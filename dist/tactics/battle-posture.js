@@ -57,9 +57,9 @@ export function createBattlePosture(worker,profile){
  return {apply(sample,{equipment=true}={}){
   const {kneel=0,prone=0,down=0,stable=0,dead=0}=sample.pose||{};
   tailClearance(kneel,prone);
-  if(kneel+prone+down<.00001)return;
+  if(kneel+prone+down<.00001||(profile.unarmed&&!down))return;
   const heading=root.rotation.y;root.rotation.y=0;root.position.set(0,0,0);root.updateMatrixWorld(true);
-  const before=spine.matrixWorld.clone(),low=Math.min(1,prone+down),cycle=(sample.distance||0)*Math.PI*5,walk=(sample.blend||0)*(1-down);
+  const before=spine.matrixWorld.clone(),low=Math.min(1,(profile.unarmed?0:prone)+down),cycle=(sample.distance||0)*Math.PI*5,walk=(sample.blend||0)*(1-down);
   const starts=new Map(),legRest=new Map();
   if(profile.proneAim&&low>0&&!profile.unarmed){
    for(const side of [-1,1])for(const n of ['thigh','shin','hoof'])legRest.set(n+side,named[n+side].quaternion.clone());
@@ -69,13 +69,12 @@ export function createBattlePosture(worker,profile){
   }
   hips.position.y-=(profile.unarmed?0:(profile.kneelDrop||.36))*kneel;
   hips.position.y+=(.27-rest.get(hips).y)*low+(profile.proneAim?.hipLift||0)*prone;
-  hips.rotation.z=-Math.PI/2*low;
+  hips.rotation.z=(profile.unarmed?hips.rotation.z:0)-Math.PI/2*low;
   hips.rotation.x=(.25+.8*stable-1.1*dead)*down;
-  spine.rotation.z+=.15*prone+.22*(1-dead)*down;
-  named.head.rotation.z+=1.35*prone+.2*down;
+  spine.rotation.z+=(profile.unarmed?0:.15*prone)+.22*(1-dead)*down;
+  named.head.rotation.z+=(profile.unarmed?0:1.35*prone)+.2*down;
   if(profile.unarmed){
-   spine.rotation.z-=.3*kneel;named.head.rotation.z+=.15*kneel;
-   for(const side of [-1,1]){named['shank '+side].rotation.z+=.35*low;named['wing '+side].rotation.x+=side*(.16*prone+.3*down);}
+   for(const side of [-1,1]){named['shank '+side].rotation.z+=.35*down;named['wing '+side].rotation.x+=side*.3*down;}
   }else{
    root.updateMatrixWorld(true);
    for(const side of [-1,1]){

@@ -32,7 +32,7 @@ canvas. On narrower windows the displayed canvas scales down; use the recorded
 | Pig director | **9/10** | All 125 sampled endpoints align; full equipment coverage open |
 | Rabbit | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Dog | **9/10** | Close/steep aim holds; full equipment coverage open |
-| Hen | Queued | Unarmed posture only; wing/weapon authoring remains separate |
+| Hen | **9/10** | Unarmed low stance only; wing/weapon and simulation-body alignment remain open |
 
 ## Reproduction
 
@@ -64,6 +64,12 @@ Species-specific corrections found during the sequential pass:
   Review also caught exposed flat upper ankle ends. Transferring the approved
   dog study's shin/pastern blend keeps those ends inside the trouser cuffs while
   preserving rigid paw soles. A dense posed cap-connection check covers this.
+- Hen: the generic prone rotation tipped the toes backward and exposed the
+  rigid lower neck. Her production stance now uses her own leg IK to fold into
+  an unarmed low pose with planted toes. The lower neck stays attached to the
+  breast; a short IK-entry blend removes the initial knee pop. Dense tests cover
+  reversible standing, crouching and stable-casualty transitions, floor clearance,
+  actual toe support and neck connection. Wing weapon handling remains open.
 
 Anatomical knee measurement bands derive from each animal's inverse bind matrices.
 They are not hard-coded to the horse. Tail checks include exact fixed-root and
