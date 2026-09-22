@@ -13,6 +13,9 @@ export function environmentGeometries(){
  const tier=new THREE.ConeGeometry(.5,1,12,3),tp=tier.attributes.position;
  for(let i=0;i<tp.count;i++){const x=tp.getX(i),y=tp.getY(i),z=tp.getZ(i),a=Math.atan2(z,x),edge=.5-y,r=1+.055*Math.sin(a*5)+.035*Math.cos(a*3);tp.setXYZ(i,x*r,y-.045*edge*Math.cos(a*5),z*r);}
  tier.computeVertexNormals();g['pine-tier']=tier;
+ const scrub=new THREE.IcosahedronGeometry(.5,1),sp=scrub.attributes.position;
+ for(let i=0;i<sp.count;i++){const x=sp.getX(i),y=sp.getY(i),z=sp.getZ(i),a=Math.atan2(z,x),r=1+.18*Math.sin(a*5+y*9);sp.setXYZ(i,x*r,y+.065*Math.cos(a*3)*(1-Math.abs(y)*2),z*r);}
+ scrub.computeVertexNormals();g['cover-crown']=scrub;
  const vertices=[];
  for(let i=0;i<7;i++){
   const a=i*2.399,dx=Math.cos(a),dz=Math.sin(a),h=.55+(i%3)*.21,bx=dx*.12,bz=dz*.12;

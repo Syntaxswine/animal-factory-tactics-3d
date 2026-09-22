@@ -1,6 +1,6 @@
 import {InspectionDocument} from './editor-3d-model.js';
 import {createEditor,applyBrush,brushShape,brushPoints,replaceMap,undo,redo} from './core/editor-model.js';
-import {validateMap,edgeKey} from './core/maps.js';
+import {validateMap,edgeKey,terrainAt,roofEndpoint} from './core/maps.js';
 import {openBlock,extractBlock,validateBlock,placeBlock} from './core/blocks.js';
 import {connectionSet} from './core/connections.js';
 import {propCells} from './core/environment.js';
@@ -12,15 +12,26 @@ export class EditingDocument extends InspectionDocument {
   const {tool,start,end=start,options={}}=command;
   if(!start||![start.x,start.y,start.z??0].every(Number.isInteger))return {ok:false,error:'Choose a map cell.'};
   if(this.block&&(['squad','exit'].includes(tool)||[start,end].some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24)))return {ok:false,error:'Keep block edits inside 24 × 24 tiles; squad and travel markers belong to full maps.'};
-  const candidate=createEditor(this.editor.map),points=brushShape(tool)?brushPoints(tool,start,end):[start],cells=[],edges=[];
+  const foliage=['foliage-cover','clear-foliage'].includes(tool),shapeTool=foliage?'woodland':tool;
+  if(foliage&&(start.z||0)!==0)return {ok:false,error:'Foliage cover paints outdoor ground. Select the ground level.'};
+  const candidate=createEditor(this.editor.map),points=brushShape(shapeTool)?brushPoints(shapeTool,start,end):[start],cells=[],edges=[];
+  const occupied=foliage?new Set(candidate.map.props.flatMap(p=>propCells(p).map(c=>c.x+','+c.y+','+(c.z||0)))):null;
   if(!points.length)return {ok:false,error:'Choose a cell inside the map.'};
   try{
-   for(const p of points){const error=applyBrush(candidate,tool,p.x,p.y,p.edge,{...options,level:start.z||0});if(error)return {ok:false,error,cells:points,edges};
+   for(const p of points){
+    let actualTool=tool,actualOptions=options;
+    if(foliage){const z=start.z||0,terrain=terrainAt(candidate.map,p.x,p.y,z);
+     if(occupied.has(p.x+','+p.y+','+z)||candidate.map.stairs.some(q=>q.x===p.x&&q.y===p.y&&(q.z===z||q.z+1===z))||roofEndpoint(candidate.map,{...p,z}))continue;
+     if(tool==='clear-foliage'){if(terrain!=='woodland')continue;actualTool='texture';actualOptions={groundKind:'ground-grass'};}
+     else {if(!['yard','ground-grass','ground-dirt','ground-gravel','woodland'].includes(terrain)||terrain==='woodland')continue;actualTool='woodland';}
+    }
+    const error=applyBrush(candidate,actualTool,p.x,p.y,p.edge,{...actualOptions,level:start.z||0});if(error)return {ok:false,error,cells:points,edges};
     if(['wall','door','erase-edge'].includes(tool))edges.push(p.edge);
     if(tool==='prop'||tool==='roof-tile')cells.push(...propCells({x:p.x,y:p.y,z:start.z||0,kind:options.propKind,rotated:options.rotated}));
     else if(tool==='room'){const w=options.rotated?options.height:options.width,h=options.rotated?options.width:options.height;for(let y=0;y<h;y++)for(let x=0;x<w;x++)cells.push({x:p.x+x,y:p.y+y,z:start.z||0});}
     else cells.push({...p,z:start.z||0});
    }
+   if(foliage&&!cells.length)return {ok:false,error:tool==='clear-foliage'?'No foliage cover to clear here.':'No uncovered outdoor ground here. Water, structures and props are skipped.',cells,edges};
    // Connectivity is allowed to be temporarily broken while designing a room.
    if(this.block){if(cells.some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24))return {ok:false,error:'The whole footprint must fit inside the block.',cells,edges};validateBlock(extractBlock(candidate.map));}
    const errors=validateMap(candidate.map,{connectivity:false});
