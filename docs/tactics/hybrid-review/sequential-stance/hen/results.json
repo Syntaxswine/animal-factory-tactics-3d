@@ -1,0 +1,366 @@
+{
+  "id": "hen",
+  "results": [
+    {
+      "outfit": "normal",
+      "target": "level",
+      "scale": "130",
+      "rows": [
+        {
+          "pose": {},
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "kneel": 0.5,
+            "prone": 0.5
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "prone": 1
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        }
+      ]
+    },
+    {
+      "outfit": "normal",
+      "target": "level",
+      "scale": "58",
+      "rows": [
+        {
+          "pose": {},
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "kneel": 0.5,
+            "prone": 0.5
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "prone": 1
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        }
+      ]
+    },
+    {
+      "outfit": "normal",
+      "target": "near",
+      "scale": "130",
+      "rows": [
+        {
+          "pose": {},
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "kneel": 0.5,
+            "prone": 0.5
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "prone": 1
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        }
+      ]
+    },
+    {
+      "outfit": "normal",
+      "target": "near",
+      "scale": "58",
+      "rows": [
+        {
+          "pose": {},
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "kneel": 0.5,
+            "prone": 0.5
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "prone": 1
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        }
+      ]
+    },
+    {
+      "outfit": "normal",
+      "target": "high",
+      "scale": "130",
+      "rows": [
+        {
+          "pose": {},
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "kneel": 0.5,
+            "prone": 0.5
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "prone": 1
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        }
+      ]
+    },
+    {
+      "outfit": "normal",
+      "target": "high",
+      "scale": "58",
+      "rows": [
+        {
+          "pose": {},
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "kneel": 0.5,
+            "prone": 0.5
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "prone": 1
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        }
+      ]
+    },
+    {
+      "outfit": "red-hats",
+      "target": "level",
+      "scale": "130",
+      "rows": [
+        {
+          "pose": {},
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "kneel": 0.5,
+            "prone": 0.5
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "prone": 1
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        }
+      ]
+    },
+    {
+      "outfit": "red-hats",
+      "target": "level",
+      "scale": "58",
+      "rows": [
+        {
+          "pose": {},
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "kneel": 0.5,
+            "prone": 0.5
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "prone": 1
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        }
+      ]
+    },
+    {
+      "outfit": "red-hats",
+      "target": "near",
+      "scale": "130",
+      "rows": [
+        {
+          "pose": {},
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "kneel": 0.5,
+            "prone": 0.5
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "prone": 1
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        }
+      ]
+    },
+    {
+      "outfit": "red-hats",
+      "target": "near",
+      "scale": "58",
+      "rows": [
+        {
+          "pose": {},
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "kneel": 0.5,
+            "prone": 0.5
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "prone": 1
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        }
+      ]
+    },
+    {
+      "outfit": "red-hats",
+      "target": "high",
+      "scale": "130",
+      "rows": [
+        {
+          "pose": {},
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "kneel": 0.5,
+            "prone": 0.5
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "prone": 1
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        }
+      ]
+    },
+    {
+      "outfit": "red-hats",
+      "target": "high",
+      "scale": "58",
+      "rows": [
+        {
+          "pose": {},
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "kneel": 0.5,
+            "prone": 0.5
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        },
+        {
+          "pose": {
+            "prone": 1
+          },
+          "supported": null,
+          "reason": null,
+          "contacts": []
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

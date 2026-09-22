@@ -21,13 +21,17 @@ export function createHenMotion(worker){
   root.position.set(0,0,0);root.rotation.set(0,0,0);worker.pose();for(const b of thighs)b.quaternion.identity();named.pelvis.position.copy(rest.get(named.pelvis));
   named.pelvis.position.y-=.09*state.gait+(options.crouchDrop??.12)*state.kneel+state.bob*.5;named.pelvis.position.z+=.02*state.transfer;
   named.breast.rotation.x=-.045*state.transfer;named.head.rotation.z=.045*Math.sin(t*2*Math.PI)*state.gait;
+  // Production low stance: fold the bird's own legs, keeping both soles on the
+  // floor through IK. A forward lean replaces the mammal's horizontal pelvis.
+  if(options.stance){const {kneel=0,prone=0}=options.stance;named.pelvis.position.y-=.01*prone;named.pelvis.rotation.z=-1.05*prone;named.breast.rotation.z=-.3*kneel+.10*prone;named.head.rotation.z+=.15*kneel+.95*prone;}
   root.updateMatrixWorld(true);joints={};
   for(const [i,side]of [-1,1].entries()){
    const a=thighs[i],b=named['shank '+side],c=named['foot '+side],f=state.feet[side];
-   const target=V(f.x+.035-state.distance+(side===-1?(options.kneelStep??.32)*state.kneel:0),.06+f.lift,side*.157),start=a.getWorldPosition(V()),la=rest.get(a).distanceTo(rest.get(b)),lb=rest.get(b).distanceTo(rest.get(c)),axis=target.clone().sub(start),d=axis.length();
+   const target=V(f.x+.035-state.distance-.10*(options.stance?.prone||0)+(side===-1?(options.kneelStep??.32)*state.kneel:0),.06+f.lift,side*.157),start=a.getWorldPosition(V()),la=rest.get(a).distanceTo(rest.get(b)),lb=rest.get(b).distanceTo(rest.get(c)),axis=target.clone().sub(start),d=axis.length();
    if(d>la+lb+1e-7||d<Math.abs(la-lb)-1e-7)throw Error('Hen leg target outside reach');
    axis.normalize();const along=(la*la-lb*lb+d*d)/(2*d),pole=options.crouchPole?V(Math.cos(Math.PI*state.kneel),0,side*Math.sin(Math.PI*state.kneel)):V(1,0,0);pole.addScaledVector(axis,-pole.dot(axis)).normalize();const mid=start.clone().addScaledVector(axis,along).addScaledVector(pole,Math.sqrt(Math.max(0,la*la-along*along)));
    rotation(a,new T.Quaternion().setFromUnitVectors(rest.get(b).clone().sub(rest.get(a)).normalize(),mid.clone().sub(start).normalize()));rotation(b,new T.Quaternion().setFromUnitVectors(rest.get(c).clone().sub(rest.get(b)).normalize(),target.clone().sub(mid).normalize()));rotation(c,new T.Quaternion());
+   if(options.stance){const enter=T.MathUtils.smoothstep(Math.max(state.kneel,state.gait),0,.12),neutral=new T.Quaternion();for(const bone of [a,b,c])bone.quaternion.slerp(neutral,1-enter);root.updateMatrixWorld(true);}
    named['wing '+side].rotation.x=-side*(.025*state.kneel+.025*state.gait);named['wing tip '+side].rotation.x=-side*.015*state.gait;
   }
   const yaw=(heading+35)*Math.PI/180;root.rotation.y=-yaw;root.position.set(state.distance*Math.cos(yaw),0,state.distance*Math.sin(yaw));root.updateMatrixWorld(true);skeleton.update();
