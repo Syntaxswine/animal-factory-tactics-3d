@@ -89,7 +89,7 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
   else{const frame=T.MathUtils.clamp(time/duration*routeSteps,0,routeSteps),i=Math.floor(frame),path=routeAngles[l.id];angle=T.MathUtils.lerp(path[i],path[Math.min(i+1,routeSteps)],frame-i);}
   l.routeAngle=angle;return candidate(angle);
  }
- function apply(progress,{direction='up',heading=0,origin=[0,0,0]}={}){
+ function applyPose(progress,{direction='up',heading=0,origin=[0,0,0]}={}){
   if(disposed)throw new Error('Ladder motion is disposed');checkFrame();
   if(worker.weapon?.id&&worker.weapon.id!=='rifle')throw new Error('Ladder study supports the worker rifle only');
   if(!Number.isFinite(progress)||!Number.isFinite(heading)||!Array.isArray(origin)||origin.length!==3||!origin.every(Number.isFinite)||!['up','down'].includes(direction))throw new Error('Invalid ladder playback transform');
@@ -146,6 +146,16 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
   root.rotation.y=-heading*Math.PI/180;root.position.copy(position).applyQuaternion(root.quaternion).add(new T.Vector3(...origin));root.updateMatrixWorld(true);worker.skeleton.update();
   result={progress:value,direction,time:t,duration,phase:direction==='up'?phase.label:({'Step onto landing':'Back onto top rung','Bring left foot through':'Step back from landing','Release left hand':'Grip left handhold','Release right hand':'Grip right handhold'}[phase.label]||phase.label.replace('Reach','Lower').replace('Step','Lower foot').replace('Mount','Dismount')),root:position.toArray(),worldRoot:root.position.toArray(),contacts:checks.map(c=>({...c,point:c.point.toArray(),worldPoint:c.point.clone().applyQuaternion(root.quaternion).add(new T.Vector3(...origin)).toArray()})),supported:true};return result;
  }
+ // Playback timing is separate from the approved geometric trajectory. Keep
+ // route compilation on its original clock; spend only 1.4s on the top exit.
+ const playbackDuration=10,exitStart=phases.at(-4).start,exitDurations=[.45,.45,.30,.20];
+ let clock=0;const playbackPhases=phases.map((p,i)=>{const seconds=i<phases.length-4?p.duration/exitStart*8.6:exitDurations[i-(phases.length-4)],entry={label:p.label,id:p.id,start:clock,end:clock+seconds,poseStart:p.start,poseEnd:p.end};clock+=seconds;return entry;});playbackPhases.at(-1).end=playbackDuration;
+ function apply(progress,options={}){
+  const direction=options.direction??'up';if(!Number.isFinite(progress)||!['up','down'].includes(direction))throw new Error('Invalid ladder playback transform');
+  const value=T.MathUtils.clamp(progress,0,1),time=value*playbackDuration,pathTime=(direction==='down'?1-value:value)*playbackDuration,phase=playbackPhases.find(p=>pathTime<=p.end)||playbackPhases.at(-1),u=T.MathUtils.clamp((pathTime-phase.start)/(phase.end-phase.start),0,1),poseTime=T.MathUtils.lerp(phase.poseStart,phase.poseEnd,u),poseProgress=poseTime/duration;
+  const pose=applyPose(direction==='down'?1-poseProgress:poseProgress,options);
+  Object.assign(pose,{progress:value,time,duration:playbackDuration,poseTime});return pose;
+ }
  function restore(mode='carry'){root.position.set(0,0,0);root.rotation.set(0,0,0);for(const {asset}of grips)asset.restore();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}worker.pose(mode);paintCorrection.set(false);root.position.copy(entry.position);root.quaternion.copy(entry.quaternion);sling.visible=false;result=null;root.updateMatrixWorld(true);worker.skeleton.update();}
  // Solve the bend routes across the whole clip once. Adjacent samples may
  // move at most five degrees: a locally cheaper elbow solution cannot snap
@@ -154,7 +164,7 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
  const routeKey=JSON.stringify([profile.id,d,bones.map(b=>rest.get(b).toArray()),limbs.map(l=>[l.offset.toArray(),l.stance])]),cached=compiledRoutes.get(routeKey);
  try{
  if(cached){Object.assign(routeAngles,cached.angles);Object.assign(routeFrames,cached.frames);}else{
- for(let frame=0;frame<=routeSteps;frame++){bakingFrame=frame;apply(frame/routeSteps);}
+ for(let frame=0;frame<=routeSteps;frame++){bakingFrame=frame;applyPose(frame/routeSteps);}
  bakingFrame=-1;
  for(const l of limbs){
   const rows=routeCosts[l.id],backtrack=[];let previous=rows[0].slice();
@@ -167,5 +177,5 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
  }
  restore('neutral');
  }catch(error){restore('neutral');sling.removeFromParent();slingGeometry.dispose();slingMaterial.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}throw error;}
- return {grips:grips.map(g=>g.asset),duration,definition:d,phases:phases.map(({label,start,end,id})=>({label,start,end,id})),apply,diagnostics:()=>result,restore,dispose(){if(disposed)return;restore('neutral');disposed=true;sling.removeFromParent();slingGeometry.dispose();slingMaterial.dispose();for(const {asset}of grips)asset.dispose();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}}};
+ return {grips:grips.map(g=>g.asset),duration:playbackDuration,definition:d,phases:playbackPhases.map(p=>({...p})),apply,diagnostics:()=>result,restore,dispose(){if(disposed)return;restore('neutral');disposed=true;sling.removeFromParent();slingGeometry.dispose();slingMaterial.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}}};
 }
