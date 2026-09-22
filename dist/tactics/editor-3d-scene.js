@@ -1,3 +1,4 @@
+import {unitBaseHeight} from './tower-geometry.js';
 import {motionPreference} from './settings-3d.js';
 import {LightingScene} from './lighting-scene.js';
 import {DaylightRig} from './daylight-rig.js';
@@ -62,7 +63,7 @@ export class InspectionScene {
    for(const part of worker.parts)part.material=paint.material;
    if(!profile.unarmed){equipment=createWeaponModel(unit.weapon);worker.equipWeapon(equipment);}
    worker.pose(profile.unarmed?'neutral':'carry',-(unit.heading||0));paint.setGripForearm?.(!!equipment?.carry?.handPoses?.support?.gripMesh);
-   const root=new T.Group();root.add(worker.root);root.position.set(unit.x,(unit.z||0)*D.floorSpacing,unit.y);root.updateMatrixWorld(true);worker.skeleton.update();for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}
+   const root=new T.Group();root.add(worker.root);root.position.set(unit.x,unitBaseHeight(unit,D.floorSpacing),unit.y);root.updateMatrixWorld(true);worker.skeleton.update();for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}
    this.scene.add(root);const model={root,worker,paint,equipment,cap,capMaterial:cap?.mesh.material,unit};this.models.push(model);this.showModel(model);this.changed();
   }catch(error){cap?.dispose();equipment?.dispose();paint?.dispose();worker?.skeleton.dispose();worker?.dispose();if(generation===this.generation){this.diagnostics.push(unit.role+': '+error.message);this.changed();}}
  }
@@ -95,7 +96,7 @@ export class InspectionScene {
    if(old){old.removeFromParent();old.dispose();}const mesh=new T.InstancedMesh(geometry,material,matrices.length);mesh.userData.chunk=key;matrices.forEach((m,i)=>mesh.setMatrixAt(i,m));mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();this.scenery.add(mesh);}
   for(const mesh of prior.values()){mesh.removeFromParent();mesh.dispose();}
   this.clearMarkers();
-  const addMarker=(p,material,heading)=>{if((p.z||0)>level)return;const ring=new T.Mesh(this.markerGeo,material);ring.rotation.x=-Math.PI/2;ring.position.set(p.x,(p.z||0)*D.floorSpacing+.035,p.y);this.markers.add(ring);if(heading!==undefined){const angle=heading*Math.PI/180,arrow=new T.ArrowHelper(new T.Vector3(Math.cos(angle),0,Math.sin(angle)),ring.position,.85,material.color.getHex(),.2,.12);this.markers.add(arrow);}};
+  const addMarker=(p,material,heading)=>{if((p.z||0)>level)return;const ring=new T.Mesh(this.markerGeo,material);ring.rotation.x=-Math.PI/2;ring.position.set(p.x,unitBaseHeight(p,D.floorSpacing)+.035,p.y);this.markers.add(ring);if(heading!==undefined){const angle=heading*Math.PI/180,arrow=new T.ArrowHelper(new T.Vector3(Math.cos(angle),0,Math.sin(angle)),ring.position,.85,material.color.getHex(),.2,.12);this.markers.add(arrow);}};
   for(const u of this.document.units)addMarker(u,u.id.startsWith('guard')?this.guardMat:this.startMat,u.heading||0);
   for(const p of [...source.exits,...(source.climbs||[])])addMarker(p,this.accessMat);
   for(const model of this.models)this.showModel(model);this.rebuildMs=performance.now()-started;this.changed();

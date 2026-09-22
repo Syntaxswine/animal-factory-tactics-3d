@@ -1,3 +1,4 @@
+import {TOWER_HEIGHT} from './tower-geometry.js';
 import {LIGHT_FORMS} from './light-sources.js';
 import {EDGES, PROPS, propCells, GROUNDS} from './environment.js';
 import {segmentBox} from './hybrid-geometry.js';
@@ -7,7 +8,7 @@ import {propParts} from './hybrid-props.js';
 export const DIMENSIONS=Object.freeze({tile:1,floorSpacing:2.12,slab:.12,wall:2,wallThickness:.16,doorThickness:.12,
  windowBottom:.85,windowTop:1.55,windowMargin:0,doorTop:1.65,lowCover:.8,standing:1.65,kneeling:1.155,prone:.462});
 export const GAME_CAMERA=Object.freeze({azimuth:Math.PI/4,elevation:Math.PI/6});
-export const toWorld=({x,y,z=0,h=0})=>[x,z*DIMENSIONS.floorSpacing+h,y];
+export const toWorld=({x,y,z=0,h=0,towerPost})=>[x,z*DIMENSIONS.floorSpacing+h+(towerPost?TOWER_HEIGHT:0),y];
 export const fromWorld=([x,h,y])=>({x,y,z:Math.floor((h+1e-8)/DIMENSIONS.floorSpacing),h:h-Math.floor((h+1e-8)/DIMENSIONS.floorSpacing)*DIMENSIONS.floorSpacing});
 export function projectWorld([x,y,z],{azimuth,elevation}=GAME_CAMERA){
  return [Math.cos(azimuth)*x-Math.sin(azimuth)*z,-Math.sin(elevation)*(Math.sin(azimuth)*x+Math.cos(azimuth)*z)+Math.cos(elevation)*y];

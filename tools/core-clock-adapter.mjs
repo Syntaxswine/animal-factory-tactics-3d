@@ -1,5 +1,7 @@
 // Explicit, reproducible changes to the pinned dependency. Never edit core/.
 export const clockOverrides={
+ 'maps.js':'Validate authored tower lookouts without requiring a ground-floor route.',
+ 'projectiles.js':'Trace open tower windows and elevated tower occupants.',
  'environment.js':'Register authored light fixture footprints and collision rules.',
  'engine.js':'Use shared round timing and opt-in 3D exposure-based awareness.',
  'world.js':'Use the shared clock, one-minute completed rounds, and exploration pacing.'
@@ -9,15 +11,37 @@ export function adaptCoreClock(name,data){
  if(!clockOverrides[name])return data;
  let s=data.toString();
  if(name==='environment.js'){return Buffer.from("import {LIGHT_PROPS} from '../light-sources.js';\n"+s+'\nObject.assign(PROPS,LIGHT_PROPS);\n');}
+ if(name==='maps.js'){
+  s="import {towerForUnit,towerEntry} from '../tower-geometry.js';\n"+s;
+  s=once(s,"if(!passable(raw,p))errors.push(`Unit start needs a walkable floor at ${k}.`);", "if(p.towerPost?!towerForUnit(raw,p):!passable(raw,p))errors.push(`Unit start needs a walkable floor or valid tower post at ${k}.`);");
+  s=once(s,'const targets=[...raw.starts,...raw.guards,...raw.exits],','const targets=[...raw.starts,...raw.guards,...raw.exits].map(p=>towerForUnit(raw,p)?towerEntry(towerForUnit(raw,p)):p),');
+  return Buffer.from(s);
+ }
+ if(name==='projectiles.js'){
+  s="import {unitBaseHeight,towerRayHit} from '../tower-geometry.js';\n"+s;
+  s=s.replace(/levelOf\((unit|nearest|shooter|target)\)\*3/g,(_,u)=>`unitBaseHeight(${u})`);
+  s=once(s,' // Exact grid/level crossings'," const towerHit=towerRayHit(state.props,origin,d,limit);if(towerHit!==null&&towerHit<limit){limit=towerHit;nearest=null;}\n // Exact grid/level crossings");
+  s=once(s," if(nearest){const result=impact('unit'", " if(towerHit!==null&&limit===towerHit)return impact('cover',limit);\n if(nearest){const result=impact('unit'");
+  return Buffer.from(s);
+ }
  if(name==='engine.js'){
   s=once(s,',ROUND_MINUTES=10,',',');
-  s="import {updateAwareness,awarenessPerception} from '../awareness.js';\n"+s;
+  s=once(s,'export function movementNeighbors(s,u,p=u,stairs){','export function movementNeighbors(s,u,p=u,stairs){if(towerForUnit(s,u))return [];');
+  s=once(s,'export function pathTo(s,u,x,y,z=levelOf(u)){','export function pathTo(s,u,x,y,z=levelOf(u)){if(towerForUnit(s,u))return null;');
+  s=once(s,'export function boundedRoute(s,g,goals,budget){','export function boundedRoute(s,g,goals,budget){if(towerForUnit(s,g))return null;');
+  s=once(s,'function placeAt(s,g,p){','function placeAt(s,g,p){if(towerForUnit(s,g))return false;');
+  s=once(s,'(levelOf(a)-levelOf(b))*3','unitBaseHeight(a)-unitBaseHeight(b)');
+  s=once(s,'levelOf(a)*3+eyeHeight(a)','unitBaseHeight(a)+eyeHeight(a)');
+  s=once(s,'levelOf(b)*3+(b.hp===undefined','unitBaseHeight(b)+(b.hp===undefined');
+  s="import {towerForUnit,unitBaseHeight,TOWER_HEIGHT} from '../tower-geometry.js';\nimport {updateAwareness,awarenessPerception} from '../awareness.js';\n"+s;
   s=once(s,'s.rules={social:!!options.social,rosterSeed};','s.rules={social:!!options.social,awareness:!!options.awareness,rosterSeed};');
   s=once(s,'export function perceive(s,a,b){','export function geometricPerceive(s,a,b){');
   s=once(s,'export const glimpsed=', 'export function perceive(s,a,b){return awarenessPerception(s,a,b,geometricPerceive(s,a,b),visibleZones);}\nexport const glimpsed=');
   s=once(s,'export function notices(s,a,b){','export function notices(s,a,b){\n if(s.rules?.awareness)return canSee(s,a,b);');
   s=once(s,'s.glimpses[g.id]={x:g.x,y:g.y,z:levelOf(g)};', 's.glimpses[g.id]=s.rules?.awareness?approximate(g):{x:g.x,y:g.y,z:levelOf(g)};');
-  s=once(s,'if(detect)refresh(s);', "if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-definition.starts.length]:definition.starts[u.id];u.perception=Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}\n if(detect)refresh(s);");
+  s=once(s,'if(detect)refresh(s);', "if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-definition.starts.length]:definition.starts[u.id];if(source?.towerPost)u.towerPost=structuredClone(source.towerPost);u.perception=Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}\n if(detect)refresh(s);");
+  s=once(s,'s.contacts[g.id]={x:g.x,y:g.y,z:levelOf(g)};', 's.contacts[g.id]={x:g.x,y:g.y,z:levelOf(g),...(g.towerPost?{towerElevation:TOWER_HEIGHT}:{})};');
+  s=once(s,'Math.round(u.y/6)*6)),z:levelOf(u)});','Math.round(u.y/6)*6)),z:levelOf(u),...(u.towerPost?{towerElevation:TOWER_HEIGHT}:{})});');
   s=once(s,'function refreshNow(s){','function refreshNow(s){\n updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});');
 
   s="import {COMBAT_ROUND_MINUTES as ROUND_MINUTES} from '../game-clock.js';\nexport {ROUND_MINUTES};\n"+s;

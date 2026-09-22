@@ -65,7 +65,7 @@ export class BattleRenderer extends HybridRenderer {
    worker.root.position.set(0,0,0);worker.root.rotation.set(0,0,0);
    if(unit.hp>0&&shot?.rifle&&!profile.unarmed){
     model.firing??=createRifleFiring(worker,profile,model.posture);
-    const target=shotPoint(shot.event.trajectories[0]).sub(new T.Vector3(...toWorld(sample)));
+    const target=shotPoint(shot.event.trajectories[0],this.state).sub(new T.Vector3(...toWorld(sample)));
     if(shot.phase.discharged&&!shot.dischargeChecked){
      const launch=model.firing.apply({...shot.phase,recoil:0,target,sample});shot.dischargeChecked=true;shot.presentationUnsupported=!launch.supported;shot.presentationReason=launch.reason;
      shot.traceOrigin=launch.supported?launch.origin.clone().add(new T.Vector3(...toWorld(sample))):null;

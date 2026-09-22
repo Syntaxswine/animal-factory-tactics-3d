@@ -1,3 +1,4 @@
+import {unitBaseHeight,towerRayHit} from '../tower-geometry.js';
 import {terrainAt,levelOf,sightEdge,W,H,LEVELS} from './maps.js';
 import {PROPS,propAt} from './environment.js';
 
@@ -21,11 +22,12 @@ export function traceProjectile(state,shooter,origin,direction,reach){
   let horizontal;
   if(a<EPS){if(c>0)continue;horizontal=[0,reach];}
   else {const discriminant=b*b-4*a*c;if(discriminant<0)continue;const root=Math.sqrt(discriminant);horizontal=[(-b-root)/(2*a),(-b+root)/(2*a)];}
-  const vertical=slab(origin.h,d.h,levelOf(unit)*3+.05,levelOf(unit)*3+bodyHeight(unit));if(!vertical)continue;
+  const vertical=slab(origin.h,d.h,unitBaseHeight(unit)+.05,unitBaseHeight(unit)+bodyHeight(unit));if(!vertical)continue;
   const t=Math.max(EPS,horizontal[0],vertical[0]),end=Math.min(reach,horizontal[1],vertical[1]);
   if(t<=end&&t<limit){limit=t;nearest=unit;}
  }
  const impact=(kind,t,extra={})=>{const p=point(origin,d,t);return {kind,...p,z:Math.max(0,Math.min(LEVELS-1,Math.floor((p.h+EPS)/3))),distance:t,...extra};};
+ const towerHit=towerRayHit(state.props,origin,d,limit);if(towerHit!==null&&towerHit<limit){limit=towerHit;nearest=null;}
  // Exact grid/level crossings keep thin walls, corner joins and floor slabs solid.
  const crossings=[0,limit];
  for(const axis of ['x','y'])if(Math.abs(d[axis])>EPS){
@@ -60,14 +62,15 @@ export function traceProjectile(state,shooter,origin,direction,reach){
   const height=terrain==='wall'||prop?.tall?2.7:(terrain==='crate'||prop?.solid&&prop.cover>0)?.8:0;
   if(height){const vertical=slab(origin.h,d.h,z*3,z*3+height);if(vertical){const hit=Math.max(t,vertical[0]);if(hit<=Math.min(end,vertical[1]))return impact('cover',hit);}}
  }
- if(nearest){const result=impact('unit',limit,{unitId:nearest.id}),relative=(result.h-levelOf(nearest)*3)/bodyHeight(nearest);result.zone=relative>.85?'head':relative<.38?'legs':'torso';return result;}
+ if(towerHit!==null&&limit===towerHit)return impact('cover',limit);
+ if(nearest){const result=impact('unit',limit,{unitId:nearest.id}),relative=(result.h-unitBaseHeight(nearest))/bodyHeight(nearest);result.zone=relative>.85?'head':relative<.38?'legs':'torso';return result;}
  return impact('range',reach);
 }
 
 export function bulletTrajectory(state,shooter,target,{accurate,zone='torso',chance=50,burst=false,reach},random){
- const origin={x:shooter.x,y:shooter.y,h:levelOf(shooter)*3+muzzleHeight(shooter)};
+ const origin={x:shooter.x,y:shooter.y,h:unitBaseHeight(shooter)+muzzleHeight(shooter)};
  const aimHeight=targetHeight(target,zone);
- let dx=target.x-origin.x,dy=target.y-origin.y,dh=levelOf(target)*3+aimHeight-origin.h;
+ let dx=target.x-origin.x,dy=target.y-origin.y,dh=unitBaseHeight(target)+aimHeight-origin.h;
  if(!accurate){
   const distance=Math.max(.5,Math.hypot(dx,dy)),angle=Math.atan2(dy,dx);
   const minimum=Math.asin(Math.min(.9,.42/distance)),maximum=Math.max(minimum,.08+(1-chance/100)*.65+(burst?.12:0));
@@ -82,12 +85,12 @@ export function bulletTrajectory(state,shooter,target,{accurate,zone='torso',cha
 
 // One shell emits all pellets together. Angular spread naturally thins the pattern with distance.
 export function shotgunTrajectories(state,shooter,target,{accurate,zone='torso',chance=50,reach,pellets=6},random){
- const origin={x:shooter.x,y:shooter.y,h:levelOf(shooter)*3+muzzleHeight(shooter)},range=Math.max(.1,Math.hypot(target.x-origin.x,target.y-origin.y));
+ const origin={x:shooter.x,y:shooter.y,h:unitBaseHeight(shooter)+muzzleHeight(shooter)},range=Math.max(.1,Math.hypot(target.x-origin.x,target.y-origin.y));
  const angle=Math.atan2(target.y-origin.y,target.x-origin.x)+(accurate?0:(random()<.5?-1:1)*(.10+(1-chance/100)*.2));
- const slope=(levelOf(target)*3+targetHeight(target,zone)-origin.h)/range;
+ const slope=(unitBaseHeight(target)+targetHeight(target,zone)-origin.h)/range;
  return Array.from({length:pellets},()=>{const phase=random()*Math.PI*2,radius=Math.sqrt(random())*.11,yaw=angle+Math.cos(phase)*radius;
   const hit=traceProjectile(state,shooter,origin,{x:Math.cos(yaw),y:Math.sin(yaw),h:slope+Math.sin(phase)*radius},reach);
-  if(accurate&&zone==='weapon'&&hit.unitId===target.id&&Math.abs(hit.h-levelOf(target)*3-targetHeight(target,'weapon'))<.15)hit.zone='weapon';
+  if(accurate&&zone==='weapon'&&hit.unitId===target.id&&Math.abs(hit.h-unitBaseHeight(target)-targetHeight(target,'weapon'))<.15)hit.zone='weapon';
   return {...hit,origin,accurate,pellet:true};
  });
 }

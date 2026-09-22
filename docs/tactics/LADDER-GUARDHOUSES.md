@@ -21,3 +21,5 @@ Independent hostile review: 9/10. Additional reviewer checks found all 63 sample
 ## Gameplay lighting integration
 
 The wooden spotlight tower and both iron searchlight guardhouses are now available in the 3D editor with active scheduled lighting, one-to-three-point sweep routes and instant spotlight detection. See [Artificial lighting](ARTIFICIAL-LIGHTING.md). The gallery remains a passive art preview; climbing/navigation is still deferred.
+
+The three playable searchlight towers now support fixed lookouts and merc climb/descend actions. Windows pass sight and light. See [Tower access](TOWER-ACCESS.md) for controls and scope. Earlier art-only notes describe the original gallery milestone.

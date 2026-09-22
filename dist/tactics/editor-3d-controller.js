@@ -1,3 +1,4 @@
+import {TOWERS,towerSlots,towerPost} from './tower-geometry.js';
 import {LIGHT_FORMS} from './light-sources.js';
 import {mapStartMinutes} from './game-clock.js';
 import {InspectionDocument} from './editor-3d-model.js';
@@ -52,6 +53,11 @@ export class EditingDocument extends InspectionDocument {
   if(error)return {ok:false,error};if(p.lightMode)candidate.map.props.at(-1).lightMode=p.lightMode;if(p.lightTargets)candidate.map.props.at(-1).lightTargets=structuredClone(p.lightTargets);const errors=validateMap(candidate.map,{connectivity:false});if(errors.length)return {ok:false,error:errors[0]};
   if(this.block){try{validateBlock(extractBlock(candidate.map));}catch(e){return {ok:false,error:e.message};}}
   replaceMap(this.editor,candidate.map);this.refresh();return {ok:true};
+ }
+ addLookout(selection,options={}){
+  if(selection?.type!=='prop'||!TOWERS[selection.data.kind])throw Error('Select a searchlight tower first.');
+  const p=selection.data,point=towerSlots(p).find(q=>![...this.map.guards,...this.map.starts].some(u=>u.x===q.x&&u.y===q.y&&(u.z||0)===q.z));if(!point)throw Error('All four tower posts are occupied.');
+  this.replace({...this.editor.map,guards:[...this.editor.map.guards,{...point,towerPost:towerPost(p,point),species:options.species||'pig-foreman',weapon:options.weapon||'rifle',heading:options.heading??90,outfit:options.outfit||'normal'}]});
  }
  lightTargets(selection,points){
   if(selection?.type!=='prop'||!LIGHT_FORMS[selection.data.kind]?.spot)throw Error('Select a spotlight first.');

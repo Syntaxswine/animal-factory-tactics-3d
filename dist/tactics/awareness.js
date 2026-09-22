@@ -1,3 +1,4 @@
+import {towerForUnit,unitBaseHeight} from './tower-geometry.js';
 import {inCone} from './core/perception.js';
 import {lightSources,lightBrightness,lightConeFactor,towerBlocksLight} from './light-sources.js';
 import {woodlandDepth} from './core/woodland.js';
@@ -15,18 +16,18 @@ function lampStrength(s,lamp,origin){
  return strength&&(distance<1e-6||clearRay({...s,props:s.props.filter(p=>p!==lamp.prop)},origin,ray,distance))?strength:0;
 }
 export function spotlightReveals(s,observer,target,zones){
- if(!s.rules?.awareness||!inCone(observer,target))return false;
+ if(!s.rules?.awareness||!towerForUnit(s,observer)&&!inCone(observer,target))return false;
  const lamps=lightSources(s.props,s.clock?.minutes??mapStartMinutes(s.definition)).filter(l=>l.aim);
  if(!lamps.length)return false;
  // The same body region must receive the beam and be visible to this observer.
  return zones(s,observer,target).filter(z=>['head','torso','legs'].includes(z)).some(zone=>{
-  const origin={x:target.x,y:target.y,h:(target.z||0)*3+targetHeight(target,zone)};
+  const origin={x:target.x,y:target.y,h:unitBaseHeight(target)+targetHeight(target,zone)};
   return lamps.some(lamp=>lampStrength(s,lamp,origin)>0);
  });
 }
 export function illuminationAt(s,u,zone='torso'){
  const sun=daylightAt(s.clock?.minutes??mapStartMinutes(s.definition));
- const origin={x:u.x,y:u.y,h:(u.z||0)*3+targetHeight(u,zone)};
+ const origin={x:u.x,y:u.y,h:unitBaseHeight(u)+targetHeight(u,zone)};
  const direction={x:sun.direction[0],y:sun.direction[2],h:sun.direction[1]};
  // Ambient visibility is deliberately separate from renderer exposure settings.
  let brightness=.12+.13*sun.strength+.75*sun.strength*(sun.strength>0&&clearRay(s,origin,direction,80)?1:0);

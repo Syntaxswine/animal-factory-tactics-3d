@@ -1,3 +1,4 @@
+import {towerBlocksSegment} from './tower-geometry.js';
 import {MINUTES_PER_DAY,DAY_START,DUSK_START} from './game-clock.js';
 // Shared authored bulb positions in tile units: X, height, map Y.
 const towerLight=(w,h,pivot,tilt)=>({w,h,spot:true,tower:true,angle:Math.PI/8,pivot,offset:.34,emitters:[[pivot[0],pivot[1]-.34*Math.sin(tilt),pivot[2]+.34*Math.cos(tilt)]]});
@@ -53,14 +54,6 @@ export function sampledEmitters(prop,minutes,floorHeight=3){
   return {...source,aim,angle:f.angle??SPOT_ANGLE};
  });
 }
-// Coarse tower self-shadow volumes supplement the ordinary tactical solids.
-// The open timber deck keeps its ladder aperture; the iron house is opaque.
-export function towerBlocksLight(source,target,p=source.prop){
- const f=LIGHT_FORMS[p.kind];if(!f?.tower)return false;
- const c=fixturePlacement(p),local=q=>{const x=q.x-c.x,y=q.y-c.y;return [p.rotated?y:x,q.h-c.z*3,p.rotated?-x:y];},a=local(source),b=local(target);
- const boxes=p.kind==='wooden-spotlight-tower'?
- [[-2.5,6.20,-2.5,2.5,6.36,1.25],[-2.5,6.20,1.25,-.5,6.36,2.25],[.5,6.20,1.25,2.5,6.36,2.25],[-2.5,6.20,2.25,2.5,6.36,2.5]]:
- [[-2.5,6.24,-1.65,.6,8.95,1.65]];
- return boxes.some(box=>{let lo=0,hi=1;for(let i=0;i<3;i++){const d=b[i]-a[i];if(Math.abs(d)<1e-9){if(a[i]<box[i]||a[i]>box[i+3])return false;}else{const v=(box[i]-a[i])/d,w=(box[i+3]-a[i])/d;lo=Math.max(lo,Math.min(v,w));hi=Math.min(hi,Math.max(v,w));if(lo>hi)return false;}}return hi>1e-6&&lo<1-1e-6;});
-}
+// Keep the public beam helper; all physical ray queries use these open-window surfaces.
+export const towerBlocksLight=(source,target,p=source.prop)=>towerBlocksSegment(p,source,target);
 export function lightSources(props,minutes){return (props||[]).filter(p=>lightEnabled(p,minutes)).flatMap(p=>sampledEmitters(p,minutes));}

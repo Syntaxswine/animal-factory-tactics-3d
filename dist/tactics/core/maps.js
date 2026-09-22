@@ -1,3 +1,4 @@
+import {towerForUnit,towerEntry} from '../tower-geometry.js';
 import {validatePlannedMap} from './feature-plan.js';
 import {validateConnections} from './connections.js';
 import {GROUNDS,PROPS,EDGES,floorTerrain,propAt,propCells,propBlocks} from './environment.js';
@@ -86,9 +87,9 @@ export function validateMap(raw,{connectivity=true}={}){
  for(const p of raw.props||[]){const cells=propCells(p);if(cells.some(a=>cells.some(b=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y)===1&&blockedEdge(raw,a,b))))errors.push('A prop footprint crosses a wall or fence.');}
  const roofKeys=new Set();for(const p of raw.climbs||[]){const k=[p.x,p.y,p.z,p.dx,p.dy].join(',');if(roofKeys.has(k))errors.push('Duplicate roof climb.');roofKeys.add(k);if(!roofValid(raw,p))errors.push('Roof climbs need free endpoints, open headroom and an unobstructed upper edge.');}
  const stairKeys=new Set();for(const p of raw.stairs){const k=stairKey(p.x,p.y,p.z);if(stairKeys.has(k))errors.push('Duplicate stair connection.');stairKeys.add(k);if(!passable(raw,p)||!passable(raw,{...p,z:p.z+1}))errors.push(`Stairs at ${k} need walkable floors at both ends.`);}
- const positions=new Set();for(const p of [...raw.starts,...raw.guards]){const k=tileKey(p.x,p.y,levelOf(p));if(positions.has(k))errors.push(`Overlapping unit starts at ${k}.`);positions.add(k);if(!passable(raw,p))errors.push(`Unit start needs a walkable floor at ${k}.`);}
+ const positions=new Set();for(const p of [...raw.starts,...raw.guards]){const k=tileKey(p.x,p.y,levelOf(p));if(positions.has(k))errors.push(`Overlapping unit starts at ${k}.`);positions.add(k);if(p.towerPost?!towerForUnit(raw,p):!passable(raw,p))errors.push(`Unit start needs a walkable floor or valid tower post at ${k}.`);}
  if(!passable(raw,raw.exits[0]))errors.push('Travel marker needs a walkable floor.');if(errors.length||!connectivity)return [...new Set(errors)];
- const targets=[...raw.starts,...raw.guards,...raw.exits],missing=reachedTargets(raw,targets);for(const p of targets)if(missing.has(index(p)))errors.push(`Unreachable start or marker at ${p.x},${p.y}, level ${levelOf(p)+1}. Add doors or stairs.`);return errors;
+ const targets=[...raw.starts,...raw.guards,...raw.exits].map(p=>towerForUnit(raw,p)?towerEntry(towerForUnit(raw,p)):p),missing=reachedTargets(raw,targets);for(const p of targets)if(missing.has(index(p)))errors.push(`Unreachable start or marker at ${p.x},${p.y}, level ${levelOf(p)+1}. Add doors or stairs.`);return errors;
 }
 export function migrateMap(raw){
  if(raw?.version!==1)return raw;

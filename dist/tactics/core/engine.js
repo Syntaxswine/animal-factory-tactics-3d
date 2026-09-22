@@ -1,5 +1,6 @@
 import {COMBAT_ROUND_MINUTES as ROUND_MINUTES} from '../game-clock.js';
 export {ROUND_MINUTES};
+import {towerForUnit,unitBaseHeight,TOWER_HEIGHT} from '../tower-geometry.js';
 import {updateAwareness,awarenessPerception} from '../awareness.js';
 import {explosivePreview,explosiveTrajectory,detonate} from './explosives.js';
 import {initPersonality,initGuardSocial,socialRoll,friendlyReaction,helped,settleStress,injuryStrain,killRelief,collapse} from './personalities.js';
@@ -46,9 +47,9 @@ export const movementModeOf=u=>u?.sneaking?'sneak':u?.running?'run':'walk';
 export const movementMultiplier=u=>MOVEMENT_MODES[movementModeOf(u)].apMultiplier;
 export const movementCost=u=>STANCES[stanceOf(u)].moveCost*movementMultiplier(u);
 export const effectiveStealth=u=>Math.min(100,Math.max(0,(u.stealth||0)+(u.sneaking?20:0)));
-export function movementNeighbors(s,u,p=u,stairs){return neighbors(s,p,stairs).filter(q=>(levelOf(q)===levelOf(p)||stanceOf(u)==='standing')&&!(levelOf(q)===levelOf(p)&&q.x!==p.x&&q.y!==p.y&&[occupant(s,q.x,p.y,levelOf(p)),occupant(s,p.x,q.y,levelOf(p))].some(v=>v&&v!==u))).map(q=>({...q,cost:(levelOf(q)===levelOf(p)?STANCES[stanceOf(u)].moveCost*q.cost:q.cost)*movementMultiplier(u)}));}
+export function movementNeighbors(s,u,p=u,stairs){if(towerForUnit(s,u))return [];return neighbors(s,p,stairs).filter(q=>(levelOf(q)===levelOf(p)||stanceOf(u)==='standing')&&!(levelOf(q)===levelOf(p)&&q.x!==p.x&&q.y!==p.y&&[occupant(s,q.x,p.y,levelOf(p)),occupant(s,p.x,q.y,levelOf(p))].some(v=>v&&v!==u))).map(q=>({...q,cost:(levelOf(q)===levelOf(p)?STANCES[stanceOf(u)].moveCost*q.cost:q.cost)*movementMultiplier(u)}));}
 export const key=tileKey;
-export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,(levelOf(a)-levelOf(b))*3);
+export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,unitBaseHeight(a)-unitBaseHeight(b));
 export const alive=u=>u.hp>0&&!u.away&&u.casualty!=='quit'; // A unit that crossed the map edge is off this map: not a target, not an occupant, not controllable here; a merc that quit (G5) has left the squad.
 export const incapacitated=u=>u?.hp===0&&['bleeding','stable'].includes(u.casualty);
 // A stabilized casualty gets back up after three full squad turns (turns that begin after the stabilization), at 5 HP, still exhausted. See RULES.md, Casualty recovery.
@@ -88,12 +89,12 @@ export function createGame(seed=1947,definition=factoryMap(),detect=true,difficu
  if(definition.name==='Factory test')for(const [i,kind]of ['shotgun','sniper','smg','hmg'].entries())s.loot[i].items.push({type:'weapon',kind,rounds:WEAPONS[kind].mag},{type:'ammo',kind,count:12});
  if(definition.name==='Factory test')for(const [i,kind]of ['grenade','launcher','rpg'].entries())s.loot[i+1].items.push({type:'weapon',kind,rounds:WEAPONS[kind].mag},{type:'ammo',kind,count:kind==='grenade'?6:3});
  if(definition.name==='Factory test')s.loot[0].items.push({type:'weapon',kind:'flamethrower',rounds:4},{type:'ammo',kind:'flamethrower',count:4});
- if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-definition.starts.length]:definition.starts[u.id];u.perception=Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}
+ if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-definition.starts.length]:definition.starts[u.id];if(source?.towerPost)u.towerPost=structuredClone(source.towerPost);u.perception=Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}
  if(detect)refresh(s);log(s,`Local map ready / ${definition.guards.length} guards.`);return s;
 }
 // Visibility and projectiles share solid geometry, but bodies do not occlude sight.
 export function zoneVisible(s,a,b,zone='torso'){
- const origin={x:a.x,y:a.y,h:levelOf(a)*3+eyeHeight(a)},end=levelOf(b)*3+(b.hp===undefined?eyeHeight(b):targetHeight(b,zone));
+ const origin={x:a.x,y:a.y,h:unitBaseHeight(a)+eyeHeight(a)},end=unitBaseHeight(b)+(b.hp===undefined?eyeHeight(b):targetHeight(b,zone));
  const direction={x:b.x-a.x,y:b.y-a.y,h:end-origin.h},length=Math.hypot(direction.x,direction.y,direction.h);
  if(length<1e-7)return true;
  const hit=traceProjectile({...s,units:[]},null,origin,direction,length);
@@ -102,7 +103,7 @@ export function zoneVisible(s,a,b,zone='torso'){
 export const visibleZones=(s,a,b)=>Object.keys(AIM_ZONES).filter(zone=>zoneVisible(s,a,b,zone));
 export function lineOfSight(s,a,b){return ['head','torso','legs','weapon'].some(zone=>zoneVisible(s,a,b,zone));}
 export const pathCost=path=>path.reduce((n,p)=>n+(p.cost||1),0);
-export function pathTo(s,u,x,y,z=levelOf(u)){
+export function pathTo(s,u,x,y,z=levelOf(u)){if(towerForUnit(s,u))return null;
  if(!walkable(s,x,y,z)||(occupant(s,x,y,z)&&occupant(s,x,y,z)!==u))return null;
  const start=key(u.x,u.y,levelOf(u)),goal=key(x,y,z),occupied=new Set(s.units.filter(p=>(alive(p)||incapacitated(p))&&p!==u).map(p=>key(p.x,p.y,levelOf(p)))),stairs=stairSet(s);
  const heuristic=p=>{const dx=Math.abs(p.x-x),dy=Math.abs(p.y-y);return (Math.max(dx,dy)+.5*Math.min(dx,dy))*movementCost(u)+2*movementMultiplier(u)*Math.abs(levelOf(p)-z);},heap=[],scores=new Map([[start,0]]),parents=new Map();
@@ -169,7 +170,7 @@ function refreshNow(s){
  const oldDetected=s.detected,oldVisible=s.visible,oldGlimpses=s.glimpses||{};
  for(const u of s.units){const at=u.x+','+u.y+','+levelOf(u);u.moved=!!u.fired||u.lastAt!==at;u.lastAt=at;u.fired=false;}s.visible=terrainVisibility(s,squad(s));s.detected=new Set(guards(s).filter(g=>squad(s).some(p=>canSee(s,p,g))).map(g=>g.id));
  s.glimpses={};for(const g of guards(s))if(!s.detected.has(g.id)&&squad(s).some(p=>perceive(s,p,g)===1))s.glimpses[g.id]=s.rules?.awareness?approximate(g):{x:g.x,y:g.y,z:levelOf(g)};
- for(const g of guards(s))if(s.detected.has(g.id))s.contacts[g.id]={x:g.x,y:g.y,z:levelOf(g)};
+ for(const g of guards(s))if(s.detected.has(g.id))s.contacts[g.id]={x:g.x,y:g.y,z:levelOf(g),...(g.towerPost?{towerElevation:TOWER_HEIGHT}:{})};
  if(s.queue.length&&[...s.detected].some(id=>!oldDetected.has(id))){s.queue=[];log(s,'Movement stopped: new opponent spotted.');}
  else if(s.queue.length&&Object.keys(s.glimpses).some(id=>!oldGlimpses[id]&&!oldDetected.has(Number(id)))){s.queue=[];log(s,'Movement stopped: movement glimpsed.');}
  if(s.visible!==oldVisible||s.seen.size<s.visible.size)for(const k of s.visible)s.seen.add(k);
@@ -455,7 +456,7 @@ export function setMovementMode(s,u,mode){
 }
 export function setSneaking(s,u){return setMovementMode(s,u,u.sneaking?'walk':'sneak');}
 // Suspicion is approximate: the 6-tile grid cell nearest the source, shared by hearing and peripheral glimpses.
-const approximate=u=>({x:Math.max(0,Math.min(W-1,Math.round(u.x/6)*6)),y:Math.max(0,Math.min(H-1,Math.round(u.y/6)*6)),z:levelOf(u)});
+const approximate=u=>({x:Math.max(0,Math.min(W-1,Math.round(u.x/6)*6)),y:Math.max(0,Math.min(H-1,Math.round(u.y/6)*6)),z:levelOf(u),...(u.towerPost?{towerElevation:TOWER_HEIGHT}:{})});
 // A gunshot alerts every guard within twice the weapon's range, squad or guard shooter alike. Guards already alert keep
 // their own, better fix; the rest converge on the approximate report. Suspicion beyond that ring is unchanged (emitNoise).
 export function alarm(s,shooter,radius){cascade(s,()=>{for(const g of guards(s))if(g!==shooter&&!['alert','broken'].includes(stateOf(g))&&distance(g,shooter)<=radius)setState(s,g,'alert',approximate(shooter),{quiet:true});});}
@@ -562,7 +563,7 @@ function sweep(s,g,ticks){g.sweep=(g.sweep??ticks)-1;g.heading=(g.heading+90)%36
 // Rest at the post (or where the guard stands when the post cannot be reached), wary for the rest of the map.
 function settle(s,g,home=true){setState(s,g,'rest');g.wary=true;if(home&&g.post)g.heading=g.post.heading;bark(s,g,g.name+(home?' is back at post.':' settled where it stood.'),'rest');}
 // Nearest free walkable tile to a point, breadth first (a post or a fix may be occupied by the time the guard gets there).
-function placeAt(s,g,p){const z=levelOf(p),start={x:p.x,y:p.y,z};if(!inBounds(start.x,start.y,z))return false;const q=[start],seen=new Set([key(start.x,start.y,z)]);
+function placeAt(s,g,p){if(towerForUnit(s,g))return false;const z=levelOf(p),start={x:p.x,y:p.y,z};if(!inBounds(start.x,start.y,z))return false;const q=[start],seen=new Set([key(start.x,start.y,z)]);
  for(let i=0;i<q.length&&i<4000;i++){const c=q[i],cz=levelOf(c);const o=occupant(s,c.x,c.y,cz);if(walkable(s,c.x,c.y,cz)&&(!o||o===g)){g.x=c.x;g.y=c.y;g.z=cz;g.lastAt=c.x+','+c.y+','+cz;return true;}
   for(const b of neighbors(s,c)){const k=key(b.x,b.y,levelOf(b));if(!seen.has(k)){seen.add(k);q.push(b);}}}
  return false;}
@@ -587,7 +588,7 @@ export function settleGuards(s,minutes){const rounds=Math.floor(minutes/ROUND_MI
 export const REALTIME_NODES=1200,REALTIME_RETRY=40,SWEEP_TICKS=8,REALTIME_SEARCHES=3; // at most this many fresh route searches per tick; the rest of the guards wait a tick
 export function fixGoals(s,dest){const z=levelOf(dest),goals=new Set();for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=dest.x+dx,y=dest.y+dy;if(inBounds(x,y,z)&&walkable(s,x,y,z))goals.add(key(x,y,z));}
  if(!goals.size){let best=null,bd=Infinity;for(let dy=-6;dy<=6;dy++)for(let dx=-6;dx<=6;dx++){const x=dest.x+dx,y=dest.y+dy,d=Math.hypot(dx,dy);if(d<bd&&inBounds(x,y,z)&&walkable(s,x,y,z)){best=key(x,y,z);bd=d;}}if(best)goals.add(best);}return goals;}
-export function boundedRoute(s,g,goals,budget){
+export function boundedRoute(s,g,goals,budget){if(towerForUnit(s,g))return null;
  const start=key(g.x,g.y,levelOf(g));if(goals.has(start))return [];
  const occupied=new Set(s.units.filter(p=>(alive(p)||incapacitated(p))&&p!==g).map(p=>key(p.x,p.y,levelOf(p)))),stairs=stairSet(s),scores=new Map([[start,0]]),parents=new Map(),heap=[];
  // A* toward the nearest goal (the same admissible estimate pathTo uses), so an open-ground route costs tens of expansions, not a diamond of thousands.

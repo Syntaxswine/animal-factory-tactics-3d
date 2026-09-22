@@ -1,3 +1,5 @@
+import {climbTower,towerClimbPreview} from './tower-actions.js';
+import {TOWER_HEIGHT} from './tower-geometry.js';
 import {illuminationAt} from './awareness.js';
 import {FrameClock,formatClock,timeOfDay,turnBased} from './game-clock.js';
 import {startEncounterClock,tickEncounterClock,settleEncounterRounds} from './encounter-clock.js';
@@ -23,11 +25,12 @@ const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastCl
 const paused=()=>userPaused||document.hidden;
 function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
 const view={x:0,y:0,zoom:1.15};
+const climbButton=document.createElement('button');climbButton.id='climb-tower';climbButton.textContent='Climb tower';$('reload').parentNode.insertBefore(climbButton,$('reload'));
 const selected=()=>state.units.find(u=>u.id===state.selected);
 const target=()=>state.units.find(u=>u.id===targetId&&u.hp>0&&state.detected.has(u.id));
 const mercStatus=u=>u.away?'Away':u.casualty==='captured'?'Captured':u.casualty==='quit'?'Left squad':u.hp>0?`${stanceOf(u)} · ${movementModeOf(u)} · ${u.hp} HP · ${u.ap} AP`:u.casualty==='bleeding'?`Bleeding · ${u.bleedTurns} turns`:u.casualty==='stable'?'Stabilized':'Dead';
 const message=text=>{$('message').textContent=text;};
-const project=u=>({x:view.x+(u.x-u.y)*28*view.zoom,y:view.y+(u.x+u.y)*14*view.zoom-((u.z||0)-level)*FLOOR_PIXELS*view.zoom});
+const project=u=>({x:view.x+(u.x-u.y)*28*view.zoom,y:view.y+(u.x+u.y)*14*view.zoom-((u.z||0)-level+((u.towerPost?TOWER_HEIGHT:u.towerElevation||0)/2.12))*FLOOR_PIXELS*view.zoom});
 function focus(x,y){overviewMode=false;view.zoom=1.15;view.x=width/2-(x-y)*28*view.zoom;view.y=height*.55-(x+y)*14*view.zoom;$('hint').textContent='Click ground to move · Shift-drag to select mercs · Drag to pan · Scroll to zoom';}
 function center(){const u=selected();level=u.z||0;$('floor').value=level;focus(u.x,u.y);}
 function overview(){const w=definition.width,h=definition.height;overviewMode=true;view.zoom=Math.min((width-50)/((w+h)*28),(height-60)/((w+h)*14));view.x=width/2-(w-h)*14*view.zoom;view.y=30;$('hint').textContent='Click the map to inspect an area · Center returns to your squad';}
@@ -46,6 +49,7 @@ function sync(){
  $('selection').textContent=`${selectedIds.size} selected · Primary: ${u.name} · ${WEAPONS[u.weapon].name} · ${u.ammo[u.weapon]||0} loaded`;
  $('target').textContent=t?`${t.name} · ${preview.ok?`${preview.chance??preview.odds??'—'}% · ${preview.cost} AP`:preview.reason}`:'Select a visible opponent to inspect a shot.';
  $('fire').disabled=paused()||renderer.busy||!preview?.ok||!canControl(state,u)||!!state.queue.length;
+ const climb=towerClimbPreview(state,u);climbButton.textContent=(climb.descending?'Descend tower':'Climb tower')+(combatCosts(state)?' · 6 AP':' · 30 sec');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||'Use the stairs or ladder at the gold entrance ring.';
  $('reload').disabled=paused()||renderer.busy||!canControl(state,u)||!!state.queue.length||!WEAPONS[u.weapon].mag;
  $('end').disabled=paused()||renderer.busy||state.phase!=='player'||!!state.queue.length;
  $('stop').disabled=paused()||!state.queue.length;
@@ -84,6 +88,7 @@ function action(fn){if(paused()||renderer.busy)return;const ok=fn();renderer.cap
  for(const mode of Object.keys(MOVEMENT_MODES))$('move-'+mode).onclick=()=>{if(paused()||renderer.busy)return;const result=setSelectionMovement(state,selectedIds,mode);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' set to '+mode+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'.':''));sync();};
  $('restart').onclick=restart;$('center').onclick=center;$('overview').onclick=overview;
  $('reload').onclick=()=>action(()=>reload(state,selected()));$('end').onclick=()=>action(()=>endTurn(state));
+ climbButton.onclick=()=>action(()=>climbTower(state,selected()));
  $('fire').onclick=()=>action(()=>{const t=target();return t&&attack(state,selected(),t);});
  $('stop').onclick=()=>{if(paused())return;state.queue=[];sync();};$('floor').onchange=()=>{level=+$('floor').value;};
 $('pause').onclick=()=>{userPaused=!userPaused;frameClock.reset();sync();};
