@@ -10,7 +10,7 @@ export function createRifleFiring(worker,profile,posture=null){
  function rotation(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(q));worker.root.updateMatrixWorld(true);}
  function raw(aim,recoil,heading,pitch,sample){
   const gun=worker.weapon,root=worker.root;root.position.set(0,0,0);root.rotation.set(0,0,0);worker.pose('carry',0);
-  named.spine.rotation.x=.16*aim;named.spine.rotation.z=-.02*recoil;
+  named.spine.rotation.x=.16*aim;named.spine.rotation.z=-.02*recoil+(profile.proneAim?.torsoFollow||0)*pitch*(sample?.pose?.prone||0)*aim;
   named.head.rotation.z=(pitch*(profile.headPitchSlope??1.5)+(profile.headPitch??-.9))*aim;
   named.head.rotation.y=((profile.headYaw??25)*Math.PI/180+.4*pitch)*aim;root.updateMatrixWorld(true);
   posture?.apply({...sample,heading:0},{equipment:false});
@@ -20,7 +20,9 @@ export function createRifleFiring(worker,profile,posture=null){
   const carryQ=new T.Quaternion().setFromUnitVectors(V(1,0,0),new T.Vector3(...gun.carry.axis).normalize());
   const yaw=-(profile.bodyYaw??35)*Math.PI/180,axis=V(Math.cos(yaw)*Math.cos(pitch),Math.sin(pitch),Math.sin(yaw)*Math.cos(pitch));
   const aimQ=new T.Quaternion().setFromUnitVectors(V(1,0,0),axis);
-  const stock=named.upperArm1.getWorldPosition(V()).add(new T.Vector3(...(profile.stockOffset||[-.045,.070,-.035])).applyQuaternion(spineQ));
+  const stockOffset=new T.Vector3(...(profile.stockOffset||[-.045,.070,-.035]));
+  if(profile.proneAim)stockOffset.lerp(new T.Vector3(...profile.proneAim.stock),sample?.pose?.prone||0);
+  const stock=named.upperArm1.getWorldPosition(V()).add(stockOffset.applyQuaternion(spineQ));
   gun.root.quaternion.copy(spineQ.clone().multiply(carryQ)).slerp(aimQ,aim);
   gun.root.position.copy(carryPosition).lerp(stock.sub(gun.anchors.stock.position.clone().applyQuaternion(aimQ)),aim).addScaledVector(axis,-.038*recoil);
   root.updateMatrixWorld(true);

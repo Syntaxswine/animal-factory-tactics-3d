@@ -27,7 +27,7 @@ export const ANIMAL_MOTION_CATALOG=[
  {id:'dog',label:'Dog guard',file:'dog-guard-10k-data.json',create:createDogWorker,paint:DOG_PAINT,frame:DOG_PAINT_FRAME,eye:[.04,1.47,.075]},
  {id:'hen',label:'Hen worker',create:createHen,paint:HEN_PAINT,frame:HEN_FRAME,unarmed:true}
 ].map(p=>({file:p.id+'-10k-data.json',frame:PAINT_FRAME,...p,...({
- horse:{kneelDrop:.3706,headPitch:-.8562,headYaw:27.734,headPitchSlope:1.459},
+ horse:{kneelDrop:.3706,headPitch:-.8562,headYaw:27.734,headPitchSlope:1.459,proneAim:{stock:[.025,.03,.065],torsoFollow:.9,tuckHem:true}},
  goat:{kneelDrop:.3706,headPitch:-.8719,headYaw:23.469,headPitchSlope:1.453},
  bull:{kneelDrop:.3706,headPitch:-.7797,headYaw:35.172,headPitchSlope:1.606},
  cow:{kneelDrop:.3706,headPitch:-.7781,headYaw:30.141,headPitchSlope:1.556},
