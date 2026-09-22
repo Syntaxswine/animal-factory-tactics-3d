@@ -14,6 +14,11 @@ for(const kind of ['botanical-chamber','medicine-cabinet'])PROPS[kind]={w:1,h:1,
 PROPS['iv-stand']={w:1,h:1,cover:0,solid:true,visualHeight:60};
 // Trees occupy one trunk tile; their canopies overhang neighboring tiles.
 for(const kind of ['tree-broadleaf','tree-pine'])PROPS[kind]={w:1,h:1,cover:25,solid:true,tall:true,visualWidth:100,visualHeight:130};
+export const TREE_VARIANTS={
+ 'tree-broadleaf-large':{base:'tree-broadleaf',scale:1.8},
+ 'tree-pine-large':{base:'tree-pine',scale:1.8}
+};
+for(const [kind,{base,scale}]of Object.entries(TREE_VARIANTS))PROPS[kind]={...PROPS[base],visualWidth:100*scale,visualHeight:130*scale};
 PROPS.bush={w:1,h:1,cover:25,solid:false,visualHeight:32};
 PROPS.reeds={w:1,h:1,cover:0,solid:false,visualHeight:48};
 // Whole walkable roof modules, drawn underneath actors on an existing supported level.

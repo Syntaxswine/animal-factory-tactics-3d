@@ -1,6 +1,9 @@
+import {TREE_VARIANTS} from './environment.js';
 // Low-poly catalog silhouettes, expressed in the same boxes used by world queries.
 // Local coordinates are measured from the prop footprint center, at floor height.
 export function propParts(kind,w,d,height){
+ const variant=TREE_VARIANTS[kind];
+ if(variant)return propParts(variant.base,w,d,height).map(p=>({...p,center:p.center.map(v=>v*variant.scale),size:p.size.map(v=>v*variant.scale)}));
  const parts=[],add=(name,material,x,y,z,a,b,c,solid=true)=>parts.push({name,material,center:[x,y,z],size:[a,b,c],solid});
  const legs=()=>{for(const x of [-w*.35,w*.35])for(const z of [-d*.35,d*.35])add(`leg:${x}:${z}`,'metal',x,height*.45,z,.09,height*.9,.09);};
  if(kind.startsWith('tree-')){

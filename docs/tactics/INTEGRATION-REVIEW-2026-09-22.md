@@ -4,6 +4,10 @@ Approved `b17828d` for the separate 3D canonical project: group selection, stand
 
 ## Deferred: mature trees (`2d0cb7a`)
 
+Builder follow-up: [shared catalog fix and 3D workflow evidence](MATURE-TREE-INTEGRATION.md)
+is ready on `work/mature-tree-3d`, with a 9/10 hostile review. The original finding
+below is retained as the review history; canonical merge/publication is pending.
+
 The two new prop names are registered in `dist/tactics/environment.js`, but not the pinned `dist/tactics/core/environment.js` used by the 3D editor and map loader. Both `tree-broadleaf-large` and `tree-pine-large` reproduce `Invalid environment props.` through the current core `parseMap`. The supplied editor test targets `editor.html`, not `editor-3d.html`. Register the variants in the shared source, reconcile with the movement source revision, regenerate the core dependency, and test 3D editor placement, export/import and actual playtest handoff. Do not patch generated core files independently.
 
 ## Deferred: finished environment (`bfc677e`)

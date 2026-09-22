@@ -374,5 +374,23 @@ export const PROP_ART = {
       530
     ],
     "height": 44
+  },
+  "tree-broadleaf-large": {
+    "file": "foliage/tree-broadleaf.png",
+    "crop": [
+      93,
+      62,
+      1176,
+      1194
+    ]
+  },
+  "tree-pine-large": {
+    "file": "foliage/tree-pine.png",
+    "crop": [
+      292,
+      16,
+      1019,
+      1205
+    ]
   }
 };

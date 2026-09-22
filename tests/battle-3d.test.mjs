@@ -8,7 +8,7 @@ import {terrainKnown,personVisible} from '../dist/tactics/battle-visibility.js';
 
 test('3D simulation dependency matches every pinned upstream module',()=>{
  const root=new URL('../dist/tactics/core/',import.meta.url),manifest=JSON.parse(fs.readFileSync(new URL('manifest.json',root)));
- assert.equal(manifest.revision,'ee61884c80d50def96096d6a08488aa5d631bd67');
+ assert.equal(manifest.revision,'e529f4b3d512d32cea522d701d01ebe8488af013');
  for(const [file,hash]of Object.entries(manifest.files))assert.equal(createHash('sha256').update(fs.readFileSync(new URL(file,root))).digest('hex'),hash,file);
 });
 test('Easy reveals distant scenery without revealing people or changing perception',()=>{

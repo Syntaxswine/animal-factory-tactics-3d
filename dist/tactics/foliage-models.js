@@ -1,6 +1,9 @@
+import {TREE_VARIANTS} from './environment.js';
 // Presentation geometry only: the existing tree footprints and collision boxes
 // remain the authority for movement, line of sight and cover.
 export function foliageModel(kind){
+ const variant=TREE_VARIANTS[kind];
+ if(variant)return foliageModel(variant.base).map(p=>({...p,center:p.center.map(v=>v*variant.scale),size:p.size.map(v=>v*variant.scale)}));
  const parts=[],add=(shape,material,center,size,rotation=[0,0,0])=>parts.push({shape,material,center,size,rotation});
  const branch=(a,b,width,shape='taper')=>{const v=b.map((n,i)=>n-a[i]);add(shape,'bark',a.map((n,i)=>(n+b[i])/2),[width,Math.hypot(...v),width],[Math.atan2(v[2],v[1]),0,-Math.atan2(v[0],Math.hypot(v[1],v[2]))]);};
  branch([0,.02,0],[-.035,.86,.018],.245);branch([-.035,.75,.018],[.055,1.62,-.02],.15);

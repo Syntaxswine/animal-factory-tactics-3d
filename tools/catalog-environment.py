@@ -15,6 +15,8 @@ for name in ['tree-broadleaf', 'tree-pine', 'bush', 'reeds']:
     alpha = Image.open(path).convert('RGBA').getchannel('A')
     art[name] = {'file': f'foliage/{path.name}', 'crop': alpha.point(lambda a: 255 if a >= 64 else 0).getbbox()}
 path = assets / 'fence-chainlink-cut.png'
+for name in ['tree-broadleaf', 'tree-pine']:
+    art[name + '-large'] = dict(art[name])
 for name in ['roof-corrugated-flat', 'roof-corrugated-sloped', 'roof-flat-parapet']:
     roof = assets / (name + '.png')
     alpha = Image.open(roof).convert('RGBA').getchannel('A')
