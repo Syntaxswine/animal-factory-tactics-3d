@@ -1,8 +1,11 @@
 import * as THREE from './vendor/three.module.js';
+import {buildStairGuardTower} from './stair-guard-tower.js';
 import {buildWoodenGuardTower} from './wooden-guard-tower.js';
 import {softBox} from './painted-environment-scene.js';
 
 export const FURNITURE_FORMS=[
+ {id:'wood-stair-tower',name:'Timber stair guard tower',tiles:[6,5],note:'Three-story 3×3 guardhouse tower with exterior switchback stairs. 6×5 overall clearance.'},
+ {id:'iron-stair-tower',name:'Iron stair guard tower',tiles:[6,5],note:'Riveted iron guardhouse and exterior stairs. 3×3 house; 6×5 overall clearance.'},
  {id:'wooden-guard-tower',name:'Wooden guard tower',tiles:[5,5],note:'3×3 braced supports · three stories · 5×5 railed deck with a ladder opening.'},
  {id:'cooking-fire',name:'Hanging cooking pot',tiles:[2,2],light:true,fire:true,note:'A suspended iron cooking pot over a stone-ring campfire, on a 2×2 footprint.'},
  {id:'campfire',name:'Stone-ring campfire',tiles:[1,1],light:true,fire:true,note:'Charred crossed logs, ash and warm sculpted flames inside a stone ring.'},
@@ -62,7 +65,8 @@ export function createFurnitureLibrary(atlas,cargo){
   if(disposed)throw Error('Furniture library disposed');
   const form=FURNITURE_FORMS.find(f=>f.id===id);if(!form||!Object.hasOwn(FURNITURE_FINISHES,skin))throw Error('Invalid furniture form/finish');
   const root=new THREE.Group();root.name=id;const timber=wood(skin),warm=wood(skin,1);
-  if(id==='wooden-guard-tower'){buildWoodenGuardTower(root,{box,wood,iron,skin});
+  if(id==='wood-stair-tower'||id==='iron-stair-tower'){buildStairGuardTower(root,{box,wood,iron,material,skin,metal:id==='iron-stair-tower'});
+  }else if(id==='wooden-guard-tower'){buildWoodenGuardTower(root,{box,wood,iron,skin});
   }else if(id==='cooking-fire'){
    const hearth=build('campfire',skin,{burning}).root;root.add(hearth);
    // Three planted legs form a triangular pyramid around the hearth.
