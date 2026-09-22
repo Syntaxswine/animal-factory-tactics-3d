@@ -1,4 +1,4 @@
-import {lightSources,lightBrightness} from './light-sources.js';
+import {lightSources,lightBrightness,lightConeFactor} from './light-sources.js';
 import {woodlandDepth} from './core/woodland.js';
 import {daylightAt} from './daylight.js';
 import {traceProjectile,targetHeight} from './core/projectiles.js';
@@ -14,7 +14,7 @@ export function illuminationAt(s,u,zone='torso'){
  // Ambient visibility is deliberately separate from renderer exposure settings.
  let brightness=.12+.13*sun.strength+.75*sun.strength*(sun.strength>0&&clearRay(s,origin,direction,80)?1:0);
  for(const lamp of lightSources(s.props,s.clock?.minutes??mapStartMinutes(s.definition))){
-  const ray={x:lamp.x-origin.x,y:lamp.y-origin.y,h:lamp.h-origin.h},distance=Math.hypot(ray.x,ray.y,ray.h),strength=lightBrightness(distance);
+  const ray={x:lamp.x-origin.x,y:lamp.y-origin.y,h:lamp.h-origin.h},distance=Math.hypot(ray.x,ray.y,ray.h),strength=lightBrightness(distance)*lightConeFactor(lamp,origin);
   // Exclude the emitter's own coarse collision footprint, not intervening geometry.
   if(strength&&(distance<1e-6||clearRay({...s,props:s.props.filter(p=>p!==lamp.prop)},origin,ray,distance)))brightness+=strength;
  }

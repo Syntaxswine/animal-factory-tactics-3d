@@ -1,6 +1,7 @@
 import {MINUTES_PER_DAY,DAY_START,DUSK_START} from './game-clock.js';
 // Shared authored bulb positions in tile units: X, height, map Y.
 export const LIGHT_FORMS={
+ 'spotlight':{w:1,h:1,spot:true,emitters:[[0,2.6,0]]},
  'campfire':{w:1,h:1,fire:true,emitters:[[0,.32,0]]},
  'cooking-fire':{w:2,h:2,fire:true,emitters:[[0,.32,0]]},
  'standing-torch':{w:1,h:1,fire:true,emitters:[[0,1.36,0]]},
@@ -19,4 +20,19 @@ export function fixturePlacement(p){const f=LIGHT_FORMS[p.kind],w=p.rotated?f.h:
 export function placedEmitters(p,floorHeight=3){const f=LIGHT_FORMS[p.kind];if(!f)return [];const center=fixturePlacement(p);
  return f.emitters.map(([x,h,y],index)=>({x:center.x+(p.rotated?-y:x),y:center.y+(p.rotated?x:y),h:center.z*floorHeight+h,prop:p,index,color:f.fire?0xffae55:0xffe5b2}));
 }
-export function lightSources(props,minutes){return (props||[]).filter(p=>lightEnabled(p,minutes)).flatMap(p=>placedEmitters(p));}
+// Relative map offsets survive block capture/placement. Z is a relative floor.
+export const SPOT_ANGLE=Math.PI/6,SPOT_PENUMBRA=.2,SPOT_LEG_SECONDS=60;
+export function spotlightTarget(prop,minutes,floorHeight=3){
+ const points=(Array.isArray(prop.lightTargets)?prop.lightTargets:[]).filter(p=>p&&[p.x,p.y,p.z??0].every(Number.isFinite)).slice(0,3);
+ if(!points.length)points.push({x:0,y:8,z:0});
+ const phase=Math.max(0,minutes)*60/SPOT_LEG_SECONDS,index=Math.floor(phase)%points.length,t=phase-Math.floor(phase),a=points[index],b=points[(index+1)%points.length];
+ return {x:prop.x+a.x+(b.x-a.x)*t,y:prop.y+a.y+(b.y-a.y)*t,h:((prop.z||0)+(a.z||0)+((b.z||0)-(a.z||0))*t)*floorHeight+.1};
+}
+export function lightConeFactor(source,target){
+ if(!source.aim)return 1;
+ const a=source.aim,d=[a.x-source.x,a.y-source.y,a.h-source.h],r=[target.x-source.x,target.y-source.y,target.h-source.h],length=Math.hypot(...d)*Math.hypot(...r);
+ if(length<1e-9)return 1;
+ const cosine=d.reduce((v,n,i)=>v+n*r[i],0)/length,outer=Math.cos(SPOT_ANGLE),inner=Math.cos(SPOT_ANGLE*(1-SPOT_PENUMBRA));
+ const t=Math.max(0,Math.min(1,(cosine-outer)/(inner-outer)));return t*t*(3-2*t);
+}
+export function lightSources(props,minutes){return (props||[]).filter(p=>lightEnabled(p,minutes)).flatMap(p=>placedEmitters(p).map(s=>LIGHT_FORMS[p.kind].spot?{...s,aim:spotlightTarget(p,minutes)}:s));}

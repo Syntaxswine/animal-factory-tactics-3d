@@ -21,3 +21,11 @@ Fires use self-lit painted flames and the model's existing animation loop. Pausi
 ## Validation
 
 `tests/light-sources.test.mjs` verifies band boundaries, emitter/model alignment, schedules, editor persistence, overlap, walls and floors. `tools/lighting-review.mjs` checks the editor, night playtest, day schedule and all nine models together. Pinned core environment additions are recorded and reproduced by the existing core adapter.
+
+## Sweeping spotlights
+
+Place the one-tile `spotlight` prop, use Select / pan to select it, then click **Pick spotlight aim points**. Click one to three tiles in order. **Save aim points** finishes after one or two picks; the third pick saves automatically. Escape cancels without changing the stored route. One point is stationary; two or three interpolate continuously in a repeating loop (including the final point back to the first), taking one game minute per leg. Until configured, the lamp aims eight tiles south.
+
+The motorized head follows a 60-degree beam with a soft outer edge. The cone gates both rendered illumination and detection, retaining the same five-tile falloff bands, schedules, range and occlusion rules as other lamps. The battle sweep samples the shared clock: pausing freezes it, and a completed combat round advances it by one minute. The editor previews movement at exploration speed; reduced-motion previews hold a clock-sampled pose. Aim points are relative map offsets, so saving, block capture/placement and undo preserve them. Rotating the fixture base preserves the chosen world aim points.
+
+`tools/spotlight-review.mjs` checks point picking, cancellation, sweeping, and mixed spot/point-light shadow batches in a real browser. Unit tests cover the cycle, cone, occlusion, and persistence.

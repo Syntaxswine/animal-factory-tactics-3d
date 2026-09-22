@@ -14,12 +14,12 @@ test('furniture fits declared footprints, has finite geometry and contacts its m
  }
  library.dispose();
 });
-test('fixtures have downward passive emitter anchors and no active lighting',()=>{
+test('fixtures have correctly directed passive emitter anchors and no active lighting',()=>{
  const library=createFurnitureLibrary(atlas,atlas);
  for(const f of FURNITURE_FORMS){const {root}=library.build(f.id);const emitters=[];
   root.traverse(o=>{assert(!o.isLight);if(o.material)assert.equal(o.material.emissive.getHex(),0);if(o.userData.role==='future-light')emitters.push(o);});
   assert.equal(emitters.length,f.light?(f.id==='streetlight-double'?2:1):0);
-  for(const a of emitters){assert.equal(a.userData.enabled,false);assert(new THREE.Vector3(0,0,-1).applyQuaternion(a.quaternion).y<-.999);}
+  for(const a of emitters){assert.equal(a.userData.enabled,false);const direction=new THREE.Vector3(0,0,-1).applyQuaternion(a.quaternion);assert(f.id==='spotlight'?direction.z>.999:direction.y<-.999);}
   if(f.light)assert(root.getObjectByName('mount'));
  }
  library.dispose();

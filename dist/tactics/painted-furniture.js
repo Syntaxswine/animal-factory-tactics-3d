@@ -2,6 +2,7 @@ import * as THREE from './vendor/three.module.js';
 import {softBox} from './painted-environment-scene.js';
 
 export const FURNITURE_FORMS=[
+ {id:'spotlight',name:'Sweeping spotlight',tiles:[1,1],light:true,note:'Industrial searchlight on a swivel post; one to three authored aim points.'},
  {id:'cooking-fire',name:'Hanging cooking pot',tiles:[2,2],light:true,fire:true,note:'A suspended iron cooking pot over a stone-ring campfire, on a 2×2 footprint.'},
  {id:'campfire',name:'Stone-ring campfire',tiles:[1,1],light:true,fire:true,note:'Charred crossed logs, ash and warm sculpted flames inside a stone ring.'},
  {id:'standing-torch',name:'Standing torch',tiles:[1,1],light:true,fire:true,note:'Timber torch in an iron tripod, with a bound fuel head.'},
@@ -164,6 +165,15 @@ export function createFurnitureLibrary(atlas,cargo){
    tube(root,green,[[0,1.73,.01],[0,1.79,.10],[0,1.99,.18],[0,2.04,.38],[0,1.93,.55],[0,1.80,.55]],.022);
    shade(root,0,1.67,.55,.23);for(const y of [1.65,1.79])box(root,brass,[0,y,.027],[.019,.019,.006]);
    anchor(root,'emitter-0',[0,1.62,.55],[0,-1,0]);anchor(root,'mount',[0,1.72,0],[0,0,-1]);
+  }else if(id==='spotlight'){
+   cyl(root,iron,[0,.07,0],.28,.32,.14);cyl(root,iron,[0,1.27,0],.045,.075,2.4);
+   const head=new THREE.Group();head.name='spot-head';head.position.set(0,2.6,0);root.add(head);
+   // Local +Z points through the open searchlight face; housing sits behind emitter.
+   cyl(head,green,[0,0,-.19],.27,.23,.32).rotation.x=Math.PI/2;
+   cyl(head,bulb,[0,0,-.02],.23,.23,.015).rotation.x=Math.PI/2;
+   mesh(head,geo('spot-rim',()=>new THREE.TorusGeometry(.255,.025,8,32)),brass,[0,0,0]);
+   for(const x of [-.32,.32])box(head,iron,[x,-.12,-.15],[.055,.38,.07]);
+   anchor(root,'emitter-0',[0,2.6,0],[0,0,1]);anchor(root,'mount',[0,0,0]);
   }else if(id.startsWith('streetlight')){
    cyl(root,iron,[0,.055,0],.19,.22,.11);cyl(root,iron,[0,.28,0],.095,.15,.40);cyl(root,iron,[0,1.66,0],.038,.068,2.40);
    for(let i=0;i<8;i++){const a=i*Math.PI/4;cyl(root,iron,[Math.sin(a)*.11,.27,Math.cos(a)*.11],.01,.013,.28);}

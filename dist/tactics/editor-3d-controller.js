@@ -49,9 +49,15 @@ export class EditingDocument extends InspectionDocument {
   if(selection?.type!=='prop')return {ok:false,error:'Select a prop to rotate.'};
   const p=selection.data,candidate=createEditor(this.editor.map);applyBrush(candidate,'erase-prop',p.x,p.y,'',{level:p.z||0});
   const error=applyBrush(candidate,'prop',p.x,p.y,'',{level:p.z||0,propKind:p.kind,rotated:!p.rotated});
-  if(error)return {ok:false,error};if(p.lightMode)candidate.map.props.at(-1).lightMode=p.lightMode;const errors=validateMap(candidate.map,{connectivity:false});if(errors.length)return {ok:false,error:errors[0]};
+  if(error)return {ok:false,error};if(p.lightMode)candidate.map.props.at(-1).lightMode=p.lightMode;if(p.lightTargets)candidate.map.props.at(-1).lightTargets=structuredClone(p.lightTargets);const errors=validateMap(candidate.map,{connectivity:false});if(errors.length)return {ok:false,error:errors[0]};
   if(this.block){try{validateBlock(extractBlock(candidate.map));}catch(e){return {ok:false,error:e.message};}}
   replaceMap(this.editor,candidate.map);this.refresh();return {ok:true};
+ }
+ lightTargets(selection,points){
+  if(selection?.type!=='prop'||!LIGHT_FORMS[selection.data.kind]?.spot)throw Error('Select a spotlight first.');
+  if(!Array.isArray(points)||points.length<1||points.length>3||points.some(p=>!p||![p.x,p.y,p.z??0].every(Number.isInteger)||p.x<0||p.y<0||p.x>=this.size||p.y>=this.size||p.z<0||p.z>2))throw Error('Choose one to three map tiles.');
+  const p=selection.data,targets=points.map(q=>({x:q.x-p.x,y:q.y-p.y,z:(q.z||0)-(p.z||0)}));
+  this.replace({...this.editor.map,props:this.editor.map.props.map(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(p.z||0)&&q.kind===p.kind?{...q,lightTargets:targets}:q)});
  }
  lightMode(selection,mode){if(selection?.type!=='prop'||!LIGHT_FORMS[selection.data.kind])throw Error('Select a lamp or fire first.');if(!['auto','on','off'].includes(mode))throw Error('Choose a light schedule.');const p=selection.data;this.replace({...this.editor.map,props:this.editor.map.props.map(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(p.z||0)&&q.kind===p.kind?{...q,lightMode:mode}:q)});}
  startTime(minutes){if(this.block)throw Error("Start time belongs to a full map.");const time={...this.map.time,startMinutes:minutes};mapStartMinutes({time});this.replace({...this.editor.map,time});}
