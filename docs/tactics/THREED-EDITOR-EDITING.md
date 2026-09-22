@@ -1,6 +1,6 @@
 # 3D editor: useful editing slice
 
-`tactics/editor-3d.html` now edits full version 2 maps through the original renderer-independent `core/editor-model.js` at the encounter's pinned upstream revision `6e2782a`. Generated core modules are unchanged. Reusable blocks remain inspectable/exportable; their assembly and generation still use the existing editor.
+`tactics/editor-3d.html` now edits full version 2 maps through the original renderer-independent `core/editor-model.js` at the encounter's pinned upstream revision `6e2782a`. Generated core modules are unchanged. Reusable version 1 blocks now use the same editable controller, with a full canonical backing map and a cropped 24 by 24 design view.
 
 ## Workflow
 
@@ -22,4 +22,17 @@ Pointer movement updates the placement overlay only, at most once per animation 
 
 `tests/editor-3d-editing.test.mjs` compares edit results directly with the sprite editor, checks atomic previews/rejection, single-stroke undo, and rejects wrong-window/origin/token playtest messages. `tools/editor-3d-editing-review.mjs` builds a room through the UI, places a guard and a prop, checks invalid placement, rotation and undo/redo, saves/reloads it, and launches that exact snapshot. It also mutates a test combatant and verifies the editor's blueprint, camera and history are unchanged. Use `PLAYWRIGHT_PATH` and `REVIEW_URL` as with the inspector review; artifacts go under ignored `artifacts/battle-3d/editing/`.
 
-This tranche does not implement game-progress Save/Load, full block-library/generator parity, arbitrary object dragging, or the story campaign. The campaign requires five maps plus dialogue and object-interaction systems; the user explicitly deferred that work.
+This tranche does not implement game-progress Save/Load, arbitrary object dragging, or the story campaign. The campaign requires five maps plus dialogue and object-interaction systems; the user explicitly deferred that work.
+
+
+## Blocks, generation, and faction outfits
+
+The Blocks & generation panel switches between full-map and block workspaces, retaining each document and its undo history. New block opens an empty 24 by 24 design. Block editing rejects footprints that cross its boundary and disables squad/travel placement. Save and Save copy use the same named library as maps, labelled by design type. JSON remains compatible with the existing editor; existing browser libraries require explicit JSON transfer, not automatic migration. Named records provide draft storage rather than adding another separate localStorage draft slot.
+
+Save sector as block captures the current sector coordinates on all three floors. Place selected block replaces that sector with the selected library block in one undo step, using the canonical seam and structure validation. Connection controls assign north/east/south/west types after validating actual geometry. They do not paint connections. Save a block after assigning them to include it in connected generation.
+
+Generation supports the existing factory and two river orientations, numeric seeds, and 100-sector assembly from connected library blocks. Feature planning specifies each of ten rows and columns, with seeded road/fence and clear actions. Apply feature plan commits the controls before generation. Missing compatible blocks, invalid seeds and failed layouts leave the map untouched. The generator algorithm is copied from the existing editor with imports redirected to the pinned core rules; a test compares its output with the original. Successful generation is one undo operation.
+
+Editor and battle rendering pass each guard's outfit to the existing species paint layers and attach fitted Red Hats caps to the head. The pig foreman retains its authored uniform/cap. Accessories inherit actor visibility and head motion, are dimmed on lower editor floors, and are disposed with replaced models. Faction rendering does not change detection rules. Armed hen poses remain unavailable.
+
+`tools/editor-3d-library-review.mjs` exercises block saves/reload, workspace retention, capture/place/undo, connections, successful and rejected generation, visible faction paint/caps in an ordinary LOS playtest, and stable graphics resource counts after repeated outfit changes. Artifacts are under `artifacts/battle-3d/library/`.

@@ -4,6 +4,31 @@ import {EditingDocument} from '../dist/tactics/editor-3d-controller.js';
 import {blankMap,parseMap} from '../dist/tactics/core/maps.js';
 import {createEditor,applyBrush} from '../dist/tactics/core/editor-model.js';
 import {receivePlaytest} from '../dist/tactics/editor-playtest.js';
+import {blockCanvas,extractBlock,validateBlock,placeBlock} from '../dist/tactics/core/blocks.js';
+import {generateConnectedMap} from '../dist/tactics/editor-3d-generator.js';
+import {generateConnectedMap as originalGenerator} from '../dist/tactics/block-generator.js';
+import {emptyFeaturePlan} from '../dist/tactics/core/feature-plan.js';
+
+test('editable blocks preserve their portable format and reject cross-boundary edits atomically',()=>{
+ const raw={...extractBlock(blockCanvas('Reusable')),authorNote:'Keep this'},d=new EditingDocument().open(JSON.stringify(raw));
+ const initial=d.export();assert.equal(d.apply({tool:'prop',start:{x:23,y:8,z:0},options:{propKind:'workbench-metal'}}).ok,false);assert.equal(d.export(),initial);
+ assert.equal(d.apply({tool:'squad',start:{x:3,y:3,z:0},options:{slot:0}}).ok,false);
+ assert.ok(d.apply({tool:'room',start:{x:4,y:4,z:0},options:{width:6,height:5}}).ok);
+ assert.ok(d.apply({tool:'guard',start:{x:6,y:6,z:0},options:{species:'goat',weapon:'rifle',outfit:'red-hats'}}).ok);
+ const portable=validateBlock(JSON.parse(d.export()));assert.equal(portable.guards[0].outfit,'red-hats');assert.equal(portable.authorNote,'Keep this');assert.equal(portable.terrain.length,24);assert.equal(d.map.starts.length,0);
+ assert.ok(d.undo());assert.equal(d.map.guards.length,0);assert.ok(d.redo());assert.equal(d.export(),JSON.stringify(portable,null,2));
+ const map=new EditingDocument().open(JSON.stringify(blankMap('Assembly'))),before=map.export();
+ map.place(portable,2,3);assert.deepEqual(map.map,placeBlock(JSON.parse(before),portable,2,3));assert.equal(map.map.guards[0].x,54);assert.equal(map.capture(2,3).guards[0].outfit,'red-hats');map.undo();assert.equal(map.export(),before);
+});
+
+test('connections and connected generation match the existing generator and retain undo',()=>{
+ const d=new EditingDocument().open(JSON.stringify(extractBlock(blockCanvas('Empty')))),types={north:'none',east:'none',south:'none',west:'none'};
+ d.connections(types);const block=JSON.parse(d.export());assert.deepEqual(block.connections,types);d.undo();assert.equal(JSON.parse(d.export()).connections,undefined);d.redo();
+ const before=d.export();assert.throws(()=>d.connections({...types,north:'road'}));assert.equal(d.export(),before);
+ const plan=emptyFeaturePlan(),generated=generateConnectedMap([block],7,plan);assert.deepEqual(generated,originalGenerator([block],7,plan));assert.equal(Object.keys(generated.blockConnections).length,100);assert.ok(parseMap(JSON.stringify(generated)));
+ const map=new EditingDocument().open(JSON.stringify(blankMap('Original'))),original=map.export();map.replace(generated);assert.equal(map.editor.undo.length,1);map.undo();assert.equal(map.export(),original);
+ assert.throws(()=>generateConnectedMap([],7));assert.throws(()=>generateConnectedMap([block],-1));plan.rows[2]='road';assert.throws(()=>generateConnectedMap([block],7,plan),/Missing blocks/);
+});
 test('3D edit commands match existing editor operations; previews and rejection never mutate',()=>{
  const raw=blankMap('Tutorial'),d=new EditingDocument().open(JSON.stringify(raw)),core=createEditor(raw);
  const room={tool:'room',start:{x:6,y:6,z:0},options:{width:6,height:5}};

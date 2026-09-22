@@ -2,6 +2,7 @@ import * as T from './vendor/three.module.js';
 import {HybridRenderer} from './hybrid-renderer.js';
 import {toWorld} from './hybrid-world.js';
 import {ANIMAL_MOTION_CATALOG} from './animal-motion-catalog.js';
+import {createRedHatCap} from './red-hat-model.js';
 import {createAnimalPaint} from './animal-motion-paint.js';
 import {createWeaponModel} from './weapon-models.js';
 import {personVisible} from './battle-visibility.js';
@@ -29,18 +30,19 @@ export class BattleRenderer extends HybridRenderer {
  async loadModel(unit){
   this.pending.add(unit.id);const generation=this.generation;
   const profile=ANIMAL_MOTION_CATALOG.find(p=>p.id===unit.species);
-  let worker,paint;
+  let worker,paint,cap;
   try{
    if(!profile)throw Error('Missing character model: '+unit.species);
    if(!this.meshData.has(profile.file))this.meshData.set(profile.file,fetch(new URL(profile.file,import.meta.url)).then(r=>{if(!r.ok)throw Error('Cannot load '+profile.file);return r.json();}));
    worker=profile.create(await this.meshData.get(profile.file));
-   paint=await createAnimalPaint(this.renderer,worker,profile,this.loader);
-   if(generation!==this.generation){paint.dispose();worker.dispose();return;}
+   paint=await createAnimalPaint(this.renderer,worker,profile,this.loader,unit.outfit);
+   if(unit.outfit==='red-hats')cap=await createRedHatCap(this.renderer,worker,profile,this.loader);
+   if(generation!==this.generation){cap?.dispose();paint.dispose();worker.dispose();return;}
    for(const part of worker.parts)part.material=paint.material;
    const root=new T.Group();root.add(worker.root);
    const locomotion=createWorkerLocomotion(worker,profile);
-   this.models.set(unit.id,{worker,paint,root,profile,locomotion});this.actors.set(unit.id,root);this.scene.add(root);
-  }catch(error){paint?.dispose();worker?.dispose();this.diagnostics.push(error.message);}
+   this.models.set(unit.id,{worker,paint,root,profile,locomotion,cap});this.actors.set(unit.id,root);this.scene.add(root);
+  }catch(error){cap?.dispose();paint?.dispose();worker?.dispose();this.diagnostics.push(error.message);}
   finally{if(generation===this.generation)this.onReady();}
  }
  actor(unit){
@@ -102,7 +104,7 @@ export class BattleRenderer extends HybridRenderer {
   this.paintedEnvironment.dispose();
   this.motion.clear();
   this.combat.clear();this.shotEffects.dispose();
-  for(const {worker,paint,root,equipment,locomotion}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);locomotion.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
+  for(const {worker,paint,root,equipment,locomotion,cap}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();
  }
 }

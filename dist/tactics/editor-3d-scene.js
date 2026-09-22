@@ -5,6 +5,7 @@ import {environmentGeometries} from './environment-geometry.js';
 import {surfacePixels,materialKind} from './hybrid-materials.js';
 import {BattleEnvironment,PAINTED_PROP_FORMS,cargoPlacements} from './battle-environment.js';
 import {ANIMAL_MOTION_CATALOG} from './animal-motion-catalog.js';
+import {createRedHatCap} from './red-hat-model.js';
 import {createAnimalPaint} from './animal-motion-paint.js';
 import {createWeaponModel} from './weapon-models.js';
 import {setInspectionCamera,floorPoint} from './editor-3d-camera.js';
@@ -42,23 +43,24 @@ export class InspectionScene {
  }
  async loadUnit(unit,generation){
   const profile=ANIMAL_MOTION_CATALOG.find(p=>p.id===unit.species);if(!profile){this.diagnostics.push('Missing character: '+unit.species);return;}
-  let worker,paint,equipment;
+  let worker,paint,equipment,cap;
   try{
    if(!this.data.has(profile.file))this.data.set(profile.file,fetch(new URL(profile.file,import.meta.url)).then(r=>{if(!r.ok)throw Error('Missing '+profile.file);return r.json();}));
-   worker=profile.create(await this.data.get(profile.file));paint=await createAnimalPaint(this.renderer,worker,profile,this.loader);
-   if(generation!==this.generation){paint.dispose();worker.skeleton.dispose();worker.dispose();return;}
+   worker=profile.create(await this.data.get(profile.file));paint=await createAnimalPaint(this.renderer,worker,profile,this.loader,unit.outfit);
+   if(unit.outfit==='red-hats')cap=await createRedHatCap(this.renderer,worker,profile,this.loader);
+   if(generation!==this.generation){cap?.dispose();paint.dispose();worker.skeleton.dispose();worker.dispose();return;}
    for(const part of worker.parts)part.material=paint.material;
    if(!profile.unarmed){equipment=createWeaponModel(unit.weapon);worker.equipWeapon(equipment);}
    worker.pose(profile.unarmed?'neutral':'carry',-(unit.heading||0));paint.setGripForearm?.(!!equipment?.carry?.handPoses?.support?.gripMesh);
    const root=new T.Group();root.add(worker.root);root.position.set(unit.x,(unit.z||0)*D.floorSpacing,unit.y);root.updateMatrixWorld(true);worker.skeleton.update();for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}
-   this.scene.add(root);const model={root,worker,paint,equipment,unit};this.models.push(model);this.showModel(model);this.changed();
-  }catch(error){equipment?.dispose();paint?.dispose();worker?.skeleton.dispose();worker?.dispose();if(generation===this.generation){this.diagnostics.push(unit.role+': '+error.message);this.changed();}}
+   this.scene.add(root);const model={root,worker,paint,equipment,cap,capMaterial:cap?.mesh.material,unit};this.models.push(model);this.showModel(model);this.changed();
+  }catch(error){cap?.dispose();equipment?.dispose();paint?.dispose();worker?.skeleton.dispose();worker?.dispose();if(generation===this.generation){this.diagnostics.push(unit.role+': '+error.message);this.changed();}}
  }
- showModel(model){const z=model.unit.z||0;model.root.visible=z<=this.options.level;for(const part of model.worker.parts)part.material=this.dim(model.paint.material,z);}
+ showModel(model){const z=model.unit.z||0;model.root.visible=z<=this.options.level;for(const part of model.worker.parts)part.material=this.dim(model.paint.material,z);if(model.cap)model.cap.mesh.material=this.dim(model.capMaterial,z);}
  async update(document){
   this.document=document;this.world=buildWorld(document.map);
   const wanted=new Map(document.units.map(u=>[u.id,u]));
-  this.models=this.models.filter(m=>{const next=wanted.get(m.unit.id);if(next&&JSON.stringify(next)===JSON.stringify(m.unit)){wanted.delete(m.unit.id);return true;}m.root.removeFromParent();m.equipment?.dispose();const dim=this.dimMaterials.get(m.paint.material);dim?.dispose();this.dimMaterials.delete(m.paint.material);m.paint.dispose();m.worker.skeleton.dispose();m.worker.dispose();return false;});
+  this.models=this.models.filter(m=>{const next=wanted.get(m.unit.id);if(next&&JSON.stringify(next)===JSON.stringify(m.unit)){wanted.delete(m.unit.id);return true;}m.root.removeFromParent();this.dimMaterials.get(m.capMaterial)?.dispose();this.dimMaterials.delete(m.capMaterial);m.cap?.dispose();m.equipment?.dispose();const dim=this.dimMaterials.get(m.paint.material);dim?.dispose();this.dimMaterials.delete(m.paint.material);m.paint.dispose();m.worker.skeleton.dispose();m.worker.dispose();return false;});
   this.rebuild();for(const unit of wanted.values())await this.loadUnit(unit,this.generation);this.changed();
  }
  rebuild(){
@@ -106,6 +108,6 @@ export class InspectionScene {
   this.highlight.material.color.setHex(result.ok?0xffe5a5:0xff6655);this.select(result.edges?.length?{type:'edge',edges:result.edges}:{cells});
  }
  clearMarkers(){for(const object of this.markers.children)if(object.isArrowHelper||object.type==='ArrowHelper'){object.line.material.dispose();object.cone.material.dispose();}this.markers.clear();}
- clearModels(){for(const m of this.models){m.root.removeFromParent();m.root.position.set(0,0,0);m.root.updateMatrixWorld(true);m.equipment?.dispose();m.paint.dispose();m.worker.skeleton.dispose();m.worker.dispose();}this.models=[];for(const m of this.dimMaterials.values())m.dispose();this.dimMaterials.clear();}
+ clearModels(){for(const m of this.models){m.root.removeFromParent();m.root.position.set(0,0,0);m.root.updateMatrixWorld(true);m.cap?.dispose();m.equipment?.dispose();m.paint.dispose();m.worker.skeleton.dispose();m.worker.dispose();}this.models=[];for(const m of this.dimMaterials.values())m.dispose();this.dimMaterials.clear();}
  dispose(){this.preview(null);this.generation++;this.clearModels();this.clearScenery();this.clearMarkers();this.cargo.dispose();for(const g of Object.values(this.geometry))g.dispose();for(const m of this.materials.values()){m.map.dispose();m.dispose();}this.highlight.geometry.dispose();this.highlight.material.dispose();this.markerGeo.dispose();this.guardMat.dispose();this.startMat.dispose();this.accessMat.dispose();this.renderer.dispose();}
 }

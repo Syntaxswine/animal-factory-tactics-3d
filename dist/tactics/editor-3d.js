@@ -1,9 +1,12 @@
+import {blockCanvas,extractBlock} from './core/blocks.js';
+import {blankMap} from './core/maps.js';
 import {PREVIEW_FOOTPRINTS} from './editor-3d-model.js';
 import {EditingDocument} from './editor-3d-controller.js';
 import {installEditing} from './editor-3d-tools.js';
 import {InspectionScene} from './editor-3d-scene.js';
 const $=id=>document.getElementById(id),canvas=$('scene');
 let documentModel,dirty=true,loading=false,serial=0,selection=null,drag=null;
+const workspaces={};
 const view={x:11.5,y:11.5,span:24,preset:'0'};
 const scene=new InspectionScene(canvas,()=>{dirty=true;diagnostics();});
 const status=text=>$('status').textContent=text;
@@ -12,15 +15,15 @@ function render(){if(dirty){scene.draw(view,canvas.clientWidth,canvas.clientHeig
 function focus(x,y,span=24){view.x=x;view.y=y;view.span=span;dirty=true;}
 function home(){view.preset='0';$('camera').value='0';const p=documentModel?.map.starts[0];focus(p?.x??11.5,p?.y??11.5,22);}
 async function open(text){
- const next=new EditingDocument().open(text),ticket=++serial;documentModel=next;loading=true;selection=null;scene.preview(null);$('properties').textContent='';$('selected').textContent='Choose a cell or object.';$('visual-note').textContent='';
+ const next=text instanceof EditingDocument?text:new EditingDocument().open(text),ticket=++serial;documentModel=next;workspaces[next.block?'block':'map']=next;loading=true;selection=null;scene.preview(null);$('properties').textContent='';$('selected').textContent='Choose a cell or object.';$('visual-note').textContent='';
  $('name').textContent=next.map.name;$('counts').textContent=`${next.size} × ${next.size} · ${next.block?'Block':next.map.guards.length+' guards'} · ${next.map.props.length} props`;
  $('floor').value='0';scene.options.level=0;$('sector-x').max=$('sector-y').max=next.block?1:10;$('sector-x').value=$('sector-y').value='1';home();status('Loading modeled scenery and starts…');$('export').disabled=false;
- await scene.open(next);if(ticket!==serial)return;loading=false;tools.reset();status(scene.diagnostics.length?'Some visuals are unavailable. See scene diagnostics.':next.block?'Block inspection — use the existing editor to place it in a full map.':'Select a build tool to edit. Right-drag or WASD pans.');dirty=true;
+ await scene.open(next);if(ticket!==serial)return;loading=false;tools.reset();status(scene.diagnostics.length?'Some visuals are unavailable. See scene diagnostics.':next.block?'Edit this reusable block, then save it to the library.':'Select a build tool to edit. Right-drag or WASD pans.');dirty=true;
 }
 async function factory(){try{status('Opening authored factory…');const r=await fetch('./default-factory.json',{cache:'no-store'});if(!r.ok)throw Error('Factory could not load: HTTP '+r.status);await open(await r.text());}catch(e){status(e.message);}}
 function inspect(x,y){const p=scene.pick(x,y,canvas.clientWidth,canvas.clientHeight);if(!p||!documentModel)return null;return documentModel.inspect(p.x,p.y,scene.options.level,{...scene.options,mode:$('pick-mode').value});}
 function select(value){selection=value;scene.select(value);$('selected').textContent=value?`${value.label} · ${value.x}, ${value.y} · floor ${value.z+1}`:'Choose a cell or object.';$('properties').textContent=value?JSON.stringify(value.data,null,2):'';
- const notes=[];if(value?.type==='unit'){if(value.data.outfit==='red-hats')notes.push('Saved red-hat outfit; the model currently shows its normal painted outfit.');if(value.data.species==='hen'&&value.data.weapon!=='hands')notes.push('Saved weapon: '+value.data.weapon+'. The hen model currently has no armed pose.');if(value.data.id.startsWith('start'))notes.push('Squad start marker. Species and rifle are illustrative.');}$('visual-note').textContent=notes.join(' ');
+ const notes=[];if(value?.type==='unit'){if(value.data.species==='hen'&&value.data.weapon!=='hands')notes.push('Saved weapon: '+value.data.weapon+'. The hen model currently has no armed pose.');if(value.data.id.startsWith('start'))notes.push('Squad start marker. Species and rifle are illustrative.');}$('visual-note').textContent=notes.join(' ');
 }
 $('factory').onclick=()=>{if(tools.guardReplace())factory();};$('home').onclick=home;$('overview').onclick=()=>{const size=documentModel?.size||240;focus((size-1)/2,(size-1)/2,size*1.55);};
 $('camera').onchange=()=>{view.preset=$('camera').value;dirty=true;};
@@ -50,7 +53,8 @@ document.addEventListener('keydown',e=>{
 for(const item of PREVIEW_FOOTPRINTS){const li=document.createElement('li');li.textContent=item.name+' · '+item.tiles.join('×');$('cargo').append(li);}
 new ResizeObserver(()=>dirty=true).observe(canvas);window.addEventListener('pagehide',()=>scene.dispose(),{once:true});
 // Programmatic inspection shares the same opening and picking paths as the UI.
-async function changed(){loading=true;try{await scene.update(documentModel);select(null);$('name').textContent=documentModel.map.name;$('counts').textContent=`240 × 240 · ${documentModel.map.guards.length} guards · ${documentModel.map.props.length} props`;dirty=true;}finally{loading=false;}}
-const tools=installEditing({canvas,scene,getDocument:()=>documentModel,getSelection:()=>selection,open,changed,status,isLoading:()=>loading});
+async function changed(){loading=true;try{await scene.update(documentModel);select(null);$('name').textContent=documentModel.map.name;$('counts').textContent=`${documentModel.size} × ${documentModel.size} · ${documentModel.map.guards.length} guards · ${documentModel.map.props.length} props`;dirty=true;}finally{loading=false;}}
+async function switchWorkspace(mode){if(loading)return;const next=workspaces[mode]||new EditingDocument().open(JSON.stringify(mode==='block'?extractBlock(blockCanvas('New block')):blankMap('New design')));await open(next);}
+const tools=installEditing({canvas,scene,getDocument:()=>documentModel,getSelection:()=>selection,open,changed,status,isLoading:()=>loading,switchWorkspace,hasUnsaved:()=>Object.values(workspaces).some(d=>d.changed)});
 window.editor3d={open,apply:command=>tools.apply(command),validate:()=>documentModel.validate(),export:()=>documentModel.export(),inspect:(x,y,z,options)=>documentModel.inspect(x,y,z,options),get document(){return documentModel;},get scene(){return scene;},get loading(){return loading;},get selection(){return selection;},view};
 requestAnimationFrame(render);factory();

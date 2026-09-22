@@ -1,6 +1,6 @@
 # Proposal: Animal Factory Tactics 3D map editor
 
-Status: milestones 1 and 2 implemented at `tactics/editor-3d.html`: inspection, full-map brush editing, named saves, undo/redo and validated snapshot playtesting. See [THREED-EDITOR-EDITING.md](THREED-EDITOR-EDITING.md) for scope and verification. Full block/generator feature parity remains planned. The five-map story campaign and its dialogue/object-interaction systems are deferred separately.
+Status: milestones 1 and 2 implemented at `tactics/editor-3d.html`: inspection, full-map brush editing, named saves, undo/redo and validated snapshot playtesting. See [THREED-EDITOR-EDITING.md](THREED-EDITOR-EDITING.md) for scope and verification. Block-library editing, capture/placement, connection planning, seeded/connected generation, and visible faction outfits are implemented. Named browser saves replace the older separate draft slot; JSON transfers existing designs without automatic database migration. The five-map story campaign and its dialogue/object-interaction systems are deferred separately.
 
 ## Purpose
 
