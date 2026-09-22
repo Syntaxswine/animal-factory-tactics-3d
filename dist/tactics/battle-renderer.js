@@ -8,12 +8,16 @@ import {personVisible} from './battle-visibility.js';
 import {BattleEnvironment,PAINTED_PROP_FORMS} from './battle-environment.js';
 import {BattleMotion} from './battle-motion.js';
 import {createWorkerLocomotion} from './worker-locomotion.js';
+import {BattleCombat} from './battle-combat.js';
+import {createRifleFiring} from './rifle-firing.js';
+import {BattleShotEffects,shotPoint} from './battle-shot-effects.js';
 
 // Reuse only the environment/camera presentation. No hybrid combat mode.
 export class BattleRenderer extends HybridRenderer {
  constructor(onReady=()=>{}){
   super(onReady);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
   this.motion=new BattleMotion();this.reducedMotion=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
+  this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
  }
  rebuild(world,seen,level,map){
@@ -41,8 +45,9 @@ export class BattleRenderer extends HybridRenderer {
  actor(unit){
   const model=this.models.get(unit.id);
   if(!model){if(!this.pending.has(unit.id))this.loadModel(unit);return null;}
-  const {worker,root,profile}=model,sample=this.motion.sample(unit);
-  const signature=`${unit.weapon}:${sample.heading}:${unit.hp>0}:${sample.blend}:${sample.blend?sample.distance:0}`;
+  const {worker,root,profile}=model,shot=this.combat.active?.event.shooter===unit.id?this.combat.active:null;
+  const sample=shot?{...this.motion.sample(unit),x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0,blend:0}:this.motion.sample(unit);
+  const signature=`${unit.weapon}:${sample.heading}:${unit.hp>0}:${sample.blend}:${sample.blend?sample.distance:0}:${shot?.start}:${shot?.phase.aim}:${shot?.phase.recoil}`;
   if(model.signature!==signature){
    // Authoring rigs solve carry grips in model space. Position only after posing.
    root.position.set(0,0,0);root.updateMatrixWorld(true);
@@ -51,7 +56,13 @@ export class BattleRenderer extends HybridRenderer {
     const old=model.equipment;model.equipment=createWeaponModel(unit.weapon);worker.equipWeapon(model.equipment);old?.dispose();model.weapon=unit.weapon;
    }
    worker.root.position.set(0,0,0);worker.root.rotation.set(0,0,0);
-   if(unit.hp>0)model.locomotion.apply(sample);
+   if(unit.hp>0&&shot?.rifle&&!profile.unarmed){
+    model.firing??=createRifleFiring(worker,profile);
+    const target=shotPoint(shot.event.trajectories[0]).sub(new T.Vector3(...toWorld(sample)));
+    if(shot.phase.discharged&&!shot.traceOrigin)shot.traceOrigin=model.firing.apply({...shot.phase,recoil:0,target}).origin.clone().add(new T.Vector3(...toWorld(sample)));
+    model.firing.apply({...shot.phase,target});
+   }
+   else if(unit.hp>0)model.locomotion.apply(sample);
    else worker.pose(profile.unarmed?'neutral':'carry',-sample.heading);
    model.paint.setGripForearm?.(!!model.equipment?.carry?.handPoses?.support?.gripMesh);
    // Temporary casualty pose, listed explicitly in the visual backlog.
@@ -63,6 +74,7 @@ export class BattleRenderer extends HybridRenderer {
    model.placement=placement;root.updateMatrixWorld(true);worker.skeleton.update();
    for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}
   }
+  if(shot)this.shotEffects.update(shot,this.state,shot.rifle&&model.firing?model.firing.muzzle():null);
   return root;
  }
  prune(){} // Reuse each actor's model across visibility changes.
@@ -76,15 +88,19 @@ export class BattleRenderer extends HybridRenderer {
   return null;
  }
  draw(ctx,state,...args){
-  const units=state.units.filter(u=>personVisible(state,u));
+  this.state=state;this.captureCombat(state);this.shotEffects.hide();
+  const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.combat.display(u));
   this.motion.update(units,performance.now(),!!this.reducedMotion?.matches);
   return super.draw(ctx,{...state,terrain:state.map,units},...args);
  }
- displayUnit(unit){return this.motion.sample(unit);}
+ captureCombat(state){this.combat.observe(state,performance.now(),!!this.reducedMotion?.matches);}
+ get busy(){return this.combat.busy;}
+ displayUnit(unit){const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){
   this.generation++;
   this.paintedEnvironment.dispose();
   this.motion.clear();
+  this.combat.clear();this.shotEffects.dispose();
   for(const {worker,paint,root,equipment,locomotion}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);locomotion.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();
  }
