@@ -17,7 +17,7 @@ export function createHenMotion(worker){
  let state,joints,heading=0;
  function rotation(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(q));root.updateMatrixWorld(true);}
  function apply(time,options={}){
-  heading=options.heading??0;state=dogMotionState(time);const t=state.time;
+  heading=options.heading??0;state=options.state??dogMotionState(time);const t=state.time;
   root.position.set(0,0,0);root.rotation.set(0,0,0);worker.pose();for(const b of thighs)b.quaternion.identity();named.pelvis.position.copy(rest.get(named.pelvis));
   named.pelvis.position.y-=.09*state.gait+.12*state.kneel+state.bob*.5;named.pelvis.position.z+=.02*state.transfer;
   named.breast.rotation.x=-.045*state.transfer;named.head.rotation.z=.045*Math.sin(t*2*Math.PI)*state.gait;
