@@ -79,6 +79,30 @@ Run `node --test tests/painted-cargo.test.mjs`, `npm run check`, and
 `npm run build:tactics-3d`. The browser driver is
 `tools/painted-cargo-review.mjs`, using Playwright/Edge and localhost:4329.
 
+## Optional labels and stickers
+
+The gallery's **Labels & stickers** selector offers no labels (the default),
+freight tickets, fragile-glass markings, caution diamonds, and factory-store
+stamps. Each option works across all 48 form/finish combinations. Library callers
+can pass a third argument to `build(form, skin, label)` using `shipping`,
+`fragile`, `hazard`, `stores`, or `none`.
+
+Artwork is editable Canvas 2D drawing code: warm paper, muted ink, deterministic
+abrasion and chipped edges. It needs no extra image downloads. Crate tickets sit
+on clear plank panels below the framing; drum stickers follow the curved shell,
+and horizontal drums also carry an end-cap ticket. Labels borrow cached geometry,
+materials and textures from the library and are disposed with it.
+
+`tools/painted-label-review.mjs` checks all 240 label/form/finish combinations
+twice (480 renders), label presence/removal, tile bounds, browser errors and
+stable resource counts. Evidence is in `painted-label-review/`. All 465 existing
+tests, asset validation and the distribution build pass.
+
+Independent label review: **9/10**, no blocking findings after moving long-crate
+side tickets clear of braces and straps. The reviewer rendered all 240
+combinations at native and close scale (480 views), with zero browser errors
+and stable resource counts. Approval covers this isolated gallery collection.
+
 ## Painted material provenance
 
 The new atlas was generated with the **built-in imagegen tool**, with the existing

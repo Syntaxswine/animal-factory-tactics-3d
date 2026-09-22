@@ -26,6 +26,43 @@ export const CARGO_FORMS=[
  {id:'barrel-block',name:'Eighteen-drum block',family:'barrel',tiles:[2,2]}
 ];
 export const DRUM_RADIUS=.328,DRUM_HEIGHT=.8;
+export const CARGO_LABELS={none:'No labels',shipping:'Freight ticket',fragile:'Fragile glass',hazard:'Hazard diamond',stores:'Factory stores'};
+// Small, deliberately distressed print artwork. Canvas keeps the icons and type
+// editable and independent of the underlying painted material atlas.
+function labelTexture(style){
+ const canvas=document.createElement('canvas');canvas.width=512;canvas.height=384;
+ const c=canvas.getContext('2d'),ink=style==='fragile'?'#813b29':'#353c36';
+ let seed=47;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+ c.fillStyle=style==='hazard'?'#c7a14e':'#cdbd94';
+ c.beginPath();c.moveTo(17,13);c.lineTo(493,19);c.lineTo(500,363);c.lineTo(28,374);c.lineTo(12,218);c.closePath();c.fill();
+ for(let i=0;i<160;i++){c.fillStyle=random()>.5?'rgba(255,237,183,.11)':'rgba(85,62,34,.08)';c.fillRect(random()*512,random()*384,18+random()*85,2+random()*8);}
+ c.strokeStyle=ink;c.fillStyle=ink;c.lineWidth=7;c.strokeRect(38,37,434,308);
+ c.textAlign='center';c.font='bold 36px Georgia';
+ if(style==='shipping'){
+  c.fillText('NORTH DOCK',256,91);c.fillRect(66,111,380,5);
+  c.textAlign='left';c.font='bold 67px monospace';c.fillText('AF / 07',64,196);
+  c.font='23px monospace';c.fillText('FREIGHT • 24',66,240);
+  for(let i=0;i<37;i++)c.fillRect(66+i*10,270,2+(i%3)*2,43);
+ }else if(style==='fragile'){
+  c.fillText('HANDLE WITH CARE',256,88);
+  c.beginPath();c.moveTo(204,119);c.lineTo(308,119);c.lineTo(300,172);c.quadraticCurveTo(256,221,212,172);c.closePath();c.stroke();
+  c.beginPath();c.moveTo(256,196);c.lineTo(256,251);c.moveTo(224,254);c.lineTo(288,254);c.stroke();
+  for(const x of [112,400]){c.beginPath();c.moveTo(x,237);c.lineTo(x,143);c.moveTo(x-19,165);c.lineTo(x,143);c.lineTo(x+19,165);c.stroke();}
+  c.font='bold 38px Georgia';c.fillText('FRAGILE',256,315);
+ }else if(style==='hazard'){
+  c.save();c.translate(256,172);c.rotate(Math.PI/4);c.lineWidth=12;c.strokeRect(-77,-77,154,154);c.restore();
+  c.font='bold 125px Georgia';c.fillText('!',256,213);c.font='bold 32px Georgia';c.fillText('CAUTION',256,315);
+ }else{
+  c.fillText('FACTORY STORES',256,88);c.fillRect(66,111,380,5);
+  c.beginPath();c.arc(256,201,65,0,Math.PI*2);c.stroke();c.font='bold 77px Georgia';c.fillText('AF',256,228);
+  c.font='bold 29px monospace';c.fillText('SUPPLY / No. 24',256,315);
+ }
+ // Abraded ink, ragged paper edges, and exposed substrate, with no noisy gloss.
+ c.globalCompositeOperation='destination-out';
+ for(let i=0;i<170;i++){c.globalAlpha=.15+random()*.5;c.fillRect(random()*512,random()*384,2+random()*13,1+random()*3);}
+ c.globalAlpha=1;for(let i=0;i<65;i++){const x=random()*512,y=i%2?12+random()*15:358+random()*22;c.fillRect(x,y,3+random()*12,4+random()*12);}
+ const t=new THREE.CanvasTexture(canvas);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t;
+}
 // A gallery/library owns cached geometry and materials. Individual arrangements
 // borrow them; removing an arrangement never disposes another one's resources.
 export function createCargoLibrary(originalAtlas,cargoAtlas){
@@ -44,6 +81,11 @@ export function createCargoLibrary(originalAtlas,cargoAtlas){
  const box=(parent,m,pos,size,r)=>add(parent,rounded(size),m,pos,r);
  const cylinder=(r,h,segments=12)=>geo(`cylinder:${r}:${h}:${segments}`,()=>new THREE.CylinderGeometry(r,r,h,segments));
  const ring=(r,t)=>geo(`ring:${r}:${t}`,()=>new THREE.TorusGeometry(r,t,6,32));
+ function sticker(parent,style,geometry,position,rotation=[0,0,0]){
+  if(style==='none')return;
+  const key='label:'+style;if(!materials.has(key)){const t=labelTexture(style);textures.push(t);materials.set(key,new THREE.MeshStandardMaterial({map:t,transparent:true,alphaTest:.12,roughness:1,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));}
+  const mesh=add(parent,geometry,materials.get(key),position,rotation);mesh.castShadow=false;mesh.userData.cargoLabel=style;
+ }
  function crate(skin,w,d,h,banded=false){
   const root=new THREE.Group();box(root,inside,[0,h/2,0],[w-.14,h-.07,d-.14]);
   box(root,finish(skin,3),[0,.025,0],[w-.06,.05,d-.06]);
@@ -73,9 +115,24 @@ export function createCargoLibrary(originalAtlas,cargoAtlas){
   for(const [y,r]of [[.032,.307],[.2,.317],[.61,.317],[.789,.307]])add(root,ring(r,.011),iron,[0,y,0],[Math.PI/2,0,0]);
   add(root,cylinder(.034,.01),iron,[.12,.791,.085]);add(root,ring(.037,.005),rub,[.12,.795,.085],[Math.PI/2,0,0]);return root;
  }
- function build(id,skin){if(disposed)throw Error('Cargo library disposed');const form=CARGO_FORMS.find(f=>f.id===id);if(!form||CARGO_SKINS[skin]?.family!==form.family)throw Error('Invalid cargo form/skin');const root=new THREE.Group(),items=[];
-  function placeCrate(x,y,z,w=.88,d=.88,h=.8,banded=false){const g=crate(skin,w,d,h,banded);g.position.set(x,y,z);root.add(g);items.push({kind:'crate',base:[x,y,z],size:[w,h,d]});}
-  function placeDrum(x,y,z,horizontal=false){const pivot=new THREE.Group(),g=drum(skin,items.length);g.position.y=-DRUM_HEIGHT/2;g.rotation.y=items.length*2.399963;pivot.add(g);pivot.position.set(x,y,z);if(horizontal)pivot.rotation.x=Math.PI/2;root.add(pivot);items.push({kind:'drum',center:[x,y,z],horizontal,radius:DRUM_RADIUS,height:DRUM_HEIGHT});}
+ function build(id,skin,label='none'){if(disposed)throw Error('Cargo library disposed');const form=CARGO_FORMS.find(f=>f.id===id);if(!form||CARGO_SKINS[skin]?.family!==form.family)throw Error('Invalid cargo form/skin');if(!Object.hasOwn(CARGO_LABELS,label))throw Error('Invalid cargo label');const root=new THREE.Group(),items=[];
+  function placeCrate(x,y,z,w=.88,d=.88,h=.8,banded=false){const g=crate(skin,w,d,h,banded);
+   if(label!=='none'){
+    // Tickets sit in the clear upper-left plank panel, between framing and brace.
+    const panel=geo('label-plane',()=>new THREE.PlaneGeometry(.24,.18));
+    sticker(g,label,panel,[-w*.23,h*.61,d/2-.0405],[0,0,-.035]);
+    const sideWidth=d-.06,sectionWidth=sideWidth>1.2?sideWidth/2:sideWidth;
+    sticker(g,label,panel,[w/2-.0405,h*.61,sideWidth/2-sectionWidth*.23],[0,Math.PI/2,.025]);
+   }
+   g.position.set(x,y,z);root.add(g);items.push({kind:'crate',base:[x,y,z],size:[w,h,d]});}
+  function placeDrum(x,y,z,horizontal=false){const pivot=new THREE.Group(),g=drum(skin,items.length);
+   if(label!=='none'){
+    // Follow the slightly dented shell, rather than a flat card floating off it.
+    const curved=geo('label-drum',()=>{const shape=new THREE.CylinderGeometry(.3165,.3165,.235,24,1,true,-.48,.96),p=shape.attributes.position;for(let i=0;i<p.count;i++){const a=Math.atan2(p.getX(i),p.getZ(i)),y=p.getY(i)+.415,r=.316-(y-.35)*(.002/.27)-.014*Math.exp(-Math.pow((a-.9)/.3,2)-Math.pow((y-.47)/.14,2))+.0008;p.setX(i,Math.sin(a)*r);p.setZ(i,Math.cos(a)*r);}shape.computeVertexNormals();return shape;});
+    sticker(g,label,curved,[0,.415,0]);
+    if(horizontal)sticker(g,label,geo('label-cap',()=>new THREE.PlaneGeometry(.26,.195)),[-.045,.794,-.04],[-Math.PI/2,0,0]);
+   }
+   g.position.y=-DRUM_HEIGHT/2;g.rotation.y=items.length*2.399963;pivot.add(g);pivot.position.set(x,y,z);if(horizontal)pivot.rotation.x=Math.PI/2;root.add(pivot);items.push({kind:'drum',center:[x,y,z],horizontal,radius:DRUM_RADIUS,height:DRUM_HEIGHT});}
   if(id==='crate-square')placeCrate(0,0,0);
   if(id==='crate-long')placeCrate(0,0,0,.88,1.88,.68);
   if(id==='crate-tall')placeCrate(0,0,0,.88,1.88,1.28);
@@ -92,7 +149,7 @@ export function createCargoLibrary(originalAtlas,cargoAtlas){
   if(id==='barrel-pyramid')for(let row=0;row<3;row++)for(let i=0;i<3-row;i++)placeDrum((i-(2-row)/2)*.656,.328+row*.656*Math.sqrt(3)/2,0,true);
   if(id==='barrel-pile'){for(const x of [-.328,.328])placeDrum(x,.328,-.37,true);placeDrum(0,.328+.656*Math.sqrt(3)/2,-.37,true);placeDrum(.6,.4,.54);}
   if(id==='barrel-block')for(let level=0;level<2;level++)for(const x of [-.656,0,.656])for(const z of [-.656,0,.656])placeDrum(x,.4+level*.8,z);
-  root.updateMatrixWorld(true);return {root,form,skin,items,bounds:new THREE.Box3().setFromObject(root,true)};
+  root.updateMatrixWorld(true);return {root,form,skin,label,items,bounds:new THREE.Box3().setFromObject(root,true)};
  }
  return {build,stats:()=>({geometries:geometries.size,materials:materials.size,textures:textures.length}),dispose(){if(disposed)return;disposed=true;for(const g of geometries.values())g.dispose();for(const m of materials.values())m.dispose();for(const t of textures)t.dispose();geometries.clear();materials.clear();textures.length=0;}};
 }
