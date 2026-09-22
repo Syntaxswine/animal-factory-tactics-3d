@@ -16,7 +16,7 @@ try{
  await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:fileURLToPath(new URL('mobile.png',out)),fullPage:true});
  await page.click('footer a');await page.waitForSelector('.cards');assert.ok(await page.locator('.card').count()>10);
  // Corrupt preferences and unavailable storage must not prevent title navigation.
- await page.goto(url);await page.evaluate(()=>localStorage.setItem('animal-factory-tactics-3d:options:v1','invalid'));await page.reload();assert.match(await page.locator('#preference-summary').innerText(),/Easy/);
+ await page.goto(url);await page.evaluate(()=>localStorage.setItem('animal-factory-tactics-3d:options:v1','invalid'));await page.reload();assert.match(await page.locator('#preference-summary').innerText(),/Easy/i);
  await page.evaluate(()=>{Storage.prototype.setItem=()=>{throw Error('blocked');};});await page.click('[data-panel="options"]');await page.click('button:has-text("Save options")');assert.match(await page.locator('#options-status').innerText(),/could not save/);
  assert.deepEqual(errors,[]);console.log(JSON.stringify({fight,errors}));
 }finally{await browser.close();}

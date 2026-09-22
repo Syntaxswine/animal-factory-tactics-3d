@@ -2,7 +2,7 @@ import {InspectionScene} from './editor-3d-scene.js';
 export async function showTitleScene(canvas,status){
  let ready=false,disposed=false;
  const draw=()=>{if(disposed)return;const w=canvas.clientWidth,h=canvas.clientHeight;if(w&&h)scene.draw({x:8,y:7,span:Math.max(14,16*h/w),preset:'0'},w,h);};
- const scene=new InspectionScene(canvas,()=>{if(ready)draw();});scene.scene.background.set('#263e30');
+ const scene=new InspectionScene(canvas,()=>{if(ready)draw();});scene.scene.background.set('#e8dfc9');
  const map={terrain:Array.from({length:18},(_,y)=>Array.from({length:18},(_,x)=>x>3&&x<14&&y>3&&y<13?'ground-concrete':'ground-gravel')),upper:[{},{}],props:[],edges:{},stairs:[],climbs:[],starts:[],guards:[],exits:[]};
  for(let x=4;x<14;x++)map.edges[`s:${x}:3`]=x===8?'doorway-concrete-open':'wall-brick';
  for(let y=4;y<13;y++)map.edges[`e:13:${y}`]=y%3===1?'window-brick':'wall-brick';
