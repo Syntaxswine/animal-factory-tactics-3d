@@ -1,13 +1,13 @@
 {
   "repository": "https://github.com/Syntaxswine/animal-factory",
-  "branch": "tactics-prototype",
-  "revision": "6e2782a4ab3dde0f8b84a8610769664335294fe0",
+  "branch": "work/movement-modes-core",
+  "revision": "ee61884c80d50def96096d6a08488aa5d631bd67",
   "files": {
     "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
     "blocks.js": "4c4961c7c9897640dafca906384569f5337bfabbc2a907adb88ca8e64a733bf4",
     "connections.js": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f",
     "editor-model.js": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262",
-    "engine.js": "51bce27654f1533c156a337a49515fff05db13a5c8f2d33de702959485294788",
+    "engine.js": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448",
     "environment.js": "fce9fc561938150f8b873f0918949ba618861a98a9907ef68e5b3a2e497d92ce",
     "explosives.js": "ab0e3a635edf516022bbe247b3a20651d2323053321573ea0bf6fb1e42525b38",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
@@ -22,6 +22,6 @@
     "sector-rules.js": "d20ee872471a503a60ac706655b19f9ba9857c41882dd6cc6a08d61e3572132a",
     "visibility.js": "17d3de4a6aca835dc176ac3fcc9f460fb12aae83bf5d2c0154b29a789ed5dc48",
     "woodland.js": "3b9258e58a2cdfb43b855f11b5b0cba4587237f44ce78bd33ddf32f308e4b0e2",
-    "world.js": "db71b2c27b5a0f9ec83486d4cc8efec81fc38aa5f64f940bc166b875e039592d"
+    "world.js": "5a63c5210c7d9c5a819fd8213ced2762930a2ccc9a383a25e2016d7a2e85801a"
   }
 }

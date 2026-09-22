@@ -2,7 +2,7 @@ import {restStrain,driftBonds} from './personalities.js';
 import {settleHappiness} from './happiness.js';
 import {quitMerc} from './engine.js';
 import {factoryMap,generateMap,blockedEdge,tileKey,levelOf,neighbors,W,H} from './maps.js';
-import {createGame,squad,guards,alive,incapacitated,canControl,abandonCasualties,occupant,refresh,walkable,log,STANCES,stanceOf,emitNoise,enterFire,combatCosts,settleGuards,spawnUnit,unit,WEAPONS} from './engine.js';
+import {createGame,squad,guards,alive,incapacitated,canControl,abandonCasualties,occupant,refresh,walkable,log,movementCost,emitNoise,enterFire,combatCosts,settleGuards,spawnUnit,unit,WEAPONS} from './engine.js';
 import {initInventory} from './inventory.js';
 import {initProgression} from './progression.js';
 import {onContract} from './happiness.js';
@@ -92,7 +92,7 @@ export const away=s=>s.units.filter(u=>u.team==='squad'&&u.away);
 export const beyond=(world,id,side)=>{const p=world.positions?.[id],d=SIDES[side];if(!p||!d)return null;return Object.keys(world.positions).find(k=>k!==id&&world.positions[k].x===p.x+d.dx&&world.positions[k].y===p.y+d.dy)||null;};
 export const borderSides=u=>[u.y<BORDER&&'north',u.x>=W-BORDER&&'east',u.y>=H-BORDER&&'south',u.x<BORDER&&'west'].filter(Boolean);
 // Crossing is one more step: the stance's cardinal move cost in combat, free while exploring.
-export const crossingCost=(s,u)=>combatCosts(s)?STANCES[stanceOf(u)].moveCost+(u.sneaking?2:0):0;
+export const crossingCost=(s,u)=>combatCosts(s)?movementCost(u):0;
 export function travelReason(world,destination) {
   const s=currentMap(world);
   if(!world.definitions[destination])return 'Unknown location.';

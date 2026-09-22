@@ -38,7 +38,12 @@ export function tankExplosionChance(unit,zone){
 }
 export const STANCES={standing:{label:'Standing',moveCost:2},kneeling:{label:'Kneeling',moveCost:4},prone:{label:'Prone',moveCost:8}};
 export const stanceOf=u=>Object.hasOwn(STANCES,u?.stance)?u.stance:'standing';
-export function movementNeighbors(s,u,p=u,stairs){return neighbors(s,p,stairs).filter(q=>(levelOf(q)===levelOf(p)||stanceOf(u)==='standing')&&!(levelOf(q)===levelOf(p)&&q.x!==p.x&&q.y!==p.y&&[occupant(s,q.x,p.y,levelOf(p)),occupant(s,p.x,q.y,levelOf(p))].some(v=>v&&v!==u))).map(q=>({...q,cost:levelOf(q)===levelOf(p)?(STANCES[stanceOf(u)].moveCost+(u.sneaking?2:0))*q.cost:q.cost}));}
+export const MOVEMENT_MODES={walk:{label:'Walk',apMultiplier:1,speed:1},run:{label:'Run',apMultiplier:.5,speed:2},sneak:{label:'Sneak',apMultiplier:1.5,speed:.5}};
+export const movementModeOf=u=>u?.sneaking?'sneak':u?.running?'run':'walk';
+export const movementMultiplier=u=>MOVEMENT_MODES[movementModeOf(u)].apMultiplier;
+export const movementCost=u=>STANCES[stanceOf(u)].moveCost*movementMultiplier(u);
+export const effectiveStealth=u=>Math.min(100,Math.max(0,(u.stealth||0)+(u.sneaking?20:0)));
+export function movementNeighbors(s,u,p=u,stairs){return neighbors(s,p,stairs).filter(q=>(levelOf(q)===levelOf(p)||stanceOf(u)==='standing')&&!(levelOf(q)===levelOf(p)&&q.x!==p.x&&q.y!==p.y&&[occupant(s,q.x,p.y,levelOf(p)),occupant(s,p.x,q.y,levelOf(p))].some(v=>v&&v!==u))).map(q=>({...q,cost:(levelOf(q)===levelOf(p)?STANCES[stanceOf(u)].moveCost*q.cost:q.cost)*movementMultiplier(u)}));}
 export const key=tileKey;
 export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,(levelOf(a)-levelOf(b))*3);
 export const alive=u=>u.hp>0&&!u.away&&u.casualty!=='quit'; // A unit that crossed the map edge is off this map: not a target, not an occupant, not controllable here; a merc that quit (G5) has left the squad.
@@ -61,7 +66,7 @@ export const tile=(s,x,y,z=0)=>terrainAt(s,x,y,z);
 export const walkable=(s,x,y,z=0)=>passable(s,{x,y,z});
 export function log(s,message){s.log.unshift(message);s.log=s.log.slice(0,50);s.revision++;}
 // One unit record, the shape every system reads. On a fresh map the id is the index; a hired merc brings its campaign id (world.js enlist).
-export function spawnUnit(s,{team,name,species,x,y,z=0,weapon,id=s.units.length,medical=0}){const u={id,team,name,species,x,y,z,medical,medkits:team==='squad'?1:0,wireCutters:team==='squad',casualty:null,bleedTurns:0,sneaking:false,stealth:20,overwatch:null,lastHeard:null,stance:'standing',hp:team==='squad'?100:45,maxHp:team==='squad'?100:45,ap:team==='squad'?12:Math.max(7,WEAPONS[weapon].cost),maxAp:team==='squad'?12:Math.max(7,WEAPONS[weapon].cost),accuracy:team==='squad'?85:55,weapon,ammo:Object.fromEntries(Object.entries(WEAPONS).map(([k,v])=>[k,v.mag])),alert:false,state:'rest',wary:false,post:null,lastKnown:null,facing:1,heading:team==='squad'?45:225,cone:sightOf({species}).field,moved:false,fired:false,lastAt:x+','+y+','+z,steps:0};s.units.push(u);return u;}
+export function spawnUnit(s,{team,name,species,x,y,z=0,weapon,id=s.units.length,medical=0}){const u={id,team,name,species,x,y,z,medical,medkits:team==='squad'?1:0,wireCutters:team==='squad',casualty:null,bleedTurns:0,sneaking:false,running:false,stealth:20,overwatch:null,lastHeard:null,stance:'standing',hp:team==='squad'?100:45,maxHp:team==='squad'?100:45,ap:team==='squad'?12:Math.max(7,WEAPONS[weapon].cost),maxAp:team==='squad'?12:Math.max(7,WEAPONS[weapon].cost),accuracy:team==='squad'?85:55,weapon,ammo:Object.fromEntries(Object.entries(WEAPONS).map(([k,v])=>[k,v.mag])),alert:false,state:'rest',wary:false,post:null,lastKnown:null,facing:1,heading:team==='squad'?45:225,cone:sightOf({species}).field,moved:false,fired:false,lastAt:x+','+y+','+z,steps:0};s.units.push(u);return u;}
 export const DEFAULT_CAST=[['Yakov','horse','assault'],['Anya','goat','rifle'],['Misha','donkey','pistol'],['Vera','sheep','knife']];
 // options.cast: [{name,species,weapon}] takes the squad starts in order (the balance instrument fields a hired merc alone); absent, the four comrades.
 export function createGame(seed=1947,definition=factoryMap(),detect=true,difficulty='standard',options={}){
@@ -96,7 +101,7 @@ export const pathCost=path=>path.reduce((n,p)=>n+(p.cost||1),0);
 export function pathTo(s,u,x,y,z=levelOf(u)){
  if(!walkable(s,x,y,z)||(occupant(s,x,y,z)&&occupant(s,x,y,z)!==u))return null;
  const start=key(u.x,u.y,levelOf(u)),goal=key(x,y,z),occupied=new Set(s.units.filter(p=>(alive(p)||incapacitated(p))&&p!==u).map(p=>key(p.x,p.y,levelOf(p)))),stairs=stairSet(s);
- const heuristic=p=>{const dx=Math.abs(p.x-x),dy=Math.abs(p.y-y);return (Math.max(dx,dy)+.5*Math.min(dx,dy))*(STANCES[stanceOf(u)].moveCost+(u.sneaking?2:0))+2*Math.abs(levelOf(p)-z);},heap=[],scores=new Map([[start,0]]),parents=new Map();
+ const heuristic=p=>{const dx=Math.abs(p.x-x),dy=Math.abs(p.y-y);return (Math.max(dx,dy)+.5*Math.min(dx,dy))*movementCost(u)+2*movementMultiplier(u)*Math.abs(levelOf(p)-z);},heap=[],scores=new Map([[start,0]]),parents=new Map();
  const deviation=p=>Math.abs((p.x-u.x)*(y-u.y)-(p.y-u.y)*(x-u.x));const less=(a,b)=>a.f<b.f||(a.f===b.f&&(deviation(a)<deviation(b)||(deviation(a)===deviation(b)&&a.g>b.g)));
  const push=n=>{heap.push(n);let i=heap.length-1;while(i){const p=(i-1)>>1;if(!less(heap[i],heap[p]))break;[heap[i],heap[p]]=[heap[p],heap[i]];i=p;}};
  const pop=()=>{const first=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let i=0;while(true){let c=i*2+1;if(c>=heap.length)break;if(c+1<heap.length&&less(heap[c+1],heap[c]))c++;if(!less(heap[c],heap[i]))break;[heap[i],heap[c]]=[heap[c],heap[i]];i=c;}}return first;};
@@ -116,14 +121,14 @@ export function reachable(s,u,budget){
 export const THREAT_TURNS=2;
 export function threatens(s,g){
  if(!alive(g)||g.burningTurns)return false;
- const w=WEAPONS[g.weapon],melee=w.mag===0,range=melee?1:w.range,budget=THREAT_TURNS*g.maxAp,walk=budget/STANCES[stanceOf(g)].moveCost;
+ const w=WEAPONS[g.weapon],melee=w.mag===0,range=melee?1:w.range,budget=THREAT_TURNS*g.maxAp,walk=budget/movementCost(g);
  const near=squad(s).filter(p=>Math.hypot(g.x-p.x,g.y-p.y)<=range+walk+1);if(!near.length)return false;
  for(const t of reachable(s,g,budget)){const from={...g,x:t.x,y:t.y,z:t.z};
   for(const p of near){const d=melee?(t.z===levelOf(p)?Math.max(Math.abs(t.x-p.x),Math.abs(t.y-p.y)):Infinity):Math.hypot(t.x-p.x,t.y-p.y)+Math.max(0,levelOf(p)-t.z);
    if(d<=range&&lineOfSight(s,from,p))return true;}} // melee too: a blade across a wall or a closed door is no threat
  return false;
 }
-export const sightRange=(a,b)=>b?.sneaking?Math.max(8,CHARACTER_RANGE-20-(b.stealth||0)*.2-(stanceOf(b)==='prone'?10:0)):CHARACTER_RANGE;
+export const sightRange=(a,b)=>b?.sneaking?Math.max(8,CHARACTER_RANGE-20-effectiveStealth(b)*.2-(stanceOf(b)==='prone'?10:0)):CHARACTER_RANGE;
 // 0 unseen, 1 glimpsed (a moving target inside the detect lobe), 2 identified (inside the identify lobe). Walls block both. See docs/tactics/SIGHT.md.
 export function perceive(s,a,b){const cap=sightRange(a,b),d=distance(a,b)+9*woodlandDepth(s,a,b);if(d<=identifyRange(a,b,cap))return lineOfSight(s,a,b)?2:0;if(b.moved&&d<=detectRange(a,b,cap))return lineOfSight(s,a,b)?1:0;return 0;}
 export const glimpsed=(s,a,b)=>perceive(s,a,b)>=1;
@@ -133,7 +138,7 @@ export function detectionChance(s,a,b){
  if(!canSee(s,a,b))return 0;
  const range=identifyRange(a,b,sightRange(a,b));
  let chance=.95-.5*Math.min(1,distance(a,b)/Math.max(1,range));
- if(b.sneaking)chance*=Math.max(.2,.55-(b.stealth||0)*.003);
+ if(b.sneaking)chance*=Math.max(.2,.55-effectiveStealth(b)*.003);
  if(stanceOf(b)==='kneeling')chance*=.75;else if(stanceOf(b)==='prone')chance*=.45;
  if(coverAgainst(s,a,b))chance*=.45;
  return Math.max(.01,chance*Math.exp(-woodlandDepth(s,a,b)*.35));
@@ -263,7 +268,7 @@ function combatDamage(s,u,damage,fatal=false,source=null){
 }
 function ignite(s,u){
  if(!alive(u)||u.burningTurns>0)return;
- u.burningTurns=3;u.ap=0;u.overwatch=null;u.stance='standing';u.sneaking=false;
+ u.burningTurns=3;u.ap=0;u.overwatch=null;u.stance='standing';u.sneaking=false;u.running=false;
  if(u.team==='guard'&&stateOf(u)!=='broken')setState(s,u,'alert');
  s.queue=[];log(s,u.name+' is on fire / panic for 3 turns.');
 }
@@ -437,7 +442,11 @@ function stepGroupMovement(s){const order=s.queue[0];let moved=false;for(const e
 
 export function turnTo(s,u,heading){if(!canControl(s,u)||s.queue.length||!Number.isFinite(heading))return false;heading=((heading%360)+360)%360;if(heading===u.heading)return false;u.overwatch=null;u.heading=heading;u.facing=Math.cos(heading*Math.PI/180)-Math.sin(heading*Math.PI/180)>=0?1:-1;refresh(s);return true;}
 
-export function setSneaking(s,u){if(!canControl(s,u)||s.queue.length)return false;u.sneaking=!u.sneaking;u.overwatch=null;refresh(s);return true;}
+export function setMovementMode(s,u,mode){
+ if(!Object.hasOwn(MOVEMENT_MODES,mode)||!canControl(s,u)||s.queue.length||movementModeOf(u)===mode)return false;
+ u.sneaking=mode==='sneak';u.running=mode==='run';u.overwatch=null;refresh(s);return true;
+}
+export function setSneaking(s,u){return setMovementMode(s,u,u.sneaking?'walk':'sneak');}
 // Suspicion is approximate: the 6-tile grid cell nearest the source, shared by hearing and peripheral glimpses.
 const approximate=u=>({x:Math.max(0,Math.min(W-1,Math.round(u.x/6)*6)),y:Math.max(0,Math.min(H-1,Math.round(u.y/6)*6)),z:levelOf(u)});
 // A gunshot alerts every guard within twice the weapon's range, squad or guard shooter alike. Guards already alert keep
@@ -575,7 +584,7 @@ export function boundedRoute(s,g,goals,budget){
  const start=key(g.x,g.y,levelOf(g));if(goals.has(start))return [];
  const occupied=new Set(s.units.filter(p=>(alive(p)||incapacitated(p))&&p!==g).map(p=>key(p.x,p.y,levelOf(p)))),stairs=stairSet(s),scores=new Map([[start,0]]),parents=new Map(),heap=[];
  // A* toward the nearest goal (the same admissible estimate pathTo uses), so an open-ground route costs tens of expansions, not a diamond of thousands.
- const pts=[...goals].map(k=>{const [x,y,z=0]=k.split(',').map(Number);return [x,y,z];}),unit=STANCES[stanceOf(g)].moveCost+(g.sneaking?2:0),h=p=>Math.min(...pts.map(([x,y,z])=>{const dx=Math.abs(p.x-x),dy=Math.abs(p.y-y);return (Math.max(dx,dy)+.5*Math.min(dx,dy))*unit+2*Math.abs(p.z-z);}));
+ const pts=[...goals].map(k=>{const [x,y,z=0]=k.split(',').map(Number);return [x,y,z];}),unit=movementCost(g),h=p=>Math.min(...pts.map(([x,y,z])=>{const dx=Math.abs(p.x-x),dy=Math.abs(p.y-y);return (Math.max(dx,dy)+.5*Math.min(dx,dy))*unit+2*movementMultiplier(g)*Math.abs(p.z-z);}));
  const less=(a,b)=>a.f<b.f||(a.f===b.f&&a.g>b.g);const push=n=>{heap.push(n);let i=heap.length-1;while(i){const p=(i-1)>>1;if(!less(heap[i],heap[p]))break;[heap[i],heap[p]]=[heap[p],heap[i]];i=p;}};
  const pop=()=>{const first=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let i=0;while(true){let c=i*2+1;if(c>=heap.length)break;if(c+1<heap.length&&less(heap[c+1],heap[c]))c++;if(!less(heap[c],heap[i]))break;[heap[i],heap[c]]=[heap[c],heap[i]];i=c;}}return first;};
  const trace=k=>{const path=[];while(k!==start){const e=parents.get(k);path.push(e.point);k=e.parent;}return path.reverse();};
@@ -584,7 +593,7 @@ export function boundedRoute(s,g,goals,budget){
   if(goals.has(p.k))return trace(p.k);
   const hp=p.f-p.g;if(hp<bestH){bestH=hp;best=p;}
   // Lean expansion: the same legality as movementNeighbors (level changes need standing, no cutting a corner past a body) checked against the precomputed occupied set.
-  for(const n of neighbors(s,p,stairs)){const same=n.z===p.z;if(!same&&stanceOf(g)!=='standing')continue;if(same&&n.x!==p.x&&n.y!==p.y&&(occupied.has(key(n.x,p.y,p.z))||occupied.has(key(p.x,n.y,p.z))))continue;const k=key(n.x,n.y,n.z),c=p.g+(same?unit*n.cost:n.cost);if(occupied.has(k)||c>=(scores.get(k)??Infinity))continue;scores.set(k,c);const q={x:n.x,y:n.y,z:n.z,cost:same?unit*n.cost:n.cost};parents.set(k,{parent:p.k,point:q});push({...q,k,g:c,f:c+h(q)});}}
+  for(const n of neighbors(s,p,stairs)){const same=n.z===p.z;if(!same&&stanceOf(g)!=='standing')continue;if(same&&n.x!==p.x&&n.y!==p.y&&(occupied.has(key(n.x,p.y,p.z))||occupied.has(key(p.x,n.y,p.z))))continue;const k=key(n.x,n.y,n.z),c=p.g+(same?unit*n.cost:n.cost*movementMultiplier(g));if(occupied.has(k)||c>=(scores.get(k)??Infinity))continue;scores.set(k,c);const q={x:n.x,y:n.y,z:n.z,cost:same?unit*n.cost:n.cost*movementMultiplier(g)};parents.set(k,{parent:p.k,point:q});push({...q,k,g:c,f:c+h(q)});}}
  // Out of budget: head for the closest tile explored (partial route), or give up when nothing is closer than where the guard stands.
  return best===first||!Number.isFinite(bestH)?null:trace(best.k);
 }

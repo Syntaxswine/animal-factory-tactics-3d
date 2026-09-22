@@ -10,7 +10,9 @@ The latest published painted cargo and donkey repair are integrated from 3D main
 
 ## Core boundary
 
-`dist/tactics/core/` is a generated, byte-identical dependency snapshot of the transitive simulation modules rooted at `engine.js` and `world.js` from `Syntaxswine/animal-factory`, `tactics-prototype`, revision `6e2782a4ab3dde0f8b84a8610769664335294fe0`. `manifest.json` records upstream identity and SHA-256 hashes. Do not edit these modules locally. Update the pinned revision in `tools/sync-tactics-core.mjs` and regenerate from an available upstream Git object when deliberately upgrading.
+`dist/tactics/core/` is a generated, byte-identical dependency snapshot of the transitive simulation modules rooted at `engine.js` and `world.js` from `Syntaxswine/animal-factory`, `work/movement-modes-core`, revision `ee61884c80d50def96096d6a08488aa5d631bd67`. `manifest.json` records upstream identity and SHA-256 hashes. Do not edit these modules locally. Update the pinned revision in `tools/sync-tactics-core.mjs` and regenerate from an available upstream Git object when deliberately upgrading.
+
+This isolated source revision adds the requested Run/Sneak rules to the previously pinned sprite core; it is not yet merged into the source tactics-prototype branch. See [MOVEMENT-MODES.md](MOVEMENT-MODES.md).
 
 The source sprite target at that revision and this page therefore execute identical simulation modules. This is a pinned dependency, not live synchronization with subsequent upstream changes. The current source game UI and the old 3D hybrid lab remain separate. The new encounter does not enable `geometryMode: hybrid` or use mesh raycasts to resolve combat. Raycasts select a rendered character; the shared engine validates actions and decides outcomes.
 
