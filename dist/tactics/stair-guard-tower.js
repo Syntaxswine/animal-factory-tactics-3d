@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import {DIMENSIONS} from './hybrid-world.js';
-export function buildStairGuardTower(root,{box,wood,iron,material,skin,metal,cargo,wrap=false,large=false}){
+export function buildStairGuardTower(root,{box,wood,iron,material,skin,metal,cargo,wrap=false,large=false,ladder=false}){
  const H=3*DIMENSIONS.floorSpacing,m=metal?material('tower-rust',0xd3b6a8,[.012,.012,.30,.475],cargo):wood(skin),trim=metal?iron:wood(skin,1),shift=wrap?0:-.95;let parent=root;
  // Expand the 3×3 core to 5×5 while preserving one-tile perimeter stair widths.
  const axis=v=>large?(Math.abs(v)<=1.5?v*5/3:v+Math.sign(v)):v;
@@ -16,7 +16,20 @@ export function buildStairGuardTower(root,{box,wood,iron,material,skin,metal,car
   b('frame-beam',trim,[0,hi,side*1.36],[2.9,.18,.18]);b('frame-beam',trim,[side*1.36,hi,0],[.18,.18,2.9]);
  }
  for(let i=0;i<12;i++)b('guardhouse-floor',m,[-1.375+i*.25,H-.06,0],[.245,.12,3]);
- if(wrap){
+ if(ladder){
+  // A clear outside climb ends at a guarded landing aligned with the existing doorway.
+  const doorZ=axis(-.8),edge=large?2.5:1.5,outer=edge+.94;
+  const place=(name,mat,[x,y,z],size)=>{const pos=wrap?[z,y,-x]:[x,y,z],dims=wrap?[size[2],size[1],size[0]]:size;return rawBox(name,mat,pos,dims);};
+  place('ladder-landing',m,[edge+.45,H-.06,doorZ],[.90,.12,.96]);
+  for(const side of [-1,1]){
+   const z=doorZ+side*.43;
+   place('ladder-landing-rail',trim,[edge+.45,H+.90,z],[.90,.065,.065]);place('ladder-landing-post',trim,[outer-.04,H+.45,z],[.065,.90,.065]);
+   place('ladder-stile',trim,[outer,(H+.93)/2,doorZ+side*.35],[.075,H+.93,.075]);
+   place('ladder-landing-column',trim,[outer-.10,H/2,z],[.10,H,.10]);
+  }
+  for(let y=.22;y<H-.05;y+=.28)place('ladder-rung',metal?iron:trim,[outer,y,doorZ],[.08,.06,.70]);
+  for(const y of [.4,H/3,H*2/3,H-.2])for(const side of [-1,1])place('ladder-standoff',iron,[outer-.10,y,doorZ+side*.35],[.20,.06,.06]);
+ }else if(wrap){
   // Quarter-turn landings carry each flight onto the next face of the trellis.
   const corners=new Map();
   const rotate=([x,y,z],q)=>{for(let i=0;i<q;i++)[x,z]=[-z,x];return [x,y,z];};
@@ -72,5 +85,5 @@ export function buildStairGuardTower(root,{box,wood,iron,material,skin,metal,car
  b('roof-ridge',trim,[0,H+2.49,0],[.16,.12,3.35]);
  if(metal){for(const z of [-1.505,1.505])for(const x of [-1.3,-.65,0,.65,1.3])for(const y of [.14,.72])b('panel-rivet',iron,[x,H+y,z],[.032,.032,.018]);}
  else{for(const z of [-1.507,1.507])for(let i=0;i<12;i++)b('wood-batten',trim,[-1.375+i*.25,H+.42,z],[.027,.82,.018]);}
- root.userData.stairTower={stories:3,deckHeight:H,guardhouse:large?[5,5]:[3,3],flights:6,treadsPerFlight:9,layout:wrap?'wraparound':'switchback',entrySide:wrap?'-Z':'+X',coreOffsetX:shift,door:wrap?{x:[axis(-1.25),axis(-.35)],z:axis(-1.45),height:1.76}:{z:[-1.25,-.35],x:1.45,height:1.76}};
+ root.userData.stairTower={stories:3,deckHeight:H,guardhouse:large?[5,5]:[3,3],flights:ladder?0:6,treadsPerFlight:ladder?0:9,access:ladder?'ladder':'stairs',layout:wrap?'wraparound':'switchback',entrySide:wrap?'-Z':'+X',coreOffsetX:shift,door:wrap?{x:[axis(-1.25),axis(-.35)],z:axis(-1.45),height:1.76}:{z:[-1.25,-.35],x:1.45,height:1.76}};
 }
