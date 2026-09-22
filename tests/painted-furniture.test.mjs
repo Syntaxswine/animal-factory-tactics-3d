@@ -39,3 +39,14 @@ test('fire flicker loops continuously without drift and resets to authored trans
  }
  library.dispose();
 });
+
+test('guard tower preserves 3x3 supports, 5x5 deck and an unobstructed ladder aperture',()=>{
+ const library=createFurnitureLibrary(atlas,atlas),{root,form}=library.build('wooden-guard-tower'),data=root.userData.tower,H=data.deckHeight;
+ assert.deepEqual(form.tiles,[5,5]);assert.equal(data.stories,3);assert(Math.abs(H-6.36)<1e-9);
+ const posts=[],deck=[];root.traverse(o=>{if(o.name==='support-post')posts.push(o);if(['deck-plank','deck-beam','deck-joist','hatch-header'].includes(o.name))deck.push(o);});assert.equal(posts.length,4);
+ const bounds=new THREE.Box3();for(const p of posts)bounds.union(new THREE.Box3().setFromObject(p));assert(bounds.min.x>=-1.5&&bounds.max.z<=1.5&&bounds.max.x-bounds.min.x>2.9);
+ const band=root.getObjectByName("iron-post-band"),bandBox=new THREE.Box3().setFromObject(band),postBox=new THREE.Box3().setFromObject(posts[0]);assert(bandBox.min.x<postBox.min.x&&bandBox.max.z>postBox.max.z,"bands must stand proud of timber");
+ const ray=new THREE.Raycaster();for(const x of [-.40,0,.40])for(const z of [1.35,1.75,2.15]){ray.set(new THREE.Vector3(x,H+.1,z),new THREE.Vector3(0,-1,0));ray.far=.6;assert.equal(ray.intersectObjects(deck,false).length,0,'hidden geometry across ladder aperture');}
+ ray.set(new THREE.Vector3(0,H+.1,0),new THREE.Vector3(0,-1,0));assert(ray.intersectObjects(deck,false).length>0,'main deck missing');
+ library.dispose();
+});
