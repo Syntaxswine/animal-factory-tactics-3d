@@ -19,7 +19,7 @@ test('fixtures have downward passive emitter anchors and no active lighting',()=
  for(const f of FURNITURE_FORMS){const {root}=library.build(f.id);const emitters=[];
   root.traverse(o=>{assert(!o.isLight);if(o.material)assert.equal(o.material.emissive.getHex(),0);if(o.userData.role==='future-light')emitters.push(o);});
   assert.equal(emitters.length,f.light?(f.id==='streetlight-double'?2:1):0);
-  for(const a of emitters){assert.equal(a.userData.enabled,false);assert(new THREE.Vector3(0,0,-1).applyQuaternion(a.quaternion).y<-.999);}
+  for(const a of emitters){assert.equal(a.userData.enabled,false);const direction=new THREE.Vector3(0,0,-1).applyQuaternion(a.getWorldQuaternion(new THREE.Quaternion()));assert(direction.y<(f.id==='wooden-spotlight-tower'?-.15:-.999));if(f.id==='wooden-spotlight-tower'){assert(direction.z>.9);assert.equal(a.userData.distribution,'spot');}}
   if(f.light)assert(root.getObjectByName('mount'));
  }
  library.dispose();
@@ -63,3 +63,5 @@ test('stair guardhouses have six ascending flights and an open top entrance',()=
  }
  library.dispose();
 });
+
+test('spotlight tower preserves ladder clearance and aims beyond its railing',()=>{const library=createFurnitureLibrary(atlas,atlas);try{const {root}=library.build('wooden-spotlight-tower'),fixture=root.getObjectByName('spotlight'),emitter=root.getObjectByName('emitter-0');root.updateMatrixWorld(true);const ray=new THREE.Raycaster(new THREE.Vector3(0,10,1.75),new THREE.Vector3(0,-1,0),0,4);assert.equal(ray.intersectObject(fixture,true).length,0);const direction=new THREE.Vector3(0,0,-1).applyQuaternion(emitter.getWorldQuaternion(new THREE.Quaternion()));ray.set(emitter.getWorldPosition(new THREE.Vector3()),direction);ray.far=4;assert.equal(ray.intersectObject(root,true).length,0,'spotlight aims into its own hardware or railing');assert(root.getObjectByName('spotlight-reflector'));assert(root.getObjectByName('spotlight-housing'));}finally{library.dispose();}});

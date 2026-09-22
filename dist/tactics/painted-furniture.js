@@ -4,6 +4,7 @@ import {buildWoodenGuardTower} from './wooden-guard-tower.js';
 import {softBox} from './painted-environment-scene.js';
 
 export const FURNITURE_FORMS=[
+ {id:'wooden-spotlight-tower',name:'Spotlight guard tower',tiles:[5,5],light:true,note:'Three-story timber tower with a pedestal searchlight, swivel yoke and recessed reflector. Lighting deferred.'},
  {id:'wood-large-wrap-tower',name:'Large timber guardhouse tower',tiles:[7,7],note:'5×5 guardhouse and timber trellis with wraparound stairs. 7×7 overall.'},
  {id:'iron-large-wrap-tower',name:'Large rust-red guardhouse tower',tiles:[7,7],note:'5×5 rusty red iron guardhouse with wraparound stairs. 7×7 overall.'},
  {id:'wood-wrap-tower',name:'Timber wraparound guard tower',tiles:[5,5],note:'Stairs wrap around the 3×3 timber trellis to a 3×3 guardhouse. 5×5 overall.'},
@@ -70,7 +71,26 @@ export function createFurnitureLibrary(atlas,cargo){
   const form=FURNITURE_FORMS.find(f=>f.id===id);if(!form||!Object.hasOwn(FURNITURE_FINISHES,skin))throw Error('Invalid furniture form/finish');
   const root=new THREE.Group();root.name=id;const timber=wood(skin),warm=wood(skin,1);
   if(['wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower','wood-large-wrap-tower','iron-large-wrap-tower'].includes(id)){buildStairGuardTower(root,{box,wood,iron,material,skin,cargo,metal:id.startsWith('iron-'),wrap:id.includes('-wrap-'),large:id.includes('-large-')});
-  }else if(id==='wooden-guard-tower'){buildWoodenGuardTower(root,{box,wood,iron,skin});
+   }else if(id==='wooden-guard-tower'||id==='wooden-spotlight-tower'){buildWoodenGuardTower(root,{box,wood,iron,skin});
+   if(id==='wooden-spotlight-tower'){
+    const H=root.userData.tower.deckHeight,fixture=new THREE.Group();fixture.name='spotlight';fixture.position.set(-1.35,H,1.10);root.add(fixture);
+    const housing=material('spotlight-oxide',0xd3b6a8,[.012,.012,.30,.475],cargo);
+    box(fixture,iron,[0,.055,0],[.66,.11,.58]);for(const x of [-.24,.24])for(const z of [-.20,.20])cyl(fixture,brass,[x,.125,z],.033,.033,.035);
+    cyl(fixture,iron,[0,.53,0],.115,.16,.91);cyl(fixture,housing,[0,1.01,0],.23,.23,.13);
+    box(fixture,housing,[0,1.12,0],[1.18,.12,.15]);for(const x of [-.56,.56]){box(fixture,housing,[x,1.38,0],[.095,.53,.14]);const pivot=cyl(fixture,brass,[x,1.61,0],.105,.105,.13);pivot.rotation.z=Math.PI/2;}
+    const head=new THREE.Group();head.name='spotlight-head';head.position.set(0,1.61,0);head.rotation.x=.22;fixture.add(head);
+    const shell=geo('searchlight-shell',()=>new THREE.LatheGeometry([[.08,-.39],[.26,-.35],[.42,-.22],[.46,.19],[.49,.24],[.49,.29],[.45,.29],[.425,.20],[.38,-.17],[.22,-.27],[.08,-.28]].map(v=>new THREE.Vector2(...v)),48));
+    mesh(head,shell,housing,[0,0,0],[Math.PI/2,0,0]).name='spotlight-housing';
+    const reflector=material('searchlight-reflector',0xb9c6c8);reflector.side=THREE.DoubleSide;reflector.roughness=.34;reflector.metalness=.35;
+    mesh(head,geo('searchlight-reflector',()=>new THREE.LatheGeometry([[.065,-.22],[.13,-.19],[.24,-.10],[.34,.055],[.423,.205]].map(v=>new THREE.Vector2(...v)),48)),reflector,[0,0,0],[Math.PI/2,0,0]).name='spotlight-reflector';
+    mesh(head,geo('searchlight-rim',()=>new THREE.TorusGeometry(.465,.025,8,48)),iron,[0,0,.282]);mesh(head,geo('searchlight-bulb',()=>new THREE.SphereGeometry(.09,16,10)),bulb,[0,0,.065]);
+    for(const x of [-.24,.24])box(head,iron,[x,0,.31],[.014,.79,.018]);box(head,iron,[0,0,.31],[.85,.014,.018]);
+    tube(head,iron,[[-.23,.29,-.23],[-.23,.43,-.20],[.23,.43,-.20],[.23,.29,-.23]],.023);
+    tube(fixture,iron,[[.12,.32,-.05],[.29,.46,-.22],[.30,.90,-.25],[.14,1.13,-.20]],.019);
+    box(fixture,iron,[.17,.82,-.04],[.20,.26,.17]);knob(fixture,[.18,.83,.057]);
+    const emitter=anchor(head,'emitter-0',[0,0,.34],[0,0,1]);emitter.userData.distribution='spot';emitter.userData.coneAngle=Math.PI/8;anchor(root,'mount',[-1.35,H,1.1]);
+   }
+
   }else if(id==='cooking-fire'){
    const hearth=build('campfire',skin,{burning}).root;root.add(hearth);
    // Three planted legs form a triangular pyramid around the hearth.
