@@ -1,0 +1,301 @@
+{
+  "count": 64,
+  "errors": [],
+  "coverage": [
+    {
+      "mesh": "author",
+      "scale": "58",
+      "heading": 0,
+      "direct": 21660,
+      "reused": 760,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "58",
+      "heading": 1,
+      "direct": 29127,
+      "reused": 1885,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "58",
+      "heading": 2,
+      "direct": 30558,
+      "reused": 1714,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "58",
+      "heading": 3,
+      "direct": 24652,
+      "reused": 4274,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "58",
+      "heading": 4,
+      "direct": 14604,
+      "reused": 4584,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "58",
+      "heading": 5,
+      "direct": 25471,
+      "reused": 4315,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "58",
+      "heading": 6,
+      "direct": 31519,
+      "reused": 1564,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "58",
+      "heading": 7,
+      "direct": 29671,
+      "reused": 1862,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "110",
+      "heading": 0,
+      "direct": 79355,
+      "reused": 3221,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "110",
+      "heading": 1,
+      "direct": 107137,
+      "reused": 7190,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "110",
+      "heading": 2,
+      "direct": 112123,
+      "reused": 6204,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "110",
+      "heading": 3,
+      "direct": 90430,
+      "reused": 16008,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "110",
+      "heading": 4,
+      "direct": 53669,
+      "reused": 16963,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "110",
+      "heading": 5,
+      "direct": 93636,
+      "reused": 15981,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "110",
+      "heading": 6,
+      "direct": 115394,
+      "reused": 6639,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "author",
+      "scale": "110",
+      "heading": 7,
+      "direct": 108878,
+      "reused": 7080,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "58",
+      "heading": 0,
+      "direct": 21503,
+      "reused": 847,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "58",
+      "heading": 1,
+      "direct": 28958,
+      "reused": 1938,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "58",
+      "heading": 2,
+      "direct": 30444,
+      "reused": 1468,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "58",
+      "heading": 3,
+      "direct": 24490,
+      "reused": 4290,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "58",
+      "heading": 4,
+      "direct": 14535,
+      "reused": 4618,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "58",
+      "heading": 5,
+      "direct": 25391,
+      "reused": 4308,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "58",
+      "heading": 6,
+      "direct": 31286,
+      "reused": 1476,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "58",
+      "heading": 7,
+      "direct": 29502,
+      "reused": 1968,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "110",
+      "heading": 0,
+      "direct": 78903,
+      "reused": 3775,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "110",
+      "heading": 1,
+      "direct": 106585,
+      "reused": 7371,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "110",
+      "heading": 2,
+      "direct": 111771,
+      "reused": 6130,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "110",
+      "heading": 3,
+      "direct": 89966,
+      "reused": 15829,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "110",
+      "heading": 4,
+      "direct": 53474,
+      "reused": 16886,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "110",
+      "heading": 5,
+      "direct": 93393,
+      "reused": 15993,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "110",
+      "heading": 6,
+      "direct": 115673,
+      "reused": 6173,
+      "fallback": 0,
+      "fallbackPercent": 0
+    },
+    {
+      "mesh": "10k",
+      "scale": "110",
+      "heading": 7,
+      "direct": 108399,
+      "reused": 7420,
+      "fallback": 0,
+      "fallbackPercent": 0
+    }
+  ],
+  "diagnostics": {
+    "ppu": 46.15384615384615,
+    "gpu": {
+      "geometries": 24,
+      "textures": 11
+    }
+  }
+}

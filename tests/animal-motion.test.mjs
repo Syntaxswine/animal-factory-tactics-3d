@@ -5,7 +5,8 @@ import {createMammalMotion} from '../dist/tactics/animal-motion.js';import {crea
 const v=a=>new T.Vector3(...a),data=p=>JSON.parse(fs.readFileSync(new URL('../dist/tactics/'+p.file,import.meta.url)));
 function setup(p){const w=p.create(data(p)),m=p.unarmed?createHenMotion(w):createMammalMotion(w,p);return {w,m,dispose(){m.restore();m.dispose();w.dispose();}};}
 function surface(mesh,predicate=()=>true){const a=mesh.geometry.attributes.position,points=[];for(let i=0;i<a.count;i++)if(predicate(a,i))points.push(mesh.applyBoneTransform(i,new T.Vector3().fromBufferAttribute(a,i)).applyMatrix4(mesh.matrixWorld));return points;}
-test('motion catalog includes every completed reduced character exactly once',()=>{const files=fs.readdirSync(new URL('../dist/tactics/',import.meta.url)).filter(f=>f.endsWith('-10k-data.json'));assert.deepEqual(roster.map(p=>p.file).sort(),files.sort());assert.equal(new Set(roster.map(p=>p.id)).size,12);});
+// The static truck shares the reduced-mesh suffix but has no character rig.
+ test('motion catalog includes every completed reduced character exactly once',()=>{const files=fs.readdirSync(new URL('../dist/tactics/',import.meta.url)).filter(f=>f.endsWith('-10k-data.json')&&f!=='canvas-truck-10k-data.json');assert.deepEqual(roster.map(p=>p.file).sort(),files.sort());assert.equal(new Set(roster.map(p=>p.id)).size,12);});
 for(const p of roster){
  test(p.id+': dense motion preserves bone lengths, planted soles, hand surfaces and floor clearance',()=>{const {w,m,dispose}=setup(p);try{
   const lengths=new Map(m.skeleton.bones.filter(b=>b.parent.isBone).map(b=>[b,b.position.length()])),feet=[-1,1].map(s=>w.parts.find(m=>/hoof|boot|foot|toes/.test(m.name)&&m.name.endsWith(' '+s)));let previous;

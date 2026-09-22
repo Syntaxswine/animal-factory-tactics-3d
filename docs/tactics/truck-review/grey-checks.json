@@ -1,0 +1,11 @@
+{
+  "count": 64,
+  "errors": [],
+  "diagnostics": {
+    "ppu": 46.15384615384615,
+    "gpu": {
+      "geometries": 24,
+      "textures": 6
+    }
+  }
+}

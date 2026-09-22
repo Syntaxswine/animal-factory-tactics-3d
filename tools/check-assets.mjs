@@ -1,3 +1,4 @@
+import {TRUCK_PAINT} from '../dist/tactics/canvas-truck-paint.js';
 import {CARGO_ATLAS} from '../dist/tactics/painted-cargo.js';
 import {PAINTED_ATLAS} from '../dist/tactics/painted-environment-scene.js';
 import {PROPS,EDGES,GROUNDS} from '../dist/tactics/environment.js';
@@ -20,6 +21,7 @@ async function checkPNG(path,width,height,channels=6){
  assert.equal(data.readUInt32BE(16),width,path);assert.equal(data.readUInt32BE(20),height,path);
  assert.equal(data[25],channels,`${path} has unexpected PNG channels`);
 }
+await checkPNG(TRUCK_PAINT.replace('../',''),1536,1024,2);
 const manifest=JSON.parse(await readFile(new URL('assets/characters/manifest.json',root)));
 for(const species of CHARACTER_SPECIES)for(const weapon of ['hands',...ARMED_WEAPONS])for(const stance of ['standing','kneeling','prone']){
  const frame=characterArt(species,weapon,'idle',stance);
@@ -50,6 +52,7 @@ assert.deepEqual(environment.assets.map(a=>a.id).sort(),artIds.sort());
 for(const a of environment.assets)await checkPNG('assets/environment/'+a.file,1254,1254,a.kind==='terrain'?2:6);
 // Validate the actual runtime overrides as well as catalog paths.
 const active=new Set(environment.assets.map(a=>(DOOR_ART[a.id]||PROP_ART[a.id])?.file||a.file));
+active.add(TRUCK_PAINT.replace('../assets/environment/',''));
 for(const {file} of Object.values(ROOM_SURFACES))active.add(file);
 for(const file of active)await readFile(new URL('assets/environment/'+file,root));
 const cargoAtlas=CARGO_ATLAS.replace('../assets/environment/','');active.add(cargoAtlas);await checkPNG('assets/environment/'+cargoAtlas,1536,1024,2);
