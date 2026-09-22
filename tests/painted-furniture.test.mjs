@@ -53,12 +53,12 @@ test('guard tower preserves 3x3 supports, 5x5 deck and an unobstructed ladder ap
 
 test('stair guardhouses have six ascending flights and an open top entrance',()=>{
  const library=createFurnitureLibrary(atlas,atlas);
- for(const id of ['wood-stair-tower','iron-stair-tower']){const {root}=library.build(id),meta=root.userData.stairTower,treads=[],walls=[];assert.deepEqual(meta.guardhouse,[3,3]);
+ for(const id of ['wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower']){const {root}=library.build(id),meta=root.userData.stairTower,treads=[],walls=[];assert.deepEqual(meta.guardhouse,[3,3]);
   root.traverse(o=>{if(o.name==='stair-tread')treads.push(o);if(['door-wall','door-jamb','door-lintel'].includes(o.name))walls.push(o);});assert.equal(treads.length,54);
   for(let i=0;i<treads.length;i++)assert(Math.abs(treads[i].position.y+.035-(i+1)*1.06/9)<1e-8);
   const overhead=[];root.traverse(o=>{if(['stair-tread','stair-landing','entry-landing','guardhouse-floor','roof-panel'].includes(o.name))overhead.push(o);});
   const clearance=new THREE.Raycaster();clearance.far=1.65;for(const tread of treads){const pos=tread.position.clone();pos.y+=.046;clearance.set(pos,new THREE.Vector3(0,1,0));assert.equal(clearance.intersectObjects(overhead,false).length,0,'stair headroom obstructed');}
-  const ray=new THREE.Raycaster();ray.far=.5;for(const z of [-1.16,-.8,-.44])for(const y of [.2,.9,1.6]){ray.set(new THREE.Vector3(.8,meta.deckHeight+y,z),new THREE.Vector3(-1,0,0));assert.equal(ray.intersectObjects(walls,false).length,0,'blocked guardhouse entrance');}
+  const ray=new THREE.Raycaster();ray.far=.5;for(const z of [-1.16,-.8,-.44])for(const y of [.2,.9,1.6]){if(meta.layout==='wraparound')ray.set(new THREE.Vector3(z,meta.deckHeight+y,-1.8),new THREE.Vector3(0,0,1));else ray.set(new THREE.Vector3(.8,meta.deckHeight+y,z),new THREE.Vector3(-1,0,0));assert.equal(ray.intersectObjects(walls,false).length,0,'blocked guardhouse entrance');}
  }
  library.dispose();
 });

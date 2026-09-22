@@ -6,6 +6,7 @@ Open `tactics/painted-furniture.html`, also linked from the 3D gallery. These ar
 
 | Model | Tile footprint | Construction |
 | --- | --- | --- |
+| Timber / rust-red wraparound guardhouses | 3×3 house / 5×5 overall | Perimeter flights with quarter-turn corner landings and rear entry |
 | Timber / iron stair guardhouses | 3×3 house / 6×5 overall | Three-story frame, six side stair flights, landings and a windowed guardhouse |
 | Wooden guard tower | 5×5 deck / 3×3 supports | Three-story braced timber frame, railings and side ladder through an open hatch |
 | Hanging cooking pot | 2×2 | Three-legged iron tripod, linked chain, bail handle and open pot over the stone-ring fire |
@@ -39,8 +40,8 @@ There are no Light objects or emissive materials in these models. The gallery us
 - `npm run check`: **587 tests passed**, plus tactical asset validation.
 - `npm run build:tactics-3d`: passed; all three furniture files are included in the Pages output.
 - Six furniture tests check all finishes for finite geometry, ground contact, footprint bounds, passive anchors, no emission and stable resource ownership/disposal.
-- `tools/painted-furniture-review.mjs`: all 18 forms at close/gameplay scale, an underside sconce view, mobile width, repeated finish changes and browser errors. Set `PLAYWRIGHT_PATH` when Playwright is outside the local module tree; optional `REVIEW_ORIGIN` defaults to port 4331.
-- Repeated gallery changes stabilized at 184 library geometries, 31 materials and 27 texture clones; browser rendering reported 195 geometries and 8 textures. No browser errors or mobile horizontal overflow in the final run.
+- `tools/painted-furniture-review.mjs`: all 20 forms at close/gameplay scale, an underside sconce view, mobile width, repeated finish changes and browser errors. Set `PLAYWRIGHT_PATH` when Playwright is outside the local module tree; optional `REVIEW_ORIGIN` defaults to port 4331.
+- Repeated gallery changes stabilized at 195 library geometries, 31 materials and 27 texture clones; browser rendering reported 206 geometries and 8 textures. No browser errors or mobile horizontal overflow in the final run.
 - Independent hostile review: **9/10**, no blockers for this design/gallery scope. Remaining optional art polish: repeated close-up texture crops and heavy refrigerator wear. Screenshots and machine results are local in `artifacts/furniture/` and `artifacts/furniture-review/`.
 
 The viewer uses a stable neutral-character framing envelope because skinned mesh bounds can retain stale positions when switching collection/single views. Model geometry bounds remain exact; this envelope affects camera framing only.
@@ -61,6 +62,12 @@ Three painted timber finishes are available. Tests verify post bounds, raised ir
 
 ## Stair guardhouses
 
-Timber and iron variants retain the three-story deck height (6.36 units), with a 3×3 windowed guardhouse above. The six half-story switchback flights each have nine treads and connect through turning landings along the +X side. An inner-lane entry bridge connects the final turning landing to the side doorway, leaving the last flight open. Braced supports, stair columns, handrails and a shallow pitched roof complete the structure. Timber offers the three wood finishes; iron uses a fixed painted metal finish with visible panel rivets.
+Timber and iron variants retain the three-story deck height (6.36 units), with a 3×3 windowed guardhouse above. The six half-story switchback flights each have nine treads and connect through turning landings along the +X side. An inner-lane entry bridge connects the final turning landing to the side doorway, leaving the last flight open. Braced supports, stair columns, handrails and a shallow pitched roof complete the structure. Timber offers the three wood finishes; iron uses the fixed oxide-red barrel atlas finish with visible panel rivets.
 
 The full arrangement needs 6×5 tiles, including stairs, landings and roof overhang; the 3×3 core is offset X=−0.95 from the asset origin. Metadata records both sizes and the stair layout. Tests check all 54 tread elevations, raycast 1.65 units of headroom above every tread center, and raycast the doorway. As with the first tower, stair traversal and elevated gameplay placement are deferred.
+
+## Wraparound stairs and rusty iron
+
+The wraparound variants retain the 3×3 trellis and guardhouse but distribute six flights around all four faces, with quarter-turn landings at the corners. Four flights make one full revolution; the final two arrive at the rear corner, where a balcony connects to the rear doorway. The complete model fits 5×5 tiles. Corner posts and diagonal knee braces support the landings. Door metadata switches to the −Z face. Original 6×5 switchback variants remain available.
+
+Both iron tower layouts use the cargo atlas oxide-red barrel panel, with exposed dark iron for framing and rails. The floor/roof panels, steps and landings share that painterly red-and-rust treatment. Browser checks cover 20 forms; geometry/headroom/doorway checks cover all four stair tower variants.

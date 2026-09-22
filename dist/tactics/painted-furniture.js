@@ -4,6 +4,8 @@ import {buildWoodenGuardTower} from './wooden-guard-tower.js';
 import {softBox} from './painted-environment-scene.js';
 
 export const FURNITURE_FORMS=[
+ {id:'wood-wrap-tower',name:'Timber wraparound guard tower',tiles:[5,5],note:'Stairs wrap around the 3×3 timber trellis to a 3×3 guardhouse. 5×5 overall.'},
+ {id:'iron-wrap-tower',name:'Rust-red wraparound guard tower',tiles:[5,5],note:'Perimeter stairs and a guardhouse in rusty red barrel paint. 3×3 core; 5×5 overall.'},
  {id:'wood-stair-tower',name:'Timber stair guard tower',tiles:[6,5],note:'Three-story 3×3 guardhouse tower with exterior switchback stairs. 6×5 overall clearance.'},
  {id:'iron-stair-tower',name:'Iron stair guard tower',tiles:[6,5],note:'Riveted iron guardhouse and exterior stairs. 3×3 house; 6×5 overall clearance.'},
  {id:'wooden-guard-tower',name:'Wooden guard tower',tiles:[5,5],note:'3×3 braced supports · three stories · 5×5 railed deck with a ladder opening.'},
@@ -65,7 +67,7 @@ export function createFurnitureLibrary(atlas,cargo){
   if(disposed)throw Error('Furniture library disposed');
   const form=FURNITURE_FORMS.find(f=>f.id===id);if(!form||!Object.hasOwn(FURNITURE_FINISHES,skin))throw Error('Invalid furniture form/finish');
   const root=new THREE.Group();root.name=id;const timber=wood(skin),warm=wood(skin,1);
-  if(id==='wood-stair-tower'||id==='iron-stair-tower'){buildStairGuardTower(root,{box,wood,iron,material,skin,metal:id==='iron-stair-tower'});
+  if(['wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower'].includes(id)){buildStairGuardTower(root,{box,wood,iron,material,skin,cargo,metal:id.startsWith('iron-'),wrap:id.includes('-wrap-')});
   }else if(id==='wooden-guard-tower'){buildWoodenGuardTower(root,{box,wood,iron,skin});
   }else if(id==='cooking-fire'){
    const hearth=build('campfire',skin,{burning}).root;root.add(hearth);
