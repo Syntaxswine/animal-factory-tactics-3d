@@ -1,6 +1,6 @@
 // Explicit, reproducible changes to the pinned dependency. Never edit core/.
 export const clockOverrides={
- 'engine.js':'Use the shared one-minute combat round for off-map guard settlement.',
+ 'engine.js':'Use shared round timing and opt-in 3D exposure-based awareness.',
  'world.js':'Use the shared clock, one-minute completed rounds, and exploration pacing.'
 };
 function once(source,from,to){if(source.split(from).length!==2)throw Error('Clock adapter anchor changed: '+from.slice(0,100));return source.replace(from,to);}
@@ -9,6 +9,15 @@ export function adaptCoreClock(name,data){
  let s=data.toString();
  if(name==='engine.js'){
   s=once(s,',ROUND_MINUTES=10,',',');
+  s="import {updateAwareness,awarenessPerception} from '../awareness.js';\n"+s;
+  s=once(s,'s.rules={social:!!options.social,rosterSeed};','s.rules={social:!!options.social,awareness:!!options.awareness,rosterSeed};');
+  s=once(s,'export function perceive(s,a,b){','export function geometricPerceive(s,a,b){');
+  s=once(s,'export const glimpsed=', 'export function perceive(s,a,b){return awarenessPerception(s,a,b,geometricPerceive(s,a,b));}\nexport const glimpsed=');
+  s=once(s,'export function notices(s,a,b){','export function notices(s,a,b){\n if(s.rules?.awareness)return canSee(s,a,b);');
+  s=once(s,'s.glimpses[g.id]={x:g.x,y:g.y,z:levelOf(g)};', 's.glimpses[g.id]=s.rules?.awareness?approximate(g):{x:g.x,y:g.y,z:levelOf(g)};');
+  s=once(s,'if(detect)refresh(s);', "if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-definition.starts.length]:definition.starts[u.id];u.perception=Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}\n if(detect)refresh(s);");
+  s=once(s,'function refreshNow(s){','function refreshNow(s){\n updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});');
+
   s="import {COMBAT_ROUND_MINUTES as ROUND_MINUTES} from '../game-clock.js';\nexport {ROUND_MINUTES};\n"+s;
  }else{
   s="import {createClock,mapStartMinutes,formatClock,advanceClock,elapsedGameMinutes,observeRoundTime,turnBased} from '../game-clock.js';\nexport {PLAY_MINUTES_PER_SECOND} from '../game-clock.js';\n"+s;

@@ -1,0 +1,67 @@
+import {woodlandDepth} from './core/woodland.js';
+import {daylightAt} from './daylight.js';
+import {traceProjectile,targetHeight} from './core/projectiles.js';
+import {mapStartMinutes} from './game-clock.js';
+const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
+export const AWARENESS={suspicious:25,identified:100,decay:2,referencePerception:50};
+const active=u=>u.hp>0&&!u.away&&!['quit','captured'].includes(u.casualty);
+function clearRay(s,origin,direction,reach){const hit=traceProjectile({...s,units:[]},null,origin,direction,reach);return hit.kind==='range'||hit.distance>=reach-1e-6;}
+export function illuminationAt(s,u,zone='torso'){
+ const sun=daylightAt(s.clock?.minutes??mapStartMinutes(s.definition));
+ const origin={x:u.x,y:u.y,h:(u.z||0)*3+targetHeight(u,zone)};
+ const direction={x:sun.direction[0],y:sun.direction[2],h:sun.direction[1]};
+ // Ambient visibility is deliberately separate from renderer exposure settings.
+ return .12+.13*sun.strength+.75*sun.strength*(sun.strength>0&&clearRay(s,origin,direction,80)?1:0);
+}
+export function awarenessRate({distance,exposure,light,contrast=0,perception=50,stealth=20,sneaking=false,running=false,moving=false,stance='standing',alert=false,concealment=0}){
+ const skill=clamp(1+(perception-stealth)/100,.35,1.8),motion=moving?(running?1.65:1.2):.65;
+ const posture=stance==='prone'?.45:stance==='kneeling'?.75:1;
+ return 8*clamp(1-distance/70,.12,1)*exposure*clamp(light+contrast*.35,.06,1)*skill*motion*posture*(sneaking?.55:1)*(alert?1.5:1)*Math.exp(-concealment*.35);
+}
+const pose=u=>[u.x,u.y,u.z||0,u.heading,u.stance,u.steps,u.ap,JSON.stringify(u.ammo)].join(':');
+export function updateAwareness(s,{geometry,zones}){
+ if(!s.rules?.awareness)return;
+ const combat=s.phase==='player'||s.phase==='enemy',seconds=s.awarenessSeconds||0;s.awarenessSeconds=0;
+ const units=s.units.filter(active),lights=new Map();
+ const light=(u,zone)=>{const key=u.id+':'+zone;if(!lights.has(key))lights.set(key,illuminationAt(s,u,zone));return lights.get(key);};
+ for(const observer of units){observer.awareness??={};
+  for(const target of units){if(observer.team===target.team)continue;
+   const key=target.id,old=observer.awareness[key],signature=pose(observer)+'|'+pose(target);
+   const record=old||{score:0,round:s.round,spent:0,signature,lastKnown:null};
+   let elapsed=seconds;
+   if(combat){
+    elapsed=0;
+    if(!record.combat){record.spent=0;}
+    else if(record.round!==s.round){elapsed=Math.max(0,60-record.spent);record.spent=0;}
+    else if(old&&record.signature!==signature){
+     const actionSeconds=60*Math.max(Math.max(0,(record.observerAP??observer.ap)-observer.ap)/Math.max(1,observer.maxAp),Math.max(0,(record.targetAP??target.ap)-target.ap)/Math.max(1,target.maxAp));
+     elapsed=Math.min(actionSeconds,60-record.spent);record.spent+=elapsed;
+    }
+   }
+   record.observerAP=observer.ap;record.targetAP=target.ap;record.combat=combat;record.round=s.round;record.signature=signature;
+   const candidate=geometry(s,observer,target),distance=Math.hypot(observer.x-target.x,observer.y-target.y,((observer.z||0)-(target.z||0))*3);
+   if(candidate){
+    const exposed=zones(s,observer,target).filter(z=>['head','torso','legs'].includes(z)),exposure=exposed.reduce((n,z)=>n+(z==='torso'?.5:.25),0);
+    const brightness=exposed.length?exposed.reduce((n,z)=>n+light(target,z),0)/exposed.length:0;
+    const dx=target.x-observer.x,dy=target.y-observer.y,len=Math.hypot(dx,dy)||1;
+    const background={...target,x:target.x+dx/len*2,y:target.y+dy/len*2};
+    const contrast=brightness<.5?Math.max(0,illuminationAt(s,background)-brightness):0;
+    const moving=!!target.moved||!!old&&old.position!==[target.x,target.y,target.z||0].join(',');
+    const rate=awarenessRate({distance,exposure,light:brightness,contrast,concealment:woodlandDepth(s,observer,target),perception:clamp((observer.perception??50)+(observer.skills?.perception||0)*3,0,100),stealth:target.stealth??20,sneaking:target.sneaking,running:target.running,moving,stance:target.stance,alert:observer.alert||observer.wary||['suspicious','searching'].includes(observer.state)});
+    record.score=clamp(record.score+rate*elapsed,0,candidate===2?100:99);
+    // At arm's reach, an exposed body is unmistakable even without daylight.
+    if(candidate===2&&distance<=1.5&&exposure>=.5)record.score=100;
+    record.light=brightness;record.exposure=exposure;record.rate=rate;
+    if(candidate===2&&record.score>=100)record.lastKnown={x:target.x,y:target.y,z:target.z||0};
+   }else record.score=Math.max(0,record.score-AWARENESS.decay*elapsed);
+   record.position=[target.x,target.y,target.z||0].join(',');record.candidate=candidate;
+   observer.awareness[key]=record;
+  }
+  for(const id of Object.keys(observer.awareness))if(!units.some(u=>String(u.id)===id))delete observer.awareness[id];
+ }
+}
+export function awarenessPerception(s,a,b,candidate){
+ if(!s.rules?.awareness)return candidate;
+ const score=a.awareness?.[b.id]?.score||0;
+ return candidate===2&&score>=100?2:candidate&&score>=25?1:0;
+}

@@ -4,7 +4,7 @@
   "revision": "e529f4b3d512d32cea522d701d01ebe8488af013",
   "overrides": {
     "engine.js": {
-      "reason": "Use the shared one-minute combat round for off-map guard settlement.",
+      "reason": "Use shared round timing and opt-in 3D exposure-based awareness.",
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
     "world.js": {
@@ -17,7 +17,7 @@
     "blocks.js": "4c4961c7c9897640dafca906384569f5337bfabbc2a907adb88ca8e64a733bf4",
     "connections.js": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f",
     "editor-model.js": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262",
-    "engine.js": "f2c2a73b228ebb08affc60c1ac44fe5065fae3d3f5a3d8f1632b0c0c7471f284",
+    "engine.js": "4101766e0f2cfe22aa07a0433e4983dab186213196ae7cbad1c8b6fe55064d4d",
     "environment.js": "424fa8b3f1287ac42a84f24e853ed382dabfd51bae10940fe62caa2b460d123a",
     "explosives.js": "ab0e3a635edf516022bbe247b3a20651d2323053321573ea0bf6fb1e42525b38",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",

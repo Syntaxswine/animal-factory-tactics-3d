@@ -1,5 +1,6 @@
 import {COMBAT_ROUND_MINUTES as ROUND_MINUTES} from '../game-clock.js';
 export {ROUND_MINUTES};
+import {updateAwareness,awarenessPerception} from '../awareness.js';
 import {explosivePreview,explosiveTrajectory,detonate} from './explosives.js';
 import {initPersonality,initGuardSocial,socialRoll,friendlyReaction,helped,settleStress,injuryStrain,killRelief,collapse} from './personalities.js';
 import {partnerLost,stabilizedPartner,cleanWin,onContract} from './happiness.js';
@@ -82,11 +83,12 @@ export function createGame(seed=1947,definition=factoryMap(),detect=true,difficu
  for(const g of guards(s))g.post={x:g.x,y:g.y,z:levelOf(g),heading:g.heading}; // a guard's start tile and heading are its post
  // G3 behind its knob: the campaign (createWorld) draws an archetype per guard from a hash of the seed and the guard's index; plain createGame leaves the G2 base numbers.
  let rosterSeed=(options.rosterSeed??seed)>>>0;for(const c of String(definition.name||''))rosterSeed=Math.imul(rosterSeed^c.charCodeAt(0),16777619)>>>0;
- s.rules={social:!!options.social,rosterSeed};if(s.rules.social)for(const [i,g] of guards(s).entries()){g.archetype=drawArchetype(rosterSeed,i);g.traits={...ARCHETYPES[g.archetype].traits};initGuardSocial(g);}
+ s.rules={social:!!options.social,awareness:!!options.awareness,rosterSeed};if(s.rules.social)for(const [i,g] of guards(s).entries()){g.archetype=drawArchetype(rosterSeed,i);g.traits={...ARCHETYPES[g.archetype].traits};initGuardSocial(g);}
  for(const u of s.units){initInventory(u,WEAPONS);if(u.team==='squad'){initProgression(u);initPersonality(u,s.rules.social);}}s.loot=definition.starts.map((p,i)=>({...p,items:[{type:'ammo',kind:i%2?'rifle':'pistol',count:i%2?5:8}]}));
  if(definition.name==='Factory test')for(const [i,kind]of ['shotgun','sniper','smg','hmg'].entries())s.loot[i].items.push({type:'weapon',kind,rounds:WEAPONS[kind].mag},{type:'ammo',kind,count:12});
  if(definition.name==='Factory test')for(const [i,kind]of ['grenade','launcher','rpg'].entries())s.loot[i+1].items.push({type:'weapon',kind,rounds:WEAPONS[kind].mag},{type:'ammo',kind,count:kind==='grenade'?6:3});
  if(definition.name==='Factory test')s.loot[0].items.push({type:'weapon',kind:'flamethrower',rounds:4},{type:'ammo',kind:'flamethrower',count:4});
+ if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-definition.starts.length]:definition.starts[u.id];u.perception=Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}
  if(detect)refresh(s);log(s,`Local map ready / ${definition.guards.length} guards.`);return s;
 }
 // Visibility and projectiles share solid geometry, but bodies do not occlude sight.
@@ -132,7 +134,8 @@ export function threatens(s,g){
 }
 export const sightRange=(a,b)=>b?.sneaking?Math.max(8,CHARACTER_RANGE-20-effectiveStealth(b)*.2-(stanceOf(b)==='prone'?10:0)):CHARACTER_RANGE;
 // 0 unseen, 1 glimpsed (a moving target inside the detect lobe), 2 identified (inside the identify lobe). Walls block both. See docs/tactics/SIGHT.md.
-export function perceive(s,a,b){const cap=sightRange(a,b),d=distance(a,b)+9*woodlandDepth(s,a,b);if(d<=identifyRange(a,b,cap))return lineOfSight(s,a,b)?2:0;if(b.moved&&d<=detectRange(a,b,cap))return lineOfSight(s,a,b)?1:0;return 0;}
+export function geometricPerceive(s,a,b){const cap=sightRange(a,b),d=distance(a,b)+9*woodlandDepth(s,a,b);if(d<=identifyRange(a,b,cap))return lineOfSight(s,a,b)?2:0;if(b.moved&&d<=detectRange(a,b,cap))return lineOfSight(s,a,b)?1:0;return 0;}
+export function perceive(s,a,b){return awarenessPerception(s,a,b,geometricPerceive(s,a,b));}
 export const glimpsed=(s,a,b)=>perceive(s,a,b)>=1;
 export const canSee=(s,a,b)=>perceive(s,a,b)===2;
 // Awareness rolls are cached until movement or a new turn; UI refresh never rerolls.
@@ -146,6 +149,7 @@ export function detectionChance(s,a,b){
  return Math.max(.01,chance*Math.exp(-woodlandDepth(s,a,b)*.35));
 }
 export function notices(s,a,b){
+ if(s.rules?.awareness)return canSee(s,a,b);
  const records=a.noticed||(a.noticed={}),old=records[b.id];
  if(!canSee(s,a,b)){delete records[b.id];return false;}
  if(old?.seen)return true;
@@ -161,9 +165,10 @@ export function notices(s,a,b){
 // declined a shout is not re-asked by the next guard the same trigger alerts.
 export function refresh(s){return cascade(s,()=>refreshNow(s));}
 function refreshNow(s){
+ updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});
  const oldDetected=s.detected,oldVisible=s.visible,oldGlimpses=s.glimpses||{};
  for(const u of s.units){const at=u.x+','+u.y+','+levelOf(u);u.moved=!!u.fired||u.lastAt!==at;u.lastAt=at;u.fired=false;}s.visible=terrainVisibility(s,squad(s));s.detected=new Set(guards(s).filter(g=>squad(s).some(p=>canSee(s,p,g))).map(g=>g.id));
- s.glimpses={};for(const g of guards(s))if(!s.detected.has(g.id)&&squad(s).some(p=>perceive(s,p,g)===1))s.glimpses[g.id]={x:g.x,y:g.y,z:levelOf(g)};
+ s.glimpses={};for(const g of guards(s))if(!s.detected.has(g.id)&&squad(s).some(p=>perceive(s,p,g)===1))s.glimpses[g.id]=s.rules?.awareness?approximate(g):{x:g.x,y:g.y,z:levelOf(g)};
  for(const g of guards(s))if(s.detected.has(g.id))s.contacts[g.id]={x:g.x,y:g.y,z:levelOf(g)};
  if(s.queue.length&&[...s.detected].some(id=>!oldDetected.has(id))){s.queue=[];log(s,'Movement stopped: new opponent spotted.');}
  else if(s.queue.length&&Object.keys(s.glimpses).some(id=>!oldGlimpses[id]&&!oldDetected.has(Number(id)))){s.queue=[];log(s,'Movement stopped: movement glimpsed.');}

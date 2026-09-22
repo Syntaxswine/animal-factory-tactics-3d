@@ -1,3 +1,4 @@
+import {refresh} from './core/engine.js';
 import {createClock,mapStartMinutes,elapsedGameMinutes,advanceClock,observeRoundTime,turnBased} from './game-clock.js';
 import {settleMorale,settleContracts} from './core/world.js';
 
@@ -11,5 +12,14 @@ function advanceEncounterTime(state,delta){
 export function tickEncounterClock(state,elapsedMs,{paused=false}={}){
  if(paused)return 0;
  const rounds=settleEncounterRounds(state);
+ if(state.rules?.awareness&&!turnBased(state)&&state.phase!=='lost'){
+  let remaining=elapsedGameMinutes(elapsedMs)*60,total=rounds;
+  while(remaining>1e-8&&!turnBased(state)&&state.phase!=='lost'){
+   const step=Math.min(remaining,5-(state.awarenessPending||0));
+   total+=advanceEncounterTime(state,step/60);remaining-=step;state.awarenessPending=(state.awarenessPending||0)+step;
+   if(state.awarenessPending>=5-1e-8){state.awarenessSeconds=5;state.awarenessPending=0;refresh(state);}
+  }
+  return total;
+ }
  return rounds+(state.phase==='lost'||turnBased(state)?0:advanceEncounterTime(state,elapsedGameMinutes(elapsedMs)));
 }
