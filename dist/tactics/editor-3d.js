@@ -33,7 +33,18 @@ canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;const p=coords(
 canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const p=coords(e);if(Math.hypot(p.x-drag.x,p.y-drag.y)>5)drag.moved=true;if(drag.moved){const a=scene.pick(drag.last.x,drag.last.y,canvas.clientWidth,canvas.clientHeight),b=scene.pick(p.x,p.y,canvas.clientWidth,canvas.clientHeight);if(a&&b){view.x+=a.x-b.x;view.y+=a.y-b.y;dirty=true;}}drag.last=p;});
 canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const moved=drag.moved;drag=null;if(!moved){const p=coords(e);select(inspect(p.x,p.y));}});canvas.addEventListener('pointercancel',()=>drag=null);
 canvas.addEventListener('wheel',e=>{e.preventDefault();zoom(Math.exp(e.deltaY*.001));},{passive:false});
-canvas.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-','Home'].includes(e.key)){e.preventDefault();if(e.key==='Home')home();else if(['+','='].includes(e.key))zoom(.8);else if(e.key==='-')zoom(1.25);else{const cx=canvas.clientWidth/2,cy=canvas.clientHeight/2,dx=e.key==='ArrowLeft'?-35:e.key==='ArrowRight'?35:0,dy=e.key==='ArrowUp'?-35:e.key==='ArrowDown'?35:0,a=scene.pick(cx,cy,canvas.clientWidth,canvas.clientHeight),b=scene.pick(cx+dx,cy+dy,canvas.clientWidth,canvas.clientHeight);view.x+=b.x-a.x;view.y+=b.y-a.y;dirty=true;}}});
+document.addEventListener('keydown',e=>{
+ if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||e.target.isContentEditable||e.target.closest?.('input,textarea,select,[role="textbox"]'))return;
+ const key=({w:'ArrowUp',a:'ArrowLeft',s:'ArrowDown',d:'ArrowRight'})[e.key.toLowerCase()]||e.key;
+ if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-','Home'].includes(key))return;
+ e.preventDefault();
+ if(key==='Home')home();else if(['+','='].includes(key))zoom(.8);else if(key==='-')zoom(1.25);
+ else{
+  const cx=canvas.clientWidth/2,cy=canvas.clientHeight/2,dx=key==='ArrowLeft'?-35:key==='ArrowRight'?35:0,dy=key==='ArrowUp'?-35:key==='ArrowDown'?35:0;
+  const a=scene.pick(cx,cy,canvas.clientWidth,canvas.clientHeight),b=scene.pick(cx+dx,cy+dy,canvas.clientWidth,canvas.clientHeight);
+  if(a&&b){view.x+=b.x-a.x;view.y+=b.y-a.y;dirty=true;}
+ }
+});
 for(const item of PREVIEW_FOOTPRINTS){const li=document.createElement('li');li.textContent=item.name+' · '+item.tiles.join('×');$('cargo').append(li);}
 new ResizeObserver(()=>dirty=true).observe(canvas);window.addEventListener('pagehide',()=>scene.dispose(),{once:true});
 // Programmatic inspection shares the same opening and picking paths as the UI.

@@ -15,6 +15,19 @@ try{
  const initial=await page.evaluate(()=>({units:editor3d.scene.models.length,props:editor3d.document.map.props.length,diagnostics:editor3d.scene.diagnostics,load:editor3d.scene.loadMs}));assert.equal(initial.units,40);assert.equal(initial.props,398);assert.deepEqual(initial.diagnostics,[]);
  const performanceReview=await page.evaluate(async()=>{const times=[],canvas=document.querySelector('#scene'),view={...editor3d.view},gl=editor3d.scene.renderer.getContext(),extension=gl.getExtension('WEBGL_debug_renderer_info');let previous=performance.now();for(let i=0;i<30;i++){await new Promise(requestAnimationFrame);const now=performance.now();times.push(now-previous);previous=now;editor3d.scene.draw({...view,x:view.x+i*.03},canvas.clientWidth,canvas.clientHeight);}editor3d.scene.draw(view,canvas.clientWidth,canvas.clientHeight);times.sort((a,b)=>a-b);return {medianFrameMs:times[15],p95FrameMs:times[28],sceneryMs:editor3d.scene.rebuildMs,heapBytes:performance.memory?.usedJSHeapSize,gpu:extension?gl.getParameter(extension.UNMASKED_RENDERER_WEBGL):'unavailable'};});
  await page.screenshot({path:fileURLToPath(new URL('factory-starts.png',output))});
+ // Camera keys work before clicking the canvas, after toolbar use and in every
+ // camera preset, but never steal text entry or browser shortcuts.
+ for(const preset of ['0','1','2','3','top']){
+  await page.selectOption('#camera',preset);await page.locator('#zoom-in').focus();await page.waitForTimeout(50);
+  for(const [letter,arrow]of [['w','ArrowUp'],['a','ArrowLeft'],['s','ArrowDown'],['D','ArrowRight']]){
+   const before=await page.evaluate(()=>({...editor3d.view}));await page.keyboard.press(letter);const after=await page.evaluate(()=>({...editor3d.view}));
+   assert.ok(Math.hypot(after.x-before.x,after.y-before.y)>.1,'WASD must move from toolbar focus');
+   await page.keyboard.press(arrow);const next=await page.evaluate(()=>({...editor3d.view}));assert.ok(Math.abs((next.x-after.x)-(after.x-before.x))<1e-6);assert.ok(Math.abs((next.y-after.y)-(after.y-before.y))<1e-6);
+  }
+ }
+ for(const selector of ['#sector-x','#camera']){await page.locator(selector).focus();const before=await page.evaluate(()=>[editor3d.view.x,editor3d.view.y,editor3d.view.span]);await page.keyboard.press('w');await page.keyboard.press('ArrowLeft');assert.deepEqual(await page.evaluate(()=>[editor3d.view.x,editor3d.view.y,editor3d.view.span]),before);}
+ await page.locator('#zoom-in').focus();const beforeShortcut=await page.evaluate(()=>({...editor3d.view}));await page.keyboard.press('Control+ArrowLeft');assert.deepEqual(await page.evaluate(()=>({...editor3d.view})),beforeShortcut);
+ await page.click('#home');
  await page.fill('#sector-x','4');await page.fill('#sector-y','6');await page.click('#sector');await page.screenshot({path:fileURLToPath(new URL('factory-room.png',output))});
  const raw=blankMap('Upper floor inspection');raw.upper[0]['12,12']='floor';raw.upper[0]['13,12']='floor';raw.stairs=[{x:12,y:12,z:0,kind:'ladder'}];raw.edges={'e:13:12:1':'window-brick'};raw.props=[{x:16,y:12,z:0,kind:'roof-flat-parapet'}];raw.guards=[{x:13,y:12,z:1,species:'hen',weapon:'rifle',heading:90,outfit:'red-hats'}];raw.extension={roundTrip:'preserve'};
  await page.locator('#import').setInputFiles({name:'floors.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(raw))});await ready();
