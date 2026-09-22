@@ -14,7 +14,7 @@ export function createRifleFiring(worker,profile,posture=null){
   named.head.rotation.z=(pitch*(profile.headPitchSlope??1.5)+(profile.headPitch??-.9))*aim;
   named.head.rotation.y=((profile.headYaw??25)*Math.PI/180+.4*pitch)*aim;root.updateMatrixWorld(true);
   posture?.apply({...sample,heading:0},{equipment:false});
-  named.head.rotation.z+=(sample?.pose?.prone||0);root.updateMatrixWorld(true);
+  named.head.rotation.z+=(sample?.pose?.prone||0)*(1+(profile.proneAim?.headOffset||0));root.updateMatrixWorld(true);
   const spineQ=named.spine.getWorldQuaternion(new T.Quaternion()),spineOrigin=named.spine.getWorldPosition(V());
   const carryPosition=new T.Vector3(...gun.carry.position).sub(rest.get(named.spine)).applyQuaternion(spineQ).add(spineOrigin);
   const carryQ=new T.Quaternion().setFromUnitVectors(V(1,0,0),new T.Vector3(...gun.carry.axis).normalize());
