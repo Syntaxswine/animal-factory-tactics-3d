@@ -6,6 +6,14 @@ export function createBattlePosture(worker,profile){
  root.position.set(0,0,0);root.rotation.set(0,0,0);worker.pose('neutral');root.updateMatrixWorld(true);
  const rest=new Map(worker.bones.map(b=>[b,b.getWorldPosition(V())]));
  const hips=named.hips||named.pelvis,spine=named.spine||named.breast;
+ const tails=profile.longTail&&profile.proneAim?worker.parts.filter(p=>p.name.includes('tail')).map(part=>{
+  const a=part.geometry.attributes,position=a.position.clone(),normal=a.normal.clone(),top=Math.max(...Array.from({length:position.count},(_,i)=>position.getY(i))),pivot=V();let count=0;
+  for(let i=0;i<position.count;i++)if(position.getY(i)>top-.025){pivot.add(V().fromBufferAttribute(position,i));count++;}pivot.divideScalar(count);pivot.y=top;
+  return {part,position,normal,pivot};
+ }):[];
+ function tailClearance(kneel){for(const {part,position,normal,pivot}of tails){const a=part.geometry.attributes;
+  for(let i=0;i<position.count;i++){const bend=T.MathUtils.smoothstep(pivot.y-position.getY(i),.025,.18),q=new T.Quaternion().setFromAxisAngle(V(0,0,1),-.75*kneel*bend),p=V().fromBufferAttribute(position,i).sub(pivot).applyQuaternion(q).add(pivot),n=V().fromBufferAttribute(normal,i).applyQuaternion(q);a.position.setXYZ(i,p.x,p.y,p.z);a.normal.setXYZ(i,n.x,n.y,n.z);}a.position.needsUpdate=true;a.normal.needsUpdate=true;
+ }}
  // Keep the tucked shirt hem with the waist instead of pulling it out of the
  // overalls when both sleeves reach forward. Reuse the approved horse proof.
  if(profile.proneAim?.tuckHem)for(const part of worker.parts.filter(p=>p.name.includes('shirt'))){
@@ -41,6 +49,7 @@ export function createBattlePosture(worker,profile){
  }
  return {apply(sample,{equipment=true}={}){
   const {kneel=0,prone=0,down=0,stable=0,dead=0}=sample.pose||{};
+  tailClearance(kneel);
   if(kneel+prone+down<.00001)return;
   const heading=root.rotation.y;root.rotation.y=0;root.position.set(0,0,0);root.updateMatrixWorld(true);
   const before=spine.matrixWorld.clone(),low=Math.min(1,prone+down),cycle=(sample.distance||0)*Math.PI*5,walk=(sample.blend||0)*(1-down);

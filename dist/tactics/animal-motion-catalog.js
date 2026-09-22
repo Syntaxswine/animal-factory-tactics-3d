@@ -29,7 +29,7 @@ export const ANIMAL_MOTION_CATALOG=[
 ].map(p=>({file:p.id+'-10k-data.json',frame:PAINT_FRAME,...p,...({
  horse:{kneelDrop:.3706,headPitch:-.8562,headYaw:27.734,headPitchSlope:1.459,proneAim:{stock:[.025,.03,.065],torsoFollow:.9,tuckHem:true}},
  goat:{kneelDrop:.3706,headPitch:-.8719,headYaw:23.469,headPitchSlope:1.453,proneAim:{stock:[.025,.03,.065],torsoFollow:.9,tuckHem:true}},
- bull:{kneelDrop:.3706,headPitch:-.7797,headYaw:35.172,headPitchSlope:1.606},
+ bull:{kneelDrop:.3706,headPitch:-.7797,headYaw:35.172,headPitchSlope:1.606,proneAim:{stock:[.025,.03,.065],torsoFollow:.9,tuckHem:true}},
  cow:{kneelDrop:.3706,headPitch:-.7781,headYaw:30.141,headPitchSlope:1.556},
  donkey:{kneelDrop:.365,headPitch:-.6078,headYaw:13.844,headPitchSlope:1.6},
  sheep:{kneelDrop:.365,headPitch:-.8844,headYaw:31.234,headPitchSlope:1.419},
