@@ -11,12 +11,25 @@ const output=new URL('../artifacts/battle-3d/',import.meta.url);fs.mkdirSync(out
 try{
  await page.goto(process.env.REVIEW_URL||'http://127.0.0.1:4318/tactics/battle-3d.html');
  await page.waitForFunction(()=>window.battle3d?.renderer.models.size>=4,{},{timeout:60000});
+ await page.waitForFunction(()=>window.battle3d.renderer.paintedEnvironment.count===261);
  await page.waitForFunction(()=>window.battle3d.picks.length>=4);
- const initial=await page.evaluate(()=>({phase:battle3d.state.phase,detected:[...battle3d.state.detected],picks:battle3d.picks.map(p=>p.id),diagnostics:battle3d.renderer.diagnostics,models:battle3d.renderer.models.size}));
+ const rosterAssets=await page.evaluate(async()=>{
+  const r=battle3d.renderer;
+  await Promise.all(battle3d.state.units.filter(u=>!r.models.has(u.id)&&!r.pending.has(u.id)).map(u=>r.loadModel(u)));
+  for(const u of battle3d.state.units)r.actor(u);
+  return {models:r.models.size,units:battle3d.state.units.length,diagnostics:r.diagnostics};
+ });
+ assert.equal(rosterAssets.models,40);assert.deepEqual(rosterAssets.diagnostics,[]);
+ const initial=await page.evaluate(()=>({phase:battle3d.state.phase,detected:[...battle3d.state.detected],picks:battle3d.picks.map(p=>p.id),diagnostics:battle3d.renderer.diagnostics,models:battle3d.renderer.models.size,guards:battle3d.state.definition.guards.length,props:battle3d.state.props.length,edges:Object.keys(battle3d.state.edges).length,paintedCargo:battle3d.renderer.paintedEnvironment.count,oldCrates:battle3d.renderer.structures.children.flatMap(m=>m.userData.boxes).filter(b=>b.kind==='cover'&&b.material==='crate-wood').length}));
  assert.deepEqual(initial.diagnostics,[]);
+ assert.equal(initial.guards,36);assert.equal(initial.props,398);assert.equal(initial.edges,1576);assert.equal(initial.oldCrates,0);
  for(const id of initial.picks)assert.ok(id<4||initial.detected.includes(id),'Unseen enemy leaked');
  await page.screenshot({path:fileURLToPath(new URL('easy-desktop.png',output))});
  const canvas=await page.locator('#battle').boundingBox();
+ await page.click('#overview');await page.screenshot({path:fileURLToPath(new URL('authored-overview.png',output))});
+ const factory=await page.evaluate(()=>battle3d.project({x:79,y:132,z:0}));
+ await page.mouse.click(canvas.x+factory.x,canvas.y+factory.y);await page.screenshot({path:fileURLToPath(new URL('painted-factory.png',output))});
+ await page.click('#center');
  const destination=await page.evaluate(()=>battle3d.project({x:4,y:4,z:0}));
  await page.mouse.click(canvas.x+destination.x,canvas.y+destination.y);
  await page.waitForFunction(()=>battle3d.state.units[0].x===4&&battle3d.state.units[0].y===4,{},{timeout:10000});

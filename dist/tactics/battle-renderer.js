@@ -5,13 +5,19 @@ import {ANIMAL_MOTION_CATALOG} from './animal-motion-catalog.js';
 import {createAnimalPaint} from './animal-motion-paint.js';
 import {createWeaponModel} from './weapon-models.js';
 import {personVisible} from './battle-visibility.js';
+import {BattleEnvironment,PAINTED_PROP_FORMS} from './battle-environment.js';
 
 // Reuse only the environment/camera presentation. No hybrid combat mode.
 export class BattleRenderer extends HybridRenderer {
  constructor(onReady=()=>{}){
   super(onReady);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
+  this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
  }
- rebuild(world,seen,level,map){super.rebuild(world,map.difficulty==='easy'?null:seen,level,map);}
+ rebuild(world,seen,level,map){
+  const scenery={...world,boxes:world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood'))};
+  super.rebuild(scenery,map.difficulty==='easy'?null:seen,level,{...map,props:map.props.filter(p=>!PAINTED_PROP_FORMS[p.kind])});
+  this.paintedEnvironment.rebuild(map,level);
+ }
  async loadModel(unit){
   this.pending.add(unit.id);const generation=this.generation;
   const profile=ANIMAL_MOTION_CATALOG.find(p=>p.id===unit.species);
@@ -68,6 +74,7 @@ export class BattleRenderer extends HybridRenderer {
  }
  dispose(){
   this.generation++;
+  this.paintedEnvironment.dispose();
   for(const {worker,paint,root,equipment}of this.models.values()){this.scene.remove(root);equipment?.dispose();paint.dispose();worker.dispose();}
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();
  }

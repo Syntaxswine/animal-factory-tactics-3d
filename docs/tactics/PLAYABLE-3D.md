@@ -2,6 +2,10 @@
 
 Open `/tactics/battle-3d.html` after `npm run serve`, or use the landing-page encounter card. Select a worker, click ground to move, select a visible opponent and use Fire. Reload, End turn, Stop, floor selection, camera centering, drag pan and wheel zoom are supported. Difficulty changes apply on Restart. Easy is the initial choice.
 
+The default is now the authored `default-factory.json` from the pinned sprite revision: 36 guards, 398 props and 1,576 boundary edges across the 240×240 map. It matches the existing `Factory-test.json`. Loading errors stop startup visibly; the page never falls back to the small training template. Use **Overview**, then click an area to inspect it; **Center** returns to the squad. `?view=overview` opens the full map for review.
+
+The latest published painted cargo and donkey repair are integrated from 3D main `1dfdc0e`. All 261 authored crate/drum placements use the painted cargo library, including crates saved as terrain cells. Geometry/material instancing preserves the library's models and textures. One-tile crate stacks use the two-crate model; one-tile drum placements use a single painted drum. The larger gallery piles and pallets are not forced into these one-tile collision footprints. Other environment types continue to use the current environment workshop models; this is not a claim that every surface has a new painted replacement.
+
 ## Core boundary
 
 `dist/tactics/core/` is a generated, byte-identical dependency snapshot of the transitive simulation modules rooted at `engine.js` and `world.js` from `Syntaxswine/animal-factory`, `tactics-prototype`, revision `6e2782a4ab3dde0f8b84a8610769664335294fe0`. `manifest.json` records upstream identity and SHA-256 hashes. Do not edit these modules locally. Update the pinned revision in `tools/sync-tactics-core.mjs` and regenerate from an available upstream Git object when deliberately upgrading.
