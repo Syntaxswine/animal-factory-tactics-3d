@@ -5,6 +5,7 @@ import {dogMotionPaint} from './dog-motion-paint.js';
 import {DOG_CLOTH_PAINT,DOG_EYE_PAINT} from './dog-paint-layers.js';
 import {sheepPaintLayers} from './sheep-paint-layers.js';
 import {henPaintLayers} from './hen-paint-layers.js';
+import {animalMotionRepairPaint} from './animal-motion-repair-paint.js';
 export async function createAnimalPaint(renderer,worker,profile,loader){
  const textures=[],load=async url=>{const t=await loader.loadAsync(url);textures.push(t);return t;},base='../assets/characters/lowpoly-proof/';
  const main=await load(profile.paint),options={species:profile.id,frame:profile.frame};
@@ -15,6 +16,7 @@ export async function createAnimalPaint(renderer,worker,profile,loader){
  if(profile.id==='hen')options.paintLayers=henPaintLayers(renderer,worker,await Promise.all(['hen-underlay-paint-v1.png','hen-tail-paint-v1.png'].map(f=>load(base+f))),profile.frame);
  if(profile.id==='pig-foreman')options.earTexture=await load('../assets/characters/model-references/pig-foreman-turnaround-v2.png');
  if(profile.tailPaint)options.tailTexture=await load(profile.tailPaint);
+ options.paintLayers=animalMotionRepairPaint(profile,options.paintLayers);
  const paint=createModelPaint(renderer,worker,main,options),dispose=paint.dispose;
  paint.dispose=()=>{dispose();textures.forEach(t=>t.dispose());};return paint;
 }

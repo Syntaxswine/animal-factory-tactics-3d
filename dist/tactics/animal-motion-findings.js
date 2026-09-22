@@ -1,15 +1,15 @@
-// Mechanical coverage is separate from visual approval and gameplay readiness.
+// Mechanical coverage and localized visual review do not imply gameplay readiness.
 export const ANIMAL_MOTION_FINDINGS={
  dog:{status:'Approved motion baseline',note:'Published dog motion retained. Cautious gait and kneeling trouser compression remain known limitations.'},
  goat:{status:'Review candidate',note:'No new blocking defect in the inspected poses. This transfer has not received architect approval.'},
  'pig-director':{status:'Review candidate',note:'Forward rifle placement and a more oblique stance clear the heavier torso. Architect motion approval remains pending.'},
- horse:{status:'Visual hold',note:'Raising the arms exposes the underarm and overall junction. Clothing paint needs cleanup.'},
- bull:{status:'Visual hold',note:'A flat, sharply bounded paint patch appears beneath the raised elbow.'},
- cow:{status:'Visual hold',note:'Raised arms expose a cream/olive discontinuity at the underarm.'},
- donkey:{status:'Visual hold',note:'The sleeve interior and lower jacket show flat paint patches in the aiming pose.'},
- sheep:{status:'Visual hold',note:'The raised shoulder exposes a cream ring and olive wedge. Grey inspection indicates a paint-ownership problem.'},
- skunk:{status:'Visual hold',note:'The shirt/overall junction fragments visually beneath the raised elbow.'},
- rabbit:{status:'Visual hold',note:'An angular underarm paint patch becomes exposed when aiming.'},
- 'pig-foreman':{status:'Visual hold',note:'Head tilt exposes unfinished neck/collar paint and makes the cap fit look loose. Inspect before approving this transfer.'},
- hen:{status:'Unarmed · visual hold',note:'Wings have no authored rifle grips. Walk, crouch, observe and rise are tested; aiming and firing are unsupported. Crouching still exposes flat upper-leg ends beyond the feathers.'}
+ horse:{status:'Localized repair approved',note:'Raised-arm underarm and overall paint now flows continuously.'},
+ bull:{status:'Localized repair approved',note:'The exposed under-elbow patch now continues the overall cloth.'},
+ cow:{status:'Localized repair approved',note:'The raised-arm overall junction now retains continuous garment paint.'},
+ donkey:{status:'Localized repair approved',note:'Sleeve, lower jacket and trousers keep their own cloth paint under raised arms.'},
+ sheep:{status:'Localized repair approved',note:'Shoulder and waistcoat paint now stay on their own garments.'},
+ skunk:{status:'Localized repair approved',note:'The shirt/overall junction stays visually continuous beneath the raised elbow.'},
+ rabbit:{status:'Localized repair approved',note:'The angular underarm patch now continues the overall cloth.'},
+ 'pig-foreman':{status:'Localized repair approved',note:'Exposed neck now retains skin paint without a rear seam. The cap follows the head correctly.'},
+ hen:{status:'Unarmed repair approved',note:'Upper leg ends remain covered through crouching and rising. Wing weapon handling is still unsupported; this study covers walk, crouch, observe and rise only.'}
 };

@@ -11,7 +11,9 @@ export function createHenMotion(worker){
  // Keep the hidden tops of the scaly shanks inside the feathered leg cuffs.
  for(const mesh of worker.parts.filter(p=>p.name.includes('toes'))){const p=mesh.geometry.attributes.position,si=mesh.geometry.attributes.skinIndex,sw=mesh.geometry.attributes.skinWeight,thigh=bones.length+(mesh.name.endsWith(' -1')?0:1);for(let i=0;i<p.count;i++){const upper=T.MathUtils.smoothstep(p.getY(i),.20,.31),a=si.getX(i),b=si.getY(i),wa=sw.getX(i),wb=sw.getY(i);si.setXYZW(i,a,b,thigh,0);sw.setXYZW(i,wa*(1-upper),wb*(1-upper),upper,0);}}
  const feathered=worker.parts.find(p=>p.name==='feathered body');for(let i=0;i<feathered.geometry.attributes.position.count;i++){const p=feathered.geometry.attributes.position,si=feathered.geometry.attributes.skinIndex,sw=feathered.geometry.attributes.skinWeight,t=(1-T.MathUtils.smoothstep(p.getY(i),.34,.56))*T.MathUtils.smoothstep(Math.abs(p.getZ(i)),.01,.06);if(t>0){const a=si.getX(i),b=si.getY(i),wa=sw.getX(i),wb=sw.getY(i);si.setXYZW(i,a,b,bones.length+(p.getZ(i)<0?0:1),0);sw.setXYZW(i,wa*(1-t),wb*(1-t),t,0);}}
- for(const p of worker.parts)p.bind(skeleton);
+ // Paint-atlas rendering has already uploaded these attributes. Publish the new
+ // weights to the GPU as well as the CPU contact/geometry checks.
+ for(const p of worker.parts){p.bind(skeleton);p.geometry.attributes.skinIndex.needsUpdate=true;p.geometry.attributes.skinWeight.needsUpdate=true;}
  let state,joints,heading=0;
  function rotation(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(q));root.updateMatrixWorld(true);}
  function apply(time,options={}){

@@ -1,0 +1,151 @@
+{
+  "browser": "153.0.4234.48",
+  "capturedAt": "2026-09-21T23:09:13.365Z",
+  "errors": [],
+  "results": [
+    {
+      "view": "front",
+      "time": 0.25,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "front",
+      "time": 0.75,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "front",
+      "time": 2.75,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "front",
+      "time": 4.4,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "front",
+      "time": 6.5,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "front",
+      "time": 8.8,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "front",
+      "time": 11,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "front",
+      "time": 6.5,
+      "positiveControl": true,
+      "exposedCapPixels": 279
+    },
+    {
+      "view": "side",
+      "time": 0.25,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "side",
+      "time": 0.75,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "side",
+      "time": 2.75,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "side",
+      "time": 4.4,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "side",
+      "time": 6.5,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "side",
+      "time": 8.8,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "side",
+      "time": 11,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "side",
+      "time": 6.5,
+      "positiveControl": true,
+      "exposedCapPixels": 352
+    },
+    {
+      "view": "back",
+      "time": 0.25,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "back",
+      "time": 0.75,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "back",
+      "time": 2.75,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "back",
+      "time": 4.4,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "back",
+      "time": 6.5,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "back",
+      "time": 8.8,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "back",
+      "time": 11,
+      "positiveControl": false,
+      "exposedCapPixels": 0
+    },
+    {
+      "view": "back",
+      "time": 6.5,
+      "positiveControl": true,
+      "exposedCapPixels": 567
+    }
+  ]
+}
