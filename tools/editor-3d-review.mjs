@@ -38,7 +38,7 @@ try{
   const p=await page.evaluate(async()=>{const T=await import('./vendor/three.module.js'),canvas=document.querySelector('#scene'),point=new T.Vector3(13,2.12,12).project(editor3d.scene.camera);return {x:(point.x+1)*canvas.clientWidth/2,y:(1-point.y)*canvas.clientHeight/2};});
   const box=await page.locator('#scene').boundingBox();await page.mouse.click(box.x+p.x,box.y+p.y);assert.equal(await page.evaluate(()=>editor3d.selection?.data.species),'hen');
  }
- assert.match(await page.locator('#visual-note').innerText(),/red-hat/);assert.match(await page.locator('#visual-note').innerText(),/no armed pose/);
+ assert.doesNotMatch(await page.locator('#visual-note').innerText(),/normal painted outfit/);assert.ok(await page.evaluate(()=>{const m=editor3d.scene.models.find(m=>m.unit.species==='hen');return m.root.visible&&m.cap?.mesh.parent===m.worker.bones.find(b=>b.name==='head')&&m.paint.material.customProgramCacheKey().includes('tailored-red-hat');}));assert.match(await page.locator('#visual-note').innerText(),/no armed pose/);
  await page.screenshot({path:fileURLToPath(new URL('upper-floor.png',output))});
  await page.selectOption('#floor','2');await page.selectOption('#pick-mode','tile');const box=await page.locator('#scene').boundingBox();await page.mouse.click(box.x+box.width/2,box.y+box.height/2);assert.equal(await page.evaluate(()=>editor3d.selection?.label),'Empty floor cell');
  const river=generateRiverMap(42,'River / bridges',0),block=extractBlock(river,0,0),resources=[];
