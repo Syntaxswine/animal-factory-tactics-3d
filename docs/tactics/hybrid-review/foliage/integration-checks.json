@@ -1,0 +1,16 @@
+[
+  {
+    "page": "index.html",
+    "calls": 43,
+    "triangles": 40644,
+    "diagnostics": [],
+    "errors": []
+  },
+  {
+    "page": "editor.html",
+    "calls": 80,
+    "triangles": 119068,
+    "diagnostics": [],
+    "errors": []
+  }
+]

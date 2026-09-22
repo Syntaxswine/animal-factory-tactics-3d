@@ -1,0 +1,31 @@
+{
+  "browser": "153.0.4234.48",
+  "checks": {
+    "reused": true,
+    "memory": {
+      "geometries": 17,
+      "textures": 9
+    },
+    "after": {
+      "geometries": 17,
+      "textures": 9
+    },
+    "dense": {
+      "calls": 29,
+      "triangles": 103048,
+      "geometries": 17,
+      "textures": 9
+    },
+    "p95": 16.899999999441206,
+    "fog": true,
+    "grass": 2,
+    "upperHidden": true,
+    "upperOnly": true,
+    "collisionUnchanged": true
+  },
+  "catalog": {
+    "count": 76,
+    "diagnostics": []
+  },
+  "errors": []
+}

@@ -1,10 +1,13 @@
 import {PROPS,propCells} from './environment.js';
 import {environmentModel} from './environment-models.js';
 import {DIMENSIONS as D} from './hybrid-world.js';
+import {grassTufts} from './foliage-models.js';
 
 // The visual catalog deliberately does not replace simulation collision volumes.
 export function environmentVisuals(world,map){
  const result=world.boxes.filter(b=>b.kind!=='prop'&&!b.id.includes(':slope:'));
+ const occupied=new Set((map.props||[]).flatMap(p=>propCells(p).map(c=>`${c.x},${c.y},${p.z||0}`)));
+ for(const b of world.boxes)if(!occupied.has(`${b.source.x},${b.source.y},${b.source.z||0}`))result.push(...grassTufts(b));
  const add=(id,source,kind,material,center,size,shape='box',rotation=[0,0,0])=>result.push({id,source,kind,material,center,size,shape,rotation});
  for(const p of map.props||[]){
   const rule=PROPS[p.kind];if(!rule)continue;

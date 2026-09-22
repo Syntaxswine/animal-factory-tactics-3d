@@ -1,3 +1,4 @@
+import {foliageModel} from './foliage-models.js';
 // Presentation only. Combat continues to query the existing hybrid-world boxes.
 // Primitives have unit extents; cylinders/cones point up, rotation is XYZ radians.
 export function environmentModel(kind,w=1,d=1,h=.8){
@@ -11,10 +12,7 @@ export function environmentModel(kind,w=1,d=1,h=.8){
  const handle=(x,y,z,width=.22)=>{box('dark-metal',x,y,z,width,.045,.045);for(const dx of [-width/2,width/2])box('steel',x+dx,y,z-.025,.035,.04,.07);};
  const wheel=(x,z)=>{round('dark-metal',x,.09,z,.15,.065,.15,[Math.PI/2,0,0]);round('steel',x,.09,z+.035,.055,.01,.055,[Math.PI/2,0,0]);};
  if(kind.startsWith('tree-')){
-  add('taper','wood',[0,.78,0],[.26,1.56,.25]);
-  for(let i=0;i<5;i++){const a=i*Math.PI*2/5;bar('wood',[0,.16,0],[Math.cos(a)*.36,.035,Math.sin(a)*.36],.1);}
-  if(kind==='tree-pine')for(let i=0;i<4;i++)add('cone',i%2?'foliage':'pine',[0,1.04+i*.35,0],[1.48-i*.28,.94,1.48-i*.28]);
-  else{for(let i=0;i<6;i++){const a=i*2.4,x=Math.cos(a)*.43,z=Math.sin(a)*.4;bar('wood',[0,.85,0],[x,1.55+(i%2)*.3,z],.09);leaf(i%2?'foliage':'leaf-light',x,1.68+(i%2)*.28,z,.91,.82,.9);}leaf('leaf-light',0,2.04,0,1,.86,1);}
+  return foliageModel(kind);
  }else if(kind==='bush'){
   for(let i=0;i<7;i++){const a=i*2.4,x=Math.cos(a)*.3,z=Math.sin(a)*.26;bar('wood',[0,0,0],[x,.4,z],.035);leaf(i%2?'foliage':'leaf-light',x,.32+i%3*.08,z,.48,.5,.46);}
  }else if(kind==='reeds'){

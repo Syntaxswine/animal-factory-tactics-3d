@@ -1,5 +1,6 @@
 import {environmentGeometries} from './environment-geometry.js';
 import {environmentVisuals} from './environment-visuals.js';
+import {FOLIAGE_ATLAS,FOLIAGE_MATERIALS,paintFoliageMaterial} from './foliage-materials.js';
 import * as THREE from './vendor/three.module.js';
 import {buildWorld,DIMENSIONS,GAME_CAMERA,toWorld} from './hybrid-world.js';
 import {hybridWorld} from './hybrid-combat.js';
@@ -47,6 +48,10 @@ export class HybridRenderer{
   this.structures=new THREE.Group();this.scene.add(this.structures);this.materials=new Map();this.textures=new Map();this.actors=new Map();this.loader=new THREE.TextureLoader();this.onReady=onReady;this.geometries=environmentGeometries();this.boxGeometry=this.geometries.box;this.diagnostics=[];
  }
  material(kind){if(this.materials.has(kind))return this.materials.get(kind);const p=surfacePixels(kind),t=new THREE.DataTexture(p.data,p.width,p.height);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.generateMipmaps=true;t.needsUpdate=true;const material=new THREE.MeshStandardMaterial({map:t,roughness:1});
+  if(FOLIAGE_MATERIALS.has(kind)){
+   if(!this.foliageTexture){this.foliageTexture=this.loader.load(FOLIAGE_ATLAS,texture=>{if(this.disposed){texture.dispose();return;}this.foliageReady=true;this.onReady();},undefined,()=>{this.diagnostics.push('Failed asset: '+FOLIAGE_ATLAS);this.onReady();});this.foliageTexture.colorSpace=THREE.SRGBColorSpace;this.foliageTexture.anisotropy=Math.min(8,this.renderer.capabilities.getMaxAnisotropy());}
+   paintFoliageMaterial(material,kind,this.foliageTexture);this.materials.set(kind,material);return material;
+  }
   material.onBeforeCompile=shader=>{shader.vertexShader=shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n#ifdef USE_MAP\n vec3 surfaceWorld=(instanceMatrix*vec4(position,1.0)).xyz; vMapUv=abs(normal.y)>.5?surfaceWorld.xz:abs(normal.x)>.5?surfaceWorld.zy:surfaceWorld.xy;\n#endif');};if(kind==='water'){material.roughness=.28;material.metalness=.2;const surfaceCompile=material.onBeforeCompile;material.onBeforeCompile=shader=>{surfaceCompile(shader);shader.uniforms.environmentTime={value:0};material.userData.waterTime=shader.uniforms.environmentTime;shader.fragmentShader='uniform float environmentTime;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n float ripple=sin(vMapUv.x*15.0+vMapUv.y*9.0+environmentTime)*.055+sin(vMapUv.y*18.0-environmentTime*.7)*.025; normal=normalize(normal+vec3(ripple,0.0,ripple*.6));');};}this.materials.set(kind,material);return material;
  }
  rebuild(world,seen,level,map){
@@ -92,5 +97,5 @@ export class HybridRenderer{
  }
  animateMaterials(time){for(const m of this.materials.values())if(m.userData.waterTime)m.userData.waterTime.value=time;}
  stats(){return {meshes:this.structures.children.length,actors:this.actors.size,cachedPoses:this.textures.size,textures:this.renderer.info.memory.textures,geometries:this.renderer.info.memory.geometries,calls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,drawTimes:[...this.drawTimes||[]],diagnostics:[...this.diagnostics],unsupported:this.world?.diagnostics||[]};}
- dispose(){for(const mesh of this.structures.children)mesh.dispose();for(const mesh of this.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}for(const t of this.textures.values())t.dispose();this.textures.clear();this.actors.clear();for(const m of this.materials.values()){m.map.dispose();m.dispose();}this.materials.clear();this.chunks?.clear();this.world=null;this.editorWorld=null;this.scene.clear();for(const geometry of Object.values(this.geometries))geometry.dispose();this.renderer.dispose();}
+ dispose(){this.disposed=true;for(const mesh of this.structures.children)mesh.dispose();for(const mesh of this.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}for(const t of this.textures.values())t.dispose();this.textures.clear();this.actors.clear();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.materials.clear();this.chunks?.clear();this.world=null;this.editorWorld=null;this.scene.clear();for(const geometry of Object.values(this.geometries))geometry.dispose();this.renderer.dispose();}
 }
