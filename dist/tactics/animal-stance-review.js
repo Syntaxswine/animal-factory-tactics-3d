@@ -9,7 +9,7 @@ import {createRifleFiring} from './rifle-firing.js';
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search);
 for(const p of profiles)$('animal').add(new Option(p.label,p.id));
 for(const key of ['animal','outfit','target','scale'])if(params.has(key))$(key).value=params.get(key);
-const renderer=new T.WebGLRenderer({canvas:$('study'),antialias:true});renderer.setPixelRatio(1);renderer.setSize(1600,900);renderer.setClearColor('#26372f');renderer.outputColorSpace=T.SRGBColorSpace;
+const renderer=new T.WebGLRenderer({canvas:$('study'),antialias:true});renderer.setPixelRatio(1);renderer.setSize(1600,900,false);renderer.setClearColor('#26372f');renderer.outputColorSpace=T.SRGBColorSpace;
 const scene=new T.Scene(),camera=new T.OrthographicCamera(),loader=new T.TextureLoader();scene.add(new T.HemisphereLight(0xfff0d5,0x667367,2));const light=new T.DirectionalLight(0xffead1,2.5);light.position.set(-3,8,6);scene.add(light);
 const floor=new T.Mesh(new T.PlaneGeometry(30,30),new T.MeshStandardMaterial({color:'#526046',roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.005;scene.add(floor);
 const grid=new T.GridHelper(30,30,0xdce1bc,0x96a585);grid.position.y=.001;scene.add(grid);
@@ -47,3 +47,4 @@ function sequence(){
  }renderer.setScissorTest(false);$('labels').replaceChildren(...labels.map(t=>{const d=document.createElement('div');d.textContent=t;return d;}));$('status').textContent='Full production transition, including grounding. Fixed camera height and ground grid in every frame.';
 }
 window.stanceStudy={ready:false,rows:[],render,sequence};for(const key of ['animal','outfit'])$(key).onchange=load;for(const key of ['target','scale'])$(key).onchange=render;$('reload').onclick=load;const strip=document.createElement('button');strip.textContent='Transition strip';strip.onclick=sequence;document.querySelector('header').append(strip);load();
+

@@ -26,7 +26,7 @@ canvas. On narrower windows the displayed canvas scales down; use the recorded
 | Bull | **9/10** | Tail clearance corrected; close/steep aim holds remain |
 | Cow | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Donkey | **9/10** | Close/steep aim holds; full equipment coverage open |
-| Sheep | Queued | Not yet inspected in this pass |
+| Sheep | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Skunk | Queued | Not yet inspected in this pass |
 | Pig foreman | Queued | Not yet inspected in this pass |
 | Pig director | Queued | Not yet inspected in this pass |
