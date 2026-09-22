@@ -86,6 +86,7 @@ export function createFurnitureLibrary(atlas,cargo){
    for(let i=0;i<count;i++){const a=i*2.4,r=id==='campfire'?.12:.025,o=mesh(fire,flameGeo(i%3),flameMat,[Math.sin(a)*r,0,Math.cos(a)*r],[0,a,(i%2?-.12:.08)]),width=id==='campfire'?.33:.17,height=(id==='campfire'?.30:.24)+[.19,0,.11,.06,.23][i];o.scale.set(width,height,width*.85);o.castShadow=false;
     const core=mesh(fire,flameGeo((i+1)%3),inner,[Math.sin(a)*(r+.025),.006,Math.cos(a)*(r+.025)],[0,a+.5,0]);core.scale.set(width*.60,height*.53,width*.58);core.castShadow=false;
    }
+   for(const [i,o]of fire.children.entries()){o.userData.flicker={scale:o.scale.toArray(),rotation:o.rotation.z,phase:i*1.73};o.material.userData.flickerBaseColor??=o.material.color.clone();}
    const a=anchor(root,'emitter-0',[center[0],center[1]+.15,center[2]],[0,-1,0]);a.userData.distribution='omnidirectional';
   }else if(id==='dining-table'||id==='coffee-table'){
 
@@ -161,4 +162,18 @@ export function createFurnitureLibrary(atlas,cargo){
   return {root,form,skin,bounds:new THREE.Box3().setFromObject(root)};
  }
  return {build,stats:()=>({geometries:geometries.size,materials:materials.size,textures:textures.length}),dispose(){if(disposed)return;disposed=true;for(const g of geometries.values())g.dispose();for(const m of materials.values())m.dispose();for(const t of textures)t.dispose();geometries.clear();materials.clear();textures.length=0;}};
+}
+
+// Absolute-time sampling makes the four-second loop independent of frame rate.
+// null restores the authored pose for paused/reduced-motion previews.
+export function animateFurnitureFire(root,seconds){
+ const fire=root.getObjectByName('flames');if(!fire||!fire.visible)return;
+ const t=seconds===null?0:seconds*Math.PI/2;
+ for(const o of fire.children){const f=o.userData.flicker;if(!f)continue;
+  const wave=seconds===null?0:Math.sin(t*5+f.phase)*.065+Math.sin(t*9+f.phase*.7)*.025;
+  o.scale.set(f.scale[0]*(1-wave*.40),f.scale[1]*(1+wave),f.scale[2]*(1-wave*.30));
+  o.rotation.z=f.rotation+(seconds===null?0:Math.sin(t*3+f.phase)*.045);
+  // Flame materials are library-shared: brightness uses one common time phase.
+  o.material.color.copy(o.material.userData.flickerBaseColor).multiplyScalar(seconds===null?1:.97+.03*Math.sin(t*7));
+ }
 }

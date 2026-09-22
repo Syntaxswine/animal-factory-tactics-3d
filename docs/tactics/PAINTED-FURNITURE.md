@@ -33,9 +33,9 @@ There are no Light objects or emissive materials in these models. The gallery us
 
 ## Validation and review
 
-- `npm run check`: **584 tests passed**, plus tactical asset validation.
+- `npm run check`: **584 tests passed** (collection baseline), plus tactical asset validation.
 - `npm run build:tactics-3d`: passed; all three furniture files are included in the Pages output.
-- Three furniture tests check all finishes for finite geometry, ground contact, footprint bounds, passive anchors, no emission and stable resource ownership/disposal.
+- Four furniture tests check all finishes for finite geometry, ground contact, footprint bounds, passive anchors, no emission and stable resource ownership/disposal.
 - `tools/painted-furniture-review.mjs`: all 14 forms at close/gameplay scale, an underside sconce view, mobile width, repeated finish changes and browser errors. Set `PLAYWRIGHT_PATH` when Playwright is outside the local module tree; optional `REVIEW_ORIGIN` defaults to port 4331.
 - Repeated gallery changes stabilized at 113 library geometries, 28 materials and 24 texture clones; browser rendering reported 124 geometries and 8 textures. No browser errors or mobile horizontal overflow in the final run.
 - Independent hostile review: **9/10**, no blockers for this design/gallery scope. Remaining optional art polish: repeated close-up texture crops and heavy refrigerator wear. Screenshots and machine results are local in `artifacts/furniture/` and `artifacts/furniture-review/`.
@@ -44,4 +44,6 @@ The viewer uses a stable neutral-character framing envelope because skinned mesh
 
 The bedside lamp variant reuses the floor lamp at 48% scale, seated exactly on the tabletop at Y=0.605. Its passive emitter and mount remain inside the transformed lamp group; use world transforms when attaching future lights.
 
-Fire assets support `build(id, finish, {burning: false})` for the extinguished visual. The Flames gallery checkbox controls this option. Flames are closed, static, painted 3D volumes with no animation, light emission, smoke, fuel simulation or damage rules. Fire emitter anchors have `distribution: "omnidirectional"`; their orientation is incidental for a future point light. The flame group is separate from the logs, stones and torch body.
+Fire assets support `build(id, finish, {burning: false})` for the extinguished visual. The Flames gallery checkbox controls this option. Flames are closed painted 3D volumes with a gentle four-second repeating flicker. There is no light emission, smoke, fuel simulation or damage behavior. Fire emitter anchors have `distribution: "omnidirectional"`; their orientation is incidental for a future point light. The flame group is separate from the logs, stones and torch body.
+
+`animateFurnitureFire(root, seconds)` samples flame scale, sway and a subtle material brightness variation from absolute time. Pass `null` to restore the authored transforms and colors. Shared flame materials use a common brightness phase. The viewer offers a Flicker animation checkbox, honors reduced-motion preferences, stops scheduling frames for hidden pages or non-burning selections, and retains a fixed camera framing envelope while flickering. Loop periodicity, pose restoration, and absence of accumulated drift are unit-tested; browser checks cover movement, pause and reduced-motion changes.

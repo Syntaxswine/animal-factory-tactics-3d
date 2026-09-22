@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../dist/tactics/vendor/three.module.js';
-import {FURNITURE_FORMS,FURNITURE_FINISHES,createFurnitureLibrary} from '../dist/tactics/painted-furniture.js';
+import {FURNITURE_FORMS,FURNITURE_FINISHES,createFurnitureLibrary,animateFurnitureFire} from '../dist/tactics/painted-furniture.js';
 const atlas=new THREE.Texture();
 test('furniture fits declared footprints, has finite geometry and contacts its mounting surface',()=>{
  const library=createFurnitureLibrary(atlas,atlas);
@@ -28,4 +28,14 @@ test('repeated collection changes retain shared resources and disposal is idempo
  const library=createFurnitureLibrary(atlas,atlas),cycle=()=>{for(const f of FURNITURE_FORMS)for(const skin of Object.keys(FURNITURE_FINISHES))library.build(f.id,skin);};
  cycle();const counts=library.stats();cycle();assert.deepEqual(library.stats(),counts);assert.throws(()=>library.build('missing'));assert.throws(()=>library.build('cabinet','missing'));
  library.dispose();assert.deepEqual(library.stats(),{geometries:0,materials:0,textures:0});assert.throws(()=>library.build('cabinet'));library.dispose();
+});
+
+test('fire flicker loops continuously without drift and resets to authored transforms',()=>{
+ const library=createFurnitureLibrary(atlas,atlas);
+ for(const id of ['campfire','standing-torch','wall-torch']){const {root}=library.build(id),fire=root.getObjectByName('flames'),snapshot=()=>fire.children.flatMap(o=>[...o.scale.toArray(),o.rotation.z,...o.material.color.toArray()]);
+  const authored=snapshot();animateFurnitureFire(root,.2);animateFurnitureFire(root,null);assert.deepEqual(snapshot(),authored);const rest=snapshot();animateFurnitureFire(root,.37);const first=snapshot();assert.notDeepEqual(first,rest);animateFurnitureFire(root,4.37);snapshot().forEach((n,i)=>assert(Math.abs(n-first[i])<1e-12));
+  for(let i=0;i<1000;i++)animateFurnitureFire(root,i/60);animateFurnitureFire(root,null);assert.deepEqual(snapshot(),rest);
+  fire.visible=false;animateFurnitureFire(root,1);assert.deepEqual(snapshot(),rest);
+ }
+ library.dispose();
 });
