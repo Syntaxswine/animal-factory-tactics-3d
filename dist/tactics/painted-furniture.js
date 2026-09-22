@@ -4,6 +4,13 @@ import {buildWoodenGuardTower} from './wooden-guard-tower.js';
 import {softBox} from './painted-environment-scene.js';
 
 export const FURNITURE_FORMS=[
+ {"id":"wood-ladder-tower","name":"Timber ladder guardhouse","tiles":[6,5],"source":"wood-stair-tower","light":false,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
+ {"id":"iron-ladder-tower","name":"Iron ladder guardhouse","tiles":[6,5],"source":"iron-stair-tower","light":false,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
+ {"id":"wood-rear-ladder-tower","name":"Timber rear-ladder guardhouse","tiles":[5,5],"source":"wood-wrap-tower","light":false,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
+ {"id":"iron-rear-ladder-tower","name":"Iron rear-ladder guardhouse","tiles":[5,5],"source":"iron-wrap-tower","light":false,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
+ {"id":"wood-large-ladder-tower","name":"Large timber ladder guardhouse","tiles":[7,7],"source":"wood-large-wrap-tower","light":false,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
+ {"id":"iron-large-ladder-tower","name":"Large iron ladder guardhouse","tiles":[7,7],"source":"iron-large-wrap-tower","light":false,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
+ {"id":"iron-searchlight-ladder-tower","name":"Iron searchlight ladder guardhouse","tiles":[6,5],"source":"iron-searchlight-stair-tower","light":true,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
  {id:'iron-searchlight-stair-tower',name:'Iron guardhouse with searchlight',tiles:[6,5],light:true,note:'Rust-red stair tower with a bracket-mounted searchlight beneath the front window. Lighting deferred.'},
  {id:'wooden-spotlight-tower',name:'Spotlight guard tower',tiles:[5,5],light:true,note:'Three-story timber tower with a pedestal searchlight, swivel yoke and recessed reflector. Lighting deferred.'},
  {id:'wood-large-wrap-tower',name:'Large timber guardhouse tower',tiles:[7,7],note:'5×5 guardhouse and timber trellis with wraparound stairs. 7×7 overall.'},
@@ -90,9 +97,9 @@ export function createFurnitureLibrary(atlas,cargo){
  function build(id,skin='honey',{burning=true}={}){
   if(disposed)throw Error('Furniture library disposed');
   const form=FURNITURE_FORMS.find(f=>f.id===id);if(!form||!Object.hasOwn(FURNITURE_FINISHES,skin))throw Error('Invalid furniture form/finish');
-  const root=new THREE.Group();root.name=id;const timber=wood(skin),warm=wood(skin,1);
-  if(['iron-searchlight-stair-tower','wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower','wood-large-wrap-tower','iron-large-wrap-tower'].includes(id)){buildStairGuardTower(root,{box,wood,iron,material,skin,cargo,metal:id.startsWith('iron-'),wrap:id.includes('-wrap-'),large:id.includes('-large-')});
-   if(id==='iron-searchlight-stair-tower'){
+  const source=form.source||id,ladder=!!form.source;const root=new THREE.Group();root.name=id;const timber=wood(skin),warm=wood(skin,1);
+  if(['iron-searchlight-stair-tower','wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower','wood-large-wrap-tower','iron-large-wrap-tower'].includes(source)){buildStairGuardTower(root,{box,wood,iron,material,skin,cargo,metal:id.startsWith('iron-'),wrap:source.includes('-wrap-'),large:source.includes('-large-'),ladder});
+   if(source==='iron-searchlight-stair-tower'){
     const H=root.userData.stairTower.deckHeight,x=root.userData.stairTower.coreOffsetX;
     const plate=box(root,iron,[x,H+.01,1.53],[.62,.88,.065]);plate.name='searchlight-wall-plate';
     for(const dx of [-.23,.23]){box(root,iron,[x+dx,H-.35,1.77],[.065,.09,.49]);tube(root,iron,[[x+dx,H-.48,1.56],[x+dx,H-.36,1.82],[x+dx,H-.31,2.02]],.035);for(const y of [H-.30,H+.32]){const bolt=cyl(root,brass,[x+dx,y,1.575],.035,.035,.025);bolt.rotation.x=Math.PI/2;}}
