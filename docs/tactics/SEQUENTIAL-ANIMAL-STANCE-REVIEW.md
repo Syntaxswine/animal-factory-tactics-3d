@@ -22,7 +22,7 @@ canvas. On narrower windows the displayed canvas scales down; use the recorded
 | Animal | Refinement review | Remaining holds |
 | --- | --- | --- |
 | Horse | **9/10** | Close/steep prone endpoints; full support/contact art audit |
-| Goat | Queued | Not yet inspected in this pass |
+| Goat | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Bull | Queued | Not yet inspected in this pass |
 | Cow | Queued | Not yet inspected in this pass |
 | Donkey | Queued | Not yet inspected in this pass |
@@ -58,4 +58,3 @@ records the unchanged 1,375-case matrix for comparison with the prior repair.
 The changes retain the previous repair's typed failure handling, complete-pose
 fallback and authoritative outcomes. The hen's unarmed status is preserved until
 its distinct wing/weapon problem is implemented and reviewed.
-
