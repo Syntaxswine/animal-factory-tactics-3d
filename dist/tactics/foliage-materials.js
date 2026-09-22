@@ -1,6 +1,6 @@
 import * as T from './vendor/three.module.js';
 export const FOLIAGE_ATLAS='../assets/environment/painted/foliage-atlas-v1.png';
-export const FOLIAGE_MATERIALS=new Set(['grass','grass-blade','foliage','leaf-light','pine','bark']);
+export const FOLIAGE_MATERIALS=new Set(['cover-grass','grass','grass-blade','foliage','leaf-light','pine','bark']);
 // Mirrored repetition makes both sides of every texture boundary meet, even
 // where hand-painted source edges differ. Insets keep mip filtering in a panel.
 export function mirroredPaintUV(u,v,panel){
@@ -8,10 +8,10 @@ export function mirroredPaintUV(u,v,panel){
  return [o[0]+.004+mirror(u)*.492,o[1]+.004+mirror(v)*.492];
 }
 export function paintFoliageMaterial(material,kind,texture){
- const panel=kind==='pine'?2:kind==='bark'?3:kind==='grass'||kind==='grass-blade'?0:1;
+ const panel=kind==='pine'?2:kind==='bark'?3:kind==='cover-grass'||kind==='grass'||kind==='grass-blade'?0:1;
  const offset=[[0,.5],[.5,.5],[0,0],[.5,0]][panel];
  material.map.dispose();material.map=texture;material.roughness=1;
- material.color.setHex(kind==='leaf-light'?0xe5edb8:kind==='grass-blade'?0xbcca83:0xd4ddbf);
+ material.color.setHex(kind==='cover-grass'?0x77956e:kind==='leaf-light'?0xe5edb8:kind==='grass-blade'?0xbcca83:0xd4ddbf);
  material.customProgramCacheKey=()=> 'painted-foliage-v2-'+kind;
  material.onBeforeCompile=shader=>{
   shader.vertexShader='varying vec3 vNaturePosition,vNatureNormal,vNatureLocal;\n'+shader.vertexShader;
@@ -23,7 +23,7 @@ export function paintFoliageMaterial(material,kind,texture){
   const sample=(uv)=>`texture2D(map,vec2(${offset[0].toFixed(1)},${offset[1].toFixed(1)})+.004+(1.-abs(mod(${uv},2.)-1.))*.492).rgb`;
   shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`
    vec3 weights=pow(abs(normalize(vNatureNormal)),vec3(4.));weights/=max(.001,weights.x+weights.y+weights.z);
-   vec3 q=vNaturePosition*${kind==='grass'?'.45':kind==='bark'?'1.8':kind==='pine'?'.65':'.80'};
+   vec3 q=vNaturePosition*${['grass','cover-grass'].includes(kind)?'.45':kind==='bark'?'1.8':kind==='pine'?'.65':'.80'};
    ${kind==='pine'?`// Cone UVs run from hem to tip. Repeat around the tier only: vertical mirroring would invert the hanging branches.
     vec2 pineUV=vec2(1.-abs(mod(vMapUv.x*4.,2.)-1.),clamp(vMapUv.y,0.,1.));
     vec3 paint=texture2D(map,vec2(.004,.004)+pineUV*.492).rgb;

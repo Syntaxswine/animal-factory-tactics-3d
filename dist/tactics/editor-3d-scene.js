@@ -70,7 +70,7 @@ export class InspectionScene {
  }
  rebuild(){
   if(!this.document)return;const started=performance.now(),{level,roofs,walls}=this.options,source=this.document.map;
-  const map={...source,props:source.props.filter(p=>!PAINTED_PROP_FORMS[p.kind]&&(roofs||!p.kind.startsWith('roof-')))};
+  const map={...source,coverOccupiedProps:source.props,props:source.props.filter(p=>!PAINTED_PROP_FORMS[p.kind]&&(roofs||!p.kind.startsWith('roof-')))};
   const world={...this.world,boxes:this.world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood')&&(walls||!b.source.edge)&&(roofs||b.kind!=='roof'))};
   const groups=new Map(),matrix=new T.Matrix4(),q=new T.Quaternion(),yaw=new T.Quaternion(),euler=new T.Euler(),position=new T.Vector3(),scale=new T.Vector3();
   const add=(geometry,material,m,z,x,y)=>{const mat=this.dim(material,z),key=`${Math.floor(x/16)},${Math.floor(y/16)}:${geometry.uuid}:${mat.uuid}`;if(!groups.has(key))groups.set(key,{geometry,material:mat,matrices:[]});groups.get(key).matrices.push(m.clone());};

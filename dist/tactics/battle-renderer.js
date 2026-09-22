@@ -25,7 +25,7 @@ export class BattleRenderer extends HybridRenderer {
  }
  rebuild(world,seen,level,map){
   const scenery={...world,boxes:world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood'))};
-  super.rebuild(scenery,map.difficulty==='easy'?null:seen,level,{...map,props:map.props.filter(p=>!PAINTED_PROP_FORMS[p.kind])});
+  super.rebuild(scenery,map.difficulty==='easy'?null:seen,level,{...map,coverOccupiedProps:map.props,props:map.props.filter(p=>!PAINTED_PROP_FORMS[p.kind])});
   this.paintedEnvironment.rebuild(map,level);
  }
  async loadModel(unit){

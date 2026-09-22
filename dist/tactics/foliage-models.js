@@ -34,3 +34,14 @@ export function grassTufts(box){
   return {id:box.id+':tuft:'+i,source:box.source,kind:'grass',material:'grass-blade',shape:'grass-tuft',center:[x+(random(i+1)-.5)*.72,top+height/2,y+(random(i+3)-.5)*.72],size:[.20+random(i+7)*.12,height,.18+random(i+9)*.12],rotation:[0,random(i+11)*Math.PI*2,0]};
  });
 }
+
+// Traversable woodland is vegetation cover, not solid tree props. These instances
+// retain the floor source for fog/floor filtering and never enter collision data.
+export function coverUndergrowth(box){
+ if(box.kind!=='floor'||box.material!=='woodland')return [];
+ const {x,y,z=0}=box.source,seed=(Math.imul(x+17,73856093)^Math.imul(y+61,19349663)^Math.imul(z+3,83492791))>>>0;
+ const random=i=>((Math.imul(seed^(i*374761393),1597334677)>>>0)%10000)/10000,top=box.center[1]+box.size[1]/2;
+ return Array.from({length:3},(_,i)=>{const h=.55+random(i+3)*.6;
+  return {id:box.id+':cover:'+i,source:box.source,kind:'foliage-cover',material:i===1?'leaf-light':'foliage',shape:'cover-crown',center:[x+(random(i+1)-.5)*.5,top+.12+h/2,y+(random(i+7)-.5)*.5],size:[.58+random(i+5)*.25,h,.55+random(i+11)*.28],rotation:[0,random(i+13)*Math.PI*2,0]};
+ });
+}
