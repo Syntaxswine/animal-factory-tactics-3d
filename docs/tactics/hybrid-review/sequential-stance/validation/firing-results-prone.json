@@ -1,0 +1,10 @@
+{
+  "frames": 75,
+  "flashFrames": 1,
+  "traceFrames": 5,
+  "reduced": {
+    "flash": false,
+    "recoil": 0
+  },
+  "errors": []
+}

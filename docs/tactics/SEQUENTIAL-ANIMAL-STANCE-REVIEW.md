@@ -6,7 +6,7 @@ remains on `work/prone-gameplay-refinement` in the separate 3D project.
 
 Each animal is inspected before moving to the next. The bounded pass addresses
 production stance transitions, shoulder/hand contact, waist deformation and
-continuous aiming. It preserves approved meshes, paint, dimensions and simulation
+continuous aiming. It preserves approved source mesh assets, paint, dimensions and simulation
 rules. Unsupported close/steep firing poses stay explicitly identified; an animal
 passing this refinement gate does not close the full equipment/animation backlog.
 
@@ -97,3 +97,42 @@ records the unchanged 1,375-case matrix for comparison with the prior repair.
 The changes retain the previous repair's typed failure handling, complete-pose
 fallback and authoritative outcomes. The hen's unarmed status is preserved until
 its distinct wing/weapon problem is implemented and reviewed.
+
+## Completed sequential pass
+
+All twelve animals passed independent hostile review at **9/10**, in the order
+above; each gate cleared before the next animal started. Hen approval covers her
+unarmed low stance only. The implementation ends at `ead47a7`, following the
+horse proof at `a3bdf17`; the review branch remains pending architect integration
+and publication. No canonical merge or deployment was performed.
+
+- **605 tests passed**, including the twelve new per-animal stance checks;
+  tactical asset validation passed. `npm run build:tactics-3d` succeeded.
+- All **20 shared-core modules** verified unchanged at `e529f4b`.
+- **144 browser configurations** across twelve animals and two outfits, with
+  close/gameplay sheets and four fixed-floor transition strips per animal.
+  The hen's target selector does not imply aiming support. No browser errors.
+- The unchanged **1,375-case five-gun endpoint matrix** now aligns **1,248**
+  cases, up from 1,184: **64 additional endpoints, zero previously supported
+  endpoints lost**. The remaining **127** close/steep cases use the explicit
+  holding fallback. Worst supported error is 0.000494658 radians. This is
+  geometric coverage, not approval of every weapon's firing animation.
+- Actual core prone rifle attack passed through the UI: flash, trace, recoil,
+  ammunition debit, immutable resolved state and reduced-motion behavior.
+- **12 browser playback sequences** passed supported → unavailable → supported
+  recovery across both outfits and motion settings, preserving impact and core
+  state. The old near fixture became reachable, so the fallback check now uses
+  model-local `(1,2,0)` on the visible floor. Height conversion respects floor
+  spacing. Sampled frame counts are not a performance benchmark.
+
+Final evidence: [coverage](hybrid-review/sequential-stance/validation/coverage.json),
+[fallback playback](hybrid-review/sequential-stance/validation/fallback-results.json),
+[core firing](hybrid-review/sequential-stance/validation/firing-results-prone.json),
+[actual discharge](hybrid-review/sequential-stance/validation/rifle-discharge-prone.png).
+Each animal's sibling evidence directory contains the reviewed sheets and browser
+results. The earlier repair's archived baseline remains unchanged.
+
+Remaining work: full species × outfit × legal equipment/action coverage,
+unsupported endpoints, crawling, full support/contact art audit, hen wing weapon
+authoring and simulation-body alignment, and squad performance/resource checks.
+This pass advances handoff sections 1 and 6; it does not close either section.

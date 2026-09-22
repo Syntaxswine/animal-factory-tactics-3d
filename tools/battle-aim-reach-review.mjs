@@ -2,6 +2,7 @@ import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import {DIMENSIONS} from '../dist/tactics/hybrid-world.js';
 const require=createRequire(import.meta.url),{chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 const out=new URL('../artifacts/battle-aim-reach/',import.meta.url);fs.mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({channel:'msedge',headless:true}),page=await browser.newPage({viewport:{width:1280,height:820}}),errors=[],results=[];
@@ -22,8 +23,10 @@ try{
   for(const reduced of [false,true]){
    await page.emulateMedia({reducedMotion:reduced?'reduce':'no-preference'});
    for(const unavailable of [false,true,false]){
-    const playback=page.evaluate(({unavailable,reduced})=>new Promise(resolve=>{
-     const r=battle3d.renderer,s=battle3d.state,u=s.units[1],x=u.x+(unavailable?1:6),y=u.y,h=(unavailable?1.4:.48)*1.8/1.65;
+    const playback=page.evaluate(({unavailable,reduced,dimensions})=>new Promise(resolve=>{
+     // The refined horse now reaches the old near fixture. This steep endpoint
+     // was checked directly and stays on the visible floor for impact checks.
+     const r=battle3d.renderer,s=battle3d.state,u=s.units[1],x=u.x+(unavailable?1:6),y=u.y,height=unavailable?2:.48,floor=Math.floor(height/dimensions.floorSpacing),h=floor*3+(height-floor*dimensions.floorSpacing)*1.8/dimensions.standing;
      s.effect={sequence:[{shooter:u.id,ax:u.x,ay:u.y,az:0,bx:x,by:y,trajectories:[{x,y,h,kind:'wall'}]}]};
      const snapshot=()=>JSON.stringify(s,(_,v)=>v instanceof Set?[...v].sort():v),before=snapshot();r.captureCombat(s);
      const rows=[],start=performance.now();function sample(){
@@ -31,7 +34,7 @@ try{
       rows.push({busy:r.busy,supported:m.firing?.status?.supported,flash:fx.flash.visible,trace:fx.trace.visible,impact:fx.impact.visible,warning:document.getElementById('message').textContent.includes('firing animation unavailable'),staleOrigin:!!a?.presentationUnsupported&&!!a?.traceOrigin});
       if(performance.now()-start>(reduced?500:1400))resolve({rows,unchanged:before===snapshot(),cap:!!m.cap});else requestAnimationFrame(sample);
      }requestAnimationFrame(sample);
-    }),{unavailable,reduced});
+    }),{unavailable,reduced,dimensions:DIMENSIONS});
     if(unavailable&&!reduced){
      await page.waitForFunction(()=>battle3d.renderer.combat.active?.presentationUnsupported);
      await page.screenshot({path:fileURLToPath(new URL('unavailable-'+outfit+'.png',out))});
