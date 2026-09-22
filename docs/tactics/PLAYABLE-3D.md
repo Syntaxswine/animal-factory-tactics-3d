@@ -1,5 +1,7 @@
 # First 3D encounter
 
+Stance controls, articulated casualties and Shift-drag group selection are now connected. See [STANCES-AND-SELECTION.md](STANCES-AND-SELECTION.md) for controls, validation and limits.
+
 Open `/tactics/battle-3d.html` after `npm run serve`, or use the landing-page encounter card. Select a worker, click ground to move, select a visible opponent and use Fire. Reload, End turn, Stop, floor selection, camera centering, drag pan and wheel zoom are supported. Difficulty changes apply on Restart. Easy is the initial choice.
 
 The default is now the authored `default-factory.json` from the pinned sprite revision: 36 guards, 398 props and 1,576 boundary edges across the 240×240 map. It matches the existing `Factory-test.json`. Loading errors stop startup visibly; the page never falls back to the small training template. Use **Overview**, then click an area to inspect it; **Center** returns to the squad. `?view=overview` opens the full map for review.
@@ -24,11 +26,11 @@ The source sprite target at that revision and this page therefore execute identi
 
 `worker-locomotion.js` adapts the motion studies' alternating planted/swinging feet and two-bone leg solving while preserving existing weapon carry grips. The hen uses its repaired avian rig, without adding firearm grips. Reduced-motion preference disables both translation interpolation and walking. Hidden enemy tracks are discarded so reappearance cannot expose an unseen route. Floor changes and teleports currently snap; ladder/roof/stair animations remain future work.
 
-Numeric coverage includes all twelve models and rifle, pistol, knife and assault carry poses for mammals; browser checks additionally instantiate every character/equipment combination actually present in the authored factory. Arbitrary combinations are not all approved: the existing pig-director/HMG carry pose still exceeds arm reach and is not introduced by this milestone. Reload, prone and kneeling action animations remain separate work.
+Numeric coverage includes all twelve models and rifle, pistol, knife and assault carry poses for mammals; browser checks additionally instantiate every character/equipment combination actually present in the authored factory. Arbitrary combinations are not all approved: the existing pig-director/HMG carry pose still exceeds arm reach and is not introduced by this milestone. Kneeling/prone locomotion and stance transitions are now connected; reload action animation remains separate work.
 
 ### Rifle firing milestone
 
-Select Anya for the rifle. Accepted rifle shots play a 1.1-second standing sequence: raise, discharge at 380 ms, recoil and lower. Two-hand grip solving and muzzle alignment follow the engine's actual trajectory endpoint, including misses and blocked shots. A flash follows the posed muzzle; the trace starts from the discharge position and follows the resolved path. Casualties previously visible remain upright until their shot discharges. Actions and enemy simulation steps wait for playback to finish; simulation outcomes are already resolved and are never recalculated by animation.
+Select Anya for the rifle. Accepted rifle shots play a 1.1-second stance-aware sequence: raise, discharge at 380 ms, recoil and lower. Two-hand grip solving and muzzle alignment follow the engine's actual trajectory endpoint, including misses and blocked shots. A flash follows the posed muzzle; the trace starts from the discharge position and follows the resolved path. Casualties previously visible remain upright until their shot discharges. Actions and enemy simulation steps wait for playback to finish; simulation outcomes are already resolved and are never recalculated by animation.
 
 Other ballistic weapons retain their carry poses and receive basic impact markers only. Explosives, flames, material-specific impacts and hit reactions remain future work. Traces and impacts use actual terrain visibility even on Easy; hidden shooters do not create visible shot sequences. Reduced motion shortens playback and disables recoil, flash and traces.
 

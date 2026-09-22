@@ -10,6 +10,8 @@ try{
  await page.goto(process.env.REVIEW_URL||'http://127.0.0.1:4318/tactics/battle-3d.html');
  await page.waitForFunction(()=>window.battle3d?.renderer.models.size>=4);
  await page.locator('#squad button').nth(1).click();
+ const stance=process.env.REVIEW_STANCE||'standing';
+ if(stance!=='standing'){await page.click('#stance-'+stance);await page.waitForFunction(stance=>{const p=battle3d.renderer.motion.sample(battle3d.state.units[1]).pose;return stance==='prone'?p.prone===1:p.kneel===1;},stance);}
  await page.evaluate(async()=>{const {refresh}=await import('./core/engine.js'),s=battle3d.state,g=s.units[4];g.x=7;g.y=6;g.hp=g.maxHp=200;refresh(s);});
  await page.waitForFunction(()=>battle3d.picks.some(p=>p.id===4));
  const box=await page.locator('#battle').boundingBox(),point=await page.evaluate(()=>{const b=battle3d,c=document.getElementById('battle'),p=b.picks.find(p=>p.id===4);for(const h of [30,40,20,50]){const y=p.py-h*b.view.zoom;if(b.renderer.pick(p.px,y,c.clientWidth,c.clientHeight)===4)return {x:p.px,y};}throw Error('Cannot pick test target');});
@@ -19,7 +21,7 @@ try{
  await page.click('#fire');
  const resolved=await page.evaluate(()=>JSON.stringify(battle3d.state,(_,v)=>v instanceof Set?[...v].sort():v));
  await page.waitForFunction(()=>battle3d.renderer.shotEffects.flash.visible);
- await page.screenshot({path:fileURLToPath(new URL('rifle-discharge.png',out))});
+ await page.screenshot({path:fileURLToPath(new URL('rifle-discharge-'+stance+'.png',out))});
  const samples=await samplesPromise;
  assert.ok(samples.some(s=>s.aim>0&&s.aim<1));assert.ok(samples.some(s=>s.flash));assert.ok(samples.some(s=>s.trace));assert.ok(samples.some(s=>s.recoil>.5));assert.equal(samples.at(-1).busy,false);
  for(const s of samples){assert.ok(s.flashError<1e-7);if(s.trace)assert.ok(Math.hypot(...s.traceOrigin.map((n,i)=>n-s.frozen[i]))<1e-5);}
@@ -28,5 +30,5 @@ try{
  await page.emulateMedia({reducedMotion:'reduce'});await page.click('#fire');
  const reduced=await page.evaluate(()=>({flash:battle3d.renderer.combat.active.phase.flash,recoil:battle3d.renderer.combat.active.phase.recoil}));assert.deepEqual(reduced,{flash:false,recoil:0});
  await page.waitForFunction(()=>!battle3d.renderer.busy);assert.deepEqual(errors,[]);
- const result={frames:samples.length,flashFrames:samples.filter(s=>s.flash).length,traceFrames:samples.filter(s=>s.trace).length,reduced,errors};fs.writeFileSync(new URL('firing-results.json',out),JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+ const result={frames:samples.length,flashFrames:samples.filter(s=>s.flash).length,traceFrames:samples.filter(s=>s.trace).length,reduced,errors};fs.writeFileSync(new URL('firing-results-'+stance+'.json',out),JSON.stringify(result,null,2));console.log(JSON.stringify(result));
 }finally{await browser.close();}

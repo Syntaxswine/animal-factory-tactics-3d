@@ -7,6 +7,7 @@ import {createAnimalPaint} from './animal-motion-paint.js';
 import {createWeaponModel} from './weapon-models.js';
 import {personVisible} from './battle-visibility.js';
 import {BattleEnvironment,PAINTED_PROP_FORMS} from './battle-environment.js';
+import {createBattlePosture} from './battle-posture.js';
 import {BattleMotion} from './battle-motion.js';
 import {createWorkerLocomotion} from './worker-locomotion.js';
 import {BattleCombat} from './battle-combat.js';
@@ -40,8 +41,8 @@ export class BattleRenderer extends HybridRenderer {
    if(generation!==this.generation){cap?.dispose();paint.dispose();worker.dispose();return;}
    for(const part of worker.parts)part.material=paint.material;
    const root=new T.Group();root.add(worker.root);
-   const locomotion=createWorkerLocomotion(worker,profile);
-   this.models.set(unit.id,{worker,paint,root,profile,locomotion,cap});this.actors.set(unit.id,root);this.scene.add(root);
+   const posture=createBattlePosture(worker,profile),locomotion=createWorkerLocomotion(worker,profile);
+   this.models.set(unit.id,{worker,paint,root,profile,locomotion,posture,cap});this.actors.set(unit.id,root);this.scene.add(root);
   }catch(error){cap?.dispose();paint?.dispose();worker?.dispose();this.diagnostics.push(error.message);}
   finally{if(generation===this.generation)this.onReady();}
  }
@@ -50,7 +51,7 @@ export class BattleRenderer extends HybridRenderer {
   if(!model){if(!this.pending.has(unit.id))this.loadModel(unit);return null;}
   const {worker,root,profile}=model,shot=this.combat.active?.event.shooter===unit.id?this.combat.active:null;
   const sample=shot?{...this.motion.sample(unit),x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0,blend:0}:this.motion.sample(unit);
-  const signature=`${unit.weapon}:${sample.heading}:${unit.hp>0}:${sample.blend}:${sample.blend?sample.distance:0}:${shot?.start}:${shot?.phase.aim}:${shot?.phase.recoil}`;
+  const signature=`${JSON.stringify(sample.pose)}:${unit.casualty}:${unit.weapon}:${sample.heading}:${unit.hp>0}:${sample.blend}:${sample.blend?sample.distance:0}:${shot?.start}:${shot?.phase.aim}:${shot?.phase.recoil}`;
   if(model.signature!==signature){
    // Authoring rigs solve carry grips in model space. Position only after posing.
    root.position.set(0,0,0);root.updateMatrixWorld(true);
@@ -60,16 +61,17 @@ export class BattleRenderer extends HybridRenderer {
    }
    worker.root.position.set(0,0,0);worker.root.rotation.set(0,0,0);
    if(unit.hp>0&&shot?.rifle&&!profile.unarmed){
-    model.firing??=createRifleFiring(worker,profile);
+    model.firing??=createRifleFiring(worker,profile,model.posture);
     const target=shotPoint(shot.event.trajectories[0]).sub(new T.Vector3(...toWorld(sample)));
-    if(shot.phase.discharged&&!shot.traceOrigin)shot.traceOrigin=model.firing.apply({...shot.phase,recoil:0,target}).origin.clone().add(new T.Vector3(...toWorld(sample)));
-    model.firing.apply({...shot.phase,target});
+    if(shot.phase.discharged&&!shot.traceOrigin)shot.traceOrigin=model.firing.apply({...shot.phase,recoil:0,target,sample}).origin.clone().add(new T.Vector3(...toWorld(sample)));
+    model.firing.apply({...shot.phase,target,sample});
    }
-   else if(unit.hp>0)model.locomotion.apply(sample);
-   else worker.pose(profile.unarmed?'neutral':'carry',-sample.heading);
+   else if(unit.hp>0&&sample.pose?.prone>0&&!profile.unarmed&&['rifle','assault','smg','shotgun','sniper'].includes(unit.weapon)){
+    model.firing??=createRifleFiring(worker,profile,model.posture);const h=sample.heading*Math.PI/180;model.firing.apply({aim:0,target:new T.Vector3(12*Math.cos(h),.48,12*Math.sin(h)),sample});
+   }
+   else {model.locomotion.apply({...sample,blend:sample.pose?.prone||sample.pose?.down?0:sample.blend});model.posture.apply(sample);if(Object.values(sample.pose||{}).some(v=>v>0))model.posture.ground();}
    model.paint.setGripForearm?.(!!model.equipment?.carry?.handPoses?.support?.gripMesh);
-   // Temporary casualty pose, listed explicitly in the visual backlog.
-   worker.root.rotation.z=unit.hp<=0?Math.PI/2:0;
+
   }
   root.position.fromArray(toWorld(sample));
   const placement=`${signature}:${sample.x}:${sample.y}:${sample.z||0}`;

@@ -1,16 +1,18 @@
 import * as T from './vendor/three.module.js';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 // Standing rifle presentation, using the reviewed shoulder/grip landmarks.
-export function createRifleFiring(worker,profile){
+export function createRifleFiring(worker,profile,posture=null){
  worker.root.position.set(0,0,0);worker.root.rotation.set(0,0,0);worker.pose('neutral');
  const named=Object.fromEntries(worker.bones.map(b=>[b.name,b]));
  const rest=new Map(worker.bones.map(b=>[b,b.getWorldPosition(V())]));
  function rotation(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(q));worker.root.updateMatrixWorld(true);}
- function raw(aim,recoil,heading,pitch){
+ function raw(aim,recoil,heading,pitch,sample){
   const gun=worker.weapon,root=worker.root;root.position.set(0,0,0);root.rotation.set(0,0,0);worker.pose('carry',0);
   named.spine.rotation.x=.16*aim;named.spine.rotation.z=-.02*recoil;
   named.head.rotation.z=(pitch*(profile.headPitchSlope??1.5)+(profile.headPitch??-.9))*aim;
   named.head.rotation.y=((profile.headYaw??25)*Math.PI/180+.4*pitch)*aim;root.updateMatrixWorld(true);
+  posture?.apply({...sample,heading:0},{equipment:false});
+  named.head.rotation.z+=(sample?.pose?.prone||0);root.updateMatrixWorld(true);
   const spineQ=named.spine.getWorldQuaternion(new T.Quaternion()),spineOrigin=named.spine.getWorldPosition(V());
   const carryPosition=new T.Vector3(...gun.carry.position).sub(rest.get(named.spine)).applyQuaternion(spineQ).add(spineOrigin);
   const carryQ=new T.Quaternion().setFromUnitVectors(V(1,0,0),new T.Vector3(...gun.carry.axis).normalize());
@@ -31,13 +33,14 @@ export function createRifleFiring(worker,profile){
    rotation(a,new T.Quaternion().setFromUnitVectors(rb.clone().sub(ra).normalize(),mid.clone().sub(start).normalize()));
    rotation(b,new T.Quaternion().setFromUnitVectors(rc.clone().sub(rb).normalize(),target.clone().sub(mid).normalize()));rotation(c,handQ);named['fingers'+side].rotation.z=-.9;
   }
-  root.rotation.y=-heading+yaw*aim;root.updateMatrixWorld(true);worker.skeleton.update();
+  root.rotation.y=-heading+yaw*aim;root.updateMatrixWorld(true);worker.skeleton.update();if(posture&&Object.values(sample?.pose||{}).some(v=>v>0))posture.ground();
  }
- function muzzle(){const gun=worker.weapon;return {origin:gun.anchors.muzzle.getWorldPosition(V()),direction:V(1,0,0).transformDirection(gun.barrel.matrixWorld)};}
- return {apply({aim,recoil=0,target}){
+ function muzzle(){const gun=worker.weapon;return {origin:gun.anchors.muzzle.getWorldPosition(V()),direction:V(1,0,0).transformDirection((gun.barrel||gun.root).matrixWorld)};}
+ return {apply({aim,recoil=0,target,sample}){
+  aim=Math.max(aim,sample?.pose?.prone||0);
   let heading=Math.atan2(target.z,target.x),pitch=Math.atan2(target.y-1.3,Math.hypot(target.x,target.z));
   for(let i=0;i<(aim>=.999?4:1);i++){
-   raw(aim,recoil,heading,pitch);const delta=target.clone().sub(muzzle().origin);heading=Math.atan2(delta.z,delta.x);pitch=Math.atan2(delta.y,Math.hypot(delta.x,delta.z));
+   raw(aim,recoil,heading,pitch,sample);const delta=target.clone().sub(muzzle().origin);heading=Math.atan2(delta.z,delta.x);pitch=Math.atan2(delta.y,Math.hypot(delta.x,delta.z));
   }
   return muzzle();
  },muzzle};

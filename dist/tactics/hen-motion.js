@@ -19,14 +19,14 @@ export function createHenMotion(worker){
  function apply(time,options={}){
   heading=options.heading??0;state=options.state??dogMotionState(time);const t=state.time;
   root.position.set(0,0,0);root.rotation.set(0,0,0);worker.pose();for(const b of thighs)b.quaternion.identity();named.pelvis.position.copy(rest.get(named.pelvis));
-  named.pelvis.position.y-=.09*state.gait+.12*state.kneel+state.bob*.5;named.pelvis.position.z+=.02*state.transfer;
+  named.pelvis.position.y-=.09*state.gait+(options.crouchDrop??.12)*state.kneel+state.bob*.5;named.pelvis.position.z+=.02*state.transfer;
   named.breast.rotation.x=-.045*state.transfer;named.head.rotation.z=.045*Math.sin(t*2*Math.PI)*state.gait;
   root.updateMatrixWorld(true);joints={};
   for(const [i,side]of [-1,1].entries()){
    const a=thighs[i],b=named['shank '+side],c=named['foot '+side],f=state.feet[side];
-   const target=V(f.x+.035-state.distance+(side===-1?.32*state.kneel:0),.06+f.lift,side*.157),start=a.getWorldPosition(V()),la=rest.get(a).distanceTo(rest.get(b)),lb=rest.get(b).distanceTo(rest.get(c)),axis=target.clone().sub(start),d=axis.length();
+   const target=V(f.x+.035-state.distance+(side===-1?(options.kneelStep??.32)*state.kneel:0),.06+f.lift,side*.157),start=a.getWorldPosition(V()),la=rest.get(a).distanceTo(rest.get(b)),lb=rest.get(b).distanceTo(rest.get(c)),axis=target.clone().sub(start),d=axis.length();
    if(d>la+lb+1e-7||d<Math.abs(la-lb)-1e-7)throw Error('Hen leg target outside reach');
-   axis.normalize();const along=(la*la-lb*lb+d*d)/(2*d),pole=V(1,0,0).addScaledVector(axis,-axis.x).normalize(),mid=start.clone().addScaledVector(axis,along).addScaledVector(pole,Math.sqrt(Math.max(0,la*la-along*along)));
+   axis.normalize();const along=(la*la-lb*lb+d*d)/(2*d),pole=options.crouchPole?V(Math.cos(Math.PI*state.kneel),0,side*Math.sin(Math.PI*state.kneel)):V(1,0,0);pole.addScaledVector(axis,-pole.dot(axis)).normalize();const mid=start.clone().addScaledVector(axis,along).addScaledVector(pole,Math.sqrt(Math.max(0,la*la-along*along)));
    rotation(a,new T.Quaternion().setFromUnitVectors(rest.get(b).clone().sub(rest.get(a)).normalize(),mid.clone().sub(start).normalize()));rotation(b,new T.Quaternion().setFromUnitVectors(rest.get(c).clone().sub(rest.get(b)).normalize(),target.clone().sub(mid).normalize()));rotation(c,new T.Quaternion());
    named['wing '+side].rotation.x=-side*(.025*state.kneel+.025*state.gait);named['wing tip '+side].rotation.x=-side*.015*state.gait;
   }

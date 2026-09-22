@@ -17,8 +17,8 @@ This inventory is based on the checked-in model, weapon, environment and motion 
 | --- | --- | --- |
 | Gameplay locomotion | Standing walk, position/facing interpolation, stop settling and reduced-motion support are now connected. Remaining work: stance-specific gaits, terrain transitions and further visual refinement | Partial |
 | Aiming and firing | Standing rifle aim, grip, recoil and muzzle attachment now follow resolved game shots for mammals. Other weapons, stance variants and armed hen handling remain | Partial |
-| Kneeling and prone | Separate transitions and held poses; crouched movement and prone crawling; prone weapon handling | First |
-| Casualties | Authored fall, dead, wounded and stabilized poses. The first encounter currently uses a temporary tipped model for casualties | First |
+| Kneeling and prone | Controls, transitions, low movement cycles and rifle aiming are connected. Further gait polish and other weapon action cycles remain | Partial |
+| Casualties | Grounded bleeding/stable/dead poses, fall transitions and recovery are connected. Terrain-conforming falls and treatment animation remain | Partial |
 | Combat feedback | Rifle muzzle flash and visibility-clipped resolved traces are connected, with basic impact markers for ballistic shots. Material-specific sparks/dust, hit reactions and richer damage feedback remain | Partial |
 | Opposing uniforms | Red-hat/outfit variants are not connected to the character models; the model alone must not be relied on to identify allegiance | First |
 | Reloads and equipment changes | Magazine/round insertion, reload motion, draw/stow/swap, empty weapon poses and carried secondary equipment | Next |
