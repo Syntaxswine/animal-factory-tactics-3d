@@ -63,13 +63,18 @@ export class BattleRenderer extends HybridRenderer {
    if(unit.hp>0&&shot?.rifle&&!profile.unarmed){
     model.firing??=createRifleFiring(worker,profile,model.posture);
     const target=shotPoint(shot.event.trajectories[0]).sub(new T.Vector3(...toWorld(sample)));
-    if(shot.phase.discharged&&!shot.traceOrigin)shot.traceOrigin=model.firing.apply({...shot.phase,recoil:0,target,sample}).origin.clone().add(new T.Vector3(...toWorld(sample)));
-    model.firing.apply({...shot.phase,target,sample});
+    if(shot.phase.discharged&&!shot.dischargeChecked){
+     const launch=model.firing.apply({...shot.phase,recoil:0,target,sample});shot.dischargeChecked=true;shot.presentationUnsupported=!launch.supported;shot.presentationReason=launch.reason;
+     shot.traceOrigin=launch.supported?launch.origin.clone().add(new T.Vector3(...toWorld(sample))):null;
+    }
+    const result=model.firing.apply({...shot.phase,target,sample});
+    if(!result.supported){shot.traceOrigin=null;if(shot.phase.discharged){shot.presentationUnsupported=true;shot.presentationReason=result.reason;}}
+    this.firingDiagnostic(model,shot.presentationUnsupported?{supported:false,reason:shot.presentationReason}:result,unit);
    }
    else if(unit.hp>0&&sample.pose?.prone>0&&!profile.unarmed&&['rifle','assault','smg','shotgun','sniper'].includes(unit.weapon)){
-    model.firing??=createRifleFiring(worker,profile,model.posture);const h=sample.heading*Math.PI/180;model.firing.apply({aim:0,target:new T.Vector3(12*Math.cos(h),.48,12*Math.sin(h)),sample});
+    model.firing??=createRifleFiring(worker,profile,model.posture);const h=sample.heading*Math.PI/180;const result=model.firing.apply({aim:0,target:new T.Vector3(12*Math.cos(h),.48,12*Math.sin(h)),sample});this.firingDiagnostic(model,result,unit);
    }
-   else {model.locomotion.apply({...sample,blend:sample.pose?.prone||sample.pose?.down?0:sample.blend});model.posture.apply(sample);if(Object.values(sample.pose||{}).some(v=>v>0))model.posture.ground();}
+   else {this.firingDiagnostic(model,null,unit);model.locomotion.apply({...sample,blend:sample.pose?.prone||sample.pose?.down?0:sample.blend});model.posture.apply(sample);if(Object.values(sample.pose||{}).some(v=>v>0))model.posture.ground();}
    model.paint.setGripForearm?.(!!model.equipment?.carry?.handPoses?.support?.gripMesh);
 
   }
@@ -79,8 +84,12 @@ export class BattleRenderer extends HybridRenderer {
    model.placement=placement;root.updateMatrixWorld(true);worker.skeleton.update();
    for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}
   }
-  if(shot)this.shotEffects.update(shot,this.state,shot.rifle&&model.firing?model.firing.muzzle():null);
+  if(shot)this.shotEffects.update(shot,this.state,shot.rifle&&!shot.presentationUnsupported&&model.firing?model.firing.muzzle():null);
   return root;
+ }
+ firingDiagnostic(model,result,unit){
+  if(model.aimWarning){const i=this.diagnostics.indexOf(model.aimWarning);if(i>=0)this.diagnostics.splice(i,1);model.aimWarning=null;}
+  if(result&&!result.supported){model.aimWarning=`${unit.name||unit.species}: firing animation unavailable (${result.reason}); shot outcome unchanged.`;this.diagnostics.push(model.aimWarning);}
  }
  prune(){} // Reuse each actor's model across visibility changes.
  pick(x,y,width,height){

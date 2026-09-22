@@ -23,3 +23,11 @@ Reviewed `dd68645` and `d83cc20` together. The mature-tree blocker is resolved t
 The horse/rifle prone study from `db9e1ee` is approved as a separate preview. Browser checks passed 648 poses per outfit, resource replacement and all twelve existing study viewers. It does not replace the integrated gameplay posture implementation. The updated completion handoff is included as a backlog, not a claim of completed catalog transfer.
 
 Combined validation: 586 tests and assets, Pages build, and shared-core verification pass. The broader finished-environment branch remains deferred for the previously recorded foliage/editor reconciliation.
+
+## Furniture and published stance follow-up
+
+Reviewed the published stance branch through `820e657` and furniture gallery `a533394`. Approved gameplay refinements cover horse, goat, bull, cow and donkey. Local-only sheep/skunk commits were not included. The rifle fallback preserves resolved outcomes and finishes playback when a target is outside the authored pose range. Updated its browser fixture because the refined horse now reaches the former unavailable endpoint; the replacement endpoint independently reproduces unsupported presentation on the visible floor. Both outfits and reduced-motion playback pass, followed by recovery to a supported shot.
+
+The ten furniture/fixture models pass the gallery review and stable-resource checks. They remain gallery assets, without editor placement or active lighting. Refrigerator distress remains optional art polish. Added the missing stance-review viewer files to the Pages build and preserved prior study entries while resolving the build-list overlap.
+
+Validation: 607 tests and assets pass; all five published stance profiles pass 12 browser configurations each; the 3D build and all 20 pinned source-module checks pass.
