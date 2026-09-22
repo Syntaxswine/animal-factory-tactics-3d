@@ -9,7 +9,7 @@ const root=path.resolve(import.meta.dirname,'..');
 const out=path.join(root,'dist/tactics/core');
 const check=process.argv.includes('--check');
 const git=(...args)=>execFileSync('git',['-c',`safe.directory=${root.replaceAll('\\','/')}`,...args],{cwd:root});
-const files={},pending=['engine.js','world.js'];
+const files={},pending=['engine.js','world.js','editor-model.js','blocks.js'];
 while(pending.length){
  const name=pending.pop();if(files[name])continue;
  if(!/^[\w-]+\.js$/.test(name))throw Error('Unexpected core dependency: '+name);

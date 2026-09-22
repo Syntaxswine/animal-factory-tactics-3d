@@ -1,6 +1,6 @@
 # Proposal: Animal Factory Tactics 3D map editor
 
-Status: proposed implementation, not an implemented feature.
+Status: milestone 1 implemented as a read-only inspector at `tactics/editor-3d.html`. Editing, storage and edited-map playtest remain planned. See [THREED-EDITOR-INSPECTION.md](THREED-EDITOR-INSPECTION.md) for scope and verification.
 
 ## Purpose
 
@@ -48,6 +48,8 @@ All input routes should call the same edit operations. Expose a small programmat
 Offer only assets with a defined logical kind, supported footprint, floor requirements and orientation. Reuse shared rules for occupancy and obstruction. Show logical footprints and collision/cover guides independently of artistic mesh bounds.
 
 The new truck and large cargo arrangements are currently gallery assets. They must not become placeable merely because a mesh exists. First define their shared map representation and behavior, add compatible 2D handling, and validate footprints in both editors. Until then, show them as preview-only assets. Cosmetic variants may use deterministic presentation mappings; saved appearance overrides require an explicit compatible schema decision.
+
+Confirmed footprints: truck 2×3; cargo retains `CARGO_FORMS.tiles`, including the three-drum row at 1×2, six-drum pyramid at 2×1, and crate pallet / mixed drum pile / eighteen-drum block at 2×2. These dimensions are approved; shared placement and gameplay rules still need implementation.
 
 ## Save and playtest
 

@@ -10,6 +10,8 @@ The [environment workshop](https://syntaxswine.github.io/animal-factory-tactics-
 
 The encounter now animates walking, tile-to-tile travel, turning and rifle firing, including aim, recoil, muzzle flash and the resolved shot path. Select Anya to try the rifle. Other weapon animations, stances and the wider interface are still being connected. The site also retains an older hybrid prototype with sprite characters and experimental collision rules; that prototype does not establish gameplay parity.
 
+The first [3D editor milestone](docs/tactics/THREED-EDITOR-INSPECTION.md) is a read-only map inspector at `tactics/editor-3d.html`: import maps/blocks, inspect actual models from five camera views, select logical footprints on three floors and export unchanged JSON. The existing editor remains available for editing.
+
 The main sprite game continues separately. The target is one authoritative game core with an optional 3D presentation. See [project scope and shared-core contract](docs/tactics/THREED-PROJECT.md) for the current boundary and next steps.
 
 ## Development

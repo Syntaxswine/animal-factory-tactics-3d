@@ -4,7 +4,9 @@
   "revision": "6e2782a4ab3dde0f8b84a8610769664335294fe0",
   "files": {
     "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
+    "blocks.js": "4c4961c7c9897640dafca906384569f5337bfabbc2a907adb88ca8e64a733bf4",
     "connections.js": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f",
+    "editor-model.js": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262",
     "engine.js": "51bce27654f1533c156a337a49515fff05db13a5c8f2d33de702959485294788",
     "environment.js": "fce9fc561938150f8b873f0918949ba618861a98a9907ef68e5b3a2e497d92ce",
     "explosives.js": "ab0e3a635edf516022bbe247b3a20651d2323053321573ea0bf6fb1e42525b38",
