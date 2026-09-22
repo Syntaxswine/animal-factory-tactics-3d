@@ -1,0 +1,36 @@
+{
+  "errors": [],
+  "count": 144,
+  "stats": [
+    {
+      "ppu": 130.37046451528,
+      "geometries": 47,
+      "materials": 47,
+      "textures": 44,
+      "gpu": {
+        "geometries": 57,
+        "textures": 8
+      }
+    },
+    {
+      "ppu": 130.37046451528,
+      "geometries": 47,
+      "materials": 47,
+      "textures": 44,
+      "gpu": {
+        "geometries": 57,
+        "textures": 8
+      }
+    },
+    {
+      "ppu": 130.37046451528,
+      "geometries": 47,
+      "materials": 47,
+      "textures": 44,
+      "gpu": {
+        "geometries": 57,
+        "textures": 8
+      }
+    }
+  ]
+}
