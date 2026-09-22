@@ -4,6 +4,7 @@ import {buildWoodenGuardTower} from './wooden-guard-tower.js';
 import {softBox} from './painted-environment-scene.js';
 
 export const FURNITURE_FORMS=[
+ {id:'iron-searchlight-stair-tower',name:'Iron guardhouse with searchlight',tiles:[6,5],light:true,note:'Rust-red stair tower with a bracket-mounted searchlight beneath the front window. Lighting deferred.'},
  {id:'wooden-spotlight-tower',name:'Spotlight guard tower',tiles:[5,5],light:true,note:'Three-story timber tower with a pedestal searchlight, swivel yoke and recessed reflector. Lighting deferred.'},
  {id:'wood-large-wrap-tower',name:'Large timber guardhouse tower',tiles:[7,7],note:'5×5 guardhouse and timber trellis with wraparound stairs. 7×7 overall.'},
  {id:'iron-large-wrap-tower',name:'Large rust-red guardhouse tower',tiles:[7,7],note:'5×5 rusty red iron guardhouse with wraparound stairs. 7×7 overall.'},
@@ -66,17 +67,11 @@ export function createFurnitureLibrary(atlas,cargo){
   cyl(root,iron,[x,y+.04,z],.038,.038,.08);
   mesh(root,geo('bulb',()=>new THREE.SphereGeometry(.048,12,8)),bulb,[x,y-.035,z]);
  }
- function build(id,skin='honey',{burning=true}={}){
-  if(disposed)throw Error('Furniture library disposed');
-  const form=FURNITURE_FORMS.find(f=>f.id===id);if(!form||!Object.hasOwn(FURNITURE_FINISHES,skin))throw Error('Invalid furniture form/finish');
-  const root=new THREE.Group();root.name=id;const timber=wood(skin),warm=wood(skin,1);
-  if(['wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower','wood-large-wrap-tower','iron-large-wrap-tower'].includes(id)){buildStairGuardTower(root,{box,wood,iron,material,skin,cargo,metal:id.startsWith('iron-'),wrap:id.includes('-wrap-'),large:id.includes('-large-')});
-   }else if(id==='wooden-guard-tower'||id==='wooden-spotlight-tower'){buildWoodenGuardTower(root,{box,wood,iron,skin});
-   if(id==='wooden-spotlight-tower'){
-    const H=root.userData.tower.deckHeight,fixture=new THREE.Group();fixture.name='spotlight';fixture.position.set(-1.35,H,1.10);root.add(fixture);
+ function addSearchlight(root,position,wall=false){
+    const fixture=new THREE.Group();fixture.name='spotlight';fixture.position.set(...position);root.add(fixture);
     const housing=material('spotlight-oxide',0xd3b6a8,[.012,.012,.30,.475],cargo);
     box(fixture,iron,[0,.055,0],[.66,.11,.58]);for(const x of [-.24,.24])for(const z of [-.20,.20])cyl(fixture,brass,[x,.125,z],.033,.033,.035);
-    cyl(fixture,iron,[0,.53,0],.115,.16,.91);cyl(fixture,housing,[0,1.01,0],.23,.23,.13);
+    cyl(fixture,iron,[0,wall?.155:.53,0],.115,.16,wall?.16:.91);cyl(fixture,housing,[0,1.01,0],.23,.23,.13);
     box(fixture,housing,[0,1.12,0],[1.18,.12,.15]);for(const x of [-.56,.56]){box(fixture,housing,[x,1.38,0],[.095,.53,.14]);const pivot=cyl(fixture,brass,[x,1.61,0],.105,.105,.13);pivot.rotation.z=Math.PI/2;}
     const head=new THREE.Group();head.name='spotlight-head';head.position.set(0,1.61,0);head.rotation.x=.22;fixture.add(head);
     const shell=geo('searchlight-shell',()=>new THREE.LatheGeometry([[.08,-.39],[.26,-.35],[.42,-.22],[.46,.19],[.49,.24],[.49,.29],[.45,.29],[.425,.20],[.38,-.17],[.22,-.27],[.08,-.28]].map(v=>new THREE.Vector2(...v)),48));
@@ -88,7 +83,25 @@ export function createFurnitureLibrary(atlas,cargo){
     tube(head,iron,[[-.23,.29,-.23],[-.23,.43,-.20],[.23,.43,-.20],[.23,.29,-.23]],.023);
     tube(fixture,iron,[[.12,.32,-.05],[.29,.46,-.22],[.30,.90,-.25],[.14,1.13,-.20]],.019);
     box(fixture,iron,[.17,.82,-.04],[.20,.26,.17]);knob(fixture,[.18,.83,.057]);
-    const emitter=anchor(head,'emitter-0',[0,0,.34],[0,0,1]);emitter.userData.distribution='spot';emitter.userData.coneAngle=Math.PI/8;anchor(root,'mount',[-1.35,H,1.1]);
+    const emitter=anchor(head,'emitter-0',[0,0,.34],[0,0,1]);emitter.userData.distribution='spot';emitter.userData.coneAngle=Math.PI/8;anchor(root,'mount',position);
+    if(wall){for(const o of fixture.children)if(o.position.y>.75)o.position.y-=.75;head.rotation.x=.35;const cable=fixture.children.find(o=>o.geometry?.type==='TubeGeometry'&&o.parent===fixture);if(cable)cable.scale.y=.4;}
+    return fixture;
+ }
+ function build(id,skin='honey',{burning=true}={}){
+  if(disposed)throw Error('Furniture library disposed');
+  const form=FURNITURE_FORMS.find(f=>f.id===id);if(!form||!Object.hasOwn(FURNITURE_FINISHES,skin))throw Error('Invalid furniture form/finish');
+  const root=new THREE.Group();root.name=id;const timber=wood(skin),warm=wood(skin,1);
+  if(['iron-searchlight-stair-tower','wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower','wood-large-wrap-tower','iron-large-wrap-tower'].includes(id)){buildStairGuardTower(root,{box,wood,iron,material,skin,cargo,metal:id.startsWith('iron-'),wrap:id.includes('-wrap-'),large:id.includes('-large-')});
+   if(id==='iron-searchlight-stair-tower'){
+    const H=root.userData.stairTower.deckHeight,x=root.userData.stairTower.coreOffsetX;
+    const plate=box(root,iron,[x,H+.01,1.53],[.62,.88,.065]);plate.name='searchlight-wall-plate';
+    for(const dx of [-.23,.23]){box(root,iron,[x+dx,H-.35,1.77],[.065,.09,.49]);tube(root,iron,[[x+dx,H-.48,1.56],[x+dx,H-.36,1.82],[x+dx,H-.31,2.02]],.035);for(const y of [H-.30,H+.32]){const bolt=cyl(root,brass,[x+dx,y,1.575],.035,.035,.025);bolt.rotation.x=Math.PI/2;}}
+    addSearchlight(root,[x,H-.30,1.99],true);
+   }
+
+   }else if(id==='wooden-guard-tower'||id==='wooden-spotlight-tower'){buildWoodenGuardTower(root,{box,wood,iron,skin});
+   if(id==='wooden-spotlight-tower'){
+    addSearchlight(root,[-1.35,root.userData.tower.deckHeight,1.10]);
    }
 
   }else if(id==='cooking-fire'){
