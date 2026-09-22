@@ -27,7 +27,7 @@ canvas. On narrower windows the displayed canvas scales down; use the recorded
 | Cow | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Donkey | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Sheep | **9/10** | Close/steep aim holds; full equipment coverage open |
-| Skunk | Queued | Not yet inspected in this pass |
+| Skunk | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Pig foreman | Queued | Not yet inspected in this pass |
 | Pig director | Queued | Not yet inspected in this pass |
 | Rabbit | Queued | Not yet inspected in this pass |
@@ -35,6 +35,23 @@ canvas. On narrower windows the displayed canvas scales down; use the recorded
 | Hen | Queued | Unarmed posture only; wing/weapon authoring remains separate |
 
 ## Reproduction
+
+Species-specific corrections found during the sequential pass:
+
+- Bull: the hanging tail was the lowest surface in kneeling, lifting knees and
+  hooves about 0.125 world units above the floor. A gradual bend below a fixed
+  attachment band clears the tail, and standing restores the original vertices.
+  Cow and donkey were checked with the same long-tail treatment.
+- Donkey: a prone-only head adjustment reduces the upward tilt from its standing
+  calibration, preserving the previous neck/collar repair.
+- Skunk: its upright plume previously swung over the head and cap in prone.
+  A separate root-preserving plume rotation clears the face. This uses the
+  forward tail attachment, not the hanging-tail pivot; stripe paint stays in its
+  existing authored coordinates.
+
+Anatomical knee measurement bands derive from each animal's inverse bind matrices.
+They are not hard-coded to the horse. Tail checks include exact fixed-root and
+standing restoration; all support checks use the final grounded posed surfaces.
 
 Horse evidence: [low-target views](hybrid-review/sequential-stance/horse/normal-level-130.png),
 [gameplay Red Hat](hybrid-review/sequential-stance/horse/red-hats-level-58.png),
