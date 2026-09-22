@@ -25,18 +25,18 @@ export class LightingScene {
     root.position.set(center.x,center.z*DIMENSIONS.floorSpacing,center.y);root.rotation.y=prop.rotated?-Math.PI/2:0;this.scene.add(root);
     root.traverse(mesh=>{if(!mesh.isMesh)return;const name=mesh.material.name;
      if(name.includes('flame')){const source=mesh.material;mesh.material=new T.MeshBasicMaterial({map:source.map,color:source.color.clone(),vertexColors:source.vertexColors});mesh.material.userData={...source.userData};mesh.userData.noShadow=true;mesh.castShadow=false;owned.push(mesh.material);}
-     else if(name==='unlit-glass'||name==='pleated-linen'){
+     else if(name==='unlit-glass'||name==='pleated-linen'||LIGHT_FORMS[prop.kind].spot&&name==='searchlight-reflector'){
       mesh.material=mesh.material.clone();mesh.userData.noShadow=true;mesh.castShadow=false;glows.push(mesh.material);owned.push(mesh.material);
      }
     });
     const lamps=sampledEmitters(prop,minutes,DIMENSIONS.floorSpacing).map(source=>{
-     const lamp=LIGHT_FORMS[prop.kind].spot?new T.SpotLight(source.color,2.8,LIGHT_RANGE,source.angle??SPOT_ANGLE,SPOT_PENUMBRA,0):new T.PointLight(source.color,2.8,LIGHT_RANGE,0);if(lamp.isSpotLight)this.scene.add(lamp.target);lamp.position.set(source.x,source.h,source.y);lamp.castShadow=true;
+     const lamp=LIGHT_FORMS[prop.kind].spot?new T.SpotLight(0xffefcf,10.5,LIGHT_RANGE,source.angle??SPOT_ANGLE,SPOT_PENUMBRA,0):new T.PointLight(source.color,2.8,LIGHT_RANGE,0);if(lamp.isSpotLight)this.scene.add(lamp.target);lamp.position.set(source.x,source.h,source.y);lamp.castShadow=true;
      lamp.shadow.mapSize.set(512,512);lamp.shadow.camera.near=.08;lamp.shadow.camera.far=LIGHT_RANGE;lamp.shadow.bias=-.0005;lamp.shadow.normalBias=.035;this.scene.add(lamp);return lamp;
     });this.models.push({prop,root,lamps,glows,owned});
    }
   }
   this.animated=false;
-  for(const model of this.models){const enabled=lightEnabled(model.prop,minutes),fire=LIGHT_FORMS[model.prop.kind].fire;
+  for(const model of this.models){const enabled=lightEnabled(model.prop,minutes),fire=LIGHT_FORMS[model.prop.kind].fire,spot=LIGHT_FORMS[model.prop.kind].spot;
    const sources=sampledEmitters(model.prop,minutes+(editor&&seconds!==null?seconds*PLAY_MINUTES_PER_SECOND:0),DIMENSIONS.floorSpacing);
    for(const [index,lamp]of model.lamps.entries()){lamp.visible=enabled;if(lamp.isSpotLight){
     const source=sources[index],aim=source.aim;lamp.position.set(source.x,source.h,source.y);
@@ -44,7 +44,7 @@ export class LightingScene {
     (model.root.getObjectByName('spot-head')||model.root.getObjectByName('spotlight-head'))?.lookAt(lamp.target.position);
     if(enabled&&editor&&seconds!==null&&(model.prop.lightTargets?.length||0)>1)this.animated=true;
    }}
-   for(const material of model.glows){material.emissive.setHex(fire?0xff8c28:0xffd895);material.emissiveIntensity=enabled?(fire?.7:.35):0;}
+   for(const material of model.glows){material.emissive.setHex(fire?0xff8c28:spot?0xffefcf:0xffd895);material.emissiveIntensity=enabled?(spot?(material.name==='searchlight-reflector'?2.5:6):fire?.7:.35):0;}
    const flames=model.root.getObjectByName('flames');if(flames)flames.visible=enabled;
    if(fire&&enabled){this.animated=seconds!==null;animateFurnitureFire(model.root,seconds);}
   }

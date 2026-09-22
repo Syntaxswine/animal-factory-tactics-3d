@@ -16,5 +16,9 @@ try{
  await page.waitForTimeout(700);await page.screenshot({path:out+'/night.png'});
  const aligned=await page.evaluate(async()=>{const T=await import('./vendor/three.module.js');return editor3d.scene.lights.models.every(m=>{m.root.updateMatrixWorld(true);return m.root.getObjectByName('emitter-0').getWorldPosition(new T.Vector3()).distanceTo(m.lamps[0].position)<1e-7;});});assert.ok(aligned);
  const popup=page.waitForEvent('popup');await page.click('#playtest');const battle=await popup;watch(battle);await battle.waitForFunction(()=>window.battle3d?.renderer.lights.models.length===3,{},{timeout:120000});await battle.click('#pause');await battle.waitForTimeout(300);await battle.screenshot({path:out+'/battle.png'});assert.ok(await battle.evaluate(()=>battle3d.renderer.lights.models.every(m=>m.lamps[0].isSpotLight)));
- await battle.close();assert.deepEqual(errors,[]);console.log(JSON.stringify({towers:3,aimPicking:true,anchorAlignment:true,playtest:true,errors}));
+ await battle.close();
+ // Off fixtures lose both the beam and the visible source glow.
+ await page.evaluate(json=>editor3d.open(json),JSON.stringify({...map,props:map.props.map(p=>({...p,lightMode:'off'}))}));await page.waitForFunction(()=>!editor3d.loading&&editor3d.scene.lights.models.every(m=>!m.lamps[0].visible&&m.glows.every(g=>g.emissiveIntensity===0)));
+ assert.ok(await page.evaluate(()=>editor3d.scene.lights.models.every(m=>m.glows.some(g=>g.name==='searchlight-reflector'))));
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({towers:3,aimPicking:true,anchorAlignment:true,playtest:true,errors}));
 }finally{await browser.close();}
