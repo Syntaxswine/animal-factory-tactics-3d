@@ -33,6 +33,15 @@ export function adaptCoreClock(name,data){
   return Buffer.from(s);
  }
  if(name==='engine.js'){
+  s="import {shotAim} from '../aim-levels.js';\n"+s;
+  s=once(s,"zone='torso',token=null){","zone='torso',token=null,aimLevel='hip'){");
+  s=once(s," const aim=AIM_ZONES[zone];"," const aiming=shotAim(WEAPONS[a.weapon],aimLevel,burst);if(!aiming)return {ok:false,reason:'Choose an aim level'};\n const aim=AIM_ZONES[zone];");
+  s=once(s,"cost=w.cost+(rounds>1?2:0)","cost=aiming.cost");
+  s=once(s,"(w.accuracy||0)+aim.accuracy","(w.accuracy||0)+aim.accuracy+aiming.accuracy");
+  s=once(s,"reason,cost,rounds,chance:Math.round(chance)","reason,cost,rounds,aimLevel:aiming.level,chance:Math.round(chance)");
+  s=once(s,"zone='torso',reaction=false){","zone='torso',reaction=false,aimLevel='hip'){");
+  s=once(s,"a,b,burst,zone);if(!p.ok)","a,b,burst,zone,null,reaction?'hip':aimLevel);if(!p.ok)");
+
   s=once(s,',ROUND_MINUTES=10,',',');
   s=once(s,'export function movementNeighbors(s,u,p=u,stairs){','export function movementNeighbors(s,u,p=u,stairs){if(towerForUnit(s,u))return [];');
   s=once(s,'export function pathTo(s,u,x,y,z=levelOf(u)){','export function pathTo(s,u,x,y,z=levelOf(u)){if(towerForUnit(s,u))return null;');

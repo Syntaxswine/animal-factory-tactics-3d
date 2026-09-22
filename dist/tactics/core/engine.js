@@ -2,6 +2,7 @@ import {COMBAT_ROUND_MINUTES as ROUND_MINUTES} from '../game-clock.js';
 export {ROUND_MINUTES};
 import {towerForUnit,unitBaseHeight,TOWER_HEIGHT} from '../tower-geometry.js';
 import {updateAwareness,awarenessPerception} from '../awareness.js';
+import {shotAim} from '../aim-levels.js';
 import {explosivePreview,explosiveTrajectory,detonate} from './explosives.js';
 import {initPersonality,initGuardSocial,socialRoll,friendlyReaction,helped,settleStress,injuryStrain,killRelief,collapse} from './personalities.js';
 import {partnerLost,stabilizedPartner,cleanWin,onContract} from './happiness.js';
@@ -249,20 +250,21 @@ export function coverAgainst(s,a,b){
  return cells.some(([x,y])=>tile(s,x,y,levelOf(b))==='crate'||PROPS[propAt(s,x,y,levelOf(b))?.kind]?.cover>0||(EDGES[s.edges[edgeBetween(b,{x,y,z:levelOf(b)})]]?.cover||0)>0);
 }
 const retaliationToken=Symbol('retaliation');
-export function previewAttack(s,a,b,burst=false,zone='torso',token=null){
+export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel='hip'){
  if(!a||!b||!alive(a)||!alive(b)||a.team===b.team&&token!==retaliationToken)return {ok:false,reason:'Choose a living opponent'};
  if(WEAPONS[a.weapon].blast)return explosivePreview(s,a,b,WEAPONS[a.weapon]);
  if(!Object.hasOwn(AIM_ZONES,zone))return {ok:false,reason:'Choose an aim location'};
+ const aiming=shotAim(WEAPONS[a.weapon],aimLevel,burst);if(!aiming)return {ok:false,reason:'Choose an aim level'};
  const aim=AIM_ZONES[zone];
- const w=WEAPONS[a.weapon],rounds=burst?(w.burstRounds||1):1,cost=w.cost+(rounds>1?2:0),melee=w.mag===0,range=melee?(levelOf(a)===levelOf(b)?Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y)):Infinity):Math.hypot(a.x-b.x,a.y-b.y);
+ const w=WEAPONS[a.weapon],rounds=burst?(w.burstRounds||1):1,cost=aiming.cost,melee=w.mag===0,range=melee?(levelOf(a)===levelOf(b)?Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y)):Infinity):Math.hypot(a.x-b.x,a.y-b.y);
  const visible=token!==retaliationToken&&a.team==='squad'?squad(s).some(p=>canSee(s,p,b)):canSee(s,a,b);
  const cover=!melee&&coverAgainst(s,a,b),heightCover=!melee&&levelOf(b)>levelOf(a)&&(a.x!==b.x||a.y!==b.y),coverPenalty=cover?25:heightCover?15:0,rangePenalty=melee?0:Math.max(0,levelOf(b)-levelOf(a)),effectiveRange=Math.max(0,w.range-rangePenalty);
- const chance=Math.max(10,Math.min(95,a.accuracy+(melee?10:0)+(w.accuracy||0)+aim.accuracy-(melee?0:Math.max(0,range+rangePenalty-3)/Math.max(1,w.range-3)*(w.rangeLoss??25))-coverPenalty-(rounds>1?10:0)));
+ const chance=Math.max(10,Math.min(95,a.accuracy+(melee?10:0)+(w.accuracy||0)+aim.accuracy+aiming.accuracy-(melee?0:Math.max(0,range+rangePenalty-3)/Math.max(1,w.range-3)*(w.rangeLoss??25))-coverPenalty-(rounds>1?10:0)));
  let reason='';
  if(a.burningTurns>0)reason='On fire: running in panic';else if(melee&&zone!=='torso')reason='Aimed shots require a firearm';else if(!visible)reason='Target not visible';else if(!inCone(a,b))reason='Outside personal sight cone';else if(range>effectiveRange)reason='Out of range';else if(!lineOfSight(s,a,b))reason='Line of fire blocked';else if(!canSee(s,a,b))reason='Not identified: face the target';else if(!melee&&!zoneVisible(s,a,b,zone))reason=AIM_ZONES[zone].label+' hidden by cover';else if(w.mag&&a.ammo[a.weapon]<rounds)reason='Reload required';else if(combatCosts(s)&&a.ap<cost)reason='Not enough AP';
  let obstruction=null;
  if(!reason&&!melee&&!w.incendiary){const path=bulletTrajectory(s,a,b,{accurate:true,zone,reach:w.range*1.5},()=>0);if(path.unitId!==b.id){const unit=s.units.find(u=>u.id===path.unitId);obstruction=unit?{kind:'unit',id:unit.id,name:unit.name,friendly:unit.team===a.team}:{kind:path.kind};}}
- return {ok:!reason,reason,cost,rounds,chance:Math.round(chance),cover,heightCover,coverPenalty,rangePenalty,damage:Math.round(weaponDamage(w,range)*aim.damage),pellets:w.pellets||1,zone,range:effectiveRange,tankChance:melee?0:tankExplosionChance(b,zone),obstruction};
+ return {ok:!reason,reason,cost,rounds,aimLevel:aiming.level,chance:Math.round(chance),cover,heightCover,coverPenalty,rangePenalty,damage:Math.round(weaponDamage(w,range)*aim.damage),pellets:w.pellets||1,zone,range:effectiveRange,tankChance:melee?0:tankExplosionChance(b,zone),obstruction};
 }
 function random(s){s.seed=(Math.imul(s.seed,1664525)+1013904223)>>>0;return s.seed/4294967296;}
 function combatDamage(s,u,damage,fatal=false,source=null){
@@ -309,10 +311,10 @@ function explodeTanks(s,wearer,source=null){
  log(s,`${wearer.name}'s fuel tanks exploded / ${victims.length} caught in blast.`);
  return {x:wearer.x,y:wearer.y,z:levelOf(wearer),h:unitBaseHeight(wearer)+.8};
 }
-export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false){
+export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,aimLevel='hip'){
  if(s.queue.length)return false;
  if(reaction?!(s.phase==='enemy'&&a?.team==='squad'&&alive(a)&&!a.burningTurns&&a.overwatch?.weapon===a.weapon&&a.overwatch.heading===a.heading&&!burst&&zone==='torso'&&withinOverwatch(a,b)&&canSee(s,a,b)):byAI?!(s.phase==='enemy'&&a?.team==='guard'&&alive(a)&&!a.burningTurns):!canControl(s,a))return false;
- const p=previewAttack(s,reaction?{...a,ap:WEAPONS[a.weapon].cost}:a,b,burst,zone);if(!p.ok)return false;a.overwatch=null;
+ const p=previewAttack(s,reaction?{...a,ap:WEAPONS[a.weapon].cost}:a,b,burst,zone,null,reaction?'hip':aimLevel);if(!p.ok)return false;a.overwatch=null;
  a.fired=true;
  // Orienting reflex: an attack from outside the victim's field spins it toward the attacker (turning is free).
  if(!inCone(b,a)){b.heading=headingTo(b,a);b.facing=Math.cos(b.heading*Math.PI/180)-Math.sin(b.heading*Math.PI/180)>=0?1:-1;log(s,b.name+' spins toward the attack.');}

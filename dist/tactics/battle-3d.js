@@ -1,3 +1,4 @@
+import {AIM_LEVELS,shotAim,supportsAim} from './aim-levels.js';
 import {climbTower,towerClimbPreview} from './tower-actions.js';
 import {TOWER_HEIGHT} from './tower-geometry.js';
 import {illuminationAt} from './awareness.js';
@@ -40,7 +41,7 @@ function sync(){
  settleEncounterRounds(state);const combat=turnBased(state);if(combat!==lastClockCombat){frameClock.reset();lastClockCombat=combat;}syncClock();
  selectedIds=pruneSelection(state,selectedIds);
  if(selectedIds.size&&!selectedIds.has(state.selected))state.selected=[...selectedIds][0];
- const u=selected(),t=target(),preview=t?previewAttack(state,u,t):null;
+ const u=selected(),t=target(),preview=t?previewAttack(state,u,t,false,'torso',null,$('aim-level').value):null;
  const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,userPaused]);
  if(signature===lastUI)return;lastUI=signature;
  $('phase').textContent=`${state.phase==='explore'?'Exploration':state.phase==='player'?'Your turn':state.phase==='enemy'?'Guard turn':state.phase==='won'?'Encounter cleared':'Encounter ended'} · Round ${state.round}`;
@@ -48,6 +49,8 @@ function sync(){
  $('light-exposure').textContent='Light on '+u.name+': '+Math.round(illuminationAt(state,u)*100)+'% · Perception '+(u.perception??50);
  $('selection').textContent=`${selectedIds.size} selected · Primary: ${u.name} · ${WEAPONS[u.weapon].name} · ${u.ammo[u.weapon]||0} loaded`;
  $('target').textContent=t?`${t.name} · ${preview.ok?`${preview.chance??preview.odds??'—'}% · ${preview.cost} AP`:preview.reason}`:'Select a visible opponent to inspect a shot.';
+ for(const [key,aim] of Object.entries(AIM_LEVELS))$('aim-level').querySelector('[value='+key+']').textContent=aim.label+' � '+shotAim(WEAPONS[u.weapon],key).cost+' AP';
+ $('aim-level').disabled=!supportsAim(WEAPONS[u.weapon]);
  $('fire').disabled=paused()||renderer.busy||!preview?.ok||!canControl(state,u)||!!state.queue.length;
  const climb=towerClimbPreview(state,u);climbButton.textContent=(climb.descending?'Descend tower':'Climb tower')+(combatCosts(state)?' · 6 AP':' · 30 sec');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||'Use the stairs or ladder at the gold entrance ring.';
  $('reload').disabled=paused()||renderer.busy||!canControl(state,u)||!!state.queue.length||!WEAPONS[u.weapon].mag;
@@ -89,7 +92,8 @@ function action(fn){if(paused()||renderer.busy)return;const ok=fn();renderer.cap
  $('restart').onclick=restart;$('center').onclick=center;$('overview').onclick=overview;
  $('reload').onclick=()=>action(()=>reload(state,selected()));$('end').onclick=()=>action(()=>endTurn(state));
  climbButton.onclick=()=>action(()=>climbTower(state,selected()));
- $('fire').onclick=()=>action(()=>{const t=target();return t&&attack(state,selected(),t);});
+ $('aim-level').onchange=()=>{lastUI='';sync();};
+ $('fire').onclick=()=>action(()=>{const t=target();return t&&attack(state,selected(),t,false,false,'torso',false,$('aim-level').value);});
  $('stop').onclick=()=>{if(paused())return;state.queue=[];sync();};$('floor').onchange=()=>{level=+$('floor').value;};
 $('pause').onclick=()=>{userPaused=!userPaused;frameClock.reset();sync();};
 document.addEventListener('visibilitychange',()=>{frameClock.reset();sync();});
