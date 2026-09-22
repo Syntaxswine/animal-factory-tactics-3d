@@ -29,8 +29,8 @@ canvas. On narrower windows the displayed canvas scales down; use the recorded
 | Sheep | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Skunk | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Pig foreman | **9/10** | Close/steep aim holds; full equipment coverage open |
-| Pig director | **9/10** | Close/steep aim holds; full equipment coverage open |
-| Rabbit | Queued | Not yet inspected in this pass |
+| Pig director | **9/10** | All 125 sampled endpoints align; full equipment coverage open |
+| Rabbit | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Dog | Queued | Not yet inspected in this pass |
 | Hen | Queued | Unarmed posture only; wing/weapon authoring remains separate |
 
@@ -53,6 +53,10 @@ Species-specific corrections found during the sequential pass:
   His settled support is belly plus both boots; an explicit 0.05 knee clearance
   is paired with tighter 0.03 belly/boot checks. His original torso aiming
   response is retained to preserve previously supported steep endpoints.
+- Pig director: his distinct belly and shoe shapes need a 0.13 prone hip lift;
+  actual settled belly, knees and shoes are all within 0.03 of the floor.
+  The head adjustment is prone-only, retaining the approved standing expression,
+  ear shape and waistcoat. All 125 sampled endpoints remain aligned.
 
 Anatomical knee measurement bands derive from each animal's inverse bind matrices.
 They are not hard-coded to the horse. Tail checks include exact fixed-root and
