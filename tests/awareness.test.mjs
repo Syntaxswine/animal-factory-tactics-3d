@@ -52,3 +52,31 @@ test('peripheral evidence stays a glimpse and close exposed contact is identifie
  s.awarenessSeconds=120;updateAwareness(s,{geometry:()=>1,zones:()=>['head','torso','legs']});assert.equal(a.awareness[b.id].score,99);
  b.x=a.x+1;b.y=a.y;s.awarenessSeconds=0;updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});assert.equal(canSee(s,a,b),true);
 });
+
+test('spotlights instantly identify sneaking camouflaged targets without range, skill or exposure delays',()=>{
+ const s=fixture(1260),target=s.units[0],observer=s.units[4];observer.x=60;observer.perception=0;target.sneaking=true;target.stealth=100;target.stance='prone';
+ for(let x=4;x<30;x++)s.map[4][x]='woodland';
+ s.props=[{kind:'spotlight',x:7,y:4,z:0,lightMode:'on',lightTargets:[{x:-4,y:0,z:0}]}];
+ assert.equal(geometricPerceive(s,observer,target),0);assert.equal(canSee(s,observer,target),true);
+ updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});assert.equal(observer.awareness[target.id].score,100);assert.equal(observer.awareness[target.id].spotlit,true);assert.deepEqual(observer.awareness[target.id].lastKnown,{x:3,y:4,z:0});
+ // Every visible portion is sufficient, even if cover leaves only the head.
+ observer.awareness={};updateAwareness(s,{geometry:()=>0,zones:()=>['head']});assert.equal(observer.awareness[target.id].score,100);
+ observer.awareness={};updateAwareness(s,{geometry:()=>0,zones:()=>['weapon']});assert.equal(observer.awareness[target.id].score,0);
+ s.rules.awareness=false;assert.equal(canSee(s,observer,target),false);
+});
+
+test('spotlight reveal respects observer cone, observer walls, beam walls, schedules and sweeping away',()=>{
+ const s=fixture(1260),target=s.units[0],observer=s.units[4];target.sneaking=true;target.stealth=100;
+ const lamp={kind:'spotlight',x:7,y:4,z:0,lightMode:'on',lightTargets:[{x:-4,y:0,z:0},{x:4,y:0,z:0}]};s.props=[lamp];
+ assert.equal(canSee(s,observer,target),true);observer.heading=0;assert.equal(canSee(s,observer,target),false);observer.heading=180;
+ s.edges['e:15:4']='wall';assert.equal(canSee(s,observer,target),false);delete s.edges['e:15:4'];
+ lamp.x=3;lamp.y=9;lamp.lightTargets=[{x:0,y:-5,z:0}];s.edges['s:3:6']='wall';assert.ok(visibleZones(s,observer,target).length);assert.equal(canSee(s,observer,target),false);delete s.edges['s:3:6'];assert.equal(canSee(s,observer,target),true);
+ lamp.lightMode='off';assert.equal(canSee(s,observer,target),false);lamp.lightMode='auto';s.clock.minutes=720;assert.equal(canSee(s,observer,target),false);
+ s.clock.minutes=1260;lamp.x=7;lamp.y=4;lamp.lightTargets=[{x:-4,y:0,z:0},{x:4,y:0,z:0}];assert.equal(canSee(s,observer,target),true);s.clock.minutes+=1;assert.equal(canSee(s,observer,target),false);
+});
+
+test('dim spotlight bands force identification but ordinary lamp brightness does not',()=>{
+ const s=fixture(1260),target=s.units[0],observer=s.units[4];target.sneaking=true;target.stealth=100;
+ const lamp={kind:'spotlight',x:25,y:8,z:0,lightMode:'on',lightTargets:[{x:-22,y:-4,z:0}]};s.props=[lamp];assert.ok(illuminationAt(s,target)<.2);assert.equal(canSee(s,observer,target),true);
+ lamp.kind='floor-lamp';lamp.x=3;lamp.y=5;assert.equal(illuminationAt(s,target),1);assert.equal(canSee(s,observer,target),false);
+});

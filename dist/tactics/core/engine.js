@@ -135,7 +135,7 @@ export function threatens(s,g){
 export const sightRange=(a,b)=>b?.sneaking?Math.max(8,CHARACTER_RANGE-20-effectiveStealth(b)*.2-(stanceOf(b)==='prone'?10:0)):CHARACTER_RANGE;
 // 0 unseen, 1 glimpsed (a moving target inside the detect lobe), 2 identified (inside the identify lobe). Walls block both. See docs/tactics/SIGHT.md.
 export function geometricPerceive(s,a,b){const cap=sightRange(a,b),d=distance(a,b)+9*woodlandDepth(s,a,b);if(d<=identifyRange(a,b,cap))return lineOfSight(s,a,b)?2:0;if(b.moved&&d<=detectRange(a,b,cap))return lineOfSight(s,a,b)?1:0;return 0;}
-export function perceive(s,a,b){return awarenessPerception(s,a,b,geometricPerceive(s,a,b));}
+export function perceive(s,a,b){return awarenessPerception(s,a,b,geometricPerceive(s,a,b),visibleZones);}
 export const glimpsed=(s,a,b)=>perceive(s,a,b)>=1;
 export const canSee=(s,a,b)=>perceive(s,a,b)===2;
 // Awareness rolls are cached until movement or a new turn; UI refresh never rerolls.
