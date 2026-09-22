@@ -11,6 +11,7 @@ try{
  const shot=name=>page.screenshot({path:fileURLToPath(new URL(name+'.png',output))});await shot('collection');
  const ids=await page.locator('#form option').evaluateAll(options=>options.map(o=>o.value));await page.selectOption('#mode','single');
  for(const id of ids){await page.selectOption('#form',id);await page.evaluate(()=>window.furnitureWorkshop.view(Math.PI/4,.55));await shot(id);await page.selectOption('#scale','58');await shot(id+'-gameplay');await page.selectOption('#scale','fit');}
+ for(const id of ['campfire','standing-torch','wall-torch']){await page.selectOption('#form',id);await page.uncheck('#flames');assert.equal(await page.evaluate(()=>window.furnitureWorkshop.selection()[0].root.getObjectByName('flames').visible),false);await shot(id+'-extinguished');await page.check('#flames');assert.equal(await page.evaluate(()=>window.furnitureWorkshop.selection()[0].root.getObjectByName('flames').visible),true);}
  await page.selectOption('#form','gooseneck-sconce');await page.evaluate(()=>window.furnitureWorkshop.view(2.4,.18));await shot('sconce-underside');
  const cycles=[];for(let cycle=0;cycle<3;cycle++){
   for(const id of ids){await page.selectOption('#form',id);if(!await page.locator('#skin').isDisabled())for(const skin of ['honey','cream','sage'])await page.selectOption('#skin',skin);}
