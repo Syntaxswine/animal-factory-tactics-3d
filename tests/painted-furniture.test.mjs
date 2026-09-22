@@ -32,7 +32,7 @@ test('repeated collection changes retain shared resources and disposal is idempo
 
 test('fire flicker loops continuously without drift and resets to authored transforms',()=>{
  const library=createFurnitureLibrary(atlas,atlas);
- for(const id of ['campfire','standing-torch','wall-torch']){const {root}=library.build(id),fire=root.getObjectByName('flames'),snapshot=()=>fire.children.flatMap(o=>[...o.scale.toArray(),o.rotation.z,...o.material.color.toArray()]);
+ for(const id of ['cooking-fire','campfire','standing-torch','wall-torch']){const {root}=library.build(id),fire=root.getObjectByName('flames'),snapshot=()=>fire.children.flatMap(o=>[...o.scale.toArray(),o.rotation.z,...o.material.color.toArray()]);
   const authored=snapshot();animateFurnitureFire(root,.2);animateFurnitureFire(root,null);assert.deepEqual(snapshot(),authored);const rest=snapshot();animateFurnitureFire(root,.37);const first=snapshot();assert.notDeepEqual(first,rest);animateFurnitureFire(root,4.37);snapshot().forEach((n,i)=>assert(Math.abs(n-first[i])<1e-12));
   for(let i=0;i<1000;i++)animateFurnitureFire(root,i/60);animateFurnitureFire(root,null);assert.deepEqual(snapshot(),rest);
   fire.visible=false;animateFurnitureFire(root,1);assert.deepEqual(snapshot(),rest);
