@@ -21,3 +21,5 @@ The preview supports grid and 3D-floor painting/erasing, fast strokes, cardinal 
 Hostile subagent review: **9/10 overall**, after fixing empty-floor wireframe state and ensuring diagonal paint strokes remain connected. Tests cover all masks, level/diagonal exclusion, add/remove updates, tile bounds, grounding, port heights and resource sharing. Browser review covers layouts at fit and native 58 px/tile from two headings, click/erase/undo, fast grid and 3D-floor strokes, wireframe on newly placed tiles, browser errors and mobile overflow.
 
 Run node --test tests/conveyor.test.mjs and tools/conveyor-review.mjs (with PLAYWRIGHT_PATH when Playwright is outside node resolution). Browser review uses the local preview at port 4331 and saves screenshots in artifacts/conveyor.
+
+Corner alignment refinement: straight and curved belt, bed and rail meshes now share one swept cross-section and consistent paint coordinates. Belt width, rail spacing, frame depth and centerline rib spacing match at joins; no end bevel creates a dip. A geometry regression check compares exact port cross-sections in all four corner orientations.
