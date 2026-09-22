@@ -19,7 +19,7 @@ export function gaitState(distance,blend,stride=.85){
 export function createWorkerLocomotion(worker,profile){
  if(profile.unarmed){
   const motion=createHenMotion(worker);
-  return {apply(sample){const state=gaitState(sample.distance,sample.blend,.48);state.kneel=sample.pose?.kneel||0;if(!sample.blend&&!state.kneel){motion.restore();worker.root.rotation.y=-sample.heading*Math.PI/180;worker.root.updateMatrixWorld(true);motion.skeleton.update();return state;}for(const f of Object.values(state.feet))f.x-=.035;motion.apply(sample.distance,{heading:sample.heading-35,state,crouchDrop:.28,kneelStep:.06,crouchPole:true});return state;},dispose:()=>motion.dispose()};
+  return {apply(sample){const state=gaitState(sample.distance,sample.blend,.48);state.kneel=Math.min(1,(sample.pose?.kneel||0)+(sample.pose?.prone||0));if(!sample.blend&&!state.kneel){motion.restore();worker.root.rotation.y=-sample.heading*Math.PI/180;worker.root.updateMatrixWorld(true);motion.skeleton.update();return state;}for(const f of Object.values(state.feet))f.x-=.035;motion.apply(sample.distance,{heading:sample.heading-35,state,crouchDrop:.28,kneelStep:.06,crouchPole:true,stance:sample.pose});return state;},dispose:()=>motion.dispose()};
  }
  worker.pose('neutral',0);worker.root.position.set(0,0,0);worker.root.updateMatrixWorld(true);
  const named=Object.fromEntries(worker.bones.map(b=>[b.name,b])),rest=new Map(worker.bones.map(b=>[b,b.getWorldPosition(V())]));

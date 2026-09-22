@@ -31,3 +31,11 @@ Reviewed the published stance branch through `820e657` and furniture gallery `a5
 The ten furniture/fixture models pass the gallery review and stable-resource checks. They remain gallery assets, without editor placement or active lighting. Refrigerator distress remains optional art polish. Added the missing stance-review viewer files to the Pages build and preserved prior study entries while resolving the build-list overlap.
 
 Validation: 607 tests and assets pass; all five published stance profiles pass 12 browser configurations each; the 3D build and all 20 pinned source-module checks pass.
+
+## Daylight, remaining animals and fire models
+
+Reviewed canonical `efde73b` together with the remaining stance refinements through `b56ba05` and furniture/fire studies through `d337d70`. Combined validation passed 626 tests, assets, Pages build and reproducible core verification. The core now has two explicitly recorded clock adapters; it is not wholly byte-identical to the earlier upstream pin. Moving these clock rules back into the shared source remains desirable for long-term 2D/3D parity.
+
+Daylight browser checks passed five preview times without blueprint mutation, authored nighttime playtests, and paused sun interpolation. Clock browser checks passed one-minute combat rounds, midnight rollover, pause/resume, hidden-tab no-catch-up and legacy dialog pausing. Lighting is presentation-only: no illumination-based detection or local lamp lighting is claimed. Night readability needs further art tuning alongside local lights.
+
+The remaining seven animals each passed 12 stance-browser configurations; hen coverage remains unarmed. Actual rifle playback fallback/recovery passed in both outfits and reduced motion after clock/lighting integration. All 15 gallery furniture/fire forms passed browser and stable-resource checks. Flames animate, but these models remain gallery-only and do not cast local illumination. The cooking-pot tripod reads well beside the character.

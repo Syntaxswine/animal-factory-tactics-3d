@@ -6,13 +6,20 @@ export function createBattlePosture(worker,profile){
  root.position.set(0,0,0);root.rotation.set(0,0,0);worker.pose('neutral');root.updateMatrixWorld(true);
  const rest=new Map(worker.bones.map(b=>[b,b.getWorldPosition(V())]));
  const hips=named.hips||named.pelvis,spine=named.spine||named.breast;
- const tails=profile.longTail&&profile.proneAim?worker.parts.filter(p=>p.name.includes('tail')).map(part=>{
-  const a=part.geometry.attributes,position=a.position.clone(),normal=a.normal.clone(),top=Math.max(...Array.from({length:position.count},(_,i)=>position.getY(i))),pivot=V();let count=0;
-  for(let i=0;i<position.count;i++)if(position.getY(i)>top-.025){pivot.add(V().fromBufferAttribute(position,i));count++;}pivot.divideScalar(count);pivot.y=top;
-  return {part,position,normal,pivot};
+ // The furry upper ankle belongs with the shin inside the trouser cuff;
+ // only the paw/sole stays rigid with the foot. Reuse the dog motion proof.
+ if(profile.proneAim?.pastern)for(const side of [-1,1]){
+  const foot=worker.parts.find(p=>p.name==='furry dog foot '+side),a=foot.geometry.attributes,shin=worker.bones.indexOf(named['shin'+side]),ankle=worker.bones.indexOf(named['hoof'+side]);
+  for(let i=0;i<a.position.count;i++){const w=T.MathUtils.smoothstep(a.position.getY(i),.10,.20);a.skinIndex.setXYZW(i,ankle,shin,0,0);a.skinWeight.setXYZW(i,1-w,w,0,0);}a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;
+ }
+ const tails=profile.proneAim&&(profile.longTail||profile.proneAim.tailUpright)?worker.parts.filter(p=>p.name.includes('tail')).map(part=>{
+  const upright=!!profile.proneAim.tailUpright,axis=upright?0:1,a=part.geometry.attributes,position=a.position.clone(),normal=a.normal.clone(),top=Math.max(...Array.from({length:position.count},(_,i)=>position.getComponent(i,axis))),pivot=V();let count=0;
+  for(let i=0;i<position.count;i++)if(position.getComponent(i,axis)>top-.025){pivot.add(V().fromBufferAttribute(position,i));count++;}pivot.divideScalar(count);pivot.setComponent(axis,top);
+  let rootRadius=0;for(let i=0;i<position.count;i++)if(position.getComponent(i,axis)>top-.025)rootRadius=Math.max(rootRadius,V().fromBufferAttribute(position,i).distanceTo(pivot));
+  return {part,position,normal,pivot,axis,upright,rootRadius};
  }):[];
- function tailClearance(kneel){for(const {part,position,normal,pivot}of tails){const a=part.geometry.attributes;
-  for(let i=0;i<position.count;i++){const bend=T.MathUtils.smoothstep(pivot.y-position.getY(i),.025,.18),q=new T.Quaternion().setFromAxisAngle(V(0,0,1),-.75*kneel*bend),p=V().fromBufferAttribute(position,i).sub(pivot).applyQuaternion(q).add(pivot),n=V().fromBufferAttribute(normal,i).applyQuaternion(q);a.position.setXYZ(i,p.x,p.y,p.z);a.normal.setXYZ(i,n.x,n.y,n.z);}a.position.needsUpdate=true;a.normal.needsUpdate=true;
+ function tailClearance(kneel,prone){for(const {part,position,normal,pivot,axis,upright,rootRadius}of tails){const a=part.geometry.attributes;
+  for(let i=0;i<position.count;i++){const point=V().fromBufferAttribute(position,i),bend=upright?T.MathUtils.smoothstep(point.distanceTo(pivot),rootRadius,rootRadius+.14):T.MathUtils.smoothstep(pivot.getComponent(axis)-position.getComponent(i,axis),.025,.18),q=new T.Quaternion().setFromAxisAngle(V(0,0,1),(upright?.95*prone:-.75*kneel)*bend),p=point.sub(pivot).applyQuaternion(q).add(pivot),n=V().fromBufferAttribute(normal,i).applyQuaternion(q);a.position.setXYZ(i,p.x,p.y,p.z);a.normal.setXYZ(i,n.x,n.y,n.z);}a.position.needsUpdate=true;a.normal.needsUpdate=true;
  }}
  // Keep the tucked shirt hem with the waist instead of pulling it out of the
  // overalls when both sleeves reach forward. Reuse the approved horse proof.
@@ -41,7 +48,7 @@ export function createBattlePosture(worker,profile){
   const footQ=new T.Quaternion().setFromAxisAngle(V(0,0,1),-1.2*low);let sole=0;
   for(const part of worker.parts.filter(p=>/hoof|boot|foot/.test(p.name))){const points=part.geometry.attributes.position;for(let i=0;i<points.count;i++)if(Math.sign(points.getZ(i))===side)sole=Math.min(sole,V().fromBufferAttribute(points,i).sub(rc).applyQuaternion(footQ).y);}
   const turn=(from,to)=>from+Math.atan2(Math.sin(to-from),Math.cos(to-from))*low;
-  const kneeY=T.MathUtils.clamp(T.MathUtils.lerp(old.knee.y,.10,low),start.y-la+.0001,start.y+la-.0001),dy=kneeY-start.y;
+  const kneeY=T.MathUtils.clamp(T.MathUtils.lerp(old.knee.y,profile.proneAim?.kneeHeight??.10,low),start.y-la+.0001,start.y+la-.0001),dy=kneeY-start.y;
   const angle=turn(Math.atan2(old.knee.z-old.hip.z,old.knee.x-old.hip.x),Math.atan2(side*.6,-1)),r=Math.sqrt(Math.max(0,la*la-dy*dy)),knee=V(start.x+Math.cos(angle)*r,kneeY,start.z+Math.sin(angle)*r);
   const ankleY=T.MathUtils.clamp(Math.max(T.MathUtils.lerp(old.ankle.y,-sole,low),-sole),knee.y-lb+.0001,knee.y+lb-.0001),sy=ankleY-knee.y;
   const bend=turn(Math.atan2(old.ankle.z-old.knee.z,old.ankle.x-old.knee.x),Math.atan2(side*.25,-1)),sr=Math.sqrt(Math.max(0,lb*lb-sy*sy)),ankle=V(knee.x+Math.cos(bend)*sr,ankleY,knee.z+Math.sin(bend)*sr);
@@ -49,10 +56,10 @@ export function createBattlePosture(worker,profile){
  }
  return {apply(sample,{equipment=true}={}){
   const {kneel=0,prone=0,down=0,stable=0,dead=0}=sample.pose||{};
-  tailClearance(kneel);
-  if(kneel+prone+down<.00001)return;
+  tailClearance(kneel,prone);
+  if(kneel+prone+down<.00001||(profile.unarmed&&!down))return;
   const heading=root.rotation.y;root.rotation.y=0;root.position.set(0,0,0);root.updateMatrixWorld(true);
-  const before=spine.matrixWorld.clone(),low=Math.min(1,prone+down),cycle=(sample.distance||0)*Math.PI*5,walk=(sample.blend||0)*(1-down);
+  const before=spine.matrixWorld.clone(),low=Math.min(1,(profile.unarmed?0:prone)+down),cycle=(sample.distance||0)*Math.PI*5,walk=(sample.blend||0)*(1-down);
   const starts=new Map(),legRest=new Map();
   if(profile.proneAim&&low>0&&!profile.unarmed){
    for(const side of [-1,1])for(const n of ['thigh','shin','hoof'])legRest.set(n+side,named[n+side].quaternion.clone());
@@ -61,14 +68,13 @@ export function createBattlePosture(worker,profile){
    hips.position.y+=drop;for(const [name,q]of legRest)named[name].quaternion.copy(q);root.updateMatrixWorld(true);
   }
   hips.position.y-=(profile.unarmed?0:(profile.kneelDrop||.36))*kneel;
-  hips.position.y+=(.27-rest.get(hips).y)*low;
-  hips.rotation.z=-Math.PI/2*low;
+  hips.position.y+=(.27-rest.get(hips).y)*low+(profile.proneAim?.hipLift||0)*prone;
+  hips.rotation.z=(profile.unarmed?hips.rotation.z:0)-Math.PI/2*low;
   hips.rotation.x=(.25+.8*stable-1.1*dead)*down;
-  spine.rotation.z+=.15*prone+.22*(1-dead)*down;
-  named.head.rotation.z+=1.35*prone+.2*down;
+  spine.rotation.z+=(profile.unarmed?0:.15*prone)+.22*(1-dead)*down;
+  named.head.rotation.z+=(profile.unarmed?0:1.35*prone)+.2*down;
   if(profile.unarmed){
-   spine.rotation.z-=.3*kneel;named.head.rotation.z+=.15*kneel;
-   for(const side of [-1,1]){named['shank '+side].rotation.z+=.35*low;named['wing '+side].rotation.x+=side*(.16*prone+.3*down);}
+   for(const side of [-1,1]){named['shank '+side].rotation.z+=.35*down;named['wing '+side].rotation.x+=side*.3*down;}
   }else{
    root.updateMatrixWorld(true);
    for(const side of [-1,1]){

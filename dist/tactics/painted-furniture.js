@@ -2,10 +2,15 @@ import * as THREE from './vendor/three.module.js';
 import {softBox} from './painted-environment-scene.js';
 
 export const FURNITURE_FORMS=[
+ {id:'cooking-fire',name:'Hanging cooking pot',tiles:[2,2],light:true,fire:true,note:'A suspended iron cooking pot over a stone-ring campfire, on a 2×2 footprint.'},
+ {id:'campfire',name:'Stone-ring campfire',tiles:[1,1],light:true,fire:true,note:'Charred crossed logs, ash and warm sculpted flames inside a stone ring.'},
+ {id:'standing-torch',name:'Standing torch',tiles:[1,1],light:true,fire:true,note:'Timber torch in an iron tripod, with a bound fuel head.'},
+ {id:'wall-torch',name:'Wall-mounted torch',tiles:[1,1],light:true,fire:true,wall:true,note:'Bound timber torch in a projecting iron wall bracket.'},
  {id:'dining-table',name:'Farmhouse table',tiles:[1,2],note:'Planked top, tapered square legs and pegged apron.'},
  {id:'coffee-table',name:'Low living-room table',tiles:[1,2],note:'Solid flat top with a lower magazine shelf.'},
  {id:'single-bed',name:'Single bed',tiles:[1,2],note:'Panelled timber frame, pillow and folded blue quilt.'},
  {id:'bedside-table',name:'Bedside table',tiles:[1,1],note:'Inset drawer and an open lower shelf.'},
+ {id:'bedside-table-lamp',name:'Bedside table with lamp',tiles:[1,1],light:true,note:'A compact brass and linen lamp on the drawer table; lighting deferred.'},
  {id:'refrigerator',name:'Enamel refrigerator',tiles:[1,1],note:'Separate freezer, rounded enamel corners and rear cooling coils.'},
  {id:'cabinet',name:'Double-door cabinet',tiles:[1,2],note:'A 1×2 cabinet with recessed panels, drawers and brass pulls.'},
  {id:'floor-lamp',name:'Pleated floor lamp',tiles:[1,1],light:true,note:'Weighted base, brass stem and a warm linen shade.'},
@@ -51,11 +56,58 @@ export function createFurnitureLibrary(atlas,cargo){
   cyl(root,iron,[x,y+.04,z],.038,.038,.08);
   mesh(root,geo('bulb',()=>new THREE.SphereGeometry(.048,12,8)),bulb,[x,y-.035,z]);
  }
- function build(id,skin='honey'){
+ function build(id,skin='honey',{burning=true}={}){
   if(disposed)throw Error('Furniture library disposed');
   const form=FURNITURE_FORMS.find(f=>f.id===id);if(!form||!Object.hasOwn(FURNITURE_FINISHES,skin))throw Error('Invalid furniture form/finish');
   const root=new THREE.Group();root.name=id;const timber=wood(skin),warm=wood(skin,1);
-  if(id==='dining-table'||id==='coffee-table'){
+  if(id==='cooking-fire'){
+   const hearth=build('campfire',skin,{burning}).root;root.add(hearth);
+   // Three planted legs form a triangular pyramid around the hearth.
+   for(let i=0;i<3;i++){
+    const a=-Math.PI/2+i*Math.PI*2/3,x=Math.cos(a)*.90,z=Math.sin(a)*.90;
+    cyl(root,iron,[x,.014,z],.065,.065,.028);
+    tube(root,iron,[[x,.03,z],[0,2.20,0]],.033);
+   }
+   cyl(root,iron,[0,2.185,0],.073,.073,.075);
+   const potAssembly=new THREE.Group();potAssembly.name='suspended-pot';potAssembly.position.y=-.061;root.add(potAssembly);
+   const potMaterial=material('cooking-pot',0x65615a,[.56,.08,.30,.33]);
+   const profile=[[0,0],[.17,0],[.25,.065],[.31,.18],[.335,.42],[.335,.46],[.304,.46],[.302,.41],[.278,.18],[.22,.085],[0,.06]],pot=mesh(potAssembly,geo('cooking-pot',()=>new THREE.LatheGeometry(profile.map(v=>new THREE.Vector2(...v)),32)),potMaterial,[0,.83,0]);pot.name='cooking-pot';
+   mesh(potAssembly,geo('pot-rim',()=>new THREE.TorusGeometry(.322,.019,7,32)),iron,[0,1.285,0],[Math.PI/2,0,0]);
+   for(const x of [-.335,.335]){box(potAssembly,iron,[x,1.24,0],[.055,.08,.055]);mesh(potAssembly,geo('pot-handle-eye',()=>new THREE.TorusGeometry(.038,.009,6,12)),brass,[x,1.285,0],[0,Math.PI/2,0]);}
+   tube(potAssembly,iron,[[-.35,1.28,0],[-.30,1.50,0],[0,1.71,0],[.30,1.50,0],[.35,1.28,0]],.016);
+   for(let i=0;i<9;i++)mesh(root,geo('pot-chain-link',()=>new THREE.TorusGeometry(.034,.008,6,12)),iron,[0,1.667+i*.061,0],[0,i%2*Math.PI/2,0]);
+   const broth=material('stew',0x9b642f,[.40,.12,.15,.26],cargo);cyl(potAssembly,broth,[0,1.205,0],.294,.294,.012);
+  }else if(form.fire){
+   const ash=material('ash',0x58544c,[.56,.08,.30,.33]),char=material('charred-timber',0x625344,[.54,.53,.30,.42]),stone=material('fire-stone',0x9a9585,[.56,.08,.30,.33]);
+   let center;
+   if(id==='campfire'){
+    cyl(root,ash,[0,.018,0],.34,.35,.036);
+    for(let i=0;i<11;i++){const a=i*Math.PI*2/11,g=geo('fire-rock:'+i,()=>{const g=new THREE.IcosahedronGeometry(1,1),p=g.attributes.position;for(let j=0;j<p.count;j++){const x=p.getX(j),y=p.getY(j),z=p.getZ(j),f=1+.07*Math.sin(x*19+y*11+z*7+i);p.setXYZ(j,x*f,y*f,z*f);}g.computeVertexNormals();g.computeBoundingBox();g.translate(0,-g.boundingBox.min.y,0);return g;});const rock=mesh(root,g,stone,[Math.sin(a)*.365,0,Math.cos(a)*.365]);rock.scale.set(.105,.065,.085);rock.rotation.y=a;}
+    for(let i=0;i<4;i++){const log=cyl(root,char,[(i%2-.5)*.15,.105+Math.floor(i/2)*.075,0],.053,.068,.53);log.rotation.set(Math.PI/2,0,(i<2?-.55:.85));}
+    center=[0,.17,0];anchor(root,'mount',[0,0,0]);
+   }else{
+    const wall=id==='wall-torch',z=wall?.27:0,base=wall?.90:.20;
+    if(wall){box(root,iron,[0,1.15,.006],[.13,.38,.035]);for(const y of [1.02,1.28])box(root,brass,[0,y,.028],[.025,.025,.009]);tube(root,iron,[[0,1.02,.02],[0,1.02,z],[0,1.19,z]],.025);anchor(root,'mount',[0,1.15,0],[0,0,-1]);}
+    else{for(let i=0;i<3;i++){const a=i*Math.PI*2/3;cyl(root,iron,[Math.sin(a)*.23,.008,Math.cos(a)*.23],.035,.035,.016);tube(root,iron,[[Math.sin(a)*.23,.02,Math.cos(a)*.23],[Math.sin(a)*.10,.22,Math.cos(a)*.10],[0,.46,0]],.018);}cyl(root,iron,[0,.33,0],.075,.075,.15);anchor(root,'mount',[0,0,0]);}
+    cyl(root,wood('honey'),[0,base+.48,z],.035,.047,.96);
+    cyl(root,char,[0,base+.91,z],.082,.055,.22);
+    for(let i=0;i<5;i++)mesh(root,geo('torch-binding',()=>new THREE.TorusGeometry(.072,.010,5,12)),iron,[0,base+.82+i*.035,z],[Math.PI/2,0,0]);
+    center=[0,base+1.01,z];
+   }
+   const fire=new THREE.Group();fire.name='flames';fire.visible=burning;fire.position.set(...center);root.add(fire);
+   const flameMat=material('painted-flame',0xffffff,[.40,.12,.15,.26],cargo);flameMat.vertexColors=true;flameMat.roughness=1;
+   // Closed curved volumes rather than camera-facing flame cards. Broad color
+   // bands model the painted tongues; these do not illuminate the scene.
+   function flameGeo(variant){return geo('flame-tongue:'+variant,()=>{const bends=[[0,-.10,.08,.26,.13,.39],[0,.07,-.14,-.12,-.36,-.27],[0,-.04,.12,.08,.27,.18]][variant],rings=[[0,0],[.035,.24],[.26,.37],[.53,.22],[.79,.105],[1,0]],g=new THREE.LatheGeometry(rings.map(([y,r])=>new THREE.Vector2(r,y)),11),p=g.attributes.position,colors=[];
+    for(let i=0;i<p.count;i++){const y=p.getY(i),j=rings.findIndex(v=>Math.abs(v[0]-y)<.001),a=Math.atan2(p.getX(i),p.getZ(i)),f=1+.13*Math.sin(a*3+variant+y*7);p.setXYZ(i,p.getX(i)*f+(bends[j]||0),y,p.getZ(i)*f+Math.sin(y*4+variant)*y*.13);const c=new THREE.Color().setRGB(1,.12+.50*y,.012+.06*y);colors.push(c.r,c.g,c.b);}g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.computeVertexNormals();return g;});}
+   const count=id==='campfire'?5:3,inner=material('flame-core',0xffd080,[.77,.15,.12,.20],cargo);
+   for(let i=0;i<count;i++){const a=i*2.4,r=id==='campfire'?.12:.025,o=mesh(fire,flameGeo(i%3),flameMat,[Math.sin(a)*r,0,Math.cos(a)*r],[0,a,(i%2?-.12:.08)]),width=id==='campfire'?.33:.17,height=(id==='campfire'?.30:.24)+[.19,0,.11,.06,.23][i];o.scale.set(width,height,width*.85);o.castShadow=false;
+    const core=mesh(fire,flameGeo((i+1)%3),inner,[Math.sin(a)*(r+.025),.006,Math.cos(a)*(r+.025)],[0,a+.5,0]);core.scale.set(width*.60,height*.53,width*.58);core.castShadow=false;
+   }
+   for(const [i,o]of fire.children.entries()){o.userData.flicker={scale:o.scale.toArray(),rotation:o.rotation.z,phase:i*1.73};o.material.userData.flickerBaseColor??=o.material.color.clone();}
+   const a=anchor(root,'emitter-0',[center[0],center[1]+.15,center[2]],[0,-1,0]);a.userData.distribution='omnidirectional';
+  }else if(id==='dining-table'||id==='coffee-table'){
+
    const h=id==='dining-table'?.84:.46;
    for(let i=0;i<4;i++)box(root,wood(skin,i),[(i-1.5)*.224,h-.035,0],[.221,.07,1.87]);
    for(const x of [-.33,.33])for(const z of [-.77,.77]){
@@ -79,11 +131,12 @@ export function createFurnitureLibrary(atlas,cargo){
    for(const z of [-.27,-.07,.13,.33,.53,.73])box(root,seam,[0,.534,z],[.76,.003,.007]);
    box(root,linen,[0,.548,-.59],[.59,.105,.31],[0,-.035,0],.042);
    box(root,cloth,[0,.559,-.22],[.80,.052,.18],undefined,.012);
-  }else if(id==='bedside-table'){
+  }else if(id==='bedside-table'||id==='bedside-table-lamp'){
    feet(root,timber,.63,.56,.15);box(root,warm,[0,.15,0],[.60,.04,.53]);
    for(const x of [-.285,.285])box(root,timber,[x,.34,0],[.045,.40,.51]);
    box(root,timber,[0,.37,-.24],[.55,.43,.03]);box(root,timber,[0,.58,0],[.66,.05,.59]);
    box(root,dark,[0,.465,0],[.55,.17,.48]);panel(root,warm,0,.46,.25,.55,.17);knob(root,[0,.46,.305]);
+   if(id==='bedside-table-lamp'){const lamp=build('floor-lamp',skin).root;lamp.name='bedside-lamp';lamp.scale.setScalar(.48);lamp.position.set(0,.605,-.045);root.add(lamp);}
   }else if(id==='cabinet'){
    // Long axis is local Z, so the cabinet is exactly a 1×2 footprint.
    const body=new THREE.Group();body.rotation.y=Math.PI/2;root.add(body);
@@ -127,4 +180,18 @@ export function createFurnitureLibrary(atlas,cargo){
   return {root,form,skin,bounds:new THREE.Box3().setFromObject(root)};
  }
  return {build,stats:()=>({geometries:geometries.size,materials:materials.size,textures:textures.length}),dispose(){if(disposed)return;disposed=true;for(const g of geometries.values())g.dispose();for(const m of materials.values())m.dispose();for(const t of textures)t.dispose();geometries.clear();materials.clear();textures.length=0;}};
+}
+
+// Absolute-time sampling makes the four-second loop independent of frame rate.
+// null restores the authored pose for paused/reduced-motion previews.
+export function animateFurnitureFire(root,seconds){
+ const fire=root.getObjectByName('flames');if(!fire||!fire.visible)return;
+ const t=seconds===null?0:seconds*Math.PI/2;
+ for(const o of fire.children){const f=o.userData.flicker;if(!f)continue;
+  const wave=seconds===null?0:Math.sin(t*5+f.phase)*.065+Math.sin(t*9+f.phase*.7)*.025;
+  o.scale.set(f.scale[0]*(1-wave*.40),f.scale[1]*(1+wave),f.scale[2]*(1-wave*.30));
+  o.rotation.z=f.rotation+(seconds===null?0:Math.sin(t*3+f.phase)*.045);
+  // Flame materials are library-shared: brightness uses one common time phase.
+  o.material.color.copy(o.material.userData.flickerBaseColor).multiplyScalar(seconds===null?1:.97+.03*Math.sin(t*7));
+ }
 }

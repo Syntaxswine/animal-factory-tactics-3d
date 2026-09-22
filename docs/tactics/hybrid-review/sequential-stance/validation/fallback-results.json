@@ -1,0 +1,101 @@
+{
+  "results": [
+    {
+      "outfit": "normal",
+      "reduced": false,
+      "unavailable": false,
+      "frames": 85,
+      "impactFrames": 10,
+      "unchanged": true
+    },
+    {
+      "outfit": "normal",
+      "reduced": false,
+      "unavailable": true,
+      "frames": 74,
+      "impactFrames": 9,
+      "unchanged": true
+    },
+    {
+      "outfit": "normal",
+      "reduced": false,
+      "unavailable": false,
+      "frames": 85,
+      "impactFrames": 11,
+      "unchanged": true
+    },
+    {
+      "outfit": "normal",
+      "reduced": true,
+      "unavailable": false,
+      "frames": 31,
+      "impactFrames": 11,
+      "unchanged": true
+    },
+    {
+      "outfit": "normal",
+      "reduced": true,
+      "unavailable": true,
+      "frames": 31,
+      "impactFrames": 11,
+      "unchanged": true
+    },
+    {
+      "outfit": "normal",
+      "reduced": true,
+      "unavailable": false,
+      "frames": 31,
+      "impactFrames": 11,
+      "unchanged": true
+    },
+    {
+      "outfit": "red-hats",
+      "reduced": false,
+      "unavailable": false,
+      "frames": 85,
+      "impactFrames": 11,
+      "unchanged": true
+    },
+    {
+      "outfit": "red-hats",
+      "reduced": false,
+      "unavailable": true,
+      "frames": 74,
+      "impactFrames": 9,
+      "unchanged": true
+    },
+    {
+      "outfit": "red-hats",
+      "reduced": false,
+      "unavailable": false,
+      "frames": 85,
+      "impactFrames": 11,
+      "unchanged": true
+    },
+    {
+      "outfit": "red-hats",
+      "reduced": true,
+      "unavailable": false,
+      "frames": 31,
+      "impactFrames": 11,
+      "unchanged": true
+    },
+    {
+      "outfit": "red-hats",
+      "reduced": true,
+      "unavailable": true,
+      "frames": 30,
+      "impactFrames": 10,
+      "unchanged": true
+    },
+    {
+      "outfit": "red-hats",
+      "reduced": true,
+      "unavailable": false,
+      "frames": 31,
+      "impactFrames": 11,
+      "unchanged": true
+    }
+  ],
+  "errors": []
+}
