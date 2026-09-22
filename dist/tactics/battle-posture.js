@@ -6,6 +6,12 @@ export function createBattlePosture(worker,profile){
  root.position.set(0,0,0);root.rotation.set(0,0,0);worker.pose('neutral');root.updateMatrixWorld(true);
  const rest=new Map(worker.bones.map(b=>[b,b.getWorldPosition(V())]));
  const hips=named.hips||named.pelvis,spine=named.spine||named.breast;
+ // The furry upper ankle belongs with the shin inside the trouser cuff;
+ // only the paw/sole stays rigid with the foot. Reuse the dog motion proof.
+ if(profile.proneAim?.pastern)for(const side of [-1,1]){
+  const foot=worker.parts.find(p=>p.name==='furry dog foot '+side),a=foot.geometry.attributes,shin=worker.bones.indexOf(named['shin'+side]),ankle=worker.bones.indexOf(named['hoof'+side]);
+  for(let i=0;i<a.position.count;i++){const w=T.MathUtils.smoothstep(a.position.getY(i),.10,.20);a.skinIndex.setXYZW(i,ankle,shin,0,0);a.skinWeight.setXYZW(i,1-w,w,0,0);}a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;
+ }
  const tails=profile.proneAim&&(profile.longTail||profile.proneAim.tailUpright)?worker.parts.filter(p=>p.name.includes('tail')).map(part=>{
   const upright=!!profile.proneAim.tailUpright,axis=upright?0:1,a=part.geometry.attributes,position=a.position.clone(),normal=a.normal.clone(),top=Math.max(...Array.from({length:position.count},(_,i)=>position.getComponent(i,axis))),pivot=V();let count=0;
   for(let i=0;i<position.count;i++)if(position.getComponent(i,axis)>top-.025){pivot.add(V().fromBufferAttribute(position,i));count++;}pivot.divideScalar(count);pivot.setComponent(axis,top);

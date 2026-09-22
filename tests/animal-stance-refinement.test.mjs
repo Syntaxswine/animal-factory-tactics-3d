@@ -22,6 +22,13 @@ for(const p of profiles.filter(p=>p.proneAim&&(!process.env.REVIEW_ANIMAL||p.id=
    assert.ok(Math.min(...surface.knees)<.07,'descent lost the supporting knee: '+JSON.stringify({t,surface}));assert.ok(surface.feet.every(y=>y<.05),'descent lost hoof/boot support: '+JSON.stringify({t,surface}));
    if(n===100)assert.ok(surface.knees.every(y=>y<(p.proneAim.kneeClearance??.04)),'settled prone knee floats: '+JSON.stringify({t,surface}));
    if(n===100&&p.proneAim.kneeClearance)assert.ok(surface.belly<.03&&surface.feet.every(y=>y<.03),'rounded build must be supported by belly and boots: '+JSON.stringify(surface));
+   // The dog's lower cuffs used to remain on the torso while the arms aimed.
+   if(p.id==='dog')for(const side of [-1,1]){
+    const shirt=w.parts.find(p=>p.name.includes('shirt')),a=shirt.geometry.attributes.position,elbow=w.bones.find(b=>b.name==='forearm'+side).getWorldPosition(new T.Vector3()),wrist=w.bones.find(b=>b.name==='hand'+side).getWorldPosition(new T.Vector3()),axis=new T.Line3(elbow,wrist);let count=0;
+    for(let i=0;i<a.count;i++)if(a.getY(i)<1.005&&a.getZ(i)*side>.31){const v=shirt.getVertexPosition(i,new T.Vector3()).applyMatrix4(shirt.matrixWorld);assert.ok(v.distanceTo(axis.closestPointToPoint(v,true,new T.Vector3()))<.10,'cuff detached from forearm');count++;}assert.ok(count>50);
+    const foot=w.parts.find(p=>p.name==='furry dog foot '+side),points=foot.geometry.attributes.position,shin=w.bones.findIndex(b=>b.name==='shin'+side),connection=w.bones[shin].matrixWorld.clone().multiply(w.skeleton.boneInverses[shin]);let capCount=0;
+    for(let i=0;i<points.count;i++)if(points.getY(i)>.24){const actual=foot.getVertexPosition(i,new T.Vector3()).applyMatrix4(foot.matrixWorld),expected=new T.Vector3().fromBufferAttribute(points,i).applyMatrix4(connection);assert.ok(actual.distanceTo(expected)<1e-6,'upper ankle cap detached from its trouser/shin connection');capCount++;}assert.ok(capCount>5);
+   }
   }
   for(const part of w.parts){const a=part.geometry.attributes.skinWeight;if(a)for(let i=0;i<a.count;i++){const weights=[a.getX(i),a.getY(i),a.getZ(i),a.getW(i)];assert.ok(weights.every(v=>v>=0&&Number.isFinite(v)));assert.ok(Math.abs(weights.reduce((a,b)=>a+b)-1)<1e-5);}}
   for(const prone of [0,.25,.5,.75,1])for(const xyz of [[6,.48,0],[1,1.4,0],[2,3,0]]){

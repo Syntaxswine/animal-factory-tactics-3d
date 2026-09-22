@@ -31,7 +31,7 @@ canvas. On narrower windows the displayed canvas scales down; use the recorded
 | Pig foreman | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Pig director | **9/10** | All 125 sampled endpoints align; full equipment coverage open |
 | Rabbit | **9/10** | Close/steep aim holds; full equipment coverage open |
-| Dog | Queued | Not yet inspected in this pass |
+| Dog | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Hen | Queued | Unarmed posture only; wing/weapon authoring remains separate |
 
 ## Reproduction
@@ -57,6 +57,13 @@ Species-specific corrections found during the sequential pass:
   actual settled belly, knees and shoes are all within 0.03 of the floor.
   The head adjustment is prone-only, retaining the approved standing expression,
   ear shape and waistcoat. All 125 sampled endpoints remain aligned.
+- Dog: the sleeve height mask incorrectly held the low cuffs on the torso during
+  aiming. The corrected mask separates outer cuffs from the low/central jacket
+  hem. Dense posed surface checks require both cuffs to stay around the actual
+  forearms; the previous motion, neutral-restoration and geometry checks remain.
+  Review also caught exposed flat upper ankle ends. Transferring the approved
+  dog study's shin/pastern blend keeps those ends inside the trouser cuffs while
+  preserving rigid paw soles. A dense posed cap-connection check covers this.
 
 Anatomical knee measurement bands derive from each animal's inverse bind matrices.
 They are not hard-coded to the horse. Tail checks include exact fixed-root and

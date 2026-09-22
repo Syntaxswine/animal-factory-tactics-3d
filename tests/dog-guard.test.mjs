@@ -15,7 +15,7 @@ for(const data of [author,reduced]){
    const tail=h.parts[7];tail.geometry.computeBoundingBox();const box=tail.geometry.boundingBox;assert.ok(box.min.y<.38&&box.max.y>.87,'relaxed plume from pelvis to knee height');assert.ok(box.max.x<-.14&&box.min.x<-.4);
    for(const m of h.parts.filter(p=>/tail|utility/.test(p.name))){const si=m.geometry.attributes.skinIndex,sw=m.geometry.attributes.skinWeight;for(let i=0;i<si.count;i++){assert.equal(si.getX(i),0);assert.equal(sw.getX(i),1);}}
    for(const side of [-1,1]){const foot=h.parts.find(p=>p.name==='furry dog foot '+side);foot.geometry.computeBoundingBox();const b=foot.geometry.boundingBox;assert.ok(b.max.x>.15&&b.max.x<.17&&b.min.x<-.10,'compact canine paw');assert.ok(b.max.z-b.min.z>.17,'broad paw');}
-   const jacket=h.parts[0],pa=jacket.geometry.attributes.position,si=jacket.geometry.attributes.skinIndex,sw=jacket.geometry.attributes.skinWeight;for(let i=0;i<pa.count;i++)if(pa.getY(i)<.96)for(let j=0;j<4;j++)if(sw.array[i*4+j]>0)assert.ok(si.array[i*4+j]<2,'jacket hem must not follow arms');
+   const jacket=h.parts[0],pa=jacket.geometry.attributes.position,si=jacket.geometry.attributes.skinIndex,sw=jacket.geometry.attributes.skinWeight;for(let i=0;i<pa.count;i++)if(pa.getY(i)<.90||(pa.getY(i)<.96&&Math.abs(pa.getZ(i))<=.25))for(let j=0;j<4;j++)if(sw.array[i*4+j]>0)assert.ok(si.array[i*4+j]<2,'jacket hem must not follow arms');
 
   }finally{h.dispose();}
  });
