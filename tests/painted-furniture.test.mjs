@@ -39,3 +39,27 @@ test('fire flicker loops continuously without drift and resets to authored trans
  }
  library.dispose();
 });
+
+test('guard tower preserves 3x3 supports, 5x5 deck and an unobstructed ladder aperture',()=>{
+ const library=createFurnitureLibrary(atlas,atlas),{root,form}=library.build('wooden-guard-tower'),data=root.userData.tower,H=data.deckHeight;
+ assert.deepEqual(form.tiles,[5,5]);assert.equal(data.stories,3);assert(Math.abs(H-6.36)<1e-9);
+ const posts=[],deck=[];root.traverse(o=>{if(o.name==='support-post')posts.push(o);if(['deck-plank','deck-beam','deck-joist','hatch-header'].includes(o.name))deck.push(o);});assert.equal(posts.length,4);
+ const bounds=new THREE.Box3();for(const p of posts)bounds.union(new THREE.Box3().setFromObject(p));assert(bounds.min.x>=-1.5&&bounds.max.z<=1.5&&bounds.max.x-bounds.min.x>2.9);
+ const band=root.getObjectByName("iron-post-band"),bandBox=new THREE.Box3().setFromObject(band),postBox=new THREE.Box3().setFromObject(posts[0]);assert(bandBox.min.x<postBox.min.x&&bandBox.max.z>postBox.max.z,"bands must stand proud of timber");
+ const ray=new THREE.Raycaster();for(const x of [-.40,0,.40])for(const z of [1.35,1.75,2.15]){ray.set(new THREE.Vector3(x,H+.1,z),new THREE.Vector3(0,-1,0));ray.far=.6;assert.equal(ray.intersectObjects(deck,false).length,0,'hidden geometry across ladder aperture');}
+ ray.set(new THREE.Vector3(0,H+.1,0),new THREE.Vector3(0,-1,0));assert(ray.intersectObjects(deck,false).length>0,'main deck missing');
+ library.dispose();
+});
+
+test('stair guardhouses have six ascending flights and an open top entrance',()=>{
+ const library=createFurnitureLibrary(atlas,atlas);
+ for(const id of ['wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower','wood-large-wrap-tower','iron-large-wrap-tower']){const {root}=library.build(id),meta=root.userData.stairTower,treads=[],walls=[];assert.deepEqual(meta.guardhouse,id.includes("-large-")?[5,5]:[3,3]);
+  root.traverse(o=>{if(o.name==='stair-tread')treads.push(o);if(['door-wall','door-jamb','door-lintel'].includes(o.name))walls.push(o);});assert.equal(treads.length,54);
+  for(let i=0;i<treads.length;i++)assert(Math.abs(treads[i].position.y+.035-(i+1)*1.06/9)<1e-8);
+  if(id.includes('-large-')){const floorBox=new THREE.Box3();root.traverse(o=>{if(o.name==='guardhouse-floor')floorBox.union(new THREE.Box3().setFromObject(o));});assert(Math.abs(floorBox.max.x-floorBox.min.x-5)<.02&&Math.abs(floorBox.max.z-floorBox.min.z-5)<.02);const treadBox=new THREE.Box3().setFromObject(treads[0]);assert(Math.abs(treadBox.max.z-treadBox.min.z-.88)<.01,'perimeter stairs must retain width');}
+  const overhead=[];root.traverse(o=>{if(['stair-tread','stair-landing','entry-landing','guardhouse-floor','roof-panel'].includes(o.name))overhead.push(o);});
+  const clearance=new THREE.Raycaster();clearance.far=1.65;for(const tread of treads){const pos=tread.position.clone();pos.y+=.046;clearance.set(pos,new THREE.Vector3(0,1,0));assert.equal(clearance.intersectObjects(overhead,false).length,0,'stair headroom obstructed');}
+  const ray=new THREE.Raycaster();ray.far=.5;for(const z of [-1.16,-.8,-.44])for(const y of [.2,.9,1.6]){if(meta.layout==='wraparound')ray.set(new THREE.Vector3(id.includes("-large-")?z*5/3:z,meta.deckHeight+y,id.includes("-large-")?-2.8:-1.8),new THREE.Vector3(0,0,1));else ray.set(new THREE.Vector3(.8,meta.deckHeight+y,z),new THREE.Vector3(-1,0,0));assert.equal(ray.intersectObjects(walls,false).length,0,'blocked guardhouse entrance');}
+ }
+ library.dispose();
+});
