@@ -14,6 +14,14 @@ export function animalMotionRepairPaint(profile,layers=null){
   ${apply('sidePanel','cloth')}
  }
  `;
+ // Forward elbows expose the tucked shirt's underside. Its neutral projection
+ // straddled cuff highlights and produced a dotted white rim in prone views.
+ if(profile.id==='horse')result.application+=`
+ if(abs(vPaintPart-1.)<.1){
+  float underarm=smoothstep(.10,.14,abs(p.z))*(1.-smoothstep(.22,.28,abs(p.z)))*(1.-smoothstep(.12,.16,abs(p.x)))*(1.-smoothstep(1.07,1.14,p.y));
+  ${apply('underarm',sample(2,'.02+p.x*.2','1.10+(p.y-1.)*.25')+'*(.88+.12*abs(n.z))')}
+ }
+ `;
  // One profile source across the nape avoids a left/right texture seam.
  if(profile.id==='pig-foreman')result.application+=`
  if(abs(vPaintPart-7.)<.1){
