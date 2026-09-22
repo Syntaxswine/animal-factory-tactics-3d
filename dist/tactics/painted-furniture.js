@@ -6,6 +6,7 @@ export const FURNITURE_FORMS=[
  {id:'coffee-table',name:'Low living-room table',tiles:[1,2],note:'Solid flat top with a lower magazine shelf.'},
  {id:'single-bed',name:'Single bed',tiles:[1,2],note:'Panelled timber frame, pillow and folded blue quilt.'},
  {id:'bedside-table',name:'Bedside table',tiles:[1,1],note:'Inset drawer and an open lower shelf.'},
+ {id:'bedside-table-lamp',name:'Bedside table with lamp',tiles:[1,1],light:true,note:'A compact brass and linen lamp on the drawer table; lighting deferred.'},
  {id:'refrigerator',name:'Enamel refrigerator',tiles:[1,1],note:'Separate freezer, rounded enamel corners and rear cooling coils.'},
  {id:'cabinet',name:'Double-door cabinet',tiles:[1,2],note:'A 1×2 cabinet with recessed panels, drawers and brass pulls.'},
  {id:'floor-lamp',name:'Pleated floor lamp',tiles:[1,1],light:true,note:'Weighted base, brass stem and a warm linen shade.'},
@@ -79,11 +80,12 @@ export function createFurnitureLibrary(atlas,cargo){
    for(const z of [-.27,-.07,.13,.33,.53,.73])box(root,seam,[0,.534,z],[.76,.003,.007]);
    box(root,linen,[0,.548,-.59],[.59,.105,.31],[0,-.035,0],.042);
    box(root,cloth,[0,.559,-.22],[.80,.052,.18],undefined,.012);
-  }else if(id==='bedside-table'){
+  }else if(id==='bedside-table'||id==='bedside-table-lamp'){
    feet(root,timber,.63,.56,.15);box(root,warm,[0,.15,0],[.60,.04,.53]);
    for(const x of [-.285,.285])box(root,timber,[x,.34,0],[.045,.40,.51]);
    box(root,timber,[0,.37,-.24],[.55,.43,.03]);box(root,timber,[0,.58,0],[.66,.05,.59]);
    box(root,dark,[0,.465,0],[.55,.17,.48]);panel(root,warm,0,.46,.25,.55,.17);knob(root,[0,.46,.305]);
+   if(id==='bedside-table-lamp'){const lamp=build('floor-lamp',skin).root;lamp.name='bedside-lamp';lamp.scale.setScalar(.48);lamp.position.set(0,.605,-.045);root.add(lamp);}
   }else if(id==='cabinet'){
    // Long axis is local Z, so the cabinet is exactly a 1×2 footprint.
    const body=new THREE.Group();body.rotation.y=Math.PI/2;root.add(body);
