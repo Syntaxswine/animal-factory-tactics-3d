@@ -6,7 +6,7 @@ const browser=await chromium.launch({channel:'msedge',headless:true}),page=await
 page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
 const out='artifacts/battle-3d/spotlight';fs.mkdirSync(out,{recursive:true});
 try{
- await page.goto('http://127.0.0.1:4323/tactics/editor-3d.html');await page.waitForFunction(()=>window.editor3d?.document&&!editor3d.loading,{},{timeout:120000});
+ await page.goto((process.env.REVIEW_ORIGIN||'http://127.0.0.1:4425')+'/tactics/editor-3d.html');await page.waitForFunction(()=>window.editor3d?.document&&!editor3d.loading,{},{timeout:120000});
  const map=blankMap('Spotlight test');map.time={startMinutes:1260};map.props=[{kind:'spotlight',x:7,y:7,z:0,lightMode:'on'}];
  await page.evaluate(json=>editor3d.open(json),JSON.stringify(map));await page.waitForFunction(()=>!editor3d.loading&&editor3d.scene.lights.models.length===1);
  await page.evaluate(()=>{editor3d.view.x=10;editor3d.view.y=9;editor3d.view.span=24;editor3d.scene.changed();});await page.waitForTimeout(500);

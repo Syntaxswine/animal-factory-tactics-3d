@@ -45,3 +45,11 @@ The remaining seven animals each passed 12 stance-browser configurations; hen co
 Approved building models through `54b614b` against canonical `f5b9da6`. Seven new tower variants cover ladder access, side switchback stairs, and 3-by-3 / 5-by-5 guardhouses with perimeter stairs. They are gallery assets, not registered playable buildings. Elevated occupancy, pathfinding, collision, cover and supported floor range need a separate integration pass; geometry headroom tests do not establish gameplay traversal.
 
 The timber silhouettes fit the character scale and wraparound access reads clearly. Saturated red metal and repetitive roof texture are optional art polish. Validation passed 641 tests and assets, the Pages build, reproducible core verification, all 22 gallery forms and stable resource counts. Existing canonical artificial-light placement/schedules/playtests and awareness contact/pause browser checks also passed with the merged model library. Resolved only the deployment file-list overlap, preserving both branches' files.
+
+## Sweeping spotlights and factory machines
+
+Approved spotlight work through `50b7945` (feature `7b358f4`) and machine gallery `1845562`. Spotlights support one to three editor aim points, clock-driven sweeps, paused playtests, and cone-based illumination in detection. Browser checks passed route picking/cancellation, sweeping, mixed point/spot shadows and pause behavior without errors.
+
+The painted lathe, milling machine and power press read clearly beside the character at gameplay scale. These are 2-by-3 gallery assets, not editor props or production systems. Heavy edge wear remains optional close-up polish. All 48 paint-coverage views passed with no fallback pixels or browser errors; geometry checks preserve the press throat and milling clearance.
+
+Combined validation: 646 tests and assets, Pages build, and verification of 20 core modules with recorded adapters at `e529f4b` passed. Preserved both branches' deployment file lists when resolving their overlap. Both browser review scripts now accept REVIEW_ORIGIN for portable local review.

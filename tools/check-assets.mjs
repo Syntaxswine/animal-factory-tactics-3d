@@ -60,6 +60,7 @@ const cargoAtlas=CARGO_ATLAS.replace('../assets/environment/','');active.add(car
 const studyAtlas=PAINTED_ATLAS.replace('../assets/environment/','');active.add(studyAtlas);await checkPNG('assets/environment/'+studyAtlas,1254,1254,2);
 const foliageAtlas=FOLIAGE_ATLAS.replace('../assets/environment/','');active.add(foliageAtlas);await checkPNG('assets/environment/'+foliageAtlas,1254,1254,2);
 active.add('foliage/river-water.png');active.add('foliage/shore-tiles-atlas.png');
+for(const kind of ['lathe','mill','press']){for(const name of [kind+'-sketch-v1.png',kind+'-paint-v1.png',...(kind==='press'?['press-paint-v2.png']:[])])active.add('factory-machines/'+name);await checkPNG('assets/environment/factory-machines/'+kind+'-paint-v'+(kind==='press'?2:1)+'.png',1536,1024,2);}
 const superseded=new Set(['door-steel-closed.png','door-wood-closed.png','doorway-concrete-open.png','foliage/river-straight.png','foliage/river-bend.png','foliage/river-banks-atlas.png']);
 for(const file of await readdir(new URL('assets/environment/',root),{recursive:true}))if(file.endsWith('.png'))assert.ok(active.has(file.replaceAll('\\','/'))||superseded.has(file.replaceAll('\\','/')),`Unattached environment sprite: ${file}`);
 for(const species of RED_HAT_SPECIES)for(const weapon of ['hands',...ARMED_WEAPONS])for(const stance of ['standing','kneeling','prone']){
