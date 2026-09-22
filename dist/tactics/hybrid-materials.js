@@ -35,6 +35,10 @@ export function surfacePixels(kind,size=128){
  return {data,width:size,height:size};
 }
 export function materialKind(box){
+ if(['enamel','bark','dirt','gravel','tiles'].includes(box.material))return box.material;
+ if(box.material==='ground-tiles')return 'tiles';
+ if(box.material==='ground-dirt')return 'dirt';
+ if(box.material==='ground-gravel')return 'gravel';
  if(['steel','leaf-light','pine','foliage','water','linen','screen','dark-metal','rust','red','olive','metal','wood','sand'].includes(box.material))return box.material;
  if(box.material==='woodland')return 'foliage';
  if(box.material==='ground-asphalt'||box.material==='bridge')return 'asphalt';

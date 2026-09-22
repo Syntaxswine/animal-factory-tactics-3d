@@ -4,7 +4,13 @@ import {DIMENSIONS as D} from './hybrid-world.js';
 
 // The visual catalog deliberately does not replace simulation collision volumes.
 export function environmentVisuals(world,map){
- const result=world.boxes.filter(b=>b.kind!=='prop'&&!b.id.includes(':slope:'));
+ const result=world.boxes.filter(b=>b.kind!=='prop'&&!b.id.includes(':slope:')).map(b=>{
+  if(b.kind==='floor'||b.id.startsWith('floor:')||b.material==='water')return {...b,shape:'slab'};
+  // Seat the separate worn cap over a recessed visual top, not a coplanar face.
+  // The source query box and the lower edge/window aperture remain unchanged.
+  if(b.kind==='wall'&&!b.id.endsWith(':door')&&!b.material.includes('corrugated'))return {...b,center:[b.center[0],b.center[1]-.006,b.center[2]],size:[b.size[0],b.size[1]-.012,b.size[2]]};
+  return b;
+ });
  const add=(id,source,kind,material,center,size,shape='box',rotation=[0,0,0])=>result.push({id,source,kind,material,center,size,shape,rotation});
  for(const p of map.props||[]){
   const rule=PROPS[p.kind];if(!rule)continue;
@@ -25,6 +31,14 @@ export function environmentVisuals(world,map){
   }
  }
  for(const b of world.boxes){
+  if(b.kind==='wall'&&!b.id.endsWith(':door')){
+   const east=b.size[0]<b.size[2],width=east?b.size[2]:b.size[0],top=b.center[1]+b.size[1]/2;
+   if(b.material.includes('corrugated')){
+    for(let i=0;i<7;i++)for(const side of [-1,1]){const c=[...b.center];c[east?2:0]+=(-.5+(i+.5)/7)*width;c[east?0:2]+=side*(b.size[east?0:2]/2+.012);add(b.id+`:fold:${i}:${side}`,b.source,'wall','metal',c,east?[.025,b.size[1]-.035,.035]:[.035,b.size[1]-.035,.025]);}
+   }else{
+    const c=[...b.center];c[1]=top-.03;add(b.id+':worn-cap',b.source,'wall','concrete',c,east?[b.size[0]+.04,.06,width]:[width,.06,b.size[2]+.04]);
+   }
+  }
   if(b.kind==='fence'&&b.id.endsWith(':bar:0')){
    const [axis]=b.source.edge.split(':'),east=axis==='e';
    for(const y of [.2,1.7])add(b.id+':rail:'+y,b.source,'fence','dark-metal',[b.center[0]+(east?0:.5),b.center[1]-1+y,b.center[2]+(east?.5:0)],east?[.045,.045,1]:[1,.045,.045]);
@@ -37,6 +51,7 @@ export function environmentVisuals(world,map){
   }
   if(b.kind==='wall'&&b.id.endsWith(':door')){
    const east=b.size[0]<b.size[2];add(b.id+':handle',b.source,'wall','dark-metal',[b.center[0]+(east?b.size[0]/2+.025:.3),b.center[1]+.03,b.center[2]+(east?.3:b.size[2]/2+.025)],east?[.05,.045,.18]:[.18,.045,.05]);
+   for(const y of [-.5,.5])for(const face of [-1,1]){const c=[...b.center];c[1]+=y;c[east?2:0]-=.41;c[east?0:2]+=face*(b.size[east?0:2]/2+.016);add(b.id+`:hinge:${y}:${face}`,b.source,'wall','dark-metal',c,east?[.035,.14,.075]:[.075,.14,.035]);}
   }
  }
  return result;

@@ -1,9 +1,10 @@
+import {createEnvironmentPaint} from './environment-painted-materials.js';
 import {environmentGeometries} from './environment-geometry.js';
 import {environmentVisuals} from './environment-visuals.js';
 import * as THREE from './vendor/three.module.js';
 import {buildWorld,DIMENSIONS,GAME_CAMERA,toWorld} from './hybrid-world.js';
 import {hybridWorld} from './hybrid-combat.js';
-import {surfacePixels,materialKind} from './hybrid-materials.js';
+import {materialKind} from './hybrid-materials.js';
 import {spriteVertex,alphaBounds,weaponLandmarks} from './hybrid-sprites.js';
 import {unitArt} from './red-hats-art.js';
 import {bodyArt} from './body-art.js';
@@ -44,11 +45,10 @@ export class HybridRenderer{
  constructor(onReady=()=>{}){
   this.renderer=new THREE.WebGLRenderer({antialias:false,alpha:true,preserveDrawingBuffer:true});this.renderer.setPixelRatio(1);this.renderer.outputColorSpace=THREE.SRGBColorSpace;
   this.scene=new THREE.Scene();this.camera=new THREE.OrthographicCamera();this.scene.add(new THREE.HemisphereLight(0xfff3d8,0x52634d,2));const sun=new THREE.DirectionalLight(0xffe2ac,2);sun.position.set(-4,9,5);this.scene.add(sun);
-  this.structures=new THREE.Group();this.scene.add(this.structures);this.materials=new Map();this.textures=new Map();this.actors=new Map();this.loader=new THREE.TextureLoader();this.onReady=onReady;this.geometries=environmentGeometries();this.boxGeometry=this.geometries.box;this.diagnostics=[];
+  this.structures=new THREE.Group();this.scene.add(this.structures);this.materials=new Map();this.textures=new Map();this.actors=new Map();this.loader=new THREE.TextureLoader();this.onReady=onReady;this.geometries=environmentGeometries();this.boxGeometry=this.geometries.box;this.diagnostics=[];this.environmentPaint=createEnvironmentPaint(this.renderer,()=>this.onReady(),e=>this.diagnostics.push(e));this.environmentReady=this.environmentPaint.ready;
  }
- material(kind){if(this.materials.has(kind))return this.materials.get(kind);const p=surfacePixels(kind),t=new THREE.DataTexture(p.data,p.width,p.height);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.generateMipmaps=true;t.needsUpdate=true;const material=new THREE.MeshStandardMaterial({map:t,roughness:1});
-  material.onBeforeCompile=shader=>{shader.vertexShader=shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n#ifdef USE_MAP\n vec3 surfaceWorld=(instanceMatrix*vec4(position,1.0)).xyz; vMapUv=abs(normal.y)>.5?surfaceWorld.xz:abs(normal.x)>.5?surfaceWorld.zy:surfaceWorld.xy;\n#endif');};if(kind==='water'){material.roughness=.28;material.metalness=.2;const surfaceCompile=material.onBeforeCompile;material.onBeforeCompile=shader=>{surfaceCompile(shader);shader.uniforms.environmentTime={value:0};material.userData.waterTime=shader.uniforms.environmentTime;shader.fragmentShader='uniform float environmentTime;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n float ripple=sin(vMapUv.x*15.0+vMapUv.y*9.0+environmentTime)*.055+sin(vMapUv.y*18.0-environmentTime*.7)*.025; normal=normalize(normal+vec3(ripple,0.0,ripple*.6));');};}this.materials.set(kind,material);return material;
- }
+ material(kind){if(this.materials.has(kind))return this.materials.get(kind);const m=this.environmentPaint.material(kind);this.materials.set(kind,m);return m;}
+
  rebuild(world,seen,level,map){
   const previous=this.chunks||new Map(),next=new Map();
   const groups=new Map();
@@ -92,5 +92,5 @@ export class HybridRenderer{
  }
  animateMaterials(time){for(const m of this.materials.values())if(m.userData.waterTime)m.userData.waterTime.value=time;}
  stats(){return {meshes:this.structures.children.length,actors:this.actors.size,cachedPoses:this.textures.size,textures:this.renderer.info.memory.textures,geometries:this.renderer.info.memory.geometries,calls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,drawTimes:[...this.drawTimes||[]],diagnostics:[...this.diagnostics],unsupported:this.world?.diagnostics||[]};}
- dispose(){for(const mesh of this.structures.children)mesh.dispose();for(const mesh of this.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}for(const t of this.textures.values())t.dispose();this.textures.clear();this.actors.clear();for(const m of this.materials.values()){m.map.dispose();m.dispose();}this.materials.clear();this.chunks?.clear();this.world=null;this.editorWorld=null;this.scene.clear();for(const geometry of Object.values(this.geometries))geometry.dispose();this.renderer.dispose();}
+ dispose(){for(const mesh of this.structures.children)mesh.dispose();for(const mesh of this.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}for(const t of this.textures.values())t.dispose();this.textures.clear();this.actors.clear();this.environmentPaint.dispose();this.materials.clear();this.chunks?.clear();this.world=null;this.editorWorld=null;this.scene.clear();for(const geometry of Object.values(this.geometries))geometry.dispose();this.renderer.dispose();}
 }

@@ -1,0 +1,330 @@
+{
+  "errors": [],
+  "count": 456,
+  "entries": [
+    {
+      "kind": "crate-wood",
+      "type": "prop"
+    },
+    {
+      "kind": "crate-steel",
+      "type": "prop"
+    },
+    {
+      "kind": "crate-stack",
+      "type": "prop"
+    },
+    {
+      "kind": "table-wood",
+      "type": "prop"
+    },
+    {
+      "kind": "table-steel",
+      "type": "prop"
+    },
+    {
+      "kind": "workbench-vise",
+      "type": "prop"
+    },
+    {
+      "kind": "workbench-metal",
+      "type": "prop"
+    },
+    {
+      "kind": "barrel-single",
+      "type": "prop"
+    },
+    {
+      "kind": "barrels-cluster",
+      "type": "prop"
+    },
+    {
+      "kind": "sandbags",
+      "type": "prop"
+    },
+    {
+      "kind": "pallet",
+      "type": "prop"
+    },
+    {
+      "kind": "lab-bench",
+      "type": "prop"
+    },
+    {
+      "kind": "medical-exam-table",
+      "type": "prop"
+    },
+    {
+      "kind": "medical-surgical-table",
+      "type": "prop"
+    },
+    {
+      "kind": "hospital-bed",
+      "type": "prop"
+    },
+    {
+      "kind": "wheeled-stretcher",
+      "type": "prop"
+    },
+    {
+      "kind": "scrub-sink",
+      "type": "prop"
+    },
+    {
+      "kind": "lab-control-console",
+      "type": "prop"
+    },
+    {
+      "kind": "bedside-monitor",
+      "type": "prop"
+    },
+    {
+      "kind": "instrument-trolley",
+      "type": "prop"
+    },
+    {
+      "kind": "botanical-chamber",
+      "type": "prop"
+    },
+    {
+      "kind": "medicine-cabinet",
+      "type": "prop"
+    },
+    {
+      "kind": "iv-stand",
+      "type": "prop"
+    },
+    {
+      "kind": "tree-broadleaf",
+      "type": "prop"
+    },
+    {
+      "kind": "tree-pine",
+      "type": "prop"
+    },
+    {
+      "kind": "bush",
+      "type": "prop"
+    },
+    {
+      "kind": "reeds",
+      "type": "prop"
+    },
+    {
+      "kind": "roof-corrugated-flat",
+      "type": "prop"
+    },
+    {
+      "kind": "roof-corrugated-sloped",
+      "type": "prop"
+    },
+    {
+      "kind": "roof-flat-parapet",
+      "type": "prop"
+    },
+    {
+      "kind": "wooden-crate-closed",
+      "type": "prop"
+    },
+    {
+      "kind": "wooden-crate-open",
+      "type": "prop"
+    },
+    {
+      "kind": "supply-chest-closed",
+      "type": "prop"
+    },
+    {
+      "kind": "supply-chest-open",
+      "type": "prop"
+    },
+    {
+      "kind": "medicine-cabinet-closed",
+      "type": "prop"
+    },
+    {
+      "kind": "medicine-cabinet-open",
+      "type": "prop"
+    },
+    {
+      "kind": "toolbox-closed",
+      "type": "prop"
+    },
+    {
+      "kind": "toolbox-open",
+      "type": "prop"
+    },
+    {
+      "kind": "first-aid-kit",
+      "type": "prop"
+    },
+    {
+      "kind": "wire-cutters",
+      "type": "prop"
+    },
+    {
+      "kind": "spare-parts",
+      "type": "prop"
+    },
+    {
+      "kind": "gun-pistol",
+      "type": "prop"
+    },
+    {
+      "kind": "gun-rifle",
+      "type": "prop"
+    },
+    {
+      "kind": "gun-assault",
+      "type": "prop"
+    },
+    {
+      "kind": "ammo-pistol",
+      "type": "prop"
+    },
+    {
+      "kind": "ammo-rifle",
+      "type": "prop"
+    },
+    {
+      "kind": "ammo-assault",
+      "type": "prop"
+    },
+    {
+      "kind": "fence-cut",
+      "type": "edge"
+    },
+    {
+      "kind": "wall",
+      "type": "edge"
+    },
+    {
+      "kind": "door",
+      "type": "edge"
+    },
+    {
+      "kind": "wall-concrete",
+      "type": "edge"
+    },
+    {
+      "kind": "wall-corrugated",
+      "type": "edge"
+    },
+    {
+      "kind": "wall-brick",
+      "type": "edge"
+    },
+    {
+      "kind": "fence-chainlink",
+      "type": "edge"
+    },
+    {
+      "kind": "fence-railing",
+      "type": "edge"
+    },
+    {
+      "kind": "jail-bars",
+      "type": "edge"
+    },
+    {
+      "kind": "jail-door-closed",
+      "type": "edge"
+    },
+    {
+      "kind": "window-concrete",
+      "type": "edge"
+    },
+    {
+      "kind": "window-brick",
+      "type": "edge"
+    },
+    {
+      "kind": "window-corrugated",
+      "type": "edge"
+    },
+    {
+      "kind": "door-steel-closed",
+      "type": "edge"
+    },
+    {
+      "kind": "door-wood-closed",
+      "type": "edge"
+    },
+    {
+      "kind": "doorway-concrete-open",
+      "type": "edge"
+    },
+    {
+      "kind": "yard",
+      "type": "ground"
+    },
+    {
+      "kind": "floor",
+      "type": "ground"
+    },
+    {
+      "kind": "bridge",
+      "type": "ground"
+    },
+    {
+      "kind": "woodland",
+      "type": "ground"
+    },
+    {
+      "kind": "water",
+      "type": "ground"
+    },
+    {
+      "kind": "ground-dirt",
+      "type": "ground"
+    },
+    {
+      "kind": "ground-gravel",
+      "type": "ground"
+    },
+    {
+      "kind": "ground-grass",
+      "type": "ground"
+    },
+    {
+      "kind": "ground-concrete",
+      "type": "ground"
+    },
+    {
+      "kind": "ground-asphalt",
+      "type": "ground"
+    },
+    {
+      "kind": "ground-tiles",
+      "type": "ground"
+    },
+    {
+      "kind": "stairs",
+      "type": "stairs"
+    },
+    {
+      "kind": "ladder",
+      "type": "stairs"
+    }
+  ],
+  "stats": [
+    {
+      "materials": 23,
+      "geometries": 22,
+      "textures": 8,
+      "errors": []
+    },
+    {
+      "materials": 23,
+      "geometries": 22,
+      "textures": 8,
+      "errors": []
+    },
+    {
+      "materials": 23,
+      "geometries": 22,
+      "textures": 8,
+      "errors": []
+    }
+  ]
+}

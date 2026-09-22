@@ -1,4 +1,5 @@
 import {TRUCK_PAINT} from '../dist/tactics/canvas-truck-paint.js';
+import {CATALOG_ATLAS} from '../dist/tactics/environment-painted-materials.js';
 import {CARGO_ATLAS} from '../dist/tactics/painted-cargo.js';
 import {PAINTED_ATLAS} from '../dist/tactics/painted-environment-scene.js';
 import {PROPS,EDGES,GROUNDS} from '../dist/tactics/environment.js';
@@ -53,6 +54,8 @@ for(const a of environment.assets)await checkPNG('assets/environment/'+a.file,12
 // Validate the actual runtime overrides as well as catalog paths.
 const active=new Set(environment.assets.map(a=>(DOOR_ART[a.id]||PROP_ART[a.id])?.file||a.file));
 active.add(TRUCK_PAINT.replace('../assets/environment/',''));
+active.add(CATALOG_ATLAS.replace('../assets/environment/',''));
+await checkPNG(CATALOG_ATLAS.replace('../',''),1254,1254,2);
 for(const {file} of Object.values(ROOM_SURFACES))active.add(file);
 for(const file of active)await readFile(new URL('assets/environment/'+file,root));
 const cargoAtlas=CARGO_ATLAS.replace('../assets/environment/','');active.add(cargoAtlas);await checkPNG('assets/environment/'+cargoAtlas,1536,1024,2);
