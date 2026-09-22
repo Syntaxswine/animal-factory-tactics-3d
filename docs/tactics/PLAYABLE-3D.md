@@ -18,6 +18,16 @@ The source sprite target at that revision and this page therefore execute identi
 
 ## Verification
 
+### Gameplay movement milestone
+
+`battle-motion.js` observes accepted integer tile positions and interpolates presentation only. The UI plays simulation steps at a 500 ms cadence, with distance-driven leg poses, blended start/stop and shortest-angle turning. AP, pathfinding, detection and combat still execute in the unchanged pinned core. Selection rings follow the presented position. Stop or contact finishes the already accepted step and settles; it cannot refund or undo that step.
+
+`worker-locomotion.js` adapts the motion studies' alternating planted/swinging feet and two-bone leg solving while preserving existing weapon carry grips. The hen uses its repaired avian rig, without adding firearm grips. Reduced-motion preference disables both translation interpolation and walking. Hidden enemy tracks are discarded so reappearance cannot expose an unseen route. Floor changes and teleports currently snap; ladder/roof/stair animations remain future work.
+
+Numeric coverage includes all twelve models and rifle, pistol, knife and assault carry poses for mammals; browser checks additionally instantiate every character/equipment combination actually present in the authored factory. Arbitrary combinations are not all approved: the existing pig-director/HMG carry pose still exceeds arm reach and is not introduced by this milestone. Firing, reload, prone and kneeling action animations remain separate work.
+
+`node tools/battle-motion-review.mjs` records actual click-to-move interpolation, changing knee poses, equipment preservation, final settling and reduced-motion behavior. It uses the same `PLAYWRIGHT_PATH`/`REVIEW_URL` settings as the encounter review.
+
 - `node tools/sync-tactics-core.mjs --check`: local byte comparison with the pinned source Git revision (requires that upstream object).
 - `node --test tests/battle-3d.test.mjs`: portable dependency hash validation, Easy visibility isolation and a deterministic movement replay with/without presentation queries.
 - `npm run check` and `npm run build:tactics-3d`: full existing checks and packaging.

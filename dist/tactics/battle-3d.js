@@ -2,6 +2,7 @@ import {createGame,move,stepMovement,previewAttack,attack,reload,endTurn,stepEne
 import {loadBattleMap} from './battle-map.js';
 import {BattleRenderer} from './battle-renderer.js';
 import {FLOOR_PIXELS} from './hybrid-renderer.js';
+import {MOVEMENT_MS} from './battle-motion.js';
 
 const $=id=>document.getElementById(id),canvas=$('battle'),ctx=canvas.getContext('2d');
 let definition;
@@ -54,12 +55,12 @@ new ResizeObserver(resize).observe(canvas);resize();restart();
 if(new URLSearchParams(location.search).get('view')==='overview')overview();
 function frame(now){
  try{
-  if(now-lastStep>180){lastStep=now;if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);sync();}
+  if(now-lastStep>MOVEMENT_MS){lastStep=now;if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);sync();}
   ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);
   for(const u of state.units.filter(v=>v.team==='squad'&&v.hp>0&&!v.away&&(v.z||0)===level)){
-   const p=project(u);ctx.strokeStyle=u.id===state.selected?'#ffe3a0':'#a4d4c2';ctx.lineWidth=u.id===state.selected?2:1;ctx.beginPath();ctx.ellipse(p.x,p.y,17*view.zoom,8*view.zoom,0,0,Math.PI*2);ctx.stroke();
+   const p=project(renderer.displayUnit(u));ctx.strokeStyle=u.id===state.selected?'#ffe3a0':'#a4d4c2';ctx.lineWidth=u.id===state.selected?2:1;ctx.beginPath();ctx.ellipse(p.x,p.y,17*view.zoom,8*view.zoom,0,0,Math.PI*2);ctx.stroke();
   }
-  if(target()){const p=project(target());ctx.strokeStyle='#ff9b80';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,18*view.zoom,9*view.zoom,0,0,Math.PI*2);ctx.stroke();}
+  if(target()){const p=project(renderer.displayUnit(target()));ctx.strokeStyle='#ff9b80';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,18*view.zoom,9*view.zoom,0,0,Math.PI*2);ctx.stroke();}
   requestAnimationFrame(frame);
  }catch(error){message('Encounter stopped: '+error.message);console.error(error);}
 }

@@ -8,7 +8,7 @@ The [environment workshop](https://syntaxswine.github.io/animal-factory-tactics-
 
 [Open the experimental site](https://syntaxswine.github.io/animal-factory-tactics-3d/) · [Main game source](https://github.com/Syntaxswine/animal-factory/tree/tactics-prototype)
 
-The encounter currently uses carry poses and tile-step movement; gameplay animation and the wider interface are still being connected. The site also retains an older hybrid prototype with sprite characters and experimental collision rules; that prototype does not establish gameplay parity.
+The encounter now animates walking, tile-to-tile travel and turning while retaining equipment carry poses. Stances, firing animations and the wider interface are still being connected. The site also retains an older hybrid prototype with sprite characters and experimental collision rules; that prototype does not establish gameplay parity.
 
 The main sprite game continues separately. The target is one authoritative game core with an optional 3D presentation. See [project scope and shared-core contract](docs/tactics/THREED-PROJECT.md) for the current boundary and next steps.
 

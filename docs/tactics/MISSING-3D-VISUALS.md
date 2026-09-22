@@ -15,7 +15,7 @@ This inventory is based on the checked-in model, weapon, environment and motion 
 
 | Element | What remains | Priority |
 | --- | --- | --- |
-| Gameplay locomotion | Independently driven start, walk, stop and turn cycles; stride matched to tile movement; diagonal turns and interrupted movement | First |
+| Gameplay locomotion | Standing walk, position/facing interpolation, stop settling and reduced-motion support are now connected. Remaining work: stance-specific gaits, terrain transitions and further visual refinement | Partial |
 | Aiming and firing | Aim at arbitrary targets from actual game actions; consistent grip, recoil and muzzle attachment for each weapon/species combination | First |
 | Kneeling and prone | Separate transitions and held poses; crouched movement and prone crawling; prone weapon handling | First |
 | Casualties | Authored fall, dead, wounded and stabilized poses. The first encounter currently uses a temporary tipped model for casualties | First |
@@ -37,7 +37,7 @@ This inventory is based on the checked-in model, weapon, environment and motion 
 
 ## New encounter coverage
 
-`dist/tactics/battle-3d.html` loads the authored 36-guard factory map and uses actual 3D models, current shared-core movement, attack previews, attacks, reloads and enemy turns. It uses carry poses and tile-step movement. This is the first encounter integration, not a complete replacement for the sprite game's interface or campaign.
+`dist/tactics/battle-3d.html` loads the authored 36-guard factory map and uses actual 3D models, current shared-core movement, attack previews, attacks, reloads and enemy turns. It now animates standing locomotion and turning, while retaining the equipped weapon's carry pose. This is the first encounter integration, not a complete replacement for the sprite game's interface or campaign.
 
 Easy displays the map's scenery even outside explored terrain. It does not add cells to `seen` or `visible`, add enemies to `detected`, reveal unseen bodies, reveal loot, or change attack legality. Standard retains explored-terrain filtering. Bodies in this page require current terrain visibility; living opponents require canonical detection. Known contacts and peripheral glimpses are not yet drawn.
 
