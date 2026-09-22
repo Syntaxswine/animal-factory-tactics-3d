@@ -1,5 +1,7 @@
 # Animal Factory Tactics 3D
 
+Update, 22 September: a separate first playable encounter now consumes the pinned current sprite core and renders modeled characters. See [PLAYABLE-3D.md](PLAYABLE-3D.md) for its exact scope and [MISSING-3D-VISUALS.md](MISSING-3D-VISUALS.md) for the remaining work. The historical snapshot notes below describe the older studies and hybrid lab.
+
 This is a separate experimental project and deployment. It preserves the committed graphics history through `6d40981`; unpublished builder changes are excluded. The user's visual approval covers the painted horse direction. It does not imply that the new horse is already playable or that the earlier hybrid collision experiment has gameplay parity.
 
 ## Available now

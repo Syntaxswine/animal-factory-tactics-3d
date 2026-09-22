@@ -1,0 +1,25 @@
+{
+  "repository": "https://github.com/Syntaxswine/animal-factory",
+  "branch": "tactics-prototype",
+  "revision": "6e2782a4ab3dde0f8b84a8610769664335294fe0",
+  "files": {
+    "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
+    "connections.js": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f",
+    "engine.js": "51bce27654f1533c156a337a49515fff05db13a5c8f2d33de702959485294788",
+    "environment.js": "fce9fc561938150f8b873f0918949ba618861a98a9907ef68e5b3a2e497d92ce",
+    "explosives.js": "ab0e3a635edf516022bbe247b3a20651d2323053321573ea0bf6fb1e42525b38",
+    "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
+    "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
+    "inventory.js": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f",
+    "maps.js": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73",
+    "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
+    "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
+    "progression.js": "8cf9aed74b163167aa7e432ad0c744ab9d3f55a30d5a3f3eaf218c163bde4e23",
+    "projectiles.js": "f8b2afc98c686cd892189d17f4fe7cb7ae7c16b8d8f2f8609ca78cf8b3192674",
+    "recruits.js": "5e4495962cdad3d0b57f0d1784bddbf54fa785e6e00a9ae932cfb7dbbbeeb81b",
+    "sector-rules.js": "d20ee872471a503a60ac706655b19f9ba9857c41882dd6cc6a08d61e3572132a",
+    "visibility.js": "17d3de4a6aca835dc176ac3fcc9f460fb12aae83bf5d2c0154b29a789ed5dc48",
+    "woodland.js": "3b9258e58a2cdfb43b855f11b5b0cba4587237f44ce78bd33ddf32f308e4b0e2",
+    "world.js": "db71b2c27b5a0f9ec83486d4cc8efec81fc38aa5f64f940bc166b875e039592d"
+  }
+}
