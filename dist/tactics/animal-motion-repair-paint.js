@@ -25,6 +25,20 @@ export function animalMotionRepairPaint(profile,layers=null){
  // The rear thigh footprint remains inside brown fabric, clear of the jacket,
  // tail and background. Use broad transitions without magnifying a seat shadow.
  if(profile.id==='donkey')result.application+=`
+ if(abs(vPaintPart-7.)<.1){
+  // A broad forearm-fur footprint retains small painted strokes on the neck.
+  // Both sides share continuous bind-space coordinates, including the nape.
+  float neck=(1.-smoothstep(1.325,1.375,p.y))*(1.-smoothstep(.08,.15,p.x));
+  vec2 furUV=vec2((679.+(p.x+.035)*140.+p.z*35.)/1774.,1.-clamp(436.-(p.y-1.275)*450.,408.,464.)/887.);
+  vec3 fur=texture2D(uModelPaint,furUV).rgb*(.88+.12*max(n.x,0.));
+  ${apply('neck','fur')}
+ }
+ if(abs(vPaintPart-8.)<.1){
+  // The gold fleck belongs to the old scarf projection on the mane root.
+  float root=1.-smoothstep(1.30,1.355,p.y);
+  vec3 mane=texture2D(uModelPaint,vec2((600.+p.z*180.)/1774.,1.-(174.-(p.y-1.29)*300.)/887.)).rgb;
+  ${apply('root','mane')}
+ }
  if(abs(vPaintPart-2.)<.1){
   float hip=smoothstep(.10,.18,abs(p.z))*(1.-smoothstep(.09,.20,abs(p.x)))*smoothstep(.66,.82,p.y);
   ${apply('hip',sample(2,'.16+p.x*.35','.62+(p.y-.83)*.8'))}
