@@ -1,0 +1,350 @@
+{
+  "date": "2026-09-22",
+  "branch": "work/ladder-animation",
+  "base": "b56ba05",
+  "hostileReview": {
+    "score": "9/10",
+    "scope": "Isolated rifle ladder presentation study; see dated review for required fixture adaptations and holds"
+  },
+  "checks": {
+    "tests": 619,
+    "failed": 0,
+    "ladderTests": 14,
+    "assetValidation": "passed",
+    "build": "passed"
+  },
+  "browser": {
+    "configurations": 44,
+    "directions": 88,
+    "samples": 18280,
+    "errors": [],
+    "fixtures": [
+      {
+        "animal": "horse",
+        "outfit": "normal",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "horse",
+        "outfit": "normal",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "horse",
+        "outfit": "red-hats",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "horse",
+        "outfit": "red-hats",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "goat",
+        "outfit": "normal",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "goat",
+        "outfit": "normal",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "goat",
+        "outfit": "red-hats",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "goat",
+        "outfit": "red-hats",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "bull",
+        "outfit": "normal",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "bull",
+        "outfit": "normal",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "bull",
+        "outfit": "red-hats",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "bull",
+        "outfit": "red-hats",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "cow",
+        "outfit": "normal",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "cow",
+        "outfit": "normal",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "cow",
+        "outfit": "red-hats",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "cow",
+        "outfit": "red-hats",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "donkey",
+        "outfit": "normal",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "donkey",
+        "outfit": "normal",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "donkey",
+        "outfit": "red-hats",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "donkey",
+        "outfit": "red-hats",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "sheep",
+        "outfit": "normal",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "sheep",
+        "outfit": "normal",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "sheep",
+        "outfit": "red-hats",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "sheep",
+        "outfit": "red-hats",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "skunk",
+        "outfit": "normal",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "skunk",
+        "outfit": "normal",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "skunk",
+        "outfit": "red-hats",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "skunk",
+        "outfit": "red-hats",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "pig-foreman",
+        "outfit": "normal",
+        "ladder": "floor",
+        "duration": 39.39999999999999,
+        "samples": 320
+      },
+      {
+        "animal": "pig-foreman",
+        "outfit": "normal",
+        "ladder": "tower",
+        "duration": 111.40000000000006,
+        "samples": 920
+      },
+      {
+        "animal": "pig-foreman",
+        "outfit": "red-hats",
+        "ladder": "floor",
+        "duration": 39.39999999999999,
+        "samples": 320
+      },
+      {
+        "animal": "pig-foreman",
+        "outfit": "red-hats",
+        "ladder": "tower",
+        "duration": 111.40000000000006,
+        "samples": 920
+      },
+      {
+        "animal": "pig-director",
+        "outfit": "normal",
+        "ladder": "floor",
+        "duration": 39.39999999999999,
+        "samples": 320
+      },
+      {
+        "animal": "pig-director",
+        "outfit": "normal",
+        "ladder": "tower",
+        "duration": 111.40000000000006,
+        "samples": 920
+      },
+      {
+        "animal": "pig-director",
+        "outfit": "red-hats",
+        "ladder": "floor",
+        "duration": 39.39999999999999,
+        "samples": 320
+      },
+      {
+        "animal": "pig-director",
+        "outfit": "red-hats",
+        "ladder": "tower",
+        "duration": 111.40000000000006,
+        "samples": 920
+      },
+      {
+        "animal": "rabbit",
+        "outfit": "normal",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "rabbit",
+        "outfit": "normal",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "rabbit",
+        "outfit": "red-hats",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "rabbit",
+        "outfit": "red-hats",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "dog",
+        "outfit": "normal",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "dog",
+        "outfit": "normal",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      },
+      {
+        "animal": "dog",
+        "outfit": "red-hats",
+        "ladder": "floor",
+        "duration": 25.000000000000004,
+        "samples": 220
+      },
+      {
+        "animal": "dog",
+        "outfit": "red-hats",
+        "ladder": "tower",
+        "duration": 55,
+        "samples": 520
+      }
+    ]
+  },
+  "clearance": {
+    "file": "clearance.json",
+    "posesPerFixture": 321,
+    "animalFixtureCombinations": 22,
+    "thresholdMetres": 0.001,
+    "limitation": "Finite posed-vertex sampling, with local named-grip exemptions; not continuous triangle collision certification"
+  },
+  "sourceSha256": {
+    "dist/tactics/ladder-motion.js": "5726aaebc252a904e49b85d2fd4bd967e95baa65a42090c8d0305e6da266b826",
+    "dist/tactics/ladder-grip.js": "1d9216a1da02f38f7fd24e8b5ec9c3427e4a9d51a125da5738e2632327e3f4b9",
+    "dist/tactics/ladder-paint.js": "8c47405376054185293074d440720a38a5d5a6cb4498109d921f56c3029b9494",
+    "dist/tactics/ladder-study.js": "9ceb1b367465b0851b63a9f1ccebe9e8a8f1189c0aa60cd5af8d6395c86671a8",
+    "dist/tactics/ladder-study.html": "479584e428c10e79caf277b666d4e4e4ae62dda65b9cec0ad7a1d8e74f9d2e24",
+    "tests/ladder-motion.test.mjs": "3d335f6f2259070917b966b01b8108f1d69481869c3e0af3a24f92f7f9f0a54e",
+    "tools/ladder-clearance-review.mjs": "12f9a767e030bdd012a12e1632634b76896f77e71763c0c9eae9b67de557955c",
+    "tools/ladder-motion-review.mjs": "62215577bf96a4695a15c222b3955172bde1c58f4acd00745b27c3df23b9df8e"
+  },
+  "sourceHashNormalization": "UTF-8 with LF line endings"
+}
