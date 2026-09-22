@@ -1,3 +1,5 @@
+import {DaylightRig} from './daylight-rig.js';
+import {mapStartMinutes} from './game-clock.js';
 import {FOLIAGE_ATLAS,FOLIAGE_MATERIALS,paintFoliageMaterial} from './foliage-materials.js';
 import * as T from './vendor/three.module.js';
 import {buildWorld,DIMENSIONS as D} from './hybrid-world.js';
@@ -16,7 +18,7 @@ export class InspectionScene {
  constructor(canvas,changed=()=>{}){
   this.changed=changed;this.renderer=new T.WebGLRenderer({canvas,antialias:true});this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));this.renderer.outputColorSpace=T.SRGBColorSpace;
   this.scene=new T.Scene();this.scene.background=new T.Color('#172c29');this.camera=new T.OrthographicCamera();
-  this.scene.add(new T.HemisphereLight(0xfff3d8,0x52634d,2));const sun=new T.DirectionalLight(0xffe2ac,2);sun.position.set(-4,9,5);this.scene.add(sun);
+  this.daylight=new DaylightRig(this.scene,this.renderer);
   this.geometry=environmentGeometries();this.materials=new Map();this.dimMaterials=new Map();this.loader=new T.TextureLoader();this.models=[];this.data=new Map();this.generation=0;this.diagnostics=[];
   this.scenery=new T.Group();this.markers=new T.Group();this.scene.add(this.scenery,this.markers);
   this.highlight=new T.LineSegments(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffe5a5,depthTest:false}));this.highlight.renderOrder=20;this.scene.add(this.highlight);
@@ -51,8 +53,8 @@ export class InspectionScene {
   let worker,paint,equipment,cap;
   try{
    if(!this.data.has(profile.file))this.data.set(profile.file,fetch(new URL(profile.file,import.meta.url)).then(r=>{if(!r.ok)throw Error('Missing '+profile.file);return r.json();}));
-   worker=profile.create(await this.data.get(profile.file));paint=await createAnimalPaint(this.renderer,worker,profile,this.loader,unit.outfit);
-   if(unit.outfit==='red-hats')cap=await createRedHatCap(this.renderer,worker,profile,this.loader);
+   worker=profile.create(await this.data.get(profile.file));paint=await createAnimalPaint(this.renderer,worker,profile,this.loader,unit.outfit,true);
+   if(unit.outfit==='red-hats')cap=await createRedHatCap(this.renderer,worker,profile,this.loader,true);
    if(generation!==this.generation){cap?.dispose();paint.dispose();worker.skeleton.dispose();worker.dispose();return;}
    for(const part of worker.parts)part.material=paint.material;
    if(!profile.unarmed){equipment=createWeaponModel(unit.weapon);worker.equipWeapon(equipment);}
@@ -102,7 +104,7 @@ export class InspectionScene {
   else for(const p of selection?.cells||[]){const corners=[[-.5,-.5],[.5,-.5],[.5,.5],[-.5,.5]];for(let i=0;i<4;i++){const a=corners[i],b=corners[(i+1)%4];points.push(new T.Vector3(p.x+a[0],h,p.y+a[1]),new T.Vector3(p.x+b[0],h,p.y+b[1]));}}
   this.highlight.geometry.dispose();this.highlight.geometry=new T.BufferGeometry().setFromPoints(points);this.changed();
  }
- draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.renderer.render(this.scene,this.camera);}
+ draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.daylight.update(this.previewMinutes??mapStartMinutes(this.document?.map),this.camera,0,true);this.renderer.render(this.scene,this.camera);}
  pick(x,y,width,height){return floorPoint(this.camera,x,y,width,height,this.options.level);}
  preview(result){
   if(this.previewMesh){this.previewMesh.removeFromParent();this.previewMesh.geometry.dispose();this.previewMesh.material.dispose();this.previewMesh.dispose();this.previewMesh=null;}
@@ -114,5 +116,5 @@ export class InspectionScene {
  }
  clearMarkers(){for(const object of this.markers.children)if(object.isArrowHelper||object.type==='ArrowHelper'){object.line.material.dispose();object.cone.material.dispose();}this.markers.clear();}
  clearModels(){for(const m of this.models){m.root.removeFromParent();m.root.position.set(0,0,0);m.root.updateMatrixWorld(true);m.cap?.dispose();m.equipment?.dispose();m.paint.dispose();m.worker.skeleton.dispose();m.worker.dispose();}this.models=[];for(const m of this.dimMaterials.values())m.dispose();this.dimMaterials.clear();}
- dispose(){this.disposed=true;this.preview(null);this.generation++;this.clearModels();this.clearScenery();this.clearMarkers();this.cargo.dispose();for(const g of Object.values(this.geometry))g.dispose();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.highlight.geometry.dispose();this.highlight.material.dispose();this.markerGeo.dispose();this.guardMat.dispose();this.startMat.dispose();this.accessMat.dispose();this.renderer.dispose();}
+ dispose(){this.daylight.dispose();this.disposed=true;this.preview(null);this.generation++;this.clearModels();this.clearScenery();this.clearMarkers();this.cargo.dispose();for(const g of Object.values(this.geometry))g.dispose();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.highlight.geometry.dispose();this.highlight.material.dispose();this.markerGeo.dispose();this.guardMat.dispose();this.startMat.dispose();this.accessMat.dispose();this.renderer.dispose();}
 }

@@ -1,3 +1,4 @@
+import {DaylightRig} from './daylight-rig.js';
 import * as T from './vendor/three.module.js';
 import {HybridRenderer} from './hybrid-renderer.js';
 import {toWorld} from './hybrid-world.js';
@@ -18,7 +19,7 @@ import {motionPreference} from './settings-3d.js';
 // Reuse only the environment/camera presentation. No hybrid combat mode.
 export class BattleRenderer extends HybridRenderer {
  constructor(onReady=()=>{}){
-  super(onReady);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
+  super(onReady);this.daylight=new DaylightRig(this.scene,this.renderer);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
   this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
@@ -36,8 +37,8 @@ export class BattleRenderer extends HybridRenderer {
    if(!profile)throw Error('Missing character model: '+unit.species);
    if(!this.meshData.has(profile.file))this.meshData.set(profile.file,fetch(new URL(profile.file,import.meta.url)).then(r=>{if(!r.ok)throw Error('Cannot load '+profile.file);return r.json();}));
    worker=profile.create(await this.meshData.get(profile.file));
-   paint=await createAnimalPaint(this.renderer,worker,profile,this.loader,unit.outfit);
-   if(unit.outfit==='red-hats')cap=await createRedHatCap(this.renderer,worker,profile,this.loader);
+   paint=await createAnimalPaint(this.renderer,worker,profile,this.loader,unit.outfit,true);
+   if(unit.outfit==='red-hats')cap=await createRedHatCap(this.renderer,worker,profile,this.loader,true);
    if(generation!==this.generation){cap?.dispose();paint.dispose();worker.dispose();return;}
    for(const part of worker.parts)part.material=paint.material;
    const root=new T.Group();root.add(worker.root);
@@ -112,7 +113,7 @@ export class BattleRenderer extends HybridRenderer {
  displayUnit(unit){const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){
   this.generation++;
-  this.paintedEnvironment.dispose();
+  this.daylight.dispose();this.paintedEnvironment.dispose();
   this.motion.clear();
   this.combat.clear();this.shotEffects.dispose();
   for(const {worker,paint,root,equipment,locomotion,cap}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}

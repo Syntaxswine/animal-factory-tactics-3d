@@ -22,7 +22,7 @@ export function paintValidity(rgba,width,height){
  return valid;
 }
 
-export function createModelPaint(renderer,horse,texture,{species='horse',frame=PAINT_FRAME,tailTexture=null,earTexture=null,paintLayers=null}={}){
+export function createModelPaint(renderer,horse,texture,{species='horse',frame=PAINT_FRAME,tailTexture=null,earTexture=null,paintLayers=null,sceneLighting=false}={}){
  const bovine=species==='bull'||species==='cow';
  if(earTexture){earTexture.colorSpace=THREE.SRGBColorSpace;earTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());}
  if(tailTexture){tailTexture.colorSpace=THREE.SRGBColorSpace;tailTexture.wrapS=THREE.RepeatWrapping;tailTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());}
@@ -50,7 +50,7 @@ export function createModelPaint(renderer,horse,texture,{species='horse',frame=P
  renderer.setRenderTarget(oldTarget);renderer.outputColorSpace=oldSpace;renderer.toneMapping=oldTone;renderer.setClearColor(oldColor,oldAlpha);renderer.setViewport(oldViewport);renderer.setScissor(oldScissor);renderer.setScissorTest(oldScissorTest);
  idMaterials.forEach(m=>m.dispose());
  const debug={value:0},gripForearm={value:0};
- const material=new THREE.MeshBasicMaterial({toneMapped:false});
+ const material=sceneLighting?new THREE.MeshStandardMaterial({roughness:1}):new THREE.MeshBasicMaterial({toneMapped:false});
  material.onBeforeCompile=shader=>{
   Object.assign(shader.uniforms,{uModelPaint:{value:texture},uPaintDepth:{value:target.depthTexture},uPaintParts:{value:target.texture},uPaintMask:{value:mask},uPaintDebug:debug,uGripForearm:gripForearm});
   if(paintLayers)Object.assign(shader.uniforms,paintLayers.uniforms);

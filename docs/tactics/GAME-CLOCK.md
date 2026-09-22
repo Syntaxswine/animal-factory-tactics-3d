@@ -27,9 +27,9 @@ Local AI route/search/sweep counts remain tactical behavior counters. Movement i
 
 ## Day, dusk and night
 
-The initial shared schedule is day 06:00–18:00, dusk 18:00–20:00, and night 20:00–06:00. These boundaries are centralized for later tuning. The encounter clock displays its current phase, and editor Design controls can set the start time with undo/save/export support.
+The initial shared schedule is dawn 05:00–06:00, day 06:00–18:00, dusk 18:00–20:00, and night 20:00–05:00. These boundaries are centralized for later tuning. The encounter clock displays its current phase, and editor Design controls can set the start time with undo/save/export support.
 
-This pass supplies the clock and phase data only. Scene illumination, lamp activation and night detection modifiers are not yet connected. They should read this clock rather than accumulate another timer or use browser wall time.
+The editor and 3D encounter share `daylight.js` and `daylight-rig.js`: a map-fixed east (+X) to west (−X) directional sun, a high but angled noon position, warm dawn/dusk fades, cool night ambient light, and soft geometry shadows. Shadow coverage follows the camera view with a single 2048px shadow map; overview shadows are less detailed. Painted actors use lighting-aware materials in these scenes. Combat minute changes ease over presentation time and freeze when paused. The editor daylight slider previews without modifying the blueprint, undo history or playtest start time; reset follows the authored start time. Lamps and illumination-based detection remain the next tranche; lighting does not change LOS or reveal hidden people.
 
 ## Verification
 

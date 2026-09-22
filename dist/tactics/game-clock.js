@@ -1,7 +1,7 @@
 // Game time is cumulative minutes from Day 1, 00:00. Wall/animation time is ms.
 import {WALK_ROUND_MS} from './movement-timing.js';
 export const MINUTES_PER_HOUR=60,MINUTES_PER_DAY=1440,START_MINUTES=480;
-export const DAY_START=360,DUSK_START=1080,NIGHT_START=1200;
+export const DAWN_START=300,DAY_START=360,DUSK_START=1080,NIGHT_START=1200;
 export const COMBAT_ROUND_MINUTES=1;
 export const PLAY_MINUTES_PER_SECOND=COMBAT_ROUND_MINUTES*1000/WALK_ROUND_MS;
 export const turnBased=state=>state.phase==='player'||state.phase==='enemy';
@@ -26,7 +26,7 @@ export function advanceClock(clock,minutes){
 }
 export function timeOfDay(clock){
  const whole=Math.floor(clock.minutes+1e-9),minuteOfDay=whole%MINUTES_PER_DAY;
- return {day:Math.floor(whole/MINUTES_PER_DAY)+1,hour:Math.floor(minuteOfDay/MINUTES_PER_HOUR),minute:minuteOfDay%MINUTES_PER_HOUR,minuteOfDay,phase:minuteOfDay<DAY_START||minuteOfDay>=NIGHT_START?'night':minuteOfDay>=DUSK_START?'dusk':'day'};
+ return {day:Math.floor(whole/MINUTES_PER_DAY)+1,hour:Math.floor(minuteOfDay/MINUTES_PER_HOUR),minute:minuteOfDay%MINUTES_PER_HOUR,minuteOfDay,phase:minuteOfDay<DAWN_START||minuteOfDay>=NIGHT_START?'night':minuteOfDay<DAY_START?'dawn':minuteOfDay>=DUSK_START?'dusk':'day'};
 }
 export function formatClock(clock){const t=timeOfDay(clock);return `Day ${t.day} · ${String(t.hour).padStart(2,'0')}:${String(t.minute).padStart(2,'0')}`;}
 export function mapStartMinutes(map){

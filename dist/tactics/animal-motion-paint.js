@@ -8,9 +8,9 @@ import {henPaintLayers} from './hen-paint-layers.js';
 import {animalMotionRepairPaint} from './animal-motion-repair-paint.js';
 import {applyRedHatUniform,RED_HAT_UNIFORM_PAINT} from './red-hat-uniform.js';
 import {applyTailoredRedHat} from './red-hat-tailored-paint.js';
-export async function createAnimalPaint(renderer,worker,profile,loader,outfit='normal'){
+export async function createAnimalPaint(renderer,worker,profile,loader,outfit='normal',sceneLighting=false){
  const textures=[],load=async url=>{const t=await loader.loadAsync(url);textures.push(t);return t;},base='../assets/characters/lowpoly-proof/';
- const main=await load(profile.paint),options={species:profile.id,frame:profile.frame};
+ const main=await load(profile.paint),options={species:profile.id,frame:profile.frame,sceneLighting};
  if(profile.id==='cow')options.paintLayers=cowNeckPaint(await load(COW_NECK_PAINT),renderer);
  if(profile.id==='rabbit')options.paintLayers=rabbitPaintLayers(await load(RABBIT_CLOTH_PAINT),renderer,await load(RABBIT_EYE_PAINT));
  if(profile.id==='dog')options.paintLayers=dogMotionPaint(await load(DOG_CLOTH_PAINT),renderer,await load(DOG_EYE_PAINT));

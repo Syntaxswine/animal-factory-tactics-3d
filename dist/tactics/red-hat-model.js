@@ -33,13 +33,13 @@ export function fitRedHatGeometry(source,head,fit){
  if(fit.combClearance)geometry.computeVertexNormals();geometry.computeBoundingSphere();return geometry;
 }
 
-export async function createRedHatCap(renderer,worker,profile,loader){
+export async function createRedHatCap(renderer,worker,profile,loader,sceneLighting=false){
  const fit=RED_HAT_FITS[profile.id];if(!fit)return null;
  const response=await fetch('./pig-foreman-10k-data.json');if(!response.ok)throw Error('Red Hat cap mesh failed to load');
  const donor=createPigForeman(await response.json());
  let paint,geometry;
  try{
-  paint=createModelPaint(renderer,donor,await loader.loadAsync(PIG_FOREMAN_PAINT),{species:'pig-foreman'});
+  paint=createModelPaint(renderer,donor,await loader.loadAsync(PIG_FOREMAN_PAINT),{species:'pig-foreman',sceneLighting});
   worker.root.updateMatrixWorld(true);const head=worker.bones.find(b=>b.name==='head');
   const source=donor.parts.find(p=>p.name.includes('service cap'));
   geometry=fitRedHatGeometry(source.geometry,head,fit);
