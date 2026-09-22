@@ -11,3 +11,7 @@ Hostile review: 9/10 after changing the inner dish from chipped enamel to clean 
 ## Iron stair guardhouse variant
 
 The iron-searchlight-stair-tower variant uses the pictured 6×5 rusty iron switchback tower. A bolted wall plate and two braced arms hold a compact searchlight below the front window, centered on the guardhouse. The shortened pedestal shares the original lamp geometry/materials. Its .35-radian downward aim clears the wall, frame and staircase; the existing 54 treads remain intact. Both original towers remain available. Active lighting is still deferred.
+
+## Gameplay lighting integration
+
+The wooden spotlight tower and both iron searchlight guardhouses are now available in the 3D editor with active scheduled lighting, one-to-three-point sweep routes and instant spotlight detection. See [Artificial lighting](ARTIFICIAL-LIGHTING.md). The gallery remains a passive art preview; climbing/navigation is still deferred.

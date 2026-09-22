@@ -1,5 +1,5 @@
 import {inCone} from './core/perception.js';
-import {lightSources,lightBrightness,lightConeFactor} from './light-sources.js';
+import {lightSources,lightBrightness,lightConeFactor,towerBlocksLight} from './light-sources.js';
 import {woodlandDepth} from './core/woodland.js';
 import {daylightAt} from './daylight.js';
 import {traceProjectile,targetHeight} from './core/projectiles.js';
@@ -9,6 +9,7 @@ export const AWARENESS={suspicious:25,identified:100,decay:2,referencePerception
 const active=u=>u.hp>0&&!u.away&&!['quit','captured'].includes(u.casualty);
 function clearRay(s,origin,direction,reach){const hit=traceProjectile({...s,units:[]},null,origin,direction,reach);return hit.kind==='range'||hit.distance>=reach-1e-6;}
 function lampStrength(s,lamp,origin){
+ if(s.props.some(p=>towerBlocksLight(lamp,origin,p)))return 0;
  const ray={x:lamp.x-origin.x,y:lamp.y-origin.y,h:lamp.h-origin.h},distance=Math.hypot(ray.x,ray.y,ray.h),strength=lightBrightness(distance)*lightConeFactor(lamp,origin);
  // Exclude only the fixture's own coarse collision footprint.
  return strength&&(distance<1e-6||clearRay({...s,props:s.props.filter(p=>p!==lamp.prop)},origin,ray,distance))?strength:0;

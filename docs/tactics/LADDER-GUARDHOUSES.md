@@ -17,3 +17,7 @@ Side-entry and rear-entry configurations retain their source doorway. The 5×5 h
 Geometry tests cover all seven source mappings, no leftover stair meshes, rung counts, handhold height, clear outside climbs, landing headroom, doorway approaches and retained searchlight. Existing footprint/material/disposal tests include all new forms. tools/ladder-towers-review.mjs checks each variant, iron finish controls, browser errors and mobile overflow. Art only: ladders are not wired to character climbing or navigation.
 
 Independent hostile review: 9/10. Additional reviewer checks found all 63 sampled landing-to-door rays clear across the seven variants.
+
+## Gameplay lighting integration
+
+The wooden spotlight tower and both iron searchlight guardhouses are now available in the 3D editor with active scheduled lighting, one-to-three-point sweep routes and instant spotlight detection. See [Artificial lighting](ARTIFICIAL-LIGHTING.md). The gallery remains a passive art preview; climbing/navigation is still deferred.

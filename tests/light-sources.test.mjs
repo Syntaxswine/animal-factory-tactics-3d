@@ -73,3 +73,25 @@ test('spotlight cone sweeps illumination without leaking behind the fixture or t
  const s=createGame(1,map,false,'easy'),u=s.units[0];startEncounterClock(s);assert.equal(illuminationAt(s,u),1);
  s.clock.minutes+=1;assert.equal(illuminationAt(s,u),.12);s.clock.minutes-=1;s.edges['e:5:4']='wall';assert.equal(illuminationAt(s,u),.12);
 });
+
+import {sampledEmitters,towerBlocksLight,LIGHT_PROPS} from '../dist/tactics/light-sources.js';
+test('tower moving emitters match their sculpted anchors and preserve authored cone widths',()=>{
+ const library=createFurnitureLibrary(new T.Texture(),new T.Texture());
+ for(const kind of ['wooden-spotlight-tower','iron-searchlight-stair-tower','iron-searchlight-ladder-tower'])for(const rotated of [false,true])for(const z of [0,1]){
+  const p={kind,x:12,y:12,z,rotated,lightTargets:[{x:12,y:18,z:-z},{x:-12,y:8,z:-z}]},root=library.build(kind).root,c=fixturePlacement(p);root.position.set(c.x,z*3,c.y);root.rotation.y=rotated?-Math.PI/2:0;
+  for(const minutes of [0,.25,.75,1,1.5]){const source=sampledEmitters(p,minutes)[0],aim=source.aim;root.getObjectByName('spotlight-head').lookAt(new T.Vector3(aim.x,aim.h,aim.y));root.updateMatrixWorld(true);assert.ok(root.getObjectByName('emitter-0').getWorldPosition(new T.Vector3()).distanceTo(new T.Vector3(source.x,source.h,source.y))<1e-8,kind);assert.equal(source.angle,Math.PI/8);}
+ }
+ library.dispose();
+});
+test('all searchlight towers place with full footprints and retain aim points through rotation and export',()=>{
+ for(const kind of ['wooden-spotlight-tower','iron-searchlight-stair-tower','iron-searchlight-ladder-tower']){
+  const d=new EditingDocument().open(JSON.stringify(blankMap())),r=d.apply({tool:'prop',start:{x:10,y:10,z:0},options:{propKind:kind,lightMode:'on'}});assert.ok(r.ok,r.error);assert.equal(r.cells.length,LIGHT_PROPS[kind].w*LIGHT_PROPS[kind].h);
+  const selected=d.inspect(10,10,0,{mode:'prop'});d.lightTargets(selected,[{x:10,y:24,z:0},{x:22,y:24,z:0}]);assert.ok(d.rotate(d.inspect(10,10,0,{mode:'prop'})).ok);const saved=new EditingDocument().open(d.export()).map.props[0];assert.equal(saved.lightMode,'on');assert.deepEqual(saved.lightTargets,[{x:0,y:14,z:0},{x:12,y:14,z:0}]);
+ }
+});
+test('tower decks and iron guardhouses block their own beams while outward beams remain clear',()=>{
+ for(const kind of ['wooden-spotlight-tower','iron-searchlight-stair-tower','iron-searchlight-ladder-tower'])for(const rotated of [false,true]){
+  const p={kind,x:20,y:20,z:0,rotated},source=sampledEmitters(p,0)[0];assert.equal(towerBlocksLight(source,source.aim),false,kind);
+  const c=fixturePlacement(p),target={x:c.x,y:c.y,h:kind==='wooden-spotlight-tower'?0:7};assert.equal(towerBlocksLight(source,target),true,kind);
+ }
+});

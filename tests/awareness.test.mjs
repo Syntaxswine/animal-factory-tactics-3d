@@ -80,3 +80,11 @@ test('dim spotlight bands force identification but ordinary lamp brightness does
  const lamp={kind:'spotlight',x:25,y:8,z:0,lightMode:'on',lightTargets:[{x:-22,y:-4,z:0}]};s.props=[lamp];assert.ok(illuminationAt(s,target)<.2);assert.equal(canSee(s,observer,target),true);
  lamp.kind='floor-lamp';lamp.x=3;lamp.y=5;assert.equal(illuminationAt(s,target),1);assert.equal(canSee(s,observer,target),false);
 });
+
+test('each mounted tower searchlight immediately reveals targets in its beam',()=>{
+ for(const kind of ['wooden-spotlight-tower','iron-searchlight-stair-tower','iron-searchlight-ladder-tower']){
+  const s=fixture(1260),target=s.units[0],observer=s.units[4];target.x=12;target.y=32;target.sneaking=true;target.stealth=100;observer.x=40;observer.y=32;observer.heading=180;observer.perception=0;
+  s.props=[{kind,x:10,y:10,z:0,lightMode:'on',lightTargets:[{x:2,y:22,z:0}]}];assert.equal(geometricPerceive(s,observer,target),0);assert.equal(canSee(s,observer,target),true,kind);updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});assert.equal(observer.awareness[target.id].score,100);
+  s.props[0].lightMode='off';assert.equal(canSee(s,observer,target),false,kind);
+ }
+});

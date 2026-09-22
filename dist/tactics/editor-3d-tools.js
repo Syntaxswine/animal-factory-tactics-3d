@@ -1,3 +1,4 @@
+import {LIGHT_FORMS} from './light-sources.js';
 import {mapStartMinutes,formatClock,timeOfDay} from './game-clock.js';
 import {installLibrary} from './editor-3d-library.js';
 import {GROUNDS,PROPS,EDGES} from './core/environment.js';
@@ -22,7 +23,7 @@ export function installEditing({canvas,scene,getDocument,getSelection,open,chang
  const cancel=()=>{aiming=null;$('finish-spotlight').hidden=true;stroke=null;pending=null;lastPreview='';scene.preview(null);};
  async function apply(c){if(busy||isLoading())return {ok:false,error:'Wait for the scene to finish loading.'};const result=getDocument().apply(c);if(result.ok){busy=true;cancel();try{await changed();sync();status('Edit applied.');}finally{busy=false;}}else status(result.error);return result;}
  async function finishAim(){if(!aiming?.points.length)return status('Pick at least one tile.');const {selection,points}=aiming;await run(()=>getDocument().lightTargets(selection,points),'Spotlight aim points saved.');}
- $('aim-spotlight').onclick=()=>{if(busy||isLoading())return;const selection=getSelection();if(selection?.type!=='prop'||selection.data.kind!=='spotlight')return status('Use Select / pan to select a spotlight first.');cancel();aiming={selection,points:[]};$('finish-spotlight').hidden=false;status('Click 1–3 aim tiles, then Save aim points. Escape cancels.');};
+ $('aim-spotlight').onclick=()=>{if(busy||isLoading())return;const selection=getSelection();if(selection?.type!=='prop'||!LIGHT_FORMS[selection.data.kind]?.spot)return status('Use Select / pan to select a spotlight first.');cancel();aiming={selection,points:[]};$('finish-spotlight').hidden=false;status('Click 1–3 aim tiles, then Save aim points. Escape cancels.');};
  $('finish-spotlight').onclick=finishAim;
  canvas.addEventListener('pointerdown',e=>{if(!aiming||e.button!==0)return;e.stopImmediatePropagation();canvas.setPointerCapture(e.pointerId);canvas.focus();},true);
  canvas.addEventListener('pointermove',e=>{if(aiming&&e.buttons!==2)e.stopImmediatePropagation();},true);

@@ -5,7 +5,7 @@ import * as T from './vendor/three.module.js';
 import {createFurnitureLibrary,animateFurnitureFire} from './painted-furniture.js';
 import {PAINTED_ATLAS} from './painted-environment-scene.js';
 import {CARGO_ATLAS} from './painted-cargo.js';
-import {LIGHT_FORMS,fixturePlacement,placedEmitters,lightEnabled,LIGHT_RANGE,spotlightTarget,SPOT_ANGLE,SPOT_PENUMBRA} from './light-sources.js';
+import {LIGHT_FORMS,fixturePlacement,sampledEmitters,lightEnabled,LIGHT_RANGE,SPOT_ANGLE,SPOT_PENUMBRA} from './light-sources.js';
 import {terrainKnown} from './battle-visibility.js';
 export class LightingScene {
  constructor(scene,loader,changed,error){
@@ -29,18 +29,19 @@ export class LightingScene {
       mesh.material=mesh.material.clone();mesh.userData.noShadow=true;mesh.castShadow=false;glows.push(mesh.material);owned.push(mesh.material);
      }
     });
-    const lamps=placedEmitters(prop,DIMENSIONS.floorSpacing).map(source=>{
-     const lamp=LIGHT_FORMS[prop.kind].spot?new T.SpotLight(source.color,2.8,LIGHT_RANGE,SPOT_ANGLE,SPOT_PENUMBRA,0):new T.PointLight(source.color,2.8,LIGHT_RANGE,0);if(lamp.isSpotLight)this.scene.add(lamp.target);lamp.position.set(source.x,source.h,source.y);lamp.castShadow=true;
+    const lamps=sampledEmitters(prop,minutes,DIMENSIONS.floorSpacing).map(source=>{
+     const lamp=LIGHT_FORMS[prop.kind].spot?new T.SpotLight(source.color,2.8,LIGHT_RANGE,source.angle??SPOT_ANGLE,SPOT_PENUMBRA,0):new T.PointLight(source.color,2.8,LIGHT_RANGE,0);if(lamp.isSpotLight)this.scene.add(lamp.target);lamp.position.set(source.x,source.h,source.y);lamp.castShadow=true;
      lamp.shadow.mapSize.set(512,512);lamp.shadow.camera.near=.08;lamp.shadow.camera.far=LIGHT_RANGE;lamp.shadow.bias=-.0005;lamp.shadow.normalBias=.035;this.scene.add(lamp);return lamp;
     });this.models.push({prop,root,lamps,glows,owned});
    }
   }
   this.animated=false;
   for(const model of this.models){const enabled=lightEnabled(model.prop,minutes),fire=LIGHT_FORMS[model.prop.kind].fire;
-   for(const lamp of model.lamps){lamp.visible=enabled;if(lamp.isSpotLight){
-    const aim=spotlightTarget(model.prop,minutes+(editor&&seconds!==null?seconds*PLAY_MINUTES_PER_SECOND:0),DIMENSIONS.floorSpacing);
+   const sources=sampledEmitters(model.prop,minutes+(editor&&seconds!==null?seconds*PLAY_MINUTES_PER_SECOND:0),DIMENSIONS.floorSpacing);
+   for(const [index,lamp]of model.lamps.entries()){lamp.visible=enabled;if(lamp.isSpotLight){
+    const source=sources[index],aim=source.aim;lamp.position.set(source.x,source.h,source.y);
     lamp.target.position.set(aim.x,aim.h,aim.y);lamp.target.updateMatrixWorld();
-    model.root.getObjectByName('spot-head')?.lookAt(lamp.target.position);
+    (model.root.getObjectByName('spot-head')||model.root.getObjectByName('spotlight-head'))?.lookAt(lamp.target.position);
     if(enabled&&editor&&seconds!==null&&(model.prop.lightTargets?.length||0)>1)this.animated=true;
    }}
    for(const material of model.glows){material.emissive.setHex(fire?0xff8c28:0xffd895);material.emissiveIntensity=enabled?(fire?.7:.35):0;}
