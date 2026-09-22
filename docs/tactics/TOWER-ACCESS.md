@@ -8,9 +8,11 @@ In battle, move a standing merc onto the gold entrance ring. **Climb tower** use
 
 Every occupied tower post automatically identifies spotlight-lit people in all directions if a lit body region has clear line of sight. Sneaking, camouflage and awareness delays do not help. Windows and doorways pass sight, beams and projectiles; walls, sills, frames, decks and roofs block them. Ordinary ground observers retain facing rules. The tower's own lamp need not provide the light: a target in any active spotlight qualifies.
 
-Rendering, sight origins and projectile bodies use the actual 6.36-tile deck elevation above the base floor. A post remains associated with its base floor for UI filtering; it does not invent a fourth global map floor. Tactical structural boxes model the open-window shell and roof panels, with fine railings/braces and beveled details still approximated. Terrain level spacing retains the existing tactical/presentation distinction.
+Rendering, sight origins and projectile bodies use the actual 6.36-tile deck elevation above the base floor. A post remains associated with its base floor for UI filtering; it does not invent a fourth global map floor. Tactical structural boxes model the open-window shell and roof panels, and share the wooden perimeter/hatch railing dimensions with the visible model. Fine braces and beveled details remain approximated. Terrain level spacing retains the existing tactical/presentation distinction.
 
-Tests cover opening and solid rays, rotations, placement persistence, stale references, climbing costs, occupied exits, stationary AI, 360-degree illuminated-target detection and elevated shooting. `tools/tower-access-review.mjs` exercises editor lookout placement and the battle climb/descend buttons, including the rendered actor height.
+Explosive launch and aim heights, uphill/downhill throw range, and blast victims use physical tower elevation. Blast events retain their impact height. Elevated fuel-pack explosions affect nearby elevated occupants without creating fire on the base floor below.
+
+Tests cover rendered perimeter-rail ray intersections and blocked spotlight identification, elevated grenades/launchers/rockets, blast separation from ground occupants, fuel-pack explosions, opening and solid rays, rotations, placement persistence, stale references, climbing costs, occupied exits, stationary AI, 360-degree illuminated-target detection and elevated shooting. `tools/tower-access-review.mjs` exercises editor lookout placement and the battle climb/descend buttons, including the rendered actor height.
 
 ## Animation handoff
 

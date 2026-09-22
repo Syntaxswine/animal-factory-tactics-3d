@@ -1,9 +1,10 @@
+import {unitBaseHeight} from '../tower-geometry.js';
 import {traceProjectile,muzzleHeight} from './projectiles.js';
 import {levelOf,inBounds,terrainAt,edgePoints,tileKey,W,H} from './maps.js';
 import {propCells} from './environment.js';
 
 export function explosivePreview(s,a,target,w){
- const range=Math.hypot(target.x-a.x,target.y-a.y),height=levelOf(a)-levelOf(target),effectiveRange=w.range+Math.max(0,height)*3;
+ const range=Math.hypot(target.x-a.x,target.y-a.y),height=(unitBaseHeight(a)-unitBaseHeight(target))/3,effectiveRange=w.range+Math.max(0,height)*3;
  const maxRange=w.arc?(w.thrown?effectiveRange:effectiveRange*2):w.range*2;
  let reason='';
  if(!inBounds(target.x,target.y,levelOf(target)))reason='Outside the map';
@@ -19,10 +20,10 @@ export function explosivePreview(s,a,target,w){
 // Parabolas are swept in short 3D segments through the same exact wall/floor/body
 // collision geometry as bullets. Rockets sweep one continuous ray.
 export function explosiveTrajectory(s,a,target,w,p,random){
- const origin={x:a.x,y:a.y,h:levelOf(a)*3+muzzleHeight(a)},accurate=random()*100<p.chance;
+ const origin={x:a.x,y:a.y,h:unitBaseHeight(a)+muzzleHeight(a)},accurate=random()*100<p.chance;
  let x=target.x,y=target.y;
  if(!accurate){const angle=random()*Math.PI*2,spread=(p.beyond?Math.max(4,Math.hypot(x-a.x,y-a.y)*.3):1+Math.hypot(x-a.x,y-a.y)*.12)*(.35+random()*.65);x+=Math.cos(angle)*spread;y+=Math.sin(angle)*spread;}
- const end={x,y,h:levelOf(target)*3+(w.arc?.08:target.ground?.08:1)},distance=Math.hypot(x-origin.x,y-origin.y);
+ const end={x,y,h:unitBaseHeight(target)+(w.arc?.08:target.ground?.08:1)},distance=Math.hypot(x-origin.x,y-origin.y);
  if(!w.arc){const hit=traceProjectile(s,a,origin,{x:x-origin.x,y:y-origin.y,h:end.h-origin.h},w.range*2);return {...hit,origin,accurate,path:[origin,hit]};}
  const apex=Math.max(3,distance*.3),steps=Math.ceil(Math.max(1,distance+Math.abs(end.h-origin.h)+apex*2)*10),path=[origin];let before=origin;
  for(let i=1;i<=steps*3;i++){
@@ -53,6 +54,6 @@ export function detonate(s,impact,w){
  // Near surfaces breach first. Floors and surviving structures shield the space beyond.
  for(const c of candidates.sort((a,b)=>a.dist-b.dist))if(blastClear(s,impact,c.point)){c.remove();destroyed++;}
  const hits=[];
- for(const u of s.units){if(u.away||u.casualty==='quit'||!(u.hp>0||['bleeding','stable'].includes(u.casualty)))continue;/* away: crossed the map edge; quit: left the squad; no body here */const point={x:u.x,y:u.y,h:levelOf(u)*3+.8},dist=Math.hypot(u.x-impact.x,u.y-impact.y,point.h-impact.h);if(dist<radius&&blastClear(s,impact,point))hits.push({unit:u,damage:Math.max(1,Math.round(w.damage*(1-dist/radius)))});}
- return {hits,blast:{x:impact.x,y:impact.y,z:impact.z,radius,destroyed}};
+ for(const u of s.units){if(u.away||u.casualty==='quit'||!(u.hp>0||['bleeding','stable'].includes(u.casualty)))continue;/* away: crossed the map edge; quit: left the squad; no body here */const point={x:u.x,y:u.y,h:unitBaseHeight(u)+.8},dist=Math.hypot(u.x-impact.x,u.y-impact.y,point.h-impact.h);if(dist<radius&&blastClear(s,impact,point))hits.push({unit:u,damage:Math.max(1,Math.round(w.damage*(1-dist/radius)))});}
+ return {hits,blast:{x:impact.x,y:impact.y,z:impact.z,h:impact.h,radius,destroyed}};
 }

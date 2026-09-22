@@ -1,5 +1,6 @@
 // Explicit, reproducible changes to the pinned dependency. Never edit core/.
 export const clockOverrides={
+ 'explosives.js':'Use physical tower heights for explosive launch, aim, range and blast victims.',
  'maps.js':'Validate authored tower lookouts without requiring a ground-floor route.',
  'projectiles.js':'Trace open tower windows and elevated tower occupants.',
  'environment.js':'Register authored light fixture footprints and collision rules.',
@@ -17,6 +18,13 @@ export function adaptCoreClock(name,data){
   s=once(s,'const targets=[...raw.starts,...raw.guards,...raw.exits],','const targets=[...raw.starts,...raw.guards,...raw.exits].map(p=>towerForUnit(raw,p)?towerEntry(towerForUnit(raw,p)):p),');
   return Buffer.from(s);
  }
+ if(name==='explosives.js'){
+  s="import {unitBaseHeight} from '../tower-geometry.js';\n"+s;
+  s=once(s,'height=levelOf(a)-levelOf(target)','height=(unitBaseHeight(a)-unitBaseHeight(target))/3');
+  for(const unit of ['a','target','u'])s=s.replaceAll(`levelOf(${unit})*3`, `unitBaseHeight(${unit})`);
+  s=once(s,'z:impact.z,radius,destroyed','z:impact.z,h:impact.h,radius,destroyed');
+  return Buffer.from(s);
+ }
  if(name==='projectiles.js'){
   s="import {unitBaseHeight,towerRayHit} from '../tower-geometry.js';\n"+s;
   s=s.replace(/levelOf\((unit|nearest|shooter|target)\)\*3/g,(_,u)=>`unitBaseHeight(${u})`);
@@ -30,7 +38,11 @@ export function adaptCoreClock(name,data){
   s=once(s,'export function pathTo(s,u,x,y,z=levelOf(u)){','export function pathTo(s,u,x,y,z=levelOf(u)){if(towerForUnit(s,u))return null;');
   s=once(s,'export function boundedRoute(s,g,goals,budget){','export function boundedRoute(s,g,goals,budget){if(towerForUnit(s,g))return null;');
   s=once(s,'function placeAt(s,g,p){','function placeAt(s,g,p){if(towerForUnit(s,g))return false;');
-  s=once(s,'(levelOf(a)-levelOf(b))*3','unitBaseHeight(a)-unitBaseHeight(b)');
+  s=once(s,'if(inBounds(x,y,z)&&Math.hypot(x-wearer.x,y-wearer.y)<=5', 'if(!wearer.towerPost&&inBounds(x,y,z)&&Math.hypot(x-wearer.x,y-wearer.y)<=5');
+  s=once(s,'levelOf(u)===z&&Math.max(Math.abs(u.x-wearer.x)', 'levelOf(u)===z&&Math.abs(unitBaseHeight(u)-unitBaseHeight(wearer))<=1&&Math.max(Math.abs(u.x-wearer.x)');
+  s=once(s,'if(levelOf(u)===z&&Math.hypot(u.x-wearer.x,u.y-wearer.y)<=5)ignite(s,u);','if(levelOf(u)===z&&Math.hypot(u.x-wearer.x,u.y-wearer.y,unitBaseHeight(u)-unitBaseHeight(wearer))<=5)ignite(s,u);');
+  s=once(s,'return {x:wearer.x,y:wearer.y,z:levelOf(wearer)};', 'return {x:wearer.x,y:wearer.y,z:levelOf(wearer),h:unitBaseHeight(wearer)+.8};');
+  s=once(s,'(levelOf(a)-levelOf(b))*3' ,'unitBaseHeight(a)-unitBaseHeight(b)');
   s=once(s,'levelOf(a)*3+eyeHeight(a)','unitBaseHeight(a)+eyeHeight(a)');
   s=once(s,'levelOf(b)*3+(b.hp===undefined','unitBaseHeight(b)+(b.hp===undefined');
   s="import {towerForUnit,unitBaseHeight,TOWER_HEIGHT} from '../tower-geometry.js';\nimport {updateAwareness,awarenessPerception} from '../awareness.js';\n"+s;

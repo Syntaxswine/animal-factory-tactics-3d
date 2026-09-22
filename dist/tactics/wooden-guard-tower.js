@@ -1,3 +1,4 @@
+import {woodenTowerRails} from './tower-geometry.js';
 import {DIMENSIONS} from './hybrid-world.js';
 export const TOWER_DECK_HEIGHT=3*DIMENSIONS.floorSpacing;
 // Open, walk-through ladder aperture: x[-.5,.5], z[1.25,2.25].
@@ -17,14 +18,11 @@ export function buildWoodenGuardTower(root,{box,wood,iron,skin}){
  for(const x of [-.58,.58])b('hatch-header',m,[x,H-.15,1.75],[.16,.18,1.12]);
  for(let i=0;i<20;i++){const z=-2.5+(i+.5)*.25,segments=i>=15&&i<=18?[[-2.5,-.5],[.5,2.5]]:[[-2.5,2.5]];for(const [a,c]of segments)b('deck-plank',wood(skin,i%4),[(a+c)/2,H-.055,z],[c-a,.11,.242]);}
  for(const side of [-1,1]){
-  for(const t of [-2.42,-1.21,0,1.21,2.42]){b('railing-post',m,[side*2.42,H+.48,t],[.12,.96,.12]);if(Math.abs(t)<2.4)b('railing-post',m,[t,H+.48,side*2.42],[.12,.96,.12]);}
-  for(const y of [.10,.47,.94]){b('perimeter-rail',alt,[side*2.42,H+y,0],[.13,.10,4.96]);b('perimeter-rail',alt,[0,H+y,side*2.42],[4.96,.10,.13]);}
   // Knee braces support the platform's overhang on each face.
   for(const t of [-1.36,1.36]){beam('cantilever-brace',[t,H-1,side*1.36],[t,H-.25,side*2.30],.16);beam('cantilever-brace',[side*1.36,H-1,t],[side*2.30,H-.25,t],.16);}
  }
  for(const x of [-.38,.38])b('ladder-stile',m,[x,(H+.92)/2,1.77],[.085,H+.92,.10]);
  for(let y=.22;y<H-.08;y+=.28)b('ladder-rung',alt,[0,y,1.77],[.76,.062,.082]);
- for(const x of [-.58,.58]){for(const z of [1.27,2.23])b('hatch-post',m,[x,H+.46,z],[.085,.92,.085]);for(const y of [.47,.91])b('hatch-side-rail',alt,[x,H+y,1.75],[.085,.085,1.04]);}
- for(const y of [.47,.91])b('hatch-back-rail',alt,[0,H+y,2.23],[1.16,.085,.085]);
+ for(const part of woodenTowerRails(H))b(part.name,part.trim?alt:m,part.p,part.size);
  root.userData.tower={supportTiles:[3,3],platformTiles:[5,5],stories:3,deckHeight:H,opening:{min:[-.5,1.25],max:[.5,2.25]},ladderSide:'+Z'};
 }

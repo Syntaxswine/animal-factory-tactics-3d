@@ -11,6 +11,10 @@
       "reason": "Register authored light fixture footprints and collision rules.",
       "upstreamSha256": "424fa8b3f1287ac42a84f24e853ed382dabfd51bae10940fe62caa2b460d123a"
     },
+    "explosives.js": {
+      "reason": "Use physical tower heights for explosive launch, aim, range and blast victims.",
+      "upstreamSha256": "ab0e3a635edf516022bbe247b3a20651d2323053321573ea0bf6fb1e42525b38"
+    },
     "maps.js": {
       "reason": "Validate authored tower lookouts without requiring a ground-floor route.",
       "upstreamSha256": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73"
@@ -29,9 +33,9 @@
     "blocks.js": "4c4961c7c9897640dafca906384569f5337bfabbc2a907adb88ca8e64a733bf4",
     "connections.js": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f",
     "editor-model.js": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262",
-    "engine.js": "f5e2e76aeee4ba90cf99bffb887c4794949fb3b29950d428e7670a132c143694",
+    "engine.js": "192e697814b5a4eacddc92262a5045ea733a6fe9c6b7614ab79f234dd1459da3",
     "environment.js": "4c60325305b1159ba3c8e74fae9d98b1deef44c57452db54d236f31568b24de1",
-    "explosives.js": "ab0e3a635edf516022bbe247b3a20651d2323053321573ea0bf6fb1e42525b38",
+    "explosives.js": "cfdf44a3cf0f09079c32baf2c34b91a6bf4cc3830084ce8235550132fa1a443f",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f",

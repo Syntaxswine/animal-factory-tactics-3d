@@ -13,9 +13,19 @@ export function towerEntry(p){const f=TOWERS[p.kind];return f.open?towerPoint(p,
 export function towerForUnit(s,u){const ref=u?.towerPost;if(!ref||![ref.dx,ref.dy].every(Number.isInteger))return null;return (s.props||[]).find(p=>TOWERS[p.kind]&&p.x===u.x+ref.dx&&p.y===u.y+ref.dy&&(p.z||0)===(u.z||0)&&p.kind===ref.kind&&towerSlots(p).some(q=>q.x===u.x&&q.y===u.y))||null;}
 export function towerPost(p,q){return {dx:p.x-q.x,dy:p.y-q.y,kind:p.kind};}
 export const unitBaseHeight=(u,spacing=3)=>(u.z||0)*spacing+(u.towerPost?TOWER_HEIGHT:0);
+// One set of dimensions feeds both visible meshes and tactical blockers.
+export function woodenTowerRails(H=TOWER_HEIGHT){const parts=[],add=(name,p,size,trim=false)=>parts.push({name,p,size,trim});
+ for(const side of [-1,1]){
+  for(const t of [-2.42,-1.21,0,1.21,2.42]){add('railing-post',[side*2.42,H+.48,t],[.12,.96,.12]);if(Math.abs(t)<2.4)add('railing-post',[t,H+.48,side*2.42],[.12,.96,.12]);}
+  for(const y of [.10,.47,.94]){add('perimeter-rail',[side*2.42,H+y,0],[.13,.10,4.96],true);add('perimeter-rail',[0,H+y,side*2.42],[4.96,.10,.13],true);}
+ }
+ for(const x of [-.58,.58]){for(const z of [1.27,2.23])add('hatch-post',[x,H+.46,z],[.085,.92,.085]);for(const y of [.47,.91])add('hatch-side-rail',[x,H+y,1.75],[.085,.085,1.04],true);}
+ for(const y of [.47,.91])add('hatch-back-rail',[0,H+y,2.23],[1.16,.085,.085],true);
+ return parts;
+}
 const shells=new Map();
 function shell(kind){if(shells.has(kind))return shells.get(kind);const parts=[],add=(x,h,y,w,t,d,angle=0)=>parts.push({c:[x,h,y],size:[w,t,d],angle}),H=TOWER_HEIGHT;
- if(TOWERS[kind].open){for(const [x,y,w,d]of [[0,-.625,5,3.75],[-1.5,1.75,2,1],[1.5,1.75,2,1],[0,2.375,5,.25]])add(x,H-.08,y,w,.16,d);}
+ if(TOWERS[kind].open){for(const [x,y,w,d]of [[0,-.625,5,3.75],[-1.5,1.75,2,1],[1.5,1.75,2,1],[0,2.375,5,.25]])add(x,H-.08,y,w,.16,d);for(const part of woodenTowerRails())add(...part.p,...part.size);}
  else{
   const box=(x,h,y,w,t,d,a=0)=>add(x-.95,h,y,w,t,d,a);
   box(0,H-.06,0,3,.12,3);
