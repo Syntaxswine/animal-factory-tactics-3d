@@ -39,3 +39,9 @@ Reviewed canonical `efde73b` together with the remaining stance refinements thro
 Daylight browser checks passed five preview times without blueprint mutation, authored nighttime playtests, and paused sun interpolation. Clock browser checks passed one-minute combat rounds, midnight rollover, pause/resume, hidden-tab no-catch-up and legacy dialog pausing. Lighting is presentation-only: no illumination-based detection or local lamp lighting is claimed. Night readability needs further art tuning alongside local lights.
 
 The remaining seven animals each passed 12 stance-browser configurations; hen coverage remains unarmed. Actual rifle playback fallback/recovery passed in both outfits and reduced motion after clock/lighting integration. All 15 gallery furniture/fire forms passed browser and stable-resource checks. Flames animate, but these models remain gallery-only and do not cast local illumination. The cooking-pot tripod reads well beside the character.
+
+## Guard tower gallery review
+
+Approved building models through `54b614b` against canonical `f5b9da6`. Seven new tower variants cover ladder access, side switchback stairs, and 3-by-3 / 5-by-5 guardhouses with perimeter stairs. They are gallery assets, not registered playable buildings. Elevated occupancy, pathfinding, collision, cover and supported floor range need a separate integration pass; geometry headroom tests do not establish gameplay traversal.
+
+The timber silhouettes fit the character scale and wraparound access reads clearly. Saturated red metal and repetitive roof texture are optional art polish. Validation passed 641 tests and assets, the Pages build, reproducible core verification, all 22 gallery forms and stable resource counts. Existing canonical artificial-light placement/schedules/playtests and awareness contact/pause browser checks also passed with the merged model library. Resolved only the deployment file-list overlap, preserving both branches' files.

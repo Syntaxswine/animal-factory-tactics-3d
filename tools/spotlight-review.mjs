@@ -18,8 +18,15 @@ try{
  await page.waitForFunction(()=>!editor3d.loading&&editor3d.document.map.props[0].lightTargets?.length===3);
  const before=await page.evaluate(()=>editor3d.scene.lights.models[0].lamps[0].target.position.toArray());await page.waitForTimeout(1000);const after=await page.evaluate(()=>editor3d.scene.lights.models[0].lamps[0].target.position.toArray());assert.notDeepEqual(before,after);
  await page.screenshot({path:out+'/sweep.png'});
+ const popup=page.waitForEvent('popup');await page.click('#playtest');const battle=await popup;
+ battle.on('pageerror',e=>errors.push(e.message));battle.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+ await battle.waitForFunction(()=>window.battle3d?.renderer.lights.models.some(m=>m.prop.kind==='spotlight'),{},{timeout:120000});await battle.click('#pause');await battle.waitForTimeout(200);
+ const paused=await battle.evaluate(()=>battle3d.renderer.lights.models[0].lamps[0].target.position.toArray());await battle.waitForTimeout(600);
+ assert.deepEqual(await battle.evaluate(()=>battle3d.renderer.lights.models[0].lamps[0].target.position.toArray()),paused);
+ await battle.screenshot({path:out+'/playtest.png'});await battle.close();await page.bringToFront();
+
  // More than four spots exercises batched shadow shaders alongside point lights.
  map.props=Array.from({length:5},(_,i)=>({kind:'spotlight',x:5+i*2,y:6,z:0,lightMode:'on',lightTargets:[{x:0,y:8,z:0}]}));map.props.push({kind:'floor-lamp',x:15,y:6,z:0,lightMode:'on'});
  await page.evaluate(json=>editor3d.open(json),JSON.stringify(map));await page.waitForFunction(()=>!editor3d.loading&&editor3d.scene.lights.models.length===6);await page.waitForTimeout(800);
- await page.screenshot({path:out+'/mixed.png'});assert.deepEqual(errors,[]);console.log(JSON.stringify({picking:true,cancel:true,sweep:true,mixedShadows:true,errors}));
+ await page.screenshot({path:out+'/mixed.png'});assert.deepEqual(errors,[]);console.log(JSON.stringify({picking:true,cancel:true,sweep:true,mixedShadows:true,pausedPlaytest:true,errors}));
 }finally{await browser.close();}
