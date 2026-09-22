@@ -1,0 +1,222 @@
+{
+  "browser": "153.0.4234.48",
+  "results": [
+    {
+      "animal": "horse",
+      "before": {
+        "geometries": 21,
+        "textures": 6
+      },
+      "hat": {
+        "attached": true,
+        "capTriangles": 700,
+        "maxError": 0
+      },
+      "after": {
+        "different": 0,
+        "geometries": 21,
+        "textures": 6,
+        "cap": false
+      }
+    },
+    {
+      "animal": "goat",
+      "before": {
+        "geometries": 21,
+        "textures": 6
+      },
+      "hat": {
+        "attached": true,
+        "capTriangles": 700,
+        "maxError": 0
+      },
+      "after": {
+        "different": 0,
+        "geometries": 21,
+        "textures": 6,
+        "cap": false
+      }
+    },
+    {
+      "animal": "bull",
+      "before": {
+        "geometries": 21,
+        "textures": 6
+      },
+      "hat": {
+        "attached": true,
+        "capTriangles": 700,
+        "maxError": 0
+      },
+      "after": {
+        "different": 0,
+        "geometries": 21,
+        "textures": 6,
+        "cap": false
+      }
+    },
+    {
+      "animal": "cow",
+      "before": {
+        "geometries": 25,
+        "textures": 7
+      },
+      "hat": {
+        "attached": true,
+        "capTriangles": 700,
+        "maxError": 0
+      },
+      "after": {
+        "different": 0,
+        "geometries": 25,
+        "textures": 7,
+        "cap": false
+      }
+    },
+    {
+      "animal": "donkey",
+      "before": {
+        "geometries": 26,
+        "textures": 6
+      },
+      "hat": {
+        "attached": true,
+        "capTriangles": 700,
+        "maxError": 0
+      },
+      "after": {
+        "different": 0,
+        "geometries": 26,
+        "textures": 6,
+        "cap": false
+      }
+    },
+    {
+      "animal": "sheep",
+      "before": {
+        "geometries": 26,
+        "textures": 9
+      },
+      "hat": {
+        "attached": true,
+        "capTriangles": 700,
+        "maxError": 0
+      },
+      "after": {
+        "different": 0,
+        "geometries": 26,
+        "textures": 9,
+        "cap": false
+      }
+    },
+    {
+      "animal": "skunk",
+      "before": {
+        "geometries": 21,
+        "textures": 7
+      },
+      "hat": {
+        "attached": true,
+        "capTriangles": 700,
+        "maxError": 0
+      },
+      "after": {
+        "different": 0,
+        "geometries": 21,
+        "textures": 7,
+        "cap": false
+      }
+    },
+    {
+      "animal": "pig-foreman",
+      "before": {
+        "geometries": 22,
+        "textures": 7
+      },
+      "hat": {
+        "attached": true,
+        "capTriangles": 0,
+        "maxError": 0
+      },
+      "after": {
+        "different": 0,
+        "geometries": 22,
+        "textures": 7,
+        "cap": false
+      }
+    },
+    {
+      "animal": "pig-director",
+      "before": {
+        "geometries": 21,
+        "textures": 6
+      },
+      "hat": {
+        "attached": true,
+        "capTriangles": 700,
+        "maxError": 0
+      },
+      "after": {
+        "different": 0,
+        "geometries": 21,
+        "textures": 6,
+        "cap": false
+      }
+    },
+    {
+      "animal": "rabbit",
+      "before": {
+        "geometries": 25,
+        "textures": 8
+      },
+      "hat": {
+        "attached": true,
+        "capTriangles": 700,
+        "maxError": 0
+      },
+      "after": {
+        "different": 0,
+        "geometries": 25,
+        "textures": 8,
+        "cap": false
+      }
+    },
+    {
+      "animal": "dog",
+      "before": {
+        "geometries": 30,
+        "textures": 8
+      },
+      "hat": {
+        "attached": true,
+        "capTriangles": 700,
+        "maxError": 0
+      },
+      "after": {
+        "different": 0,
+        "geometries": 30,
+        "textures": 8,
+        "cap": false
+      }
+    },
+    {
+      "animal": "hen",
+      "before": {
+        "geometries": 17,
+        "textures": 12
+      },
+      "hat": {
+        "attached": true,
+        "capTriangles": 700,
+        "maxError": 0
+      },
+      "after": {
+        "different": 0,
+        "geometries": 17,
+        "textures": 12,
+        "cap": false
+      }
+    }
+  ],
+  "errors": []
+}
