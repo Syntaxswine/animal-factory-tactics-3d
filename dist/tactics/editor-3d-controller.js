@@ -1,3 +1,4 @@
+import {mapStartMinutes} from './game-clock.js';
 import {InspectionDocument} from './editor-3d-model.js';
 import {createEditor,applyBrush,brushShape,brushPoints,replaceMap,undo,redo} from './core/editor-model.js';
 import {validateMap,edgeKey,terrainAt,roofEndpoint} from './core/maps.js';
@@ -6,7 +7,7 @@ import {connectionSet} from './core/connections.js';
 import {propCells} from './core/environment.js';
 export function brushPoint(p){const x=Math.floor(p.x+.5),y=Math.floor(p.y+.5),dx=p.x-x,dy=p.y-y,axis=Math.abs(dx)>Math.abs(dy)?'e':'s';return {x,y,z:p.z,edge:edgeKey(axis,x-(axis==='e'&&dx<0?1:0),y-(axis==='s'&&dy<0?1:0),p.z)};}
 export class EditingDocument extends InspectionDocument {
- open(text){super.open(text);this.editor=createEditor(this.block?openBlock(this.original):this.map);this.changed=false;this.revision=0;return this;}
+ open(text){super.open(text);if(!this.block)mapStartMinutes(this.map);this.editor=createEditor(this.block?openBlock(this.original):this.map);this.changed=false;this.revision=0;return this;}
  refresh(){if(this.block){const original={...this.original,...extractBlock(this.editor.map)};if(!this.editor.map.blockConnections?.['0,0'])delete original.connections;const display=new InspectionDocument().open(JSON.stringify(original));this.map=display.map;this.original=original;}else{this.map=this.editor.map;this.original=this.map;}this.units=[...this.map.starts.map((p,i)=>({...p,id:'start-'+i,species:['horse','goat','donkey','sheep'][i],weapon:'rifle',heading:0,role:'Squad start '+(i+1)})),...this.map.guards.map((p,i)=>({...p,id:'guard-'+i,role:'Guard '+(i+1)}))];this.changed=true;this.revision++;}
  preview(command){
   const {tool,start,end=start,options={}}=command;
@@ -50,7 +51,8 @@ export class EditingDocument extends InspectionDocument {
   if(this.block){try{validateBlock(extractBlock(candidate.map));}catch(e){return {ok:false,error:e.message};}}
   replaceMap(this.editor,candidate.map);this.refresh();return {ok:true};
  }
- replace(map){if(this.block)validateBlock(extractBlock(map));const errors=validateMap(map,{connectivity:false});if(errors.length)throw Error(errors[0]);replaceMap(this.editor,map);this.refresh();}
+ startTime(minutes){if(this.block)throw Error("Start time belongs to a full map.");const time={...this.map.time,startMinutes:minutes};mapStartMinutes({time});this.replace({...this.editor.map,time});}
+ replace(map){if(!this.block)mapStartMinutes(map);if(this.block)validateBlock(extractBlock(map));const errors=validateMap(map,{connectivity:false});if(errors.length)throw Error(errors[0]);replaceMap(this.editor,map);this.refresh();}
  capture(sx,sy){if(this.block)throw Error('Capture a sector from a full map.');return validateBlock(extractBlock(this.editor.map,sx,sy));}
  place(block,sx,sy){if(this.block)throw Error('Place blocks in a full map.');this.replace(placeBlock(this.editor.map,block,sx,sy));}
  connections(types){if(!this.block)throw Error('Open a block to assign its connections.');connectionSet(this.editor.map,0,0,types);this.replace({...this.editor.map,blockConnections:{'0,0':types}});}

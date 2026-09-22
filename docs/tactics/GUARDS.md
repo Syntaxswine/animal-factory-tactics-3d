@@ -1,3 +1,5 @@
+> Clock update: the current 3D dependency uses one game minute per round, including off-map guard settlement. The historical ten-minute approximation discussed below is superseded by [GAME-CLOCK.md](GAME-CLOCK.md). Tactical AI step/search counters remain behavior counters; animation duration does not advance a combat round.
+
 # Guard alertness and personalities — proposal and tracking record
 
 Opened 2026-09-16 on branch `tactics-guard-alertness`, stacked on `tactics-sight-lobes` (SIGHT.md). Direction from the user: guns alert guards at twice their range; guards, like mercs, get different personalities; that needs an alert / at-rest rule set first; twelve personalities, expanding what the friendly-fire reactions began; then, later the same day, personalities drawn at random from twelve Jungian archetypes rather than authored per guard.

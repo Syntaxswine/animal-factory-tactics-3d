@@ -1,3 +1,5 @@
+import {createClock,mapStartMinutes,formatClock,advanceClock,elapsedGameMinutes,observeRoundTime,turnBased} from '../game-clock.js';
+export {PLAY_MINUTES_PER_SECOND} from '../game-clock.js';
 import {restStrain,driftBonds} from './personalities.js';
 import {settleHappiness} from './happiness.js';
 import {quitMerc} from './engine.js';
@@ -8,13 +10,13 @@ import {initProgression} from './progression.js';
 import {onContract} from './happiness.js';
 import {slate,fit,dailyRate,pricesFor,buildRecruit,recruitSocial,contractPrices,payDay,ROSTER_MAX,MERC_ID_BASE,DAY_MINUTES} from './recruits.js';
 import {awardXP} from './progression.js';
-export const TRAVEL_MINUTES=60,PLAY_MINUTES_PER_SECOND=1,REST_RECOVERY_HOURS=48,MEDICAL_RECOVERY_HOURS=24,MEDIC_SKILL_REQUIRED=25;
+export const TRAVEL_MINUTES=60,REST_RECOVERY_HOURS=48,MEDICAL_RECOVERY_HOURS=24,MEDIC_SKILL_REQUIRED=25;
 // The overmap is a grid of local-map tiles. Two tiles are linked when they touch; a squad walks from one to the next across the shared edge.
 export const BORDER=3,SIDES={north:{dx:0,dy:-1},east:{dx:1,dy:0},south:{dx:0,dy:1},west:{dx:-1,dy:0}},OPPOSITE={north:'south',east:'west',south:'north',west:'east'};
 export function linksFrom(positions){const ids=Object.keys(positions),links=[];for(const a of ids)for(const b of ids)if(a<b&&Math.abs(positions[a].x-positions[b].x)+Math.abs(positions[a].y-positions[b].y)===1)links.push([a,b]);return links;}
 export function createWorld(custom=null,difficulty='standard',rosterSeed=1947) {
   const positions={factory:{x:0,y:0},yard:{x:1,y:0},annex:{x:2,y:0}};
-  return {difficulty,current:'factory',start:'factory',clock:{minutes:480,incomeRemainder:0},money:0,journeys:0,lastIncome:0,locations:{factory:{type:'factory'},yard:{type:'yard'},annex:{type:'factory'}},definitions:{factory:custom||factoryMap(),yard:generateMap(83,'Freight yard'),annex:generateMap(126,'Outer factory')},rosterSeed,nextId:MERC_ID_BASE,hired:[],states:{factory:createGame(1947,custom||factoryMap(),true,difficulty,{social:true,rosterSeed})},positions,links:linksFrom(positions)};
+  const world={difficulty,current:'factory',start:'factory',clock:createClock(mapStartMinutes(custom)),money:0,journeys:0,lastIncome:0,locations:{factory:{type:'factory'},yard:{type:'yard'},annex:{type:'factory'}},definitions:{factory:custom||factoryMap(),yard:generateMap(83,'Freight yard'),annex:generateMap(126,'Outer factory')},rosterSeed,nextId:MERC_ID_BASE,hired:[],states:{factory:createGame(1947,custom||factoryMap(),true,difficulty,{social:true,rosterSeed})},positions,links:linksFrom(positions)};observeRoundTime(world.clock,currentMap(world));return world;
 }
 export const currentMap=world=>world.states[world.current];
 // Shortest overmap route from the original starting tile, never from the squad.
@@ -30,16 +32,18 @@ export function factoryIncome(world,id){
 }
 export const liberated=(world,id)=>world.states[id]?.phase==='won';
 export const incomePerHour=world=>Object.keys(world.definitions).reduce((sum,id)=>sum+(liberated(world,id)?factoryIncome(world,id):0),0);
-export function clockLabel(world){const minutes=Math.floor(world.clock.minutes);return `Day ${Math.floor(minutes/1440)+1} · ${String(Math.floor(minutes/60)%24).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;}
+export const clockLabel=world=>formatClock(world.clock);
 // Every elapsed interval uses the same clock and production calculation.
 export function advanceTime(world,minutes){
  if(!Number.isFinite(minutes)||minutes<=0)return 0;
  const earned=world.clock.incomeRemainder+incomePerHour(world)*minutes/60,income=Math.floor(earned+1e-9);
- world.clock.minutes+=minutes;world.clock.incomeRemainder=Math.max(0,earned-income);world.money+=income;return income;
+ advanceClock(world.clock,minutes);world.clock.incomeRemainder=Math.max(0,earned-income);world.money+=income;return income;
 }
+export function settleWorldClock(world){const s=currentMap(world),minutes=observeRoundTime(world.clock,s),income=advanceTime(world,minutes);if(minutes){settleMorale(world,s,minutes);settleContracts(world,s);}return income;}
 export function tickWorld(world,elapsedMs,{paused=false}={}){
- if(paused||currentMap(world).phase==='lost'||!Number.isFinite(elapsedMs)||elapsedMs<=0)return 0;
- const minutes=elapsedMs/1000*PLAY_MINUTES_PER_SECOND,income=advanceTime(world,minutes);settleMorale(world,currentMap(world),minutes);settleContracts(world,currentMap(world));return income;
+ if(paused)return 0;const roundIncome=settleWorldClock(world),s=currentMap(world);
+ if(s.phase==='lost'||turnBased(s))return roundIncome;
+ const minutes=elapsedGameMinutes(elapsedMs),income=advanceTime(world,minutes);if(minutes){settleMorale(world,s,minutes);settleContracts(world,s);}return roundIncome+income;
 }
 // G5: happiness is settled whenever the campaign clock advances (exploration, downtime, travel). A waiting crosser counts as on its destination.
 // A merc whose meter has been at zero for a day quits here if the map is calm; otherwise the engine lets it go when the contact ends.

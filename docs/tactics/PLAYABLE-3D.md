@@ -10,7 +10,7 @@ The latest published painted cargo and donkey repair are integrated from 3D main
 
 ## Core boundary
 
-`dist/tactics/core/` is a generated, byte-identical dependency snapshot of the transitive simulation modules rooted at `engine.js` and `world.js` from `Syntaxswine/animal-factory`, `work/movement-modes-core`, revision `ee61884c80d50def96096d6a08488aa5d631bd67`. `manifest.json` records upstream identity and SHA-256 hashes. Do not edit these modules locally. Update the pinned revision in `tools/sync-tactics-core.mjs` and regenerate from an available upstream Git object when deliberately upgrading.
+`dist/tactics/core/` is generated from upstream `Syntaxswine/animal-factory`, revision `e529f4b3d512d32cea522d701d01ebe8488af013`. Eighteen modules remain byte-identical. Two explicit shared-clock adapters (`engine.js` and `world.js`) are applied by `tools/core-clock-adapter.mjs` during import: the one-minute round and shared campaign clock. The manifest records upstream identities, adapter reasons and effective hashes. Never hand-edit generated modules; regenerate through `tools/sync-tactics-core.mjs`. See [GAME-CLOCK.md](GAME-CLOCK.md).
 
 This isolated source revision adds the requested Run/Sneak rules to the previously pinned sprite core; it is not yet merged into the source tactics-prototype branch. See [MOVEMENT-MODES.md](MOVEMENT-MODES.md).
 

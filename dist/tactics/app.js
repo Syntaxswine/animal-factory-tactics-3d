@@ -1,3 +1,4 @@
+import {FrameClock,turnBased} from './game-clock.js';
 import {muzzlePoint,aimPoint} from './hybrid-combat.js';
 import {DIMENSIONS} from './hybrid-world.js';
 const hybridEnabled=new URLSearchParams(location.search).get('renderer')==='hybrid';
@@ -18,7 +19,7 @@ import {drawBody} from './body-art.js';
 import {PROPS,propCells} from './environment.js';
 import {environmentRenderer} from './environment-renderer.js';
 import {bounds,inView,focusSector,sectorOverview} from './view.js';
-import {createWorld,currentMap,travel,travelReason,locationDistance,factoryIncome,liberated,incomePerHour,clockLabel,tickWorld,spendTime,downtimeReason,medicalRestPreview,MEDIC_SKILL_REQUIRED,leave,leaveReason,recall,recallReason,beyond,borderSides,resolveRetreat,away,crossingCost,BORDER} from './world.js';
+import {createWorld,currentMap,travel,travelReason,locationDistance,factoryIncome,liberated,incomePerHour,clockLabel,tickWorld,settleWorldClock,spendTime,downtimeReason,medicalRestPreview,MEDIC_SKILL_REQUIRED,leave,leaveReason,recall,recallReason,beyond,borderSides,resolveRetreat,away,crossingCost,BORDER} from './world.js';
 import {parseMap,blockedEdge,levelOf,roofTop,neighbors} from './maps.js';
 import {edgeCells,edgePoints} from './maps.js';
 import {W,H,WEAPONS,overwatchRange,headingTo,arrangeInventory,stowWeapon,equipCutters,allocateSkill,setSneaking,setOverwatch,stepInvestigation,inventoryTransfer,turnTo,AIM_ZONES,zoneVisible,canSee,moveGroup,key,alive,incapacitated,medicalCost,stabilizePreview,stabilize,cutPreview,cutFence,squad,guards,occupant,tile,walkable,createGame,groundTarget,attackGround,STANCES,stanceOf,setStance,movementNeighbors,navigationPath,pathCost,pathTo,move,stepMovement,previewAttack,attack,equip,reload,endTurn,stepEnemy,canControl,sightOf,identifyRange,detectRange} from './engine.js';
@@ -30,7 +31,7 @@ let watchPreview=false,watchAim=false,showCone=false,bagSelection=null,inventory
 let terrainAim=false,terrainTarget=null;
 let selectedIds=new Set([0]),aimZone='torso',shotConfirmation=null;
 let viewLevel=0,routeCache=null,cursor=null,hoverAction=null,cursorView='';
-let lastClockFrame=null;
+const frameClock=new FrameClock();
 let world=createWorld(customMap,undefined,{geometryMode:hybridEnabled?'hybrid':undefined}),s=currentMap(world),targetId=null,burst=false,showGrid=false,hover=null,hoverActor=null,route=null,lastTick=0,lastRevision=-1,toast='',toastUntil=0,effectUntil=0,effectStart=0,lastEffect=null,flame=null,drag=null,width=1,height=1;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const camera={x:0,y:0,zoom:1.15},images=new Map(),sprites=[];
@@ -178,7 +179,7 @@ function updateHover(){
  if(!route?.length)setCursorKind('blocked');
  $('hint').textContent=route?.length?`${hover.x}, ${hover.y} · ${route.length} tiles${s.phase==='player'?` / ${pathCost(route)} AP${pathCost(route)>u.ap?' · will stop when AP is spent':''}`:' / explore and replan'} · Click to move`:'No route through discovered terrain, or already at destination.';
 }
-function sync(){ {const settled=resolveRetreat(world);if(settled.ok){adoptMap(settled.state);message('The fight is over for those who stayed. '+squad(s).length+' regrouped in '+s.definition.name+'.');}} syncClock();if(hover)updateHover(); $('sight-info').textContent=`${selected().cone}° field · ${sightOf(selected()).bino}° binocular · 60 tile identify / 75 tile landscape`;$('turn').disabled=!canControl(s,selected())||!!s.queue.length;selectedIds=new Set([...selectedIds].filter(id=>alive(s.units[id])));selectedIds.add(s.selected);
+function sync(){settleWorldClock(world); {const settled=resolveRetreat(world);if(settled.ok){adoptMap(settled.state);message('The fight is over for those who stayed. '+squad(s).length+' regrouped in '+s.definition.name+'.');}} syncClock();if(hover)updateHover(); $('sight-info').textContent=`${selected().cone}° field · ${sightOf(selected()).bino}° binocular · 60 tile identify / 75 tile landscape`;$('turn').disabled=!canControl(s,selected())||!!s.queue.length;selectedIds=new Set([...selectedIds].filter(id=>alive(s.units[id])));selectedIds.add(s.selected);
  $('level').value=viewLevel;const stairs=movementNeighbors(s,selected()).filter(p=>p.z!==levelOf(selected()));for(const [id,delta]of [['up',1],['down',-1]]){const link=stairs.find(p=>p.z===levelOf(selected())+delta);$(id).disabled=!canControl(s,selected())||s.queue.length>0||!link||(s.phase==='player'&&selected().ap<link.cost);$(id).textContent=(link?.kind==='roof'?'Roof':link?.cost===3?'Ladder':link?'Stairs':'Climb')+(delta===1?' ↑':' ↓')+(link?' · '+link.cost+' AP':'');}
  $('local-name').textContent=s.definition.name;$('recon-name').textContent=s.definition.name;document.title='Red Shift — '+s.definition.name;
  const u=selected(),w=WEAPONS[u.weapon],t=target(),p=t?previewAttack(s,u,t,burst,aimZone):null,control=canControl(s,u)&&!s.queue.length;
@@ -210,7 +211,7 @@ function select(id,toggle=false){watchAim=false;watchPreview=false;watchPreview=
 function shotKey(t){const u=selected();return [u.id,t.id,aimZone,burst,s.round,s.phase,s.revision,u.x,u.y,u.z,u.weapon,u.ap,t.x,t.y,t.z,t.hp].join(':');}
 function chooseEnemy(id){terrainAim=false;terrainTarget=null;const t=s.units[id];if(!t||!alive(t)||!s.detected.has(id))return;if(targetId===id&&shotConfirmation===shotKey(t)){tryAttack();return;}targetId=id;shotConfirmation=shotKey(t);sync();updateHover();}
 function tryAttack(){const t=target();shotConfirmation=null;if(t&&attack(s,selected(),t,burst,false,aimZone))sync();else message('Attack unavailable. Check range, AP and ammunition.');}
-function restart(){watchAim=false;watchPreview=false;watchPreview=false;terrainAim=false;terrainTarget=null;lastClockFrame=null;selectedIds=new Set([0]);shotConfirmation=null;aimZone='torso';$('aim-zone').value=aimZone;world=createWorld(customMap,$('difficulty').value,{geometryMode:hybridEnabled?'hybrid':undefined});s=currentMap(world);targetId=null;burst=false;hover=null;route=null;lastEffect=null;camera.zoom=1.15;center();sync();}
+function restart(){watchAim=false;watchPreview=false;watchPreview=false;terrainAim=false;terrainTarget=null;frameClock.reset();selectedIds=new Set([0]);shotConfirmation=null;aimZone='torso';$('aim-zone').value=aimZone;world=createWorld(customMap,$('difficulty').value,{geometryMode:hybridEnabled?'hybrid':undefined});s=currentMap(world);targetId=null;burst=false;hover=null;route=null;lastEffect=null;camera.zoom=1.15;center();sync();}
 function zoom(factor){const cx=width/2,cy=height/2,z=camera.zoom,next=Math.max(.025,Math.min(2.3,z*factor));camera.x=cx+(camera.x-cx)*next/z;camera.y=cy+(camera.y-cy)*next/z;camera.zoom=next;}
 $('squad').addEventListener('click',e=>{const b=e.target.closest('[data-unit]');if(b)select(Number(b.dataset.unit),e.shiftKey);});
 $('weapons').addEventListener('click',e=>{const b=e.target.closest('[data-weapon]');if(b&&equip(s,selected(),b.dataset.weapon)){burst=false;sync();}});
@@ -239,11 +240,11 @@ $('sector').onclick=sector;$('level').onchange=()=>{viewLevel=Number($('level').
 for(const [id,delta]of [['up',1],['down',-1]])$(id).onclick=()=>{const u=selected(),link=movementNeighbors(s,u).find(p=>p.z===levelOf(u)+delta);if(!link||!move(s,u,link.x,link.y,link.z))message('Stand at stairs, a ladder or a marked roof climb while standing with enough AP.');sync();};
 canvas.addEventListener('dblclick',e=>{if(camera.zoom>=.2)return;const r=canvas.getBoundingClientRect(),p=pick(e.clientX-r.left,e.clientY-r.top);if(p.x<0||p.y<0||p.x>=W||p.y>=H)return;$('sector-x').value=Math.floor(p.x/24)+1;$('sector-y').value=Math.floor(p.y/24)+1;sector();});
 $('mini').onclick=e=>{const r=$('mini').getBoundingClientRect();$('sector-x').value=Math.min(10,Math.floor((e.clientX-r.left)/r.width*10)+1);$('sector-y').value=Math.min(10,Math.floor((e.clientY-r.top)/r.height*10)+1);sector();};
-function frame(now){const elapsed=lastClockFrame===null?0:now-lastClockFrame;lastClockFrame=now;tickWorld(world,elapsed,{paused:document.hidden||$('manual').open});syncClock();if(!(s.effect?.sequence?.some(e=>e.dialogue)&&(s.effect!==lastEffect||now<effectUntil))&&!document.querySelector('dialog[open]')&&now-lastTick>(s.phase==='enemy'?110:130)){lastTick=now;if(s.phase==='enemy')stepEnemy(s);else if(s.queue.length){const before=levelOf(selected());stepMovement(s);if(levelOf(selected())!==before){viewLevel=levelOf(selected());$('level').value=viewLevel;}}if(s.phase!=='enemy')stepInvestigation(s);if(s.revision!==lastRevision)sync();}draw(now);requestAnimationFrame(frame);}resize();sync();requestAnimationFrame(frame);
+function frame(now){const paused=document.hidden||!!document.querySelector('dialog[open]');const elapsed=frameClock.sample(now,{paused,mode:turnBased(s)});tickWorld(world,elapsed,{paused});syncClock();if(!paused&&!(s.effect?.sequence?.some(e=>e.dialogue)&&(s.effect!==lastEffect||now<effectUntil))&&!document.querySelector('dialog[open]')&&now-lastTick>(s.phase==='enemy'?110:130)){lastTick=now;if(s.phase==='enemy')stepEnemy(s);else if(s.queue.length){const before=levelOf(selected());stepMovement(s);if(levelOf(selected())!==before){viewLevel=levelOf(selected());$('level').value=viewLevel;}}if(s.phase!=='enemy')stepInvestigation(s);if(s.revision!==lastRevision)sync();}draw(now);requestAnimationFrame(frame);}resize();sync();requestAnimationFrame(frame);
 
 function syncClock(){const clock=clockLabel(world);if($('campaign-clock').textContent!==clock)$('campaign-clock').textContent=clock;const summary=`${clock} · Treasury $${world.money.toLocaleString()} · +$${incomePerHour(world).toLocaleString()} / hour`;if($('economy-summary').textContent!==summary)$('economy-summary').textContent=summary;}
-document.addEventListener('visibilitychange',()=>{lastClockFrame=null;});
-$('manual').addEventListener('close',()=>{lastClockFrame=null;});
+document.addEventListener('visibilitychange',()=>{frameClock.reset();});
+for(const dialog of document.querySelectorAll('dialog'))dialog.addEventListener('close',()=>frameClock.reset());
 // Make another local map the active one after travel or a completed retreat.
 function adoptMap(state){s=state;selectedIds=new Set([s.selected]);shotConfirmation=null;aimZone='torso';$('aim-zone').value=aimZone;targetId=null;terrainAim=false;terrainTarget=null;hover=null;hoverActor=null;route=null;lastEffect=null;center();}
 function showOvermap(){
@@ -306,7 +307,7 @@ function renderDowntime(){const reason=downtimeReason(world),hours=Number($('dow
 function renderMedicalRest(){const chosen=$('rest-medic').value,medics=squad(s).filter(u=>!u.casualty&&u.medical>=MEDIC_SKILL_REQUIRED).sort((a,b)=>b.medical-a.medical);$('rest-medic').replaceChildren();for(const u of medics){const option=document.createElement('option');option.value=u.id;option.textContent=`${u.name} · Medical ${u.medical}`;$('rest-medic').append(option);}if(medics.some(u=>String(u.id)===chosen))$('rest-medic').value=chosen;const preview=medicalRestPreview(world,$('rest-medic').value===''?null:Number($('rest-medic').value));$('medical-rest').disabled=!preview.ok;$('medical-rest').title=preview.reason;$('medical-rest-info').textContent=preview.reason||`Use ${preview.kitsNeeded} of ${preview.kits} squad medkits. Each wounded troop gets 24 hours of faster recovery; unfinished care continues during later rests without another kit.`;}
 $('rest-medic').onchange=renderMedicalRest;
 $('downtime-hours').onchange=renderDowntime;
-for(const [id,activity]of [['rest-squad','rest'],['medical-rest','medical-rest'],['train-squad','train']])$(id).onclick=()=>{const result=spendTime(world,activity,Number($('downtime-hours').value),$('rest-medic').value===''?null:Number($('rest-medic').value));lastClockFrame=null;$('downtime-result').textContent=result.ok?result.message+` Factory income +$${result.income}.`:result.error;sync();renderDowntime();};
+for(const [id,activity]of [['rest-squad','rest'],['medical-rest','medical-rest'],['train-squad','train']])$(id).onclick=()=>{const result=spendTime(world,activity,Number($('downtime-hours').value),$('rest-medic').value===''?null:Number($('rest-medic').value));frameClock.reset();$('downtime-result').textContent=result.ok?result.message+` Factory income +$${result.income}.`:result.error;sync();renderDowntime();};
 
 
 window.hybridGameDiagnostics=()=>({mode:s.geometryMode,stats:hybridRenderer?.stats(),selected:s.selected,units:s.units.map(u=>({id:u.id,x:u.x,y:u.y,z:u.z,ap:u.ap,hp:u.hp,stance:u.stance})),phase:s.phase,camera:{...camera},width,height,viewLevel});

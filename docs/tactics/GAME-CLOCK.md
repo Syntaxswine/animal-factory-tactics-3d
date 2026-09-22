@@ -1,0 +1,30 @@
+# Shared game clock
+
+`dist/tactics/game-clock.js` owns time units, pacing, formatting, round accounting and the day/dusk/night schedule. Game time is cumulative minutes since Day 1, 00:00; animation and browser timestamps are milliseconds. The existing `{minutes, incomeRemainder}` clock shape is retained. New encounters begin at 08:00 unless their map specifies `time.startMinutes`, an integer from 0 to 1439.
+
+## Advancement
+
+- Exploration, including cleared maps: one game minute per real second of active play. A full day is 24 minutes of exploration.
+- Combat: one game minute per completed round, as requested. Thinking, individual actions, guard animations and rendering frames add no clock time. Starting contact opens a round without charging time. Completing a round advances once. A contact that ends mid-round, including victory or defeat, charges its last minute once. Repeated UI refreshes never charge it again.
+- Travel, rest and training retain their existing explicit durations: one hour per successful crossing and the selected number of hours for downtime. Failed operations take no time. Production, morale and contracts use actual elapsed game minutes.
+- Hidden tabs and open game dialogs pause live time. The 3D encounter also has a Pause/Resume button that stops simulation and presentation motion. Visibility and resume transitions reset the browser time baseline, so suspended frames never produce catch-up time. A lost encounter stops its clock after settling the final round.
+
+Round accounting observes the engine's existing phase and round transitions; it does not derive combat time from AP spending or animation duration. The observer resets when the active map identity changes. Travel uses its explicit one-hour duration, without stacking another partial-round charge on top. Its WeakMap bookkeeping is runtime-only. The running encounter clock belongs to the game state; it never writes back to the editor blueprint. Save-game persistence remains a separate future task.
+
+## Integrations
+
+The existing sprite campaign uses the shared primitives in `world.js` and a `FrameClock` in `app.js`. The 3D encounter uses `encounter-clock.js`, attaches the same clock shape to its state, and calls the pinned campaign's existing morale/contract settlement rules. It does not create a campaign, extra maps or an income source for Quick Fight.
+
+The pinned dependency is still reproducibly generated. `tools/core-clock-adapter.mjs` applies explicit, checked transformations to `core/engine.js` and `core/world.js` during `tools/sync-tactics-core.mjs`. The engine's off-map guard recovery conversion now imports the same one-minute round constant; fires and guard recovery therefore no longer treat that round as ten minutes. Stress recovery still uses real elapsed game minutes, with no multiplied surrogate interval. The world adapter uses the shared clock and round accounting. The manifest records each adapter's reason, upstream hash and effective module hashes. Other core modules remain unchanged. Do not hand-edit generated modules.
+
+Local AI route/search/sweep counts remain tactical behavior counters. Movement interpolation and firing effects remain presentation durations. Neither is a second campaign clock, and neither adds time to combat. This pass does not rebalance those behaviors.
+
+## Day, dusk and night
+
+The initial shared schedule is day 06:00–18:00, dusk 18:00–20:00, and night 20:00–06:00. These boundaries are centralized for later tuning. The encounter clock displays its current phase, and editor Design controls can set the start time with undo/save/export support.
+
+This pass supplies the clock and phase data only. Scene illumination, lamp activation and night detection modifiers are not yet connected. They should read this clock rather than accumulate another timer or use browser wall time.
+
+## Verification
+
+`tests/game-clock.test.mjs` covers fractional frame updates, day boundaries, pause/resume, invalid values, actual engine rounds, final partial rounds, both campaign world modules, income, off-map guard effects, and editor start-time round trips. Existing clock/rest/travel tests remain passing. `tools/game-clock-review.mjs` verifies a real playtest round at 19:59 becoming 20:00, midnight rollover, a frozen paused clock and presentation, visibility without catch-up, restart, and blueprint isolation. `node tools/sync-tactics-core.mjs --check` verifies reproducible core output and the adapter manifest.

@@ -1,6 +1,6 @@
 # 3D editor: useful editing slice
 
-`tactics/editor-3d.html` now edits full version 2 maps through the original renderer-independent `core/editor-model.js` at the encounter's pinned upstream revision `6e2782a`. Generated core modules are unchanged. Reusable version 1 blocks now use the same editable controller, with a full canonical backing map and a cropped 24 by 24 design view.
+`tactics/editor-3d.html` now edits full version 2 maps through the original renderer-independent `core/editor-model.js` at the encounter's pinned upstream revision `e529f4b`. Map/editor rules remain unchanged; generated engine/world modules now use the recorded shared-clock adapters (see GAME-CLOCK.md). Reusable version 1 blocks now use the same editable controller, with a full canonical backing map and a cropped 24 by 24 design view.
 
 ## Workflow
 
@@ -36,3 +36,5 @@ Generation supports the existing factory and two river orientations, numeric see
 Editor and battle rendering pass each guard's outfit to the existing species paint layers and attach fitted Red Hats caps to the head. The pig foreman retains its authored uniform/cap. Accessories inherit actor visibility and head motion, are dimmed on lower editor floors, and are disposed with replaced models. Faction rendering does not change detection rules. Armed hen poses remain unavailable.
 
 `tools/editor-3d-library-review.mjs` exercises block saves/reload, workspace retention, capture/place/undo, connections, successful and rejected generation, visible faction paint/caps in an ordinary LOS playtest, and stable graphics resource counts after repeated outfit changes. Artifacts are under `artifacts/battle-3d/library/`.
+
+Map designs can set their start time under Design. This is stored as `time.startMinutes` (0 through 1439), participates in undo and named saves, and initializes playtest time. The running clock never writes back into the blueprint.

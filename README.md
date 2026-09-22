@@ -25,3 +25,5 @@ Requires Node.js 24. No dependency installation is needed for the build or Node 
 - npm run build:tactics-3d — create the Pages distribution.
 
 Pushes to main run checks and publish the independent GitHub Pages site. Browser review scripts additionally require Playwright and Edge.
+
+The [shared game clock](docs/tactics/GAME-CLOCK.md) advances one minute per completed combat round, pauses while choosing actions, and runs at one game minute per real second during exploration. The editor can set a map start time; the encounter shows day/dusk/night and supports pause/resume. Lighting and night detection are the next layer.

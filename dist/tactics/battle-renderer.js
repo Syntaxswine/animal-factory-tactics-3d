@@ -104,10 +104,10 @@ export class BattleRenderer extends HybridRenderer {
  draw(ctx,state,...args){
   this.state=state;this.captureCombat(state);this.shotEffects.hide();
   const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.combat.display(u));
-  this.motion.update(units,performance.now(),!!this.reducedMotion?.matches);
+  this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
   return super.draw(ctx,{...state,terrain:state.map,units},...args);
  }
- captureCombat(state){this.combat.observe(state,performance.now(),!!this.reducedMotion?.matches);}
+ captureCombat(state){this.combat.observe(state,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);}
  get busy(){return this.combat.busy;}
  displayUnit(unit){const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){

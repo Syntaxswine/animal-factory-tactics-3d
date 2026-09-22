@@ -1,3 +1,5 @@
+import {COMBAT_ROUND_MINUTES as ROUND_MINUTES} from '../game-clock.js';
+export {ROUND_MINUTES};
 import {explosivePreview,explosiveTrajectory,detonate} from './explosives.js';
 import {initPersonality,initGuardSocial,socialRoll,friendlyReaction,helped,settleStress,injuryStrain,killRelief,collapse} from './personalities.js';
 import {partnerLost,stabilizedPartner,cleanWin,onContract} from './happiness.js';
@@ -460,7 +462,7 @@ export function emitNoise(s,u,radius){if(u.team!=='squad')return;for(const g of 
 // personality parameters (G3) will scale the numbers. Counters in rounds tick at the end of each guard phase (settleRound); in real time
 // the same transitions happen on arrival and sweep (stepInvestigation), and a map the squad has left settles by the campaign clock on re-entry (settleGuards).
 export const GUARD_STATES=['rest','suspicious','alert','searching','standdown','broken'];
-export const ALERT_ROUNDS=3,SEARCH_CELLS=4,BROKEN_ROUNDS=2,SUSPICION_STEPS=12,SUSPICION_SWEEP=2,ROUND_MINUTES=10,REALTIME_ROUND_TICKS=6,WARY_HEARING=1.5,WARY_STEPS=1.5,NERVE=1/3,STANDOFF_TRIES=3,BARK_RANGE=30;
+export const ALERT_ROUNDS=3,SEARCH_CELLS=4,BROKEN_ROUNDS=2,SUSPICION_STEPS=12,SUSPICION_SWEEP=2,REALTIME_ROUND_TICKS=6,WARY_HEARING=1.5,WARY_STEPS=1.5,NERVE=1/3,STANDOFF_TRIES=3,BARK_RANGE=30;
 // The boolean wins when the two disagree (fixtures and older code flip it directly), and the old suspicion fields alone still read as Suspicious.
 export const stateOf=g=>{const st=g.alert?'alert':g.state&&g.state!=='alert'?g.state:'rest';return st==='rest'&&g.lastHeard&&g.searchSteps>0?'suspicious':st;};
 export const active=g=>['alert','searching','broken'].includes(stateOf(g)); // holds the engagement economy and the warnings; contact itself needs Alert

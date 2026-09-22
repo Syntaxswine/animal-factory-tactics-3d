@@ -1,3 +1,5 @@
+import {FrameClock,formatClock,timeOfDay,turnBased} from './game-clock.js';
+import {startEncounterClock,tickEncounterClock,settleEncounterRounds} from './encounter-clock.js';
 import {createGame,move,stepMovement,previewAttack,attack,reload,endTurn,stepEnemy,stepInvestigation,canControl,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts,MOVEMENT_MODES,movementModeOf,movementCost,effectiveStealth} from './core/engine.js';
 import {loadBattleMap} from './battle-map.js';
 import {BattleRenderer} from './battle-renderer.js';
@@ -16,6 +18,9 @@ if(new URLSearchParams(location.search).has('editorPlaytest')){
 }
 let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false;
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
+const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastClockCombat;
+const paused=()=>userPaused||document.hidden;
+function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
 const view={x:0,y:0,zoom:1.15};
 const selected=()=>state.units.find(u=>u.id===state.selected);
 const target=()=>state.units.find(u=>u.id===targetId&&u.hp>0&&state.detected.has(u.id));
@@ -26,23 +31,24 @@ function focus(x,y){overviewMode=false;view.zoom=1.15;view.x=width/2-(x-y)*28*vi
 function center(){const u=selected();level=u.z||0;$('floor').value=level;focus(u.x,u.y);}
 function overview(){const w=definition.width,h=definition.height;overviewMode=true;view.zoom=Math.min((width-50)/((w+h)*28),(height-60)/((w+h)*14));view.x=width/2-(w-h)*14*view.zoom;view.y=30;$('hint').textContent='Click the map to inspect an area · Center returns to your squad';}
 function resize(){const box=canvas.getBoundingClientRect();width=box.width;height=box.height;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(state){if(overviewMode)overview();else center();}}
-function restart(){renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,rosterSeed:1947});selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Scenery revealed. People still need line of sight.':'Explore to reveal the map.');sync();}
+function restart(){renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,rosterSeed:1947});startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Scenery revealed. People still need line of sight.':'Explore to reveal the map.');sync();}
 function sync(){
+ settleEncounterRounds(state);const combat=turnBased(state);if(combat!==lastClockCombat){frameClock.reset();lastClockCombat=combat;}syncClock();
  selectedIds=pruneSelection(state,selectedIds);
  if(selectedIds.size&&!selectedIds.has(state.selected))state.selected=[...selectedIds][0];
  const u=selected(),t=target(),preview=t?previewAttack(state,u,t):null;
- const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy]);
+ const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,userPaused]);
  if(signature===lastUI)return;lastUI=signature;
  $('phase').textContent=`${state.phase==='explore'?'Exploration':state.phase==='player'?'Your turn':state.phase==='enemy'?'Guard turn':state.phase==='won'?'Encounter cleared':'Encounter ended'} · Round ${state.round}`;
  $('squad').replaceChildren(...state.units.filter(v=>v.team==='squad').map(v=>{const button=document.createElement('button');button.textContent=`${v.id===state.selected?"★ ":""}${v.name} · ${mercStatus(v)}`;button.setAttribute('aria-pressed',String(selectedIds.has(v.id)));button.disabled=!selectable(v);button.onclick=e=>{selectMerc(v.id,e.shiftKey);center();sync();};return button;}));
  $('selection').textContent=`${selectedIds.size} selected · Primary: ${u.name} · ${WEAPONS[u.weapon].name} · ${u.ammo[u.weapon]||0} loaded`;
  $('target').textContent=t?`${t.name} · ${preview.ok?`${preview.chance??preview.odds??'—'}% · ${preview.cost} AP`:preview.reason}`:'Select a visible opponent to inspect a shot.';
- $('fire').disabled=renderer.busy||!preview?.ok||!canControl(state,u)||!!state.queue.length;
- $('reload').disabled=renderer.busy||!canControl(state,u)||!!state.queue.length||!WEAPONS[u.weapon].mag;
- $('end').disabled=renderer.busy||state.phase!=='player'||!!state.queue.length;
- $('stop').disabled=!state.queue.length;
- for(const name of Object.keys(STANCES)){const b=$('stance-'+name),group=stanceSelection(state,selectedIds,name);b.setAttribute('aria-pressed',String(group.all));b.disabled=renderer.busy||!group.ready.length;}
- for(const mode of Object.keys(MOVEMENT_MODES)){const b=$('move-'+mode),group=movementSelection(state,selectedIds,mode);b.setAttribute('aria-pressed',String(group.all));b.disabled=renderer.busy||!group.ready.length;}
+ $('fire').disabled=paused()||renderer.busy||!preview?.ok||!canControl(state,u)||!!state.queue.length;
+ $('reload').disabled=paused()||renderer.busy||!canControl(state,u)||!!state.queue.length||!WEAPONS[u.weapon].mag;
+ $('end').disabled=paused()||renderer.busy||state.phase!=='player'||!!state.queue.length;
+ $('stop').disabled=paused()||!state.queue.length;
+ for(const name of Object.keys(STANCES)){const b=$('stance-'+name),group=stanceSelection(state,selectedIds,name);b.setAttribute('aria-pressed',String(group.all));b.disabled=paused()||renderer.busy||!group.ready.length;}
+ for(const mode of Object.keys(MOVEMENT_MODES)){const b=$('move-'+mode),group=movementSelection(state,selectedIds,mode);b.setAttribute('aria-pressed',String(group.all));b.disabled=paused()||renderer.busy||!group.ready.length;}
  const group=movementSelection(state,selectedIds,'walk').members,costs=[...new Set(group.map(movementCost))].sort((a,b)=>a-b);
  $('movement-info').textContent=(costs.length?costs.join(' / ')+' AP per straight tile':'No mercs selected')+' · Primary stealth '+effectiveStealth(u)+(u.sneaking?' (+20, capped at 100)':'');
  $('stance-cost').textContent=selectedIds.size+' selected · '+(!combatCosts(state)?'Free stance change':'2 AP per merc changing stance');
@@ -59,7 +65,7 @@ function click(x,y,shift=false){
  if(overviewMode){const px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom);focus((px+py)/2,(py-px)/2);return;}
  const hit=renderer.pick(x,y,width,height);
  if(hit!==null){const u=state.units.find(u=>u.id===hit);if(selectable(u)){selectMerc(u.id,shift);}else if(state.detected.has(u.id)&&u.hp>0)targetId=u.id;sync();return;}
- if(renderer.busy||shift)return;
+ if(paused()||renderer.busy||shift)return;
  const px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom),tx=Math.round((px+py)/2),ty=Math.round((py-px)/2);
  if(selectedIds.size>1?moveGroup(state,[...selectedIds],selected(),tx,ty,level):move(state,selected(),tx,ty,level)){targetId=null;message('');}else message('Cannot move there now. Check the route, floor and available AP.');sync();
 }
@@ -70,19 +76,23 @@ canvas.addEventListener('pointercancel',()=>{drag=null;});
 canvas.addEventListener('lostpointercapture',()=>{drag=null;});
 window.addEventListener('blur',()=>{drag=null;});
 canvas.addEventListener('wheel',e=>{e.preventDefault();const box=canvas.getBoundingClientRect(),x=e.clientX-box.left,y=e.clientY-box.top,old=view.zoom;view.zoom=Math.max(.08,Math.min(3,old*Math.exp(-e.deltaY*.001)));view.x=x-(x-view.x)*view.zoom/old;view.y=y-(y-view.y)*view.zoom/old;},{passive:false});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){drag=null;state.queue=[];targetId=null;sync();}});
-function action(fn){if(renderer.busy)return;const ok=fn();renderer.captureCombat(state);message(ok?'':'Action unavailable.');sync();}
- for(const name of Object.keys(STANCES))$('stance-'+name).onclick=()=>{if(renderer.busy)return;const result=setSelectionStance(state,selectedIds,name);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' changed to '+name+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'. Check AP and action availability.':''));sync();};
- for(const mode of Object.keys(MOVEMENT_MODES))$('move-'+mode).onclick=()=>{if(renderer.busy)return;const result=setSelectionMovement(state,selectedIds,mode);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' set to '+mode+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'.':''));sync();};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!paused()){drag=null;state.queue=[];targetId=null;sync();}});
+function action(fn){if(paused()||renderer.busy)return;const ok=fn();renderer.captureCombat(state);message(ok?'':'Action unavailable.');sync();}
+ for(const name of Object.keys(STANCES))$('stance-'+name).onclick=()=>{if(paused()||renderer.busy)return;const result=setSelectionStance(state,selectedIds,name);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' changed to '+name+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'. Check AP and action availability.':''));sync();};
+ for(const mode of Object.keys(MOVEMENT_MODES))$('move-'+mode).onclick=()=>{if(paused()||renderer.busy)return;const result=setSelectionMovement(state,selectedIds,mode);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' set to '+mode+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'.':''));sync();};
  $('restart').onclick=restart;$('center').onclick=center;$('overview').onclick=overview;
  $('reload').onclick=()=>action(()=>reload(state,selected()));$('end').onclick=()=>action(()=>endTurn(state));
  $('fire').onclick=()=>action(()=>{const t=target();return t&&attack(state,selected(),t);});
- $('stop').onclick=()=>{state.queue=[];sync();};$('floor').onchange=()=>{level=+$('floor').value;};
+ $('stop').onclick=()=>{if(paused())return;state.queue=[];sync();};$('floor').onchange=()=>{level=+$('floor').value;};
+$('pause').onclick=()=>{userPaused=!userPaused;frameClock.reset();sync();};
+document.addEventListener('visibilitychange',()=>{frameClock.reset();sync();});
+window.addEventListener('pageshow',()=>frameClock.reset());
 new ResizeObserver(resize).observe(canvas);resize();restart();
 if(new URLSearchParams(location.search).get('view')==='overview')overview();
 function frame(now){
  try{
-  if(!renderer.busy&&now-lastStep>stepDelay){lastStep=now;stepDelay=queuedMovementDuration(state);if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);renderer.captureCombat(state);sync();}
+  const elapsed=frameClock.sample(now,{paused:paused(),mode:turnBased(state)});presentationTime+=elapsed;renderer.presentationNow=presentationTime;tickEncounterClock(state,elapsed,{paused:paused()});syncClock();
+  if(!paused()&&!renderer.busy&&presentationTime-lastStep>stepDelay){lastStep=presentationTime;stepDelay=queuedMovementDuration(state);if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);renderer.captureCombat(state);sync();}
   ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);
   if(lastUIBusy!==renderer.busy||lastUIDiagnostics!==renderer.diagnostics.join('\n')){lastUIBusy=renderer.busy;sync();}
   for(const u of state.units.filter(v=>v.team==='squad'&&alive(v)&&(v.z||0)===level)){
@@ -95,5 +105,5 @@ function frame(now){
  }catch(error){message('Encounter stopped: '+error.message);console.error(error);}
 }
 // Read-only inspection hooks for browser regression checks.
-window.battle3d={get state(){return state;},get renderer(){return renderer;},get picks(){return picks;},get selectedIds(){return [...selectedIds];},project,view};
+window.battle3d={get state(){return state;},get renderer(){return renderer;},get clock(){return state.clock;},get paused(){return paused();},get picks(){return picks;},get selectedIds(){return [...selectedIds];},project,view};
 requestAnimationFrame(frame);

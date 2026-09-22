@@ -6,9 +6,10 @@ import {createGame,move,stepMovement} from '../dist/tactics/core/engine.js';
 import {factoryMap} from '../dist/tactics/core/maps.js';
 import {terrainKnown,personVisible} from '../dist/tactics/battle-visibility.js';
 
-test('3D simulation dependency matches every pinned upstream module',()=>{
+test('3D simulation dependency matches the pinned modules and recorded clock adapters',()=>{
  const root=new URL('../dist/tactics/core/',import.meta.url),manifest=JSON.parse(fs.readFileSync(new URL('manifest.json',root)));
  assert.equal(manifest.revision,'e529f4b3d512d32cea522d701d01ebe8488af013');
+ assert.deepEqual(Object.keys(manifest.overrides),['engine.js','world.js']);
  for(const [file,hash]of Object.entries(manifest.files))assert.equal(createHash('sha256').update(fs.readFileSync(new URL(file,root))).digest('hex'),hash,file);
 });
 test('Easy reveals distant scenery without revealing people or changing perception',()=>{
