@@ -1,6 +1,6 @@
 # Factory income
 
-The shared game clock starts at Day 1, 08:00, unless a map supplies an authored start time. During exploration and the overmap, one real second advances one game minute. During combat, player thinking and action animations consume no clock time; each completed round advances exactly one game minute. Entering combat is free; ending contact partway through a round, including victory or defeat, completes that last minute once. Income follows the same elapsed game minutes.
+The shared game clock starts at Day 1, 08:00, unless a map supplies an authored start time. During exploration and the overmap, three real seconds advance one game minute. During combat, player thinking and action animations consume no clock time; each completed round advances exactly one game minute. Entering combat is free; ending contact partway through a round, including victory or defeat, completes that last minute once. Income follows the same elapsed game minutes.
 
 Hidden tabs and open dialogs pause live time without catch-up; defeat stops it after the final round. Travel still takes one hour. Rejected travel does not advance time. See [GAME-CLOCK.md](GAME-CLOCK.md) for the shared clock and integration rules.
 

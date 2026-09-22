@@ -1,6 +1,8 @@
 import {MOVEMENT_MODES,movementModeOf} from './core/engine.js';
-// Presentation time only. The core has already accepted and charged each step.
-export const MOVEMENT_MS=500;
+import {WALK_TILE_MS} from './movement-timing.js';
+// Presentation duration; the shared clock uses baseline walking to calibrate exploration.
+// The core has already accepted and charged each step.
+export const MOVEMENT_MS=WALK_TILE_MS;
 export const movementDuration=u=>MOVEMENT_MS/MOVEMENT_MODES[movementModeOf(u)].speed;
 export function queuedMovementDuration(state){
  const next=state.queue[0],ids=next?.group?next.group.map(o=>o.id):next?[next.id]:[];

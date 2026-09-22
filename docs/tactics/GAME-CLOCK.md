@@ -4,12 +4,18 @@
 
 ## Advancement
 
-- Exploration, including cleared maps: one game minute per real second of active play. A full day is 24 minutes of exploration.
+- Exploration, including cleared maps: one game minute per three real seconds of active play. A full day is 72 minutes of exploration.
 - Combat: one game minute per completed round, as requested. Thinking, individual actions, guard animations and rendering frames add no clock time. Starting contact opens a round without charging time. Completing a round advances once. A contact that ends mid-round, including victory or defeat, charges its last minute once. Repeated UI refreshes never charge it again.
 - Travel, rest and training retain their existing explicit durations: one hour per successful crossing and the selected number of hours for downtime. Failed operations take no time. Production, morale and contracts use actual elapsed game minutes.
 - Hidden tabs and open game dialogs pause live time. The 3D encounter also has a Pause/Resume button that stops simulation and presentation motion. Visibility and resume transitions reset the browser time baseline, so suspended frames never produce catch-up time. A lost encounter stops its clock after settling the final round.
 
 Round accounting observes the engine's existing phase and round transitions; it does not derive combat time from AP spending or animation duration. The observer resets when the active map identity changes. Travel uses its explicit one-hour duration, without stacking another partial-round charge on top. Its WeakMap bookkeeping is runtime-only. The running encounter clock belongs to the game state; it never writes back to the editor blueprint. Save-game persistence remains a separate future task.
+
+## Movement calibration
+
+A baseline standing walker has 12 AP and spends 2 AP per cardinal tile: six tiles per one-minute combat round. Each walking tile takes 500 ms in the 3D presentation, so those six tiles take 3,000 ms. Exploration therefore advances 20 game seconds per real second. `movement-timing.js` shares the walking duration with `battle-motion.js`; the clock derives its rate from this reference round. Tests check the reference AP values against the pinned engine and progression rules.
+
+This is a steady world clock, including when the squad is idle. Selection, party size, AP upgrades, posture and movement mode do not change its speed. Running covers twelve cardinal tiles per game minute. Sneaking retains its existing slower presentation (three tiles per exploration minute); its combat AP budget permits four. Diagonals, posture and climbing also retain their existing costs rather than rebalance movement in this clock change.
 
 ## Integrations
 

@@ -6,15 +6,15 @@ import {refresh,guards,allocateSkill} from '../dist/tactics/engine.js';
 
 test('shared clock advances from real elapsed time, pauses without catch-up, and rolls over days',()=>{
  const w=createWorld(blankMap());assert.equal(clockLabel(w),'Day 1 · 08:00');
- tickWorld(w,1500);assert.equal(w.clock.minutes,481.5);assert.equal(clockLabel(w),'Day 1 · 08:01');
+ tickWorld(w,4500);assert.equal(w.clock.minutes,481.5);assert.equal(clockLabel(w),'Day 1 · 08:01');
  tickWorld(w,60000,{paused:true});assert.equal(w.clock.minutes,481.5);
- tickWorld(w,500);assert.equal(w.clock.minutes,482);
+ tickWorld(w,1500);assert.equal(w.clock.minutes,482);
  advanceTime(w,958);assert.equal(clockLabel(w),'Day 2 · 00:00');
  const before=structuredClone(w.clock);for(const n of [-1,NaN,Infinity])advanceTime(w,n);assert.deepEqual(w.clock,before);
  currentMap(w).phase='lost';tickWorld(w,10000);assert.deepEqual(w.clock,before);
 });
 test('production is independent of frame size and begins only after liberation',()=>{
- const a=createWorld(blankMap()),b=createWorld(blankMap());advanceTime(a,60);for(let i=0;i<3600;i++)tickWorld(b,1000/60);
+ const a=createWorld(blankMap()),b=createWorld(blankMap());advanceTime(a,60);for(let i=0;i<10800;i++)tickWorld(b,1000/60);
  assert.equal(a.money,100);assert.equal(b.money,100);
  const w=createWorld();advanceTime(w,45);assert.equal(w.money,0);guards(currentMap(w)).forEach(g=>g.hp=0);refresh(currentMap(w));advanceTime(w,15);assert.equal(w.money,25);
 });

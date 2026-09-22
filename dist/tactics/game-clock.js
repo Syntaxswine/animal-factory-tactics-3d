@@ -1,7 +1,9 @@
 // Game time is cumulative minutes from Day 1, 00:00. Wall/animation time is ms.
-export const MINUTES_PER_HOUR=60,MINUTES_PER_DAY=1440,START_MINUTES=480,PLAY_MINUTES_PER_SECOND=1;
+import {WALK_ROUND_MS} from './movement-timing.js';
+export const MINUTES_PER_HOUR=60,MINUTES_PER_DAY=1440,START_MINUTES=480;
 export const DAY_START=360,DUSK_START=1080,NIGHT_START=1200;
 export const COMBAT_ROUND_MINUTES=1;
+export const PLAY_MINUTES_PER_SECOND=COMBAT_ROUND_MINUTES*1000/WALK_ROUND_MS;
 export const turnBased=state=>state.phase==='player'||state.phase==='enemy';
 const rounds=new WeakMap();
 export function observeRoundTime(clock,state){
