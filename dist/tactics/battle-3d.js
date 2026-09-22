@@ -15,7 +15,7 @@ if(new URLSearchParams(location.search).has('editorPlaytest')){
  document.querySelector('aside h1').textContent='Playtest: '+definition.name;
 }
 let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false;
-let selectedIds=new Set();
+let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
 const view={x:0,y:0,zoom:1.15};
 const selected=()=>state.units.find(u=>u.id===state.selected);
 const target=()=>state.units.find(u=>u.id===targetId&&u.hp>0&&state.detected.has(u.id));
@@ -47,7 +47,9 @@ function sync(){
  $('movement-info').textContent=(costs.length?costs.join(' / ')+' AP per straight tile':'No mercs selected')+' · Primary stealth '+effectiveStealth(u)+(u.sneaking?' (+20, capped at 100)':'');
  $('stance-cost').textContent=selectedIds.size+' selected · '+(!combatCosts(state)?'Free stance change':'2 AP per merc changing stance');
  $('log').replaceChildren(...state.log.slice(0,8).map(text=>{const li=document.createElement('li');li.textContent=text;return li;}));
- if(renderer.diagnostics.length)message(renderer.diagnostics.at(-1));
+ lastUIDiagnostics=renderer.diagnostics.join('\n');
+ if(renderer.diagnostics.length){lastDiagnostic=renderer.diagnostics.at(-1);message(lastDiagnostic);}
+ else if(lastDiagnostic){if($('message').textContent===lastDiagnostic)message('Ready.');lastDiagnostic='';}
 }
 function selectMerc(id,toggle=false){
  const u=state.units.find(u=>u.id===id);if(!u||!selectable(u))return;
@@ -82,7 +84,7 @@ function frame(now){
  try{
   if(!renderer.busy&&now-lastStep>stepDelay){lastStep=now;stepDelay=queuedMovementDuration(state);if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);renderer.captureCombat(state);sync();}
   ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);
-  if(lastUIBusy!==renderer.busy){lastUIBusy=renderer.busy;sync();}
+  if(lastUIBusy!==renderer.busy||lastUIDiagnostics!==renderer.diagnostics.join('\n')){lastUIBusy=renderer.busy;sync();}
   for(const u of state.units.filter(v=>v.team==='squad'&&alive(v)&&(v.z||0)===level)){
    const p=project(renderer.displayUnit(u));ctx.strokeStyle=selectedIds.has(u.id)?'#ffe3a0':'#a4d4c2';ctx.lineWidth=u.id===state.selected?2:1;ctx.beginPath();ctx.ellipse(p.x,p.y,17*view.zoom,8*view.zoom,0,0,Math.PI*2);ctx.stroke();
   }
