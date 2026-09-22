@@ -6,6 +6,7 @@ Open `tactics/painted-furniture.html`, also linked from the 3D gallery. These ar
 
 | Model | Tile footprint | Construction |
 | --- | --- | --- |
+| Large timber / rust-red guardhouses | 5×5 house / 7×7 overall | Three-story expanded core with one-tile perimeter stairs |
 | Timber / rust-red wraparound guardhouses | 3×3 house / 5×5 overall | Perimeter flights with quarter-turn corner landings and rear entry |
 | Timber / iron stair guardhouses | 3×3 house / 6×5 overall | Three-story frame, six side stair flights, landings and a windowed guardhouse |
 | Wooden guard tower | 5×5 deck / 3×3 supports | Three-story braced timber frame, railings and side ladder through an open hatch |
@@ -40,8 +41,8 @@ There are no Light objects or emissive materials in these models. The gallery us
 - `npm run check`: **587 tests passed**, plus tactical asset validation.
 - `npm run build:tactics-3d`: passed; all three furniture files are included in the Pages output.
 - Six furniture tests check all finishes for finite geometry, ground contact, footprint bounds, passive anchors, no emission and stable resource ownership/disposal.
-- `tools/painted-furniture-review.mjs`: all 20 forms at close/gameplay scale, an underside sconce view, mobile width, repeated finish changes and browser errors. Set `PLAYWRIGHT_PATH` when Playwright is outside the local module tree; optional `REVIEW_ORIGIN` defaults to port 4331.
-- Repeated gallery changes stabilized at 195 library geometries, 31 materials and 27 texture clones; browser rendering reported 206 geometries and 8 textures. No browser errors or mobile horizontal overflow in the final run.
+- `tools/painted-furniture-review.mjs`: all 22 forms at close/gameplay scale, an underside sconce view, mobile width, repeated finish changes and browser errors. Set `PLAYWRIGHT_PATH` when Playwright is outside the local module tree; optional `REVIEW_ORIGIN` defaults to port 4331.
+- Repeated gallery changes stabilized at 301 library geometries, 31 materials and 27 texture clones; browser rendering reported 312 geometries and 8 textures. No browser errors or mobile horizontal overflow in the final run.
 - Independent hostile review: **9/10**, no blockers for this design/gallery scope. Remaining optional art polish: repeated close-up texture crops and heavy refrigerator wear. Screenshots and machine results are local in `artifacts/furniture/` and `artifacts/furniture-review/`.
 
 The viewer uses a stable neutral-character framing envelope because skinned mesh bounds can retain stale positions when switching collection/single views. Model geometry bounds remain exact; this envelope affects camera framing only.
@@ -71,3 +72,7 @@ The full arrangement needs 6×5 tiles, including stairs, landings and roof overh
 The wraparound variants retain the 3×3 trellis and guardhouse but distribute six flights around all four faces, with quarter-turn landings at the corners. Four flights make one full revolution; the final two arrive at the rear corner, where a balcony connects to the rear doorway. The complete model fits 5×5 tiles. Corner posts and diagonal knee braces support the landings. Door metadata switches to the −Z face. Original 6×5 switchback variants remain available.
 
 Both iron tower layouts use the cargo atlas oxide-red barrel panel, with exposed dark iron for framing and rails. The floor/roof panels, steps and landings share that painterly red-and-rust treatment. Browser checks cover 20 forms; geometry/headroom/doorway checks cover all four stair tower variants.
+
+## Large 5×5 guardhouses
+
+The large wraparound timber and rusty iron forms expand the core and guardhouse to 5×5 tiles, retaining the three-story deck elevation. Perimeter stairs keep their existing 0.88-unit tread width rather than widening with the core. The full footprint is 7×7. Longer flights have the same nine rises per half-story; roof pitch is reduced to retain the existing ridge height. Original 3×3 versions remain available. Tests explicitly check the expanded floor bounds, unchanged stair width, tread elevations, headroom and rear entry.
