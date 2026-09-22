@@ -20,7 +20,8 @@ for(const p of profiles.filter(p=>p.proneAim&&(!process.env.REVIEW_ANIMAL||p.id=
    assert.equal(r.supported,true,'ordinary low endpoint must remain aligned throughout transition');assert.ok(surface.body>=.0119);assert.ok(surface.weapon>=0,'weapon crossed floor');
    if(prior)assert.ok(now.every((v,i)=>v.distanceTo(prior[i])<.06),'grounded full-controller joint jump');prior=now;
    assert.ok(Math.min(...surface.knees)<.07,'descent lost the supporting knee: '+JSON.stringify({t,surface}));assert.ok(surface.feet.every(y=>y<.05),'descent lost hoof/boot support: '+JSON.stringify({t,surface}));
-   if(n===100)assert.ok(surface.knees.every(y=>y<.04),'settled prone knee floats: '+JSON.stringify({t,surface}));
+   if(n===100)assert.ok(surface.knees.every(y=>y<(p.proneAim.kneeClearance??.04)),'settled prone knee floats: '+JSON.stringify({t,surface}));
+   if(n===100&&p.proneAim.kneeClearance)assert.ok(surface.belly<.03&&surface.feet.every(y=>y<.03),'rounded build must be supported by belly and boots: '+JSON.stringify(surface));
   }
   for(const part of w.parts){const a=part.geometry.attributes.skinWeight;if(a)for(let i=0;i<a.count;i++){const weights=[a.getX(i),a.getY(i),a.getZ(i),a.getW(i)];assert.ok(weights.every(v=>v>=0&&Number.isFinite(v)));assert.ok(Math.abs(weights.reduce((a,b)=>a+b)-1)<1e-5);}}
   for(const prone of [0,.25,.5,.75,1])for(const xyz of [[6,.48,0],[1,1.4,0],[2,3,0]]){

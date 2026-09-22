@@ -42,7 +42,7 @@ export function createBattlePosture(worker,profile){
   const footQ=new T.Quaternion().setFromAxisAngle(V(0,0,1),-1.2*low);let sole=0;
   for(const part of worker.parts.filter(p=>/hoof|boot|foot/.test(p.name))){const points=part.geometry.attributes.position;for(let i=0;i<points.count;i++)if(Math.sign(points.getZ(i))===side)sole=Math.min(sole,V().fromBufferAttribute(points,i).sub(rc).applyQuaternion(footQ).y);}
   const turn=(from,to)=>from+Math.atan2(Math.sin(to-from),Math.cos(to-from))*low;
-  const kneeY=T.MathUtils.clamp(T.MathUtils.lerp(old.knee.y,.10,low),start.y-la+.0001,start.y+la-.0001),dy=kneeY-start.y;
+  const kneeY=T.MathUtils.clamp(T.MathUtils.lerp(old.knee.y,profile.proneAim?.kneeHeight??.10,low),start.y-la+.0001,start.y+la-.0001),dy=kneeY-start.y;
   const angle=turn(Math.atan2(old.knee.z-old.hip.z,old.knee.x-old.hip.x),Math.atan2(side*.6,-1)),r=Math.sqrt(Math.max(0,la*la-dy*dy)),knee=V(start.x+Math.cos(angle)*r,kneeY,start.z+Math.sin(angle)*r);
   const ankleY=T.MathUtils.clamp(Math.max(T.MathUtils.lerp(old.ankle.y,-sole,low),-sole),knee.y-lb+.0001,knee.y+lb-.0001),sy=ankleY-knee.y;
   const bend=turn(Math.atan2(old.ankle.z-old.knee.z,old.ankle.x-old.knee.x),Math.atan2(side*.25,-1)),sr=Math.sqrt(Math.max(0,lb*lb-sy*sy)),ankle=V(knee.x+Math.cos(bend)*sr,ankleY,knee.z+Math.sin(bend)*sr);
@@ -62,7 +62,7 @@ export function createBattlePosture(worker,profile){
    hips.position.y+=drop;for(const [name,q]of legRest)named[name].quaternion.copy(q);root.updateMatrixWorld(true);
   }
   hips.position.y-=(profile.unarmed?0:(profile.kneelDrop||.36))*kneel;
-  hips.position.y+=(.27-rest.get(hips).y)*low;
+  hips.position.y+=(.27-rest.get(hips).y)*low+(profile.proneAim?.hipLift||0)*prone;
   hips.rotation.z=-Math.PI/2*low;
   hips.rotation.x=(.25+.8*stable-1.1*dead)*down;
   spine.rotation.z+=.15*prone+.22*(1-dead)*down;

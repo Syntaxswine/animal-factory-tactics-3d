@@ -28,7 +28,7 @@ canvas. On narrower windows the displayed canvas scales down; use the recorded
 | Donkey | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Sheep | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Skunk | **9/10** | Close/steep aim holds; full equipment coverage open |
-| Pig foreman | Queued | Not yet inspected in this pass |
+| Pig foreman | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Pig director | Queued | Not yet inspected in this pass |
 | Rabbit | Queued | Not yet inspected in this pass |
 | Dog | Queued | Not yet inspected in this pass |
@@ -48,6 +48,11 @@ Species-specific corrections found during the sequential pass:
   A separate root-preserving plume rotation clears the face. This uses the
   forward tail attachment, not the hanging-tail pivot; stripe paint stays in its
   existing authored coordinates.
+- Pig foreman: a modest prone hip lift restores boot support beneath the rounded
+  belly, and a prone-only head correction brings his gaze toward the rifle.
+  His settled support is belly plus both boots; an explicit 0.05 knee clearance
+  is paired with tighter 0.03 belly/boot checks. His original torso aiming
+  response is retained to preserve previously supported steep endpoints.
 
 Anatomical knee measurement bands derive from each animal's inverse bind matrices.
 They are not hard-coded to the horse. Tail checks include exact fixed-root and

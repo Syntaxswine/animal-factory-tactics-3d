@@ -34,7 +34,7 @@ export const ANIMAL_MOTION_CATALOG=[
  donkey:{kneelDrop:.365,headPitch:-.6078,headYaw:13.844,headPitchSlope:1.6,proneAim:{stock:[.025,.03,.065],torsoFollow:.9,tuckHem:true,headOffset:-.25}},
  sheep:{kneelDrop:.365,headPitch:-.8844,headYaw:31.234,headPitchSlope:1.419,proneAim:{stock:[.025,.03,.065],torsoFollow:.9,tuckHem:true}},
  skunk:{kneelDrop:.3706,headPitch:-.875,headYaw:27.516,headPitchSlope:1.472,proneAim:{stock:[.025,.03,.065],torsoFollow:.9,tuckHem:true,tailUpright:true}},
- 'pig-foreman':{kneelDrop:.3118,headPitch:-.8,headYaw:11.438,headPitchSlope:.75,bodyYaw:60,stockOffset:[.14,.12,-.035]},
+ 'pig-foreman':{kneelDrop:.3118,headPitch:-.8,headYaw:11.438,headPitchSlope:.75,bodyYaw:60,stockOffset:[.14,.12,-.035],proneAim:{stock:[.14,.12,-.035],torsoFollow:0,tuckHem:true,hipLift:.10,kneeClearance:.05,headOffset:-.35}},
  'pig-director':{kneelDrop:.3152,headPitch:-.7625,headYaw:21.172,headPitchSlope:.975,bodyYaw:60,stockOffset:[.14,.12,-.035]},
  rabbit:{kneelDrop:.3706,headPitch:-.8297,headYaw:26.641,headPitchSlope:1.525}
 }[p.id]||{})}));

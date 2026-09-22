@@ -9,6 +9,8 @@ import {createWeaponModel} from '../dist/tactics/weapon-models.js';
 import {BattleRenderer} from '../dist/tactics/battle-renderer.js';
 import {BattleShotEffects} from '../dist/tactics/battle-shot-effects.js';
 import {shotPhase} from '../dist/tactics/battle-combat.js';
+const endpointKey=(species,weapon,prone,target)=>JSON.stringify([species,weapon,prone,target]);
+const approvedEndpoints=new Set(JSON.parse(fs.readFileSync(new URL('../docs/tactics/hybrid-review/prone-gameplay/coverage.json',import.meta.url))).rows.filter(r=>r.supported).map(r=>endpointKey(r.species,r.weapon,r.prone,r.target)));
 
 for(const p of profiles.filter(p=>!p.unarmed))test(p.id+': near and steep aiming preserves valid grips and reports unavailable presentation',()=>{
  const w=p.create(JSON.parse(fs.readFileSync(new URL('../dist/tactics/'+p.file,import.meta.url)))),posture=createBattlePosture(w,p),f=createRifleFiring(w,p,posture);
@@ -18,6 +20,7 @@ for(const p of profiles.filter(p=>!p.unarmed))test(p.id+': near and steep aiming
   try{for(const prone of [0,.25,.5,.75,1])for(const xyz of [[12,.48,0],[3,.4,2],[1,1.4,0],[2,3,0],[3,.05,-2]]){
    const target=new T.Vector3(...xyz),sample={pose:{prone},heading:0,blend:0,distance:0};
    const result=f.apply({aim:1,target,sample});
+   if(approvedEndpoints.has(endpointKey(p.id,id,prone,xyz)))assert.equal(result.supported,true,'previously supported endpoint regressed: '+endpointKey(p.id,id,prone,xyz));
    for(const contact of w.diagnostics().contacts)assert.ok(contact.error<1e-6,'failed search left a wrist off its grip');
    w.bones.forEach((b,i)=>{if(b.parent?.isBone)assert.ok(Math.abs(b.position.length()-lengths[i])<1e-8,'bone length changed: '+b.name);assert.deepEqual(b.scale.toArray(),[1,1,1]);assert.ok(b.matrixWorld.elements.every(Number.isFinite));});
    if(result.supported){assert.ok(result.direction.angleTo(target.clone().sub(result.origin))<=.0005);assert.ok(f.muzzle());}
