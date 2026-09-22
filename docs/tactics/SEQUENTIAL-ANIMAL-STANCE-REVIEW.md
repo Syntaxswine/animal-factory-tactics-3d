@@ -29,7 +29,7 @@ canvas. On narrower windows the displayed canvas scales down; use the recorded
 | Sheep | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Skunk | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Pig foreman | **9/10** | Close/steep aim holds; full equipment coverage open |
-| Pig director | Queued | Not yet inspected in this pass |
+| Pig director | **9/10** | Close/steep aim holds; full equipment coverage open |
 | Rabbit | Queued | Not yet inspected in this pass |
 | Dog | Queued | Not yet inspected in this pass |
 | Hen | Queued | Unarmed posture only; wing/weapon authoring remains separate |
