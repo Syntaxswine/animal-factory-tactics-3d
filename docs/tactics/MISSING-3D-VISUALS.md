@@ -16,10 +16,10 @@ This inventory is based on the checked-in model, weapon, environment and motion 
 | Element | What remains | Priority |
 | --- | --- | --- |
 | Gameplay locomotion | Standing walk, position/facing interpolation, stop settling and reduced-motion support are now connected. Remaining work: stance-specific gaits, terrain transitions and further visual refinement | Partial |
-| Aiming and firing | Aim at arbitrary targets from actual game actions; consistent grip, recoil and muzzle attachment for each weapon/species combination | First |
+| Aiming and firing | Standing rifle aim, grip, recoil and muzzle attachment now follow resolved game shots for mammals. Other weapons, stance variants and armed hen handling remain | Partial |
 | Kneeling and prone | Separate transitions and held poses; crouched movement and prone crawling; prone weapon handling | First |
 | Casualties | Authored fall, dead, wounded and stabilized poses. The first encounter currently uses a temporary tipped model for casualties | First |
-| Combat feedback | Gameplay muzzle flashes, traces, impact sparks/dust, hit reactions and readable damage feedback. The encounter currently reports outcomes in its event log | First |
+| Combat feedback | Rifle muzzle flash and visibility-clipped resolved traces are connected, with basic impact markers for ballistic shots. Material-specific sparks/dust, hit reactions and richer damage feedback remain | Partial |
 | Opposing uniforms | Red-hat/outfit variants are not connected to the character models; the model alone must not be relied on to identify allegiance | First |
 | Reloads and equipment changes | Magazine/round insertion, reload motion, draw/stow/swap, empty weapon poses and carried secondary equipment | Next |
 | Hen equipment | Wing grip and armed animation; existing hen motion is explicitly unarmed | Next |
