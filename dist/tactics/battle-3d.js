@@ -9,6 +9,10 @@ const $=id=>document.getElementById(id),canvas=$('battle'),ctx=canvas.getContext
 $('difficulty').value=readSettings().difficulty;
 let definition;
 try{definition=await loadBattleMap();}catch(error){$('message').textContent=error.message;$('restart').disabled=true;throw error;}
+if(new URLSearchParams(location.search).has('editorPlaytest')){
+ const back=document.createElement('button');back.id='return-editor';back.textContent='Return to editor';back.onclick=()=>{window.opener?.focus();window.close();};document.querySelector('header').append(back);
+ document.querySelector('aside h1').textContent='Playtest: '+definition.name;
+}
 let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,drag=null,lastUI='',overviewMode=false,lastUIBusy=false;
 const view={x:0,y:0,zoom:1.15};
 const selected=()=>state.units.find(u=>u.id===state.selected);

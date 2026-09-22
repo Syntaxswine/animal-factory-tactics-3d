@@ -1,6 +1,6 @@
 # Proposal: Animal Factory Tactics 3D map editor
 
-Status: milestone 1 implemented as a read-only inspector at `tactics/editor-3d.html`. Editing, storage and edited-map playtest remain planned. See [THREED-EDITOR-INSPECTION.md](THREED-EDITOR-INSPECTION.md) for scope and verification.
+Status: milestones 1 and 2 implemented at `tactics/editor-3d.html`: inspection, full-map brush editing, named saves, undo/redo and validated snapshot playtesting. See [THREED-EDITOR-EDITING.md](THREED-EDITOR-EDITING.md) for scope and verification. Full block/generator feature parity remains planned. The five-map story campaign and its dialogue/object-interaction systems are deferred separately.
 
 ## Purpose
 

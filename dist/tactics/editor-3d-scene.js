@@ -55,6 +55,12 @@ export class InspectionScene {
   }catch(error){equipment?.dispose();paint?.dispose();worker?.skeleton.dispose();worker?.dispose();if(generation===this.generation){this.diagnostics.push(unit.role+': '+error.message);this.changed();}}
  }
  showModel(model){const z=model.unit.z||0;model.root.visible=z<=this.options.level;for(const part of model.worker.parts)part.material=this.dim(model.paint.material,z);}
+ async update(document){
+  this.document=document;this.world=buildWorld(document.map);
+  const wanted=new Map(document.units.map(u=>[u.id,u]));
+  this.models=this.models.filter(m=>{const next=wanted.get(m.unit.id);if(next&&JSON.stringify(next)===JSON.stringify(m.unit)){wanted.delete(m.unit.id);return true;}m.root.removeFromParent();m.equipment?.dispose();const dim=this.dimMaterials.get(m.paint.material);dim?.dispose();this.dimMaterials.delete(m.paint.material);m.paint.dispose();m.worker.skeleton.dispose();m.worker.dispose();return false;});
+  this.rebuild();for(const unit of wanted.values())await this.loadUnit(unit,this.generation);this.changed();
+ }
  rebuild(){
   if(!this.document)return;const started=performance.now(),{level,roofs,walls}=this.options,source=this.document.map;
   const map={...source,props:source.props.filter(p=>!PAINTED_PROP_FORMS[p.kind]&&(roofs||!p.kind.startsWith('roof-')))};
@@ -72,7 +78,10 @@ export class InspectionScene {
    matrix.compose(position.set(p.x,z*D.floorSpacing,p.y),q.setFromAxisAngle(new T.Vector3(0,1,0),p.rotated?-Math.PI/2:0),scale.set(1,1,1));
    this.cargo.prototypes.get(key).root.traverse(part=>{if(part.isMesh)add(part.geometry,part.material,new T.Matrix4().multiplyMatrices(matrix,part.matrixWorld),z,p.x,p.y);});
   }
-  this.clearScenery();for(const {geometry,material,matrices}of groups.values()){const mesh=new T.InstancedMesh(geometry,material,matrices.length);matrices.forEach((m,i)=>mesh.setMatrixAt(i,m));mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();this.scenery.add(mesh);}
+  const prior=new Map(this.scenery.children.map(m=>[m.userData.chunk,m]));
+  for(const [key,{geometry,material,matrices}]of groups){const old=prior.get(key);prior.delete(key);if(old&&old.count===matrices.length&&matrices.every((m,i)=>m.elements.every((n,j)=>Math.abs(n-old.instanceMatrix.array[i*16+j])<1e-5)))continue;
+   if(old){old.removeFromParent();old.dispose();}const mesh=new T.InstancedMesh(geometry,material,matrices.length);mesh.userData.chunk=key;matrices.forEach((m,i)=>mesh.setMatrixAt(i,m));mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();this.scenery.add(mesh);}
+  for(const mesh of prior.values()){mesh.removeFromParent();mesh.dispose();}
   this.clearMarkers();
   const addMarker=(p,material,heading)=>{if((p.z||0)>level)return;const ring=new T.Mesh(this.markerGeo,material);ring.rotation.x=-Math.PI/2;ring.position.set(p.x,(p.z||0)*D.floorSpacing+.035,p.y);this.markers.add(ring);if(heading!==undefined){const angle=heading*Math.PI/180,arrow=new T.ArrowHelper(new T.Vector3(Math.cos(angle),0,Math.sin(angle)),ring.position,.85,material.color.getHex(),.2,.12);this.markers.add(arrow);}};
   for(const u of this.document.units)addMarker(u,u.id.startsWith('guard')?this.guardMat:this.startMat,u.heading||0);
@@ -82,13 +91,21 @@ export class InspectionScene {
  setOptions(options){Object.assign(this.options,options);this.rebuild();}
  select(selection){
   const points=[],h=this.options.level*D.floorSpacing+.045;
-  if(selection?.type==='edge'){const [axis,x,y]=selection.edge.split(':'),a=+x,b=+y;points.push(...(axis==='e'?[new T.Vector3(a+.5,h,b-.5),new T.Vector3(a+.5,h,b+.5)]:[new T.Vector3(a-.5,h,b+.5),new T.Vector3(a+.5,h,b+.5)]));}
+  if(selection?.type==='edge'){for(const edge of selection.edges||[selection.edge]){const [axis,x,y]=edge.split(':'),a=+x,b=+y;points.push(...(axis==='e'?[new T.Vector3(a+.5,h,b-.5),new T.Vector3(a+.5,h,b+.5)]:[new T.Vector3(a-.5,h,b+.5),new T.Vector3(a+.5,h,b+.5)]));}}
   else for(const p of selection?.cells||[]){const corners=[[-.5,-.5],[.5,-.5],[.5,.5],[-.5,.5]];for(let i=0;i<4;i++){const a=corners[i],b=corners[(i+1)%4];points.push(new T.Vector3(p.x+a[0],h,p.y+a[1]),new T.Vector3(p.x+b[0],h,p.y+b[1]));}}
   this.highlight.geometry.dispose();this.highlight.geometry=new T.BufferGeometry().setFromPoints(points);this.changed();
  }
  draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.renderer.render(this.scene,this.camera);}
  pick(x,y,width,height){return floorPoint(this.camera,x,y,width,height,this.options.level);}
+ preview(result){
+  if(this.previewMesh){this.previewMesh.removeFromParent();this.previewMesh.geometry.dispose();this.previewMesh.material.dispose();this.previewMesh.dispose();this.previewMesh=null;}
+  if(!result){this.select(null);return;}
+  const cells=result.cells||[],z=this.options.level;
+  const geometry=new T.PlaneGeometry(.98,.98),material=new T.MeshBasicMaterial({color:result.ok?0x91ddba:0xff6655,transparent:true,opacity:.4,depthTest:false,side:T.DoubleSide});
+  const mesh=new T.InstancedMesh(geometry,material,cells.length),matrix=new T.Matrix4();cells.forEach((p,i)=>{matrix.makeRotationX(-Math.PI/2);matrix.setPosition(p.x,z*D.floorSpacing+.06,p.y);mesh.setMatrixAt(i,matrix);});mesh.renderOrder=19;mesh.frustumCulled=false;this.scene.add(mesh);this.previewMesh=mesh;
+  this.highlight.material.color.setHex(result.ok?0xffe5a5:0xff6655);this.select(result.edges?.length?{type:'edge',edges:result.edges}:{cells});
+ }
  clearMarkers(){for(const object of this.markers.children)if(object.isArrowHelper||object.type==='ArrowHelper'){object.line.material.dispose();object.cone.material.dispose();}this.markers.clear();}
  clearModels(){for(const m of this.models){m.root.removeFromParent();m.root.position.set(0,0,0);m.root.updateMatrixWorld(true);m.equipment?.dispose();m.paint.dispose();m.worker.skeleton.dispose();m.worker.dispose();}this.models=[];for(const m of this.dimMaterials.values())m.dispose();this.dimMaterials.clear();}
- dispose(){this.generation++;this.clearModels();this.clearScenery();this.clearMarkers();this.cargo.dispose();for(const g of Object.values(this.geometry))g.dispose();for(const m of this.materials.values()){m.map.dispose();m.dispose();}this.highlight.geometry.dispose();this.highlight.material.dispose();this.markerGeo.dispose();this.guardMat.dispose();this.startMat.dispose();this.accessMat.dispose();this.renderer.dispose();}
+ dispose(){this.preview(null);this.generation++;this.clearModels();this.clearScenery();this.clearMarkers();this.cargo.dispose();for(const g of Object.values(this.geometry))g.dispose();for(const m of this.materials.values()){m.map.dispose();m.dispose();}this.highlight.geometry.dispose();this.highlight.material.dispose();this.markerGeo.dispose();this.guardMat.dispose();this.startMat.dispose();this.accessMat.dispose();this.renderer.dispose();}
 }
