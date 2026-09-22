@@ -3,7 +3,7 @@
 export function environmentModel(kind,w=1,d=1,h=.8){
  const p=[];
  const add=(shape,material,c,s,r=[0,0,0])=>p.push({shape,material,center:c,size:s,rotation:r});
- const box=(m,x,y,z,a,b,c,r)=>add('box',m,[x,y,z],[a,b,c],r);
+ const box=(m,x,y,z,a,b,c,r)=>add(m==='linen'||m==='sand'?'rounded':'box',m,[x,y,z],[a,b,c],r);
  const round=(m,x,y,z,a,b,c=a,r)=>add('cylinder',m,[x,y,z],[a,b,c],r);
  const leaf=(m,x,y,z,a,b,c,r=[0,0,0])=>add('crown',m,[x,y,z],[a,b,c],r);
  const bar=(m,a,b,r)=>{const v=b.map((n,i)=>n-a[i]),l=Math.hypot(...v);add('cylinder',m,a.map((n,i)=>(n+b[i])/2),[r,l,r],[Math.atan2(v[2],v[1]),0,-Math.atan2(v[0],Math.hypot(v[1],v[2]))]);};

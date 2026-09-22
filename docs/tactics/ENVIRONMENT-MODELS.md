@@ -27,7 +27,7 @@ Paint is shared across related surfaces; deliberate repeat and reuse remain
 visible under magnification. The intended acceptance scales are 58 and 110
 CSS px/unit, with the approved horse available for direct style comparison.
 
-The shared shape library now includes softened hard surfaces, shaped foliage
+The shared shape library now includes square-edged rigid blocks, shaped foliage
 fans, pillow-like sandbags, shouldered drums and thin hoops. Trees have branch
 structure and asymmetric crowns; crates have separate boards, braces and
 hardware. Beds, benches, medical cabinets and workshop equipment have more
@@ -73,7 +73,7 @@ selected model and is included in camera fitting.
 Current validation: **471/471 tests**, asset validation and the 3D distribution
 build pass. The final catalog sweep performs **456 renders**, with no browser
 errors or unsupported content and stable warmed resource counts (23 materials,
-22 GPU geometries, eight textures including the horse reference resources).
+23 GPU geometries, eight textures including the horse reference resources).
 
 `tools/environment-finished-integration.mjs` checks the Factory-test map in
 legacy/hybrid game and editor, real camera panning, game movement, wall editing,
@@ -84,6 +84,16 @@ not cross-device performance guarantees. Evidence is in the `integration/`
 subdirectory of `environment-finished-review/`.
 
 ## Final hostile review
+
+User-directed form correction: rigid construction now uses actual flat-faced,
+square-cornered boxes. Tabletops, workbench shelves, crate boards, cabinet panels
+and architectural blocks no longer inherit the rounded primitive. Rounded
+details are selected explicitly for cloth/sand components; cushions, sandbags,
+foliage, drums and other curved forms retain their intended shapes. All six
+focused environment tests, the 456-render browser sweep and distribution build
+pass after this correction; screenshots and resource counts are refreshed.
+The independent reviewer rated this bounded correction **9/10**, after another
+152-view sweep and four independently passing model tests.
 
 Independent art review progressed from **7/10** (overly busy grounds, wear and
 foliage) to **8.5/10** (material hierarchy corrected; overlapping cap surfaces)

@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.module.js';
-// Shared closed shapes: broad planes survive at gameplay scale, rounded edges
-// catch the painted light without multiplying per-instance geometry resources.
+// Rigid construction keeps planar faces and square corners. Rounding is an
+// explicit shape choice for soft details, not the default for every box.
 function rounded(){
  const g=new THREE.BoxGeometry(1,1,1,4,4,4),p=g.attributes.position;
  for(let i=0;i<p.count;i++){const v=new THREE.Vector3().fromBufferAttribute(p,i),c=v.clone().clampScalar(-.42,.42);v.sub(c).normalize().multiplyScalar(.08).add(c);p.setXYZ(i,v.x,v.y,v.z);}
@@ -18,7 +18,7 @@ function organic(type){
  g.computeVertexNormals();return g;
 }
 export function environmentGeometries(){
- const g={box:rounded(),cylinder:new THREE.CylinderGeometry(.5,.5,1,16),taper:new THREE.CylinderGeometry(.3,.5,1,12),cone:new THREE.ConeGeometry(.5,1,10),crown:organic('crown'),bough:organic('bough'),bag:organic('bag'),cushion:organic('bag'),leaf:new THREE.OctahedronGeometry(.5),ring:new THREE.TorusGeometry(.35,.15,6,16),wedge:new THREE.BoxGeometry(1,1,1)};
+ const g={box:new THREE.BoxGeometry(1,1,1),rounded:rounded(),cylinder:new THREE.CylinderGeometry(.5,.5,1,16),taper:new THREE.CylinderGeometry(.3,.5,1,12),cone:new THREE.ConeGeometry(.5,1,10),crown:organic('crown'),bough:organic('bough'),bag:organic('bag'),cushion:organic('bag'),leaf:new THREE.OctahedronGeometry(.5),ring:new THREE.TorusGeometry(.35,.15,6,16),wedge:new THREE.BoxGeometry(1,1,1)};
  const profile=[[0,-.5],[.43,-.5],[.475,-.47],[.49,-.36],[.5,-.15],[.495,.2],[.48,.43],[.44,.5],[0,.5]];
  g.drum=new THREE.LatheGeometry(profile.map(([r,y])=>new THREE.Vector2(r,y)),24);
  // Continuous terrain must meet at full tile edges; softened prop corners leave seams.
