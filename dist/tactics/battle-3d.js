@@ -1,9 +1,9 @@
-import {createGame,move,stepMovement,previewAttack,attack,reload,endTurn,stepEnemy,stepInvestigation,canControl,WEAPONS,setStance,stanceOf,STANCES,alive,moveGroup,combatCosts} from './core/engine.js';
+import {createGame,move,stepMovement,previewAttack,attack,reload,endTurn,stepEnemy,stepInvestigation,canControl,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts} from './core/engine.js';
 import {loadBattleMap} from './battle-map.js';
 import {BattleRenderer} from './battle-renderer.js';
 import {FLOOR_PIXELS} from './hybrid-renderer.js';
 import {MOVEMENT_MS} from './battle-motion.js';
-import {rectangleMembers,pruneSelection,toggleSelection,selectable} from './battle-selection.js';
+import {rectangleMembers,pruneSelection,toggleSelection,selectable,stanceSelection,setSelectionStance} from './battle-selection.js';
 import {readSettings} from './settings-3d.js';
 
 const $=id=>document.getElementById(id),canvas=$('battle'),ctx=canvas.getContext('2d');
@@ -41,8 +41,8 @@ function sync(){
  $('reload').disabled=renderer.busy||!canControl(state,u)||!!state.queue.length||!WEAPONS[u.weapon].mag;
  $('end').disabled=renderer.busy||state.phase!=='player'||!!state.queue.length;
  $('stop').disabled=!state.queue.length;
- for(const name of Object.keys(STANCES)){const b=$('stance-'+name);b.setAttribute('aria-pressed',String(stanceOf(u)===name));b.disabled=renderer.busy||!!state.queue.length||!canControl(state,u)||stanceOf(u)===name||combatCosts(state)&&u.ap<2;}
- $('stance-cost').textContent='Primary merc · '+(!combatCosts(state)?'Free stance change':'2 AP to change stance');
+ for(const name of Object.keys(STANCES)){const b=$('stance-'+name),group=stanceSelection(state,selectedIds,name);b.setAttribute('aria-pressed',String(group.all));b.disabled=renderer.busy||!group.ready.length;}
+ $('stance-cost').textContent=selectedIds.size+' selected · '+(!combatCosts(state)?'Free stance change':'2 AP per merc changing stance');
  $('log').replaceChildren(...state.log.slice(0,8).map(text=>{const li=document.createElement('li');li.textContent=text;return li;}));
  if(renderer.diagnostics.length)message(renderer.diagnostics.at(-1));
 }
@@ -60,14 +60,14 @@ function click(x,y,shift=false){
 }
 canvas.addEventListener('pointerdown',e=>{if(e.button!==0||drag)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,select:e.shiftKey};canvas.setPointerCapture(e.pointerId);});
 canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)drag.moved=true;if(drag.moved&&!drag.select){view.x+=e.clientX-drag.lastX;view.y+=e.clientY-drag.lastY;}drag.lastX=e.clientX;drag.lastY=e.clientY;});
-canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const d=drag;drag=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);const r=canvas.getBoundingClientRect();if(d.select&&d.moved){const ids=rectangleMembers(state.units,level,{x:d.x-r.left,y:d.y-r.top},{x:e.clientX-r.left,y:e.clientY-r.top},u=>project(renderer.displayUnit(u)));if(ids.length){selectedIds=new Set(ids);if(!selectedIds.has(state.selected))state.selected=ids[0];targetId=null;state.queue=[];message(ids.length+' mercs selected. Ground clicks move the group; actions use the primary merc.');sync();}else message('No mercs in that rectangle.');}else if(!d.moved)click(e.clientX-r.left,e.clientY-r.top,d.select);});
+canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const d=drag;drag=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);const r=canvas.getBoundingClientRect();if(d.select&&d.moved){const ids=rectangleMembers(state.units,level,{x:d.x-r.left,y:d.y-r.top},{x:e.clientX-r.left,y:e.clientY-r.top},u=>project(renderer.displayUnit(u)));if(ids.length){selectedIds=new Set(ids);if(!selectedIds.has(state.selected))state.selected=ids[0];targetId=null;state.queue=[];message(ids.length+' mercs selected. Ground clicks move the group; stance buttons affect the group; Fire and Reload use the primary merc.');sync();}else message('No mercs in that rectangle.');}else if(!d.moved)click(e.clientX-r.left,e.clientY-r.top,d.select);});
 canvas.addEventListener('pointercancel',()=>{drag=null;});
 canvas.addEventListener('lostpointercapture',()=>{drag=null;});
 window.addEventListener('blur',()=>{drag=null;});
 canvas.addEventListener('wheel',e=>{e.preventDefault();const box=canvas.getBoundingClientRect(),x=e.clientX-box.left,y=e.clientY-box.top,old=view.zoom;view.zoom=Math.max(.08,Math.min(3,old*Math.exp(-e.deltaY*.001)));view.x=x-(x-view.x)*view.zoom/old;view.y=y-(y-view.y)*view.zoom/old;},{passive:false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){drag=null;state.queue=[];targetId=null;sync();}});
 function action(fn){if(renderer.busy)return;const ok=fn();renderer.captureCombat(state);message(ok?'':'Action unavailable.');sync();}
- for(const name of Object.keys(STANCES))$('stance-'+name).onclick=()=>action(()=>setStance(state,selected(),name));
+ for(const name of Object.keys(STANCES))$('stance-'+name).onclick=()=>{if(renderer.busy)return;const result=setSelectionStance(state,selectedIds,name);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' changed to '+name+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'. Check AP and action availability.':''));sync();};
  $('restart').onclick=restart;$('center').onclick=center;$('overview').onclick=overview;
  $('reload').onclick=()=>action(()=>reload(state,selected()));$('end').onclick=()=>action(()=>endTurn(state));
  $('fire').onclick=()=>action(()=>{const t=target();return t&&attack(state,selected(),t);});

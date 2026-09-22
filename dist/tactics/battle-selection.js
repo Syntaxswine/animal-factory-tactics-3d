@@ -1,4 +1,4 @@
-import {alive} from './core/engine.js';
+import {alive,setStance,stanceOf,canControl,combatCosts,STANCES} from './core/engine.js';
 export const selectable=u=>u.team==='squad'&&alive(u)&&u.casualty!=='captured';
 export function rectangleMembers(units,level,a,b,project){
  const left=Math.min(a.x,b.x),right=Math.max(a.x,b.x),top=Math.min(a.y,b.y),bottom=Math.max(a.y,b.y);
@@ -10,3 +10,14 @@ export function pruneSelection(state,ids){
  return next;
 }
 export function toggleSelection(ids,id){const next=new Set(ids);if(next.has(id)&&next.size>1)next.delete(id);else next.add(id);return next;}
+
+export function stanceSelection(state,ids,stance){
+ const members=state.units.filter(u=>ids.has(u.id)&&selectable(u));
+ const ready=members.filter(u=>Object.hasOwn(STANCES,stance)&&stanceOf(u)!==stance&&canControl(state,u)&&!state.queue.length&&(!combatCosts(state)||u.ap>=2));
+ return {members,ready,all:members.length>0&&members.every(u=>stanceOf(u)===stance)};
+}
+export function setSelectionStance(state,ids,stance){
+ const members=stanceSelection(state,ids,stance).members,changed=[],skipped=[];
+ for(const u of members){if(stanceOf(u)===stance)continue;if(setStance(state,u,stance))changed.push(u.name);else skipped.push(u.name);}
+ return {changed,skipped};
+}

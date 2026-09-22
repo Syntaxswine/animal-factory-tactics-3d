@@ -8,7 +8,7 @@ import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {createWeaponModel} from '../dist/tactics/weapon-models.js';
 import {createRifleFiring} from '../dist/tactics/rifle-firing.js';
 import {BattleMotion,postureOf} from '../dist/tactics/battle-motion.js';
-import {rectangleMembers,pruneSelection,toggleSelection} from '../dist/tactics/battle-selection.js';
+import {rectangleMembers,pruneSelection,toggleSelection,stanceSelection,setSelectionStance} from '../dist/tactics/battle-selection.js';
 import {createGame,setStance,combatCosts} from '../dist/tactics/core/engine.js';
 
 test('rectangle selection works both ways and excludes guards, casualties, absent and other-floor mercs',()=>{
@@ -52,4 +52,14 @@ for(const profile of ANIMAL_MOTION_CATALOG)test(profile.id+': grounded stances, 
    for(const weapon of ['assault','smg','shotgun','sniper']){const old=equipment;equipment=createWeaponModel(weapon);worker.equipWeapon(equipment);old.dispose();for(const prone of [.25,.5,1])firing.apply({aim:0,target,sample:{pose:{prone},distance:.3,blend:1}});}
   }
  }finally{loc.dispose();equipment?.dispose();worker.dispose();}
+});
+
+test('group stances change every eligible merc, retain selection and report partial AP failures',()=>{
+ const s=createGame(),members=s.units.filter(u=>u.team==='squad'),ids=new Set(members.map(u=>u.id));
+ for(const stance of ['kneeling','prone','standing']){const result=setSelectionStance(s,ids,stance);assert.equal(result.changed.length,members.length);assert.equal(result.skipped.length,0);assert.ok(stanceSelection(s,ids,stance).all);}
+ s.phase='player';members[0].stance='kneeling';members[1].ap=1;const ap=members.map(u=>u.ap),before=[...ids];
+ const result=setSelectionStance(s,ids,'kneeling');assert.deepEqual(result.skipped,[members[1].name]);assert.equal(result.changed.length,members.length-2);
+ assert.equal(members[0].ap,ap[0]);assert.equal(members[1].ap,1);for(const u of members.slice(2))assert.equal(u.ap,ap[members.indexOf(u)]-2);
+ assert.equal(stanceSelection(s,ids,'kneeling').all,false);assert.deepEqual([...ids],before);
+ s.queue=[{}];assert.equal(stanceSelection(s,ids,'prone').ready.length,0);assert.equal(setSelectionStance(s,ids,'prone').changed.length,0);
 });
