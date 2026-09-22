@@ -6,7 +6,7 @@ Open `tactics/painted-furniture.html`, also linked from the 3D gallery. These ar
 
 | Model | Tile footprint | Construction |
 | --- | --- | --- |
-| Hanging cooking pot | 2×2 | Braced iron frame, linked chain, bail handle and open pot over the stone-ring fire |
+| Hanging cooking pot | 2×2 | Three-legged iron tripod, linked chain, bail handle and open pot over the stone-ring fire |
 | Stone-ring campfire | 1×1 | Charred crossed logs, ash, irregular stones and painted flame tongues |
 | Standing torch | 1×1 | Timber shaft, bound fuel head and iron tripod |
 | Wall-mounted torch | Wall / 1×1 projection | Timber torch with a projecting iron bracket |
@@ -38,7 +38,7 @@ There are no Light objects or emissive materials in these models. The gallery us
 - `npm run build:tactics-3d`: passed; all three furniture files are included in the Pages output.
 - Four furniture tests check all finishes for finite geometry, ground contact, footprint bounds, passive anchors, no emission and stable resource ownership/disposal.
 - `tools/painted-furniture-review.mjs`: all 15 forms at close/gameplay scale, an underside sconce view, mobile width, repeated finish changes and browser errors. Set `PLAYWRIGHT_PATH` when Playwright is outside the local module tree; optional `REVIEW_ORIGIN` defaults to port 4331.
-- Repeated gallery changes stabilized at 128 library geometries, 30 materials and 26 texture clones; browser rendering reported 139 geometries and 8 textures. No browser errors or mobile horizontal overflow in the final run.
+- Repeated gallery changes stabilized at 125 library geometries, 30 materials and 26 texture clones; browser rendering reported 136 geometries and 8 textures. No browser errors or mobile horizontal overflow in the final run.
 - Independent hostile review: **9/10**, no blockers for this design/gallery scope. Remaining optional art polish: repeated close-up texture crops and heavy refrigerator wear. Screenshots and machine results are local in `artifacts/furniture/` and `artifacts/furniture-review/`.
 
 The viewer uses a stable neutral-character framing envelope because skinned mesh bounds can retain stale positions when switching collection/single views. Model geometry bounds remain exact; this envelope affects camera framing only.
@@ -49,4 +49,4 @@ Fire assets support `build(id, finish, {burning: false})` for the extinguished v
 
 `animateFurnitureFire(root, seconds)` samples flame scale, sway and a subtle material brightness variation from absolute time. Pass `null` to restore the authored transforms and colors. Shared flame materials use a common brightness phase. The viewer offers a Flicker animation checkbox, honors reduced-motion preferences, stops scheduling frames for hidden pages or non-burning selections, and retains a fixed camera framing envelope while flickering. Loop periodicity, pose restoration, and absence of accumulated drift are unit-tested; browser checks cover movement, pause and reduced-motion changes.
 
-The `cooking-fire` arrangement reuses the complete campfire beneath a hollow, thick-rimmed pot. The pot bottom is at Y=0.83, with clearance above the animated flames. Four planted feet support two braced A-frames and an overhead rail; four alternating chain links connect the rail to the pot bail. Flames, animation controls and the passive emitter are inherited from the nested campfire. This is a visual asset; cooking and food interactions are not implemented.
+The `cooking-fire` arrangement reuses the complete campfire beneath a hollow, thick-rimmed pot. The pot bottom is at Y=0.83, with clearance above the animated flames. Three planted feet form a triangular pyramid, with the legs joining at a collar above the pot; eight alternating chain links connect the apex to the pot bail. Flames, animation controls and the passive emitter are inherited from the nested campfire. This is a visual asset; cooking and food interactions are not implemented.

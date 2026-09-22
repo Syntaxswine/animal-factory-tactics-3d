@@ -62,18 +62,19 @@ export function createFurnitureLibrary(atlas,cargo){
   const root=new THREE.Group();root.name=id;const timber=wood(skin),warm=wood(skin,1);
   if(id==='cooking-fire'){
    const hearth=build('campfire',skin,{burning}).root;root.add(hearth);
-   // Two braced A-frames keep the fire accessible from front and rear.
-   for(const x of [-.82,.82]){
-    for(const z of [-.64,.64]){cyl(root,iron,[x,.014,z],.075,.075,.028);tube(root,iron,[[x,.03,z],[x,1.95,0]],.032);}
-    tube(root,iron,[[x,.55,-.46],[x,.55,.46]],.023);
+   // Three planted legs form a triangular pyramid around the hearth.
+   for(let i=0;i<3;i++){
+    const a=-Math.PI/2+i*Math.PI*2/3,x=Math.cos(a)*.90,z=Math.sin(a)*.90;
+    cyl(root,iron,[x,.014,z],.065,.065,.028);
+    tube(root,iron,[[x,.03,z],[0,2.20,0]],.033);
    }
-   tube(root,iron,[[-.91,1.95,0],[.91,1.95,0]],.04);
+   cyl(root,iron,[0,2.185,0],.073,.073,.075);
    const potMaterial=material('cooking-pot',0x65615a,[.56,.08,.30,.33]);
    const profile=[[0,0],[.17,0],[.25,.065],[.31,.18],[.335,.42],[.335,.46],[.304,.46],[.302,.41],[.278,.18],[.22,.085],[0,.06]],pot=mesh(root,geo('cooking-pot',()=>new THREE.LatheGeometry(profile.map(v=>new THREE.Vector2(...v)),32)),potMaterial,[0,.83,0]);pot.name='cooking-pot';
    mesh(root,geo('pot-rim',()=>new THREE.TorusGeometry(.322,.019,7,32)),iron,[0,1.285,0],[Math.PI/2,0,0]);
    for(const x of [-.335,.335]){box(root,iron,[x,1.24,0],[.055,.08,.055]);mesh(root,geo('pot-handle-eye',()=>new THREE.TorusGeometry(.038,.009,6,12)),brass,[x,1.285,0],[0,Math.PI/2,0]);}
    tube(root,iron,[[-.35,1.28,0],[-.30,1.50,0],[0,1.71,0],[.30,1.50,0],[.35,1.28,0]],.016);
-   for(let i=0;i<4;i++)mesh(root,geo('pot-chain-link',()=>new THREE.TorusGeometry(.034,.008,6,12)),iron,[0,1.728+i*.061,0],[0,i%2*Math.PI/2,0]);
+   for(let i=0;i<8;i++)mesh(root,geo('pot-chain-link',()=>new THREE.TorusGeometry(.034,.008,6,12)),iron,[0,1.728+i*.061,0],[0,i%2*Math.PI/2,0]);
    const broth=material('stew',0x9b642f,[.40,.12,.15,.26],cargo);cyl(root,broth,[0,1.205,0],.294,.294,.012);
   }else if(form.fire){
    const ash=material('ash',0x58544c,[.56,.08,.30,.33]),char=material('charred-timber',0x625344,[.54,.53,.30,.42]),stone=material('fire-stone',0x9a9585,[.56,.08,.30,.33]);
