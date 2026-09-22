@@ -44,3 +44,10 @@ The capture tool accepts `--no-video` and `--animal=hen` (or another catalog ID)
 Independent review has cleared horse, bull, cow, rabbit, skunk, sheep, donkey and foreman repairs at **9/10 each**, plus **9/10** for the hen's unarmed leg-junction repair. These scores apply to the actual localized visuals in carry, crouch/aim, recoil, front/side/rear and gameplay views, rather than merely the diagnostic packet.
 
 Architect approval of the revised motion transfers and publication remain pending. The hen's weapon-handling limitation remains explicit.
+## Donkey neck follow-up
+
+The upright profile still enlarged a narrow cheek-paint strip into long vertical streaks. A broader forearm-fur footprint now continues the neck into the jaw, with continuous coordinates across the nape. The stray gold mark was on the mane root (confirmed by raycast), so that small region now uses dark mane painting. The accepted neck height, skull, collar geometry and skin weights remain unchanged.
+
+This follow-up passes **43 relevant geometry/motion tests**, **264 donkey browser configurations**, and the 3D distribution build. Donkey view sheets and both motion videos are refreshed; `donkey-neck-before.png` and `donkey-neck-after.png` record the reported upright profile.
+
+Independent hostile review cleared this neck/mane correction at **9/10**, including both actual profiles through carry, transition and aiming, plus rear, three-quarter and gameplay views. The opposite-profile evidence is in `donkey-neck-profiles.png`; reproduce it with `node tools/donkey-neck-review.mjs`. The camera is reflected around its focus, since the regular Side camera follows character heading.
