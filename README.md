@@ -12,6 +12,8 @@ The encounter now animates walking, tile-to-tile travel, turning and rifle firin
 
 The first [3D editor milestone](docs/tactics/THREED-EDITOR-INSPECTION.md) is a read-only map inspector at `tactics/editor-3d.html`: import maps/blocks, inspect actual models from five camera views, select logical footprints on three floors and export unchanged JSON. The existing editor remains available for editing.
 
+The site opens on the game title screen (`dist/tactics-3d.html` locally). Quick Fight launches the full authored factory; Map Editor opens the 3D inspector. Options remember Easy/Standard difficulty and device/reduced/full motion for subsequent fights in the separate `animal-factory-tactics-3d:options:v1` storage key. Campaign and Save / Load are explicitly marked coming soon; no game-save or story-mode integration is implied. Existing studies remain under Models & art galleries (`tactics-3d-gallery.html`). `tools/title-3d-review.mjs` checks navigation, saved options applied to combat, storage failure handling and mobile layout; use `REVIEW_URL` for packaged or published title pages.
+
 The main sprite game continues separately. The target is one authoritative game core with an optional 3D presentation. See [project scope and shared-core contract](docs/tactics/THREED-PROJECT.md) for the current boundary and next steps.
 
 ## Development

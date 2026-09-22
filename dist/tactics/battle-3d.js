@@ -3,8 +3,10 @@ import {loadBattleMap} from './battle-map.js';
 import {BattleRenderer} from './battle-renderer.js';
 import {FLOOR_PIXELS} from './hybrid-renderer.js';
 import {MOVEMENT_MS} from './battle-motion.js';
+import {readSettings} from './settings-3d.js';
 
 const $=id=>document.getElementById(id),canvas=$('battle'),ctx=canvas.getContext('2d');
+$('difficulty').value=readSettings().difficulty;
 let definition;
 try{definition=await loadBattleMap();}catch(error){$('message').textContent=error.message;$('restart').disabled=true;throw error;}
 let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,drag=null,lastUI='',overviewMode=false,lastUIBusy=false;

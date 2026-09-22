@@ -11,12 +11,13 @@ import {createWorkerLocomotion} from './worker-locomotion.js';
 import {BattleCombat} from './battle-combat.js';
 import {createRifleFiring} from './rifle-firing.js';
 import {BattleShotEffects,shotPoint} from './battle-shot-effects.js';
+import {motionPreference} from './settings-3d.js';
 
 // Reuse only the environment/camera presentation. No hybrid combat mode.
 export class BattleRenderer extends HybridRenderer {
  constructor(onReady=()=>{}){
   super(onReady);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
-  this.motion=new BattleMotion();this.reducedMotion=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
+  this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
  }
