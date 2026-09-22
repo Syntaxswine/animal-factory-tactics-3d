@@ -11,7 +11,7 @@ const view={x:11.5,y:11.5,span:24,preset:'0'};
 const scene=new InspectionScene(canvas,()=>{dirty=true;diagnostics();});
 const status=text=>$('status').textContent=text;
 function diagnostics(){$('diagnostics').textContent=scene.diagnostics.join('\n')||'No missing scene assets reported.';$('metrics').textContent=`${scene.models.length} modeled starts · load ${Math.round(scene.loadMs||0)} ms · scenery ${Math.round(scene.rebuildMs||0)} ms · ${scene.renderer.info.memory.geometries} geometries / ${scene.renderer.info.memory.textures} textures`;}
-function render(){if(dirty){scene.draw(view,canvas.clientWidth,canvas.clientHeight);dirty=false;diagnostics();}requestAnimationFrame(render);}
+function render(){if(dirty||scene.lights?.animated){scene.draw(view,canvas.clientWidth,canvas.clientHeight);dirty=false;diagnostics();}requestAnimationFrame(render);}
 function focus(x,y,span=24){view.x=x;view.y=y;view.span=span;dirty=true;}
 function home(){view.preset='0';$('camera').value='0';const p=documentModel?.map.starts[0];focus(p?.x??11.5,p?.y??11.5,22);}
 async function open(text){

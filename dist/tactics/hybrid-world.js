@@ -1,3 +1,4 @@
+import {LIGHT_FORMS} from './light-sources.js';
 import {EDGES, PROPS, propCells, GROUNDS} from './environment.js';
 import {segmentBox} from './hybrid-geometry.js';
 import {propParts} from './hybrid-props.js';
@@ -52,6 +53,7 @@ export function buildWorld(map){
   }else diagnostics.push({source:`edge:${key}`,kind,message:'Unsupported edge'});
  }
  for(const p of map.props||[]){
+  if(LIGHT_FORMS[p.kind])continue;
   const id=`prop:${p.x},${p.y},${p.z||0}:${p.kind}`;
   if(!supportedProps.has(p.kind)){diagnostics.push({source:id,kind:p.kind,message:'Unsupported prop'});continue;}
   if(p.kind.startsWith('roof-')){

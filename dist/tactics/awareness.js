@@ -1,3 +1,4 @@
+import {lightSources,lightBrightness} from './light-sources.js';
 import {woodlandDepth} from './core/woodland.js';
 import {daylightAt} from './daylight.js';
 import {traceProjectile,targetHeight} from './core/projectiles.js';
@@ -11,7 +12,13 @@ export function illuminationAt(s,u,zone='torso'){
  const origin={x:u.x,y:u.y,h:(u.z||0)*3+targetHeight(u,zone)};
  const direction={x:sun.direction[0],y:sun.direction[2],h:sun.direction[1]};
  // Ambient visibility is deliberately separate from renderer exposure settings.
- return .12+.13*sun.strength+.75*sun.strength*(sun.strength>0&&clearRay(s,origin,direction,80)?1:0);
+ let brightness=.12+.13*sun.strength+.75*sun.strength*(sun.strength>0&&clearRay(s,origin,direction,80)?1:0);
+ for(const lamp of lightSources(s.props,s.clock?.minutes??mapStartMinutes(s.definition))){
+  const ray={x:lamp.x-origin.x,y:lamp.y-origin.y,h:lamp.h-origin.h},distance=Math.hypot(ray.x,ray.y,ray.h),strength=lightBrightness(distance);
+  // Exclude the emitter's own coarse collision footprint, not intervening geometry.
+  if(strength&&(distance<1e-6||clearRay({...s,props:s.props.filter(p=>p!==lamp.prop)},origin,ray,distance)))brightness+=strength;
+ }
+ return Math.min(1,brightness);
 }
 export function awarenessRate({distance,exposure,light,contrast=0,perception=50,stealth=20,sneaking=false,running=false,moving=false,stance='standing',alert=false,concealment=0}){
  const skill=clamp(1+(perception-stealth)/100,.35,1.8),motion=moving?(running?1.65:1.2):.65;

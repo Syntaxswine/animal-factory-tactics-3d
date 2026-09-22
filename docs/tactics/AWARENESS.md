@@ -14,7 +14,7 @@ Exploration samples every five game seconds (a quarter real second at current pa
 
 Sunlight uses the shared daylight direction and strength. Rays from each exposed body region toward the sun use the same solid geometry as sight and projectiles, ignoring character bodies. Daylight reaches 100%; sun-blocked daytime ambient is 25%; night ambient is 12%. These gameplay values are separate from display exposure. The geometry uses existing tactical wall/prop/floor approximations, so decorative mesh shadows are not guaranteed to match detection pixel for pixel. A brighter sample two tiles behind a darker target provides a limited silhouette bonus. This is a first approximation, not a full image-contrast model.
 
-Artificial lamps and their five-tile brightness bands remain separate work. No invisible lamp sources are introduced by this system.
+Placed lamps and fires now contribute using the same five-tile brightness bands and geometry ray tests. See `ARTIFICIAL-LIGHTING.md` for schedules, models and rendering limitations.
 
 ## Memory, sound and feedback
 

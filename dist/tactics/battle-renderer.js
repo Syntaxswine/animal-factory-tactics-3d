@@ -1,3 +1,4 @@
+import {LightingScene} from './lighting-scene.js';
 import {DaylightRig} from './daylight-rig.js';
 import * as T from './vendor/three.module.js';
 import {HybridRenderer} from './hybrid-renderer.js';
@@ -20,6 +21,7 @@ import {motionPreference} from './settings-3d.js';
 export class BattleRenderer extends HybridRenderer {
  constructor(onReady=()=>{}){
   super(onReady);this.daylight=new DaylightRig(this.scene,this.renderer);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
+  this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
   this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
@@ -113,7 +115,7 @@ export class BattleRenderer extends HybridRenderer {
  displayUnit(unit){const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){
   this.generation++;
-  this.daylight.dispose();this.paintedEnvironment.dispose();
+  this.lights.dispose();this.daylight.dispose();this.paintedEnvironment.dispose();
   this.motion.clear();
   this.combat.clear();this.shotEffects.dispose();
   for(const {worker,paint,root,equipment,locomotion,cap}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}

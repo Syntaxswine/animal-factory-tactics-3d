@@ -1,3 +1,4 @@
+import {LIGHT_PROPS} from '../light-sources.js';
 // Explicit game rules for the supplied environment art. Manifest prose is not executable.
 export const GROUNDS=['ground-dirt','ground-gravel','ground-grass','ground-concrete','ground-asphalt','ground-tiles'];
 export const PROPS={
@@ -40,3 +41,5 @@ export const propTall=(m,x,y,z=0)=>!!PROPS[propAt(m,x,y,z)?.kind]?.tall;
 
 // Unlocked doors stay solid to shots until a character opens them while crossing.
 for(const kind of ['door-steel-closed','door-wood-closed','jail-door-closed'])EDGES[kind].opensTo='doorway-concrete-open';
+
+Object.assign(PROPS,LIGHT_PROPS);

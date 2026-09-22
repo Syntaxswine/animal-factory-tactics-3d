@@ -28,7 +28,7 @@ export function createFurnitureLibrary(atlas,cargo){
  const geo=(key,make)=>{if(!geometries.has(key))geometries.set(key,make());return geometries.get(key);};
  function material(name,color,cell,source=atlas){
   if(materials.has(name))return materials.get(name);
-  const m=new THREE.MeshStandardMaterial({color,roughness:.88});
+  const m=new THREE.MeshStandardMaterial({color,roughness:.88});m.name=name;
   if(cell){const t=source.clone();t.offset.set(cell[0],cell[1]);t.repeat.set(cell[2],cell[3]);t.needsUpdate=true;textures.push(t);m.map=t;}
   if(name.startsWith('wood:')){const tone=name.includes(':honey:')?[.22,.13,.065]:name.includes(':cream:')?[.48,.41,.30]:[.16,.20,.12];m.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb=mix(vec3('+tone.join(',')+'),diffuseColor.rgb,.62);');};m.customProgramCacheKey=()=>name;}
   materials.set(name,m);return m;

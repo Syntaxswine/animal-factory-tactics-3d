@@ -7,6 +7,10 @@
       "reason": "Use shared round timing and opt-in 3D exposure-based awareness.",
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
+    "environment.js": {
+      "reason": "Register authored light fixture footprints and collision rules.",
+      "upstreamSha256": "424fa8b3f1287ac42a84f24e853ed382dabfd51bae10940fe62caa2b460d123a"
+    },
     "world.js": {
       "reason": "Use the shared clock, one-minute completed rounds, and exploration pacing.",
       "upstreamSha256": "5a63c5210c7d9c5a819fd8213ced2762930a2ccc9a383a25e2016d7a2e85801a"
@@ -18,7 +22,7 @@
     "connections.js": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f",
     "editor-model.js": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262",
     "engine.js": "4101766e0f2cfe22aa07a0433e4983dab186213196ae7cbad1c8b6fe55064d4d",
-    "environment.js": "424fa8b3f1287ac42a84f24e853ed382dabfd51bae10940fe62caa2b460d123a",
+    "environment.js": "4c60325305b1159ba3c8e74fae9d98b1deef44c57452db54d236f31568b24de1",
     "explosives.js": "ab0e3a635edf516022bbe247b3a20651d2323053321573ea0bf6fb1e42525b38",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",

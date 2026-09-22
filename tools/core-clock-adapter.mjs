@@ -1,5 +1,6 @@
 // Explicit, reproducible changes to the pinned dependency. Never edit core/.
 export const clockOverrides={
+ 'environment.js':'Register authored light fixture footprints and collision rules.',
  'engine.js':'Use shared round timing and opt-in 3D exposure-based awareness.',
  'world.js':'Use the shared clock, one-minute completed rounds, and exploration pacing.'
 };
@@ -7,6 +8,7 @@ function once(source,from,to){if(source.split(from).length!==2)throw Error('Cloc
 export function adaptCoreClock(name,data){
  if(!clockOverrides[name])return data;
  let s=data.toString();
+ if(name==='environment.js'){return Buffer.from("import {LIGHT_PROPS} from '../light-sources.js';\n"+s+'\nObject.assign(PROPS,LIGHT_PROPS);\n');}
  if(name==='engine.js'){
   s=once(s,',ROUND_MINUTES=10,',',');
   s="import {updateAwareness,awarenessPerception} from '../awareness.js';\n"+s;

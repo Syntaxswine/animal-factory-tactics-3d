@@ -32,10 +32,12 @@ export class DaylightRig {
   // Async character, cargo and scenery loads all join the same lighting setup.
   // Unlit editor markers and combat effects must never cast geometry shadows.
   this.scene.traverse(object=>{if(!object.isMesh)return;const materials=Array.isArray(object.material)?object.material:[object.material];
-   if(materials.some(m=>m?.isMeshStandardMaterial||m?.isMeshPhongMaterial||m?.isMeshLambertMaterial)){object.castShadow=true;object.receiveShadow=true;
+   if(materials.some(m=>m?.isMeshStandardMaterial||m?.isMeshPhongMaterial||m?.isMeshLambertMaterial)){object.castShadow=!object.userData.noShadow;object.receiveShadow=true;
     for(const material of materials)if(!material.userData.daylightPrepared){
      material.userData.daylightPrepared=true;const compile=material.onBeforeCompile,key=material.customProgramCacheKey();
-     material.onBeforeCompile=(shader,renderer)=>{compile.call(material,shader,renderer);shader.fragmentShader=shader.fragmentShader.replace('outgoingLight=max(outgoingLight,diffuseColor.rgb*.75);','');};
+     material.onBeforeCompile=(shader,renderer)=>{compile.call(material,shader,renderer);shader.fragmentShader=shader.fragmentShader.replace('outgoingLight=max(outgoingLight,diffuseColor.rgb*.75);','');
+      const lights=T.ShaderChunk.lights_pars_begin.replace('float distanceFalloff =', 'if (decayExponent == 0.0 && cutoffDistance == 30.0) { if(lightDistance > 30.0) return 0.0; return pow(0.5,max(0.0,ceil(lightDistance / 5.0)-1.0)); }\n float distanceFalloff =');
+      shader.fragmentShader=shader.fragmentShader.replace('#include <lights_pars_begin>',lights);};
      material.customProgramCacheKey=()=>key+'-daylight';material.needsUpdate=true;
     }}
   });
