@@ -11,12 +11,16 @@
       "reason": "Require neighboring authored doors to agree on lock difficulty.",
       "upstreamSha256": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f"
     },
+    "editor-model.js": {
+      "reason": "Allow supported cliff tiles at water edges.",
+      "upstreamSha256": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262"
+    },
     "engine.js": {
       "reason": "Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks.",
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
     "environment.js": {
-      "reason": "Register authored light fixture footprints and collision rules.",
+      "reason": "Register authored light and cliff footprints and collision rules.",
       "upstreamSha256": "424fa8b3f1287ac42a84f24e853ed382dabfd51bae10940fe62caa2b460d123a"
     },
     "explosives.js": {
@@ -28,7 +32,7 @@
       "upstreamSha256": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f"
     },
     "maps.js": {
-      "reason": "Validate tower lookouts, locks and fixture condition; enforce locked-door traversal.",
+      "reason": "Validate cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal.",
       "upstreamSha256": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73"
     },
     "progression.js": {
@@ -36,7 +40,7 @@
       "upstreamSha256": "8cf9aed74b163167aa7e432ad0c744ab9d3f55a30d5a3f3eaf218c163bde4e23"
     },
     "projectiles.js": {
-      "reason": "Trace open tower windows and elevated tower occupants.",
+      "reason": "Trace open tower windows, elevated occupants and welded cliff surfaces.",
       "upstreamSha256": "f8b2afc98c686cd892189d17f4fe7cb7ae7c16b8d8f2f8609ca78cf8b3192674"
     },
     "world.js": {
@@ -48,18 +52,18 @@
     "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
     "blocks.js": "c57a672d9a279dd7a61b60008ffeabd09b84ed3f70a4ed30d9ae5f7728b6fb12",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
-    "editor-model.js": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262",
+    "editor-model.js": "476f20f5c5848b78a155d4fa6884f6724934449b0bf278728ff9408635c5be4f",
     "engine.js": "1da3ed25a755beee2d0e350108dcc05f90c9efe052abb3aeabae5ecf7550cc5b",
-    "environment.js": "4c60325305b1159ba3c8e74fae9d98b1deef44c57452db54d236f31568b24de1",
+    "environment.js": "0030f1ad61122c0d0f989f32da362837a03938def60be417f88492fb22d3a666",
     "explosives.js": "d28c8600c983f8a018a32e84a137836b81165d80924587f0195f23a540a64fa4",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "521036500cfc6e0965e9b2db6b47ea33ca7996bf74d24648fd734da5ba20742f",
-    "maps.js": "1691d7c26865ba77f987136084adbae2cbaa97f25ec466290877e20ad4f55a7c",
+    "maps.js": "37840a8434a120b6d4e9cb5962f89c6e9a38efb62de6b2ae707aa54ede1d8c3c",
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",
-    "projectiles.js": "7bad756c863435d4ba5242c7c104349ed4631d03667bcd74be0ee084a138c02a",
+    "projectiles.js": "69853de71fa76be3048afc2c8d81d94a3de0497f814fb763c81021c9ed454300",
     "recruits.js": "5e4495962cdad3d0b57f0d1784bddbf54fa785e6e00a9ae932cfb7dbbbeeb81b",
     "sector-rules.js": "d20ee872471a503a60ac706655b19f9ba9857c41882dd6cc6a08d61e3572132a",
     "visibility.js": "17d3de4a6aca835dc176ac3fcc9f460fb12aae83bf5d2c0154b29a789ed5dc48",

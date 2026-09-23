@@ -1,3 +1,4 @@
+import {cliffRayHit} from '../cliff-map-geometry.js';
 import {unitBaseHeight,towerRayHit} from '../tower-geometry.js';
 import {terrainAt,levelOf,sightEdge,W,H,LEVELS} from './maps.js';
 import {PROPS,propAt} from './environment.js';
@@ -27,7 +28,7 @@ export function traceProjectile(state,shooter,origin,direction,reach){
   if(t<=end&&t<limit){limit=t;nearest=unit;}
  }
  const impact=(kind,t,extra={})=>{const p=point(origin,d,t);return {kind,...p,z:Math.max(0,Math.min(LEVELS-1,Math.floor((p.h+EPS)/3))),distance:t,...extra};};
- const towerHit=towerRayHit(state.props,origin,d,limit);if(towerHit!==null&&towerHit<limit){limit=towerHit;nearest=null;}
+ const hits=[towerRayHit(state.props,origin,d,limit),cliffRayHit(state.props,origin,d,limit)].filter(t=>t!==null),terrainHit=hits.length?Math.min(...hits):null;if(terrainHit!==null&&terrainHit<limit){limit=terrainHit;nearest=null;}
  // Exact grid/level crossings keep thin walls, corner joins and floor slabs solid.
  const crossings=[0,limit];
  for(const axis of ['x','y'])if(Math.abs(d[axis])>EPS){
@@ -62,7 +63,7 @@ export function traceProjectile(state,shooter,origin,direction,reach){
   const height=terrain==='wall'||prop?.tall?2.7:(terrain==='crate'||prop?.solid&&prop.cover>0)?.8:0;
   if(height){const vertical=slab(origin.h,d.h,z*3,z*3+height);if(vertical){const hit=Math.max(t,vertical[0]);if(hit<=Math.min(end,vertical[1]))return impact('cover',hit);}}
  }
- if(towerHit!==null&&limit===towerHit)return impact('cover',limit);
+ if(terrainHit!==null&&limit===terrainHit)return impact('cover',limit);
  if(nearest){const result=impact('unit',limit,{unitId:nearest.id}),relative=(result.h-unitBaseHeight(nearest))/bodyHeight(nearest);result.zone=relative>.85?'head':relative<.38?'legs':'torso';return result;}
  return impact('range',reach);
 }

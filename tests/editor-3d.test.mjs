@@ -38,5 +38,5 @@ test('invalid imports fail without replacing an existing document; cargo sizes f
  assert.deepEqual(PREVIEW_FOOTPRINTS.find(p=>p.id==='truck').tiles,[2,3]);assert.deepEqual(PREVIEW_FOOTPRINTS.find(p=>p.id==='barrel-row').tiles,[1,2]);
 });
 test('scenery map catalog agrees with the pinned editing and encounter rules',()=>{
- const normalize=f=>fs.readFileSync(new URL(f,root),'utf8').replaceAll('\r','');assert.equal(normalize('environment.js'),normalize('core/environment.js').replace("import {LIGHT_PROPS} from '../light-sources.js';\n",'').replace('\nObject.assign(PROPS,LIGHT_PROPS);\n',''));
+ const normalize=f=>fs.readFileSync(new URL(f,root),'utf8').replaceAll('\r','');assert.equal(normalize('environment.js'),normalize('core/environment.js').replace("import {CLIFF_PROPS} from '../cliff-map.js';\n",'').replace("import {LIGHT_PROPS} from '../light-sources.js';\n",'').replace('\nObject.assign(PROPS,LIGHT_PROPS,CLIFF_PROPS);\n',''));
 });

@@ -5,9 +5,10 @@ export const clockOverrides={
  'blocks.js':'Preserve authored door locks across block extraction and placement.',
  'progression.js':'Use canonical 1-100 stats and derived resources for opted-in characters.',
  'explosives.js':'Use physical tower heights, weapon skills and endurance-aware explosive previews.',
- 'maps.js':'Validate tower lookouts, locks and fixture condition; enforce locked-door traversal.',
- 'projectiles.js':'Trace open tower windows and elevated tower occupants.',
- 'environment.js':'Register authored light fixture footprints and collision rules.',
+ 'maps.js':'Validate cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal.',
+ 'projectiles.js':'Trace open tower windows, elevated occupants and welded cliff surfaces.',
+ 'environment.js':'Register authored light and cliff footprints and collision rules.',
+ 'editor-model.js':'Allow supported cliff tiles at water edges.',
  'engine.js':'Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks.',
  'world.js':'Use the shared clock, one-minute completed rounds, and exploration pacing.'
 };
@@ -15,8 +16,16 @@ function once(source,from,to){if(source.split(from).length!==2)throw Error('Cloc
 export function adaptCoreClock(name,data){
  if(!clockOverrides[name])return data;
  let s=data.toString();
- if(name==='environment.js'){return Buffer.from("import {LIGHT_PROPS} from '../light-sources.js';\n"+s+'\nObject.assign(PROPS,LIGHT_PROPS);\n');}
+ if(name==='environment.js'){return Buffer.from("import {CLIFF_PROPS} from '../cliff-map.js';\nimport {LIGHT_PROPS} from '../light-sources.js';\n"+s+'\nObject.assign(PROPS,LIGHT_PROPS,CLIFF_PROPS);\n');}
+ if(name==='editor-model.js'){
+  s="import {isCliff} from '../cliff-map.js';\n"+s;
+  s=once(s,'!floorTerrain(terrainAt(m,q.x,q.y,q.z))||propAt(m,q.x,q.y,q.z)',"!(floorTerrain(terrainAt(m,q.x,q.y,q.z))||isCliff(p)&&terrainAt(m,q.x,q.y,q.z)==='water')||propAt(m,q.x,q.y,q.z)");
+  return Buffer.from(s);
+ }
  if(name==='maps.js'){
+  s="import {isCliff,cliffMapErrors} from '../cliff-map.js';\n"+s;
+  s=once(s,'const propPositions=new Set();',"errors.push(...cliffMapErrors(raw));const propPositions=new Set();");
+  s=once(s,'!floorTerrain(terrainAt(raw,q.x,q.y,q.z))',"!(floorTerrain(terrainAt(raw,q.x,q.y,q.z))||isCliff(p)&&terrainAt(raw,q.x,q.y,q.z)==='water')");
   s=once(s," if(!raw.edges||", " if(raw.edgeLocks!==undefined&&(!raw.edgeLocks||typeof raw.edgeLocks!=='object'||Array.isArray(raw.edgeLocks)))return [...errors,'Invalid door locks.'];\n for(const [key,value]of Object.entries(raw.edgeLocks||{}))if(!EDGES[raw.edges?.[key]]?.opensTo||!Number.isInteger(value)||value<1||value>100)return [...errors,'Door locks require closed doors and difficulty 1-100.'];\n for(const p of raw.props||[])if(p.condition!==undefined&&(!Number.isInteger(p.condition)||p.condition<0||p.condition>100))return [...errors,'Fixture condition must be 0-100.'];\n if(!raw.edges||");
   s=once(s,'if(!next)return false;m.edges[k]=next;', 'if(!next||m.edgeLocks?.[k])return false;m.edges[k]=next;');
   s=once(s,'||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo)', '||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo&&!m.edgeLocks?.[edgeBetween(p,b)])');
@@ -64,10 +73,10 @@ export function adaptCoreClock(name,data){
   return Buffer.from(s);
  }
  if(name==='projectiles.js'){
-  s="import {unitBaseHeight,towerRayHit} from '../tower-geometry.js';\n"+s;
+  s="import {cliffRayHit} from '../cliff-map-geometry.js';\nimport {unitBaseHeight,towerRayHit} from '../tower-geometry.js';\n"+s;
   s=s.replace(/levelOf\((unit|nearest|shooter|target)\)\*3/g,(_,u)=>`unitBaseHeight(${u})`);
-  s=once(s,' // Exact grid/level crossings'," const towerHit=towerRayHit(state.props,origin,d,limit);if(towerHit!==null&&towerHit<limit){limit=towerHit;nearest=null;}\n // Exact grid/level crossings");
-  s=once(s," if(nearest){const result=impact('unit'", " if(towerHit!==null&&limit===towerHit)return impact('cover',limit);\n if(nearest){const result=impact('unit'");
+  s=once(s,' // Exact grid/level crossings'," const hits=[towerRayHit(state.props,origin,d,limit),cliffRayHit(state.props,origin,d,limit)].filter(t=>t!==null),terrainHit=hits.length?Math.min(...hits):null;if(terrainHit!==null&&terrainHit<limit){limit=terrainHit;nearest=null;}\n // Exact grid/level crossings");
+  s=once(s," if(nearest){const result=impact('unit'", " if(terrainHit!==null&&limit===terrainHit)return impact('cover',limit);\n if(nearest){const result=impact('unit'");
   return Buffer.from(s);
  }
  if(name==='engine.js'){

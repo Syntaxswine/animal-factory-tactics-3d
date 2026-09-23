@@ -1,3 +1,4 @@
+import {isCliff,CLIFF_LIMIT} from './cliff-map.js';
 import {TOWERS,towerSlots,towerPost} from './tower-geometry.js';
 import {LIGHT_FORMS} from './light-sources.js';
 import {mapStartMinutes} from './game-clock.js';
@@ -15,20 +16,28 @@ export class EditingDocument extends InspectionDocument {
   const {tool,start,end=start,options={}}=command;
   if(!start||![start.x,start.y,start.z??0].every(Number.isInteger))return {ok:false,error:'Choose a map cell.'};
   if(this.block&&(['squad','exit'].includes(tool)||[start,end].some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24)))return {ok:false,error:'Keep block edits inside 24 × 24 tiles; squad and travel markers belong to full maps.'};
-  const foliage=['foliage-cover','clear-foliage'].includes(tool),shapeTool=foliage?'woodland':tool;
+  const foliage=['foliage-cover','clear-foliage'].includes(tool),shapeTool=foliage||['cliff','erase-cliff'].includes(tool)?'woodland':tool;
   if(foliage&&(start.z||0)!==0)return {ok:false,error:'Foliage cover paints outdoor ground. Select the ground level.'};
   const candidate=createEditor(this.editor.map),points=brushShape(shapeTool)?brushPoints(shapeTool,start,end):[start],cells=[],edges=[];
   const occupied=foliage?new Set(candidate.map.props.flatMap(p=>propCells(p).map(c=>c.x+','+c.y+','+(c.z||0)))):null;
+  if(tool==='cliff'&&points.length>CLIFF_LIMIT)return {ok:false,error:'Paint at most '+CLIFF_LIMIT+' cliff tiles at a time.'};
   if(!points.length)return {ok:false,error:'Choose a cell inside the map.'};
   try{
    for(const p of points){
     let actualTool=tool,actualOptions=options;
+    if(['cliff','erase-cliff'].includes(tool)){
+     const existing=candidate.map.props.find(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(start.z||0));
+     if(isCliff(existing))applyBrush(candidate,'erase-prop',p.x,p.y,'',{level:start.z||0});
+     if(tool==='erase-cliff'){cells.push({...p,z:start.z||0});continue;}
+     actualTool='prop';actualOptions={propKind:options.cliffKind||'cliff-ledge',rotated:false};
+    }
     if(foliage){const z=start.z||0,terrain=terrainAt(candidate.map,p.x,p.y,z);
      if(occupied.has(p.x+','+p.y+','+z)||candidate.map.stairs.some(q=>q.x===p.x&&q.y===p.y&&(q.z===z||q.z+1===z))||roofEndpoint(candidate.map,{...p,z}))continue;
      if(tool==='clear-foliage'){if(terrain!=='woodland')continue;actualTool='texture';actualOptions={groundKind:'ground-grass'};}
      else {if(!['yard','ground-grass','ground-dirt','ground-gravel','woodland'].includes(terrain)||terrain==='woodland')continue;actualTool='woodland';}
     }
     const error=applyBrush(candidate,actualTool,p.x,p.y,p.edge,{...actualOptions,level:start.z||0});if(error)return {ok:false,error,cells:points,edges};
+    if(tool==='cliff')Object.assign(candidate.map.props.at(-1),{cliffMask:options.cliffMask??15,cliffVariant:options.cliffVariant??0,cliffSand:options.cliffSand??0});
     if(tool==='prop'&&LIGHT_FORMS[options.propKind])candidate.map.props.at(-1).lightMode=['on','off'].includes(options.lightMode)?options.lightMode:'auto';
     if(['wall','door','erase-edge'].includes(tool))edges.push(p.edge);
     if(tool==='prop'||tool==='roof-tile')cells.push(...propCells({x:p.x,y:p.y,z:start.z||0,kind:options.propKind,rotated:options.rotated}));
@@ -59,6 +68,7 @@ export class EditingDocument extends InspectionDocument {
  rename(name){name=name.trim();if(!name||name.length>60)return {ok:false,error:'Use a name from 1 to 60 characters.'};replaceMap(this.editor,{...this.editor.map,name});this.refresh();return {ok:true};}
  rotate(selection){
   if(selection?.type!=='prop')return {ok:false,error:'Select a prop to rotate.'};
+  if(isCliff(selection.data))return {ok:false,error:'Change cliff corner masks instead of rotating props.'};
   const p=selection.data,candidate=createEditor(this.editor.map);applyBrush(candidate,'erase-prop',p.x,p.y,'',{level:p.z||0});
   const error=applyBrush(candidate,'prop',p.x,p.y,'',{level:p.z||0,propKind:p.kind,rotated:!p.rotated});
   if(error)return {ok:false,error};if(p.condition!==undefined)candidate.map.props.at(-1).condition=p.condition;if(p.lightMode)candidate.map.props.at(-1).lightMode=p.lightMode;if(p.lightTargets)candidate.map.props.at(-1).lightTargets=structuredClone(p.lightTargets);const errors=validateMap(candidate.map,{connectivity:false});if(errors.length)return {ok:false,error:errors[0]};

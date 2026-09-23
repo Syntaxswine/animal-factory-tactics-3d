@@ -1,3 +1,4 @@
+import {isCliff} from './cliff-map.js';
 import {TOWER_HEIGHT} from './tower-geometry.js';
 import {LIGHT_FORMS} from './light-sources.js';
 import {EDGES, PROPS, propCells, GROUNDS} from './environment.js';
@@ -54,6 +55,7 @@ export function buildWorld(map){
   }else diagnostics.push({source:`edge:${key}`,kind,message:'Unsupported edge'});
  }
  for(const p of map.props||[]){
+  if(isCliff(p))continue;
   if(LIGHT_FORMS[p.kind])continue;
   const id=`prop:${p.x},${p.y},${p.z||0}:${p.kind}`;
   if(!supportedProps.has(p.kind)){diagnostics.push({source:id,kind:p.kind,message:'Unsupported prop'});continue;}
