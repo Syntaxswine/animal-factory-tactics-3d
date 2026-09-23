@@ -1,0 +1,689 @@
+[
+  {
+    "fixture": "floor",
+    "animal": "horse",
+    "definition": {
+      "height": 2.12,
+      "plane": 0.35,
+      "width": 0.6,
+      "firstRung": 0.1325,
+      "spacing": 0.265,
+      "rungs": 8,
+      "railTop": 3.02
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.8572870428668526,
+    "graspExemptions": 300609
+  },
+  {
+    "fixture": "tower",
+    "animal": "horse",
+    "definition": {
+      "height": 6.36,
+      "plane": 0.35,
+      "width": 0.7,
+      "firstRung": 0.22,
+      "spacing": 0.28,
+      "rungs": 22,
+      "railTop": 7.29,
+      "rungThickness": 0.06,
+      "rungDepth": 0.08,
+      "railThickness": 0.075
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.290844969497638,
+    "graspExemptions": 310726
+  },
+  {
+    "fixture": "floor",
+    "animal": "goat",
+    "definition": {
+      "height": 2.12,
+      "plane": 0.35,
+      "width": 0.6,
+      "firstRung": 0.1325,
+      "spacing": 0.265,
+      "rungs": 8,
+      "railTop": 3.02
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.875173773798671,
+    "graspExemptions": 300609
+  },
+  {
+    "fixture": "tower",
+    "animal": "goat",
+    "definition": {
+      "height": 6.36,
+      "plane": 0.35,
+      "width": 0.7,
+      "firstRung": 0.22,
+      "spacing": 0.28,
+      "rungs": 22,
+      "railTop": 7.29,
+      "rungThickness": 0.06,
+      "rungDepth": 0.08,
+      "railThickness": 0.075
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.290844969497643,
+    "graspExemptions": 310726
+  },
+  {
+    "fixture": "floor",
+    "animal": "bull",
+    "definition": {
+      "height": 2.12,
+      "plane": 0.35,
+      "width": 0.6,
+      "firstRung": 0.1325,
+      "spacing": 0.265,
+      "rungs": 8,
+      "railTop": 3.02
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.8818809127142186,
+    "graspExemptions": 300609
+  },
+  {
+    "fixture": "tower",
+    "animal": "bull",
+    "definition": {
+      "height": 6.36,
+      "plane": 0.35,
+      "width": 0.7,
+      "firstRung": 0.22,
+      "spacing": 0.28,
+      "rungs": 22,
+      "railTop": 7.29,
+      "rungThickness": 0.06,
+      "rungDepth": 0.08,
+      "railThickness": 0.075
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.2908449694976336,
+    "graspExemptions": 310726
+  },
+  {
+    "fixture": "floor",
+    "animal": "cow",
+    "definition": {
+      "height": 2.12,
+      "plane": 0.35,
+      "width": 0.6,
+      "firstRung": 0.1325,
+      "spacing": 0.265,
+      "rungs": 8,
+      "railTop": 3.02
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.8818809127142186,
+    "graspExemptions": 300609
+  },
+  {
+    "fixture": "tower",
+    "animal": "cow",
+    "definition": {
+      "height": 6.36,
+      "plane": 0.35,
+      "width": 0.7,
+      "firstRung": 0.22,
+      "spacing": 0.28,
+      "rungs": 22,
+      "railTop": 7.29,
+      "rungThickness": 0.06,
+      "rungDepth": 0.08,
+      "railThickness": 0.075
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.2908449694976336,
+    "graspExemptions": 310726
+  },
+  {
+    "fixture": "floor",
+    "animal": "donkey",
+    "definition": {
+      "height": 2.12,
+      "plane": 0.35,
+      "width": 0.6,
+      "firstRung": 0.1325,
+      "spacing": 0.265,
+      "rungs": 8,
+      "railTop": 3.02
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.8572463149089975,
+    "graspExemptions": 300609
+  },
+  {
+    "fixture": "tower",
+    "animal": "donkey",
+    "definition": {
+      "height": 6.36,
+      "plane": 0.35,
+      "width": 0.7,
+      "firstRung": 0.22,
+      "spacing": 0.28,
+      "rungs": 22,
+      "railTop": 7.29,
+      "rungThickness": 0.06,
+      "rungDepth": 0.08,
+      "railThickness": 0.075
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.290844969497639,
+    "graspExemptions": 310726
+  },
+  {
+    "fixture": "floor",
+    "animal": "sheep",
+    "definition": {
+      "height": 2.12,
+      "plane": 0.35,
+      "width": 0.6,
+      "firstRung": 0.1325,
+      "spacing": 0.265,
+      "rungs": 8,
+      "railTop": 3.02
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.875173773798671,
+    "graspExemptions": 300609
+  },
+  {
+    "fixture": "tower",
+    "animal": "sheep",
+    "definition": {
+      "height": 6.36,
+      "plane": 0.35,
+      "width": 0.7,
+      "firstRung": 0.22,
+      "spacing": 0.28,
+      "rungs": 22,
+      "railTop": 7.29,
+      "rungThickness": 0.06,
+      "rungDepth": 0.08,
+      "railThickness": 0.075
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.290844969497643,
+    "graspExemptions": 310726
+  },
+  {
+    "fixture": "floor",
+    "animal": "skunk",
+    "definition": {
+      "height": 2.12,
+      "plane": 0.35,
+      "width": 0.6,
+      "firstRung": 0.1325,
+      "spacing": 0.265,
+      "rungs": 8,
+      "railTop": 3.02
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.8395330776464385,
+    "graspExemptions": 300609
+  },
+  {
+    "fixture": "tower",
+    "animal": "skunk",
+    "definition": {
+      "height": 6.36,
+      "plane": 0.35,
+      "width": 0.7,
+      "firstRung": 0.22,
+      "spacing": 0.28,
+      "rungs": 22,
+      "railTop": 7.29,
+      "rungThickness": 0.06,
+      "rungDepth": 0.08,
+      "railThickness": 0.075
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.2908449694976367,
+    "graspExemptions": 310726
+  },
+  {
+    "fixture": "floor",
+    "animal": "pig-foreman",
+    "definition": {
+      "height": 2.12,
+      "plane": 0.35,
+      "width": 0.6,
+      "firstRung": 0.1325,
+      "spacing": 0.265,
+      "rungs": 8,
+      "railTop": 3.02,
+      "exitWidth": 0.94
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 8,
+      "maxDepth": 0.006859186949945112,
+      "worst": {
+        "progress": 0.9,
+        "phase": "Bring left foot through",
+        "part": "forearm and hand 1",
+        "vertex": 38,
+        "vertices": 477,
+        "source": [
+          0.0335129015147686,
+          0.8019999861717224,
+          0.3403829038143158
+        ],
+        "point": [
+          0.3218591869499451,
+          2.989423140207188,
+          0.44321430998678235
+        ]
+      }
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.5688910903705002,
+    "graspExemptions": 300992
+  },
+  {
+    "fixture": "tower",
+    "animal": "pig-foreman",
+    "definition": {
+      "height": 6.36,
+      "plane": 0.35,
+      "width": 0.7,
+      "firstRung": 0.22,
+      "spacing": 0.28,
+      "rungs": 22,
+      "railTop": 7.29,
+      "rungThickness": 0.06,
+      "rungDepth": 0.08,
+      "railThickness": 0.075,
+      "exitWidth": 0.94
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 1.462565429503101,
+    "graspExemptions": 306531
+  },
+  {
+    "fixture": "floor",
+    "animal": "pig-director",
+    "definition": {
+      "height": 2.12,
+      "plane": 0.35,
+      "width": 0.6,
+      "firstRung": 0.1325,
+      "spacing": 0.265,
+      "rungs": 8,
+      "railTop": 3.02,
+      "exitWidth": 0.94
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 3,
+      "maxDepth": 0.0047890759889840095,
+      "worst": {
+        "progress": 0.75,
+        "phase": "Reach left",
+        "part": "connected dress trousers",
+        "vertex": 193,
+        "vertices": 1051,
+        "source": [
+          0.17103849351406097,
+          0.4059999883174896,
+          -0.2388889044523239
+        ],
+        "point": [
+          0.319789075988984,
+          2.1284281219744607,
+          -0.29495656214668997
+        ]
+      }
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.5066118893819094,
+    "graspExemptions": 301007
+  },
+  {
+    "fixture": "tower",
+    "animal": "pig-director",
+    "definition": {
+      "height": 6.36,
+      "plane": 0.35,
+      "width": 0.7,
+      "firstRung": 0.22,
+      "spacing": 0.28,
+      "rungs": 22,
+      "railTop": 7.29,
+      "rungThickness": 0.06,
+      "rungDepth": 0.08,
+      "railThickness": 0.075,
+      "exitWidth": 0.94
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 1.4625654295031036,
+    "graspExemptions": 306552
+  },
+  {
+    "fixture": "floor",
+    "animal": "rabbit",
+    "definition": {
+      "height": 2.12,
+      "plane": 0.35,
+      "width": 0.6,
+      "firstRung": 0.1325,
+      "spacing": 0.265,
+      "rungs": 8,
+      "railTop": 3.02
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.8616959113316103,
+    "graspExemptions": 300609
+  },
+  {
+    "fixture": "tower",
+    "animal": "rabbit",
+    "definition": {
+      "height": 6.36,
+      "plane": 0.35,
+      "width": 0.7,
+      "firstRung": 0.22,
+      "spacing": 0.28,
+      "rungs": 22,
+      "railTop": 7.29,
+      "rungThickness": 0.06,
+      "rungDepth": 0.08,
+      "railThickness": 0.075
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.290844969497636,
+    "graspExemptions": 310726
+  },
+  {
+    "fixture": "floor",
+    "animal": "dog",
+    "definition": {
+      "height": 2.12,
+      "plane": 0.35,
+      "width": 0.6,
+      "firstRung": 0.1325,
+      "spacing": 0.265,
+      "rungs": 8,
+      "railTop": 3.02
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.827437236628911,
+    "graspExemptions": 300609
+  },
+  {
+    "fixture": "tower",
+    "animal": "dog",
+    "definition": {
+      "height": 6.36,
+      "plane": 0.35,
+      "width": 0.7,
+      "firstRung": 0.22,
+      "spacing": 0.28,
+      "rungs": 22,
+      "railTop": 7.29,
+      "rungThickness": 0.06,
+      "rungDepth": 0.08,
+      "railThickness": 0.075
+    },
+    "samples": 321,
+    "deck": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rail": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "rung": {
+      "count": 0,
+      "maxDepth": 0
+    },
+    "maxJointSpeed": 2.2908449694976336,
+    "graspExemptions": 310726
+  }
+]
