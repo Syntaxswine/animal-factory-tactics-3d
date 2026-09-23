@@ -24,7 +24,7 @@ if(new URLSearchParams(location.search).has('editorPlaytest')){
 let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false;
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
 const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastClockCombat;
-const characterScreen=createCharacterScreen({getState:()=>state,onOpen:()=>{frameClock.reset();sync();},onClose:()=>{frameClock.reset();sync();}});
+const characterScreen=createCharacterScreen({getState:()=>state,getEquipmentState:id=>renderer?.traversal.active?.event.unitId===id?'stowed':'carried',onOpen:()=>{frameClock.reset();sync();},onClose:()=>{frameClock.reset();sync();}});
 const paused=()=>userPaused||document.hidden||characterScreen.open;
 function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
 const view={x:0,y:0,zoom:1.15};
