@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.js';
+import {SAND_GLSL} from './painted-sand.js';
 
 export const PAINTED_GRASS={id:'grass-cliff-meadow',name:'Cliff meadow grass',tileSize:2,variants:4,manifest:'../assets/environment/grass-cliff-meadow/tiles.json'};
 // The approved cliff-cap colour recipe, sampled at its original Y=2 on BOTH
@@ -10,9 +11,16 @@ export const GRASS_GLSL=`
  vec3 meadowRepeat(vec2 uv,vec2 offset){vec2 p=uv*2.+offset,w=smoothstep(vec2(.65),vec2(1.),uv);return mix(mix(meadowSource(p),meadowSource(p-vec2(2,0)),w.x),mix(meadowSource(p-vec2(0,2)),meadowSource(p-vec2(2,2)),w.x),w.y);}
  vec3 meadowPaint(vec2 world,float variantOverride){vec2 cell=floor(world/2.),uv=fract(world/2.);float variant=variantOverride<0.?mod(cell.x*7.+cell.y*11.,4.):variantOverride;float fade=pow(sin(uv.x*3.14159265)*sin(uv.y*3.14159265),2.);return mix(meadowRepeat(uv,vec2(0)),meadowRepeat(uv,vec2(2.37,3.71)*variant),fade*.85);}
 `;
-export function createPaintedGrass({unlit=false,variant=-1,rim=false}={}){
+export function createPaintedGrass({unlit=false,variant=-1,rim=false,sand=false,tint=0xffffff}={}){
  if(!Number.isInteger(variant)||variant< -1||variant>=PAINTED_GRASS.variants)throw Error('Invalid meadow variant');
  const material=unlit?new T.MeshBasicMaterial({toneMapped:false}):new T.MeshStandardMaterial({roughness:1,flatShading:true});
- material.onBeforeCompile=s=>{s.uniforms.meadowVariant={value:variant};s.vertexShader='varying vec2 vMeadow;\n'+(rim?'attribute float cliffRim;varying float vMeadowRim;\n':'')+s.vertexShader;s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMeadow=(modelMatrix*vec4(position,1.)).xz;'+(rim?'vMeadowRim=cliffRim;':''));s.fragmentShader='varying vec2 vMeadow;uniform float meadowVariant;\n'+(rim?'varying float vMeadowRim;\n':'')+GRASS_GLSL+s.fragmentShader;s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb=meadowPaint(vMeadow,meadowVariant);'+(rim?'\nfloat wear=gn(vec3(vMeadow*4.,2.));float edge=1.-smoothstep(.035,.14+wear*.04,vMeadowRim);vec3 soil=vec3(.105,.069,.034)*(.85+wear*.3);diffuseColor.rgb=mix(diffuseColor.rgb,soil,edge*.93);':''));};
- material.customProgramCacheKey=()=>`cliff-meadow-v2-${unlit}-${rim}`;return material;
+ const grassTint={value:new T.Color(tint)};material.userData.grassTint=grassTint;
+ material.onBeforeCompile=s=>{
+  s.uniforms.meadowVariant={value:variant};s.uniforms.grassTint=grassTint;
+  s.vertexShader='varying vec2 vMeadow;\n'+(rim?'attribute float cliffRim;varying float vMeadowRim;varying float vMeadowUp;\n':'')+(sand?'attribute float sandBlend;varying float vSandBlend;varying vec3 vSandWorld;varying vec3 vSandNormal;\n':'')+s.vertexShader;
+  s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMeadow=(modelMatrix*vec4(position,1.)).xz;'+(rim?'vMeadowRim=cliffRim;vMeadowUp=abs(normal.y);':'')+(sand?'vSandBlend=sandBlend;vSandWorld=(modelMatrix*vec4(position,1.)).xyz;vSandNormal=normalize(mat3(modelMatrix)*normal);':''));
+  s.fragmentShader='varying vec2 vMeadow;uniform float meadowVariant;uniform vec3 grassTint;\n'+(rim?'varying float vMeadowRim;varying float vMeadowUp;\n':'')+(sand?'varying float vSandBlend;varying vec3 vSandWorld;varying vec3 vSandNormal;\n'+SAND_GLSL:'')+GRASS_GLSL+s.fragmentShader;
+  s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb=meadowPaint(vMeadow,meadowVariant)*grassTint;'+(sand?'diffuseColor.rgb=mix(diffuseColor.rgb,sandSurface(vSandWorld,vSandNormal),sandCoverage(vMeadow,vSandBlend));':'')+(rim?'\nfloat wear=gn(vec3(vMeadow*4.,2.));float edge=1.-smoothstep(.035,.14+wear*.04,vMeadowRim/max(.08,vMeadowUp));vec3 soil=vec3(.105,.069,.034)*(.85+wear*.3);diffuseColor.rgb=mix(diffuseColor.rgb,soil,edge*.93'+(sand?'*(1.-sandCoverage(vMeadow,vSandBlend))':'')+');':''));
+ };
+ material.customProgramCacheKey=()=>`cliff-meadow-v3-${unlit}-${rim}-${sand}`;return material;
 }

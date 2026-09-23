@@ -75,9 +75,9 @@ export function cliffGeometry(set='ledge',shape='straight',seed=1){
  g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();g.userData.layout=layout;addCliffRimAttribute(g,boundary.map(([a,b])=>({a:top(a),b:top(b)})));return g;
 }
 
-export function cliffMaterials(){
+export function cliffMaterials({sand=false}={}){
  return [false,true].map(turf=>{
-  if(turf)return createPaintedGrass({rim:true});
+  if(turf)return createPaintedGrass({rim:true,sand});
   const m=new T.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
   m.onBeforeCompile=s=>{
    s.vertexShader='varying vec3 vCliff;\n'+s.vertexShader;

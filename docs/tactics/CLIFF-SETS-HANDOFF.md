@@ -1,5 +1,27 @@
 # Wall-height cliff sets
 
+## Latest: joined families and independent sand paint
+
+The continuous tile kit now assembles **ledge and crag in one welded landform**. Pass `mixed` to `createCliffTiles` / `cliffTileGeometry` and give each tile `set: 'ledge'` or `set: 'crag'`. All existing river corner masks and contour variants remain valid. Ledge support remains exactly Y=2.00. Adjacent crag vertices meet that datum at the shared edge, then ease down into the broken crown; away from ledges the approved original crag heights remain unchanged. Even an isolated crag surrounded by ledges retains interior relief. This supersedes the earlier assumption that every exposed crag lip must be Y=0.60: a lip beside a ledge must rise to meet it.
+
+Build connected landforms as **one tile collection**. Both neighboring family and paint values are needed before heights and blends are generated. Independently generated single-family chunks do not automatically gain these transitions. The original standalone block previews remain historical pieces; mixed-family assembly uses the continuous tile kit.
+
+Sand is independent of shape. Optional tile `sand` values range from 0 (grass) to 1 (sand); shared corner weights blend the paint smoothly through neighboring tiles. Omitting it gives the preview convention of grassy ledges and sandy crags. Changing paint never changes positions, normals, rim geometry, rubble classification or traversal descriptors. Occupied tiles alone appear in `userData.traversal`, including their masks and family. These are family eligibility descriptors, **not generated body-sized landing pads or active climb routes**. Crags retain no climbing route even where their boundary meets a ledge.
+
+`painted-sand.js` owns the warm, chipped sand paint. New assets under `dist/assets/environment/sand-cliff/`:
+
+- `sand.png`: seamless opaque 512px ground tile covering 2×2 world units.
+- `sand-feather.png`: 512px RGBA patch fading to fully transparent edges, with no baked grass colour.
+- `tiles.json`: dimensions, colour space, usage and bake validation.
+
+`sand-ground.html` provides both downloads and the same transparent patch over three grass palettes. The solid tile is for broad areas; the feathered sprite is an isolated patch rather than a repeating boundary atlas. `tools/bake-cliff-sand.mjs` regenerates both from the material, checking borders, alpha and identical ground/raised output. Use `PLAYWRIGHT_MODULE` when Playwright is not installed in the repository and `CLIFF_STUDY_URL` to override the default local server on port 4435.
+
+The live grass material exposes a shared grass tint on ground and caps. Sand blends against that actual tinted grass, so the transition follows local meadow, cool-green or dry colours instead of introducing a fixed green fringe. Sand on steep surfaces uses normal-weighted projections to prevent vertical paint streaks. The approved exposed-soil line remains on grassy rims; its width accounts for slope, and it fades out with sand ownership to avoid a dark cord across bare rock.
+
+The study defaults to **Joined ledge & crag**. Top paint controls demonstrate grass, sand and a blend independently of shape; grass-colour controls affect both elevations. A separate sand patch on the lower ground demonstrates its reuse. Wall height, horse size, river contours and gameplay/editor scope remain unchanged.
+
+Independent hostile review: **9/10** after correcting the dark rim on sandy slopes and excluding empty cells from traversal metadata. **17 focused/environment tests pass**, including exhaustive mixed neighbor patterns in both axes and three variants, closed solids, exact ledge support, isolated crag relief and paint-independent geometry. **66 browser configurations pass with zero errors**, covering layouts, paint, grass palettes, grey forms and original-piece regression views, plus low-angle/native and mobile checks. Actual PNG border difference is zero; the feathered border alpha is zero with 128,351 partially transparent pixels. Unlit pixel checks confirm that palette changes affect exposed grass and transitions while leaving fully covered sand unchanged. Independent review also verified tile-order invariance at 26,194 unique surface coordinates and stable browser resources. The 3D distribution build passes and includes the new material, sprites, manifest and gallery.
+
 User brief: one flat-topped, climbable set and one uneven-topped, nonclimbable set. **Both must be the height of a wall.**
 
 ## Art and geometry contract

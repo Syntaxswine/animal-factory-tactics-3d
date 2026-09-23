@@ -47,3 +47,34 @@ test('all compatible edge patterns match geometry across variants; crags fall to
  assert.equal(cliffCrestHeight('crag',0,.3,.7),.6);assert(cliffCrestHeight('crag',1,.3,.7)>1.1);assert.equal(cliffCrestHeight('crag',1,0,0),2);assert.equal(cliffCrestHeight('ledge',0,0,0),2);
  assert.throws(()=>cliffTileGeometry('ledge',[{x:0,z:0,mask:1,variant:3}]));assert.throws(()=>cliffTileGeometry('ledge',[{x:0,z:0,mask:15,variant:0},{x:1,z:0,mask:0,variant:0}]));
 });
+
+test('mixed ledge/crag joins weld at wall height in both axes across every compatible river pattern',()=>{
+ for(const [dx,dz,bits,other]of [[1,0,[2,4],[1,8]],[0,1,[8,4],[1,2]]])for(let a=0;a<16;a++)for(let b=0;b<16;b++)if(bits.every((bit,i)=>!!(a&bit)===!!(b&other[i])))for(let variant=0;variant<3;variant++){
+  const tiles=[{x:0,z:0,mask:a,variant,set:'ledge'},{x:dx,z:dz,mask:b,variant:(variant+1)%3,set:'crag'}],g=cliffTileGeometry('mixed',tiles);audit(g);
+  const p=g.attributes.position,cap=g.groups.find(g=>g.materialIndex===1),samples=new Map();
+  if(cap)for(let i=cap.start;i<cap.start+cap.count;i++){
+   const x=p.getX(i),y=p.getY(i),z=p.getZ(i),key=`${x.toFixed(6)},${z.toFixed(6)}`,sample=[y,g.attributes.sandBlend.getX(i)];
+   if(samples.has(key))assert.deepEqual(sample,samples.get(key),'welded position has one height and one paint weight');samples.set(key,sample);
+   if(Math.abs((dx?x:z)-1)<1e-6)assert.equal(y,2,'both sides of ledge/crag join meet at wall height');
+  }
+  assert.deepEqual(g.userData.traversal.map(t=>t.climbable),tiles.filter(t=>t.mask).map(t=>t.set==='ledge'));assert(g.userData.traversal.every(t=>t.mask>0));g.dispose();
+ }
+});
+
+test('mixed swaths preserve ledge support, crag relief and paint-independent geometry',()=>{
+ for(const layout of ['plateau','gorge','coast']){
+  const tiles=cliffLandscapeTiles(layout).map(t=>({...t,set:t.x<0?'ledge':'crag'}));
+  const g=cliffTileGeometry('mixed',tiles),grass=cliffTileGeometry('mixed',tiles.map(t=>({...t,sand:0}))),sand=cliffTileGeometry('mixed',tiles.map(t=>({...t,sand:1})));audit(g);
+  for(const painted of [grass,sand]){assert.deepEqual(painted.attributes.position.array,g.attributes.position.array);assert.deepEqual(painted.attributes.normal.array,g.attributes.normal.array);assert.deepEqual(painted.userData.rim,g.userData.rim);assert.deepEqual(painted.userData.traversal,g.userData.traversal);}
+  const cap=g.groups.find(g=>g.materialIndex===1),p=g.attributes.position;let sloped=0,flat=0,blended=0;
+  for(let i=cap.start;i<cap.start+cap.count;i++){
+   assert.equal(grass.attributes.sandBlend.getX(i),0);assert.equal(sand.attributes.sandBlend.getX(i),1);
+   if(p.getX(i)<=0){assert.equal(p.getY(i),2);flat++;}else if(p.getY(i)<1.8)sloped++;
+   const m=g.attributes.sandBlend.getX(i);assert(m>=0&&m<=1);if(m>0&&m<1)blended++;
+  }
+  assert(flat&&sloped&&blended);for(const mesh of [g,grass,sand])mesh.dispose();
+ }
+ const isolated=[];for(let z=-1;z<=1;z++)for(let x=-1;x<=1;x++)isolated.push({x,z,mask:15,variant:0,set:x===0&&z===0?'crag':'ledge'});
+ const g=cliffTileGeometry('mixed',isolated),mesh=new T.Mesh(g,new T.MeshBasicMaterial());mesh.updateMatrixWorld();const ray=new T.Raycaster(new T.Vector3(.5,3,.5),new T.Vector3(0,-1,0));assert(ray.intersectObject(mesh)[0].point.y<1.9,'an isolated crag must not turn into a flat landing');audit(g);g.dispose();mesh.material.dispose();
+ assert.throws(()=>cliffTileGeometry('mixed',[{x:0,z:0,mask:15,variant:0}]));assert.throws(()=>cliffTileGeometry('ledge',[{x:0,z:0,mask:15,variant:0,sand:2}]));
+});
