@@ -1,3 +1,4 @@
+export const WOODEN_LADDER={z:1.55,width:.76,exitWidth:.94,railTop:7.28};
 // Structural surfaces shared by beam, sight and projectile queries. Windows are gaps.
 export const TOWER_HEIGHT=6.36;
 export const TOWERS={

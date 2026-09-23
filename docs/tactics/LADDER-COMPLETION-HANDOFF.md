@@ -5,7 +5,7 @@ Review branch: `work/ladder-completion`, based on 3D canonical `aef82f5`.
 ## Remaining work, in order
 
 - [x] Approach and landing transitions. Passed independent hostile review at **9/10**, scoped to nine rifle-equipped mammals on the iron tower.
-- [ ] Wooden hatch climbing. Use the real 1×1 hatch, its joists, headers, three-sided railing, and 0.76-wide stiles; do not reuse the iron doorway trajectory without a geometry review.
+- [x] Wooden hatch climbing for the nine nonpig mammals. Independent hostile review **9/10**, scoped to the modified wooden fixture and rifle presentation below. Pigs, hen and production integration remain separate holds.
 - [ ] Widened pig exits. Adapt the visible tower and its shared structural geometry, including doorway and landing clearance, before enabling either pig. The existing isolated 0.94-wide flared-rail study is not sufficient.
 - [ ] Hen climbing. Author wing support and foot contacts for the actual hen rig; do not enable the mammal controller or claim rifle support.
 
@@ -34,3 +34,15 @@ Skunk and dog tails use a reversible root bend inside the guardhouse, shared wit
 - Painted browser matrix: **36 combinations** (nine species × two outfits × both directions), all seven phases sampled, zero browser errors. Both rotations and all four posts also receive numerical route tests.
 - Additional tail clearance: skunk/dog, all four upper posts × eight headings, plus rotated-post ascent/descent trajectories. Clearance evidence is sampled vertex/mesh testing, not continuous collision proof.
 - Wooden hatches, both pigs, hen and other equipment remain outside this approval. This review branch does not publish or merge those unfinished cases.
+
+## Wooden hatch presentation checkpoint
+
+Independent hostile review: **9/10** for horse, goat, bull, skunk, sheep, donkey, cow, rabbit and dog, ascending and descending. The six-second climb now opens the fingers, withdraws from the stile, braces on the forward hatch posts and steps through the real opening. Upper hand transfers use a strictly monotonic weighted arc-length timing map; peak sampled wrist speed is about 5.7–5.8 m/s. Source poses, limb lengths, character dimensions and paint coordinates are preserved.
+
+The approved fixture is explicitly modified: the wooden ladder moves from local Z=1.77 to 1.55, avoiding existing support ties, and its 0.76-wide lower stiles flare to 0.94 above the deck. Stile cross-section remains 0.085×0.10. The 1×1 hatch, 5×5 footprint and 6.36 deck height remain unchanged. Approval does not apply to the old ladder placement.
+
+Checks include 44 focused ladder/journey/traversal tests, 14 furniture/tower tests and the 3D Pages build. The final hand-path correction additionally passed the horse fixed-limb/restoration and all-post/orientation route checks. Independent review covered all nine painted models, both outfits, close/native views, both directions, all visible mesh surfaces, rotated skunk/dog routes and dense late-phase samples. Horse/skunk visible-surface reverse/history checks were exactly deterministic. These are sampled checks, not continuous collision proof.
+
+One nonblocking residual is disclosed: a dense sample found a **5.16 mm skunk plume graze** against the rear rail. The reviewer found no meaningful visible silhouette break; this is not a zero-collision claim.
+
+Production wooden traversal remains disabled. Before activation, reconcile shared equipment state with canonical, preload or bake the expensive initial route preparation, and match ordinary wooden-post tail posture to the journey endpoint. The weapon remains visibly slung with hands free while climbing and returns to carry after landing. Both pigs still require body/exit clearance work; hen still requires authored avian contacts. No gameplay timing or occupancy changes are authorized by this art checkpoint.

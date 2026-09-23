@@ -1,7 +1,7 @@
 import {createLadderJourney} from './ladder-journey.js';
-import {towerCenter} from './tower-geometry.js';
+import {towerCenter,WOODEN_LADDER} from './tower-geometry.js';
 import {toWorld,DIMENSIONS} from './hybrid-world.js';
-export function ladderFrame(tower){const c=towerCenter(tower),x=1.84,y=-.8;return {origin:[c.x+(tower.rotated?-y:x),(tower.z||0)*DIMENSIONS.floorSpacing,c.y+(tower.rotated?x:y)],heading:tower.rotated?270:180};}
+export function ladderFrame(tower){const wooden=tower.kind==='wooden-spotlight-tower',c=towerCenter(tower),x=wooden?0:1.84,y=wooden?WOODEN_LADDER.z+.35:-.8;return {origin:[c.x+(tower.rotated?-y:x),(tower.z||0)*DIMENSIONS.floorSpacing,c.y+(tower.rotated?x:y)],heading:(wooden?270:180)+(tower.rotated?90:0)};}
 export function canAnimateLadder(event,unit){return event?.access==='ladder'&&event.tower.kind==='iron-searchlight-ladder-tower'&&unit?.weapon==='rifle'&&unit.hp>0&&unit.species!=='hen'&&!unit.species.startsWith('pig');}
 // Consumes committed events; never changes simulation state, AP or the clock.
 export class BattleTraversal {

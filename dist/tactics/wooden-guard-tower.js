@@ -1,4 +1,4 @@
-import {woodenTowerRails} from './tower-geometry.js';
+import {woodenTowerRails,WOODEN_LADDER} from './tower-geometry.js';
 import {DIMENSIONS} from './hybrid-world.js';
 export const TOWER_DECK_HEIGHT=3*DIMENSIONS.floorSpacing;
 // Open, walk-through ladder aperture: x[-.5,.5], z[1.25,2.25].
@@ -21,8 +21,8 @@ export function buildWoodenGuardTower(root,{box,wood,iron,skin}){
   // Knee braces support the platform's overhang on each face.
   for(const t of [-1.36,1.36]){beam('cantilever-brace',[t,H-1,side*1.36],[t,H-.25,side*2.30],.16);beam('cantilever-brace',[side*1.36,H-1,t],[side*2.30,H-.25,t],.16);}
  }
- for(const x of [-.38,.38])b('ladder-stile',m,[x,(H+.92)/2,1.77],[.085,H+.92,.10]);
- for(let y=.22;y<H-.08;y+=.28)b('ladder-rung',alt,[0,y,1.77],[.76,.062,.082]);
+ for(const side of [-1,1]){const levels=[0,H,H+.35,H+.92];for(let i=1;i<levels.length;i++){const a=levels[i-1],c=levels[i],x=y=>side*(y<=H?WOODEN_LADDER.width:WOODEN_LADDER.exitWidth)/2;beam('ladder-stile',[x(a),a,WOODEN_LADDER.z],[x(c),c,WOODEN_LADDER.z],.085).scale.z=.10/.085;}}
+ for(let y=.22;y<H-.08;y+=.28)b('ladder-rung',alt,[0,y,WOODEN_LADDER.z],[WOODEN_LADDER.width,.062,.082]);
  for(const part of woodenTowerRails(H))b(part.name,part.trim?alt:m,part.p,part.size);
  root.userData.tower={supportTiles:[3,3],platformTiles:[5,5],stories:3,deckHeight:H,opening:{min:[-.5,1.25],max:[.5,2.25]},ladderSide:'+Z'};
 }

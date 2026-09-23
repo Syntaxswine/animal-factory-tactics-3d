@@ -7,8 +7,8 @@ export function createTowerTailTuck(worker,profile){
   const position=part.geometry.attributes.position.clone(),normal=part.geometry.attributes.normal.clone(),top=Math.max(...Array.from({length:position.count},(_,i)=>position.getComponent(i,axis))),pivot=new T.Vector3();let count=0;
   for(let i=0;i<position.count;i++)if(position.getComponent(i,axis)>top-.025){pivot.add(new T.Vector3().fromBufferAttribute(position,i));count++;}pivot.divideScalar(count);pivot.setComponent(axis,top);return {part,position,normal,pivot};
  }):[];
- return {apply(amount,{fromCurrent=false}={}){const t=T.MathUtils.clamp(amount,0,1);for(const {part,position,normal,pivot}of tails){const a=part.geometry.attributes;for(let i=0;i<position.count;i++){
-   const v=new T.Vector3().fromBufferAttribute(position,i),blend=T.MathUtils.smoothstep(v.distanceTo(pivot),.06,.25),q=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,0,1),(upright?-.50:.22)*(fromCurrent?1:t)*blend),point=v.sub(pivot).applyQuaternion(q).add(pivot),norm=new T.Vector3().fromBufferAttribute(normal,i).applyQuaternion(q);
+ return {apply(amount,{fromCurrent=false,angle=upright?-.50:.22}={}){const t=T.MathUtils.clamp(amount,0,1);for(const {part,position,normal,pivot}of tails){const a=part.geometry.attributes;for(let i=0;i<position.count;i++){
+   const v=new T.Vector3().fromBufferAttribute(position,i),blend=T.MathUtils.smoothstep(v.distanceTo(pivot),.06,.25),q=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,0,1),angle*(fromCurrent?1:t)*blend),point=v.sub(pivot).applyQuaternion(q).add(pivot),norm=new T.Vector3().fromBufferAttribute(normal,i).applyQuaternion(q);
    if(fromCurrent){point.lerp(new T.Vector3().fromBufferAttribute(a.position,i),1-t);norm.lerp(new T.Vector3().fromBufferAttribute(a.normal,i),1-t);if(t>0&&t<1)norm.normalize();}
    a.position.setXYZ(i,point.x,point.y,point.z);a.normal.setXYZ(i,norm.x,norm.y,norm.z);
   }a.position.needsUpdate=a.normal.needsUpdate=true;}}};

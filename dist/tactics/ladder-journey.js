@@ -1,7 +1,7 @@
 import {createTowerTailTuck} from './tower-tail-tuck.js';
 import * as T from './vendor/three.module.js';
 import {createLadderMotion,LADDER_PRESETS} from './ladder-motion.js';
-import {towerCenter} from './tower-geometry.js';
+import {towerCenter,WOODEN_LADDER} from './tower-geometry.js';
 import {toWorld} from './hybrid-world.js';
 const V=a=>new T.Vector3(...a),ease=t=>{t=T.MathUtils.clamp(t,0,1);return t*t*(3-2*t);};
 const travel=t=>{t=T.MathUtils.clamp(t,0,1);const a=.12;return t<a?t*t/(2*a*(1-a)):t>1-a?1-(1-t)**2/(2*a*(1-a)):(t-a/2)/(1-a);};
@@ -15,21 +15,27 @@ export function ladderWalkRoute(event,endpoint,upper){
  const dx=point.x-c.x,dz=point.z-c.y,slotX=rotation?dz:dx;
  // Enter the door in line, then use the central aisle. Never cut through the
  // other three occupied lookout slots on the way to the assigned one.
+ if(event.tower.kind==='wooden-spotlight-tower')return [V(endpoint),local(0,.60),local(0,0),local(slotX,0),point];
  return [V(endpoint),local(-.65,-.8),local(-.65,0),local(slotX,0),point];
 }
 export function createLadderJourney(worker,profile,event,frame,heading=0){
- if(!event||!['up','down'].includes(event.direction)||event.tower?.kind!=='iron-searchlight-ladder-tower'||!Number.isFinite(heading)||!Number.isFinite(frame?.heading)||!Array.isArray(frame?.origin)||frame.origin.length!==3||!frame.origin.every(Number.isFinite)||![event.from,event.to].every(p=>p&&toWorld(p).every(Number.isFinite)))throw Error('Invalid ladder journey route');
+ if(!event||!['up','down'].includes(event.direction)||!['iron-searchlight-ladder-tower','wooden-spotlight-tower'].includes(event.tower?.kind)||!Number.isFinite(heading)||!Number.isFinite(frame?.heading)||!Array.isArray(frame?.origin)||frame.origin.length!==3||!frame.origin.every(Number.isFinite)||![event.from,event.to].every(p=>p&&toWorld(p).every(Number.isFinite)))throw Error('Invalid ladder journey route');
  event=structuredClone(event);frame={heading:frame.heading,origin:[...frame.origin]};
  const root=worker.root,entryTransform={position:root.position.clone(),quaternion:root.quaternion.clone()};let climb,restoreTail=()=>{};
  const restoreTransform=()=>{root.position.copy(entryTransform.position);root.quaternion.copy(entryTransform.quaternion);root.updateMatrixWorld(true);worker.skeleton.update();};
  try{
- climb=createLadderMotion(worker,profile,{...LADDER_PRESETS.tower,landingHandHeight:1.10,landingHandSpan:.20,...(profile.id==='skunk'?{stowSide:.545}:{})});
+ const wooden=event.tower.kind==='wooden-spotlight-tower';
+ climb=createLadderMotion(worker,profile,{...LADDER_PRESETS.tower,landingHandHeight:1.10,landingHandSpan:.20,...(profile.id==='skunk'?{stowSide:.545}:{}),...(wooden?{width:WOODEN_LADDER.width,exitWidth:WOODEN_LADDER.exitWidth,railTop:WOODEN_LADDER.railTop,railThickness:.085,railDepth:.10,rungThickness:.062,rungDepth:.082,hatch:{front:WOODEN_LADDER.z+.35-1.25,back:WOODEN_LADDER.z+.35-2.25,half:.5}}:{})});
  climb.restore('neutral');root.position.set(0,0,0);root.rotation.set(0,0,0);root.updateMatrixWorld(true);
  const named=Object.fromEntries(worker.bones.map(b=>[b.name,b])),rest=new Map(worker.bones.map(b=>[b,b.getWorldPosition(new T.Vector3())]));
- const tailTuck=createTowerTailTuck(worker,profile);let tailAmount=0;function tuckTail(amount){tailAmount=amount;tailTuck.apply(amount);}
+ const tailTuck=createTowerTailTuck(worker,profile);let tailAmount=0,tailAngle=profile.id==='skunk'?-.50:.22;function tuckTail(amount,angle=profile.id==='skunk'?-.50:.22){tailAmount=amount;tailAngle=angle;tailTuck.apply(amount,{angle});}
  restoreTail=()=>tuckTail(0);
- const capture=()=>({tailAmount,position:root.position.clone(),quaternion:root.quaternion.clone(),bones:worker.bones.map(b=>({position:b.position.clone(),quaternion:b.quaternion.clone(),world:b.getWorldPosition(new T.Vector3())})),feet:[-1,1].map(side=>({point:named['hoof'+side].getWorldPosition(new T.Vector3()),quaternion:named['hoof'+side].getWorldQuaternion(new T.Quaternion())})),gun:{position:worker.weapon.root.position.clone(),quaternion:worker.weapon.root.quaternion.clone()}});
- climb.apply(0,{...frame,direction:'up'});const bottom=capture();climb.apply(1,{...frame,direction:'up'});const top=capture();climb.restore('carry');
+ function applyClimb(progress,direction){const r=climb.apply(progress,{...frame,direction}),h=climb.definition.height;
+  const clear=T.MathUtils.smoothstep(r.root[0],.12,.50),bend=profile.id==='skunk'?T.MathUtils.lerp(-.90-.15*T.MathUtils.smoothstep(r.root[1],h-1.1,h-.6)+.035*T.MathUtils.smoothstep(r.root[0],.05,.12)*(1-T.MathUtils.smoothstep(r.root[1],h-1.15,h-.95)),-.50,clear):T.MathUtils.lerp(.40,.22,clear);
+  tuckTail(wooden?T.MathUtils.smoothstep(r.root[1],h-2.8,h-2.2):0,wooden?bend:undefined);return r;
+ }
+ const capture=()=>({tailAmount,tailAngle,position:root.position.clone(),quaternion:root.quaternion.clone(),bones:worker.bones.map(b=>({position:b.position.clone(),quaternion:b.quaternion.clone(),world:b.getWorldPosition(new T.Vector3())})),feet:[-1,1].map(side=>({point:named['hoof'+side].getWorldPosition(new T.Vector3()),quaternion:named['hoof'+side].getWorldQuaternion(new T.Quaternion())})),gun:{position:worker.weapon.root.position.clone(),quaternion:worker.weapon.root.quaternion.clone()}});
+ applyClimb(0,'up');const bottom=capture();applyClimb(1,'up');const top=capture();climb.restore('carry');
  const neutralAnchor=pose=>{const p=pose.position.clone();p.y=pose===top?frame.origin[1]+climb.definition.height:frame.origin[1];return p.toArray();};
  const low=ladderWalkRoute(event,neutralAnchor(bottom),false),high=ladderWalkRoute(event,neutralAnchor(top),true);
  // Stop at the door/aisle corners and turn with two short planted steps.
@@ -49,7 +55,7 @@ export function createLadderJourney(worker,profile,event,frame,heading=0){
   if(stowed){
    for(const side of [-1,1]){named['upperArm'+side].rotation.x=side*.30;named['forearm'+side].rotation.z=.20;}
    worker.weapon.root.visible=true;worker.weapon.root.position.copy(bottom.gun.position);worker.weapon.root.quaternion.copy(bottom.gun.quaternion);
-   if(profile.id==='skunk'){
+   if(profile.id==='skunk'&&!wooden){
     const stock=worker.weapon.anchors.stock.position.clone().applyQuaternion(bottom.gun.quaternion).add(bottom.gun.position).add(new T.Vector3(.10,.25,-.15));
     worker.weapon.root.quaternion.setFromUnitVectors(new T.Vector3(1,0,0),new T.Vector3(.50,.86,-.12).normalize());worker.weapon.root.position.copy(stock).sub(worker.weapon.anchors.stock.position.clone().applyQuaternion(worker.weapon.root.quaternion));
    }
@@ -63,9 +69,9 @@ export function createLadderJourney(worker,profile,event,frame,heading=0){
  if(up){
   addWalk('Approach',low,heading,frame.heading);
   add('Stow and mount',handoff,t=>handoffPose(bottom,t/handoff,low.at(-1)));
-  add('Climb',6,t=>{tuckTail(0);contacts=climb.apply(t/6,{...frame,direction:'up'}).contacts;});
+  add('Climb',6,t=>{contacts=applyClimb(t/6,'up').contacts;});
   add('Settle on landing',settle,t=>handoffPose(top,1-t/settle,landing,true));
-  addWalk('Clear doorway with rifle slung',high.slice(0,3),frame.heading,frame.heading,{fixedYaw:frame.heading},true);
+  addWalk(wooden?'Clear hatch with rifle slung':'Clear doorway with rifle slung',high.slice(0,3),frame.heading,frame.heading,{fixedYaw:frame.heading},true);
   add('Recover rifle inside',handoff,t=>handoffPose(parked,1-t/handoff,inside));
   addWalk('Walk to destination',high.slice(2),frame.heading,heading,{lastFacing:true});
  }else{
@@ -73,7 +79,7 @@ export function createLadderJourney(worker,profile,event,frame,heading=0){
   add('Stow rifle inside',handoff,t=>handoffPose(parked,t/handoff,inside));
   addWalk('Clear doorway with rifle slung',high.slice(0,3).reverse(),frame.heading,frame.heading,{fixedYaw:frame.heading},true);
   add('Settle at top rung',settle,t=>handoffPose(top,t/settle,landing,true));
-  add('Climb',6,t=>{tuckTail(0);contacts=climb.apply(t/6,{...frame,direction:'down'}).contacts;});
+  add('Climb',6,t=>{contacts=applyClimb(t/6,'down').contacts;});
   add('Recover rifle on ground',handoff,t=>handoffPose(bottom,1-t/handoff,low.at(-1)));
   addWalk('Walk to destination',[...low].reverse(),frame.heading,heading,{fixedYaw:frame.heading});
  }
@@ -99,7 +105,7 @@ export function createLadderJourney(worker,profile,event,frame,heading=0){
  }
  function handoffPose(target,u,point,stowed=false){
   standing(point,frame.heading,stowed);const source=capture(),w=ease(u);
-  tuckTail(T.MathUtils.lerp(source.tailAmount,target.tailAmount,w));
+  tuckTail(T.MathUtils.lerp(source.tailAmount,target.tailAmount,w),T.MathUtils.lerp(source.tailAngle,target.tailAngle,w));
   worker.bones.forEach((b,i)=>{b.position.lerpVectors(source.bones[i].position,target.bones[i].position,w);b.quaternion.copy(source.bones[i].quaternion).slerp(target.bones[i].quaternion,w);});
   root.position.lerpVectors(source.position,target.position,w);root.position.y-=.02*Math.sin(Math.PI*w)**2;root.quaternion.copy(source.quaternion).slerp(target.quaternion,w);
   const gun=worker.weapon.root;gun.position.lerpVectors(source.gun.position,target.gun.position,w);if(!stowed){gun.position.y+=.20*Math.sin(Math.PI*w);gun.position.z+=(profile.id==='skunk'?.18:.55)*Math.sin(Math.PI*w);}gun.quaternion.copy(source.gun.quaternion).slerp(target.gun.quaternion,w);if(stowed&&profile.id==='skunk'){const p=1-w,g=1-ease((p-.25)/.75);gun.position.lerpVectors(source.gun.position,target.gun.position,g);gun.position.y+=.24*ease(p/.25)*(1-ease((p-.75)/.25));gun.quaternion.copy(source.gun.quaternion).slerp(target.gun.quaternion,g);}
