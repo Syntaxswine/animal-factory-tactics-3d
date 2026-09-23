@@ -20,11 +20,11 @@ export function createEquipmentStow(worker,profile){
   if(mode==='empty'){gun.root.visible=false;sling.visible=false;return;}
   let anchor=center;
   if(id==='rifle'){position.set(back,-.23,z);anchor=gun.anchors.stock.position;}
-  else if(['holster','sheath','pouch'].includes(mode)){position.set(-.10,-.40,profile.id==='skunk'?-.40:.35);axis.set(0,-1,0);}
-  else if(mode==='pack'){position.set(-.38,-.10,profile.id==='skunk'?-.32:.25);axis.set(0,1,.10);}
-  else {const depth=bounds.isEmpty()?0:Math.max(0,-bounds.min.y);position.set(back-.12-depth,-.12,profile.id==='skunk'?.53:-.15);axis.set(0,1,profile.id==='skunk'?-.10:.12);}
+  else if(['holster','sheath','pouch'].includes(mode)){position.set(-.10,-.40,profile.id==='skunk'?.40:.35);axis.set(0,-1,0);}
+  else if(mode==='pack'){position.set(-.38,-.10,profile.id==='skunk'?.32:.25);axis.set(0,1,.10);}
+  else {const depth=bounds.isEmpty()?0:Math.max(0,-bounds.min.y);position.set(back-.08-depth,-.12,profile.id==='skunk'?.53:.18);axis.set(0,1,profile.id==='skunk'?-.10:.12);}
   const origin=root.worldToLocal(spine.localToWorld(position.clone()));gun.root.visible=true;gun.root.quaternion.setFromUnitVectors(V(1,0,0),axis.normalize()).premultiply(spineQ);gun.root.position.copy(origin).sub(anchor.clone().applyQuaternion(gun.root.quaternion));
-  if(holder){holder.visible=true;holder.position.copy(mode==='pack'?root.worldToLocal(spine.localToWorld(position.clone().add(V(.045,0,profile.id==='skunk'?.08:-.08)))):origin);holder.quaternion.copy(spineQ);}
+  if(holder){holder.visible=true;holder.position.copy(mode==='pack'?root.worldToLocal(spine.localToWorld(position.clone().add(V(.045,0,-.08)))):origin);holder.quaternion.copy(spineQ);}
   if(gun.mount)gun.mount.visible=true;if(gun.hose){gun.hose.visible=true;gun.updateHose?.(root);}
   sling.visible=mode==='sling';if(sling.visible){points[0].copy(position);points[points.length-1].copy(position);for(let i=0;i<points.length;i++){const across=V(1,0,0).cross(points[Math.min(i+1,32)].clone().sub(points[Math.max(0,i-1)])).normalize().multiplyScalar(.017);for(const side of [-1,1]){const p=root.worldToLocal(spine.localToWorld(points[i].clone().addScaledVector(across,side)));geometry.attributes.position.setXYZ(i*2+(side===1?1:0),p.x,p.y,p.z);}}geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
   root.updateMatrixWorld(true);

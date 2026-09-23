@@ -16,7 +16,7 @@ export class BattleTraversal {
   const pose=a.motion.apply(Math.min(1,Math.max(0,(now-a.start)/6000)),{direction:a.event.direction,...ladderFrame(a.event.tower)});a.position=pose.worldRoot;worker.skeleton.update();for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}return true;
  }
  display(unit){const a=this.active;if(a?.event.unitId!==unit.id)return unit;const p=a.position||toWorld(a.event.from);return {...unit,x:p[0],y:p[2],z:0,h:p[1],towerPost:undefined,towerElevation:p[1]};}
- finish(){const a=this.active;if(a?.motion){a.motion.dispose();a.model.signature=null;a.model.placement=null;}this.active=null;}
+ finish(){const a=this.active;if(a?.motion){a.motion.dispose();a.model.drawRequested=a.weapon!=='hands';a.model.signature=null;a.model.placement=null;}this.active=null;}
  get busy(){return !!this.active||!!this.queue.length;}
  clear(){this.finish();this.queue=[];this.lastId=0;}
 }

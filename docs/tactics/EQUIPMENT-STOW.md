@@ -4,7 +4,7 @@
 
 All thirteen held loadouts are supported: empty hands, knife, pistol, rifle, assault rifle, SMG, shotgun, sniper rifle, heavy machine gun, grenade launcher, RPG, grenade and flamethrower. Small items use a hip holster/sheath/pouch, long weapons use back slings, and the flamethrower retains its visible backpack and connected hose while securing its lance alongside the pack. Source weapon geometry and scale remain intact. The existing rifle placement is preserved.
 
-The state switches at action boundaries; it does not yet animate a hand reaching to holster or draw. It is separate from unequipping an item into the inventory. One body pose controller and one equipment-stow controller should own an actor at a time. Replacing the equipped model during a climb cancels that presentation safely.
+Stowing switches at action boundaries. Drawing now has a shared 850 ms transition documented in `EQUIPMENT-DRAW.md`; changing weapons skips the old weapon’s stow animation. It is separate from unequipping an item into the inventory. One body pose controller and one equipment-stow controller should own an actor at a time. Replacing the equipped model during a climb cancels that presentation safely.
 
 The iron tower ladder now accepts these loadouts for the nine supported non-pig mammals. Pigs still require the flared exit; hens require authored wing contacts; the wooden tower hatch still needs separate geometry review. Nothing in the shared equipment state changes those fixture/rig limits.
 

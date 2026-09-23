@@ -5,7 +5,7 @@ import {TOWER_HEIGHT} from './tower-geometry.js';
 import {illuminationAt} from './awareness.js';
 import {FrameClock,formatClock,timeOfDay,turnBased} from './game-clock.js';
 import {startEncounterClock,tickEncounterClock,settleEncounterRounds} from './encounter-clock.js';
-import {createGame,move,stepMovement,previewAttack,attack,reload,endTurn,stepEnemy,stepInvestigation,canControl,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts,MOVEMENT_MODES,movementModeOf,movementCost,effectiveStealth} from './core/engine.js';
+import {createGame,move,stepMovement,previewAttack,attack,equip,reload,endTurn,stepEnemy,stepInvestigation,canControl,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts,MOVEMENT_MODES,movementModeOf,movementCost,effectiveStealth} from './core/engine.js';
 import {loadBattleMap} from './battle-map.js';
 import {BattleRenderer} from './battle-renderer.js';
 import {FLOOR_PIXELS} from './hybrid-renderer.js';
@@ -24,7 +24,7 @@ if(new URLSearchParams(location.search).has('editorPlaytest')){
 let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false;
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
 const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastClockCombat;
-const characterScreen=createCharacterScreen({getState:()=>state,getEquipmentState:id=>renderer?.traversal.active?.event.unitId===id?'stowed':'carried',onOpen:()=>{frameClock.reset();sync();},onClose:()=>{frameClock.reset();sync();}});
+const characterScreen=createCharacterScreen({getState:()=>state,getEquipmentState:id=>renderer?.equipmentState(id)||'carried',canEquip:()=>!renderer.busy,onEquip:(id,weapon)=>{if(renderer.busy)return false;const ok=equip(state,state.units.find(u=>u.id===id),weapon);if(ok){renderer.captureCombat(state);lastUI='';}return ok;},onOpen:()=>{frameClock.reset();sync();},onClose:()=>{frameClock.reset();sync();}});
 const paused=()=>userPaused||document.hidden||characterScreen.open;
 function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
 const view={x:0,y:0,zoom:1.15};
