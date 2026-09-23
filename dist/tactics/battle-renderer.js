@@ -1,4 +1,5 @@
 import {prepareLadderRoute} from './ladder-preparation.js';
+import {CliffMapScene} from './cliff-map-scene.js';
 import {BattleLoot} from './battle-loot.js';
 import {createEquipmentDraw,DRAW_DURATION_MS} from './equipment-draw.js';
 import {BattleTraversal} from './battle-traversal.js';
@@ -25,7 +26,7 @@ import {motionPreference} from './settings-3d.js';
 export class BattleRenderer extends HybridRenderer {
  constructor(onReady=()=>{}){
   super(onReady);this.daylight=new DaylightRig(this.scene,this.renderer);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
-  this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
+  this.cliffs=new CliffMapScene(this.scene);this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
   this.loot=new BattleLoot(this.scene);this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
@@ -33,7 +34,7 @@ export class BattleRenderer extends HybridRenderer {
  rebuild(world,seen,level,map){
   const scenery={...world,boxes:world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood'))};
   super.rebuild(scenery,map.difficulty==='easy'?null:seen,level,{...map,coverOccupiedProps:map.props,props:map.props.filter(p=>!PAINTED_PROP_FORMS[p.kind])});
-  this.paintedEnvironment.rebuild(map,level);
+  this.paintedEnvironment.rebuild(map,level);this.cliffs.rebuild(map,level);
  }
  async loadModel(unit){
   this.pending.add(unit.id);const generation=this.generation;
@@ -142,7 +143,7 @@ export class BattleRenderer extends HybridRenderer {
  displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){
   this.generation++;
-  this.loot.dispose();this.lights.dispose();this.daylight.dispose();this.paintedEnvironment.dispose();
+  this.loot.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();this.paintedEnvironment.dispose();
   this.motion.clear();
   this.traversal.clear();this.combat.clear();this.shotEffects.dispose();
   for(const {worker,paint,root,equipment,locomotion,cap,draw}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
