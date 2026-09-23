@@ -33,7 +33,7 @@ export function cliffGeometry(set='ledge',shape='straight',seed=1){
   const p={i,j,x:i/N-w/2+(edge?(seam?0:dx/length*chip):(random(n)-.5)*.18),z:j/N-d/2+(edge?dz/length*chip:(random(n+1)-.5)*.18),edge,seam};
   // Broken crest: no horizontal landing. Peak envelope is normalized to wall height below.
   const ridge=Math.max(0,1-Math.abs(p.z)/(d*.5));
-  p.y=set==='ledge'?CLIFF_HEIGHT:.85+.65*ridge+.50*random(seam?j*79:n+7);
+  p.y=set==='ledge'?CLIFF_HEIGHT:.52+1.05*ridge+.40*random(seam?j*79:n+7);
   points.set(k,p);return p;
  };
  for(let j=0;j<d*N;j++)for(let i=0;i<w*N;i++)if(inside(i,j)){
