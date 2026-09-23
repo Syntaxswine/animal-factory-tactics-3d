@@ -9,3 +9,9 @@ The viewer now accumulates progress in a full-precision variable. The range slid
 Validation: **14 focused tests passed**, **44 browser configurations / 88 directions / 18,280 phase samples** passed without browser errors, and the 3D build passed. Independent old/new pose comparisons for the horse and director on both fixtures found unchanged bone matrices at mapped trajectory times; reverse-playback error remained below `2e-13`.
 
 Independent hostile review: **9/10**. Actual Play-button completion measured 10.009 seconds for the compact horse, 10.010 seconds for the tower horse, and 10.005 seconds for director descent. The reviewer approved the accelerated landing as readable within the existing presentation-only scope and fixture limitations.
+
+## Six-second follow-up
+
+The subsequent user-requested timing compresses the approved ten-second clip uniformly by 0.6. Playback now takes **6 seconds**: 5.16 seconds for approach/climbing, 0.27 seconds for each landing step, and 0.18/0.12 seconds for the hand releases. This preserves the quicker top exit and all poses, contacts and reverse-playback behavior. All **14 focused tests** and the 3D build pass.
+
+Independent hostile review: **9/10**. Measured playback was 6.021 seconds for compact horse ascent, 6.012 seconds for compact horse descent, and 6.018 seconds for director tower ascent. The accelerated exit remained readable; previous fixture requirements and presentation-only limitations remain unchanged.

@@ -147,9 +147,9 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
   result={progress:value,direction,time:t,duration,phase:direction==='up'?phase.label:({'Step onto landing':'Back onto top rung','Bring left foot through':'Step back from landing','Release left hand':'Grip left handhold','Release right hand':'Grip right handhold'}[phase.label]||phase.label.replace('Reach','Lower').replace('Step','Lower foot').replace('Mount','Dismount')),root:position.toArray(),worldRoot:root.position.toArray(),contacts:checks.map(c=>({...c,point:c.point.toArray(),worldPoint:c.point.clone().applyQuaternion(root.quaternion).add(new T.Vector3(...origin)).toArray()})),supported:true};return result;
  }
  // Playback timing is separate from the approved geometric trajectory. Keep
- // route compilation on its original clock; spend only 1.4s on the top exit.
- const playbackDuration=10,exitStart=phases.at(-4).start,exitDurations=[.45,.45,.30,.20];
- let clock=0;const playbackPhases=phases.map((p,i)=>{const seconds=i<phases.length-4?p.duration/exitStart*8.6:exitDurations[i-(phases.length-4)],entry={label:p.label,id:p.id,start:clock,end:clock+seconds,poseStart:p.start,poseEnd:p.end};clock+=seconds;return entry;});playbackPhases.at(-1).end=playbackDuration;
+ // route compilation on its original clock; spend only 0.84s on the top exit.
+ const playbackDuration=6,exitStart=phases.at(-4).start,exitDurations=[.27,.27,.18,.12];
+ let clock=0;const playbackPhases=phases.map((p,i)=>{const seconds=i<phases.length-4?p.duration/exitStart*5.16:exitDurations[i-(phases.length-4)],entry={label:p.label,id:p.id,start:clock,end:clock+seconds,poseStart:p.start,poseEnd:p.end};clock+=seconds;return entry;});playbackPhases.at(-1).end=playbackDuration;
  function apply(progress,options={}){
   const direction=options.direction??'up';if(!Number.isFinite(progress)||!['up','down'].includes(direction))throw new Error('Invalid ladder playback transform');
   const value=T.MathUtils.clamp(progress,0,1),time=value*playbackDuration,pathTime=(direction==='down'?1-value:value)*playbackDuration,phase=playbackPhases.find(p=>pathTime<=p.end)||playbackPhases.at(-1),u=T.MathUtils.clamp((pathTime-phase.start)/(phase.end-phase.start),0,1),poseTime=T.MathUtils.lerp(phase.poseStart,phase.poseEnd,u),poseProgress=poseTime/duration;
