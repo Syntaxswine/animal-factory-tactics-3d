@@ -1,3 +1,4 @@
+import {BattleTraversal} from './battle-traversal.js';
 import {LightingScene} from './lighting-scene.js';
 import {DaylightRig} from './daylight-rig.js';
 import * as T from './vendor/three.module.js';
@@ -23,7 +24,7 @@ export class BattleRenderer extends HybridRenderer {
   super(onReady);this.daylight=new DaylightRig(this.scene,this.renderer);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
   this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
   this.motion=new BattleMotion();this.reducedMotion=motionPreference();
-  this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
+  this.traversal=new BattleTraversal();this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
  }
  rebuild(world,seen,level,map){
@@ -46,12 +47,16 @@ export class BattleRenderer extends HybridRenderer {
    const root=new T.Group();root.add(worker.root);
    const posture=createBattlePosture(worker,profile),locomotion=createWorkerLocomotion(worker,profile);
    this.models.set(unit.id,{worker,paint,root,profile,locomotion,posture,cap});this.actors.set(unit.id,root);this.scene.add(root);
-  }catch(error){cap?.dispose();paint?.dispose();worker?.dispose();this.diagnostics.push(error.message);}
+  }catch(error){cap?.dispose();paint?.dispose();worker?.dispose();this.diagnostics.push(error.message);if(this.traversal?.active?.event.unitId===unit.id)this.traversal.finish();}
   finally{if(generation===this.generation)this.onReady();}
  }
  actor(unit){
   const model=this.models.get(unit.id);
   if(!model){if(!this.pending.has(unit.id))this.loadModel(unit);return null;}
+  if(this.traversal?.active?.event.unitId===unit.id){
+   if(model.weapon!==unit.weapon){const old=model.equipment;model.equipment=createWeaponModel(unit.weapon);model.worker.equipWeapon(model.equipment);old?.dispose();model.weapon=unit.weapon;}
+   try{if(this.traversal.pose(model,unit,this.presentationNow??performance.now()))return model.root;}catch(error){this.diagnostics.push('Ladder animation: '+error.message);this.traversal.finish();}
+  }
   const {worker,root,profile}=model,shot=this.combat.active?.event.shooter===unit.id?this.combat.active:null;
   const sample=shot?{...this.motion.sample(unit),x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0,blend:0}:this.motion.sample(unit);
   const signature=`${JSON.stringify(sample.pose)}:${unit.casualty}:${unit.weapon}:${sample.heading}:${unit.hp>0}:${sample.blend}:${sample.blend?sample.distance:0}:${shot?.start}:${shot?.phase.aim}:${shot?.phase.recoil}`;
@@ -110,14 +115,14 @@ export class BattleRenderer extends HybridRenderer {
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
   return super.draw(ctx,{...state,terrain:state.map,units},...args);
  }
- captureCombat(state){this.combat.observe(state,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);}
- get busy(){return this.combat.busy;}
- displayUnit(unit){const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
+ captureCombat(state){this.combat.observe(state,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);this.traversal.observe(state,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);}
+ get busy(){return this.combat.busy||this.traversal.busy;}
+ displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){
   this.generation++;
   this.lights.dispose();this.daylight.dispose();this.paintedEnvironment.dispose();
   this.motion.clear();
-  this.combat.clear();this.shotEffects.dispose();
+  this.traversal.clear();this.combat.clear();this.shotEffects.dispose();
   for(const {worker,paint,root,equipment,locomotion,cap}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();
  }

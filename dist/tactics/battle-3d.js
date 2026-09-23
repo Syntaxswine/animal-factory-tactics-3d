@@ -105,7 +105,7 @@ new ResizeObserver(resize).observe(canvas);resize();restart();
 if(new URLSearchParams(location.search).get('view')==='overview')overview();
 function frame(now){
  try{
-  const elapsed=frameClock.sample(now,{paused:paused(),mode:turnBased(state)});presentationTime+=elapsed;renderer.presentationNow=presentationTime;tickEncounterClock(state,elapsed,{paused:paused()});syncClock();
+  const elapsed=frameClock.sample(now,{paused:paused(),mode:turnBased(state)});presentationTime+=elapsed;renderer.presentationNow=presentationTime;tickEncounterClock(state,elapsed,{paused:paused()||renderer.traversal.busy});syncClock();
   if(!paused()&&!renderer.busy&&presentationTime-lastStep>stepDelay){lastStep=presentationTime;stepDelay=queuedMovementDuration(state);if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);renderer.captureCombat(state);sync();}
   ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);
   if(lastUIBusy!==renderer.busy||lastUIDiagnostics!==renderer.diagnostics.join('\n')){lastUIBusy=renderer.busy;sync();}
