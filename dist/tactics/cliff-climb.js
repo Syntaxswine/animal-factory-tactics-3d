@@ -55,8 +55,8 @@ export function createCliffClimb(worker,profile){
  const feet=[
   [-1,1].map(s=>foot(-.685,0,s)),[-1,1].map(s=>foot(-.685,0,s)),[-1,1].map(s=>foot(-.685,0,s)),
   [-1,1].map(s=>foot(-.34,.48,s)),[-1,1].map(s=>foot(-.33,.45,s)),
-  [-1,1].map(s=>foot(-.31,1.24,s)),[foot(-.24,1.24,-1),foot(.25,2,1,.50)],
-  [foot(-.17,1.83,-1),foot(.25,2,1,.50)],[-1,1].map(s=>foot(.25,2,s,.268+s*.232)),[-1,1].map(s=>foot(.25,2,s,.268+s*.232)),[-1,1].map(s=>foot(.25,2,s,.268+s*.232))
+  [foot(-.31,1.24,-1,.04),foot(-.31,1.24,1)],[foot(-.24,1.24,-1,.28),foot(.25,2,1,.50)],
+  [foot(-.17,1.83,-1,.30),foot(.25,2,1,.50)],[-1,1].map(s=>foot(.25,2,s,.268+s*.232)),[-1,1].map(s=>foot(.25,2,s,.268+s*.232)),[-1,1].map(s=>foot(.25,2,s,.268+s*.232))
  ];
  function worldRotate(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(Q()).invert().multiply(q));root.updateMatrixWorld(true);}
  function solve(l,point,q,pole){
@@ -77,8 +77,8 @@ export function createCliffClimb(worker,profile){
    for(const l of limbs.filter(l=>l.id.startsWith('hand'))){const grasp=1-ease((amount-(l.side===1?.64:0))/(l.side===1?.25:.18));if(!grasp)continue;const boneQ=l.c.getWorldQuaternion(Q()),anchor=worker.weapon.anchors[l.side===1?'grip':'support'].getWorldPosition(V()),palm=V(.052,-.010,0),from=l.c.localToWorld(palm.clone());const target=from.lerp(anchor,grasp);contacts.push({id:l.id,kind:'weapon',error:solve({...l,offset:palm},target,boneQ,l.b.getWorldPosition(V()).sub(l.a.getWorldPosition(V())).lerp(V(-.3,-.3,l.side*.8),ease(amount/.15)))});}
   }
   for(const [i,l]of limbs.filter(l=>l.id.startsWith('foot')).entries()){
-   const target=feet[index][i].clone().lerp(feet[index+1][i],w);if(index===2)target.y+=.09*Math.sin(Math.PI*u);if(index===5&&l.side===1){target.x=T.MathUtils.lerp(-.31,.25,ease((u-.30)/.70));target.y=T.MathUtils.lerp(1.24,2.06,ease(u/.40))-.06*ease((u-.80)/.20);target.z+=.18*Math.sin(Math.PI*u);}if(index===6&&l.side===-1)target.y+=.06*Math.sin(Math.PI*u);if(index===7&&l.side===-1){target.x=T.MathUtils.lerp(-.17,.25,ease((u-.40)/.60));target.y=T.MathUtils.lerp(1.83,2.13,ease(u/.40))-.13*ease((u-.80)/.20);target.z-=.10*Math.sin(Math.PI*u);}
-   const restPole=rest.get(l.b).clone().sub(rest.get(l.a)),basePole=V(.12,.05,l.side*.7),foldPole=l.side===1?V(-.15,1,.25):V(-.5,1,-.6),pole=index===0||index===9?restPole:index===1?restPole.lerp(basePole,w):index===8?foldPole.lerp(restPole,w):l.side===1?(index===4?basePole.lerp(foldPole,w):index>=5?foldPole:basePole):(index===7?basePole.lerp(foldPole,w):basePole);
+   const target=feet[index][i].clone().lerp(feet[index+1][i],w);if(index===2)target.y+=.09*Math.sin(Math.PI*u);if(index===5&&l.side===1){target.x=T.MathUtils.lerp(-.31,.25,ease((u-.30)/.70));target.y=T.MathUtils.lerp(1.24,2.06,ease(u/.40))-.06*ease((u-.80)/.20);target.z+=.18*Math.sin(Math.PI*u);}if(index===6&&l.side===-1)target.y+=.06*Math.sin(Math.PI*u);if(index===7&&l.side===-1){target.x=T.MathUtils.lerp(-.17,.25,ease((u-.40)/.60));target.y=T.MathUtils.lerp(1.83,2.13,ease(u/.40))-.13*ease((u-.80)/.20);target.z+=.12*Math.sin(Math.PI*u);}
+   const restPole=rest.get(l.b).clone().sub(rest.get(l.a)),basePole=V(.12,.05,l.side*.7),trailPole=V(-.1,-.1,.8),foldPole=l.side===1?V(-.15,1,.25):V(-.5,1,.6),pole=index===0||index===9?restPole:index===1?restPole.lerp(basePole,w):index===8?foldPole.lerp(restPole,w):l.side===1?(index===4?basePole.lerp(foldPole,w):index>=5?foldPole:basePole):(index===4?basePole.lerp(trailPole,w):index===7?trailPole.lerp(foldPole,w):index>=5?trailPole:basePole);
    const error=solve(l,target,Q(),pole),planted=index<=1||(l.side===1&&index>=6)||index>=8;
    contacts.push({id:l.id,kind:planted?(target.y>1?'upper-ground':'floor'):'free',point:target.toArray(),planted,error});
   }

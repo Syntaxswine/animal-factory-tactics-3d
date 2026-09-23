@@ -65,12 +65,12 @@ test('deep flex keeps the upper pastern attached to the shin and the horn and so
  }finally{m.dispose();w.dispose();}
 });
 
-test('right knee leads a wide upper landing while the trailing leg remains below the rim',()=>{
+test('both legs swing right while the leading knee clears the rim and the trailing leg stays lower',()=>{
  const w=load(),m=createCliffClimb(w,profile),joint=name=>w.bones.find(b=>b.name===name).getWorldPosition(V());try{
   m.apply(2.9/6);const knee=joint('shin1'),ankle=joint('hoof1'),trailingKnee=joint('shin-1'),trailingAnkle=joint('hoof-1');
   assert(knee.y>2.1&&knee.y>ankle.y,'right knee must lead the hoof over the rim');
   assert(ankle.z>.5&&knee.z>joint('thigh1').z,'leading leg remains tucked under torso');
-  assert(trailingKnee.y<2&&trailingAnkle.y<1.5&&trailingAnkle.x<0&&trailingAnkle.z<0,'trailing leg folds up with leading leg');
+  assert(trailingKnee.y<2&&trailingAnkle.y<1.5&&trailingAnkle.x<0&&trailingAnkle.z>.12&&trailingKnee.z>joint('thigh-1').z+.12,'trailing leg must swing right below the leading leg');
   const plant=m.apply(3.21/6).contacts.find(c=>c.id==='foot1').worldPoint;
   assert(plant[0]>.15&&plant[2]>.45,'right landing is not clear of the torso');
   for(const t of [3.5,3.85,4.35,5.1,6]){const r=m.apply(t/6);assert(V().fromArray(r.contacts.find(c=>c.id==='foot1').worldPoint).distanceTo(V().fromArray(plant))<1e-9,'wide plant slides during transfer');}
