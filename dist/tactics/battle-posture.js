@@ -1,8 +1,10 @@
+import {createTowerTailTuck} from './tower-tail-tuck.js';
 import * as T from './vendor/three.module.js';
 import {createCasualtyPose} from './casualty-pose.js';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 // Articulate the existing painted skeleton; no changes to collision or core state.
 export function createBattlePosture(worker,profile){
+ const towerTail=createTowerTailTuck(worker,profile);
  const root=worker.root,named=Object.fromEntries(worker.bones.map(b=>[b.name,b]));
  root.position.set(0,0,0);root.rotation.set(0,0,0);worker.pose('neutral');root.updateMatrixWorld(true);
  const rest=new Map(worker.bones.map(b=>[b,b.getWorldPosition(V())]));
@@ -59,7 +61,9 @@ export function createBattlePosture(worker,profile){
  let casualty;
  function applyStance(sample,{equipment=true}={}){
   const {kneel=0,prone=0}=sample.pose||{};
+  towerTail.apply(0);
   tailClearance(kneel,prone);
+  if(sample.towerPost?.kind==='iron-searchlight-ladder-tower')towerTail.apply(1-T.MathUtils.clamp(kneel+prone,0,1),{fromCurrent:true});
   if(kneel+prone<.00001||profile.unarmed)return;
   const heading=root.rotation.y;root.rotation.y=0;root.position.set(0,0,0);root.updateMatrixWorld(true);
   const before=spine.matrixWorld.clone(),low=Math.min(1,prone),cycle=(sample.distance||0)*Math.PI*5,walk=sample.blend||0;
@@ -96,7 +100,7 @@ export function createBattlePosture(worker,profile){
   }
   root.rotation.y=heading;root.updateMatrixWorld(true);worker.skeleton.update();
  }
- return {apply(sample,options={}){
+ return {resetTail(){towerTail.apply(0);},apply(sample,options={}){
   casualty?.reset();
   const down=T.MathUtils.clamp(sample.pose?.down||0,0,1);
   const remaining=Math.max(1-down,1e-8);
