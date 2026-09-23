@@ -75,7 +75,7 @@ export function cliffGeometry(set='ledge',shape='straight',seed=1){
  g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();g.userData.layout=layout;addCliffRimAttribute(g,boundary.map(([a,b])=>({a:top(a),b:top(b)})));return g;
 }
 
-export function cliffMaterials({sand=false}={}){
+export function cliffMaterials({sand=false,water=false}={}){
  return [false,true].map(turf=>{
   if(turf)return createPaintedGrass({rim:true,sand});
   const m=new T.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
@@ -91,11 +91,12 @@ export function cliffMaterials({sand=false}={}){
     float fleck=step(.63,chips)-step(chips,.28);
     diffuseColor.rgb*=.72+floor(broad*5.)*.11+fleck*.10;
     ${turf?'diffuseColor.rgb*=mix(vec3(.65,.68,.40),vec3(1.20,1.05,.77),smoothstep(.30,.66,cn(vCliff*2.6)));':`float seam=abs(sin(vCliff.y*16.+cn(vCliff*vec3(2.,.4,2.))*4.));diffuseColor.rgb*=1.-(1.-smoothstep(.02,.12,seam))*.17;diffuseColor.rgb*=mix(vec3(.68,.66,.57),vec3(1.),smoothstep(0.,.40,vCliff.y));`}
+    ${water?'float wet=(1.-smoothstep(.04,.23+cn(vCliff*15.)*.06,vCliff.y));diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.52,.61,.58),wet*.75);':''}
    `);
-  };m.customProgramCacheKey=()=>`cliff-painted-v1-${turf}`;return m;
+  };m.customProgramCacheKey=()=>`cliff-painted-v2-${turf}-${water}`;return m;
  });
 }
-export function createCliff(set='ledge',shape='straight',seed=1){
- const geometry=cliffGeometry(set,shape,seed),materials=cliffMaterials(),root=new T.Group(),mesh=new T.Mesh(geometry,materials);mesh.castShadow=mesh.receiveShadow=true;root.add(mesh);let disposed=false;
+export function createCliff(set='ledge',shape='straight',seed=1,{water=false}={}){
+ const geometry=cliffGeometry(set,shape,seed),materials=cliffMaterials({water}),root=new T.Group(),mesh=new T.Mesh(geometry,materials);mesh.castShadow=mesh.receiveShadow=true;root.add(mesh);let disposed=false;
  return {root,mesh,layout:geometry.userData.layout,dispose(){if(disposed)return;disposed=true;geometry.dispose();materials.forEach(m=>m.dispose());}};
 }

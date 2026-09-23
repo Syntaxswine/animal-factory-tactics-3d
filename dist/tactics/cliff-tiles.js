@@ -81,7 +81,7 @@ export function cliffTileGeometry(set,tiles){
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([...positions[0],...positions[1]],3));g.setAttribute('color',new T.Float32BufferAttribute([...colors[0],...colors[1]],3));if(positions[0].length)g.addGroup(0,positions[0].length/3,0);if(positions[1].length)g.addGroup(positions[0].length/3,positions[1].length/3,1);g.setAttribute('sandBlend',new T.Float32BufferAttribute([...sandMasks[0],...sandMasks[1]],1));g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();
  g.userData={set,tiles:tiles.map(t=>({...t})),capTriangles:caps.length,boundarySegments:boundary.size,height:CLIFF_HEIGHT,climbable:set==='ledge',traversal:tiles.filter(t=>t.mask).map(t=>({x:t.x,z:t.z,mask:t.mask,set:t.set||set,climbable:(t.set||set)==='ledge'})),rim:[...boundary.values()].map(([a,b])=>({a:p3(a),b:p3(b),set:(a.crag+b.crag)>.01?'crag':'ledge'}))};addCliffRimAttribute(g,g.userData.rim);return g;
 }
-export function createCliffTiles(set,tiles){
- const geometry=cliffTileGeometry(set,tiles),materials=cliffMaterials({sand:true}),root=new T.Group(),mesh=new T.Mesh(geometry,materials);mesh.castShadow=mesh.receiveShadow=true;root.add(mesh);let disposed=false;
+export function createCliffTiles(set,tiles,{water=false}={}){
+ const geometry=cliffTileGeometry(set,tiles),materials=cliffMaterials({sand:true,water}),root=new T.Group(),mesh=new T.Mesh(geometry,materials);mesh.castShadow=mesh.receiveShadow=true;root.add(mesh);let disposed=false;
  return {root,mesh,original:materials,dispose(){if(disposed)return;disposed=true;geometry.dispose();materials.forEach(m=>m.dispose());}};
 }
