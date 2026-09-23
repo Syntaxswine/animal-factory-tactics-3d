@@ -74,9 +74,11 @@ Start in [animal-motion.js](../../dist/tactics/animal-motion.js), [dog-motion.js
 
 ## 2. Casualty refinement and death-transition coverage
 
-- [ ] Inventory the current bleeding, stable, dead and captured states and their visual behavior. Preserve their actual gameplay meanings and visibility rules.
-- [ ] Review the approved integrated casualty poses and fall/settle transitions, beginning with the horse; correct demonstrated gaps rather than rebuilding the existing baseline. A dead unit must not merely freeze in an aiming pose.
-- [ ] Support falls from standing, kneeling and prone, plus spawning/loading directly into a settled casualty pose. Do not make game progression depend on waiting for an animation.
+Bounded presentation update on `work/casualty-3d`: all twelve animals and both outfits, supported casualty poses, reversible transitions, tail/sole repairs and production renderer integration. Independent hostile review **9/10**; 724 tests and browser evidence pass. See [Casualty 3D handoff](CASUALTY-3D-HANDOFF.md). This does not close scenery-aware falls, physical dropped equipment, the complete 2D comparison or architect publication.
+
+- [x] Inventory the current bleeding, stable, dead and captured states and their visual behavior. Preserve their actual gameplay meanings and visibility rules.
+- [x] Review the approved integrated casualty poses and fall/settle transitions, beginning with the horse; correct demonstrated gaps rather than rebuilding the existing baseline. A dead unit must not merely freeze in an aiming pose.
+- [x] Support falls from standing, kneeling and prone, plus spawning/loading directly into a settled casualty pose. Do not make game progression depend on waiting for an animation.
 - [ ] Transfer to all twelve characters and both outfits; check head, limbs, wings, horns, caps and tails against the ground and nearby scenery. Use deliberate authored poses before considering ragdolls.
 - [ ] Keep weapon detachment, dropped items and body placement consistent with simulation events. Prevent duplicate drops and distinguish a visible casualty from a removed/captured unit.
 - [ ] Verify saved-state restoration, floor elevation, fog/visibility and cleanup. Compare against the existing body sprites at equal gameplay scale and reach the section review gate.

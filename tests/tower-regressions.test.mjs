@@ -71,3 +71,10 @@ test('an elevated fuel-pack explosion hits adjacent lookouts without burning the
  }
  assert.ok(checked,'deterministic seeds exercise the fuel-pack detonation');
 });
+
+test('widened iron doorway preserves the same clear opening in visible art and tactical blockers',()=>{
+ const library=createFurnitureLibrary(new T.Texture(),new T.Texture());try{for(const rotated of [false,true]){
+ const p={kind:'iron-searchlight-ladder-tower',x:10,y:10,z:0,rotated},root=library.build(p.kind).root,c=towerCenter(p);root.position.set(c.x,0,c.y);root.rotation.y=rotated?-Math.PI/2:0;root.updateMatrixWorld(true);
+ for(const [offset,height,blocked]of [[-.55,1,false],[.55,1,false],[-.60,1,true],[.60,1,true],[0,1.89,false],[0,1.91,true]]){const a=world(p,1,6.36+height,-.8+offset),b=world(p,0,6.36+height,-.8+offset),origin=new T.Vector3(a.x,a.h,a.y),end=new T.Vector3(b.x,b.h,b.y),ray=new T.Raycaster(origin,end.clone().sub(origin).normalize(),0,1);assert.equal(ray.intersectObject(root,true).length>0,blocked,'visible doorway');assert.equal(towerBlocksSegment(p,a,b),blocked,'tactical doorway');}
+ }}finally{library.dispose();}
+});

@@ -1,3 +1,4 @@
+import {prepareLadderRoute} from './ladder-preparation.js';
 import {BattleLoot} from './battle-loot.js';
 import {createEquipmentDraw,DRAW_DURATION_MS} from './equipment-draw.js';
 import {BattleTraversal} from './battle-traversal.js';
@@ -26,7 +27,7 @@ export class BattleRenderer extends HybridRenderer {
   super(onReady);this.daylight=new DaylightRig(this.scene,this.renderer);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
   this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
   this.loot=new BattleLoot(this.scene);this.motion=new BattleMotion();this.reducedMotion=motionPreference();
-  this.traversal=new BattleTraversal();this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
+  this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
  }
  rebuild(world,seen,level,map){
@@ -39,6 +40,7 @@ export class BattleRenderer extends HybridRenderer {
   const profile=ANIMAL_MOTION_CATALOG.find(p=>p.id===unit.species);
   let worker,paint,cap;
   try{
+   for(const kind of new Set((this.state?.props||[]).filter(p=>['iron-searchlight-ladder-tower','wooden-spotlight-tower'].includes(p.kind)).map(p=>p.kind)))if(profile&&unit.team==='squad')prepareLadderRoute(profile,kind).catch(()=>{});
    if(!profile)throw Error('Missing character model: '+unit.species);
    if(!this.meshData.has(profile.file))this.meshData.set(profile.file,fetch(new URL(profile.file,import.meta.url)).then(r=>{if(!r.ok)throw Error('Cannot load '+profile.file);return r.json();}));
    worker=profile.create(await this.meshData.get(profile.file));
@@ -57,11 +59,11 @@ export class BattleRenderer extends HybridRenderer {
   if(!model){if(!this.pending.has(unit.id))this.loadModel(unit);return null;}
   if(this.traversal?.active?.event.unitId===unit.id){
    model.draw?.dispose();model.draw=null;model.drawRequested=false;
-   if(model.weapon!==unit.weapon){const old=model.equipment;model.equipment=createWeaponModel(unit.weapon);model.worker.equipWeapon(model.equipment);old?.dispose();model.weapon=unit.weapon;}
+   if(!model.profile.unarmed&&model.weapon!==unit.weapon){const old=model.equipment;model.equipment=createWeaponModel(unit.weapon);model.worker.equipWeapon(model.equipment);old?.dispose();model.weapon=unit.weapon;}
    try{if(this.traversal.pose(model,unit,this.presentationNow??performance.now()))return model.root;}catch(error){this.diagnostics.push('Ladder animation: '+error.message);this.traversal.finish();}
   }
   const {worker,root,profile}=model,shot=this.combat.active?.event.shooter===unit.id?this.combat.active:null;
-  const sample=shot?{...this.motion.sample(unit),x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0,blend:0}:this.motion.sample(unit);
+  const sample=this.traversal?.preparing&&this.traversal.active?.event.unitId===unit.id?{...this.motion.sample(unit),...this.traversal.display(unit),blend:0,pose:{}}:shot?{...this.motion.sample(unit),x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0,blend:0}:this.motion.sample(unit);
   const now=this.presentationNow??performance.now();
   if(unit.hp<=0||this.reducedMotion?.matches)model.drawRequested=false;
   if(model.draw&&(unit.hp<=0||model.weapon!==unit.weapon||this.reducedMotion?.matches)){model.draw.dispose();model.draw=null;model.drawRequested=false;}
@@ -74,7 +76,7 @@ export class BattleRenderer extends HybridRenderer {
     const old=model.equipment;model.drawRequested=!!old&&model.drawSkipWeapon!==unit.weapon&&unit.weapon!=='hands'&&!this.reducedMotion?.matches;model.equipment=createWeaponModel(unit.weapon);worker.equipWeapon(model.equipment);old?.dispose();model.weapon=unit.weapon;
    }
    worker.root.position.set(0,0,0);worker.root.rotation.set(0,0,0);
-   if(unit.hp>0&&shot?.rifle&&!profile.unarmed){
+   if(unit.hp>0&&!(sample.pose?.down>0)&&shot?.rifle&&!profile.unarmed){
     model.firing??=createRifleFiring(worker,profile,model.posture);
     const target=shotPoint(shot.event.trajectories[0],this.state).sub(new T.Vector3(...toWorld(sample)));
     if(shot.phase.discharged&&!shot.dischargeChecked){
@@ -85,13 +87,13 @@ export class BattleRenderer extends HybridRenderer {
     if(!result.supported){shot.traceOrigin=null;if(shot.phase.discharged){shot.presentationUnsupported=true;shot.presentationReason=result.reason;}}
     this.firingDiagnostic(model,shot.presentationUnsupported?{supported:false,reason:shot.presentationReason}:result,unit);
    }
-   else if(unit.hp>0&&sample.pose?.prone>0&&!profile.unarmed&&['rifle','assault','smg','shotgun','sniper'].includes(unit.weapon)){
+   else if(unit.hp>0&&!(sample.pose?.down>0)&&sample.pose?.prone>0&&!profile.unarmed&&['rifle','assault','smg','shotgun','sniper'].includes(unit.weapon)){
     model.firing??=createRifleFiring(worker,profile,model.posture);const h=sample.heading*Math.PI/180;const result=model.firing.apply({aim:0,target:new T.Vector3(12*Math.cos(h),.48,12*Math.sin(h)),sample});this.firingDiagnostic(model,result,unit);
    }
    else {this.firingDiagnostic(model,null,unit);model.locomotion.apply({...sample,blend:sample.pose?.prone||sample.pose?.down?0:sample.blend});model.posture.apply(sample);if(Object.values(sample.pose||{}).some(v=>v>0))model.posture.ground();}
-   if(model.drawRequested&&!model.draw&&unit.hp>0&&!shot&&!profile.unarmed){model.draw=createEquipmentDraw(worker,profile);model.drawStart=now;model.drawRequested=false;}
+   if(model.drawRequested&&!model.draw&&unit.hp>0&&!(sample.pose?.down>0)&&!shot&&!profile.unarmed){model.draw=createEquipmentDraw(worker,profile);model.drawStart=now;model.drawRequested=false;}
    if(model.draw){const progress=(now-model.drawStart)/DRAW_DURATION_MS;if(progress>=1){model.draw.dispose();model.draw=null;model.signature=null;}else model.draw.apply(progress);}
-   model.paint.setGripForearm?.(!!model.equipment?.carry?.handPoses?.support?.gripMesh);
+   model.paint.setGripForearm?.(!!model.equipment?.root.visible&&!!model.equipment?.carry?.handPoses?.support?.gripMesh);
 
   }
   root.position.fromArray(toWorld(sample));
@@ -136,7 +138,7 @@ export class BattleRenderer extends HybridRenderer {
   }
  }
  get busy(){return this.combat.busy||this.traversal.busy||[...this.models.values()].some(m=>m.draw||m.drawRequested);}
- equipmentState(id){return this.traversal.active?.event.unitId===id?'stowed':this.models.get(id)?.draw||this.models.get(id)?.drawRequested?'drawing':'carried';}
+ equipmentState(id){return this.traversal.active?.event.unitId===id?(this.traversal.active.motion?.climb.equipmentState||'carried'):this.models.get(id)?.draw||this.models.get(id)?.drawRequested?'drawing':'carried';}
  displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){
   this.generation++;

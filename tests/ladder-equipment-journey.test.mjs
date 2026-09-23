@@ -21,8 +21,9 @@ for(const id of Object.keys(WEAPON_MODELS))test(id+': full journey, phase cancel
    const e={...event,direction,from:direction==='up'?bottom:top,to:direction==='up'?top:bottom};
    const journey=createLadderJourney(worker,profile,e,ladderFrame(tower));
    const times=journey.phases.map(p=>(p.start+p.end)/2),duration=journey.duration;
-   for(const phase of journey.phases)for(const t of [phase.start,(phase.start+phase.end)/2,phase.end]){
+   for(const phase of journey.phases)for(const t of [phase.start,...[.25,.5,.75].map(f=>phase.start+(phase.end-phase.start)*f),phase.end]){
     const result=journey.apply(t/duration);assert.ok(result.worldRoot.every(Number.isFinite));assert.equal(worker.weapon,gun);assert.ok(gun.root.matrixWorld.elements.every(Number.isFinite));
+    if(gun.hose&&gun.hose.visible){const a=gun.hose.geometry.attributes.position,radial=gun.hose.geometry.parameters.radialSegments,ring=radial+1;for(const [start,anchor]of [[0,gun.anchors.hoseOut],[a.count-ring,gun.anchors.hoseIn]]){const center=new T.Vector3();for(let i=0;i<radial;i++)center.add(new T.Vector3().fromBufferAttribute(a,start+i));center.divideScalar(radial).applyMatrix4(gun.hose.matrixWorld);assert.ok(center.distanceTo(anchor.getWorldPosition(new T.Vector3()))<1e-6,'hose detached at '+phase.label);}}
     if(phase.label==='Climb'&&t>phase.start&&t<phase.end){assert.equal(gun.root.visible,id!=='hands');assert.equal(accessories(worker).length>0,true);if(gun.hose){assert.equal(gun.hose.visible,true);assert.equal(gun.mount.visible,true);}}
    }
    journey.dispose();assert.equal(accessories(worker).length,0);

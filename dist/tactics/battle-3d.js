@@ -26,7 +26,7 @@ if(new URLSearchParams(location.search).has('editorPlaytest')){
  const back=document.createElement('button');back.id='return-editor';back.textContent='Return to editor';back.onclick=()=>{window.opener?.focus();window.close();};document.querySelector('header').append(back);
  document.querySelector('aside h1').textContent='Playtest: '+definition.name;
 }
-let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false;
+let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false,lastLadderPreparing=false;
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
 const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastClockCombat,storageBusy=false,lastAuto=performance.now(),autoRound=0,autoDisabled=false;
 const characterScreen=createCharacterScreen({getState:()=>state,onInventoryChange:()=>{renderer.captureCombat(state);lastUI='';sync();},getEquipmentState:id=>renderer?.equipmentState(id)||'carried',canEquip:()=>!renderer.busy,onEquip:(id,weapon)=>{if(renderer.busy)return false;const ok=equip(state,state.units.find(u=>u.id===id),weapon);if(ok){renderer.captureCombat(state);lastUI='';}return ok;},onOpen:()=>{frameClock.reset();sync();},onClose:()=>{frameClock.reset();sync();}});
@@ -60,10 +60,10 @@ function sync(){
  selectedIds=pruneSelection(state,selectedIds);
  if(selectedIds.size&&!selectedIds.has(state.selected))state.selected=[...selectedIds][0];
  const u=selected(),t=target(),preview=t?previewAttack(state,u,t,false,'torso',null,$('aim-level').value):null;
- const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,Math.floor(v.stamina),v.medkits,v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,userPaused]);
+ const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,Math.floor(v.stamina),v.medkits,v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,renderer.traversal.preparing,userPaused]);
  if(signature===lastUI)return;lastUI=signature;
  fieldPanel.replaceChildren();for(const entry of nearbyInteractions(state,u)){const b=document.createElement('button'),p=entry.preview;b.textContent=entry.label+' · '+(p.cost?p.cost+' AP':'1 min')+(p.chance!==undefined?' · '+p.chance+'%':'')+(p.amount>0?' · +'+Math.floor(p.amount):'');b.disabled=paused()||renderer.busy||!p.ok;b.title=p.reason||('Stamina cost: '+p.stamina);b.onclick=()=>action(()=>performInteraction(state,selected(),entry.kind,entry.target));fieldPanel.append(b);}
- $('phase').textContent=`${state.phase==='explore'?'Exploration':state.phase==='player'?'Your turn':state.phase==='enemy'?'Guard turn':state.phase==='won'?'Encounter cleared':'Encounter ended'} · Round ${state.round}`;
+ $('phase').textContent=(renderer.traversal.preparing?'Preparing ladder motion… · ':'')+`${state.phase==='explore'?'Exploration':state.phase==='player'?'Your turn':state.phase==='enemy'?'Guard turn':state.phase==='won'?'Encounter cleared':'Encounter ended'} · Round ${state.round}`;
  $('squad').replaceChildren(...state.units.filter(v=>v.team==='squad').map(v=>{const button=document.createElement('button');button.textContent=`${v.id===state.selected?"★ ":""}${v.name} · ${mercStatus(v)}`;button.setAttribute('aria-pressed',String(selectedIds.has(v.id)));button.disabled=!selectable(v);button.onclick=e=>{selectMerc(v.id,e.shiftKey);center();sync();};return button;}));
  $('light-exposure').textContent='Light on '+u.name+': '+Math.round(illuminationAt(state,u)*100)+'% · Perception '+(u.perception??50);
  $('selection').textContent=`${selectedIds.size} selected · Primary: ${u.name} · ${WEAPONS[u.weapon].name} · ${u.ammo[u.weapon]||0} loaded`;
@@ -129,7 +129,7 @@ function frame(now){
   const elapsed=frameClock.sample(now,{paused:paused(),mode:turnBased(state)});presentationTime+=elapsed;renderer.presentationNow=presentationTime;tickEncounterClock(state,elapsed,{paused:paused()||renderer.traversal.busy});syncClock();
   if(!paused()&&!renderer.busy&&presentationTime-lastStep>stepDelay){lastStep=presentationTime;stepDelay=queuedMovementDuration(state);if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);renderer.captureCombat(state);sync();}
   ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);
-  if(lastUIBusy!==renderer.busy||lastUIDiagnostics!==renderer.diagnostics.join('\n')){lastUIBusy=renderer.busy;sync();}
+  if(lastLadderPreparing!==renderer.traversal.preparing||lastUIBusy!==renderer.busy||lastUIDiagnostics!==renderer.diagnostics.join('\n')){lastLadderPreparing=renderer.traversal.preparing;lastUIBusy=renderer.busy;sync();}
   for(const u of state.units.filter(v=>v.team==='squad'&&alive(v)&&(v.z||0)===level)){
    const p=project(renderer.displayUnit(u));ctx.strokeStyle=selectedIds.has(u.id)?'#ffe3a0':'#a4d4c2';ctx.lineWidth=u.id===state.selected?2:1;ctx.beginPath();ctx.ellipse(p.x,p.y,17*view.zoom,8*view.zoom,0,0,Math.PI*2);ctx.stroke();
   }

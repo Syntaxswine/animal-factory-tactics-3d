@@ -1,0 +1,28 @@
+import * as T from './vendor/three.module.js';
+import {ANIMAL_MOTION_CATALOG as profiles} from './animal-motion-catalog.js';
+import {createAnimalPaint} from './animal-motion-paint.js';
+import {createRedHatCap} from './red-hat-model.js';
+import {LIGHT_ATLAS} from './horse-light-model.js';
+import {createLadderMotion,LADDER_PRESETS,WIDE_LADDER_EXIT,ladderRailSegments} from './ladder-motion.js';
+const $=id=>document.getElementById(id),params=new URLSearchParams(location.search);
+for(const p of profiles.filter(p=>!p.unarmed))$('animal').add(new Option(p.label,p.id));
+for(const key of ['animal','outfit','ladder','view','scale','direction'])if(params.has(key))$(key).value=params.get(key);
+const renderer=new T.WebGLRenderer({canvas:$('scene'),antialias:true});renderer.setPixelRatio(1);renderer.setSize(1400,850,false);renderer.outputColorSpace=T.SRGBColorSpace;renderer.setClearColor('#303b33');renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
+const scene=new T.Scene(),camera=new T.OrthographicCamera(),loader=new T.TextureLoader();scene.add(new T.HemisphereLight(0xfff1d3,0x778878,2));const sun=new T.DirectionalLight(0xffecd5,2.4);sun.position.set(-4,10,7);scene.add(sun);
+const ground=new T.Mesh(new T.PlaneGeometry(35,35),new T.MeshStandardMaterial({color:'#56604a',roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.015;scene.add(ground);scene.add(new T.GridHelper(25,25,0xa1ac89,0x6d795d));
+const rifleTexture=await loader.loadAsync(LIGHT_ATLAS);rifleTexture.colorSpace=T.SRGBColorSpace;
+let worker=null,motion=null,paint=null,cap=null,ladder=null,loading=false,playing=false,last=0,playbackProgress=0;
+function dispose(){if(worker){scene.remove(worker.root);motion?.dispose();cap?.dispose();paint?.dispose();worker.dispose();}if(ladder){scene.remove(ladder);ladder.traverse(p=>{if(p.isMesh){p.geometry.dispose();p.material.dispose();}});}worker=motion=paint=cap=ladder=null;}
+function buildLadder(d){const g=new T.Group();const box=(name,color,p,s)=>{const m=new T.Mesh(new T.BoxGeometry(...s),new T.MeshStandardMaterial({color,roughness:.82}));m.name=name;m.position.set(...p);g.add(m);return m;};
+ for(const {a,b}of ladderRailSegments(d)){const axis=b.clone().sub(a),mid=a.clone().add(b).multiplyScalar(.5),part=box('Handhold stile','#60695b',mid.toArray(),[d.railThickness||.07,axis.length(),d.railThickness||.07]);part.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),axis.normalize());}
+ for(let i=0;i<d.rungs;i++)box('Rung '+i,'#a3a18c',[d.plane,d.firstRung+i*d.spacing,0],[d.rungDepth||.07,d.rungThickness||.055,d.width+.05]);
+ box('Upper landing','#737056',[d.plane+.76,d.height-.06,0],[1.52,.12,1.3]);
+ for(const z of [-.61,.61]){box('Landing rail','#60695b',[d.plane+.85,d.height+.85,z],[1.7,.06,.06]);box('Landing post','#60695b',[d.plane+1.55,d.height+.42,z],[.06,.84,.06]);}
+ return g;
+}
+async function load(){if(loading)return;loading=true;playing=false;$('play').textContent='Play';window.ladderStudy.ready=false;const id=$('animal').value,outfit=$('outfit').value,type=$('ladder').value;try{dispose();const p=profiles.find(p=>p.id===id),data=await fetch(p.file).then(r=>r.json());worker=p.create(data,rifleTexture);paint=await createAnimalPaint(renderer,worker,p,loader,outfit);for(const part of worker.parts)part.material=paint.material;cap=outfit==='red-hats'?await createRedHatCap(renderer,worker,p,loader):null;motion=createLadderMotion(worker,p,{...LADDER_PRESETS[type],...(p.id.startsWith('pig')?{exitWidth:WIDE_LADDER_EXIT}:{})});ladder=buildLadder(motion.definition);scene.add(ladder,worker.root);window.ladderStudy.ready=true;render();}catch(e){$('status').textContent=e.message;console.error(e);}finally{loading=false;if(id!==$('animal').value||outfit!==$('outfit').value||type!==$('ladder').value)load();}}
+function render(){if(!motion)return;const p=playing?playbackProgress:+$('progress').value,d=motion.apply(p,{direction:$('direction').value}),height=motion.definition.height,mode=$('scale').value,scale=mode==='game'?58:mode==='close'?280:Math.min(165,710/(height+1.9)),center=mode==='full'?new T.Vector3(.45,height/2+.6,0):new T.Vector3(d.root[0],d.root[1]+.92,0),view={three:[-1,.42,1.4],side:[0,.12,1],front:[1,.12,0],rear:[-1,.12,0]}[$('view').value];
+ camera.left=-700/scale;camera.right=700/scale;camera.top=425/scale;camera.bottom=-425/scale;camera.near=.01;camera.far=80;camera.position.copy(center).add(new T.Vector3(...view).multiplyScalar(8));camera.lookAt(center);camera.updateProjectionMatrix();renderer.render(scene,camera);$('time').textContent=`${(p*motion.duration).toFixed(1)} / ${motion.duration.toFixed(1)} s`;$('status').textContent=(motion.definition.exitWidth?'Flared exit study · ':'')+d.phase+' · '+d.contacts.filter(c=>c.planted).length+' planted contacts';window.ladderStudy.result=d;window.ladderStudy.worker=worker;window.ladderStudy.motion=motion;
+}
+window.ladderStudy={ready:false,seek(p){playbackProgress=p;$('progress').value=p;render();},render};for(const id of ['animal','outfit','ladder'])$(id).onchange=load;for(const id of ['view','scale','direction'])$(id).oninput=render;$('progress').oninput=()=>{playbackProgress=+$('progress').value;render();};$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Pause':'Play';if(+$('progress').value===1)$('progress').value=0;playbackProgress=+$('progress').value;last=performance.now();};
+function frame(now){if(playing&&motion){playbackProgress=Math.min(1,playbackProgress+(now-last)/1000/motion.duration);$('progress').value=playbackProgress;render();if(playbackProgress>=1){playing=false;$('play').textContent='Play';}}last=now;requestAnimationFrame(frame);}requestAnimationFrame(frame);load();
