@@ -1,5 +1,9 @@
 # Cliff climbing gameplay handoff
 
+Update: live horse/rifle ascent, saved terrain support, and the distinct editor
+tool identifiers are documented in [CLIFF-LIVE-ANIMATION.md](CLIFF-LIVE-ANIMATION.md).
+The study-only rendering limitations below describe the original cost/link pass.
+
 Cliff links now use the live 3D movement system. The approved cliff study assets
 from main are included, but this change does not automatically stamp study
 geometry into maps or infer routes from decorative contour tiles.

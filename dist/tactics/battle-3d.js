@@ -27,6 +27,7 @@ if(new URLSearchParams(location.search).has('editorPlaytest')){
  const back=document.createElement('button');back.id='return-editor';back.textContent='Return to editor';back.onclick=()=>{window.opener?.focus();window.close();};document.querySelector('header').append(back);
  document.querySelector('aside h1').textContent='Playtest: '+definition.name;
 }
+let cliffViewState=null,cliffViewId=0;
 let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false,lastLadderPreparing=false;
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
 const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastClockCombat,storageBusy=false,lastAuto=performance.now(),autoRound=0,autoDisabled=false;
@@ -58,6 +59,7 @@ async function quickLoad(){try{await loadGame('quick');}catch(e){message('Could 
 function autosave(){saveGame('auto').catch(e=>{autoDisabled=true;message('Autosave failed: '+e.message+' Use Save / Load to retry.');});}
 function sync(){
  settleEncounterRounds(state);const combat=turnBased(state);if(combat!==lastClockCombat){frameClock.reset();lastClockCombat=combat;}syncClock();
+ if(cliffViewState!==state){cliffViewState=state;cliffViewId=0;}const traversal=state.cliffTraversals?.at(-1);if(traversal&&traversal.id>cliffViewId){cliffViewId=traversal.id;if(traversal.unitId===state.selected){level=selected().z||0;$('floor').value=level;}}
  selectedIds=pruneSelection(state,selectedIds);
  if(selectedIds.size&&!selectedIds.has(state.selected))state.selected=[...selectedIds][0];
  const u=selected(),t=target(),preview=t?previewAttack(state,u,t,false,'torso',null,$('aim-level').value):null;

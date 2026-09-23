@@ -40,7 +40,7 @@
       "upstreamSha256": "8cf9aed74b163167aa7e432ad0c744ab9d3f55a30d5a3f3eaf218c163bde4e23"
     },
     "projectiles.js": {
-      "reason": "Trace open tower windows, elevated occupants and welded cliff surfaces.",
+      "reason": "Trace open tower windows, elevated occupants and welded cliff surfaces. Use physical cliff caps instead of phantom upper slabs.",
       "upstreamSha256": "f8b2afc98c686cd892189d17f4fe7cb7ae7c16b8d8f2f8609ca78cf8b3192674"
     },
     "world.js": {
@@ -52,8 +52,8 @@
     "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
     "blocks.js": "c57a672d9a279dd7a61b60008ffeabd09b84ed3f70a4ed30d9ae5f7728b6fb12",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
-    "editor-model.js": "83e5886a2e816c9d1d8507fe9e0095fedf9116801e93a5bcbb588c297bc0fa7b",
-    "engine.js": "c2957f9fd9690513676c97ebbe50c6abcdc4c869d1881d8317d7a2366992b0a1",
+    "editor-model.js": "793c22e5818d81c86dd039c4d6dd145c6445c70ace05e3537c74ac628bbd7a91",
+    "engine.js": "c3482dc0ab52c237c5cbad809d8e3813e00ec0389c3efbb24be40f26f93b52c6",
     "environment.js": "0030f1ad61122c0d0f989f32da362837a03938def60be417f88492fb22d3a666",
     "explosives.js": "d28c8600c983f8a018a32e84a137836b81165d80924587f0195f23a540a64fa4",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
@@ -63,7 +63,7 @@
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",
-    "projectiles.js": "69853de71fa76be3048afc2c8d81d94a3de0497f814fb763c81021c9ed454300",
+    "projectiles.js": "0775aef5481741fc70cdcd610edac1d50bcdc123c27aef9346f225b3f97de46a",
     "recruits.js": "5e4495962cdad3d0b57f0d1784bddbf54fa785e6e00a9ae932cfb7dbbbeeb81b",
     "sector-rules.js": "d20ee872471a503a60ac706655b19f9ba9857c41882dd6cc6a08d61e3572132a",
     "visibility.js": "17d3de4a6aca835dc176ac3fcc9f460fb12aae83bf5d2c0154b29a789ed5dc48",

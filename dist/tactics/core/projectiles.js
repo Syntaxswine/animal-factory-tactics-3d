@@ -1,3 +1,4 @@
+import {cliffSupportAt} from '../cliff-support.js';
 import {cliffRayHit} from '../cliff-map-geometry.js';
 import {unitBaseHeight,towerRayHit} from '../tower-geometry.js';
 import {terrainAt,levelOf,sightEdge,W,H,LEVELS} from './maps.js';
@@ -46,7 +47,7 @@ export function traceProjectile(state,shooter,origin,direction,reach){
    const lower=Math.floor(Math.min(before.h,after.h)/3),upper=Math.floor(Math.max(before.h,after.h)/3);
    if(lower!==upper&&upper>=0&&upper<LEVELS){
     const cells=new Set([`${ax},${ay}`,`${bx},${by}`]);
-    for(const cell of cells){const [x,y]=cell.split(',').map(Number);if((upper===0||terrainAt(state,x,y,upper)!=='void')&&!(state.stairs||[]).some(s=>s.x===x&&s.y===y&&s.z===upper-1))return impact('floor',t);}
+    for(const cell of cells){const [x,y]=cell.split(',').map(Number);if((upper===0||terrainAt(state,x,y,upper)!=='void'&&!cliffSupportAt(state,{x,y,z:upper}))&&!(state.stairs||[]).some(s=>s.x===x&&s.y===y&&s.z===upper-1))return impact('floor',t);}
    }
    const z=Math.floor(p.h/3),height=p.h-z*3;
    if(z>=0&&z<LEVELS&&height<=2.7){

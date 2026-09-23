@@ -88,7 +88,7 @@ export class HybridRenderer{
   const seen=editor?null:state.seen,rebuild=this.world!==world||this.seenCount!==seen?.size||this.level!==level;if(rebuild){this.rebuild(world,seen,level,state);this.world=world;this.seenCount=seen?.size;this.level=level;}
   const units=editor?[...state.starts.map((p,i)=>({...p,id:i,species:['horse','goat','donkey','sheep'][i],weapon:'rifle',hp:100,team:'squad'})),...state.guards.map((p,i)=>({...p,id:i+4,hp:100,team:'guard'}))]:state.units;
   for(const mesh of this.actors.values())mesh.visible=false;const picking=[];
-  for(const u of units){if(u.away||u.casualty==='captured'||(u.z||0)!==level||!editor&&u.team!=='squad'&&!state.detected.has(u.id)&&!(u.hp<=0&&state.seen.has(key(u.x,u.y,u.z||0))))continue;
+  for(const u of units){if(u.away||u.casualty==='captured'||(u.presentationLevel??u.z??0)!==level||!editor&&u.team!=='squad'&&!state.detected.has(u.id)&&!(u.hp<=0&&state.seen.has(key(u.x,u.y,u.z||0))))continue;
    // Only initialize artwork near the viewport; large maps do not preload every pose.
    const center=new THREE.Vector3(...toWorld(u)).project(camera),px=(center.x+1)*width/2,py=(1-center.y)*height/2;if(px< -200||px>width+200||py< -200||py>height+200)continue;
    const mesh=this.actor(u);if(!mesh)continue;mesh.visible=true;const box=new THREE.Box3().setFromObject(mesh),points=[];for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z])points.push(new THREE.Vector3(x,y,z).project(camera));const xs=points.map(p=>(p.x+1)*width/2),ys=points.map(p=>(1-p.y)*height/2);picking.push({id:u.id,x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys),px,py});

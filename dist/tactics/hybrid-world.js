@@ -1,3 +1,4 @@
+import {cliffSupportAt} from './cliff-support.js';
 import {isCliff} from './cliff-map.js';
 import {TOWER_HEIGHT} from './tower-geometry.js';
 import {LIGHT_FORMS} from './light-sources.js';
@@ -9,7 +10,7 @@ import {propParts} from './hybrid-props.js';
 export const DIMENSIONS=Object.freeze({tile:1,floorSpacing:2.12,slab:.12,wall:2,wallThickness:.16,doorThickness:.12,
  windowBottom:.85,windowTop:1.55,windowMargin:0,doorTop:1.65,lowCover:.8,standing:1.65,kneeling:1.155,prone:.462});
 export const GAME_CAMERA=Object.freeze({azimuth:Math.PI/4,elevation:Math.PI/6});
-export const toWorld=({x,y,z=0,h=0,towerPost})=>[x,z*DIMENSIONS.floorSpacing+h+(towerPost?TOWER_HEIGHT:0),y];
+export const toWorld=({x,y,z=0,h=0,towerPost,cliffSupport})=>[x,(cliffSupport&&!towerPost?cliffSupport.level*DIMENSIONS.floorSpacing+cliffSupport.height:z*DIMENSIONS.floorSpacing)+h+(towerPost?TOWER_HEIGHT:0),y];
 export const fromWorld=([x,h,y])=>({x,y,z:Math.floor((h+1e-8)/DIMENSIONS.floorSpacing),h:h-Math.floor((h+1e-8)/DIMENSIONS.floorSpacing)*DIMENSIONS.floorSpacing});
 export function projectWorld([x,y,z],{azimuth,elevation}=GAME_CAMERA){
  return [Math.cos(azimuth)*x-Math.sin(azimuth)*z,-Math.sin(elevation)*(Math.sin(azimuth)*x+Math.cos(azimuth)*z)+Math.cos(elevation)*y];
@@ -31,7 +32,7 @@ export function buildWorld(map){
   if(!grounds.has(terrain)&&terrain!=='crate'){diagnostics.push({source:`tile:${x},${y},${z}`,kind:terrain,message:'Unsupported terrain'});return;}
   // Existing stairs leave the upper slab open; movement remains a simulation rule.
   const roof=roofs.get(`${x},${y},${z}`);
-  if(!z||!(map.stairs||[]).some(p=>p.x===x&&p.y===y&&p.z===z-1))box(`floor:${x},${y},${z}`,roof?'roof':'floor',roof?.kind||terrain,[x,z*DIMENSIONS.floorSpacing-D.slab/2,y],[1,D.slab,1],{x,y,z});
+  if(!cliffSupportAt(map,{x,y,z})&&(!z||!(map.stairs||[]).some(p=>p.x===x&&p.y===y&&p.z===z-1)))box(`floor:${x},${y},${z}`,roof?'roof':'floor',roof?.kind||terrain,[x,z*DIMENSIONS.floorSpacing-D.slab/2,y],[1,D.slab,1],{x,y,z});
   if(terrain==='crate')box(`cover:${x},${y},${z}`,'cover','crate-wood',[x,z*DIMENSIONS.floorSpacing+D.lowCover/2,y],[1,D.lowCover,1],{x,y,z});
  }
  const terrain=map.terrain||map.map;

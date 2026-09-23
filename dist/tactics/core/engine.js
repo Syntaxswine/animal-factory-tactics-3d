@@ -1,3 +1,4 @@
+import {updateCliffSupports} from '../cliff-support.js';
 import {recordCliffTraversal} from '../cliff-traversal.js';
 import {COMBAT_ROUND_MINUTES as ROUND_MINUTES} from '../game-clock.js';
 export {ROUND_MINUTES};
@@ -171,7 +172,7 @@ export function notices(s,a,b){
 // Every trigger that can put several guards in Alert at once (a refresh's sightings, a gunshot's alarm ring) is one cascade: a listener that
 // declined a shout is not re-asked by the next guard the same trigger alerts.
 export function refresh(s){return cascade(s,()=>refreshNow(s));}
-function refreshNow(s){
+function refreshNow(s){updateCliffSupports(s);
  updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});
  const oldDetected=s.detected,oldVisible=s.visible,oldGlimpses=s.glimpses||{};
  for(const u of s.units){const at=u.x+','+u.y+','+levelOf(u);u.moved=!!u.fired||u.lastAt!==at;u.lastAt=at;u.fired=false;}s.visible=terrainVisibility(s,squad(s));s.detected=new Set(guards(s).filter(g=>squad(s).some(p=>canSee(s,p,g))).map(g=>g.id));

@@ -61,7 +61,7 @@ export class BattleRenderer extends HybridRenderer {
   if(this.traversal?.active?.event.unitId===unit.id){
    model.draw?.dispose();model.draw=null;model.drawRequested=false;
    if(!model.profile.unarmed&&model.weapon!==unit.weapon){const old=model.equipment;model.equipment=createWeaponModel(unit.weapon);model.worker.equipWeapon(model.equipment);old?.dispose();model.weapon=unit.weapon;}
-   try{if(this.traversal.pose(model,unit,this.presentationNow??performance.now()))return model.root;}catch(error){this.diagnostics.push('Ladder animation: '+error.message);this.traversal.finish();}
+   try{if(this.traversal.pose(model,unit,this.presentationNow??performance.now()))return model.root;}catch(error){this.diagnostics.push('Traversal animation: '+error.message);this.traversal.finish();}
   }
   const {worker,root,profile}=model,shot=this.combat.active?.event.shooter===unit.id?this.combat.active:null;
   const sample=this.traversal?.preparing&&this.traversal.active?.event.unitId===unit.id?{...this.motion.sample(unit),...this.traversal.display(unit),blend:0,pose:{}}:shot?{...this.motion.sample(unit),x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0,blend:0}:this.motion.sample(unit);
@@ -124,7 +124,7 @@ export class BattleRenderer extends HybridRenderer {
  draw(ctx,state,...args){
   this.loot.sync(state,args[3]);
   this.state=state;this.captureCombat(state);this.shotEffects.hide();
-  const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.combat.display(u));
+  const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.traversal.active?.event.unitId===u.id?{...u,presentationLevel:args[3]}:this.combat.display(u));
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
   return super.draw(ctx,{...state,terrain:state.map,units},...args);
  }

@@ -20,7 +20,7 @@ export function towerSlots(p){const shift=TOWERS[p.kind].open?0:-.95;return [-.7
 export function towerEntry(p){const f=TOWERS[p.kind];return f.open?towerPoint(p,0,3):f.ladder?towerPoint(p,3.5,-.8):towerPoint(p,1.04,-3);}
 export function towerForUnit(s,u){const ref=u?.towerPost;if(!ref||![ref.dx,ref.dy].every(Number.isInteger))return null;return (s.props||[]).find(p=>TOWERS[p.kind]&&p.x===u.x+ref.dx&&p.y===u.y+ref.dy&&(p.z||0)===(u.z||0)&&p.kind===ref.kind&&towerSlots(p).some(q=>q.x===u.x&&q.y===u.y))||null;}
 export function towerPost(p,q){return {dx:p.x-q.x,dy:p.y-q.y,kind:p.kind};}
-export const unitBaseHeight=(u,spacing=3)=>(u.z||0)*spacing+(u.towerPost?TOWER_HEIGHT:0);
+export const unitBaseHeight=(u,spacing=3)=>(u.cliffSupport&&!u.towerPost?u.cliffSupport.level*spacing+u.cliffSupport.height:(u.z||0)*spacing)+(u.towerPost?TOWER_HEIGHT:0);
 // One set of dimensions feeds both visible meshes and tactical blockers.
 export function woodenTowerRails(H=TOWER_HEIGHT){const parts=[],add=(name,p,size,trim=false)=>parts.push({name,p,size,trim});
  for(const side of [-1,1]){
