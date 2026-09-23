@@ -1,10 +1,11 @@
 // Explicit, reproducible changes to the pinned dependency. Never edit core/.
 export const clockOverrides={
- 'explosives.js':'Use physical tower heights for explosive launch, aim, range and blast victims.',
+ 'progression.js':'Use canonical 1-100 stats and derived resources for opted-in characters.',
+ 'explosives.js':'Use physical tower heights, weapon skills and endurance-aware explosive previews.',
  'maps.js':'Validate authored tower lookouts without requiring a ground-floor route.',
  'projectiles.js':'Trace open tower windows and elevated tower occupants.',
  'environment.js':'Register authored light fixture footprints and collision rules.',
- 'engine.js':'Use shared round timing and opt-in 3D exposure-based awareness.',
+ 'engine.js':'Use shared timing, opt-in 3D awareness and canonical character stats in combat.',
  'world.js':'Use the shared clock, one-minute completed rounds, and exploration pacing.'
 };
 function once(source,from,to){if(source.split(from).length!==2)throw Error('Clock adapter anchor changed: '+from.slice(0,100));return source.replace(from,to);}
@@ -18,7 +19,16 @@ export function adaptCoreClock(name,data){
   s=once(s,'const targets=[...raw.starts,...raw.guards,...raw.exits],','const targets=[...raw.starts,...raw.guards,...raw.exits].map(p=>towerForUnit(raw,p)?towerEntry(towerForUnit(raw,p)):p),');
   return Buffer.from(s);
  }
+ if(name==='progression.js'){
+  s="import {refreshStats,trainStat} from '../character-stats.js';\n"+s;
+  s=once(s,'export function recalculate(u){','export function recalculate(u){if(u.stats){refreshStats(u);return;}');
+  s=once(s,'export function train(u,skill){','export function train(u,skill){if(u.stats)return trainStat(u,skill);');
+  return Buffer.from(s);
+ }
  if(name==='explosives.js'){
+  s="import {weaponAccuracy,damageAfterResistance} from '../character-stats.js';\n"+s;
+  s=once(s,'a.accuracy-Math.max','weaponAccuracy(a)-Math.max');
+  s=once(s,'damage:w.damage,zone:', 'damage:damageAfterResistance(target,w.damage),rawDamage:w.damage,zone:');
   s="import {unitBaseHeight} from '../tower-geometry.js';\n"+s;
   s=once(s,'height=levelOf(a)-levelOf(target)','height=(unitBaseHeight(a)-unitBaseHeight(target))/3');
   for(const unit of ['a','target','u'])s=s.replaceAll(`levelOf(${unit})*3`, `unitBaseHeight(${unit})`);
@@ -33,6 +43,13 @@ export function adaptCoreClock(name,data){
   return Buffer.from(s);
  }
  if(name==='engine.js'){
+  s="import {initializeStats,weaponAccuracy,damageAfterResistance} from '../character-stats.js';\n"+s;
+  s=once(s,"if(detect)refresh(s);log(s,", "if(options.statSystem){s.rules.statSystem=true;for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id],authored={...(u.team==='squad'?options.cast?.[u.id]?.stats:{}),...source?.stats};if(Number.isFinite(source?.perception)&&!Number.isFinite(authored.perception))authored.perception=source.perception;initializeStats(u,authored);}}\n if(detect)refresh(s);log(s,");
+  s=once(s,'s.units.push(u);return u;', 'if(s.rules?.statSystem)initializeStats(u);s.units.push(u);return u;');
+  s=once(s,'a.accuracy+(melee?10:0)','weaponAccuracy(a)+(melee?10:0)');
+  s=once(s,'damage:Math.round(weaponDamage(w,range)*aim.damage)', 'damage:damageAfterResistance(b,Math.round(weaponDamage(w,range)*aim.damage)),rawDamage:Math.round(weaponDamage(w,range)*aim.damage)');
+  s=once(s,'for(const {unit:victim,damage:amount,zone:pelletZone}of impacts){','for(const {unit:victim,damage:rawAmount,zone:pelletZone}of impacts){const amount=damageAfterResistance(victim,rawAmount);');
+  s=once(s,"u.weapon=id;if(id==='flamethrower')", "u.weapon=id;if(u.stats)u.accuracy=weaponAccuracy(u);if(id==='flamethrower')");
   s="import {shotAim} from '../aim-levels.js';\n"+s;
   s=once(s,"zone='torso',token=null){","zone='torso',token=null,aimLevel='hip'){");
   s=once(s," const aim=AIM_ZONES[zone];"," const aiming=shotAim(WEAPONS[a.weapon],aimLevel,burst);if(!aiming)return {ok:false,reason:'Choose an aim level'};\n const aim=AIM_ZONES[zone];");
@@ -60,7 +77,7 @@ export function adaptCoreClock(name,data){
   s=once(s,'export const glimpsed=', 'export function perceive(s,a,b){return awarenessPerception(s,a,b,geometricPerceive(s,a,b),visibleZones);}\nexport const glimpsed=');
   s=once(s,'export function notices(s,a,b){','export function notices(s,a,b){\n if(s.rules?.awareness)return canSee(s,a,b);');
   s=once(s,'s.glimpses[g.id]={x:g.x,y:g.y,z:levelOf(g)};', 's.glimpses[g.id]=s.rules?.awareness?approximate(g):{x:g.x,y:g.y,z:levelOf(g)};');
-  s=once(s,'if(detect)refresh(s);', "if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-definition.starts.length]:definition.starts[u.id];if(source?.towerPost)u.towerPost=structuredClone(source.towerPost);u.perception=Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}\n if(detect)refresh(s);");
+  s=once(s,'if(detect)refresh(s);', "if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id];if(source?.towerPost)u.towerPost=structuredClone(source.towerPost);u.perception=u.stats?u.stats.perception:Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}\n if(detect)refresh(s);");
   s=once(s,'s.contacts[g.id]={x:g.x,y:g.y,z:levelOf(g)};', 's.contacts[g.id]={x:g.x,y:g.y,z:levelOf(g),...(g.towerPost?{towerElevation:TOWER_HEIGHT}:{})};');
   s=once(s,'Math.round(u.y/6)*6)),z:levelOf(u)});','Math.round(u.y/6)*6)),z:levelOf(u),...(u.towerPost?{towerElevation:TOWER_HEIGHT}:{})});');
   s=once(s,'function refreshNow(s){','function refreshNow(s){\n updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});');
