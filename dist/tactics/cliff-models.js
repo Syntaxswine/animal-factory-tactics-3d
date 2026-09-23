@@ -1,5 +1,6 @@
 import * as T from './vendor/three.module.js';
 import {DIMENSIONS} from './hybrid-world.js';
+import {createPaintedGrass} from './painted-grass.js';
 
 // Presentation kit: dimensions are authoritative; map activation is a separate adapter.
 export const CLIFF_HEIGHT=DIMENSIONS.wall;
@@ -75,6 +76,7 @@ export function cliffGeometry(set='ledge',shape='straight',seed=1){
 
 export function cliffMaterials(){
  return [false,true].map(turf=>{
+  if(turf)return createPaintedGrass();
   const m=new T.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
   m.onBeforeCompile=s=>{
    s.vertexShader='varying vec3 vCliff;\n'+s.vertexShader;
