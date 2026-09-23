@@ -16,7 +16,7 @@ export function createEquipmentStow(worker,profile){
  let state='carried',disposed=false,saved;
  const save=()=>[gun.root,gun.mount,gun.hose].filter(Boolean).map(o=>({o,visible:o.visible,p:o.position.clone(),q:o.quaternion.clone(),scale:o.scale.clone()}));saved=save();
  function restore(){for(const {o,visible,p,q,scale}of saved){o.visible=visible;o.position.copy(p);o.quaternion.copy(q);o.scale.copy(scale);}sling.visible=false;if(holder)holder.visible=false;state='carried';root.updateMatrixWorld(true);gun.updateHose?.(root);}
- function apply(){if(disposed)throw Error('Equipment stow is disposed');if(worker.weapon!==gun)throw Error('Equipment changed during stow');if(state!=='stowed'){saved=save();state='stowed';}root.updateMatrixWorld(true);const parentQ=root.getWorldQuaternion(new T.Quaternion()).invert(),spineQ=spine.getWorldQuaternion(new T.Quaternion()).premultiply(parentQ),position=V(),axis=V(0,.9,profile.id==='skunk'?-.12:.42).normalize();
+ function apply(){if(disposed)throw Error('Equipment stow is disposed');material.opacity=1;material.transparent=false;if(worker.weapon!==gun)throw Error('Equipment changed during stow');if(state!=='stowed'){saved=save();state='stowed';}root.updateMatrixWorld(true);const parentQ=root.getWorldQuaternion(new T.Quaternion()).invert(),spineQ=spine.getWorldQuaternion(new T.Quaternion()).premultiply(parentQ),position=V(),axis=V(0,.9,profile.id==='skunk'?-.12:.42).normalize();
   if(mode==='empty'){gun.root.visible=false;sling.visible=false;return;}
   let anchor=center;
   if(id==='rifle'){position.set(back,-.23,z);anchor=gun.anchors.stock.position;}
@@ -29,5 +29,5 @@ export function createEquipmentStow(worker,profile){
   sling.visible=mode==='sling';if(sling.visible){points[0].copy(position);points[points.length-1].copy(position);for(let i=0;i<points.length;i++){const across=V(1,0,0).cross(points[Math.min(i+1,32)].clone().sub(points[Math.max(0,i-1)])).normalize().multiplyScalar(.017);for(const side of [-1,1]){const p=root.worldToLocal(spine.localToWorld(points[i].clone().addScaledVector(across,side)));geometry.attributes.position.setXYZ(i*2+(side===1?1:0),p.x,p.y,p.z);}}geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
   root.updateMatrixWorld(true);
  }
- return {id,mode,get state(){return state;},apply,restore,dispose(){if(disposed)return;restore();disposed=true;sling.removeFromParent();holder?.removeFromParent();geometry.dispose();holder?.geometry.dispose();material.dispose();}};
+ return {blend(amount){const w=T.MathUtils.clamp(amount,0,1);material.transparent=w<1;material.opacity=w;sling.visible=mode==='sling'&&w>0;if(holder)holder.visible=w>0;},id,mode,get state(){return state;},apply,restore,dispose(){if(disposed)return;restore();disposed=true;sling.removeFromParent();holder?.removeFromParent();geometry.dispose();holder?.geometry.dispose();material.dispose();}};
 }

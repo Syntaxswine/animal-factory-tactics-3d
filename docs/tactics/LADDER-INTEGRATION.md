@@ -8,4 +8,14 @@ Weapon placement now uses the shared carried/stowed controller documented in `EQ
 
 The frame maps the source ladder's X=1.49, Z=-0.8 rung plane (relative to the tower center) onto the controller's X=0.35 plane, facing inward. Both tower rotations and base-floor elevations are handled. Gameplay occupancy remains committed to the destination throughout this presentation, matching the existing event contract.
 
-Current limits: the clip begins with the held equipment stowed and ends at the ladder landing; placement then returns to the assigned tactical post. Pigs need a visibly widened exit, hens need wing contacts, the wooden tower's hatch ladder needs a separate geometry review. Those cases retain their existing immediate traversal. Stairs do not play ladder motion.
+The full iron-tower journey now includes walking to the ladder, stowing, the six-second climb, passing through the doorway, recovering equipment and walking to the assigned post. Its variable presentation duration does not charge additional AP or time. It uses the shared equipment stow controller for all thirteen loadouts; completion does not request a duplicate draw animation.
+
+Current limits: Pigs need a visibly widened exit, hens need wing contacts, the wooden tower's hatch ladder needs a separate geometry review. Those cases retain their existing immediate traversal. Stairs do not play ladder motion.
+
+## Shared-equipment integration review
+
+Adapted the committed iron-tower journey from `2a2e382`; newer uncommitted wooden-tower work in the ladder worktree was not imported. Included its reversible tail tuck and compatible casualty posture dependency. The journey owns body contacts; `equipment-stow.js` owns weapon placement and sling/holster/pouch/pack assets. No rifle-only equipment controller is reintroduced.
+
+Regression coverage exercises every loadout in both directions, each phase boundary, and cancellation, casualty, weapon change and normal completion at each phase. It checks accessory disposal, retained weapon identity, finite subsequent casualty/carry poses and unchanged authoritative encounter state. Existing nine-species route/contact/surface tests remain in place. Browser review covers all thirteen loadouts and return to carried equipment.
+
+This is an integration candidate for architect review, not a renewed independent clearance approval for every large weapon through the doorway. Wooden hatches, pigs and hens remain outside this change.

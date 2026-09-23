@@ -1,7 +1,10 @@
+import {createTowerTailTuck} from './tower-tail-tuck.js';
 import * as T from './vendor/three.module.js';
+import {createCasualtyPose} from './casualty-pose.js';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 // Articulate the existing painted skeleton; no changes to collision or core state.
 export function createBattlePosture(worker,profile){
+ const towerTail=createTowerTailTuck(worker,profile);
  const root=worker.root,named=Object.fromEntries(worker.bones.map(b=>[b.name,b]));
  root.position.set(0,0,0);root.rotation.set(0,0,0);worker.pose('neutral');root.updateMatrixWorld(true);
  const rest=new Map(worker.bones.map(b=>[b,b.getWorldPosition(V())]));
@@ -54,12 +57,16 @@ export function createBattlePosture(worker,profile){
   const bend=turn(Math.atan2(old.ankle.z-old.knee.z,old.ankle.x-old.knee.x),Math.atan2(side*.25,-1)),sr=Math.sqrt(Math.max(0,lb*lb-sy*sy)),ankle=V(knee.x+Math.cos(bend)*sr,ankleY,knee.z+Math.sin(bend)*sr);
   rotation(a,new T.Quaternion().setFromUnitVectors(rb.clone().sub(ra).normalize(),knee.clone().sub(start).normalize()));rotation(b,new T.Quaternion().setFromUnitVectors(rc.clone().sub(rb).normalize(),ankle.clone().sub(knee).normalize()));rotation(c,footQ);
  }
- return {apply(sample,{equipment=true}={}){
-  const {kneel=0,prone=0,down=0,stable=0,dead=0}=sample.pose||{};
+ const tailSources=worker.parts.filter(p=>p.name.includes('tail')||p.name==='apron waist tie').map(part=>({part,position:part.geometry.attributes.position.clone(),normal:part.geometry.attributes.normal.clone()}));
+ let casualty;
+ function applyStance(sample,{equipment=true}={}){
+  const {kneel=0,prone=0}=sample.pose||{};
+  towerTail.apply(0);
   tailClearance(kneel,prone);
-  if(kneel+prone+down<.00001||(profile.unarmed&&!down))return;
+  if(sample.towerPost?.kind==='iron-searchlight-ladder-tower')towerTail.apply(1-T.MathUtils.clamp(kneel+prone,0,1),{fromCurrent:true});
+  if(kneel+prone<.00001||profile.unarmed)return;
   const heading=root.rotation.y;root.rotation.y=0;root.position.set(0,0,0);root.updateMatrixWorld(true);
-  const before=spine.matrixWorld.clone(),low=Math.min(1,(profile.unarmed?0:prone)+down),cycle=(sample.distance||0)*Math.PI*5,walk=(sample.blend||0)*(1-down);
+  const before=spine.matrixWorld.clone(),low=Math.min(1,prone),cycle=(sample.distance||0)*Math.PI*5,walk=sample.blend||0;
   const starts=new Map(),legRest=new Map();
   if(profile.proneAim&&low>0&&!profile.unarmed){
    for(const side of [-1,1])for(const n of ['thigh','shin','hoof'])legRest.set(n+side,named[n+side].quaternion.clone());
@@ -70,18 +77,16 @@ export function createBattlePosture(worker,profile){
   hips.position.y-=(profile.unarmed?0:(profile.kneelDrop||.36))*kneel;
   hips.position.y+=(.27-rest.get(hips).y)*low+(profile.proneAim?.hipLift||0)*prone;
   hips.rotation.z=(profile.unarmed?hips.rotation.z:0)-Math.PI/2*low;
-  hips.rotation.x=(.25+.8*stable-1.1*dead)*down;
-  spine.rotation.z+=(profile.unarmed?0:.15*prone)+.22*(1-dead)*down;
-  named.head.rotation.z+=(profile.unarmed?0:1.35*prone)+.2*down;
-  if(profile.unarmed){
-   for(const side of [-1,1]){named['shank '+side].rotation.z+=.35*down;named['wing '+side].rotation.x+=side*.3*down;}
-  }else{
+  hips.rotation.x=0;
+  spine.rotation.z+=(profile.unarmed?0:.15*prone);
+  named.head.rotation.z+=(profile.unarmed?0:1.35*prone);
+  {
    root.updateMatrixWorld(true);
    for(const side of [-1,1]){
     const foot=rest.get(named['hoof'+side]);
     if(kneel>0&&(low===0||(!profile.proneAim&&low<.001)))leg(side,V(foot.x+(side===1?.26:-.28)*kneel+.07*Math.sin(cycle+side)*walk,.12+.025*Math.max(0,Math.sin(cycle+side))*walk,foot.z));
-    if(low>0){named['thigh'+side].rotation.z+=(-.16+.10*Math.sin(cycle+side)*walk)*low+.22*down;named['thigh'+side].rotation.x+=side*(.18*prone+.12*down);named['shin'+side].rotation.z+=(.28+.17*Math.sin(cycle+side)*walk)*prone+(.5+side*.16)*down;named['hoof'+side].rotation.z+=.8*low;}
-    if(profile.proneAim&&prone>0){const bones=['thigh','shin','hoof'].map(n=>named[n+side]),casualty=bones.map(b=>b.quaternion.clone());supportedLeg(side,starts.get(side),low);if(down>0)bones.forEach((b,i)=>b.quaternion.slerp(casualty[i],down/low));}
+    if(low>0){named['thigh'+side].rotation.z+=(-.16+.10*Math.sin(cycle+side)*walk)*low;named['thigh'+side].rotation.x+=side*(.18*prone);named['shin'+side].rotation.z+=(.28+.17*Math.sin(cycle+side)*walk)*prone;named['hoof'+side].rotation.z+=.8*low;}
+    if(profile.proneAim&&prone>0)supportedLeg(side,starts.get(side),low);
    }
   }
   root.updateMatrixWorld(true);
@@ -89,12 +94,18 @@ export function createBattlePosture(worker,profile){
    // Transform carry equipment with the torso, keeping both authored grips.
    const delta=spine.matrixWorld.clone().multiply(before.invert());
    worker.weapon.root.applyMatrix4(delta);worker.weapon.updateHose?.(root);
-   worker.weapon.root.visible=down<.5;
-   if(worker.weapon.mount)worker.weapon.mount.visible=down<.5;
-   if(worker.weapon.hose)worker.weapon.hose.visible=down<.5;
+   worker.weapon.root.visible=true;
+   if(worker.weapon.mount)worker.weapon.mount.visible=true;
+   if(worker.weapon.hose)worker.weapon.hose.visible=true;
   }
-  if(down>0&&!profile.unarmed)for(const side of [-1,1]){named['upperArm'+side].rotation.z+=(-.45+side*.2)*down;named['forearm'+side].rotation.z+=.8*down;}
   root.rotation.y=heading;root.updateMatrixWorld(true);worker.skeleton.update();
+ }
+ return {resetTail(){towerTail.apply(0);},apply(sample,options={}){
+  casualty?.reset();
+  const down=T.MathUtils.clamp(sample.pose?.down||0,0,1);
+  const remaining=Math.max(1-down,1e-8);
+  applyStance({...sample,pose:{kneel:(sample.pose?.kneel||0)/remaining,prone:(sample.pose?.prone||0)/remaining}},options);
+  if(down>0){casualty ||= createCasualtyPose(worker,profile,tailSources);casualty.apply(sample);}
  },ground(){
   // Ground the actual skinned surface, including non-human heads/tails/feet.
   // Called only when a pose changes; stationary actors keep their cached pose.
