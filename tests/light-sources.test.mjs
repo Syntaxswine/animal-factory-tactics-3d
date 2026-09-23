@@ -95,3 +95,15 @@ test('tower decks and iron guardhouses block their own beams while outward beams
   const c=fixturePlacement(p),target={x:c.x,y:c.y,h:kind==='wooden-spotlight-tower'?0:7};assert.equal(towerBlocksLight(source,target),true,kind);
  }
 });
+
+import {towerEntry,towerCenter} from '../dist/tactics/tower-geometry.js';
+test('ladder tower lights face away from their protected entries in both editor rotations',()=>{
+ const library=createFurnitureLibrary(new T.Texture(),new T.Texture());
+ try{for(const kind of ['wooden-spotlight-tower','iron-searchlight-ladder-tower'])for(const rotated of [false,true]){
+  const p={kind,x:12,y:12,z:0,rotated},c=towerCenter(p),entry=towerEntry(p),source=sampledEmitters(p,0)[0],d={x:source.aim.x-source.x,y:source.aim.y-source.y},rear={x:entry.x-c.x,y:entry.y-c.y};
+  assert.ok(d.x*rear.x+d.y*rear.y<0,'default beam points toward ladder');assert.ok((source.x-c.x)*rear.x+(source.y-c.y)*rear.y<0,'fixture is on entry side');assert.equal(towerBlocksLight(source,source.aim),false);
+  const root=library.build(kind).root;root.position.set(c.x,0,c.y);root.rotation.y=rotated?-Math.PI/2:0;root.updateMatrixWorld(true);
+  const emitter=root.getObjectByName('emitter-0'),placed=placedEmitters(p)[0];assert.ok(emitter.getWorldPosition(new T.Vector3()).distanceTo(new T.Vector3(placed.x,placed.h,placed.y))<1e-8,'authored emitter and lighting model disagree');
+  root.getObjectByName('spotlight-head').lookAt(new T.Vector3(source.aim.x,source.aim.h,source.aim.y));root.updateMatrixWorld(true);const ray=new T.Raycaster(emitter.getWorldPosition(new T.Vector3()),new T.Vector3(source.aim.x,source.aim.h,source.aim.y).sub(emitter.getWorldPosition(new T.Vector3())).normalize(),.02,8);assert.equal(ray.intersectObject(root,true).length,0,'default outgoing beam hits its mounting hardware');
+ }}finally{library.dispose();}
+});

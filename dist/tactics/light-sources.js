@@ -1,11 +1,11 @@
 import {towerBlocksSegment} from './tower-geometry.js';
 import {MINUTES_PER_DAY,DAY_START,DUSK_START} from './game-clock.js';
 // Shared authored bulb positions in tile units: X, height, map Y.
-const towerLight=(w,h,pivot,tilt)=>({w,h,spot:true,tower:true,angle:Math.PI/8,pivot,offset:.34,emitters:[[pivot[0],pivot[1]-.34*Math.sin(tilt),pivot[2]+.34*Math.cos(tilt)]]});
+const towerLight=(w,h,pivot,tilt,forward=[0,1],scale=1)=>({w,h,spot:true,tower:true,angle:Math.PI/8,pivot,forward,offset:.34*scale,emitters:[[pivot[0]+forward[0]*.34*scale*Math.cos(tilt),pivot[1]-.34*scale*Math.sin(tilt),pivot[2]+forward[1]*.34*scale*Math.cos(tilt)]]});
 export const LIGHT_FORMS={
- 'wooden-spotlight-tower':towerLight(5,5,[-1.35,7.97,1.10],.22),
+ 'wooden-spotlight-tower':towerLight(5,5,[-1.35,7.97,-1.10],.22,[0,-1]),
  'iron-searchlight-stair-tower':towerLight(6,5,[-.95,6.92,1.99],.35),
- 'iron-searchlight-ladder-tower':towerLight(6,5,[-.95,6.92,1.99],.35),
+ 'iron-searchlight-ladder-tower':towerLight(6,5,[-2.7195,6.668,0],.35,[-1,0],.55),
  'spotlight':{w:1,h:1,spot:true,emitters:[[0,2.6,0]]},
  'campfire':{w:1,h:1,fire:true,emitters:[[0,.32,0]]},
  'cooking-fire':{w:2,h:2,fire:true,emitters:[[0,.32,0]]},
@@ -30,7 +30,7 @@ export const SPOT_ANGLE=Math.PI/6,SPOT_PENUMBRA=.2,SPOT_LEG_SECONDS=60;
 export function spotlightTarget(prop,minutes,floorHeight=3){
  const points=(Array.isArray(prop.lightTargets)?prop.lightTargets:[]).filter(p=>p&&[p.x,p.y,p.z??0].every(Number.isFinite)).slice(0,3);
  if(!points.length){
-  const f=LIGHT_FORMS[prop.kind];if(f?.tower){const c=fixturePlacement(prop),[x,,y]=f.pivot;points.push({x:c.x-prop.x+(prop.rotated?-y-20:x),y:c.y-prop.y+(prop.rotated?x:y+20),z:0});}
+  const f=LIGHT_FORMS[prop.kind];if(f?.tower){const c=fixturePlacement(prop),x=f.pivot[0]+20*f.forward[0],y=f.pivot[2]+20*f.forward[1];points.push({x:c.x-prop.x+(prop.rotated?-y:x),y:c.y-prop.y+(prop.rotated?x:y),z:0});}
   else points.push({x:0,y:8,z:0});
  }
  const phase=Math.max(0,minutes)*60/SPOT_LEG_SECONDS,index=Math.floor(phase)%points.length,t=phase-Math.floor(phase),a=points[index],b=points[(index+1)%points.length];

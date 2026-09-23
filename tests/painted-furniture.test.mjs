@@ -19,7 +19,7 @@ test('fixtures have correctly directed passive emitter anchors and no active lig
  for(const f of FURNITURE_FORMS){const {root}=library.build(f.id);const emitters=[];
   root.traverse(o=>{assert(!o.isLight);if(o.material)assert.equal(o.material.emissive.getHex(),0);if(o.userData.role==='future-light')emitters.push(o);});
   assert.equal(emitters.length,f.light?(f.id==='streetlight-double'?2:1):0);
-  for(const a of emitters){assert.equal(a.userData.enabled,false);const direction=new THREE.Vector3(0,0,-1).applyQuaternion(a.getWorldQuaternion(new THREE.Quaternion()));const tower=['wooden-spotlight-tower','iron-searchlight-stair-tower','iron-searchlight-ladder-tower'].includes(f.id);if(f.id==='spotlight')assert(direction.z>.999);else assert(direction.y<(tower?-.15:-.999));if(tower){assert(direction.z>.9);assert.equal(a.userData.distribution,'spot');}}
+  for(const a of emitters){assert.equal(a.userData.enabled,false);const direction=new THREE.Vector3(0,0,-1).applyQuaternion(a.getWorldQuaternion(new THREE.Quaternion()));const tower=['wooden-spotlight-tower','iron-searchlight-stair-tower','iron-searchlight-ladder-tower'].includes(f.id);if(f.id==='spotlight')assert(direction.z>.999);else assert(direction.y<(tower?-.15:-.999));if(tower){assert(f.id==='wooden-spotlight-tower'?direction.z<-.9:f.id==='iron-searchlight-ladder-tower'?direction.x<-.9:direction.z>.9);assert.equal(a.userData.distribution,'spot');}}
   if(f.light)assert(root.getObjectByName('mount'));
  }
  library.dispose();

@@ -5,7 +5,7 @@ import {softBox} from './painted-environment-scene.js';
 
 export const FURNITURE_FORMS=[
  {id:'spotlight',name:'Sweeping spotlight',tiles:[1,1],light:true,note:'Industrial searchlight on a swivel post; one to three authored aim points.'},
- {"id":"wood-ladder-tower","name":"Timber ladder guardhouse","tiles":[6,5],"source":"wood-stair-tower","light":false,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
+ {"id":"wood-ladder-tower","name":"Timber ladder guardhouse","tiles":[6,5],"source":"wood-stair-tower","light":false,"note":"Three-story guardhouse with its searchlight opposite the exterior ladder and guarded landing."},
  {"id":"iron-ladder-tower","name":"Iron ladder guardhouse","tiles":[6,5],"source":"iron-stair-tower","light":false,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
  {"id":"wood-rear-ladder-tower","name":"Timber rear-ladder guardhouse","tiles":[5,5],"source":"wood-wrap-tower","light":false,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
  {"id":"iron-rear-ladder-tower","name":"Iron rear-ladder guardhouse","tiles":[5,5],"source":"iron-wrap-tower","light":false,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
@@ -13,7 +13,7 @@ export const FURNITURE_FORMS=[
  {"id":"iron-large-ladder-tower","name":"Large iron ladder guardhouse","tiles":[7,7],"source":"iron-large-wrap-tower","light":false,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
  {"id":"iron-searchlight-ladder-tower","name":"Iron searchlight ladder guardhouse","tiles":[6,5],"source":"iron-searchlight-stair-tower","light":true,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
  {id:'iron-searchlight-stair-tower',name:'Iron guardhouse with searchlight',tiles:[6,5],light:true,note:'Rust-red stair tower with a bracket-mounted searchlight beneath the front window. Lighting deferred.'},
- {id:'wooden-spotlight-tower',name:'Spotlight guard tower',tiles:[5,5],light:true,note:'Three-story timber tower with a pedestal searchlight, swivel yoke and recessed reflector. Lighting deferred.'},
+ {id:'wooden-spotlight-tower',name:'Spotlight guard tower',tiles:[5,5],light:true,note:'Three-story timber tower with a pedestal searchlight facing away from the ladder hatch.'},
  {id:'wood-large-wrap-tower',name:'Large timber guardhouse tower',tiles:[7,7],note:'5×5 guardhouse and timber trellis with wraparound stairs. 7×7 overall.'},
  {id:'iron-large-wrap-tower',name:'Large rust-red guardhouse tower',tiles:[7,7],note:'5×5 rusty red iron guardhouse with wraparound stairs. 7×7 overall.'},
  {id:'wood-wrap-tower',name:'Timber wraparound guard tower',tiles:[5,5],note:'Stairs wrap around the 3×3 timber trellis to a 3×3 guardhouse. 5×5 overall.'},
@@ -101,15 +101,16 @@ export function createFurnitureLibrary(atlas,cargo){
   const source=form.source||id,ladder=!!form.source;const root=new THREE.Group();root.name=id;const timber=wood(skin),warm=wood(skin,1);
   if(['iron-searchlight-stair-tower','wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower','wood-large-wrap-tower','iron-large-wrap-tower'].includes(source)){buildStairGuardTower(root,{box,wood,iron,material,skin,cargo,metal:id.startsWith('iron-'),wrap:source.includes('-wrap-'),large:source.includes('-large-'),ladder,wideExit:id==='iron-searchlight-ladder-tower'});
    if(source==='iron-searchlight-stair-tower'){
-    const H=root.userData.stairTower.deckHeight,x=root.userData.stairTower.coreOffsetX;
-    const plate=box(root,iron,[x,H+.01,1.53],[.62,.88,.065]);plate.name='searchlight-wall-plate';
-    for(const dx of [-.23,.23]){box(root,iron,[x+dx,H-.35,1.77],[.065,.09,.49]);tube(root,iron,[[x+dx,H-.48,1.56],[x+dx,H-.36,1.82],[x+dx,H-.31,2.02]],.035);for(const y of [H-.30,H+.32]){const bolt=cyl(root,brass,[x+dx,y,1.575],.035,.035,.025);bolt.rotation.x=Math.PI/2;}}
-    addSearchlight(root,[x,H-.30,1.99],true);
+    // Compact rear bracket scales about the wall face to retain the six-tile footprint.
+    const H=root.userData.stairTower.deckHeight,x=0,lightMount=new THREE.Group();lightMount.name='searchlight-mount';lightMount.position.x=root.userData.stairTower.coreOffsetX;lightMount.rotation.y=ladder?-Math.PI/2:0;if(ladder){const scale=.55;lightMount.scale.setScalar(scale);lightMount.position.x-=1.5*(1-scale);lightMount.position.y=H*(1-scale);}root.add(lightMount);
+    const plate=box(lightMount,iron,[x,H+.01,1.53],[.62,.88,.065]);plate.name='searchlight-wall-plate';
+    for(const dx of [-.23,.23]){box(lightMount,iron,[x+dx,H-.35,1.77],[.065,.09,.49]);tube(lightMount,iron,[[x+dx,H-.48,1.56],[x+dx,H-.36,1.82],[x+dx,H-.31,2.02]],.035);for(const y of [H-.30,H+.32]){const bolt=cyl(lightMount,brass,[x+dx,y,1.575],.035,.035,.025);bolt.rotation.x=Math.PI/2;}}
+    addSearchlight(lightMount,[x,H-.30,1.99],true);
    }
 
    }else if(id==='wooden-guard-tower'||id==='wooden-spotlight-tower'){buildWoodenGuardTower(root,{box,wood,iron,skin});
    if(id==='wooden-spotlight-tower'){
-    addSearchlight(root,[-1.35,root.userData.tower.deckHeight,1.10]);
+    addSearchlight(root,[-1.35,root.userData.tower.deckHeight,-1.10]).rotation.y=Math.PI;
    }
 
   }else if(id==='cooking-fire'){
