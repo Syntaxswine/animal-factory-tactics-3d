@@ -32,7 +32,7 @@ export class InspectionDocument {
   if(walls&&(mode==='edge'||mode==='auto'&&nearEdge)&&this.map.edges[edge])return {...base,type:'edge',edge,label:this.map.edges[edge]+(this.map.edgeLocks?.[edge]?' · Locked / difficulty '+this.map.edgeLocks[edge]:''),data:{edge,kind:this.map.edges[edge]},cells:[base]};
   if(unit&&['auto','unit'].includes(mode))return {...base,type:'unit',label:unit.role,data:unit,cells:[base]};
   if(availableProp&&['auto','prop'].includes(mode))return {...base,type:'prop',label:prop.kind,data:prop,cells:propCells(prop)};
-  const access=[...this.map.stairs.map(p=>({...p,kind:p.kind||'stairs'})),...(this.map.climbs||[]).map(p=>({...p,kind:'roof climb'})),...this.map.exits.map(p=>({...p,kind:'Travel marker'}))].find(p=>p.x===x&&p.y===y&&((p.z||0)===z||(p.kind==='stairs'||p.kind==='ladder')&&(p.z||0)+1===z));
+  const access=[...this.map.stairs.map(p=>({...p,kind:p.kind||'stairs'})),...(this.map.climbs||[]).map(p=>({...p,kind:p.kind==='cliff'?'cliff climb':'roof climb'})),...this.map.exits.map(p=>({...p,kind:'Travel marker'}))].find(p=>p.x===x&&p.y===y&&((p.z||0)===z||(p.kind==='stairs'||p.kind==='ladder')&&(p.z||0)+1===z));
   if(access&&['auto','access'].includes(mode))return {...base,type:'access',label:access.kind,data:access,cells:[base]};
   return {...base,type:'tile',label:terrain==='void'?'Empty floor cell':terrain,data:{...base,terrain},cells:[base]};
  }

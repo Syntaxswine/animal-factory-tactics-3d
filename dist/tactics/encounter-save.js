@@ -30,13 +30,13 @@ export function captureEncounter(state,now=Date.now()){
  const s=structuredClone(state);
  // Actions commit before their animations. Keep the result, not the presentation
  // event or unexecuted movement orders, so loading cannot replay a shot/climb.
- s.effect=null;s.queue=[];delete s.towerTraversal;delete s.shouting;delete s.sealed;
+ s.effect=null;s.queue=[];delete s.towerTraversal;delete s.cliffTraversals;delete s.cliffTraversalSequence;delete s.shouting;delete s.sealed;
  validateSavedState(s);
  return {format:'animal-factory-tactics-3d',version:SAVE_VERSION,savedAt:now,mapName:s.definition.name,phase:s.phase,round:s.round,minutes:s.clock.minutes,state:s};
 }
 export function restoreEncounter(record){
  if(record?.format!=='animal-factory-tactics-3d'||record.version!==SAVE_VERSION)throw Error('This save uses an unsupported format or version.');
- const s=structuredClone(record.state);validateSavedState(s);s.effect=null;s.queue=[];delete s.towerTraversal;delete s.shouting;delete s.sealed;
+ const s=structuredClone(record.state);validateSavedState(s);s.effect=null;s.queue=[];delete s.towerTraversal;delete s.cliffTraversals;delete s.cliffTraversalSequence;delete s.shouting;delete s.sealed;
  // Prime the observer without advancing time, refilling resources or recomputing awareness.
  observeRoundTime(s.clock,s);return s;
 }

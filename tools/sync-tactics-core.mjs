@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
+import {adaptCoreCliffs,cliffOverrides} from './core-cliff-adapter.mjs';
 import {adaptCoreClock,clockOverrides} from './core-clock-adapter.mjs';
 
 // Generated dependency: update the revision deliberately, never hand-edit core/.
@@ -14,8 +15,8 @@ const files={},overrides={},pending=['engine.js','world.js','editor-model.js','b
 while(pending.length){
  const name=pending.pop();if(files[name])continue;
  if(!/^[\w-]+\.js$/.test(name))throw Error('Unexpected core dependency: '+name);
- const upstream=git('show',`${revision}:dist/tactics/${name}`),data=adaptCoreClock(name,upstream);
- if(clockOverrides[name])overrides[name]={reason:clockOverrides[name],upstreamSha256:createHash('sha256').update(upstream).digest('hex')};
+ const upstream=git('show',`${revision}:dist/tactics/${name}`),data=adaptCoreCliffs(name,adaptCoreClock(name,upstream));
+ if(clockOverrides[name]||cliffOverrides[name])overrides[name]={reason:[clockOverrides[name],cliffOverrides[name]].filter(Boolean).join(' '),upstreamSha256:createHash('sha256').update(upstream).digest('hex')};
  files[name]=createHash('sha256').update(data).digest('hex');
  for(const match of data.toString().matchAll(/(?:from\s*|import\s*)['"]\.\/([^'"]+)['"]/g))pending.push(match[1]);
  if(check){if(!fs.readFileSync(path.join(out,name)).equals(data))throw Error('Core differs from upstream: '+name);}

@@ -11,8 +11,12 @@
       "reason": "Require neighboring authored doors to agree on lock difficulty.",
       "upstreamSha256": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f"
     },
+    "editor-model.js": {
+      "reason": "Author tagged cliff links using supported adjacent levels.",
+      "upstreamSha256": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262"
+    },
     "engine.js": {
-      "reason": "Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks.",
+      "reason": "Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events.",
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
     "environment.js": {
@@ -28,7 +32,7 @@
       "upstreamSha256": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f"
     },
     "maps.js": {
-      "reason": "Validate tower lookouts, locks and fixture condition; enforce locked-door traversal.",
+      "reason": "Validate tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP.",
       "upstreamSha256": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73"
     },
     "progression.js": {
@@ -48,14 +52,14 @@
     "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
     "blocks.js": "c57a672d9a279dd7a61b60008ffeabd09b84ed3f70a4ed30d9ae5f7728b6fb12",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
-    "editor-model.js": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262",
-    "engine.js": "1da3ed25a755beee2d0e350108dcc05f90c9efe052abb3aeabae5ecf7550cc5b",
+    "editor-model.js": "b0178f9e417189ea2c142dbf8fe96b7d236a3e19977562b1b06f08e46d0b6a94",
+    "engine.js": "c2957f9fd9690513676c97ebbe50c6abcdc4c869d1881d8317d7a2366992b0a1",
     "environment.js": "4c60325305b1159ba3c8e74fae9d98b1deef44c57452db54d236f31568b24de1",
     "explosives.js": "d28c8600c983f8a018a32e84a137836b81165d80924587f0195f23a540a64fa4",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "521036500cfc6e0965e9b2db6b47ea33ca7996bf74d24648fd734da5ba20742f",
-    "maps.js": "1691d7c26865ba77f987136084adbae2cbaa97f25ec466290877e20ad4f55a7c",
+    "maps.js": "c2d424a840f12ac8f9fd651961f2a4fd2342d8498fafad8d7f82675a05258980",
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",
