@@ -21,13 +21,18 @@ export function createLadderGrip(worker,side,handHeight){
  const adjacency=new Map();for(const [a,b]of edges.values())for(const [x,y]of [[a,b],[b,a]]){if(!adjacency.has(x))adjacency.set(x,[]);adjacency.get(x).push(y);}
  const order=[adjacency.keys().next().value];let previous=-1;while(order.length<adjacency.size){const current=order.at(-1),next=adjacency.get(current)?.find(i=>i!==previous);if(next===undefined||next===order[0])break;order.push(next);previous=current;}
  const originalPosition=arm.geometry.attributes.position,position=originalPosition.clone();for(const i of order)position.setY(i,handHeight+.12);
+ const morphed=originalPosition.clone(),blendSI=si.clone(),blendSW=sw.clone(),kept=new Set(indices),collapse=new T.Vector3();for(const i of order)collapse.add(V().fromBufferAttribute(position,i));collapse.divideScalar(order.length);
  const n=order.length,geometry=new T.BufferGeometry(),positions=new Float32Array(n*5*3),ix=[];
  for(let ring=0;ring<4;ring++)for(let i=0;i<n;i++){const a=ring*n+i,b=ring*n+(i+1)%n;ix.push(a,b,a+n,b,b+n,a+n);}
  geometry.setAttribute('position',new T.BufferAttribute(positions,3));geometry.setIndex(ix);const cuff=add(geometry);cuff.name='Ladder grip cuff';cuff.material=material.clone();cuff.material.side=T.DoubleSide;
- return {group,meshes,arm,original,trimmed,update(point,quaternion){
-  arm.geometry.setIndex(trimmed);arm.geometry.setAttribute('position',position);arm.geometry.setAttribute('skinIndex',gripSI);arm.geometry.setAttribute('skinWeight',gripSW);group.visible=true;group.position.copy(point);group.quaternion.copy(quaternion);worker.root.updateMatrixWorld(true);
+ return {group,meshes,arm,original,trimmed,update(point,quaternion,blend=1){
+  if(blend<1){for(let i=0;i<si.count;i++){
+   const target=kept.has(i)?new T.Vector3().fromBufferAttribute(position,i):collapse,v=new T.Vector3().fromBufferAttribute(originalPosition,i).lerp(target,blend);morphed.setXYZ(i,v.x,v.y,v.z);
+   const weights=new Map();for(let j=0;j<4;j++){const source=si.getComponent(i,j),target=gripSI.getComponent(i,j);weights.set(source,(weights.get(source)||0)+sw.getComponent(i,j)*(1-blend));weights.set(target,(weights.get(target)||0)+gripSW.getComponent(i,j)*blend);}const rows=[...weights].sort((a,b)=>b[1]-a[1]).slice(0,4),sum=rows.reduce((n,r)=>n+r[1],0);while(rows.length<4)rows.push([0,0]);blendSI.setXYZW(i,...rows.map(r=>r[0]));blendSW.setXYZW(i,...rows.map(r=>r[1]/sum));
+  }morphed.needsUpdate=blendSI.needsUpdate=blendSW.needsUpdate=true;}
+  arm.geometry.setIndex(blend<1?original:trimmed);arm.geometry.setAttribute('position',blend<1?morphed:position);arm.geometry.setAttribute('skinIndex',blend<1?blendSI:gripSI);arm.geometry.setAttribute('skinWeight',blend<1?blendSW:gripSW);group.visible=blend>0;group.scale.setScalar(1);group.position.copy(point);group.quaternion.copy(quaternion);worker.root.updateMatrixWorld(true);
   const points=order.map(i=>group.worldToLocal(arm.getVertexPosition(i,new T.Vector3()).applyMatrix4(arm.matrixWorld))),center=points.reduce((a,p)=>a.add(p),new T.Vector3()).multiplyScalar(1/n);
   for(let i=0;i<n;i++){const end=points[i].clone().sub(center).multiplyScalar(.25).add(V(-.083,.016,0));for(let ring=0;ring<5;ring++){const u=ring/4,a=Math.atan2(points[i].y,points[i].x),b=Math.atan2(end.y,end.x),delta=Math.atan2(Math.sin(b-a),Math.cos(b-a)),angle=a+delta*u,radius=T.MathUtils.lerp(Math.hypot(points[i].x,points[i].y),Math.hypot(end.x,end.y),u),q=V(Math.cos(angle)*radius,Math.sin(angle)*radius,T.MathUtils.lerp(points[i].z,end.z,u));positions.set(q.toArray(),(ring*n+i)*3);}}
-  geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();
+  geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();group.scale.setScalar(blend);
  },restore(){arm.geometry.setIndex(original);arm.geometry.setAttribute('position',originalPosition);arm.geometry.setAttribute('skinIndex',si);arm.geometry.setAttribute('skinWeight',sw);group.visible=false;},dispose(){arm.geometry.setIndex(original);group.removeFromParent();for(const m of meshes)m.geometry.dispose();cuff.material.dispose();material.dispose();}};
 }

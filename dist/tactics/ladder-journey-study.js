@@ -1,0 +1,28 @@
+import * as T from './vendor/three.module.js';
+import {ANIMAL_MOTION_CATALOG as profiles} from './animal-motion-catalog.js';
+import {createAnimalPaint} from './animal-motion-paint.js';
+import {createRedHatCap} from './red-hat-model.js';
+import {LIGHT_ATLAS} from './horse-light-model.js';
+import {createLadderJourney} from './ladder-journey.js';
+import {ladderFrame} from './battle-traversal.js';
+import {towerEntry,towerSlots,towerPost,towerCenter} from './tower-geometry.js';
+import {createFurnitureLibrary} from './painted-furniture.js';
+import {PAINTED_ATLAS} from './painted-environment-scene.js';
+import {CARGO_ATLAS} from './painted-cargo.js';
+const $=id=>document.getElementById(id),params=new URLSearchParams(location.search);
+for(const p of profiles.filter(p=>!p.unarmed&&!p.id.startsWith('pig')))$('animal').add(new Option(p.label,p.id));
+for(const key of ['animal','outfit','ladder','view','scale','direction','slot','rotation'])if(params.has(key))$(key).value=params.get(key);
+const renderer=new T.WebGLRenderer({canvas:$('scene'),antialias:true});renderer.setPixelRatio(1);renderer.setSize(1400,850,false);renderer.outputColorSpace=T.SRGBColorSpace;renderer.setClearColor('#303b33');renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
+const scene=new T.Scene(),camera=new T.OrthographicCamera(),loader=new T.TextureLoader();scene.add(new T.HemisphereLight(0xfff1d3,0x778878,2));const sun=new T.DirectionalLight(0xffecd5,2.4);sun.position.set(-4,10,7);scene.add(sun);
+const ground=new T.Mesh(new T.PlaneGeometry(35,35),new T.MeshStandardMaterial({color:'#56604a',roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.015;scene.add(ground);scene.add(new T.GridHelper(25,25,0xa1ac89,0x6d795d));
+const [atlas,cargo]=await Promise.all([loader.loadAsync(PAINTED_ATLAS),loader.loadAsync(CARGO_ATLAS)]);atlas.colorSpace=cargo.colorSpace=T.SRGBColorSpace;const library=createFurnitureLibrary(atlas,cargo);
+const rifleTexture=await loader.loadAsync(LIGHT_ATLAS);rifleTexture.colorSpace=T.SRGBColorSpace;
+let worker=null,motion=null,paint=null,cap=null,ladder=null,loading=false,playing=false,last=0,playbackProgress=0;
+function dispose(){if(worker){scene.remove(worker.root);motion?.dispose();cap?.dispose();paint?.dispose();worker.dispose();}if(ladder){scene.remove(ladder);}worker=motion=paint=cap=ladder=null;}
+async function load(){if(loading)return;loading=true;playing=false;$('play').textContent='Play';window.ladderJourneyStudy.ready=false;const keys=['animal','outfit','ladder','direction','slot','rotation'],settings=Object.fromEntries(keys.map(k=>[k,$(k).value])),{animal:id,outfit,ladder:type}=settings;try{dispose();const p=profiles.find(p=>p.id===id),data=await fetch(p.file).then(r=>r.json());worker=p.create(data,rifleTexture);paint=await createAnimalPaint(renderer,worker,p,loader,outfit);for(const part of worker.parts)part.material=paint.material;cap=outfit==='red-hats'?await createRedHatCap(renderer,worker,p,loader):null;const tower={kind:'iron-searchlight-ladder-tower',x:0,y:0,z:0,rotated:settings.rotation==='1'},entry=towerEntry(tower),top=towerSlots(tower)[+settings.slot];top.towerPost=towerPost(tower,top);const direction=settings.direction,event={tower,direction,from:direction==='up'?entry:top,to:direction==='up'?top:entry};motion=createLadderJourney(worker,p,event,ladderFrame(tower),0);ladder=library.build(tower.kind).root;const c=towerCenter(tower);ladder.position.set(c.x,0,c.y);ladder.rotation.y=tower.rotated?-Math.PI/2:0;scene.add(ladder,worker.root);window.ladderJourneyStudy.ready=true;render();}catch(e){$('status').textContent=e.message;console.error(e);}finally{loading=false;if(keys.some(k=>settings[k]!==$(k).value))load();}}
+function render(){if(!motion)return;const p=playing?playbackProgress:+$('progress').value,d=motion.apply(p),height=motion.definition.height,mode=$('scale').value,scale=mode==='game'?58:mode==='close'?280:Math.min(165,710/(height+1.9)),center=mode==='full'?new T.Vector3(2.5,height/2+.6,2):new T.Vector3(d.root[0],d.root[1]+.92,d.root[2]),view={three:[1,.42,-1.4],side:[0,.12,-1],front:[1,.12,0],rear:[-1,.12,0]}[$('view').value];
+ ladder.traverse(o=>{if(/house-wall|house-lintel|door-wall|roof|window|door-lintel|panel-rivet/.test(o.name))o.visible=!$('cutaway').checked;});
+ camera.left=-700/scale;camera.right=700/scale;camera.top=425/scale;camera.bottom=-425/scale;camera.near=.01;camera.far=80;camera.position.copy(center).add(new T.Vector3(...view).applyAxisAngle(new T.Vector3(0,1,0),$('rotation').value==='1'?-Math.PI/2:0).multiplyScalar(8));camera.lookAt(center);camera.updateProjectionMatrix();renderer.render(scene,camera);$('time').textContent=`${(p*motion.duration).toFixed(1)} / ${motion.duration.toFixed(1)} s`;$('status').textContent=d.phase;window.ladderJourneyStudy.result=d;window.ladderJourneyStudy.worker=worker;window.ladderJourneyStudy.motion=motion;
+}
+window.ladderJourneyStudy={ready:false,seek(p){playbackProgress=p;$('progress').value=p;render();},render};for(const id of ['animal','outfit','ladder','direction','slot','rotation'])$(id).onchange=load;for(const id of ['view','scale','cutaway'])$(id).oninput=render;$('progress').oninput=()=>{playbackProgress=+$('progress').value;render();};$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Pause':'Play';if(+$('progress').value===1)$('progress').value=0;playbackProgress=+$('progress').value;last=performance.now();};
+function frame(now){if(playing&&motion){playbackProgress=Math.min(1,playbackProgress+(now-last)/1000/motion.duration);$('progress').value=playbackProgress;render();if(playbackProgress>=1){playing=false;$('play').textContent='Play';}}last=now;requestAnimationFrame(frame);}requestAnimationFrame(frame);load();
