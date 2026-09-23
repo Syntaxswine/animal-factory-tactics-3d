@@ -20,7 +20,7 @@ export const LIGHT_FORMS={
 export const LIGHT_PROPS=Object.fromEntries(Object.entries(LIGHT_FORMS).map(([kind,f])=>[kind,{w:f.w,h:f.h,solid:!f.wall,cover:kind==='bedside-table-lamp'?25:0}]));
 export const LIGHT_RANGE=30;
 export function lightBrightness(distance){return !Number.isFinite(distance)||distance<0||distance>LIGHT_RANGE?0:2**-Math.max(0,Math.ceil(distance/5)-1);}
-export function lightEnabled(prop,minutes){const form=LIGHT_FORMS[prop.kind];if(!form||prop.lightMode==='off')return false;if(prop.lightMode==='on'||form.fire)return true;const m=((minutes%MINUTES_PER_DAY)+MINUTES_PER_DAY)%MINUTES_PER_DAY;return m<DAY_START||m>=DUSK_START;}
+export function lightEnabled(prop,minutes){const form=LIGHT_FORMS[prop.kind];if(!form||prop.lightMode==='off'||(prop.condition??100)<100)return false;if(prop.lightMode==='on'||form.fire)return true;const m=((minutes%MINUTES_PER_DAY)+MINUTES_PER_DAY)%MINUTES_PER_DAY;return m<DAY_START||m>=DUSK_START;}
 export function fixturePlacement(p){const f=LIGHT_FORMS[p.kind],w=p.rotated?f.h:f.w,h=p.rotated?f.w:f.h;return {x:p.x+(w-1)/2+(f.wall&&p.rotated?.48:0),y:p.y+(h-1)/2-(f.wall&&!p.rotated?.48:0),z:p.z||0};}
 export function placedEmitters(p,floorHeight=3){const f=LIGHT_FORMS[p.kind];if(!f)return [];const center=fixturePlacement(p);
  return f.emitters.map(([x,h,y],index)=>({x:center.x+(p.rotated?-y:x),y:center.y+(p.rotated?x:y),h:center.z*floorHeight+h,prop:p,index,color:f.fire?0xffae55:0xffe5b2}));

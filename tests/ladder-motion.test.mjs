@@ -30,8 +30,8 @@ for(const p of profiles.filter(p=>!p.unarmed&&(!process.env.REVIEW_ANIMAL||proce
     w.bones.forEach((b,i)=>assert.ok(b.getWorldPosition(new T.Vector3()).distanceTo(baseJoints[i].clone().applyQuaternion(q).add(o))<1e-7,'world frame differs'));
     r.contacts.forEach((c,i)=>assert.ok(new T.Vector3(...c.worldPoint).distanceTo(new T.Vector3(...baseline.contacts[i].point).applyQuaternion(q).add(o))<1e-7));
    }
-   m.restore();assert.equal(m.diagnostics(),null);assert.ok(w.root.position.distanceTo(new T.Vector3(1.3,.5,-2.1))<1e-8);assert.ok(Math.abs(w.root.rotation.y-.37)<1e-8);assert.equal(w.weapon.root.visible,true);assert.ok(w.diagnostics().contacts.every(c=>c.error<1e-6));assert.equal(w.root.getObjectByName('Rifle shoulder sling').visible,false);
-  }finally{m.dispose();for(let i=0;i<w.parts.length;i++){assert.deepEqual(w.parts[i].geometry.attributes.skinIndex.array,saved[i].si);assert.deepEqual(w.parts[i].geometry.attributes.skinWeight.array,saved[i].sw);assert.deepEqual(w.parts[i].geometry.attributes.position.array,saved[i].position);assert.deepEqual(w.parts[i].geometry.index.array,saved[i].index);}assert.equal(w.root.getObjectByName('Rifle shoulder sling'),undefined);assert.ok(w.parts.every(p=>!p.geometry.hasAttribute('ladderTorso')));w.dispose();}
+   m.restore();assert.equal(m.diagnostics(),null);assert.ok(w.root.position.distanceTo(new T.Vector3(1.3,.5,-2.1))<1e-8);assert.ok(Math.abs(w.root.rotation.y-.37)<1e-8);assert.equal(w.weapon.root.visible,true);assert.ok(w.diagnostics().contacts.every(c=>c.error<1e-6));assert.equal(w.root.getObjectByName('Equipment shoulder sling').visible,false);
+  }finally{m.dispose();for(let i=0;i<w.parts.length;i++){assert.deepEqual(w.parts[i].geometry.attributes.skinIndex.array,saved[i].si);assert.deepEqual(w.parts[i].geometry.attributes.skinWeight.array,saved[i].sw);assert.deepEqual(w.parts[i].geometry.attributes.position.array,saved[i].position);assert.deepEqual(w.parts[i].geometry.index.array,saved[i].index);}assert.equal(w.root.getObjectByName('Equipment shoulder sling'),undefined);assert.ok(w.parts.every(p=>!p.geometry.hasAttribute('ladderTorso')));w.dispose();}
  }
 });
 test('ladder rejects unprovided upper handholds and unsupported hen contacts',()=>{const p=profiles[0],w=load(p);try{assert.throws(()=>createLadderMotion(w,p,{...LADDER_PRESETS.floor,railTop:2.12}),/upper handholds/);assert.throws(()=>createLadderMotion(w,p,{...LADDER_PRESETS.floor,plane:NaN}),/finite/);}finally{w.dispose();}const hen=profiles.find(p=>p.unarmed),h=load(hen);try{assert.throws(()=>createLadderMotion(h,hen),/Hen wing/);}finally{h.dispose();}});
@@ -48,7 +48,7 @@ test('invalid construction rolls back; cached clips, guards and disposal preserv
   const d={...LADDER_PRESETS.floor,plane:.351},first=createLadderMotion(w,p,d);first.apply(.43);const pose=w.bones.map(b=>b.getWorldPosition(new T.Vector3()));first.dispose();first.dispose();assert.throws(()=>first.apply(0),/disposed/);
   const cached=createLadderMotion(w,p,d);cached.apply(.43);w.bones.forEach((b,i)=>assert.ok(b.getWorldPosition(new T.Vector3()).distanceTo(pose[i])<1e-9));
   for(const [progress,options]of [[NaN,{}],[.5,{direction:'sideways'}],[.5,{origin:[0,NaN,0]}],[.5,{heading:Infinity}]])assert.throws(()=>cached.apply(progress,options),/Invalid/);
-  w.weapon.id='hmg';assert.throws(()=>cached.apply(.4),/rifle only/);delete w.weapon.id;cached.dispose();
+  const originalWeapon=w.weapon;w.equipWeapon({...originalWeapon,id:'hmg'});assert.throws(()=>cached.apply(.4),/Equipment changed/);w.equipWeapon(originalWeapon);cached.dispose();
   assert.equal(w.root.children.length,children);w.parts.forEach((p,i)=>assert.deepEqual(p.geometry.index.array,indices[i]));
  }finally{w.dispose();}
 });

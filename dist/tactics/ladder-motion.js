@@ -1,3 +1,4 @@
+import {createEquipmentStow,supportsStow} from './equipment-stow.js';
 import * as T from './vendor/three.module.js';
 import {createLadderPaintCorrection} from './ladder-paint.js';
 import {createLadderGrip} from './ladder-grip.js';
@@ -18,7 +19,8 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
  if(profile.unarmed)throw new Error('Hen wing contacts are not authored for ladder climbing');
  const d={...definition,...(definition.hatch?{hatch:{...definition.hatch}}:{})},root=worker.root,bones=worker.bones,named=Object.fromEntries(bones.map(b=>[b.name,b]));
  if(profile.id.startsWith('pig')&&(d.exitWidth||d.width)<WIDE_LADDER_EXIT)throw new Error('Pig climbing requires the authored 0.94-wide flared exit; original narrow handholds do not fit');
- if(!worker.weapon?.anchors?.stock||(worker.weapon.id&&worker.weapon.id!=='rifle'))throw new Error('Ladder study supports the worker rifle only');
+ if(!supportsStow(worker.weapon?.id||'rifle'))throw new Error('Unsupported ladder equipment');
+ if(d.hatch&&(worker.weapon?.id||'rifle')!=='rifle')throw new Error('Wooden hatch equipment clearance currently supports the rifle only');
  const entry={position:root.position.clone(),quaternion:root.quaternion.clone()};checkFrame();
  if(!['height','plane','width','firstRung','spacing','rungs','railTop'].every(k=>Number.isFinite(d[k]))||['exitWidth','rungThickness','rungDepth','railThickness','railDepth','landingHandHeight','landingHandSpan','stowSide'].some(k=>d[k]!==undefined&&(!Number.isFinite(d[k])||d[k]<=0))||!(d.height>0&&d.firstRung>=0&&d.spacing>0&&Number.isInteger(d.rungs)&&d.rungs>=6&&d.rungs<=128&&d.width>.4&&(!d.exitWidth||d.exitWidth>=d.width)&&d.railTop>=d.height+.65&&d.firstRung+(d.rungs-1)*d.spacing<d.height))throw new Error('Ladder requires finite rung geometry and upper handholds at least 0.65 above its landing');
  if(d.hatch&&(!['front','back','half'].every(k=>Number.isFinite(d.hatch[k]))||d.hatch.front<=d.plane||d.hatch.back>=d.plane||d.hatch.half<d.width/2))throw new Error('Invalid hatch clearance geometry');
@@ -49,9 +51,7 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
   for(const l of limbs.filter(l=>l.finger)){l.surface=[];for(const part of worker.parts){const a=part.geometry.attributes,ids=[...new Set(part.geometry.index.array)];for(let k=0;k<ids.length;k+=3){const i=ids[k],weights=Array.from({length:4},(_,j)=>({bone:bones[a.skinIndex.getComponent(i,j)],weight:a.skinWeight.getComponent(i,j)})).filter(w=>w.weight>0);if(weights.some(w=>(w.bone===l.a||w.bone===l.b)&&w.weight>.1))l.surface.push({point:V().fromBufferAttribute(a.position,i),weights});}}}
   for(const {asset}of grips)asset.restore();
  }
- const slingGeometry=new T.BufferGeometry(),slingMaterial=new T.MeshStandardMaterial({color:0x513a25,roughness:.95,side:T.DoubleSide}),sling=new T.Mesh(slingGeometry,slingMaterial);sling.name='Rifle shoulder sling';root.add(sling);
- const back=d.hatch?-.13:profile.id.startsWith('pig')?-.40:profile.id==='skunk'?-.22:-.29,stowZ=d.hatch&&profile.id==='skunk'?.34:profile.id==='skunk'?(d.stowSide??.53):-.15,front=profile.id.startsWith('pig')?.33:.19,slingCurve=new T.CatmullRomCurve3([V(back,-.23,stowZ),V(-.18,.17,-.18),V(.025,.22,-.17),V(front,.10,-.13),V(front,-.18,.14),V(back,-.23,stowZ)]),slingPoints=slingCurve.getPoints(32),slingPositions=new Float32Array(slingPoints.length*6),slingIndices=[];
- for(let i=0;i<slingPoints.length-1;i++)slingIndices.push(i*2,i*2+1,i*2+2,i*2+1,i*2+3,i*2+2);slingGeometry.setAttribute('position',new T.BufferAttribute(slingPositions,3));slingGeometry.setIndex(slingIndices);
+ const equipmentStow=createEquipmentStow(worker,profile,d.hatch?{riflePlacement:{back:-.13,side:profile.id==='skunk'?.34:-.15,axis:[0,1,0],preserveAxisRoll:true}}:{});
  const phases=[],neutral=structuredClone(Object.fromEntries(Object.entries(contacts).map(([k,v])=>[k,v.toArray()])));
  let state=Object.fromEntries(Object.entries(contacts).map(([k,v])=>[k,{point:v.clone(),kind:k.startsWith('hand')?'free':'floor',index:null}]));
  const rung=(index,side,hand)=>{let y=d.firstRung+index*d.spacing,rail=hand&&(index>=d.rungs||y>d.height-.20);if(rail)y=Math.max(y,d.height+.14);return {point:V(d.plane,y+(hand?0:(d.rungThickness||.055)/2),rail?ladderRailZ(d,y,side):side*(hand?d.width*.36:limbs.find(l=>l.id==='foot'+side).stance)),kind:rail?'rail':'rung',index};};
@@ -109,7 +109,8 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
  }
  function applyPose(progress,{direction='up',heading=0,origin=[0,0,0]}={}){
   if(disposed)throw new Error('Ladder motion is disposed');checkFrame();
-  if(worker.weapon?.id&&worker.weapon.id!=='rifle')throw new Error('Ladder study supports the worker rifle only');
+  if(!supportsStow(worker.weapon?.id||'rifle'))throw new Error('Unsupported ladder equipment');
+  if(d.hatch&&(worker.weapon?.id||'rifle')!=='rifle')throw new Error('Wooden hatch equipment clearance currently supports the rifle only');
   if(!Number.isFinite(progress)||!Number.isFinite(heading)||!Array.isArray(origin)||origin.length!==3||!origin.every(Number.isFinite)||!['up','down'].includes(direction))throw new Error('Invalid ladder playback transform');
   const value=T.MathUtils.clamp(progress,0,1),t=(direction==='down'?1-value:value)*duration,phase=phases.find(p=>t<=p.end)||phases.at(-1),u=ease((t-phase.start)/phase.duration),sample={};
   worker.pose('neutral');for(const {p,si,sw}of activeSkin){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}paintCorrection.set(true);root.rotation.set(0,0,0);root.position.set(0,0,0);
@@ -171,10 +172,7 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
    worldRotation(l.b,new T.Quaternion().setFromUnitVectors(rest.get(l.c).clone().sub(rest.get(l.b)).normalize(),target.clone().sub(mid).normalize()));worldRotation(l.c,sample[l.id].quaternion);if(l.finger)l.finger.rotation.z=1.7*sample[l.id].grasp;
    checks.push({id:l.id,routeAngle:l.routeAngle,...sample[l.id],error:l.c.localToWorld(l.offset.clone()).distanceTo(sample[l.id].point)});
   }
-  // Stowed rifle follows the spine; the caller's equipment object is reused.
-  const gun=worker.weapon;if(gun){const spine=named.spine,origin=root.worldToLocal(spine.localToWorld(V(back,-.23,stowZ))),axis=V(0,.9,d.hatch?0:profile.id==='skunk'?-.12:.42).normalize().applyQuaternion(spine.getWorldQuaternion(new T.Quaternion()));gun.root.visible=true;gun.root.quaternion.setFromUnitVectors(V(1,0,0),axis);gun.root.position.copy(origin).sub(gun.anchors.stock.position.clone().applyQuaternion(gun.root.quaternion));gun.mount&&(gun.mount.visible=false);gun.hose&&(gun.hose.visible=false);
-   for(let i=0;i<slingPoints.length;i++){const tangent=slingPoints[Math.min(i+1,32)].clone().sub(slingPoints[Math.max(0,i-1)]),across=V(1,0,0).cross(tangent).normalize().multiplyScalar(.017);for(const side of [-1,1]){const v=root.worldToLocal(spine.localToWorld(slingPoints[i].clone().addScaledVector(across,side)));slingGeometry.attributes.position.setXYZ(i*2+(side===1?1:0),v.x,v.y,v.z);}}slingGeometry.attributes.position.needsUpdate=true;slingGeometry.computeVertexNormals();slingGeometry.computeBoundingSphere();sling.visible=true;slingMaterial.opacity=1;
-  }
+  equipmentStow.apply();
   for(const {limb,asset}of grips)asset.update(sample[limb.id].point.clone().sub(root.position),sample[limb.id].quaternion,1,1-sample[limb.id].grasp);
   root.rotation.y=-heading*Math.PI/180;root.position.copy(position).applyQuaternion(root.quaternion).add(new T.Vector3(...origin));root.updateMatrixWorld(true);worker.skeleton.update();
   result={progress:value,direction,time:t,duration,phase:direction==='up'?phase.label:({'Step onto landing':'Back onto top rung','Bring left foot through':'Step back from landing','Release left hand':'Grip left handhold','Release right hand':'Grip right handhold'}[phase.label]||phase.label.replace('Reach','Lower').replace('Step','Lower foot').replace('Mount','Dismount')),root:position.toArray(),worldRoot:root.position.toArray(),contacts:checks.map(c=>({...c,point:c.point.toArray(),worldPoint:c.point.clone().applyQuaternion(root.quaternion).add(new T.Vector3(...origin)).toArray()})),supported:true};return result;
@@ -193,7 +191,7 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
   const pose=applyPose(direction==='down'?1-poseProgress:poseProgress,options);
   Object.assign(pose,{progress:value,time,duration:playbackDuration,poseTime});return pose;
  }
- // Blend the temporary glove, shirt weights and sling into an already posed
+ // Blend the temporary glove and shirt weights into an already posed
  // handoff. This preserves the ordinary actor at zero and the climb at one.
  function transition(amount){
   if(disposed)throw new Error('Ladder motion is disposed');if(!Number.isFinite(amount))throw new Error('Invalid ladder transition amount');
@@ -204,11 +202,9 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
    for(let i=0;i<si.count;i++){const weights=new Map();for(let j=0;j<4;j++){const a=source.si.getComponent(i,j),b=si.getComponent(i,j);weights.set(a,(weights.get(a)||0)+source.sw.getComponent(i,j)*(1-w));weights.set(b,(weights.get(b)||0)+sw.getComponent(i,j)*w);}const rows=[...weights].sort((a,b)=>b[1]-a[1]).slice(0,4),sum=rows.reduce((n,r)=>n+r[1],0);while(rows.length<4)rows.push([0,0]);mixedSI.setXYZW(i,...rows.map(r=>r[0]));mixedSW.setXYZW(i,...rows.map(r=>r[1]/sum));}mixedSI.needsUpdate=mixedSW.needsUpdate=true;p.geometry.setAttribute('skinIndex',mixedSI);p.geometry.setAttribute('skinWeight',mixedSW);
   }
   for(const {limb,asset}of grips){const point=root.worldToLocal(limb.c.localToWorld(limb.offset.clone())),quaternion=root.getWorldQuaternion(new T.Quaternion()).invert().multiply(limb.c.getWorldQuaternion(new T.Quaternion()));asset.update(point,quaternion,w,d.hatch?1:0);}
-  sling.visible=w>0;slingMaterial.transparent=true;slingMaterial.opacity=w;const spine=named.spine;
-  for(let i=0;i<slingPoints.length;i++){const tangent=slingPoints[Math.min(i+1,32)].clone().sub(slingPoints[Math.max(0,i-1)]),across=V(1,0,0).cross(tangent).normalize().multiplyScalar(.017);for(const side of [-1,1]){const v=root.worldToLocal(spine.localToWorld(slingPoints[i].clone().addScaledVector(across,side)));slingGeometry.attributes.position.setXYZ(i*2+(side===1?1:0),v.x,v.y,v.z);}}slingGeometry.attributes.position.needsUpdate=true;slingGeometry.computeVertexNormals();slingGeometry.computeBoundingSphere();
   root.updateMatrixWorld(true);worker.skeleton.update();
  }
- function restore(mode='carry'){root.position.set(0,0,0);root.rotation.set(0,0,0);for(const {asset}of grips)asset.restore();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}worker.pose(mode);paintCorrection.set(false);root.position.copy(entry.position);root.quaternion.copy(entry.quaternion);sling.visible=false;result=null;root.updateMatrixWorld(true);worker.skeleton.update();}
+ function restore(mode='carry'){equipmentStow.restore();root.position.set(0,0,0);root.rotation.set(0,0,0);for(const {asset}of grips)asset.restore();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}worker.pose(mode);paintCorrection.set(false);root.position.copy(entry.position);root.quaternion.copy(entry.quaternion);result=null;root.updateMatrixWorld(true);worker.skeleton.update();}
  // Solve the bend routes across the whole clip once. Adjacent samples may
  // move at most five degrees: a locally cheaper elbow solution cannot snap
  // across the rail when a contact is released. Playback still solves exact
@@ -234,6 +230,6 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
  if(d.hatch&&!storedTiming)for(const phase of phases.filter(p=>/Lift.*upper|Brace forward/.test(p.label))){const map=new Float64Array(257);let previous;for(let i=0;i<map.length;i++){const r=applyPose((phase.start+(phase.end-phase.start)*i/(map.length-1))/duration),l=limbs.find(l=>l.id===phase.id),current={point:l.c.getWorldPosition(V()),q:l.c.getWorldQuaternion(new T.Quaternion()),grasp:r.contacts.find(c=>c.id===l.id).grasp};if(previous)map[i]=map[i-1]+.02*phase.duration/(map.length-1)+current.point.distanceTo(previous.point)+.08*current.q.angleTo(previous.q)+.15*Math.abs(current.grasp-previous.grasp);previous=current;}timingMaps.set(phase.start,map);}
  if(d.hatch)compiledRoutes.get(routeKey).timing=timingMaps;
  restore('neutral');
- }catch(error){restore('neutral');sling.removeFromParent();slingGeometry.dispose();slingMaterial.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}throw error;}
- return {grips:grips.map(g=>g.asset),duration:playbackDuration,definition:d,phases:playbackPhases.map(p=>({...p})),apply,diagnostics:()=>result,restore,transition,dispose(){if(disposed)return;restore('neutral');disposed=true;sling.removeFromParent();slingGeometry.dispose();slingMaterial.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}}};
+ }catch(error){restore('neutral');equipmentStow.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}throw error;}
+ return {grips:grips.map(g=>g.asset),duration:playbackDuration,definition:d,phases:playbackPhases.map(p=>({...p})),apply,diagnostics:()=>result,restore,transition,stow:()=>equipmentStow.apply(),stowBlend:w=>equipmentStow.blend(w),get equipmentState(){return equipmentStow.state;},dispose(){if(disposed)return;restore('neutral');disposed=true;equipmentStow.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}}};
 }

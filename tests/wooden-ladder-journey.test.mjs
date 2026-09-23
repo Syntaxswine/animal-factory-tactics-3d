@@ -28,7 +28,7 @@ for(const p of profiles.filter(p=>!p.unarmed&&(!process.env.REVIEW_ANIMAL||proce
  try{
   assert.equal(m.climb.duration,6);assert.equal(m.definition.hatch.half,.5);
   const rows=[];for(const phase of m.climb.phases)for(let i=0;i<=8;i++){
-   const progress=(phase.start+(phase.end-phase.start)*i/8)/6,r=m.climb.apply(progress);rows.push({progress,points:w.bones.map(b=>b.getWorldPosition(new T.Vector3()))});
+   const progress=(phase.start+(phase.end-phase.start)*i/8)/6,r=m.climb.apply(progress);assert.equal(m.climb.equipmentState,'stowed');assert.equal(w.weapon.root.visible,true);rows.push({progress,points:w.bones.map(b=>b.getWorldPosition(new T.Vector3()))});
    w.bones.forEach((b,i)=>assert.ok(Math.abs(b.position.length()-lengths[i])<1e-8,'bone length changed'));
    for(const c of r.contacts)assert.ok(c.error<1e-5,'unreachable '+c.id+' in '+phase.label);
    if(r.contacts.filter(c=>c.kind==='floor'||c.kind==='landing').length<2)assert.ok(r.contacts.filter(c=>c.planted).length>=3,'three-point support lost');
@@ -36,7 +36,7 @@ for(const p of profiles.filter(p=>!p.unarmed&&(!process.env.REVIEW_ANIMAL||proce
   }
   if(p.id==='horse')for(const phase of m.climb.phases.filter(p=>/Lift.*upper|Brace forward/.test(p.label))){let previous,maxSpeed=0,lastPoseTime=-Infinity;for(let i=0;i<=160;i++){const time=phase.start+(phase.end-phase.start)*i/160,r=m.climb.apply(time/6),bone=w.bones.find(b=>b.name===phase.id),point=bone.getWorldPosition(new T.Vector3());assert.ok(r.poseTime>=lastPoseTime,'retime reversed source trajectory');lastPoseTime=r.poseTime;if(previous)maxSpeed=Math.max(maxSpeed,point.distanceTo(previous)/(phase.end-phase.start)*160);previous=point;}assert.ok(maxSpeed<8,'hatch hand transfer snaps: '+maxSpeed+' m/s');}
   for(const row of rows.filter((_,i)=>i%9===4).reverse()){m.climb.apply(1-row.progress,{direction:'down'});w.bones.forEach((b,i)=>assert.ok(b.getWorldPosition(new T.Vector3()).distanceTo(row.points[i])<1e-7,'reverse/scrub changed geometry'));}
-  for(const t of [0,1]){m.apply(t);assert.ok(w.root.position.distanceTo(V(toWorld(t?e.to:e.from)))<1e-8,'wrong committed tile');}
+  for(const t of [0,1]){m.apply(t);assert.equal(m.climb.equipmentState,'carried');assert.ok(w.root.position.distanceTo(V(toWorld(t?e.to:e.from)))<1e-8,'wrong committed tile');}
  }finally{m.dispose();m.dispose();w.parts.forEach((p,i)=>{for(const [name,array]of Object.entries(saved[i]))if(array)assert.deepEqual(p.geometry.attributes[name].array,array,'failed restoration '+p.name+'/'+name);});w.dispose();}
 });
 test('wooden hatch routes reach all posts in both orientations and both directions',()=>{

@@ -1,10 +1,14 @@
 // Explicit, reproducible changes to the pinned dependency. Never edit core/.
 export const clockOverrides={
- 'explosives.js':'Use physical tower heights for explosive launch, aim, range and blast victims.',
- 'maps.js':'Validate authored tower lookouts without requiring a ground-floor route.',
+ 'connections.js':'Require neighboring authored doors to agree on lock difficulty.',
+ 'inventory.js':'Support carried tools, stack merging and their weight.',
+ 'blocks.js':'Preserve authored door locks across block extraction and placement.',
+ 'progression.js':'Use canonical 1-100 stats and derived resources for opted-in characters.',
+ 'explosives.js':'Use physical tower heights, weapon skills and endurance-aware explosive previews.',
+ 'maps.js':'Validate tower lookouts, locks and fixture condition; enforce locked-door traversal.',
  'projectiles.js':'Trace open tower windows and elevated tower occupants.',
  'environment.js':'Register authored light fixture footprints and collision rules.',
- 'engine.js':'Use shared round timing and opt-in 3D exposure-based awareness.',
+ 'engine.js':'Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks.',
  'world.js':'Use the shared clock, one-minute completed rounds, and exploration pacing.'
 };
 function once(source,from,to){if(source.split(from).length!==2)throw Error('Clock adapter anchor changed: '+from.slice(0,100));return source.replace(from,to);}
@@ -13,12 +17,46 @@ export function adaptCoreClock(name,data){
  let s=data.toString();
  if(name==='environment.js'){return Buffer.from("import {LIGHT_PROPS} from '../light-sources.js';\n"+s+'\nObject.assign(PROPS,LIGHT_PROPS);\n');}
  if(name==='maps.js'){
+  s=once(s," if(!raw.edges||", " if(raw.edgeLocks!==undefined&&(!raw.edgeLocks||typeof raw.edgeLocks!=='object'||Array.isArray(raw.edgeLocks)))return [...errors,'Invalid door locks.'];\n for(const [key,value]of Object.entries(raw.edgeLocks||{}))if(!EDGES[raw.edges?.[key]]?.opensTo||!Number.isInteger(value)||value<1||value>100)return [...errors,'Door locks require closed doors and difficulty 1-100.'];\n for(const p of raw.props||[])if(p.condition!==undefined&&(!Number.isInteger(p.condition)||p.condition<0||p.condition>100))return [...errors,'Fixture condition must be 0-100.'];\n if(!raw.edges||");
+  s=once(s,'if(!next)return false;m.edges[k]=next;', 'if(!next||m.edgeLocks?.[k])return false;m.edges[k]=next;');
+  s=once(s,'||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo)', '||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo&&!m.edgeLocks?.[edgeBetween(p,b)])');
   s="import {towerForUnit,towerEntry} from '../tower-geometry.js';\n"+s;
   s=once(s,"if(!passable(raw,p))errors.push(`Unit start needs a walkable floor at ${k}.`);", "if(p.towerPost?!towerForUnit(raw,p):!passable(raw,p))errors.push(`Unit start needs a walkable floor or valid tower post at ${k}.`);");
+  s=once(s,'missing=reachedTargets(raw,targets)', 'missing=reachedTargets({...raw,edgeLocks:{}},targets)');
   s=once(s,'const targets=[...raw.starts,...raw.guards,...raw.exits],','const targets=[...raw.starts,...raw.guards,...raw.exits].map(p=>towerForUnit(raw,p)?towerEntry(towerForUnit(raw,p)):p),');
   return Buffer.from(s);
  }
+ if(name==='connections.js'){
+  s=once(s,"out[y+':'+z]=v;","out[y+':'+z]=v+'|'+(d.edgeLocks?.[k]||0);");
+  s=once(s,"out[x+':'+z]=v;","out[x+':'+z]=v+'|'+(d.edgeLocks?.[k]||0);");
+  return Buffer.from(s);
+ }
+ if(name==='inventory.js'){
+
+  s="import {TOOLS} from '../inventory-tools.js';\n"+s;
+  s=once(s,"i.type==='weapon'?(WEIGHT[i.kind]||0):i.count*.03", "i.type==='weapon'?(WEIGHT[i.kind]||0):i.type==='tool'?(TOOLS[i.kind]?.weight||0)*i.count:i.count*.03");
+  s=once(s,"if(item.type==='ammo'&&u.pack.some(i=>i.type==='ammo'&&i.kind===item.kind))return true;", "if(['ammo','tool'].includes(item.type)&&u.pack.some(i=>i.type===item.type&&i.kind===item.kind))return true;");
+  s=once(s,"const existing=u.pack.find(i=>i.type==='ammo'&&i.kind===item.kind)","const existing=u.pack.find(i=>i.type===item.type&&i.kind===item.kind)");
+  return Buffer.from(s);
+ }
+ if(name==='blocks.js'){
+  s=once(s,'retained[k]=v;',"if(d.edges[local]!==undefined&&(d.edgeLocks?.[local]||0)!==(m.edgeLocks?.[k]||0))throw Error('Shared door lock conflicts with the neighboring block.');retained[k]=v;");
+  s=once(s,'if(m.blockConnections?.[sx',"if(m.edgeLocks){d.edgeLocks={};for(const [key,value]of Object.entries(m.edgeLocks)){const [axis,a,b,z]=key.split(':');const local=edgeKey(axis,Number(a)-x,Number(b)-y,Number(z||0));if(d.edges[local])d.edgeLocks[local]=value;}}if(m.blockConnections?.[sx");
+  s=once(s,'for(const [k,v]of Object.entries(d.edges)){',"if(d.edgeLocks){m.edgeLocks||={};for(const [key,value]of Object.entries(d.edgeLocks)){const [axis,a,b,z]=key.split(':');m.edgeLocks[edgeKey(axis,Number(a)+x,Number(b)+y,Number(z||0))]=value;}}for(const [k,v]of Object.entries(d.edges)){");
+  s=once(s,'const out=structuredClone(m);',"const out=structuredClone(m);if(out.edgeLocks)for(const key of Object.keys(out.edgeLocks))if(edgeCells(key).some(p=>inside(p,x,y)))delete out.edgeLocks[key];");
+  s=once(s,'Object.assign(out.edges,retained);',"Object.assign(out.edges,retained);for(const key of Object.keys(retained))if(m.edgeLocks?.[key]){out.edgeLocks||={};out.edgeLocks[key]=m.edgeLocks[key];}");
+  return Buffer.from(s);
+ }
+ if(name==='progression.js'){
+  s="import {refreshStats,trainStat} from '../character-stats.js';\n"+s;
+  s=once(s,'export function recalculate(u){','export function recalculate(u){if(u.stats){refreshStats(u);return;}');
+  s=once(s,'export function train(u,skill){','export function train(u,skill){if(u.stats)return trainStat(u,skill);');
+  return Buffer.from(s);
+ }
  if(name==='explosives.js'){
+  s="import {weaponAccuracy,damageAfterResistance} from '../character-stats.js';\n"+s;
+  s=once(s,'a.accuracy-Math.max','weaponAccuracy(a)-Math.max');
+  s=once(s,'damage:w.damage,zone:', 'damage:damageAfterResistance(target,w.damage),rawDamage:w.damage,zone:');
   s="import {unitBaseHeight} from '../tower-geometry.js';\n"+s;
   s=once(s,'height=levelOf(a)-levelOf(target)','height=(unitBaseHeight(a)-unitBaseHeight(target))/3');
   for(const unit of ['a','target','u'])s=s.replaceAll(`levelOf(${unit})*3`, `unitBaseHeight(${unit})`);
@@ -33,6 +71,25 @@ export function adaptCoreClock(name,data){
   return Buffer.from(s);
  }
  if(name==='engine.js'){
+  s="import {starterTools} from '../inventory-tools.js';\n"+s;
+  s=once(s,'levelOf(u)===levelOf(p)&&Math.abs(u.x-p.x)', 'levelOf(u)===levelOf(p)&&Math.abs(unitBaseHeight(u)-unitBaseHeight(p))<.1&&Math.abs(u.x-p.x)');
+  s=once(s,'body:u.id,searched:false,items:rollLoot(s,u)', 'body:u.id,...(u.towerPost?{towerPost:structuredClone(u.towerPost)}:{}),searched:false,items:rollLoot(s,u)');
+  s="import {spendStamina,spendMovement,canMoveStamina,recoverStamina} from '../stamina.js';\n"+s;
+  s=once(s,'edges:{...definition.edges},','edges:{...definition.edges},edgeLocks:structuredClone(definition.edgeLocks||{}),');
+  s=once(s,"if(s.phase==='player'&&path[0].cost>u.ap)","if(!canMoveStamina(u,path[0])||s.phase==='player'&&path[0].cost>u.ap)");
+  s=once(s,'if(!canControl(s,u)||!currentStep||occupant', 'if(!canControl(s,u)||!currentStep||!canMoveStamina(u,currentStep)||occupant');
+  s=once(s,'if(!valid||occupant', 'if(!valid||!canMoveStamina(u,valid)||occupant');
+  s=s.replaceAll('openDoorBetween(s,u,step);u.heading', 'spendMovement(u,step);openDoorBetween(s,u,step);u.heading');
+  s=once(s,'function stepTo(s,g,p){g.heading','function stepTo(s,g,p){spendMovement(g,p);g.heading');
+  s=once(s,'function newRound(s){finishFireRound(s);','function newRound(s){recoverStamina(s,1,{combat:true});finishFireRound(s);');
+  s=once(s,'if(!reaction&&combatCosts(s))a.ap-=p.cost;',"spendStamina(a,WEAPONS[a.weapon].mag?2:6);if(!reaction&&combatCosts(s))a.ap-=p.cost;");
+  s="import {initializeStats,weaponAccuracy,damageAfterResistance} from '../character-stats.js';\n"+s;
+  s=once(s,"if(detect)refresh(s);log(s,", "if(options.statSystem){s.rules.statSystem=true;for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id],authored={...(u.team==='squad'?options.cast?.[u.id]?.stats:{}),...source?.stats};if(Number.isFinite(source?.perception)&&!Number.isFinite(authored.perception))authored.perception=source.perception;initializeStats(u,authored);starterTools(u);}}\n if(detect)refresh(s);log(s,");
+  s=once(s,'s.units.push(u);return u;', 'if(s.rules?.statSystem)initializeStats(u);s.units.push(u);return u;');
+  s=once(s,'a.accuracy+(melee?10:0)','weaponAccuracy(a)+(melee?10:0)');
+  s=once(s,'damage:Math.round(weaponDamage(w,range)*aim.damage)', 'damage:damageAfterResistance(b,Math.round(weaponDamage(w,range)*aim.damage)),rawDamage:Math.round(weaponDamage(w,range)*aim.damage)');
+  s=once(s,'for(const {unit:victim,damage:amount,zone:pelletZone}of impacts){','for(const {unit:victim,damage:rawAmount,zone:pelletZone}of impacts){const amount=damageAfterResistance(victim,rawAmount);');
+  s=once(s,"u.weapon=id;if(id==='flamethrower')", "u.weapon=id;if(u.stats)u.accuracy=weaponAccuracy(u);if(id==='flamethrower')");
   s="import {shotAim} from '../aim-levels.js';\n"+s;
   s=once(s,"zone='torso',token=null){","zone='torso',token=null,aimLevel='hip'){");
   s=once(s," const aim=AIM_ZONES[zone];"," const aiming=shotAim(WEAPONS[a.weapon],aimLevel,burst);if(!aiming)return {ok:false,reason:'Choose an aim level'};\n const aim=AIM_ZONES[zone];");
@@ -60,7 +117,7 @@ export function adaptCoreClock(name,data){
   s=once(s,'export const glimpsed=', 'export function perceive(s,a,b){return awarenessPerception(s,a,b,geometricPerceive(s,a,b),visibleZones);}\nexport const glimpsed=');
   s=once(s,'export function notices(s,a,b){','export function notices(s,a,b){\n if(s.rules?.awareness)return canSee(s,a,b);');
   s=once(s,'s.glimpses[g.id]={x:g.x,y:g.y,z:levelOf(g)};', 's.glimpses[g.id]=s.rules?.awareness?approximate(g):{x:g.x,y:g.y,z:levelOf(g)};');
-  s=once(s,'if(detect)refresh(s);', "if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-definition.starts.length]:definition.starts[u.id];if(source?.towerPost)u.towerPost=structuredClone(source.towerPost);u.perception=Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}\n if(detect)refresh(s);");
+  s=once(s,'if(detect)refresh(s);', "if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id];if(source?.towerPost)u.towerPost=structuredClone(source.towerPost);u.perception=u.stats?u.stats.perception:Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}\n if(detect)refresh(s);");
   s=once(s,'s.contacts[g.id]={x:g.x,y:g.y,z:levelOf(g)};', 's.contacts[g.id]={x:g.x,y:g.y,z:levelOf(g),...(g.towerPost?{towerElevation:TOWER_HEIGHT}:{})};');
   s=once(s,'Math.round(u.y/6)*6)),z:levelOf(u)});','Math.round(u.y/6)*6)),z:levelOf(u),...(u.towerPost?{towerElevation:TOWER_HEIGHT}:{})});');
   s=once(s,'function refreshNow(s){','function refreshNow(s){\n updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});');

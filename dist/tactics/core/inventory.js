@@ -1,12 +1,13 @@
+import {TOOLS} from '../inventory-tools.js';
 export const WEIGHT={knife:1,pistol:1,rifle:4,assault:4,flamethrower:12,grenade:2,launcher:5,rpg:7,shotgun:4,sniper:5,smg:4,hmg:12};
-export const itemWeight=i=>i.type==='weapon'?(WEIGHT[i.kind]||0):i.count*.03;
+export const itemWeight=i=>i.type==='weapon'?(WEIGHT[i.kind]||0):i.type==='tool'?(TOOLS[i.kind]?.weight||0)*i.count:i.count*.03;
 export const loadWeight=u=>(u.pack||[]).reduce((n,i)=>n+itemWeight(i),0)+(u.medkits||0)*.5+(u.wireCutters?1:0);
 export function initInventory(u,weapons){u.capacity=GRID_W*GRID_H;u.slots=[u.weapon,u.weapon==='pistol'?'knife':'pistol'];u.pack=[...new Set(u.slots)].map(kind=>({type:'weapon',kind,rounds:weapons[kind].mag}));for(const kind of ['pistol','rifle'])u.pack.push({type:'ammo',kind,count:kind==='pistol'?16:5});if(u.weapon==='flamethrower')u.pack.push({type:'ammo',kind:'flamethrower',count:4});if(u.team==='guard'){u.slots=[u.weapon];u.pack=u.pack.filter(i=>i.type==='weapon'&&i.kind===u.weapon||i.type==='ammo'&&i.kind===u.weapon);}}
 export const reserve=(u,kind)=>u.pack.filter(i=>i.type==='ammo'&&i.kind===kind).reduce((n,i)=>n+i.count,0);
 export function consumeAmmo(u,kind,count){for(const i of u.pack)if(i.type==='ammo'&&i.kind===kind){const n=Math.min(count,i.count);i.count-=n;count-=n;}u.pack=u.pack.filter(i=>i.type!=='ammo'||i.count>0);}
 export function syncWeapons(u){for(const i of u.pack)if(i.type==='weapon')i.rounds=u.ammo[i.kind];}
-export function accepts(u,item){if(item.type==='weapon'&&u.pack.some(i=>i.type==='weapon'&&i.kind===item.kind))return false;if(item.type==='ammo'&&u.pack.some(i=>i.type==='ammo'&&i.kind===item.kind))return true;return gridLayout({...u,pack:[...u.pack,{...item,cell:undefined}]}).ok;}
-export function receive(u,item){if(item.type==='weapon'){u.ammo[item.kind]=item.rounds;u.pack.push({...item,cell:undefined});}else{const existing=u.pack.find(i=>i.type==='ammo'&&i.kind===item.kind);if(existing)existing.count+=item.count;else u.pack.push(item);}}
+export function accepts(u,item){if(item.type==='weapon'&&u.pack.some(i=>i.type==='weapon'&&i.kind===item.kind))return false;if(['ammo','tool'].includes(item.type)&&u.pack.some(i=>i.type===item.type&&i.kind===item.kind))return true;return gridLayout({...u,pack:[...u.pack,{...item,cell:undefined}]}).ok;}
+export function receive(u,item){if(item.type==='weapon'){u.ammo[item.kind]=item.rounds;u.pack.push({...item,cell:undefined});}else{const existing=u.pack.find(i=>i.type===item.type&&i.kind===item.kind);if(existing)existing.count+=item.count;else u.pack.push(item);}}
 
 export const GRID_W=6,GRID_H=3;
 export const itemSpan=i=>i.type==='weapon'&&['rifle','assault','flamethrower','launcher','rpg','shotgun','sniper','smg','hmg'].includes(i.kind)?2:1;

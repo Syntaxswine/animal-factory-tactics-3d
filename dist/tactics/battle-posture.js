@@ -63,7 +63,7 @@ export function createBattlePosture(worker,profile){
   const {kneel=0,prone=0}=sample.pose||{};
   towerTail.apply(0);
   tailClearance(kneel,prone);
-  if(sample.towerPost?.kind==='iron-searchlight-ladder-tower')towerTail.apply(1-T.MathUtils.clamp(kneel+prone,0,1),{fromCurrent:true});
+  if(['iron-searchlight-ladder-tower','wooden-spotlight-tower'].includes(sample.towerPost?.kind))towerTail.apply(1-T.MathUtils.clamp(kneel+prone,0,1),{fromCurrent:true});
   if(kneel+prone<.00001||profile.unarmed)return;
   const heading=root.rotation.y;root.rotation.y=0;root.position.set(0,0,0);root.updateMatrixWorld(true);
   const before=spine.matrixWorld.clone(),low=Math.min(1,prone),cycle=(sample.distance||0)*Math.PI*5,walk=sample.blend||0;

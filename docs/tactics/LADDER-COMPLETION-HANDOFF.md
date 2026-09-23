@@ -46,3 +46,11 @@ Checks include 44 focused ladder/journey/traversal tests, 14 furniture/tower tes
 One nonblocking residual is disclosed: a dense sample found a **5.16 mm skunk plume graze** against the rear rail. The reviewer found no meaningful visible silhouette break; this is not a zero-collision claim.
 
 Production wooden traversal remains disabled. Before activation, reconcile shared equipment state with canonical, preload or bake the expensive initial route preparation, and match ordinary wooden-post tail posture to the journey endpoint. The weapon remains visibly slung with hands free while climbing and returns to carry after landing. Both pigs still require body/exit clearance work; hen still requires authored avian contacts. No gameplay timing or occupancy changes are authorized by this art checkpoint.
+## Shared equipment reconciliation
+
+Merged approved canonical `47b861a` into this review branch. Both ladder paths now use `equipment-stow.js` for equipment state, visibility, sling/accessory ownership and restoration. The wooden study has an explicit rifle placement preserving its approved back position and axis; other wooden loadouts remain guarded. Iron retains canonical support for all thirteen loadouts. The weapon is visibly stowed with hands free during climbing and carried again at the journey endpoints.
+
+Compared all nine wooden body and rifle trajectories with `fa2d007` at 301 samples each: maximum position difference 3.1e-15 m and quaternion difference 6e-8 radians. The adapter preserves the reviewed trajectory. Fixed a merge regression by updating the flamethrower hose after handoff interpolation; actual hose end-ring centers now track the pack and lance anchors. All 13 loadout/cancellation tests pass, with extra intermediate hose checks. All four skunk/dog iron/wood tail endpoint tests and the three focused wooden equipment-state/route tests pass. Baseline ladder/equipment regression: 33 passing tests.
+
+Ordinary wooden-post standing now matches the approved skunk/dog tail tuck. Production wooden activation still needs route preloading/baking; this reconciliation does not activate it or approve pigs/hen.
+Independent hostile reconciliation review: **9/10**, excluding the separate pig-fixture work.
