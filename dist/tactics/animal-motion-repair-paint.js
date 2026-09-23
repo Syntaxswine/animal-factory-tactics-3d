@@ -2,11 +2,26 @@
 // These bind-space repairs belong to the motion study, not the static models.
 export function animalMotionRepairPaint(profile,layers=null){
  const overalls=['horse','bull','cow','rabbit','skunk'].includes(profile.id);
- if(!overalls&&!['sheep','donkey','pig-foreman'].includes(profile.id))return layers;
+ if(!overalls&&!['sheep','donkey','pig-foreman','dog'].includes(profile.id))return layers;
  const result=layers||{uniforms:{},declarations:'',application:'',dispose(){}};
  const f=profile.frame;
  const sample=(view,x,y)=>`texture2D(uModelPaint,vec2((${view+.5}+(${x})/${f.width})/4.,.5+((${y})-${f.centerY})/${f.height})).rgb`;
  const apply=(mask,color)=>`diffuseColor.rgb=mix(diffuseColor.rgb,${color},${mask});coverage*=1.-${mask};filled=max(filled,${mask});`;
+ // Turnaround projections have no view of the soles. Finish these newly visible
+ // surfaces in bind space: dogs have pads; rabbits retain a fur-covered sole.
+ if(['dog','rabbit'].includes(profile.id))result.application+=`
+ if(abs(vPaintPart-4.)<.1||abs(vPaintPart-6.)<.1){
+  float sole=(1.-smoothstep(.012,.045,p.y))*(1.-smoothstep(-.35,.05,n.y));
+  float strokes=sin(p.x*210.+sin(p.z*150.)*2.);
+  vec3 underside=mix(vec3(.19,.105,.052),vec3(.35,.225,.115),smoothstep(-.4,.7,strokes));
+  ${profile.id==='dog'?`vec2 paw=vec2((p.x-.015)/.06,(abs(p.z)-.232)/.065);
+  float pad=1.-smoothstep(.78,1.,length(paw));
+  float toePads=0.;
+  for(int i=0;i<3;i++){vec2 toe=vec2((p.x-.098)/.028,(abs(p.z)-(.19+float(i)*.042))/.020);toePads=max(toePads,1.-smoothstep(.72,1.,length(toe)));}
+  underside=mix(underside,vec3(.055,.033,.024)+.018*smoothstep(-.3,.8,strokes),max(pad,toePads));`:`underside*=.85+.15*smoothstep(-.03,.14,p.x);`}
+  ${apply('sole','underside')}
+ }
+ `;
  if(overalls)result.application+=`
  if(abs(vPaintPart-2.)<.1){
   float sidePanel=smoothstep(.10,.15,abs(p.z))*(1.-smoothstep(.10,.16,abs(p.x)))*smoothstep(.73,.79,p.y)*(1.-smoothstep(1.02,1.10,p.y));

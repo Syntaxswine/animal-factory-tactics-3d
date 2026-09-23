@@ -1,0 +1,248 @@
+{
+  "configurations": 48,
+  "transitionStrips": 192,
+  "results": [
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scale": "130"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scale": "58"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scale": "130"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scale": "58"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scale": "130"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scale": "58"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scale": "130"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scale": "58"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scale": "130"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scale": "58"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scale": "130"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scale": "58"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scale": "130"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scale": "58"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scale": "130"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scale": "58"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scale": "130"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scale": "58"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scale": "130"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scale": "58"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scale": "130"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scale": "58"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scale": "130"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scale": "58"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scale": "130"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scale": "58"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scale": "130"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scale": "58"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scale": "130"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scale": "58"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scale": "130"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scale": "58"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scale": "130"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scale": "58"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scale": "130"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scale": "58"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scale": "130"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scale": "58"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scale": "130"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scale": "58"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scale": "130"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scale": "58"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scale": "130"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scale": "58"
+    },
+    {
+      "animal": "hen",
+      "outfit": "normal",
+      "scale": "130"
+    },
+    {
+      "animal": "hen",
+      "outfit": "normal",
+      "scale": "58"
+    },
+    {
+      "animal": "hen",
+      "outfit": "red-hats",
+      "scale": "130"
+    },
+    {
+      "animal": "hen",
+      "outfit": "red-hats",
+      "scale": "58"
+    }
+  ],
+  "productionRecovery": true,
+  "errors": []
+}

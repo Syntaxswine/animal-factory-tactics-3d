@@ -68,7 +68,7 @@ export class BattleRenderer extends HybridRenderer {
     const old=model.equipment;model.equipment=createWeaponModel(unit.weapon);worker.equipWeapon(model.equipment);old?.dispose();model.weapon=unit.weapon;
    }
    worker.root.position.set(0,0,0);worker.root.rotation.set(0,0,0);
-   if(unit.hp>0&&shot?.rifle&&!profile.unarmed){
+   if(unit.hp>0&&!(sample.pose?.down>0)&&shot?.rifle&&!profile.unarmed){
     model.firing??=createRifleFiring(worker,profile,model.posture);
     const target=shotPoint(shot.event.trajectories[0],this.state).sub(new T.Vector3(...toWorld(sample)));
     if(shot.phase.discharged&&!shot.dischargeChecked){
@@ -79,11 +79,11 @@ export class BattleRenderer extends HybridRenderer {
     if(!result.supported){shot.traceOrigin=null;if(shot.phase.discharged){shot.presentationUnsupported=true;shot.presentationReason=result.reason;}}
     this.firingDiagnostic(model,shot.presentationUnsupported?{supported:false,reason:shot.presentationReason}:result,unit);
    }
-   else if(unit.hp>0&&sample.pose?.prone>0&&!profile.unarmed&&['rifle','assault','smg','shotgun','sniper'].includes(unit.weapon)){
+   else if(unit.hp>0&&!(sample.pose?.down>0)&&sample.pose?.prone>0&&!profile.unarmed&&['rifle','assault','smg','shotgun','sniper'].includes(unit.weapon)){
     model.firing??=createRifleFiring(worker,profile,model.posture);const h=sample.heading*Math.PI/180;const result=model.firing.apply({aim:0,target:new T.Vector3(12*Math.cos(h),.48,12*Math.sin(h)),sample});this.firingDiagnostic(model,result,unit);
    }
    else {this.firingDiagnostic(model,null,unit);model.locomotion.apply({...sample,blend:sample.pose?.prone||sample.pose?.down?0:sample.blend});model.posture.apply(sample);if(Object.values(sample.pose||{}).some(v=>v>0))model.posture.ground();}
-   model.paint.setGripForearm?.(!!model.equipment?.carry?.handPoses?.support?.gripMesh);
+   model.paint.setGripForearm?.(!!model.equipment?.root.visible&&!!model.equipment?.carry?.handPoses?.support?.gripMesh);
 
   }
   root.position.fromArray(toWorld(sample));
