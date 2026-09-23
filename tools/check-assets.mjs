@@ -61,6 +61,13 @@ const studyAtlas=PAINTED_ATLAS.replace('../assets/environment/','');active.add(s
 const foliageAtlas=FOLIAGE_ATLAS.replace('../assets/environment/','');active.add(foliageAtlas);await checkPNG('assets/environment/'+foliageAtlas,1254,1254,2);
 active.add('foliage/river-water.png');active.add('foliage/shore-tiles-atlas.png');
 for(const kind of ['lathe','mill','press']){for(const name of [kind+'-sketch-v1.png',kind+'-paint-v1.png',...(kind==='press'?['press-paint-v2.png']:[])])active.add('factory-machines/'+name);await checkPNG('assets/environment/factory-machines/'+kind+'-paint-v'+(kind==='press'?2:1)+'.png',1536,1024,2);}
+// Reusable cliff-study paint is intentionally separate from the gameplay catalog.
+for(const [directory,names] of [['sand-cliff',['sand.png','sand-feather.png']],['grass-cliff-meadow',['grass-0.png','grass-1.png','grass-2.png','grass-3.png']]]){
+ const manifest=JSON.parse(await readFile(new URL('assets/environment/'+directory+'/tiles.json',root)));
+ assert.deepEqual(manifest.tiles,names);assert.equal(manifest.pixels,512);
+ for(const name of names){const file=directory+'/'+name;active.add(file);await checkPNG('assets/environment/'+file,512,512);}
+ if(directory==='grass-cliff-meadow'){assert.deepEqual(manifest.atlas,{file:'atlas.png',columns:2,rows:2});active.add(directory+'/atlas.png');await checkPNG('assets/environment/'+directory+'/atlas.png',1024,1024);}
+}
 const superseded=new Set(['door-steel-closed.png','door-wood-closed.png','doorway-concrete-open.png','foliage/river-straight.png','foliage/river-bend.png','foliage/river-banks-atlas.png']);
 for(const file of await readdir(new URL('assets/environment/',root),{recursive:true}))if(file.endsWith('.png'))assert.ok(active.has(file.replaceAll('\\','/'))||superseded.has(file.replaceAll('\\','/')),`Unattached environment sprite: ${file}`);
 for(const species of RED_HAT_SPECIES)for(const weapon of ['hands',...ARMED_WEAPONS])for(const stance of ['standing','kneeling','prone']){
