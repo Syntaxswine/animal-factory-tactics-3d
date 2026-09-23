@@ -1,11 +1,11 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base href="./tactics/"><title>Animal Factory Tactics</title><link rel="icon" href="data:,"><link rel="stylesheet" href="title-3d.css"></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base href="./tactics/"><title>Animal Factory Tactics</title><link rel="icon" href="data:,"><link rel="stylesheet" href="title-3d.css"><link rel="stylesheet" href="save-panel.css"></head><body>
 <div class="backdrop" aria-hidden="true"><canvas id="diorama"></canvas></div>
 <header><span class="insignia" aria-hidden="true">AF</span><span>Animal Factory<br><b>Tactical operations</b></span><span class="edition">3D EDITION / IN DEVELOPMENT</span></header>
 <main><section class="menu-panel"><p class="eyebrow">The factory is waiting.</p><h1>ANIMAL<br>FACTORY<span>TACTICS</span></h1>
 <nav aria-label="Main menu">
 <a class="menu-item primary" href="battle-3d.html"><span class="number">01</span><span><strong>Quick Fight</strong><small>The full factory test map</small></span><span class="arrow" aria-hidden="true">↗</span></a>
 <button class="menu-item" data-panel="campaign"><span class="number">02</span><span><strong>Campaign</strong><small>Story mode</small></span><span class="state">Coming soon</span></button>
-<button class="menu-item" data-panel="saves"><span class="number">03</span><span><strong>Save / Load</strong><small>Game progress</small></span><span class="state">Coming soon</span></button>
+<button class="menu-item" data-panel="saves"><span class="number">03</span><span><strong>Save / Load</strong><small>Saved encounters</small></span><span class="arrow" aria-hidden="true">↗</span></button>
 <a class="menu-item" href="editor-3d.html"><span class="number">04</span><span><strong>Map Editor</strong><small>Build, save &amp; playtest maps</small></span><span class="arrow" aria-hidden="true">↗</span></a>
 <button class="menu-item" data-panel="options"><span class="number">05</span><span><strong>Options</strong><small>Difficulty &amp; motion</small></span><span class="arrow" aria-hidden="true">＋</span></button>
 </nav><p id="preference-summary" class="preference"></p></section>
@@ -13,6 +13,6 @@
 <footer><span>Turn-based tactics · Work in progress</span><a href="../tactics-3d-gallery.html">Models &amp; art galleries ↗</a></footer>
 <dialog id="panel" aria-labelledby="panel-title"><form method="dialog"><button class="close" aria-label="Close">×</button></form><p class="eyebrow" id="panel-kicker"></p><h2 id="panel-title"></h2>
 <section id="campaign-panel" hidden><p>The story campaign is still being connected to the 3D game.</p><p>Quick Fight is available now on the full factory test map.</p><a class="action" href="battle-3d.html">Start Quick Fight ↗</a></section>
-<section id="saves-panel" hidden><p>Saving and loading game progress is not available in the 3D encounter yet. Leaving a fight or restarting begins a fresh session.</p><p>Map JSON import and export are available separately in the Map Editor.</p><a class="action secondary" href="editor-3d.html">Open Map Editor ↗</a></section>
+<section id="saves-panel" hidden></section>
 <section id="options-panel" hidden><form id="options-form"><label>Quick Fight difficulty<select id="option-difficulty"><option value="easy">Easy — scenery revealed</option><option value="standard">Standard — explore to reveal scenery</option></select></label><p class="hint">Opponents still require detection in line of sight on both difficulties.</p><label>Motion<select id="option-motion"><option value="system">Use device preference</option><option value="reduced">Reduced motion</option><option value="full">Full motion</option></select></label><p class="hint">Reduced motion skips walking interpolation, recoil, muzzle flashes and shot traces.</p><button class="action" type="submit">Save options</button><p id="options-status" role="status"></p></form></section></dialog>
 <script type="module" src="title-3d.js"></script></body></html>
