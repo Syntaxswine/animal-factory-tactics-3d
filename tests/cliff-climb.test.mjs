@@ -29,7 +29,24 @@ test('six-second cliff climb keeps hands, soles and rigid limb lengths through t
    last=r;
   }
   m.apply(2.95/6);assert(new T.Vector3(0,1,0).applyQuaternion(w.bones.find(b=>b.name==='spine').getWorldQuaternion(new T.Quaternion())).z<-.6,'left lean missing during right leg swing');
-  m.apply(3.8/6);assert(new T.Vector3(0,1,0).applyQuaternion(w.bones.find(b=>b.name==='spine').getWorldQuaternion(new T.Quaternion())).z>.08,'weight does not rise onto right leg');
+ }finally{m.dispose();w.dispose();}
+});
+
+test('chest loads forward before hip extension, one palm supports the push, and trailing leg follows',()=>{
+ const w=load(),m=createCliffClimb(w,profile),bone=n=>w.bones.find(b=>b.name===n),position=n=>bone(n).getWorldPosition(V()),shoulders=()=>position('upperArm-1').add(position('upperArm1')).multiplyScalar(.5);
+ try{
+  m.apply(0);const planes=[-1,1].map(side=>({side,n:position('shin'+side).sub(position('thigh'+side)).cross(position('hoof'+side).sub(position('shin'+side))).normalize()}));
+  m.apply(3.2/6);const startHip=position('hips'),startShoulders=shoulders();let rose=false,lastSupport=3.2;
+  for(let i=0;i<=115;i++){const t=3.2+i*.01,r=m.apply(t/6),hips=position('hips'),chest=shoulders(),hands=r.contacts.filter(c=>c.id.startsWith('hand')&&c.planted);
+   if(!rose&&hips.y>startHip.y+.05){assert(chest.x>startShoulders.x+.18,'hips lift before the chest advances');rose=true;}
+   if(t<=3.75)assert(hands.length>=1,'unsupported early push');
+   if(hands.length)lastSupport=t;
+   for(const contact of hands){const grip=m.grips[contact.id==='hand-1'?0:1];for(const finger of grip.meshes.slice(1,5)){let gap=Infinity;for(const j of new Set(finger.geometry.index.array)){const p=finger.getVertexPosition(j,V()).applyMatrix4(finger.matrixWorld);if(p.x>0)gap=Math.min(gap,Math.abs(p.y-2));}assert(gap<.003,'supporting fingers float above the cap');}}
+   if(!hands.length&&t<3.85){assert(hips.x>=0,'last palm released with hips outside');assert(chest.x>.25,'last palm released before torso reaches planted hoof');}
+   const trail=r.contacts.find(c=>c.id==='foot-1');if(t<=3.49)assert(Math.abs(trail.point[1]-1.24)<1e-8,'trailing leg lifts before forward loading');if(trail.point[0]>=0)assert(t>lastSupport&&lastSupport>=3.75,'trailing leg crosses before supported transfer');
+   for(const {side,n}of planes){const upper=n.clone().applyQuaternion(bone('thigh'+side).getWorldQuaternion(new T.Quaternion())),lower=n.clone().applyQuaternion(bone('shin'+side).getWorldQuaternion(new T.Quaternion()));assert(upper.dot(lower)>1-1e-8,'opposing knee roll twists the trouser surface');}
+  }
+  assert(rose);assert(lastSupport>=3.75);
  }finally{m.dispose();w.dispose();}
 });
 
