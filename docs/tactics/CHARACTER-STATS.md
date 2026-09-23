@@ -27,7 +27,7 @@ The character screen displays all 13 assigned values, HP, stamina capacity, AP a
 
 ## Still to build
 
-Stamina expenditure and recovery; forcing doors and lockpicking; repairs and expanded medical actions; mine disarming; leadership, militia training and morale bonuses. Mechanical and Leadership are assigned and displayed but do not yet have those action systems. Campaign integration and balance tuning remain separate work.
+Stamina, door checks, electrical-fixture repairs and field treatment are now implemented; see [Field actions](FIELD-ACTIONS.md). General machinery/tool repair, mine disarming, leadership, militia training and morale bonuses remain. Campaign integration and balance tuning remain separate work.
 
 ## Verification
 

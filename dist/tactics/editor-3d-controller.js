@@ -6,7 +6,7 @@ import {createEditor,applyBrush,brushShape,brushPoints,replaceMap,undo,redo} fro
 import {validateMap,edgeKey,terrainAt,roofEndpoint} from './core/maps.js';
 import {openBlock,extractBlock,validateBlock,placeBlock} from './core/blocks.js';
 import {connectionSet} from './core/connections.js';
-import {propCells} from './core/environment.js';
+import {EDGES,propCells} from './core/environment.js';
 export function brushPoint(p){const x=Math.floor(p.x+.5),y=Math.floor(p.y+.5),dx=p.x-x,dy=p.y-y,axis=Math.abs(dx)>Math.abs(dy)?'e':'s';return {x,y,z:p.z,edge:edgeKey(axis,x-(axis==='e'&&dx<0?1:0),y-(axis==='s'&&dy<0?1:0),p.z)};}
 export class EditingDocument extends InspectionDocument {
  open(text){super.open(text);if(!this.block)mapStartMinutes(this.map);this.editor=createEditor(this.block?openBlock(this.original):this.map);this.changed=false;this.revision=0;return this;}
@@ -38,6 +38,7 @@ export class EditingDocument extends InspectionDocument {
    if(foliage&&!cells.length)return {ok:false,error:tool==='clear-foliage'?'No foliage cover to clear here.':'No uncovered outdoor ground here. Water, structures and props are skipped.',cells,edges};
    // Connectivity is allowed to be temporarily broken while designing a room.
    if(this.block){if(cells.some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24))return {ok:false,error:'The whole footprint must fit inside the block.',cells,edges};validateBlock(extractBlock(candidate.map));}
+   if(candidate.map.edgeLocks)for(const key of Object.keys(candidate.map.edgeLocks))if(!EDGES[candidate.map.edges[key]]?.opensTo)delete candidate.map.edgeLocks[key];
    const errors=validateMap(candidate.map,{connectivity:false});
    return {ok:!errors.length,error:errors[0]||'',cells,edges,map:candidate.map};
   }catch(e){return {ok:false,error:e.message,cells:points,edges};}
@@ -45,12 +46,23 @@ export class EditingDocument extends InspectionDocument {
  apply(command){const result=this.preview(command);if(result.ok){replaceMap(this.editor,result.map);this.refresh();}return result;}
  undo(){if(!this.editor||!undo(this.editor))return false;this.refresh();return true;}
  redo(){if(!this.editor||!redo(this.editor))return false;this.refresh();return true;}
+ doorLock(selection,difficulty){
+  if(this.block)throw Error('Set door locks in a full map.');
+  if(selection?.type!=='edge'||!EDGES[this.map.edges[selection.edge]]?.opensTo)throw Error('Select a closed door.');
+  if(!Number.isInteger(difficulty)||difficulty<0||difficulty>100)throw Error('Use 0 for unlocked, or a difficulty from 1 to 100.');
+  const edgeLocks={...this.map.edgeLocks};if(difficulty)edgeLocks[selection.edge]=difficulty;else delete edgeLocks[selection.edge];this.replace({...this.editor.map,edgeLocks});
+ }
+ fixtureCondition(selection,condition){
+  const p=selection?.data;if(selection?.type!=='prop'||!LIGHT_FORMS[p.kind]||LIGHT_FORMS[p.kind].fire)throw Error('Select an electrical light fixture.');
+  if(!Number.isInteger(condition)||condition<0||condition>100)throw Error('Condition must be 0-100.');
+  this.replace({...this.editor.map,props:this.editor.map.props.map(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(p.z||0)?{...q,condition}:q)});
+ }
  rename(name){name=name.trim();if(!name||name.length>60)return {ok:false,error:'Use a name from 1 to 60 characters.'};replaceMap(this.editor,{...this.editor.map,name});this.refresh();return {ok:true};}
  rotate(selection){
   if(selection?.type!=='prop')return {ok:false,error:'Select a prop to rotate.'};
   const p=selection.data,candidate=createEditor(this.editor.map);applyBrush(candidate,'erase-prop',p.x,p.y,'',{level:p.z||0});
   const error=applyBrush(candidate,'prop',p.x,p.y,'',{level:p.z||0,propKind:p.kind,rotated:!p.rotated});
-  if(error)return {ok:false,error};if(p.lightMode)candidate.map.props.at(-1).lightMode=p.lightMode;if(p.lightTargets)candidate.map.props.at(-1).lightTargets=structuredClone(p.lightTargets);const errors=validateMap(candidate.map,{connectivity:false});if(errors.length)return {ok:false,error:errors[0]};
+  if(error)return {ok:false,error};if(p.condition!==undefined)candidate.map.props.at(-1).condition=p.condition;if(p.lightMode)candidate.map.props.at(-1).lightMode=p.lightMode;if(p.lightTargets)candidate.map.props.at(-1).lightTargets=structuredClone(p.lightTargets);const errors=validateMap(candidate.map,{connectivity:false});if(errors.length)return {ok:false,error:errors[0]};
   if(this.block){try{validateBlock(extractBlock(candidate.map));}catch(e){return {ok:false,error:e.message};}}
   replaceMap(this.editor,candidate.map);this.refresh();return {ok:true};
  }

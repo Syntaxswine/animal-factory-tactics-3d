@@ -4,6 +4,7 @@ import {towerForUnit,unitBaseHeight,TOWER_HEIGHT} from '../tower-geometry.js';
 import {updateAwareness,awarenessPerception} from '../awareness.js';
 import {shotAim} from '../aim-levels.js';
 import {initializeStats,weaponAccuracy,damageAfterResistance} from '../character-stats.js';
+import {spendStamina,spendMovement,canMoveStamina,recoverStamina} from '../stamina.js';
 import {explosivePreview,explosiveTrajectory,detonate} from './explosives.js';
 import {initPersonality,initGuardSocial,socialRoll,friendlyReaction,helped,settleStress,injuryStrain,killRelief,collapse} from './personalities.js';
 import {partnerLost,stabilizedPartner,cleanWin,onContract} from './happiness.js';
@@ -77,7 +78,7 @@ export const DEFAULT_CAST=[['Yakov','horse','assault'],['Anya','goat','rifle'],[
 // options.cast: [{name,species,weapon}] takes the squad starts in order (the balance instrument fields a hired merc alone); absent, the four comrades.
 export function createGame(seed=1947,definition=factoryMap(),detect=true,difficulty='standard',options={}){
  const errors=validateMap(definition);if(errors.length)throw Error(errors.join(' '));
- const s={difficulty:difficulty==='easy'?'easy':'standard',map:structuredClone(definition.terrain),upper:structuredClone(definition.upper),stairs:structuredClone(definition.stairs),climbs:structuredClone(definition.climbs||[]),props:structuredClone(definition.props||[]),sectors:structuredClone(definition.sectors),edges:{...definition.edges},definition:structuredClone(definition),units:[],phase:'explore',round:0,selected:0,visible:new Set(),seen:new Set(),detected:new Set(),glimpses:{},log:[],seed,perceptionSeed:seed,revision:0,queue:[],enemyIndex:0,contacts:{},effect:null};
+ const s={difficulty:difficulty==='easy'?'easy':'standard',map:structuredClone(definition.terrain),upper:structuredClone(definition.upper),stairs:structuredClone(definition.stairs),climbs:structuredClone(definition.climbs||[]),props:structuredClone(definition.props||[]),sectors:structuredClone(definition.sectors),edges:{...definition.edges},edgeLocks:structuredClone(definition.edgeLocks||{}),definition:structuredClone(definition),units:[],phase:'explore',round:0,selected:0,visible:new Set(),seen:new Set(),detected:new Set(),glimpses:{},log:[],seed,perceptionSeed:seed,revision:0,queue:[],enemyIndex:0,contacts:{},effect:null};
  const add=(team,name,species,x,y,weapon,z=0)=>spawnUnit(s,{team,name,species,x,y,z,weapon,medical:team==='squad'?[0,25,50,100][s.units.length]:0});
  const cast=options.cast?options.cast.map(c=>[c.name,c.species,c.weapon]):DEFAULT_CAST;
  definition.starts.forEach((p,i)=>{if(cast[i])add('squad',cast[i][0],cast[i][1],p.x,p.y,cast[i][2],levelOf(p));});
@@ -236,14 +237,14 @@ export function navigationPath(s,u,x,y,z=levelOf(u)){if(!inBounds(x,y,z))return 
 
 export function move(s,u,x,y,z=levelOf(u)){
  if(!canControl(s,u))return false;const path=navigationPath(s,u,x,y,z);if(!path?.length)return false;
- if(s.phase==='player'&&path[0].cost>u.ap)return false;
+ if(!canMoveStamina(u,path[0])||s.phase==='player'&&path[0].cost>u.ap)return false;
  u.overwatch=null;s.queue=path.map(p=>({id:u.id,...p,goal:{x,y,z}}));return true;
 }
 export function stepMovement(s){
  if(!s.queue.length||!['explore','player','won'].includes(s.phase))return false;
  if(s.queue[0].group)return stepGroupMovement(s);
- let step=s.queue[0];const actor=unit(s,step.id);if(step.goal&&canControl(s,actor)){const goal=step.goal,path=navigationPath(s,actor,goal.x,goal.y,goal.z);if(!path?.length){s.queue=[];log(s,'Route stopped: destination reached or no discovered route remains.');return false;}s.queue=path.map(p=>({id:actor.id,...p,goal}));}step=s.queue.shift();const u=unit(s,step.id),currentStep=u&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===levelOf(step));if(!canControl(s,u)||!currentStep||occupant(s,step.x,step.y,levelOf(step))||(s.phase==='player'&&u.ap<currentStep.cost)){s.queue=[];return false;}
- openDoorBetween(s,u,step);u.heading=headingTo(u,step);u.facing=(step.x-u.x)-(step.y-u.y)>=0?1:-1;u.x=step.x;u.y=step.y;u.z=levelOf(step);u.steps++;u.overwatch=null;emitNoise(s,u,u.sneaking?3:10);if(s.phase==='player')u.ap-=currentStep.cost;enterFire(s,u);refresh(s);return true;
+ let step=s.queue[0];const actor=unit(s,step.id);if(step.goal&&canControl(s,actor)){const goal=step.goal,path=navigationPath(s,actor,goal.x,goal.y,goal.z);if(!path?.length){s.queue=[];log(s,'Route stopped: destination reached or no discovered route remains.');return false;}s.queue=path.map(p=>({id:actor.id,...p,goal}));}step=s.queue.shift();const u=unit(s,step.id),currentStep=u&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===levelOf(step));if(!canControl(s,u)||!currentStep||!canMoveStamina(u,currentStep)||occupant(s,step.x,step.y,levelOf(step))||(s.phase==='player'&&u.ap<currentStep.cost)){s.queue=[];return false;}
+ spendMovement(u,step);openDoorBetween(s,u,step);u.heading=headingTo(u,step);u.facing=(step.x-u.x)-(step.y-u.y)>=0?1:-1;u.x=step.x;u.y=step.y;u.z=levelOf(step);u.steps++;u.overwatch=null;emitNoise(s,u,u.sneaking?3:10);if(s.phase==='player')u.ap-=currentStep.cost;enterFire(s,u);refresh(s);return true;
 }
 export function coverAgainst(s,a,b){
  const occupied=PROPS[propAt(s,b.x,b.y,levelOf(b))?.kind];
@@ -323,7 +324,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
  if(b.team==='guard')targeted(s,b,a);
  // A squad attack from real time opens a turn (engaged holds it until the squad ends that turn); the shot is re-checked against the AP the turn actually has.
  if(['explore','won'].includes(s.phase)){s.engaged=true;refresh(s);if(s.phase==='player'&&a.team==='squad'&&a.ap<p.cost){log(s,a.name+': not enough AP to fire.');return false;}}
- if(!reaction&&combatCosts(s))a.ap-=p.cost; // no charge on a map with nothing left to fight (a blast on a won map)
+ spendStamina(a,WEAPONS[a.weapon].mag?2:6);if(!reaction&&combatCosts(s))a.ap-=p.cost; // no charge on a map with nothing left to fight (a blast on a won map)
  const trajectories=[],explosions=[],sequence=[];
  // A stack suspends the current burst while a reply resolves; ammunition bounds chains.
  const frames=[{a,b,p,zone,left:p.rounds,weapon:a.weapon,aim:{...b},reply:false}];
@@ -400,7 +401,7 @@ export function endTurn(s){if(s.phase!=='player'||s.queue.length)return false;s.
  // Only a turn that began after the stabilization counts; the third such end runs the counter out, and the comrade stands when the next squad turn begins (stepEnemy), never for the guards' volley first.
  for(const u of s.units)if(recovering(u)&&s.round>u.recoveryFrom)u.recoveryTurns--;for(const u of s.units)panicRun(s,u);s.phase='enemy';s.enemyIndex=0;for(const g of guards(s))g.ap=g.burningTurns?0:g.maxAp;log(s,'Guard turn.');return true;}
 // The bookkeeping of a new squad turn: fires burn down, recovered comrades stand, AP refills (the waiting crosser's too), stress settles.
-function newRound(s){finishFireRound(s);settleRound(s);s.round++;for(const u of s.units)if(u.casualty==='stable'&&u.recoveryTurns<=0){u.casualty=null;u.hp=RECOVERY_HP;log(s,u.name+' is back on their feet / '+RECOVERY_HP+' HP, exhausted.');}for(const p of squad(s)){p.ap=p.burningTurns?0:p.maxAp;p.overwatch=null;settleStress(p,2);}for(const p of s.units)if(p.team==='squad'&&p.away&&p.hp>0){p.ap=p.maxAp;p.away.ap=p.maxAp;}/* a comrade waiting beyond the edge gets the new turn too */}
+function newRound(s){recoverStamina(s,1,{combat:true});finishFireRound(s);settleRound(s);s.round++;for(const u of s.units)if(u.casualty==='stable'&&u.recoveryTurns<=0){u.casualty=null;u.hp=RECOVERY_HP;log(s,u.name+' is back on their feet / '+RECOVERY_HP+' HP, exhausted.');}for(const p of squad(s)){p.ap=p.burningTurns?0:p.maxAp;p.overwatch=null;settleStress(p,2);}for(const p of s.units)if(p.team==='squad'&&p.away&&p.hp>0){p.ap=p.maxAp;p.away.ap=p.maxAp;}/* a comrade waiting beyond the edge gets the new turn too */}
 export function stepEnemy(s){
  if(s.phase!=='enemy')return false;
  const g=s.units[s.enemyIndex];
@@ -448,7 +449,7 @@ export function moveGroup(s,ids,leader,x,y,z=levelOf(leader)){
  for(const u of members){const gx=u.x+dx,gy=u.y+dy,candidates=[];for(let oy=-2;oy<=2;oy++)for(let ox=-2;ox<=2;ox++)candidates.push({x:gx+ox,y:gy+oy,z,d:ox*ox+oy*oy});candidates.sort((a,b)=>a.d-b.d);let found=null;for(const goal of candidates){if(reserved.has(key(goal.x,goal.y,z)))continue;const path=inBounds(goal.x,goal.y,z)?pathTo(planning,u,goal.x,goal.y,z):null;if(path&&(path.length||u.x===goal.x&&u.y===goal.y&&levelOf(u)===z)){if(s.phase==='player'&&path.length&&path[0].cost>u.ap)continue;found=goal;break;}}if(!found)return false;reserved.add(key(found.x,found.y,z));orders.push({id:u.id,goal:{x:found.x,y:found.y,z}});}
  if(orders.every(o=>{const u=unit(s,o.id);return u.x===o.goal.x&&u.y===o.goal.y&&levelOf(u)===z;}))return false;for(const u of members)u.overwatch=null;s.queue=[{group:orders}];log(s,'Group movement ordered for '+orders.length+' comrades.');return true;
 }
-function stepGroupMovement(s){const order=s.queue[0];let moved=false;for(const entry of order.group){const u=unit(s,entry.id),goal=entry.goal;if(!canControl(s,u)){s.queue=[];return moved;}if(u.x===goal.x&&u.y===goal.y&&levelOf(u)===goal.z)continue;const path=navigationPath(s,u,goal.x,goal.y,goal.z),step=path?.[0],valid=step&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===step.z);if(!valid||occupant(s,step.x,step.y,step.z)||(s.phase==='player'&&u.ap<valid.cost)){s.queue=[];log(s,'Group stopped: route blocked or a comrade lacks AP.');return moved;}openDoorBetween(s,u,step);u.heading=headingTo(u,step);u.facing=(step.x-u.x)-(step.y-u.y)>=0?1:-1;u.x=step.x;u.y=step.y;u.z=step.z;u.steps++;u.overwatch=null;emitNoise(s,u,u.sneaking?3:10);if(s.phase==='player')u.ap-=valid.cost;enterFire(s,u);moved=true;refresh(s);if(s.queue[0]!==order)return moved;}
+function stepGroupMovement(s){const order=s.queue[0];let moved=false;for(const entry of order.group){const u=unit(s,entry.id),goal=entry.goal;if(!canControl(s,u)){s.queue=[];return moved;}if(u.x===goal.x&&u.y===goal.y&&levelOf(u)===goal.z)continue;const path=navigationPath(s,u,goal.x,goal.y,goal.z),step=path?.[0],valid=step&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===step.z);if(!valid||!canMoveStamina(u,valid)||occupant(s,step.x,step.y,step.z)||(s.phase==='player'&&u.ap<valid.cost)){s.queue=[];log(s,'Group stopped: route blocked or a comrade lacks AP.');return moved;}spendMovement(u,step);openDoorBetween(s,u,step);u.heading=headingTo(u,step);u.facing=(step.x-u.x)-(step.y-u.y)>=0?1:-1;u.x=step.x;u.y=step.y;u.z=step.z;u.steps++;u.overwatch=null;emitNoise(s,u,u.sneaking?3:10);if(s.phase==='player')u.ap-=valid.cost;enterFire(s,u);moved=true;refresh(s);if(s.queue[0]!==order)return moved;}
  if(order.group.every(e=>{const u=unit(s,e.id);return u.x===e.goal.x&&u.y===e.goal.y&&levelOf(u)===e.goal.z;}))s.queue=[];return moved;
 }
 
@@ -562,7 +563,7 @@ function fleeStep(s,g){const threat=g.threat||g.lastKnown;if(!threat)return null
  const options=movementNeighbors(s,g).filter(q=>levelOf(q)===levelOf(g)&&!occupant(s,q.x,q.y,levelOf(q))&&!onFire(s,q)&&distance(q,threat)>d0+1e-9);if(!options.length)return null;
  const allies=guards(s).filter(o=>o!==g),refuge=q=>Math.min(g.post?distance(q,g.post):Infinity,...allies.map(o=>distance(q,o)));
  return options.sort((a,b)=>refuge(a)-refuge(b)||distance(b,threat)-distance(a,threat))[0];}
-function stepTo(s,g,p){g.heading=headingTo(g,p);openDoorBetween(s,g,p);g.facing=(p.x-g.x)-(p.y-g.y)>=0?1:-1;g.x=p.x;g.y=p.y;g.z=levelOf(p);g.steps++;enterFire(s,g);}
+function stepTo(s,g,p){spendMovement(g,p);g.heading=headingTo(g,p);openDoorBetween(s,g,p);g.facing=(p.x-g.x)-(p.y-g.y)>=0?1:-1;g.x=p.x;g.y=p.y;g.z=levelOf(p);g.steps++;enterFire(s,g);}
 function sweep(s,g,ticks){g.sweep=(g.sweep??ticks)-1;g.heading=(g.heading+90)%360;return g.sweep<=0;}
 // Rest at the post (or where the guard stands when the post cannot be reached), wary for the rest of the map.
 function settle(s,g,home=true){setState(s,g,'rest');g.wary=true;if(home&&g.post)g.heading=g.post.heading;bark(s,g,g.name+(home?' is back at post.':' settled where it stood.'),'rest');}

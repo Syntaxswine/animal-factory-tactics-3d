@@ -2,10 +2,10 @@
 export const clockOverrides={
  'progression.js':'Use canonical 1-100 stats and derived resources for opted-in characters.',
  'explosives.js':'Use physical tower heights, weapon skills and endurance-aware explosive previews.',
- 'maps.js':'Validate authored tower lookouts without requiring a ground-floor route.',
+ 'maps.js':'Validate tower lookouts, locks and fixture condition; enforce locked-door traversal.',
  'projectiles.js':'Trace open tower windows and elevated tower occupants.',
  'environment.js':'Register authored light fixture footprints and collision rules.',
- 'engine.js':'Use shared timing, opt-in 3D awareness and canonical character stats in combat.',
+ 'engine.js':'Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks.',
  'world.js':'Use the shared clock, one-minute completed rounds, and exploration pacing.'
 };
 function once(source,from,to){if(source.split(from).length!==2)throw Error('Clock adapter anchor changed: '+from.slice(0,100));return source.replace(from,to);}
@@ -14,8 +14,12 @@ export function adaptCoreClock(name,data){
  let s=data.toString();
  if(name==='environment.js'){return Buffer.from("import {LIGHT_PROPS} from '../light-sources.js';\n"+s+'\nObject.assign(PROPS,LIGHT_PROPS);\n');}
  if(name==='maps.js'){
+  s=once(s," if(!raw.edges||", " if(raw.edgeLocks!==undefined&&(!raw.edgeLocks||typeof raw.edgeLocks!=='object'||Array.isArray(raw.edgeLocks)))return [...errors,'Invalid door locks.'];\n for(const [key,value]of Object.entries(raw.edgeLocks||{}))if(!EDGES[raw.edges?.[key]]?.opensTo||!Number.isInteger(value)||value<1||value>100)return [...errors,'Door locks require closed doors and difficulty 1-100.'];\n for(const p of raw.props||[])if(p.condition!==undefined&&(!Number.isInteger(p.condition)||p.condition<0||p.condition>100))return [...errors,'Fixture condition must be 0-100.'];\n if(!raw.edges||");
+  s=once(s,'if(!next)return false;m.edges[k]=next;', 'if(!next||m.edgeLocks?.[k])return false;m.edges[k]=next;');
+  s=once(s,'||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo)', '||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo&&!m.edgeLocks?.[edgeBetween(p,b)])');
   s="import {towerForUnit,towerEntry} from '../tower-geometry.js';\n"+s;
   s=once(s,"if(!passable(raw,p))errors.push(`Unit start needs a walkable floor at ${k}.`);", "if(p.towerPost?!towerForUnit(raw,p):!passable(raw,p))errors.push(`Unit start needs a walkable floor or valid tower post at ${k}.`);");
+  s=once(s,'missing=reachedTargets(raw,targets)', 'missing=reachedTargets({...raw,edgeLocks:{}},targets)');
   s=once(s,'const targets=[...raw.starts,...raw.guards,...raw.exits],','const targets=[...raw.starts,...raw.guards,...raw.exits].map(p=>towerForUnit(raw,p)?towerEntry(towerForUnit(raw,p)):p),');
   return Buffer.from(s);
  }
@@ -43,6 +47,15 @@ export function adaptCoreClock(name,data){
   return Buffer.from(s);
  }
  if(name==='engine.js'){
+  s="import {spendStamina,spendMovement,canMoveStamina,recoverStamina} from '../stamina.js';\n"+s;
+  s=once(s,'edges:{...definition.edges},','edges:{...definition.edges},edgeLocks:structuredClone(definition.edgeLocks||{}),');
+  s=once(s,"if(s.phase==='player'&&path[0].cost>u.ap)","if(!canMoveStamina(u,path[0])||s.phase==='player'&&path[0].cost>u.ap)");
+  s=once(s,'if(!canControl(s,u)||!currentStep||occupant', 'if(!canControl(s,u)||!currentStep||!canMoveStamina(u,currentStep)||occupant');
+  s=once(s,'if(!valid||occupant', 'if(!valid||!canMoveStamina(u,valid)||occupant');
+  s=s.replaceAll('openDoorBetween(s,u,step);u.heading', 'spendMovement(u,step);openDoorBetween(s,u,step);u.heading');
+  s=once(s,'function stepTo(s,g,p){g.heading','function stepTo(s,g,p){spendMovement(g,p);g.heading');
+  s=once(s,'function newRound(s){finishFireRound(s);','function newRound(s){recoverStamina(s,1,{combat:true});finishFireRound(s);');
+  s=once(s,'if(!reaction&&combatCosts(s))a.ap-=p.cost;',"spendStamina(a,WEAPONS[a.weapon].mag?2:6);if(!reaction&&combatCosts(s))a.ap-=p.cost;");
   s="import {initializeStats,weaponAccuracy,damageAfterResistance} from '../character-stats.js';\n"+s;
   s=once(s,"if(detect)refresh(s);log(s,", "if(options.statSystem){s.rules.statSystem=true;for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id],authored={...(u.team==='squad'?options.cast?.[u.id]?.stats:{}),...source?.stats};if(Number.isFinite(source?.perception)&&!Number.isFinite(authored.perception))authored.perception=source.perception;initializeStats(u,authored);}}\n if(detect)refresh(s);log(s,");
   s=once(s,'s.units.push(u);return u;', 'if(s.rules?.statSystem)initializeStats(u);s.units.push(u);return u;');
