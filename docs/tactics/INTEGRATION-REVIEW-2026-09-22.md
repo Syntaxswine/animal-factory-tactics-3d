@@ -77,3 +77,15 @@ Approved editor work through `56beefc` and casualty work `f3189fd` together. The
 Casualty poses read as supported curled downed states and extended dead states. Browser checks passed 48 configurations and 192 transition strips, fitted caps, reduced motion, weapon hiding/restoration, production recovery and upper-floor placement. A separate combined browser fixture interrupted active ladder playback with a bleeding casualty, verified disposal and hidden equipment at the authoritative elevated destination, then recovered successfully without diagnostics. Recovery remains a simple transition, not a fully authored get-up. No scenery-aware falling, dropped weapon models or corpse collision changes are claimed.
 
 Validation: 729 tests and assets, Pages build, reproducible core verification, all browser checks and clean diff checks pass. Deployment list conflicts were resolved by retaining both branches and the previously approved ladder study. The dossier and ladder browser scripts now accept REVIEW_URL. Fresh horse, hen and dog casualty views and the dossier/ladder gameplay captures were visually reviewed.
+
+## Equipment, inventory and full ladder journey review
+
+Reviewed equipment/inventory branch through `92b433f` against canonical `aef82f5`. The integration retains casualty-safe draw and grip handling and all deployment entries. Updated legacy ladder tests to inspect the shared equipment sling and reject replacement equipment through the rig's equip API; the previous rifle-only assertions were obsolete. Browser scripts now accept REVIEW_URL, and the stow fixture enables production character stats.
+
+Browser checks pass inventory handovers, drops/pickups, ready/backpack transitions, lockpicking, mobile controls, rest, treatment, electrical repairs, weapon draw costs and all 13 ladder loadouts. Core synchronization and Pages build pass. The equipment stow presentation remains the six-second ladder clip with destination placement afterward; this approval does not claim a complete approach/doorway journey.
+
+Separately reviewed ladder completion `2a2e382` in a detached worktree. All 31 focused ladder-motion, journey and traversal tests pass. The horse study loads without browser errors and reaches its final post; sampled approach, climb, doorway and endpoint screenshots were inspected. This was a bounded visual check, not a fresh exhaustive visual pass for every animal.
+
+Hold the ladder-completion merge: its rifle-specific sling transitions and full-duration traversal controller conflict with the equipment branch's shared stow ownership and all-loadout controller. Port the journey transitions onto shared equipment stowing, preserve full-duration busy/cancellation handling, and verify casualty interruption, loadout restoration and doorway clearance together before integration. Do not resolve these conflicts by replacing either controller wholesale. Pigs and hen remain outside supported animated tower traversal.
+
+Final equipment integration validation: all 764 tests and asset checks pass; the core verification, Pages build and four browser review scripts pass.
