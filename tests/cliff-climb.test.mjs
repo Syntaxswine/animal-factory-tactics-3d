@@ -65,9 +65,21 @@ test('deep flex keeps the upper pastern attached to the shin and the horn and so
  }finally{m.dispose();w.dispose();}
 });
 
+test('right knee leads a wide upper landing while the trailing leg remains below the rim',()=>{
+ const w=load(),m=createCliffClimb(w,profile),joint=name=>w.bones.find(b=>b.name===name).getWorldPosition(V());try{
+  m.apply(2.9/6);const knee=joint('shin1'),ankle=joint('hoof1'),trailingKnee=joint('shin-1'),trailingAnkle=joint('hoof-1');
+  assert(knee.y>2.1&&knee.y>ankle.y,'right knee must lead the hoof over the rim');
+  assert(ankle.z>.5&&knee.z>joint('thigh1').z,'leading leg remains tucked under torso');
+  assert(trailingKnee.y<2&&trailingAnkle.y<1.5&&trailingAnkle.x<0&&trailingAnkle.z<0,'trailing leg folds up with leading leg');
+  const plant=m.apply(3.21/6).contacts.find(c=>c.id==='foot1').worldPoint;
+  assert(plant[0]>.15&&plant[2]>.45,'right landing is not clear of the torso');
+  for(const t of [3.5,3.85,4.35,5.1,6]){const r=m.apply(t/6);assert(V().fromArray(r.contacts.find(c=>c.id==='foot1').worldPoint).distanceTo(V().fromArray(plant))<1e-9,'wide plant slides during transfer');}
+ }finally{m.dispose();w.dispose();}
+});
+
 test('constructor, cancellation and disposal preserve exact entry transforms and geometry including a tilted actor',()=>{
- const w=load();w.pose('carry');w.root.position.set(7,2,-4);w.root.rotation.set(.2,.6,-.1);const s=snapshot(w),children=w.root.children.length;
- const m=createCliffClimb(w,profile);try{restored(w,s);m.apply(.49);m.restore();restored(w,s);m.apply(.49);m.dispose();m.dispose();restored(w,s);assert.equal(w.root.children.length,children);assert.throws(()=>m.apply(0),/disposed/);}finally{m.dispose();w.dispose();}
+ const w=load();w.parts[0].geometry.setAttribute('paintPart',new T.Float32BufferAttribute(new Float32Array(w.parts[0].geometry.attributes.position.count).fill(1),1));const material=w.parts[0].material,hook=material.onBeforeCompile,key=material.customProgramCacheKey;w.pose('carry');w.root.position.set(7,2,-4);w.root.rotation.set(.2,.6,-.1);const s=snapshot(w),children=w.root.children.length;
+ const m=createCliffClimb(w,profile);try{restored(w,s);m.apply(.49);assert.notEqual(material.onBeforeCompile,hook);m.restore();restored(w,s);assert.equal(material.onBeforeCompile,hook);assert.equal(material.customProgramCacheKey,key);m.apply(.49);m.dispose();m.dispose();restored(w,s);assert.equal(material.onBeforeCompile,hook);assert.equal(material.customProgramCacheKey,key);assert.equal(w.root.children.length,children);assert.throws(()=>m.apply(0),/disposed/);}finally{m.dispose();w.dispose();}
 });
 
 test('unsupported rigs and constructor failures leave no temporary geometry or helpers',()=>{
