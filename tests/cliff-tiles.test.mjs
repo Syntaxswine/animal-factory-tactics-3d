@@ -3,6 +3,16 @@ import assert from 'node:assert/strict';
 import * as T from '../dist/tactics/vendor/three.module.js';
 import {shoreField} from '../dist/tactics/shore-tiles.js';
 import {cliffTileGeometry,cliffLandscapeTiles,cliffCrestHeight} from '../dist/tactics/cliff-tiles.js';
+import {addCliffRimAttribute} from '../dist/tactics/cliff-rim.js';
+
+test('soil rim marks exposed contours and never outlines a welded internal tile join',()=>{
+ const g=cliffTileGeometry('ledge',[{x:0,z:0,mask:15,variant:0},{x:1,z:0,mask:15,variant:1}]),p=g.attributes.position,mask=g.attributes.cliffRim;let seamSamples=0,outerSamples=0;
+ for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i);assert(Number.isFinite(mask.getX(i))&&mask.getX(i)>=0);if(y!==2)continue;
+  if(x===1&&z>=.25&&z<=.75){assert(mask.getX(i)>=.25);seamSamples++;}
+  if(x===0||x===2||z===0||z===1){assert(mask.getX(i)<1e-6);outerSamples++;}}
+ assert(seamSamples&&outerSamples);g.dispose();
+ const sample=cliffTileGeometry('ledge',cliffLandscapeTiles('plateau')),positions=sample.attributes.position.array.slice(),normals=sample.attributes.normal.array.slice();addCliffRimAttribute(sample,sample.userData.rim);assert.deepEqual(sample.attributes.position.array,positions);assert.deepEqual(sample.attributes.normal.array,normals);sample.dispose();
+});
 
 function audit(g){
  const p=g.attributes.position,edges=new Map();let volume=0;

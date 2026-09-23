@@ -10,9 +10,9 @@ export const GRASS_GLSL=`
  vec3 meadowRepeat(vec2 uv,vec2 offset){vec2 p=uv*2.+offset,w=smoothstep(vec2(.65),vec2(1.),uv);return mix(mix(meadowSource(p),meadowSource(p-vec2(2,0)),w.x),mix(meadowSource(p-vec2(0,2)),meadowSource(p-vec2(2,2)),w.x),w.y);}
  vec3 meadowPaint(vec2 world,float variantOverride){vec2 cell=floor(world/2.),uv=fract(world/2.);float variant=variantOverride<0.?mod(cell.x*7.+cell.y*11.,4.):variantOverride;float fade=pow(sin(uv.x*3.14159265)*sin(uv.y*3.14159265),2.);return mix(meadowRepeat(uv,vec2(0)),meadowRepeat(uv,vec2(2.37,3.71)*variant),fade*.85);}
 `;
-export function createPaintedGrass({unlit=false,variant=-1}={}){
+export function createPaintedGrass({unlit=false,variant=-1,rim=false}={}){
  if(!Number.isInteger(variant)||variant< -1||variant>=PAINTED_GRASS.variants)throw Error('Invalid meadow variant');
  const material=unlit?new T.MeshBasicMaterial({toneMapped:false}):new T.MeshStandardMaterial({roughness:1,flatShading:true});
- material.onBeforeCompile=s=>{s.uniforms.meadowVariant={value:variant};s.vertexShader='varying vec2 vMeadow;\n'+s.vertexShader;s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMeadow=(modelMatrix*vec4(position,1.)).xz;');s.fragmentShader='varying vec2 vMeadow;uniform float meadowVariant;\n'+GRASS_GLSL+s.fragmentShader;s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb=meadowPaint(vMeadow,meadowVariant);');};
- material.customProgramCacheKey=()=>`cliff-meadow-v1-${unlit}`;return material;
+ material.onBeforeCompile=s=>{s.uniforms.meadowVariant={value:variant};s.vertexShader='varying vec2 vMeadow;\n'+(rim?'attribute float cliffRim;varying float vMeadowRim;\n':'')+s.vertexShader;s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMeadow=(modelMatrix*vec4(position,1.)).xz;'+(rim?'vMeadowRim=cliffRim;':''));s.fragmentShader='varying vec2 vMeadow;uniform float meadowVariant;\n'+(rim?'varying float vMeadowRim;\n':'')+GRASS_GLSL+s.fragmentShader;s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb=meadowPaint(vMeadow,meadowVariant);'+(rim?'\nfloat wear=gn(vec3(vMeadow*4.,2.));float edge=1.-smoothstep(.035,.14+wear*.04,vMeadowRim);vec3 soil=vec3(.105,.069,.034)*(.85+wear*.3);diffuseColor.rgb=mix(diffuseColor.rgb,soil,edge*.93);':''));};
+ material.customProgramCacheKey=()=>`cliff-meadow-v2-${unlit}-${rim}`;return material;
 }

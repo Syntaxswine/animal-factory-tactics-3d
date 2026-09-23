@@ -1,6 +1,7 @@
 import * as T from './vendor/three.module.js';
 import {DIMENSIONS} from './hybrid-world.js';
 import {createPaintedGrass} from './painted-grass.js';
+import {addCliffRimAttribute} from './cliff-rim.js';
 
 // Presentation kit: dimensions are authoritative; map activation is a separate adapter.
 export const CLIFF_HEIGHT=DIMENSIONS.wall;
@@ -71,12 +72,12 @@ export function cliffGeometry(set='ledge',shape='straight',seed=1){
  const g=new T.BufferGeometry(),ordered=[],tints=[];
  for(const material of [0,1]){const start=ordered.length/3;for(const [offset,count,kind]of groups)if(kind===material){ordered.push(...positions.slice(offset*3,(offset+count)*3));tints.push(...colors.slice(offset*3,(offset+count)*3));}if(ordered.length/3>start)g.addGroup(start,ordered.length/3-start,material);}
  g.setAttribute('position',new T.Float32BufferAttribute(ordered,3));g.setAttribute('color',new T.Float32BufferAttribute(tints,3));
- g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();g.userData.layout=layout;return g;
+ g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();g.userData.layout=layout;addCliffRimAttribute(g,boundary.map(([a,b])=>({a:top(a),b:top(b)})));return g;
 }
 
 export function cliffMaterials(){
  return [false,true].map(turf=>{
-  if(turf)return createPaintedGrass();
+  if(turf)return createPaintedGrass({rim:true});
   const m=new T.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
   m.onBeforeCompile=s=>{
    s.vertexShader='varying vec3 vCliff;\n'+s.vertexShader;

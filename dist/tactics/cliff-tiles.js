@@ -1,6 +1,7 @@
 import * as T from './vendor/three.module.js';
 import {shoreField,shoreMask,SHORE_VARIANTS} from './shore-tiles.js';
 import {CLIFF_HEIGHT,CLIFF_SETS,cliffMaterials} from './cliff-models.js';
+import {addCliffRimAttribute} from './cliff-rim.js';
 
 // Identical corner bits, scalar field and A/B/C variants to the river shoreline kit.
 export const CLIFF_TILE_VARIANTS=SHORE_VARIANTS;
@@ -58,7 +59,7 @@ export function cliffTileGeometry(set,tiles){
   const recess=tileEdge?0:Math.sin(Math.PI*f)*(.025+.035*hash(p.x+i,p.z));return [p.x+n[0]/length*recess,p.y*f,p.z+n[1]/length*recess];}
  for(const [a,b]of boundary.values())for(let i=0;i<5;i++){const aa=ring(a,i),bb=ring(b,i),cc=ring(b,i+1),dd=ring(a,i+1);tri(aa,bb,cc);tri(aa,cc,dd);}
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([...positions[0],...positions[1]],3));g.setAttribute('color',new T.Float32BufferAttribute([...colors[0],...colors[1]],3));if(positions[0].length)g.addGroup(0,positions[0].length/3,0);if(positions[1].length)g.addGroup(positions[0].length/3,positions[1].length/3,1);g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();
- g.userData={set,tiles:tiles.map(t=>({...t})),capTriangles:caps.length,boundarySegments:boundary.size,height:CLIFF_HEIGHT,climbable:set==='ledge',rim:[...boundary.values()].map(([a,b])=>({a:p3(a),b:p3(b)}))};return g;
+ g.userData={set,tiles:tiles.map(t=>({...t})),capTriangles:caps.length,boundarySegments:boundary.size,height:CLIFF_HEIGHT,climbable:set==='ledge',rim:[...boundary.values()].map(([a,b])=>({a:p3(a),b:p3(b)}))};addCliffRimAttribute(g,g.userData.rim);return g;
 }
 export function createCliffTiles(set,tiles){
  const geometry=cliffTileGeometry(set,tiles),materials=cliffMaterials(),root=new T.Group(),mesh=new T.Mesh(geometry,materials);mesh.castShadow=mesh.receiveShadow=true;root.add(mesh);let disposed=false;

@@ -40,6 +40,12 @@ Saved the approved cliff-cap colour recipe as **Cliff meadow grass** (`grass-cli
 
 Independent hostile review: **9/10**. Every ordered PNG variant pairing has **zero RGB border difference**. Eight focused tests pass, including actual transformed rock-bottom checks on both families across three layouts and unchanged terrain geometry. Ninety viewer configurations passed with zero errors; independent twelve-cycle rebuild checks found no resource growth. The 3D build includes the PNGs, atlas, manifest, material and gallery. Matching grass remains readable through vertical rock faces, shadows and edge stones. Rocks do not create gameplay collision, and safe climb-route reservations and editor integration remain separate.
 
+## Far-rim readability correction
+
+Matching meadow initially obscured the far ledge where its vertical face was hidden. `cliff-rim.js` now records distance to the actual exposed boundary after tile welding. The grass cap material uses that attribute for a narrow, irregular exposed-soil rim, fading into unchanged grass over roughly 14–18cm. Ground grass and the saved tile assets are unchanged. The same treatment covers the original standalone pieces. It adds no raised curb, vertices, collision or navigation rule; existing stones and climb sockets are unchanged.
+
+Independent hostile review: **9/10**, including default, reverse low-angle and native-size views. Gorge outlines follow the exposed contour without internal grid lines. Nine focused tests pass, including explicit interior-seam exclusion and unchanged positions/normals; the 3D build passes. A small nonblocking limitation remains on coarse standalone caps: interpolated distances make slightly wider triangular soil patches at some corners. This is an art readability approval only.
+
 ## Original piece review and verification
 
 Independent hostile review: **9/10**, scoped to this art/geometry handoff. The reviewer checked all three shapes at native 58px/unit and close low-angle views, confirmed the distinct soil cap and broken crest, the usable ledge cells, the empty corner notch and the inset lip. Thirty independent rebuild/grey/wire/seed cycles had no browser errors and stable GPU resource counts. Matching joins are approved for straight end profiles; editor/gameplay activation remains separate.
