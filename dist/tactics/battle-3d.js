@@ -1,3 +1,5 @@
+import {nearbyLoot} from './battle-inventory.js';
+import {nearbyInteractions,performInteraction} from './field-actions.js';
 import {createCharacterScreen} from './character-screen.js';
 import {AIM_LEVELS,shotAim,supportsAim} from './aim-levels.js';
 import {climbTower,towerClimbPreview} from './tower-actions.js';
@@ -5,7 +7,7 @@ import {TOWER_HEIGHT} from './tower-geometry.js';
 import {illuminationAt} from './awareness.js';
 import {FrameClock,formatClock,timeOfDay,turnBased} from './game-clock.js';
 import {startEncounterClock,tickEncounterClock,settleEncounterRounds} from './encounter-clock.js';
-import {createGame,move,stepMovement,previewAttack,attack,reload,endTurn,stepEnemy,stepInvestigation,canControl,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts,MOVEMENT_MODES,movementModeOf,movementCost,effectiveStealth} from './core/engine.js';
+import {createGame,move,stepMovement,previewAttack,attack,equip,reload,endTurn,stepEnemy,stepInvestigation,canControl,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts,MOVEMENT_MODES,movementModeOf,movementCost,effectiveStealth} from './core/engine.js';
 import {loadBattleMap} from './battle-map.js';
 import {BattleRenderer} from './battle-renderer.js';
 import {FLOOR_PIXELS} from './hybrid-renderer.js';
@@ -24,34 +26,36 @@ if(new URLSearchParams(location.search).has('editorPlaytest')){
 let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false;
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
 const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastClockCombat;
-const characterScreen=createCharacterScreen({getState:()=>state,onOpen:()=>{frameClock.reset();sync();},onClose:()=>{frameClock.reset();sync();}});
+const characterScreen=createCharacterScreen({getState:()=>state,onInventoryChange:()=>{renderer.captureCombat(state);lastUI='';sync();},getEquipmentState:id=>renderer?.equipmentState(id)||'carried',canEquip:()=>!renderer.busy,onEquip:(id,weapon)=>{if(renderer.busy)return false;const ok=equip(state,state.units.find(u=>u.id===id),weapon);if(ok){renderer.captureCombat(state);lastUI='';}return ok;},onOpen:()=>{frameClock.reset();sync();},onClose:()=>{frameClock.reset();sync();}});
 const paused=()=>userPaused||document.hidden||characterScreen.open;
 function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
 const view={x:0,y:0,zoom:1.15};
 const climbButton=document.createElement('button');climbButton.id='climb-tower';climbButton.textContent='Climb tower';$('reload').parentNode.insertBefore(climbButton,$('reload'));
+const fieldPanel=document.createElement('section');fieldPanel.id='field-actions';$('reload').parentNode.after(fieldPanel);
 const selected=()=>state.units.find(u=>u.id===state.selected);
 const target=()=>state.units.find(u=>u.id===targetId&&u.hp>0&&state.detected.has(u.id));
-const mercStatus=u=>u.away?'Away':u.casualty==='captured'?'Captured':u.casualty==='quit'?'Left squad':u.hp>0?`${stanceOf(u)} · ${movementModeOf(u)} · ${u.hp} HP · ${u.ap} AP`:u.casualty==='bleeding'?`Bleeding · ${u.bleedTurns} turns`:u.casualty==='stable'?'Stabilized':'Dead';
+const mercStatus=u=>u.away?'Away':u.casualty==='captured'?'Captured':u.casualty==='quit'?'Left squad':u.hp>0?`${stanceOf(u)} · ${movementModeOf(u)} · ${u.hp} HP · ${u.ap} AP · ${Math.floor(u.stamina)} stamina`:u.casualty==='bleeding'?`Bleeding · ${u.bleedTurns} turns`:u.casualty==='stable'?'Stabilized':'Dead';
 const message=text=>{$('message').textContent=text;};
 const project=u=>({x:view.x+(u.x-u.y)*28*view.zoom,y:view.y+(u.x+u.y)*14*view.zoom-((u.z||0)-level+((u.towerPost?TOWER_HEIGHT:u.towerElevation||0)/2.12))*FLOOR_PIXELS*view.zoom});
 function focus(x,y){overviewMode=false;view.zoom=1.15;view.x=width/2-(x-y)*28*view.zoom;view.y=height*.55-(x+y)*14*view.zoom;$('hint').textContent='Click ground to move · Shift-drag to select mercs · Drag to pan · Scroll to zoom';}
 function center(){const u=selected();level=u.z||0;$('floor').value=level;focus(u.x,u.y);}
 function overview(){const w=definition.width,h=definition.height;overviewMode=true;view.zoom=Math.min((width-50)/((w+h)*28),(height-60)/((w+h)*14));view.x=width/2-(w-h)*14*view.zoom;view.y=30;$('hint').textContent='Click the map to inspect an area · Center returns to your squad';}
 function resize(){const box=canvas.getBoundingClientRect();width=box.width;height=box.height;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(state){if(overviewMode)overview();else center();}}
-function restart(){renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,rosterSeed:1947});startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Scenery revealed. People still need line of sight.':'Explore to reveal the map.');sync();}
+function restart(){renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Scenery revealed. People still need line of sight.':'Explore to reveal the map.');sync();}
 function sync(){
  settleEncounterRounds(state);const combat=turnBased(state);if(combat!==lastClockCombat){frameClock.reset();lastClockCombat=combat;}syncClock();
  selectedIds=pruneSelection(state,selectedIds);
  if(selectedIds.size&&!selectedIds.has(state.selected))state.selected=[...selectedIds][0];
  const u=selected(),t=target(),preview=t?previewAttack(state,u,t,false,'torso',null,$('aim-level').value):null;
- const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,userPaused]);
+ const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,Math.floor(v.stamina),v.medkits,v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,userPaused]);
  if(signature===lastUI)return;lastUI=signature;
+ fieldPanel.replaceChildren();for(const entry of nearbyInteractions(state,u)){const b=document.createElement('button'),p=entry.preview;b.textContent=entry.label+' · '+(p.cost?p.cost+' AP':'1 min')+(p.chance!==undefined?' · '+p.chance+'%':'')+(p.amount>0?' · +'+Math.floor(p.amount):'');b.disabled=paused()||renderer.busy||!p.ok;b.title=p.reason||('Stamina cost: '+p.stamina);b.onclick=()=>action(()=>performInteraction(state,selected(),entry.kind,entry.target));fieldPanel.append(b);}
  $('phase').textContent=`${state.phase==='explore'?'Exploration':state.phase==='player'?'Your turn':state.phase==='enemy'?'Guard turn':state.phase==='won'?'Encounter cleared':'Encounter ended'} · Round ${state.round}`;
  $('squad').replaceChildren(...state.units.filter(v=>v.team==='squad').map(v=>{const button=document.createElement('button');button.textContent=`${v.id===state.selected?"★ ":""}${v.name} · ${mercStatus(v)}`;button.setAttribute('aria-pressed',String(selectedIds.has(v.id)));button.disabled=!selectable(v);button.onclick=e=>{selectMerc(v.id,e.shiftKey);center();sync();};return button;}));
  $('light-exposure').textContent='Light on '+u.name+': '+Math.round(illuminationAt(state,u)*100)+'% · Perception '+(u.perception??50);
  $('selection').textContent=`${selectedIds.size} selected · Primary: ${u.name} · ${WEAPONS[u.weapon].name} · ${u.ammo[u.weapon]||0} loaded`;
  $('target').textContent=t?`${t.name} · ${preview.ok?`${preview.chance??preview.odds??'—'}% · ${preview.cost} AP`:preview.reason}`:'Select a visible opponent to inspect a shot.';
- for(const [key,aim] of Object.entries(AIM_LEVELS))$('aim-level').querySelector('[value='+key+']').textContent=aim.label+' � '+shotAim(WEAPONS[u.weapon],key).cost+' AP';
+ for(const [key,aim] of Object.entries(AIM_LEVELS))$('aim-level').querySelector('[value='+key+']').textContent=aim.label+' · '+shotAim(WEAPONS[u.weapon],key).cost+' AP';
  $('aim-level').disabled=!supportsAim(WEAPONS[u.weapon]);
  $('fire').disabled=paused()||renderer.busy||!preview?.ok||!canControl(state,u)||!!state.queue.length;
  const climb=towerClimbPreview(state,u);climbButton.textContent=(climb.descending?'Descend tower':'Climb tower')+(combatCosts(state)?' · 6 AP':' · 30 sec');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||'Use the stairs or ladder at the gold entrance ring.';
@@ -75,10 +79,11 @@ function selectMerc(id,toggle=false){
 function click(x,y,shift=false){
  if(overviewMode){const px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom);focus((px+py)/2,(py-px)/2);return;}
  const hit=renderer.pick(x,y,width,height);
- if(hit!==null){const u=state.units.find(u=>u.id===hit);if(selectable(u)){selectMerc(u.id,shift);}else if(state.detected.has(u.id)&&u.hp>0)targetId=u.id;sync();return;}
+ if(hit!==null){const u=state.units.find(u=>u.id===hit);if(selectable(u)){selectMerc(u.id,shift);}else if(u.hp<=0&&nearbyLoot(state,selected()).some(p=>p.body===u.id)){characterScreen.show(state.selected);}else if(state.detected.has(u.id)&&u.hp>0)targetId=u.id;sync();return;}
+ const pile=renderer.pickLoot(x,y,width,height);if(pile){if(nearbyLoot(state,selected()).includes(pile))characterScreen.show(state.selected);else message('Move beside the supplies to pick them up.');return;}
  if(paused()||renderer.busy||shift)return;
  const px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom),tx=Math.round((px+py)/2),ty=Math.round((py-px)/2);
- if(selectedIds.size>1?moveGroup(state,[...selectedIds],selected(),tx,ty,level):move(state,selected(),tx,ty,level)){targetId=null;message('');}else message('Cannot move there now. Check the route, floor and available AP.');sync();
+ if(selectedIds.size>1?moveGroup(state,[...selectedIds],selected(),tx,ty,level):move(state,selected(),tx,ty,level)){targetId=null;message('');}else message('Cannot move there now. Check the route, floor, AP and stamina. Walk or catch your breath if exhausted.');sync();
 }
 canvas.addEventListener('pointerdown',e=>{if(e.button!==0||drag)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,select:e.shiftKey};canvas.setPointerCapture(e.pointerId);});
 canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)drag.moved=true;if(drag.moved&&!drag.select){view.x+=e.clientX-drag.lastX;view.y+=e.clientY-drag.lastY;}drag.lastX=e.clientX;drag.lastY=e.clientY;});

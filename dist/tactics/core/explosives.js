@@ -1,4 +1,5 @@
 import {unitBaseHeight} from '../tower-geometry.js';
+import {weaponAccuracy,damageAfterResistance} from '../character-stats.js';
 import {traceProjectile,muzzleHeight} from './projectiles.js';
 import {levelOf,inBounds,terrainAt,edgePoints,tileKey,W,H} from './maps.js';
 import {propCells} from './environment.js';
@@ -13,8 +14,8 @@ export function explosivePreview(s,a,target,w){
  else if(range>maxRange||range+Math.max(0,-height)*3>maxRange)reason='Out of range';
  else if(a.ammo[a.weapon]<1)reason='Reload required';
  else if(!['explore','won'].includes(s.phase)&&a.ap<w.cost)reason='Not enough AP';
- const beyond=range>effectiveRange,chance=beyond?10:Math.max(20,Math.min(95,a.accuracy-Math.max(0,range-3)/Math.max(1,effectiveRange-3)*25));
- return {ok:!reason,reason,cost:w.cost,rounds:1,chance:Math.round(chance),damage:w.damage,zone:'torso',range:effectiveRange,maxRange,beyond,blastRadius:w.blast};
+ const beyond=range>effectiveRange,chance=beyond?10:Math.max(20,Math.min(95,weaponAccuracy(a)-Math.max(0,range-3)/Math.max(1,effectiveRange-3)*25));
+ return {ok:!reason,reason,cost:w.cost,rounds:1,chance:Math.round(chance),damage:damageAfterResistance(target,w.damage),rawDamage:w.damage,zone:'torso',range:effectiveRange,maxRange,beyond,blastRadius:w.blast};
 }
 
 // Parabolas are swept in short 3D segments through the same exact wall/floor/body

@@ -14,7 +14,7 @@ export function setTerrain(m,x,y,z,value){if(!inBounds(x,y,z))return false;if(!z
 export const passable=(m,p)=>floorTerrain(terrainAt(m,p.x,p.y,levelOf(p)))&&!propBlocks(m,p.x,p.y,levelOf(p));
 export function edgeBetween(a,b){if(levelOf(a)!==levelOf(b)||Math.abs(a.x-b.x)+Math.abs(a.y-b.y)!==1)return null;return a.x!==b.x?edgeKey('e',Math.min(a.x,b.x),a.y,levelOf(a)):edgeKey('s',a.x,Math.min(a.y,b.y),levelOf(a));}
 export function blockedEdge(m,a,b){const k=edgeBetween(a,b);return !k||!!EDGES[m.edges?.[k]]?.solid;}
-export function openDoorBetween(m,a,b){const k=edgeBetween(a,b),next=EDGES[m.edges?.[k]]?.opensTo;if(!next)return false;m.edges[k]=next;return true;}
+export function openDoorBetween(m,a,b){const k=edgeBetween(a,b),next=EDGES[m.edges?.[k]]?.opensTo;if(!next||m.edgeLocks?.[k])return false;m.edges[k]=next;return true;}
 export function sightEdge(m,a,b,{height=1.3,offset=.5}={}){const k=edgeBetween(a,b);if(!k)return true;const rule=EDGES[m.edges?.[k]];if(rule?.window)return !(height>=1&&height<=2.4&&offset>=.15&&offset<=.85);return !!rule?.opaque;}
 export function edgeCells(k){const [axis,xs,ys,zs]=k.split(':'),x=Number(xs),y=Number(ys),z=Number(zs||0);return [{x,y,z},{x:x+(axis==='e'?1:0),y:y+(axis==='s'?1:0),z}];}
 export function edgePoints(k){const [axis,xs,ys,zs]=k.split(':'),x=Number(xs),y=Number(ys),z=Number(zs||0);return axis==='e'?[{x:x+.5,y:y-.5,z},{x:x+.5,y:y+.5,z}]:[{x:x-.5,y:y+.5,z},{x:x+.5,y:y+.5,z}];}
@@ -23,7 +23,7 @@ export const stairKey=(x,y,z)=>`${x},${y},${z}`;
 export function stairSet(m){return new Map((m.stairs||[]).map(p=>[stairKey(p.x,p.y,p.z),p.kind==='ladder'?3:2]));}
 export function neighbors(m,p,stairs=stairSet(m),includeDiagonals=true){
  const z=levelOf(p),out=[];
- for(const b of [{x:p.x+1,y:p.y,z},{x:p.x-1,y:p.y,z},{x:p.x,y:p.y+1,z},{x:p.x,y:p.y-1,z}])if(passable(m,b)&&(!blockedEdge(m,p,b)||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo))out.push({...b,cost:1});
+ for(const b of [{x:p.x+1,y:p.y,z},{x:p.x-1,y:p.y,z},{x:p.x,y:p.y+1,z},{x:p.x,y:p.y-1,z}])if(passable(m,b)&&(!blockedEdge(m,p,b)||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo&&!m.edgeLocks?.[edgeBetween(p,b)]))out.push({...b,cost:1});
  if(includeDiagonals)for(const dx of [-1,1])for(const dy of [-1,1]){const a={x:p.x+dx,y:p.y,z},b={x:p.x,y:p.y+dy,z},q={x:p.x+dx,y:p.y+dy,z};if(passable(m,a)&&passable(m,b)&&passable(m,q)&&!blockedEdge(m,p,a)&&!blockedEdge(m,p,b)&&!blockedEdge(m,a,q)&&!blockedEdge(m,b,q))out.push({...q,cost:1.5});}
  for(const dz of [-1,1])if(stairs.has(stairKey(p.x,p.y,Math.min(z,z+dz)))&&passable(m,{x:p.x,y:p.y,z:z+dz}))out.push({x:p.x,y:p.y,z:z+dz,cost:stairs.get(stairKey(p.x,p.y,Math.min(z,z+dz)))});for(const link of roofNeighbors(m,p))out.push(link);return out;
 }
@@ -72,6 +72,9 @@ export function validateMap(raw,{connectivity=true}={}){
  if(!Array.isArray(raw.terrain)||raw.terrain.length!==H||raw.terrain.some(r=>!Array.isArray(r)||r.length!==W||r.some(t=>!['yard','floor','crate','void','water','bridge','woodland',...GROUNDS].includes(t))))return [...errors,'Invalid ground terrain.'];
  if(!Array.isArray(raw.upper)||raw.upper.length!==2)return [...errors,'Expected two sparse upper levels.'];
  for(const layer of raw.upper){if(!layer||typeof layer!=='object'||Array.isArray(layer))return [...errors,'Invalid upper floor.'];for(const [k,v]of Object.entries(layer)){const [x,y]=k.split(',').map(Number);if(k!==tileKey(x,y)||!inBounds(x,y)||!['yard','floor','crate','bridge','woodland',...GROUNDS].includes(v))return [...errors,'Invalid upper floor tile.'];}}
+ if(raw.edgeLocks!==undefined&&(!raw.edgeLocks||typeof raw.edgeLocks!=='object'||Array.isArray(raw.edgeLocks)))return [...errors,'Invalid door locks.'];
+ for(const [key,value]of Object.entries(raw.edgeLocks||{}))if(!EDGES[raw.edges?.[key]]?.opensTo||!Number.isInteger(value)||value<1||value>100)return [...errors,'Door locks require closed doors and difficulty 1-100.'];
+ for(const p of raw.props||[])if(p.condition!==undefined&&(!Number.isInteger(p.condition)||p.condition<0||p.condition>100))return [...errors,'Fixture condition must be 0-100.'];
  if(!raw.edges||typeof raw.edges!=='object'||Array.isArray(raw.edges))return [...errors,'Missing edge barriers.'];
  for(const [k,v]of Object.entries(raw.edges)){const p=/^(e|s):(-?\d+):(-?\d+)(?::([12]))?$/.exec(k);if(!p)return [...errors,'Invalid edge key.'];const x=Number(p[2]),y=Number(p[3]),z=Number(p[4]||0);if(!Object.hasOwn(EDGES,v)||k!==edgeKey(p[1],x,y,z)||(p[1]==='e'?(x< -1||x>=W||y<0||y>=H):(x<0||x>=W||y< -1||y>=H)))return [...errors,'Invalid edge location or type.'];}
  if(!Array.isArray(raw.starts)||raw.starts.length!==4||raw.starts.some(p=>!point(p)))return [...errors,'Place exactly four valid squad starts.'];
@@ -89,7 +92,7 @@ export function validateMap(raw,{connectivity=true}={}){
  const stairKeys=new Set();for(const p of raw.stairs){const k=stairKey(p.x,p.y,p.z);if(stairKeys.has(k))errors.push('Duplicate stair connection.');stairKeys.add(k);if(!passable(raw,p)||!passable(raw,{...p,z:p.z+1}))errors.push(`Stairs at ${k} need walkable floors at both ends.`);}
  const positions=new Set();for(const p of [...raw.starts,...raw.guards]){const k=tileKey(p.x,p.y,levelOf(p));if(positions.has(k))errors.push(`Overlapping unit starts at ${k}.`);positions.add(k);if(p.towerPost?!towerForUnit(raw,p):!passable(raw,p))errors.push(`Unit start needs a walkable floor or valid tower post at ${k}.`);}
  if(!passable(raw,raw.exits[0]))errors.push('Travel marker needs a walkable floor.');if(errors.length||!connectivity)return [...new Set(errors)];
- const targets=[...raw.starts,...raw.guards,...raw.exits].map(p=>towerForUnit(raw,p)?towerEntry(towerForUnit(raw,p)):p),missing=reachedTargets(raw,targets);for(const p of targets)if(missing.has(index(p)))errors.push(`Unreachable start or marker at ${p.x},${p.y}, level ${levelOf(p)+1}. Add doors or stairs.`);return errors;
+ const targets=[...raw.starts,...raw.guards,...raw.exits].map(p=>towerForUnit(raw,p)?towerEntry(towerForUnit(raw,p)):p),missing=reachedTargets({...raw,edgeLocks:{}},targets);for(const p of targets)if(missing.has(index(p)))errors.push(`Unreachable start or marker at ${p.x},${p.y}, level ${levelOf(p)+1}. Add doors or stairs.`);return errors;
 }
 export function migrateMap(raw){
  if(raw?.version!==1)return raw;

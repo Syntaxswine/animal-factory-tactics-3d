@@ -1,5 +1,7 @@
 # Ladder climbing presentation handoff
 
+Integration update: the original rifle-only equipment contract below has been superseded by the shared carried/stowed state in `EQUIPMENT-STOW.md`. The authored body route, fixture and rig restrictions remain applicable.
+
 Presentation worktree: `work/ladder-animation`, based on `b56ba05`. This change authors motion and a comparison viewer. Gameplay pathfinding, ladder actions, movement cost, occupancy, visibility and outcome playback belong to the wiring task.
 
 ## Review viewer

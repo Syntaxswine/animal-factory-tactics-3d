@@ -1,0 +1,15 @@
+import {createRequire} from 'node:module';import fs from 'node:fs';import assert from 'node:assert/strict';
+const {chromium}=createRequire(import.meta.url)(process.env.PLAYWRIGHT_PATH||'playwright'),browser=await chromium.launch({channel:'msedge',headless:true});
+try{const page=await browser.newPage({viewport:{width:1500,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:4323/tactics/battle-3d.html');await page.waitForFunction(()=>window.battle3d?.renderer.models.has(0),{},{timeout:120000});await page.click('#pause');
+ await page.evaluate(async()=>{const {blankMap}=await import('./core/maps.js'),{createGame,equip}=await import('./core/engine.js'),{towerEntry}=await import('./tower-geometry.js'),{startEncounterClock}=await import('./encounter-clock.js');const m=blankMap();m.props=[{kind:'iron-searchlight-ladder-tower',x:10,y:10,z:0}];m.starts[0]=towerEntry(m.props[0]);const s=createGame(42,m,false,'easy',{awareness:true});s.units[0].pack.push({type:'weapon',kind:'rifle',rounds:5});equip(s,s.units[0],'rifle');startEncounterClock(s);Object.assign(battle3d.state,s);});await page.click('#center');await page.click('#pause');await page.click('#climb-tower');await page.waitForFunction(()=>battle3d.renderer.traversal.active?.motion,{},{timeout:120000});await page.click('#pause');
+
+ const ids=['hands','knife','pistol','rifle','assault','smg','shotgun','sniper','hmg','launcher','rpg','grenade','flamethrower'];fs.mkdirSync('artifacts/battle-3d/equipment-stow',{recursive:true});
+ for(const id of ids){
+  await page.evaluate(async id=>{const r=battle3d.renderer,s=battle3d.state,u=s.units[0];r.traversal.clear();u.weapon=id;u.slots[0]=id;if(!u.pack.some(p=>p.type==='weapon'&&p.kind===id))u.pack.push({type:'weapon',kind:id,rounds:u.ammo[id]});s.towerTraversal={...s.towerTraversal,id:s.towerTraversal.id+1};r.captureCombat(s);r.actor(u);if(!r.traversal.active)throw Error(r.diagnostics.join(';'));r.traversal.active.start=r.presentationNow-3000;r.actor(u);battle3d.view.zoom=2.2;const point=r.traversal.display(u),p=battle3d.project(point),rect=document.querySelector('#battle').getBoundingClientRect();battle3d.view.x+=rect.width*.5-p.x;battle3d.view.y+=rect.height*.65-p.y;},id);
+  await page.locator('#aim-level').dispatchEvent('change');await page.waitForTimeout(100);await page.screenshot({path:'artifacts/battle-3d/equipment-stow/'+id+'.png'});
+  assert.deepEqual(await page.evaluate(()=>battle3d.renderer.diagnostics),[]);if(id==='flamethrower'){await page.click('#character');assert.match(await page.locator('.dossier-equipment').innerText(),/Stowed/);await page.click('#character-close');}
+  await page.evaluate(()=>{const r=battle3d.renderer;r.traversal.finish();r.actor(battle3d.state.units[0]);});
+  assert.equal(await page.evaluate(()=>battle3d.renderer.models.get(0).equipment.root.visible),true);
+ }
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({loadouts:ids.length,restored:true,errors}));
+}finally{await browser.close();}
