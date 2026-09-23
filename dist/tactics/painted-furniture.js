@@ -99,7 +99,7 @@ export function createFurnitureLibrary(atlas,cargo){
   if(disposed)throw Error('Furniture library disposed');
   const form=FURNITURE_FORMS.find(f=>f.id===id);if(!form||!Object.hasOwn(FURNITURE_FINISHES,skin))throw Error('Invalid furniture form/finish');
   const source=form.source||id,ladder=!!form.source;const root=new THREE.Group();root.name=id;const timber=wood(skin),warm=wood(skin,1);
-  if(['iron-searchlight-stair-tower','wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower','wood-large-wrap-tower','iron-large-wrap-tower'].includes(source)){buildStairGuardTower(root,{box,wood,iron,material,skin,cargo,metal:id.startsWith('iron-'),wrap:source.includes('-wrap-'),large:source.includes('-large-'),ladder});
+  if(['iron-searchlight-stair-tower','wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower','wood-large-wrap-tower','iron-large-wrap-tower'].includes(source)){buildStairGuardTower(root,{box,wood,iron,material,skin,cargo,metal:id.startsWith('iron-'),wrap:source.includes('-wrap-'),large:source.includes('-large-'),ladder,wideExit:id==='iron-searchlight-ladder-tower'});
    if(source==='iron-searchlight-stair-tower'){
     const H=root.userData.stairTower.deckHeight,x=root.userData.stairTower.coreOffsetX;
     const plate=box(root,iron,[x,H+.01,1.53],[.62,.88,.065]);plate.name='searchlight-wall-plate';

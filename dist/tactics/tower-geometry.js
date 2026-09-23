@@ -1,3 +1,10 @@
+export const IRON_LADDER_EXIT={width:.94,landingWidth:1.30,railSpan:1.24,doorHalf:.61,doorHeight:1.90};
+export function ironTowerDoor(wide=false,H=TOWER_HEIGHT){const half=wide?IRON_LADDER_EXIT.doorHalf:.47,height=wide?IRON_LADDER_EXIT.doorHeight:1.72,parts=[];
+ const add=(name,p,size)=>parts.push({name,p,size});
+ for(const [z,length]of wide?[[(-1.5-.8-half)/2,1.5-.8-half],[(1.5-.8+half)/2,1.5+.8-half]]:[[-1.375,.25],[.575,1.85]])add('door-wall',[1.45,H+.99,z],[.10,1.98,length]);
+ add('door-lintel',[1.45,H+(wide?2.00:1.88),-.8],[.16,wide?.20:.24,wide?2*half:.92]);
+ for(const z of [-.8-half,-.8+half])add('door-jamb',[1.45,H+height/2,z],[.16,height,.065]);return parts;
+}
 export const WOODEN_LADDER={z:1.55,width:.76,exitWidth:.94,railTop:7.28};
 // Structural surfaces shared by beam, sight and projectile queries. Windows are gaps.
 export const TOWER_HEIGHT=6.36;
@@ -32,7 +39,7 @@ function shell(kind){if(shells.has(kind))return shells.get(kind);const parts=[],
   box(0,H-.06,0,3,.12,3);
   for(const y of [-1.45,1.45]){box(0,H+.42,y,3,.84,.1);box(0,H+1.91,y,3,.22,.1);for(const x of [-1.43,0,1.43])box(x,H+1.32,y,.12,.96,.14);box(0,H+.86,y,3.04,.07,.18);}
   box(-1.45,H+.42,0,.1,.84,3);box(-1.45,H+1.91,0,.1,.22,3);for(const y of [-1.43,0,1.43])box(-1.45,H+1.32,y,.14,.96,.12);box(-1.45,H+.86,0,.18,.07,3.04);
-  for(const [y,d]of [[-1.375,.25],[.575,1.85]])box(1.45,H+.99,y,.1,1.98,d);box(1.45,H+1.88,-.8,.16,.24,.92);for(const y of [-1.27,-.33])box(1.45,H+.86,y,.16,1.72,.065);
+  for(const part of ironTowerDoor(!!TOWERS[kind].ladder,H))box(...part.p,...part.size);
   for(const side of [-1,1])box(side*.8,H+2.25,0,1.68,.1,3.30,-side*.28);box(0,H+2.49,0,.16,.12,3.35);
  }
  shells.set(kind,parts);return parts;

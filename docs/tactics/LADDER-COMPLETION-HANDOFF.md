@@ -6,8 +6,8 @@ Review branch: `work/ladder-completion`, based on 3D canonical `aef82f5`.
 
 - [x] Approach and landing transitions. Passed independent hostile review at **9/10**, scoped to nine rifle-equipped mammals on the iron tower.
 - [x] Wooden hatch climbing for the nine nonpig mammals. Independent hostile review **9/10**, scoped to the modified wooden fixture and rifle presentation below. Pigs, hen and production integration remain separate holds.
-- [ ] Widened pig exits. Adapt the visible tower and its shared structural geometry, including doorway and landing clearance, before enabling either pig. The existing isolated 0.94-wide flared-rail study is not sufficient.
-- [ ] Hen climbing. Author wing support and foot contacts for the actual hen rig; do not enable the mammal controller or claim rifle support.
+- [x] Widened pig exits. Independent hostile review **9/10** on both fixtures. Adapt the visible tower and its shared structural geometry, including doorway and landing clearance, before enabling either pig. The existing isolated 0.94-wide flared-rail study is not sufficient.
+- [x] Hen climbing. Independent hostile review **9/10** for the separate unarmed avian controller, both fixtures and directions. Wing support, foot contacts and explicit airborne phases use the actual hen rig; no rifle support is claimed.
 
 Each section must score at least 9/10 in independent hostile review before proceeding to the next. Other equipment still needs separate stow and clearance work.
 
@@ -54,3 +54,27 @@ Compared all nine wooden body and rifle trajectories with `fa2d007` at 301 sampl
 
 Ordinary wooden-post standing now matches the approved skunk/dog tail tuck. Production wooden activation still needs route preloading/baking; this reconciliation does not activate it or approve pigs/hen.
 Independent hostile reconciliation review: **9/10**, excluding the separate pig-fixture work.
+
+## Shared widened iron fixture
+
+The iron searchlight ladder tower now has 0.94-wide upper stiles, a 1.30-wide landing, rails at a 1.24 span, and a 1.155-clear doorway with 1.90 height. Visible door parts and tactical door geometry use the same source. Other tower variants, the 6×5 footprint and deck height remain unchanged. Exterior ladder/landing rails retain their previous tactical blocking policy.
+
+The nine previously approved mammals passed an independent **9/10** regression review on this wider fixture. Actual visible surfaces, including temporary cuffs/fingers and Red Hat caps, were checked. Opening hands now stay clear of the stiles before crossing, and the skunk rifle uses an upright placement closer to the back. The sling is regenerated from the actual stock anchor after each handoff, fixing an end segment that previously lagged behind the weapon. Sampled sling endpoint error was below 4.6e-8 m. This review excludes the separate pig and hen gates.
+
+## Pig presentation checkpoint
+
+Both foreman and director passed independent hostile review at **9/10** on the widened iron tower and the modified wooden hatch, in both directions, with rifle stow preserved. The foreman retains his shorter reach sequence; the director takes earlier upper handholds. Their upper body paths clear the belly in front and the back of the hatch in sequence. Temporary belly/waistcoat weighting, curled-tail tucking and finger release restore exactly. Neither character is scaled to fit.
+
+Actual indexed body, glove, cuff, rifle and sling surfaces were checked through complete ascent/descent, including dense upper-entry probes. Painted Original/Red Hat close/native views and timed samples were reviewed. Four pig tests cover fixed anatomy, state/restoration, route endpoints, reverse scrubbing and the previously failing torso/rung/rail points. These are sampled presentation checks above a 5 mm reporting threshold, not a continuous collision guarantee. Production pig activation remains an integration hold.
+
+## Hen presentation implementation
+
+The hen uses a separate unarmed controller and her existing wing/leg rig. Actual feather tips brace against the ladder; articulated toes support the rung steps. The last part is a deliberate wing-assisted hop, with a visible windup/downstroke, continuous rising/falling trajectory, recovery/braking sweep and fixed-foot landing compression. The public diagnostics distinguish airborne frames from planted contacts. The entire clip remains six seconds, with approach/landing outside that clock.
+
+Wing, apron, waist-tie and tail corrections are temporary deformations; source paint coordinates and body dimensions are unchanged. The fan folds into a narrower feather bundle through the opening, retaining angular separation. Existing HenMotion leg rigs are borrowed without duplicate thighs or ownership transfer. Failed construction restores original transforms, parents, attributes and skeletons. The study does not grant flight as a gameplay action or add hen weapon grips.
+
+Focused tests check actual feather/toe contact, all visible surfaces against the fixture, fixed bone lengths, phase-boundary continuity, deterministic scrubbing, exact endpoints, explicit flight state, disposal and failed setup for fresh/borrowed rigs. The full project check passed **814 tests** and tactical asset verification; subsequent hen art adjustments are covered by the focused tests and fresh dense surface scans. Production hen/wooden activation and route preloading remain with integration.
+
+Final independent hostile review: **9/10** for the bounded unarmed six-second hen presentation. Fresh close/native temporal sheets include Original and Red Hat outfits. Independent full-route visible-surface scans passed on iron and wood, ascending and descending, including rotated slot 3 with Red Hat, at a 5 mm reporting threshold. Boundary surface differences stayed below 9 micrometres across samples one microsecond either side. Failed-constructor rollback passed with fresh and borrowed rigs. This approves authored bird traversal, not realistic flight physics, weapon handling or production wiring.
+
+The final hen browser matrix completed **64 configurations with zero errors**: both fixtures, both outfits, both directions, both rotations and all four posts. The 3D Pages build passed. All four presentation checklist sections are now reviewed at 9/10; integration holds and the previously disclosed sampled skunk plume graze remain. This branch does not deploy automatically.

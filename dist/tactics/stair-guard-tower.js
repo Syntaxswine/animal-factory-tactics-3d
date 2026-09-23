@@ -1,6 +1,7 @@
+import {IRON_LADDER_EXIT,ironTowerDoor} from './tower-geometry.js';
 import * as THREE from './vendor/three.module.js';
 import {DIMENSIONS} from './hybrid-world.js';
-export function buildStairGuardTower(root,{box,wood,iron,material,skin,metal,cargo,wrap=false,large=false,ladder=false}){
+export function buildStairGuardTower(root,{box,wood,iron,material,skin,metal,cargo,wrap=false,large=false,ladder=false,wideExit=false}){
  const H=3*DIMENSIONS.floorSpacing,m=metal?material('tower-rust',0xd3b6a8,[.012,.012,.30,.475],cargo):wood(skin),trim=metal?iron:wood(skin,1),shift=wrap?0:-.95;let parent=root;
  // Expand the 3×3 core to 5×5 while preserving one-tile perimeter stair widths.
  const axis=v=>large?(Math.abs(v)<=1.5?v*5/3:v+Math.sign(v)):v;
@@ -20,11 +21,12 @@ export function buildStairGuardTower(root,{box,wood,iron,material,skin,metal,car
   // A clear outside climb ends at a guarded landing aligned with the existing doorway.
   const doorZ=axis(-.8),edge=large?2.5:1.5,outer=edge+.94;
   const place=(name,mat,[x,y,z],size)=>{const pos=wrap?[z,y,-x]:[x,y,z],dims=wrap?[size[2],size[1],size[0]]:size;return rawBox(name,mat,pos,dims);};
-  place('ladder-landing',m,[edge+.45,H-.06,doorZ],[.90,.12,.96]);
+  place('ladder-landing',m,[edge+.45,H-.06,doorZ],[.90,.12,wideExit?IRON_LADDER_EXIT.landingWidth:.96]);
   for(const side of [-1,1]){
-   const z=doorZ+side*.43;
+   const z=doorZ+side*(wideExit?IRON_LADDER_EXIT.railSpan/2:.43);
    place('ladder-landing-rail',trim,[edge+.45,H+.90,z],[.90,.065,.065]);place('ladder-landing-post',trim,[outer-.04,H+.45,z],[.065,.90,.065]);
-   place('ladder-stile',trim,[outer,(H+.93)/2,doorZ+side*.35],[.075,H+.93,.075]);
+   const ys=wideExit?[0,H,H+.35,H+.93]:[0,H+.93],span=y=>side*(wideExit?THREE.MathUtils.lerp(.70,IRON_LADDER_EXIT.width,THREE.MathUtils.clamp((y-H)/.35,0,1)):.70)/2;
+   for(let i=1;i<ys.length;i++){const y0=ys[i-1],y1=ys[i],z0=span(y0),z1=span(y1),o=place('ladder-stile',trim,[outer,(y0+y1)/2,doorZ+(z0+z1)/2],[.075,Math.hypot(y1-y0,z1-z0),.075]),axis=new THREE.Vector3(0,y1-y0,z1-z0);if(wrap)axis.set(z1-z0,y1-y0,0);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),axis.normalize());}
    place('ladder-landing-column',trim,[outer-.10,H/2,z],[.10,H,.10]);
   }
   for(let y=.22;y<H-.05;y+=.28)place('ladder-rung',metal?iron:trim,[outer,y,doorZ],[.08,.06,.70]);
@@ -77,13 +79,11 @@ export function buildStairGuardTower(root,{box,wood,iron,material,skin,metal,car
  b('house-wall',m,[-1.45,H+.42,0],[.10,.84,3]);b('house-lintel',m,[-1.45,H+1.91,0],[.10,.22,3]);
  for(const z of [-1.43,0,1.43])b('window-post',trim,[-1.45,H+1.32,z],[.14,.96,.12]);
  b('window-sill',trim,[-1.45,H+.86,0],[.18,.07,3.04]);
- for(const [z,length]of [[-1.375,.25],[.575,1.85]])b('door-wall',m,[1.45,H+.99,z],[.10,1.98,length]);
- b('door-lintel',trim,[1.45,H+1.88,-.8],[.16,.24,.92]);
- for(const z of [-1.27,-.33])b('door-jamb',trim,[1.45,H+.86,z],[.16,1.72,.065]);
+ for(const part of ironTowerDoor(wideExit,H))b(part.name,part.name==='door-wall'?m:trim,part.p,part.size);
  // Shallow pitched roof; overhang stays separate from the stair doorway.
  for(const side of [-1,1]){if(large)rawBox('roof-panel',metal?m:trim,[side*1.30,H+2.25,0],[2.68,.10,5.30],[0,0,-side*Math.atan(Math.tan(.28)*1.68/2.68)]);else b('roof-panel',metal?m:trim,[side*.80,H+2.25,0],[1.68,.10,3.30],[0,0,-side*.28]);}
  b('roof-ridge',trim,[0,H+2.49,0],[.16,.12,3.35]);
  if(metal){for(const z of [-1.505,1.505])for(const x of [-1.3,-.65,0,.65,1.3])for(const y of [.14,.72])b('panel-rivet',iron,[x,H+y,z],[.032,.032,.018]);}
  else{for(const z of [-1.507,1.507])for(let i=0;i<12;i++)b('wood-batten',trim,[-1.375+i*.25,H+.42,z],[.027,.82,.018]);}
- root.userData.stairTower={stories:3,deckHeight:H,guardhouse:large?[5,5]:[3,3],flights:ladder?0:6,treadsPerFlight:ladder?0:9,access:ladder?'ladder':'stairs',layout:wrap?'wraparound':'switchback',entrySide:wrap?'-Z':'+X',coreOffsetX:shift,door:wrap?{x:[axis(-1.25),axis(-.35)],z:axis(-1.45),height:1.76}:{z:[-1.25,-.35],x:1.45,height:1.76}};
+ root.userData.stairTower={stories:3,deckHeight:H,guardhouse:large?[5,5]:[3,3],flights:ladder?0:6,treadsPerFlight:ladder?0:9,access:ladder?'ladder':'stairs',layout:wrap?'wraparound':'switchback',entrySide:wrap?'-Z':'+X',coreOffsetX:shift,exitWidth:wideExit?IRON_LADDER_EXIT.width:.70,door:wideExit?{z:[-.8-IRON_LADDER_EXIT.doorHalf+.0325,-.8+IRON_LADDER_EXIT.doorHalf-.0325],x:1.45,height:IRON_LADDER_EXIT.doorHeight}:wrap?{x:[axis(-1.25),axis(-.35)],z:axis(-1.45),height:1.76}:{z:[-1.25,-.35],x:1.45,height:1.76}};
 }
