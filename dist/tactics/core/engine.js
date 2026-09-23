@@ -5,6 +5,7 @@ import {updateAwareness,awarenessPerception} from '../awareness.js';
 import {shotAim} from '../aim-levels.js';
 import {initializeStats,weaponAccuracy,damageAfterResistance} from '../character-stats.js';
 import {spendStamina,spendMovement,canMoveStamina,recoverStamina} from '../stamina.js';
+import {starterTools} from '../inventory-tools.js';
 import {explosivePreview,explosiveTrajectory,detonate} from './explosives.js';
 import {initPersonality,initGuardSocial,socialRoll,friendlyReaction,helped,settleStress,injuryStrain,killRelief,collapse} from './personalities.js';
 import {partnerLost,stabilizedPartner,cleanWin,onContract} from './happiness.js';
@@ -92,7 +93,7 @@ export function createGame(seed=1947,definition=factoryMap(),detect=true,difficu
  if(definition.name==='Factory test')for(const [i,kind]of ['shotgun','sniper','smg','hmg'].entries())s.loot[i].items.push({type:'weapon',kind,rounds:WEAPONS[kind].mag},{type:'ammo',kind,count:12});
  if(definition.name==='Factory test')for(const [i,kind]of ['grenade','launcher','rpg'].entries())s.loot[i+1].items.push({type:'weapon',kind,rounds:WEAPONS[kind].mag},{type:'ammo',kind,count:kind==='grenade'?6:3});
  if(definition.name==='Factory test')s.loot[0].items.push({type:'weapon',kind:'flamethrower',rounds:4},{type:'ammo',kind:'flamethrower',count:4});
- if(options.statSystem){s.rules.statSystem=true;for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id],authored={...(u.team==='squad'?options.cast?.[u.id]?.stats:{}),...source?.stats};if(Number.isFinite(source?.perception)&&!Number.isFinite(authored.perception))authored.perception=source.perception;initializeStats(u,authored);}}
+ if(options.statSystem){s.rules.statSystem=true;for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id],authored={...(u.team==='squad'?options.cast?.[u.id]?.stats:{}),...source?.stats};if(Number.isFinite(source?.perception)&&!Number.isFinite(authored.perception))authored.perception=source.perception;initializeStats(u,authored);starterTools(u);}}
  if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id];if(source?.towerPost)u.towerPost=structuredClone(source.towerPost);u.perception=u.stats?u.stats.perception:Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}
  if(detect)refresh(s);log(s,`Local map ready / ${definition.guards.length} guards.`);return s;
 }
@@ -276,7 +277,7 @@ function combatDamage(s,u,damage,fatal=false,source=null){
  if(u.hp>0)return;
  if(living)killRelief(source,u);
  if(u.team==='guard'&&living&&s.rules?.social)mourn(s,u,source);
- if(u.team==='guard'&&living&&!u.lootDropped){delete s.contacts[u.id];awardCombatXP(s);s.loot.push({x:u.x,y:u.y,z:levelOf(u),body:u.id,searched:false,items:rollLoot(s,u)});u.pack=[];u.lootDropped=true;}
+ if(u.team==='guard'&&living&&!u.lootDropped){delete s.contacts[u.id];awardCombatXP(s);s.loot.push({x:u.x,y:u.y,z:levelOf(u),body:u.id,...(u.towerPost?{towerPost:structuredClone(u.towerPost)}:{}),searched:false,items:rollLoot(s,u)});u.pack=[];u.lootDropped=true;}
  if(u.team==='squad'&&(living||fatal&&incapacitated(u))){u.casualty=fatal?'dead':s.difficulty==='easy'?'stable':'bleeding';u.bleedTurns=u.casualty==='bleeding'?6:0;u.ap=0;u.overwatch=null;s.queue=[];u.recoveryTurns=0;u.burningTurns=0;if(living)collapse(u);if(u.casualty==='stable')beginRecovery(s,u);if(s.fight)s.fight.casualty=true;if(u.casualty==='dead'&&s.rules?.social)for(const line of partnerLost(s.units,u,'dead',source))log(s,line);}
 }
 function ignite(s,u){
@@ -383,7 +384,7 @@ export function stowWeapon(s,u,slot){if(!canControl(s,u)||s.queue.length||![0,1]
 export function arrangeInventory(s,u,key,cell){if(!canControl(s,u)||s.queue.length||!placeItem(u,key,cell))return false;log(s,'Backpack rearranged.');return true;}
 export function reload(s,u,byAI=false){if(byAI?!(s.phase==='enemy'&&u?.team==='guard'&&alive(u)&&!u.burningTurns):!canControl(s,u))return false;const w=WEAPONS[u.weapon],count=Math.min(w.mag-u.ammo[u.weapon],reserve(u,u.weapon));if(s.queue.length||!w.mag||count<=0||(combatCosts(s)&&u.ap<3))return false;if(combatCosts(s))u.ap-=3;u.overwatch=null;u.ammo[u.weapon]+=count;consumeAmmo(u,u.weapon,count);syncWeapons(u);log(s,u.name+' reloaded '+count+' rounds.');return true;}
 // Same floor, own tile or a cardinal neighbour, no barrier between: the reach for loot, bodies and hand-overs.
-export const adjacentTo=(s,u,p)=>levelOf(u)===levelOf(p)&&Math.abs(u.x-p.x)+Math.abs(u.y-p.y)<=1&&(u.x===p.x&&u.y===p.y||!blockedEdge(s,u,p));
+export const adjacentTo=(s,u,p)=>levelOf(u)===levelOf(p)&&Math.abs(unitBaseHeight(u)-unitBaseHeight(p))<.1&&Math.abs(u.x-p.x)+Math.abs(u.y-p.y)<=1&&(u.x===p.x&&u.y===p.y||!blockedEdge(s,u,p));
 // Loot rolls use their own stream so a body's contents never move a bullet (see socialSeed in personalities.js for the same idea).
 function lootRandom(s){s.lootSeed=(Math.imul(s.lootSeed??(s.seed^0x51ed270b),1664525)+1013904223)>>>0;return s.lootSeed/4294967296;}
 // What a fallen guard's body holds, rolled once at the fall from what it actually carried: every gun with the rounds it had loaded,

@@ -3,6 +3,14 @@
   "branch": "work/mature-tree-core",
   "revision": "e529f4b3d512d32cea522d701d01ebe8488af013",
   "overrides": {
+    "blocks.js": {
+      "reason": "Preserve authored door locks across block extraction and placement.",
+      "upstreamSha256": "4c4961c7c9897640dafca906384569f5337bfabbc2a907adb88ca8e64a733bf4"
+    },
+    "connections.js": {
+      "reason": "Require neighboring authored doors to agree on lock difficulty.",
+      "upstreamSha256": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f"
+    },
     "engine.js": {
       "reason": "Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks.",
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
@@ -14,6 +22,10 @@
     "explosives.js": {
       "reason": "Use physical tower heights, weapon skills and endurance-aware explosive previews.",
       "upstreamSha256": "ab0e3a635edf516022bbe247b3a20651d2323053321573ea0bf6fb1e42525b38"
+    },
+    "inventory.js": {
+      "reason": "Support carried tools, stack merging and their weight.",
+      "upstreamSha256": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f"
     },
     "maps.js": {
       "reason": "Validate tower lookouts, locks and fixture condition; enforce locked-door traversal.",
@@ -34,15 +46,15 @@
   },
   "files": {
     "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
-    "blocks.js": "4c4961c7c9897640dafca906384569f5337bfabbc2a907adb88ca8e64a733bf4",
-    "connections.js": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f",
+    "blocks.js": "c57a672d9a279dd7a61b60008ffeabd09b84ed3f70a4ed30d9ae5f7728b6fb12",
+    "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
     "editor-model.js": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262",
-    "engine.js": "004e973d3faf9b7630613848c025f589c5c873c830b6c9adfe10821edf33f279",
+    "engine.js": "1da3ed25a755beee2d0e350108dcc05f90c9efe052abb3aeabae5ecf7550cc5b",
     "environment.js": "4c60325305b1159ba3c8e74fae9d98b1deef44c57452db54d236f31568b24de1",
     "explosives.js": "d28c8600c983f8a018a32e84a137836b81165d80924587f0195f23a540a64fa4",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
-    "inventory.js": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f",
+    "inventory.js": "521036500cfc6e0965e9b2db6b47ea33ca7996bf74d24648fd734da5ba20742f",
     "maps.js": "1691d7c26865ba77f987136084adbae2cbaa97f25ec466290877e20ad4f55a7c",
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",

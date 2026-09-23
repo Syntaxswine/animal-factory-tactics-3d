@@ -23,7 +23,7 @@ The battle sidebar lists available nearby interactions with costs, estimated ben
 | Pick lock | 8 | 4 | Dexterity versus authored lock difficulty |
 | Force door | 10 | 12 | Strength versus authored lock difficulty; noise radius 20 |
 
-Effective Medical/Mechanical include floor(Intelligence / 10), capped at 100. Lock success is clamp(50 + stat - difficulty, 5, 95) percent. A deterministic saved interaction seed advances once per attempt; failed attempts cost the same resources. Successful checks open the door. These initial field actions assume basic tools; dedicated lockpick/toolkit inventory is not introduced here.
+Effective Medical/Mechanical include floor(Intelligence / 10), capped at 100. Lock success is clamp(50 + stat - difficulty, 5, 95) percent. A deterministic saved interaction seed advances once per attempt; failed attempts cost the same resources. Successful checks open the door. Picking now requires a carried reusable lockpick set, and each repair action consumes one unit of repair supplies. See [Inventory and locks](INVENTORY-AND-LOCKS.md).
 
 Outside combat, each field action takes one game minute and no AP. Time uses the encounter clock, including morale and contract settlement. Other eligible idle characters recover stamina during that minute. Previewing or rejecting an action changes nothing. Treatment requires a conscious teammate/self, an open adjacent edge and the same physical height. Bleeding teammates use Stabilize.
 
@@ -31,7 +31,7 @@ Outside combat, each field action takes one game minute and no AP. Time uses the
 
 In the 3D editor, expand **Locks & repairs**, select a closed door boundary and apply difficulty (0 removes the lock, 1-100 sets it). Select an electrical light fixture and apply condition (0-100). Changes support undo, redo and map JSON export.
 
-Full maps store locks as `edgeLocks: {"e:10:10": 50}`. Locks prevent automatic door opening and path traversal. Connectivity validation treats locked doors as potentially openable; it still catches genuinely disconnected terrain. Erasing a door in the editor removes its lock. Locks are full-map metadata and are not carried by block-library extraction/placement.
+Full maps store locks as `edgeLocks: {"e:10:10": 50}`. Locks prevent automatic door opening and path traversal. Connectivity validation treats locked doors as potentially openable; it still catches genuinely disconnected terrain. Erasing a door in the editor removes its lock. Locks now survive block-library extraction and placement as well as full maps; conflicting shared-door locks are rejected.
 
 Fixtures store `condition` on the prop. Values below 100 disable both rendered light and tactical illumination; reaching 100 restores the authored on/off/automatic schedule. Rotation preserves condition. Repairs currently cover electrical lights and searchlight towers, not fires, weapon wear or general factory machinery. Existing maps retain unlocked doors and working fixtures unless explicitly authored otherwise.
 

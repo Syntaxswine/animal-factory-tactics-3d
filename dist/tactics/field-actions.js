@@ -1,3 +1,4 @@
+import {toolCount,consumeTool} from './inventory-tools.js';
 import {canControl,combatCosts,refresh,emitNoise,stabilize,stabilizePreview} from './core/engine.js';
 import {edgeCells,blockedEdge} from './core/maps.js';
 import {EDGES,propCells} from './core/environment.js';
@@ -27,11 +28,11 @@ export function interactionPreview(s,u,kind,target){
   amount=Math.min(100-(target?.condition??100),Math.max(5,Math.floor(effectiveSkill(u,'mechanical')/2)));
   if(!s.props.includes(target)||!repairable(target))reason='Choose an electrical light fixture.';
   else if(!propCells(target).some(p=>nearby(s,u,p)))reason='Stand beside the fixture.';
-  else if(!(amount>0))reason='Fixture is working.';
+  else if(!(amount>0))reason='Fixture is working.';else if(!toolCount(u,'repairKit'))reason='Repair supplies are required.';
  }else{
   const difficulty=s.edgeLocks?.[target],skill=kind==='force'?u.stats.strength:u.stats.dexterity;
   chance=Math.max(5,Math.min(95,50+skill-(difficulty||50)));
-  if(!difficulty||!EDGES[s.edges[target]]?.opensTo)reason='Choose a locked door.';else if(!besideDoor(u,target))reason='Stand beside the door.';
+  if(!difficulty||!EDGES[s.edges[target]]?.opensTo)reason='Choose a locked door.';else if(!besideDoor(u,target))reason='Stand beside the door.';else if(kind==='pick'&&!toolCount(u,'lockpicks'))reason='A lockpick set is required.';
  }
  return {ok:!reason,reason,cost:combatCosts(s)?costs[kind]:0,minutes:1,stamina:stamina[kind],amount,chance};
 }
@@ -41,7 +42,7 @@ export function performInteraction(s,u,kind,target){
  if(kind==='stabilize'){result='stabilized '+target.name+'.';}
  else if(kind==='rest'){u.stamina=Math.min(u.maxStamina,u.stamina+p.amount);result='rested: +'+Math.round(p.amount)+' stamina.';}
  else if(kind==='heal'){u.medkits--;target.hp+=p.amount;result='treated '+target.name+': +'+p.amount+' HP.';}
- else if(kind==='repair'){target.condition=(target.condition??100)+p.amount;result='repaired '+target.kind+': '+target.condition+'%'+(target.condition===100?' / working.':' / still offline.');}
+ else if(kind==='repair'){consumeTool(u,'repairKit');target.condition=(target.condition??100)+p.amount;result='repaired '+target.kind+': '+target.condition+'%'+(target.condition===100?' / working.':' / still offline.');}
  else {s.interactionSeed=(Math.imul((s.interactionSeed??s.seed)>>>0,1664525)+1013904223)>>>0;const success=s.interactionSeed/4294967296*100<p.chance;if(success){delete s.edgeLocks[target];s.edges[target]=EDGES[s.edges[target]].opensTo;}if(kind==='force')emitNoise(s,u,20);result=(success?'opened the locked door.':'failed to open the lock.');}
  if(!combatCosts(s)&&s.clock){advanceEncounterTime(s,p.minutes,false);recoverStamina({...s,units:s.units.filter(v=>v!==u)},p.minutes);s.awarenessSeconds=(s.awarenessSeconds||0)+60*p.minutes;}
  s.log.unshift(u.name+' '+result);refresh(s);return true;
@@ -49,7 +50,7 @@ export function performInteraction(s,u,kind,target){
 export function nearbyInteractions(s,u){
  const entries=[{kind:'rest',target:null,label:'Catch breath'}];
  for(const v of s.units)if(v.team==='squad'&&!v.away&&nearby(s,u,v)&&((v.hp>0&&v.hp<v.maxHp)||v.casualty==='bleeding'))entries.push({kind:v.casualty==='bleeding'?'stabilize':'heal',target:v,label:(v.casualty==='bleeding'?'Stabilize ':'Treat ')+v.name});
- for(const key of Object.keys(s.edgeLocks||{}))if(EDGES[s.edges[key]]?.opensTo&&besideDoor(u,key))for(const kind of ['pick','force'])entries.push({kind,target:key,label:(kind==='pick'?'Pick lock':'Force door')+' ('+key+')'});
+ for(const key of Object.keys(s.edgeLocks||{}))if(EDGES[s.edges[key]]?.opensTo&&besideDoor(u,key))for(const kind of ['pick','force']){const p=edgeCells(key).find(p=>p.x!==u.x||p.y!==u.y),direction=p.x>u.x?'east':p.x<u.x?'west':p.y>u.y?'south':'north',material=s.edges[key].includes('steel')?'steel':s.edges[key].includes('wood')?'wooden':'cell';entries.push({kind,target:key,label:(kind==='pick'?'Pick lock':'Force door')+' · '+direction+' '+material+' door'});}
  for(const p of s.props)if(repairable(p)&&(p.condition??100)<100&&propCells(p).some(q=>nearby(s,u,q)))entries.push({kind:'repair',target:p,label:'Repair '+p.kind});
  return entries.map(e=>({...e,preview:interactionPreview(s,u,e.kind,e.target)}));
 }

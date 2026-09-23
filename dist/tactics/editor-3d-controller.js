@@ -47,7 +47,6 @@ export class EditingDocument extends InspectionDocument {
  undo(){if(!this.editor||!undo(this.editor))return false;this.refresh();return true;}
  redo(){if(!this.editor||!redo(this.editor))return false;this.refresh();return true;}
  doorLock(selection,difficulty){
-  if(this.block)throw Error('Set door locks in a full map.');
   if(selection?.type!=='edge'||!EDGES[this.map.edges[selection.edge]]?.opensTo)throw Error('Select a closed door.');
   if(!Number.isInteger(difficulty)||difficulty<0||difficulty>100)throw Error('Use 0 for unlocked, or a difficulty from 1 to 100.');
   const edgeLocks={...this.map.edgeLocks};if(difficulty)edgeLocks[selection.edge]=difficulty;else delete edgeLocks[selection.edge];this.replace({...this.editor.map,edgeLocks});

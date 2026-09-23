@@ -1,5 +1,8 @@
 // Explicit, reproducible changes to the pinned dependency. Never edit core/.
 export const clockOverrides={
+ 'connections.js':'Require neighboring authored doors to agree on lock difficulty.',
+ 'inventory.js':'Support carried tools, stack merging and their weight.',
+ 'blocks.js':'Preserve authored door locks across block extraction and placement.',
  'progression.js':'Use canonical 1-100 stats and derived resources for opted-in characters.',
  'explosives.js':'Use physical tower heights, weapon skills and endurance-aware explosive previews.',
  'maps.js':'Validate tower lookouts, locks and fixture condition; enforce locked-door traversal.',
@@ -21,6 +24,27 @@ export function adaptCoreClock(name,data){
   s=once(s,"if(!passable(raw,p))errors.push(`Unit start needs a walkable floor at ${k}.`);", "if(p.towerPost?!towerForUnit(raw,p):!passable(raw,p))errors.push(`Unit start needs a walkable floor or valid tower post at ${k}.`);");
   s=once(s,'missing=reachedTargets(raw,targets)', 'missing=reachedTargets({...raw,edgeLocks:{}},targets)');
   s=once(s,'const targets=[...raw.starts,...raw.guards,...raw.exits],','const targets=[...raw.starts,...raw.guards,...raw.exits].map(p=>towerForUnit(raw,p)?towerEntry(towerForUnit(raw,p)):p),');
+  return Buffer.from(s);
+ }
+ if(name==='connections.js'){
+  s=once(s,"out[y+':'+z]=v;","out[y+':'+z]=v+'|'+(d.edgeLocks?.[k]||0);");
+  s=once(s,"out[x+':'+z]=v;","out[x+':'+z]=v+'|'+(d.edgeLocks?.[k]||0);");
+  return Buffer.from(s);
+ }
+ if(name==='inventory.js'){
+
+  s="import {TOOLS} from '../inventory-tools.js';\n"+s;
+  s=once(s,"i.type==='weapon'?(WEIGHT[i.kind]||0):i.count*.03", "i.type==='weapon'?(WEIGHT[i.kind]||0):i.type==='tool'?(TOOLS[i.kind]?.weight||0)*i.count:i.count*.03");
+  s=once(s,"if(item.type==='ammo'&&u.pack.some(i=>i.type==='ammo'&&i.kind===item.kind))return true;", "if(['ammo','tool'].includes(item.type)&&u.pack.some(i=>i.type===item.type&&i.kind===item.kind))return true;");
+  s=once(s,"const existing=u.pack.find(i=>i.type==='ammo'&&i.kind===item.kind)","const existing=u.pack.find(i=>i.type===item.type&&i.kind===item.kind)");
+  return Buffer.from(s);
+ }
+ if(name==='blocks.js'){
+  s=once(s,'retained[k]=v;',"if(d.edges[local]!==undefined&&(d.edgeLocks?.[local]||0)!==(m.edgeLocks?.[k]||0))throw Error('Shared door lock conflicts with the neighboring block.');retained[k]=v;");
+  s=once(s,'if(m.blockConnections?.[sx',"if(m.edgeLocks){d.edgeLocks={};for(const [key,value]of Object.entries(m.edgeLocks)){const [axis,a,b,z]=key.split(':');const local=edgeKey(axis,Number(a)-x,Number(b)-y,Number(z||0));if(d.edges[local])d.edgeLocks[local]=value;}}if(m.blockConnections?.[sx");
+  s=once(s,'for(const [k,v]of Object.entries(d.edges)){',"if(d.edgeLocks){m.edgeLocks||={};for(const [key,value]of Object.entries(d.edgeLocks)){const [axis,a,b,z]=key.split(':');m.edgeLocks[edgeKey(axis,Number(a)+x,Number(b)+y,Number(z||0))]=value;}}for(const [k,v]of Object.entries(d.edges)){");
+  s=once(s,'const out=structuredClone(m);',"const out=structuredClone(m);if(out.edgeLocks)for(const key of Object.keys(out.edgeLocks))if(edgeCells(key).some(p=>inside(p,x,y)))delete out.edgeLocks[key];");
+  s=once(s,'Object.assign(out.edges,retained);',"Object.assign(out.edges,retained);for(const key of Object.keys(retained))if(m.edgeLocks?.[key]){out.edgeLocks||={};out.edgeLocks[key]=m.edgeLocks[key];}");
   return Buffer.from(s);
  }
  if(name==='progression.js'){
@@ -47,6 +71,9 @@ export function adaptCoreClock(name,data){
   return Buffer.from(s);
  }
  if(name==='engine.js'){
+  s="import {starterTools} from '../inventory-tools.js';\n"+s;
+  s=once(s,'levelOf(u)===levelOf(p)&&Math.abs(u.x-p.x)', 'levelOf(u)===levelOf(p)&&Math.abs(unitBaseHeight(u)-unitBaseHeight(p))<.1&&Math.abs(u.x-p.x)');
+  s=once(s,'body:u.id,searched:false,items:rollLoot(s,u)', 'body:u.id,...(u.towerPost?{towerPost:structuredClone(u.towerPost)}:{}),searched:false,items:rollLoot(s,u)');
   s="import {spendStamina,spendMovement,canMoveStamina,recoverStamina} from '../stamina.js';\n"+s;
   s=once(s,'edges:{...definition.edges},','edges:{...definition.edges},edgeLocks:structuredClone(definition.edgeLocks||{}),');
   s=once(s,"if(s.phase==='player'&&path[0].cost>u.ap)","if(!canMoveStamina(u,path[0])||s.phase==='player'&&path[0].cost>u.ap)");
@@ -57,7 +84,7 @@ export function adaptCoreClock(name,data){
   s=once(s,'function newRound(s){finishFireRound(s);','function newRound(s){recoverStamina(s,1,{combat:true});finishFireRound(s);');
   s=once(s,'if(!reaction&&combatCosts(s))a.ap-=p.cost;',"spendStamina(a,WEAPONS[a.weapon].mag?2:6);if(!reaction&&combatCosts(s))a.ap-=p.cost;");
   s="import {initializeStats,weaponAccuracy,damageAfterResistance} from '../character-stats.js';\n"+s;
-  s=once(s,"if(detect)refresh(s);log(s,", "if(options.statSystem){s.rules.statSystem=true;for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id],authored={...(u.team==='squad'?options.cast?.[u.id]?.stats:{}),...source?.stats};if(Number.isFinite(source?.perception)&&!Number.isFinite(authored.perception))authored.perception=source.perception;initializeStats(u,authored);}}\n if(detect)refresh(s);log(s,");
+  s=once(s,"if(detect)refresh(s);log(s,", "if(options.statSystem){s.rules.statSystem=true;for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id],authored={...(u.team==='squad'?options.cast?.[u.id]?.stats:{}),...source?.stats};if(Number.isFinite(source?.perception)&&!Number.isFinite(authored.perception))authored.perception=source.perception;initializeStats(u,authored);starterTools(u);}}\n if(detect)refresh(s);log(s,");
   s=once(s,'s.units.push(u);return u;', 'if(s.rules?.statSystem)initializeStats(u);s.units.push(u);return u;');
   s=once(s,'a.accuracy+(melee?10:0)','weaponAccuracy(a)+(melee?10:0)');
   s=once(s,'damage:Math.round(weaponDamage(w,range)*aim.damage)', 'damage:damageAfterResistance(b,Math.round(weaponDamage(w,range)*aim.damage)),rawDamage:Math.round(weaponDamage(w,range)*aim.damage)');

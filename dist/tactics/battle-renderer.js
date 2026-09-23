@@ -1,3 +1,4 @@
+import {BattleLoot} from './battle-loot.js';
 import {createEquipmentDraw,DRAW_DURATION_MS} from './equipment-draw.js';
 import {BattleTraversal} from './battle-traversal.js';
 import {LightingScene} from './lighting-scene.js';
@@ -24,7 +25,7 @@ export class BattleRenderer extends HybridRenderer {
  constructor(onReady=()=>{}){
   super(onReady);this.daylight=new DaylightRig(this.scene,this.renderer);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
   this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
-  this.motion=new BattleMotion();this.reducedMotion=motionPreference();
+  this.loot=new BattleLoot(this.scene);this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.traversal=new BattleTraversal();this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
  }
@@ -116,7 +117,9 @@ export class BattleRenderer extends HybridRenderer {
   }
   return null;
  }
+ pickLoot(x,y,width,height){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return this.loot.pick(ray);}
  draw(ctx,state,...args){
+  this.loot.sync(state,args[3]);
   this.state=state;this.captureCombat(state);this.shotEffects.hide();
   const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.combat.display(u));
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
@@ -137,7 +140,7 @@ export class BattleRenderer extends HybridRenderer {
  displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){
   this.generation++;
-  this.lights.dispose();this.daylight.dispose();this.paintedEnvironment.dispose();
+  this.loot.dispose();this.lights.dispose();this.daylight.dispose();this.paintedEnvironment.dispose();
   this.motion.clear();
   this.traversal.clear();this.combat.clear();this.shotEffects.dispose();
   for(const {worker,paint,root,equipment,locomotion,cap,draw}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
