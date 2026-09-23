@@ -1,3 +1,4 @@
+import {createCharacterScreen} from './character-screen.js';
 import {AIM_LEVELS,shotAim,supportsAim} from './aim-levels.js';
 import {climbTower,towerClimbPreview} from './tower-actions.js';
 import {TOWER_HEIGHT} from './tower-geometry.js';
@@ -23,7 +24,8 @@ if(new URLSearchParams(location.search).has('editorPlaytest')){
 let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false;
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
 const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastClockCombat;
-const paused=()=>userPaused||document.hidden;
+const characterScreen=createCharacterScreen({getState:()=>state,onOpen:()=>{frameClock.reset();sync();},onClose:()=>{frameClock.reset();sync();}});
+const paused=()=>userPaused||document.hidden||characterScreen.open;
 function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
 const view={x:0,y:0,zoom:1.15};
 const climbButton=document.createElement('button');climbButton.id='climb-tower';climbButton.textContent='Climb tower';$('reload').parentNode.insertBefore(climbButton,$('reload'));
@@ -85,10 +87,11 @@ canvas.addEventListener('pointercancel',()=>{drag=null;});
 canvas.addEventListener('lostpointercapture',()=>{drag=null;});
 window.addEventListener('blur',()=>{drag=null;});
 canvas.addEventListener('wheel',e=>{e.preventDefault();const box=canvas.getBoundingClientRect(),x=e.clientX-box.left,y=e.clientY-box.top,old=view.zoom;view.zoom=Math.max(.08,Math.min(3,old*Math.exp(-e.deltaY*.001)));view.x=x-(x-view.x)*view.zoom/old;view.y=y-(y-view.y)*view.zoom/old;},{passive:false});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!paused()){drag=null;state.queue=[];targetId=null;sync();}});
+document.addEventListener('keydown',e=>{if(characterScreen.open)return;if(e.key==='Escape'&&!paused()){drag=null;state.queue=[];targetId=null;sync();}});
 function action(fn){if(paused()||renderer.busy)return;const ok=fn();renderer.captureCombat(state);message(ok?'':'Action unavailable.');sync();}
  for(const name of Object.keys(STANCES))$('stance-'+name).onclick=()=>{if(paused()||renderer.busy)return;const result=setSelectionStance(state,selectedIds,name);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' changed to '+name+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'. Check AP and action availability.':''));sync();};
  for(const mode of Object.keys(MOVEMENT_MODES))$('move-'+mode).onclick=()=>{if(paused()||renderer.busy)return;const result=setSelectionMovement(state,selectedIds,mode);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' set to '+mode+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'.':''));sync();};
+ $('character').onclick=()=>characterScreen.show(state.selected);
  $('restart').onclick=restart;$('center').onclick=center;$('overview').onclick=overview;
  $('reload').onclick=()=>action(()=>reload(state,selected()));$('end').onclick=()=>action(()=>endTurn(state));
  climbButton.onclick=()=>action(()=>climbTower(state,selected()));
