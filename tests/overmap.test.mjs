@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {anchor,route,blank,demo,validate,warnings,SketchDocument,WIDTH,HEIGHT} from '../dist/tactics/overmap-model.js';
+import {anchor,route,blank,demo,validate,warnings,SketchDocument,WIDTH,HEIGHT,plateauRim} from '../dist/tactics/overmap-model.js';
 import {point,curve,crossing} from '../dist/tactics/overmap-symbols.js';
 
 test('north one-third to south two-thirds bends east with exact boundary anchors',()=>{
@@ -46,4 +46,24 @@ test('example uses correct dimensions and connected river at every seam',()=>{
  const m=validate(demo());assert.equal(m.sectors.length,450);assert.equal(WIDTH,30);assert.equal(HEIGHT,15);
  for(let y=0;y<HEIGHT;y++)assert.ok(!warnings(m,y*WIDTH+7).some(w=>w.startsWith('river')));
  const r=m.sectors[7*WIDTH+7].routes.find(r=>r.kind==='river');assert.equal(r.from.offset,1/3);assert.equal(r.to.offset,2/3);
+});
+
+test('example river combines straight stretches and bends while keeping attachments aligned',()=>{
+ const rivers=demo().sectors.flatMap(s=>s.routes.filter(r=>r.kind==='river'));
+ assert.ok(rivers.filter(r=>r.from.offset===r.to.offset).length>=5);
+ assert.ok(rivers.some(r=>r.from.offset<r.to.offset));assert.ok(rivers.some(r=>r.from.offset>r.to.offset));
+});
+test('tutorial preserves the authored plateau footprint with one descent into an interior town',()=>{
+ const m=validate(demo()),indices=m.sectors.flatMap((s,i)=>s.role==='tutorial'?[i]:[]),inside=new Set(indices),steps={north:-WIDTH,south:WIDTH,east:1,west:-1};
+ assert.equal(indices.length,5);assert.deepEqual(indices.map(i=>m.sectors[i].tutorialStep).sort(),[1,2,3,4,5]);
+ const exits=[];
+ for(const i of indices){assert.equal(m.sectors[i].difficulty,'easy');assert.deepEqual(warnings(m,i),[]);
+  for(const side of m.sectors[i].travel)if(!inside.has(i+steps[side]))exits.push(i+steps[side]);
+ }
+ assert.equal(exits.length,1);const town=exits[0];assert.equal(m.sectors[town].role,'town');assert.ok(town%WIDTH>0&&town%WIDTH<WIDTH-1&&town>=WIDTH&&town<WIDTH*(HEIGHT-1));
+ assert.equal(m.sectors[town+WIDTH].role,'town');assert.ok(m.sectors[town+WIDTH].facilities.includes('workshop'));
+ assert.deepEqual(indices.map(i=>[i%WIDTH-2,Math.floor(i/WIDTH)-3]),[[0,0],[0,1],[1,1],[0,2],[1,2]]);
+ for(const i of indices){assert.equal(m.sectors[i].terrain,'plateau');for(const rim of plateauRim(m,i))assert.ok(!inside.has(i+steps[rim.side]));}
+ assert.equal(indices.flatMap(i=>plateauRim(m,i)).filter(r=>r.opening).length,1);
+ const d=new SketchDocument(m);d.edit(indices[0],s=>s.name='Landing');d.undo();d.redo();assert.equal(validate(JSON.parse(JSON.stringify(d.map))).sectors[indices[0]].tutorialStep,1);
 });

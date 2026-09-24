@@ -1,4 +1,4 @@
-import {WIDTH,HEIGHT,SIDES,ROLES,TERRAINS,slots,fraction,route,blank,demo,validate,warnings,SketchDocument} from './overmap-model.js';
+import {WIDTH,HEIGHT,SIDES,ROLES,TERRAINS,slots,fraction,route,blank,demo,validate,warnings,SketchDocument,plateauRim} from './overmap-model.js';
 import {svg,drawSector,icon,LEGEND,crossing} from './overmap-symbols.js';
 const $=id=>document.getElementById(id),doc=new SketchDocument(),STORAGE='animal-factory-overmap-sketch-v1';
 let selected=7*WIDTH+7;
@@ -15,7 +15,7 @@ function drawGrid(){
  doc.map.sectors.forEach((s,i)=>{
   const x=i%WIDTH,y=Math.floor(i/WIDTH),g=svg('g',{transform:`translate(${x*100} ${y*100})`,class:'sector-cell',role:'button',tabindex:i===selected?0:-1,'aria-label':`Sector ${x+1}, ${y+1}: ${s.name||s.role}, ${s.difficulty}`,'aria-pressed':String(i===selected),'data-sector':i});
   const title=svg('title');title.textContent=`${x+1},${y+1} · ${s.name||s.role}\n${s.routes.map(r=>r.kind+': '+r.from.side+' '+fraction(r.from.offset)+' → '+r.to.side+' '+fraction(r.to.offset)).join('\n')}`;
-  g.append(title,drawSector(s,{ports:$('ports').checked,overlay:$('overlay').value}),svg('rect',{width:100,height:100,class:'cell-border'}));
+  g.append(title,drawSector(s,{ports:$('ports').checked,overlay:$('overlay').value,rim:plateauRim(doc.map,i)}),svg('rect',{width:100,height:100,class:'cell-border'}));
   if(i===selected)g.append(svg('rect',{x:2,y:2,width:96,height:96,class:'selection'}));
   const choose=()=>{selected=i;render();};g.onclick=choose;
   g.onkeydown=e=>{let next=i;if(e.key==='ArrowRight')next=y*WIDTH+Math.min(WIDTH-1,x+1);else if(e.key==='ArrowLeft')next=y*WIDTH+Math.max(0,x-1);else if(e.key==='ArrowUp')next=Math.max(0,y-1)*WIDTH+x;else if(e.key==='ArrowDown')next=Math.min(HEIGHT-1,y+1)*WIDTH+x;else if(e.key!=='Enter'&&e.key!==' ')return;e.preventDefault();selected=next;render();$('overmap').querySelector(`[data-sector="${selected}"]`).focus();};
@@ -23,10 +23,11 @@ function drawGrid(){
  });
  const colors=$('overlay').value==='difficulty'?[['Easy','#dbe0c1'],['Medium','#ebd7ad'],['Hard','#e2bbb0'],['Unassigned','#ece4cf']]:$('overlay').value==='ownership'?[['Player','#c3d9d5'],['Red Hats','#e4b6a7'],['Neutral','#d7d3c1'],['Unassigned','#ece4cf']]:[['Landscape','#ece4cf']];
  $('overlay-key').replaceChildren(...colors.map(([label,color])=>{const span=document.createElement('span'),chip=document.createElement('i');chip.className='swatch';chip.style.background=color;span.append(chip,label);return span;}));
+ const tutorial=doc.map.sectors.filter(s=>s.role==='tutorial');$('tutorial-summary').textContent=`Tutorial: ${tutorial.length} / 5 sectors. Example footprint: XOO / XXO / XXO. Plateau descent proposed at the bottom-left sector.`;$('find-start').disabled=!tutorial.length;
  $('counts').textContent=`450 sectors · ${doc.map.sectors.filter(s=>s.routes.some(r=>r.kind==='river')).length} river sectors · ${doc.map.sectors.filter(s=>s.gate==='bridge').length} bridges`;
 }
 function drawDetail(s){
- const el=$('detail');el.replaceChildren(drawSector(s,{ports:true,overlay:$('overlay').value,detail:true}),svg('rect',{width:100,height:100,class:'detail-outline'}));
+ const el=$('detail');el.replaceChildren(drawSector(s,{ports:true,overlay:$('overlay').value,detail:true,rim:plateauRim(doc.map,selected)}),svg('rect',{width:100,height:100,class:'detail-outline'}));
  for(const n of [1/3,.5,2/3]){const v=n*100,t=fraction(n);el.append(textNode(t,{x:v,y:-3,class:'edge-label'}),textNode(t,{x:v,y:106,class:'edge-label'}),textNode(t,{x:-6,y:v+1.5,class:'edge-label'}),textNode(t,{x:107,y:v+1.5,class:'edge-label'}));}
  for(const [t,x,y]of [['N',50,-11],['S',50,114],['W',-13,52],['E',114,52]])el.append(textNode(t,{x,y,class:'side-label'}));
 }
@@ -38,6 +39,7 @@ function pathEditor(r,index){
 function render(){
  const s=doc.map.sectors[selected];$('map-name').value=doc.map.name;$('map-caption').textContent=doc.map.name;$('sector-title').textContent=`${String(selected%WIDTH+1).padStart(2,'0')} / ${String(Math.floor(selected/WIDTH)+1).padStart(2,'0')}`;
  drawGrid();drawDetail(s);
+ $('tutorial-step-label').hidden=s.role!=='tutorial';$('tutorial-step').value=s.tutorialStep||'';
  $('sector-name').value=s.name;for(const id of ['terrain','role','difficulty','owner','gate'])$(id).value=s[id];for(const id of ['factory','workshop'])$(id).checked=s.facilities.includes(id);
  $('routes').replaceChildren(...s.routes.map(pathEditor));if(!s.routes.length)$('routes').textContent='No paths in this sector.';
  for(const side of SIDES)$('travel-'+side).checked=s.travel.includes(side);
@@ -47,7 +49,9 @@ function render(){
  $('undo').disabled=!doc.past.length;$('redo').disabled=!doc.future.length;
 }
 for(const side of SIDES){const l=document.createElement('label');l.className='check';const input=document.createElement('input');input.type='checkbox';input.id='travel-'+side;input.onchange=()=>edit(s=>{s.travel=SIDES.filter(v=>$('travel-'+v).checked);});l.append(input,side);$('travel').append(l);}
-for(const id of ['terrain','role','difficulty','owner','gate'])$(id).onchange=()=>edit(s=>s[id]=$(id).value);
+for(const id of ['terrain','role','difficulty','owner','gate'])$(id).onchange=()=>edit(s=>{s[id]=$(id).value;if(s.role!=='tutorial')delete s.tutorialStep;});
+$('tutorial-step').onchange=()=>edit(s=>{if($('tutorial-step').value)s.tutorialStep=Number($('tutorial-step').value);else delete s.tutorialStep;});
+$('find-start').onclick=()=>{selected=doc.map.sectors.findIndex(s=>s.role==='tutorial'&&s.tutorialStep===1);if(selected<0)selected=doc.map.sectors.findIndex(s=>s.role==='tutorial');if(selected<0)return;render();$('overmap').querySelector(`[data-sector="${selected}"]`).scrollIntoView({block:'nearest',inline:'nearest'});status('Tutorial plateau selected. Stage order and descent location are editable; local cliff geometry is not connected yet.');};
 $('sector-name').onchange=()=>edit(s=>s.name=$('sector-name').value.trim());
 for(const id of ['factory','workshop'])$(id).onchange=()=>edit(s=>s.facilities=['factory','workshop'].filter(v=>$(v).checked));
 $('map-name').onchange=()=>attempt(()=>{doc.replace({...doc.map,name:$('map-name').value.trim()});render();status('Overmap renamed.');});

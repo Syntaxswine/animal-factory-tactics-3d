@@ -21,6 +21,7 @@ const paths={
  factory:'M-19 12V-5L-6-12V-4L6-12V12Z M11 12V-20H18V12 M-14 3H-9 M-3 3H2',
  workshop:'M-15 12V-3L0-16 15-3V12Z M-5 12V2H5V12',
  forest:'M0-24-13-3H-7L-19 13H-3V21H3V13H19L7-3H13Z',
+ plateau:'M-26 16-16-12H16L26 16 M-16-12-10-4H10L16-12',
  mountains:'M-26 15-8-19 10 15 M0 15 17-12 31 15 M-15-5-8-1-2-6',
  wetland:'M-23 11Q-12 4 0 11T23 11 M-16 1V-15 M-22-9-16-3-10-10 M10 2V-21 M4-14 10-8 17-16',
  countryside:'M-22 10Q-8-12 5 4T25 10 M-15 17H18',
@@ -28,10 +29,10 @@ const paths={
  passage:'M-19-14-9 0-19 14 M19-14 9 0 19 14 M-8 0H8',
 };
 export function icon(kind,x=50,y=50,scale=1){return svg('path',{d:paths[kind]||paths.countryside,transform:`translate(${x} ${y}) scale(${scale})`,class:'symbol symbol-'+kind,'stroke-linejoin':'round','stroke-linecap':'round'});}
-export function drawSector(s,{ports=false,overlay='difficulty',detail=false}={}){
+export function drawSector(s,{ports=false,overlay='difficulty',detail=false,rim=[]}={}){
  const g=svg('g',{'class':'sector-art'});
  g.append(svg('rect',{width:100,height:100,class:`ground ${overlay==='ownership'?'owner-'+s.owner:overlay==='difficulty'?'difficulty-'+s.difficulty:'natural'}`}));
- if(s.terrain!=='plain')g.append(icon(s.terrain,50,48,.7));
+ if(s.terrain!=='plain'&&s.terrain!=='plateau')g.append(icon(s.terrain,50,48,.7));
  for(const kind of ['river','cliff','road'])for(const r of s.routes.filter(r=>r.kind===kind)){
   g.append(svg('path',{d:path(r),class:'route '+kind}));
   if(kind==='road')g.append(svg('path',{d:path(r),class:'road-center'}));
@@ -44,10 +45,13 @@ export function drawSector(s,{ports=false,overlay='difficulty',detail=false}={})
   if(hit){const gate=svg('g',{transform:`translate(${hit.x} ${hit.y}) rotate(${hit.angle})`});gate.append(svg('rect',{x:-15,y:-7,width:30,height:14,class:'gate-deck'}),icon(s.gate,0,0,.7));g.append(gate);}
   else g.append(icon(s.gate,76,77,.65));
  }
+ for(const {side,opening}of rim){const edge=svg('g',{transform:`rotate(${{north:0,east:90,south:180,west:270}[side]} 50 50)`});edge.append(svg('path',{d:opening?'M0 5H40 M60 5H100':'M0 5H100',class:'plateau-rim'}));for(let x=5;x<100;x+=10)if(!opening||x<40||x>60)edge.append(svg('path',{d:`M${x} 5V0`,class:'plateau-rim'}));if(opening)edge.append(svg('path',{d:'M42 0H58 M44 3H56 M46 6H54',class:'plateau-rim'}));g.append(edge);}
+ if(s.role==='tutorial')g.append(svg('rect',{x:3,y:3,width:94,height:94,class:'tutorial-area'}));
  if(s.role!=='countryside'){g.append(svg('circle',{cx:50,cy:38,r:24,class:'site-disc'}),icon(s.role,50,38,.8));}
+ if(s.role==='tutorial'&&s.tutorialStep){const label=svg('text',{x:50,y:78,class:'tutorial-label'});label.textContent=s.tutorialStep===1?'1 · START':'STEP '+s.tutorialStep;g.append(label);}
  s.facilities.forEach((f,i)=>{g.append(svg('circle',{cx:26+i*42,cy:79,r:16,class:'site-disc'}),icon(f,26+i*42,79,.55));});
  if(ports)for(const r of s.routes)for(const p of [r.from,r.to]){const [x,y]=anchor(p);g.append(svg('circle',{cx:x,cy:y,r:detail?2.4:3.4,class:'port port-'+r.kind}));}
  for(const side of s.travel){const [x,y]=anchor({side,offset:.5});const angle={north:-90,south:90,west:180,east:0}[side];g.append(svg('path',{d:'M-10-3H-3V-6L4 0-3 6V3H-10',transform:`translate(${x} ${y}) rotate(${angle})`,class:'travel-port'}));}
  return g;
 }
-export const LEGEND=[...ROLES,'factory','workshop','forest','mountains','wetland','bridge','passage'];
+export const LEGEND=[...ROLES,'factory','workshop','forest','mountains','wetland','plateau','bridge','passage'];

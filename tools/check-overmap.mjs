@@ -22,6 +22,7 @@ try{
  await page.locator('#import').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from('{"kind":"wrong"}')});
  await page.waitForFunction(()=>document.getElementById('status').textContent.startsWith('Import failed'));assert.equal(await page.locator('#sector-name').inputValue(),'River watch');
  await page.locator('#demo').click();
+ assert.ok((await page.locator('#tutorial-summary').innerText()).includes('5 / 5'));await page.locator('#find-start').click();assert.equal(await page.locator('#tutorial-step').inputValue(),'1');assert.equal(await page.locator('#sector-name').inputValue(),'Tutorial start');await page.locator('#tutorial-step').selectOption('2');await page.locator('#undo').click();assert.equal(await page.locator('#tutorial-step').inputValue(),'1');await page.locator('[data-sector="217"]').click();
  const svgDownload=page.waitForEvent('download');await page.locator('#export-svg').click();const exported=await svgDownload;await exported.saveAs('artifacts/overmap/map.svg');
  const svgText=await fs.readFile('artifacts/overmap/map.svg','utf8');assert.ok(svgText.includes('<style>'));assert.ok(svgText.includes('river-center'));
  assert.equal(await page.evaluate(text=>new DOMParser().parseFromString(text,'image/svg+xml').querySelectorAll('parsererror').length,svgText),0);

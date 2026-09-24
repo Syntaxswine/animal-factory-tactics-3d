@@ -59,7 +59,7 @@ must explicitly introduce template IDs, generation/library versions, seed,
 settlement membership, tutorial locks, authored entry areas and retained actual
 arrangements. Do not treat this drawing example as generator output.
 
-The fixed five-sector tutorial shape still needs authored input. Keep deferred
+The tutorial footprint is now authored as XOO / XXO / XXO; its local maps still need authoring. Keep deferred
 generation choices (bridge rounding, river-network count and diagonal bridge
 adjacency) explicit. Ownership values are planning overlays, not control logic.
 There is no new simulation clock or militia, incident, trading or logistics code.
@@ -74,3 +74,22 @@ There is no new simulation clock or militia, incident, trading or logistics code
 - `npm run build:tactics-3d`
 
 Browser screenshots are local artifacts under `artifacts/overmap/`.
+
+## Tutorial and river drawing follow-up
+
+The user supplied the exact footprint XOO / XXO / XXO, now represented as a
+plateau. Stage 1 occupies the upper-left sector. The proposed stage order runs
+south, east, south, west, with one descent from the bottom-left sector to an
+interior two-sector starting town and workshop. The exit position and stage
+order are editable assumptions; the footprint follows the user's design.
+
+Cliff rims surround contiguous plateau terrain and open only at declared travel
+edges. These are map graphics, not enforced gameplay barriers or tactical cliff
+geometry. Stage numbers persist through save/load and undo. Older sketches
+remain valid. Use Example for the updated drawing; old saved sketches preserve
+their contents.
+
+The river now contains straight stretches at both third positions plus occasional
+eastward and westward bends. Each shared boundary offset is reused by both
+neighbors. Tests cover continuity, variation, the exact five-sector footprint,
+plateau rim, single declared descent and interior starting town.
