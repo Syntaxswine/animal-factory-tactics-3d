@@ -37,9 +37,10 @@ edits; saved success flags are not trusted.
 ## Geography and integration limits
 
 This is a strategic plan generator, not a playable campaign generator. The
-current geographic family uses three separate parallel corridors. Orientation,
-order, positions, meanders and third-offset attachments are seeded. Intersecting
-river/cliff chains and arbitrary branching networks are not generated yet.
+current generator independently selects six weighted boundary endpoints, then
+routes two river pairs and one cliff pair through the map. Same-edge, adjacent-
+edge and opposite-edge connections are supported. Features avoid each other
+and the tutorial; intersecting or branching river networks remain deferred.
 
 Strategic reachability uses a conservative sector graph: ordinary land permits
 off-road movement, tutorial travel remains authored, and rivers/cliffs are crossed
@@ -122,3 +123,13 @@ The main toolbar Fresh world button uses the same fresh-seed generation path as
 Re-randomize world. It regenerates all elements, retains validation/cancellation
 and undo, and does not merely move the tutorial. Manual tutorial placement and
 rotation remain in their existing controls.
+
+Version strategic-plan-8 replaces shared corridor orientation with endpoint-first
+routing. All six endpoints are sampled up front without forcing edge pairs.
+North/south boundary positions weigh 1, east/west 0.5. Duplicate boundary sectors
+are excluded; each corner has two possible entry sides but can only be used once.
+Routing keeps the sampled positions and sides fixed, enters/exits toward the
+interior, and penalizes excess bends. Unroutable pairs, short paths or failed
+crossing/reachability constraints reject the attempt; endpoints are not shifted
+to force a solution. Stored feature records retain start/end positions and sides.
+The earlier shared-orientation notes above describe superseded versions.

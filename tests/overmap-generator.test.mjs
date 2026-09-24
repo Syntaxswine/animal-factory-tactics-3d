@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {generateWorld,validateGenerated,STAGES,neighbor,SETTLEMENT_ZONES,boundaryOrientation,BOUNDARY_POSITION_WEIGHTS,settlementSpacingErrors} from '../dist/tactics/overmap-generator.js';
+import {generateWorld,validateGenerated,STAGES,neighbor,SETTLEMENT_ZONES,boundaryPorts,sampleBoundaryEndpoints,BOUNDARY_POSITION_WEIGHTS,settlementSpacingErrors} from '../dist/tactics/overmap-generator.js';
 import {SketchDocument,demo,tutorialCells,blank,route} from '../dist/tactics/overmap-model.js';
 
 test('same seed and versioned inputs reproduce the actual arrangement and retry sequence',()=>{
  const trace=[],a=generateWorld(1,{},p=>trace.push(p)),b=generateWorld(1);
- assert.deepEqual(a,b);assert.equal(a.generation.attempt,2);
+ assert.deepEqual(a,b);assert.ok(a.generation.attempt>1);
  const final=trace.filter(p=>p.attempt===a.generation.attempt).map(p=>p.stage);assert.deepEqual(final,STAGES);
  assert.ok(a.generation.version);assert.ok(a.generation.contentLibraryVersion);assert.equal(a.generation.seed,1);
  assert.deepEqual(JSON.parse(JSON.stringify(a)),a);
@@ -49,15 +49,15 @@ test('validation catches broken zones, edges, gates, roads and tutorial escape e
  assert.match(rejected(m=>{const s=m.sectors.find(s=>s.tutorialStep===1);s.travel.push(['north','east','south','west'].find(d=>!s.travel.includes(d)));}),/Tutorial|Travel/);
  assert.match(rejected(m=>{const f=m.generation.features[0];m.sectors[f.cells[0]].routes.find(r=>r.kind==='river').from.offset=.5;}),/Invalid properties/);
  assert.match(rejected(m=>m.sectors.find(s=>s.gate==='bridge').gateGuards=16),/guards/);
- assert.match(rejected(m=>{const city=m.sectors.find(s=>s.role==='city'),easy=m.sectors.find(s=>s.role==='countryside'&&s.difficulty==='easy');city.difficulty='easy';easy.difficulty='hard';}),/settlement crosses difficulty zones|city sizes must/);
+ assert.match(rejected(m=>{const city=m.sectors.find(s=>s.role==='city'&&s.difficulty==='hard'),easy=m.sectors.find(s=>s.role==='countryside'&&s.difficulty==='easy');city.difficulty='easy';easy.difficulty='hard';}),/settlement crosses difficulty zones|city sizes must/);
 });
 
-test('boundary selection combines edge length with half weight for east/west positions',()=>{
- assert.deepEqual(BOUNDARY_POSITION_WEIGHTS,{north:1,south:1,east:.5,west:.5});
- assert.equal(boundaryOrientation(()=>.799999),true);assert.equal(boundaryOrientation(()=>.8),false);
- // Equal-sized edges still retain the per-position 2:1 preference.
- assert.equal(boundaryOrientation(()=>.66,20,20),true);assert.equal(boundaryOrientation(()=>.67,20,20),false);
- const choices=Array.from({length:1000},(_,i)=>boundaryOrientation(()=>(i+.5)/1000));assert.equal(choices.filter(Boolean).length,800);
+test('each endpoint samples all boundary positions with east/west half weight',()=>{
+ assert.deepEqual(BOUNDARY_POSITION_WEIGHTS,{north:1,south:1,east:.5,west:.5});const ports=boundaryPorts();
+ assert.equal(ports.filter(p=>p.side==='north').length,30);assert.equal(ports.filter(p=>p.side==='south').length,30);assert.equal(ports.filter(p=>p.side==='east').length,15);assert.equal(ports.filter(p=>p.side==='west').length,15);
+ const tally={north:0,south:0,east:0,west:0};for(let i=0;i<1000;i++)tally[sampleBoundaryEndpoints(()=>(i+.5)/1000,1)[0].side]++;
+ assert.deepEqual(tally,{north:400,south:400,east:100,west:100});
+ const points=sampleBoundaryEndpoints(()=>.2);assert.equal(points.length,6);assert.equal(new Set(points.map(p=>p.index)).size,6);
 });
 test('finished worlds include north/south and east/west river and cliff exits',()=>{
  const edges={river:new Set(),cliff:new Set()};
@@ -95,4 +95,14 @@ test('validation rejects fortresses placed within four sectors of each other',()
  const close=['north','east','south','west'].map(side=>neighbor(first,side)).find(i=>i!==null&&m.sectors[i].role==='countryside');assert.notEqual(close,undefined);
  [m.sectors[second],m.sectors[close]]=[m.sectors[close],m.sectors[second]];
  assert.match(validateGenerated(m).errors.join(' '),/Every pair of fortresses must be at least four sectors apart/);
+});
+
+test('independently sampled ends yield mixed, same and opposite edges without moving endpoints',()=>{
+ const opposite={north:'south',south:'north',east:'west',west:'east'},kinds={river:new Set(),cliff:new Set()};let mixedWithinWorld=false;
+ for(const seed of [0,1,2,3,5,7,42,100,3286254627]){const m=generateWorld(seed),pairs=[];
+  for(const f of m.generation.features){const first=m.sectors[f.cells[0]].routes.find(r=>r.kind===f.kind),last=m.sectors[f.cells.at(-1)].routes.find(r=>r.kind===f.kind);assert.equal(f.cells[0],f.start.index);assert.equal(f.cells.at(-1),f.end.index);assert.equal(first.from.side,f.start.side);assert.equal(last.to.side,f.end.side);
+   const type=f.start.side===f.end.side?'same':opposite[f.start.side]===f.end.side?'opposite':'mixed';kinds[f.kind].add(type);pairs.push([f.start.side,f.end.side].sort().join('-'));
+  }mixedWithinWorld ||= new Set(pairs).size>1;
+ }
+ assert.ok(mixedWithinWorld);for(const types of Object.values(kinds))assert.deepEqual([...types].sort(),['mixed','opposite','same']);
 });

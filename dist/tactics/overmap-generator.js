@@ -1,6 +1,6 @@
 import {WIDTH as W,HEIGHT as H,SIDES,STEP,OPPOSITE,blank,route,validate,warnings,placeTutorial,tutorialCells} from './overmap-model.js';
 
-export const GENERATOR_VERSION='strategic-plan-7';
+export const GENERATOR_VERSION='strategic-plan-8';
 export const STAGES=['Tutorial','Rivers','Cliffs','Difficulty zoning','Settlements and fortresses','Roads','Bridges and gates','Validation'];
 export const DEFAULTS={villages:3,towns:4,cities:5,maxAttempts:40};
 export const SETTLEMENT_ZONES={easy:{towns:2,villages:1,cities:[[3,3]]},medium:{towns:1,villages:2,cities:[[3,4],[4,4]]},hard:{towns:1,villages:0,cities:[[3,4],[5,5]]}};
@@ -17,27 +17,32 @@ const pick=(a,r)=>a[Math.floor(r()*a.length)];
 function shuffled(a,r){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
 function settings(options){const o={...DEFAULTS,...options};for(const [k,min,max]of [['villages',3,3],['towns',4,4],['cities',5,5],['maxAttempts',1,100]])if(!Number.isInteger(o[k])||o[k]<min||o[k]>max)fail(`${k} must be a whole number from ${min} to ${max}.`);return o;}
 
-// Three separated corridors permit two rivers and a cliff chain without ambiguous
-// river/cliff intersections. Orientation, corridors, meanders and ports are seeded.
 export const BOUNDARY_POSITION_WEIGHTS={north:1,south:1,east:.5,west:.5};
-export function boundaryOrientation(r,width=W,height=H){
- const ns=width*(BOUNDARY_POSITION_WEIGHTS.north+BOUNDARY_POSITION_WEIGHTS.south),ew=height*(BOUNDARY_POSITION_WEIGHTS.east+BOUNDARY_POSITION_WEIGHTS.west);
- return r()<ns/(ns+ew);
+export function boundaryPorts(){return SIDES.flatMap(side=>Array.from({length:side==='north'||side==='south'?W:H},(_,n)=>({side,index:side==='north'?n:side==='south'?(H-1)*W+n:side==='west'?n*W:n*W+W-1,weight:BOUNDARY_POSITION_WEIGHTS[side]})));}
+export function sampleBoundaryEndpoints(r,count=6){
+ const pool=boundaryPorts(),result=[];
+ for(let i=0;i<count;i++){if(!pool.length)fail('Not enough distinct boundary sectors.');let value=r()*pool.reduce((n,p)=>n+p.weight,0),chosen=pool.at(-1);for(const p of pool){value-=p.weight;if(value<0){chosen=p;break;}}result.push({side:chosen.side,index:chosen.index});for(let j=pool.length-1;j>=0;j--)if(pool[j].index===chosen.index)pool.splice(j,1);}
+ return result;
 }
-function corridors(r){const vertical=boundaryOrientation(r),span=vertical?W:H;const starts=[];for(let a=1;a<span-1;a++)for(let b=a+3;b<span-1;b++)for(let c=b+3;c<span-1;c++)starts.push([a,b,c]);return {vertical,lines:shuffled(pick(starts,r),r)};}
-function feature(m,kind,base,vertical,reserved,r,id){
- const length=vertical?H:W,span=vertical?W:H,toIndex=(a,b)=>vertical?b*W+a:a*W+b;
- const occupied=new Set(m.sectors.flatMap((s,i)=>s.routes.length?[i]:[]));
- const allowed=(a,b)=>a>0&&a<span-1&&!reserved.has(toIndex(a,b))&&!occupied.has(toIndex(a,b))&&!neighbors(toIndex(a,b)).some(i=>occupied.has(i));
- let current=base,path=[];
- for(let b=0;b<length;b++){
-  if(!allowed(current,b))fail(`${kind}: corridor meets the reserved tutorial or another feature.`);
-  path.push(toIndex(current,b));
-  if(b>1&&b<length-2&&b%4===0&&r()<.55){const next=base+(current===base?(r()<.5?-1:1):0);if(next!==current&&allowed(next,b)&&allowed(next,b+1)){path.push(toIndex(next,b));current=next;}}
+function feature(m,kind,start,end,reserved,r,id){
+ const occupied=new Set(m.sectors.flatMap((s,i)=>s.routes.length?[i]:[])),blocked=new Set(reserved);
+ for(const i of occupied){blocked.add(i);neighbors(i).forEach(j=>blocked.add(j));}
+ const first=neighbor(start.index,OPPOSITE[start.side]),last=neighbor(end.index,OPPOSITE[end.side]);
+ if(first===null||last===null||[start.index,end.index,first,last].some(i=>blocked.has(i)))fail(kind+': chosen endpoints meet reserved terrain.');
+ const allowed=i=>!blocked.has(i)&&i!==start.index&&i!==end.index&&(interior(i)||i===first||i===last);
+ // Direction is part of the search state so bends have a stable cost. Endpoints
+ // are fixed before routing; impossible pairs reject the attempt, never move ends.
+ const noise=all().map(()=>r()*.9),dist=new Map(),previous=new Map(),open=[];
+ const initial=first*4+SIDES.indexOf(OPPOSITE[start.side]);dist.set(initial,0);open.push({key:initial,cost:0});let finish;
+ while(open.length){open.sort((a,b)=>b.cost-a.cost||b.key-a.key);const item=open.pop();if(item.cost!==dist.get(item.key))continue;const i=Math.floor(item.key/4),heading=item.key%4;if(i===last){finish=item.key;break;}
+  for(let d=0;d<4;d++){const j=neighbor(i,SIDES[d]);if(j===null||!allowed(j))continue;const key=j*4+d,cost=item.cost+1+noise[j]+(d===heading?0:1.8);if(cost<(dist.get(key)??Infinity)){dist.set(key,cost);previous.set(key,item.key);open.push({key,cost});}}
  }
+ if(finish===undefined)fail(kind+': no route between the selected boundary endpoints.');
+ const path=[];for(let key=finish;key!==undefined;key=previous.get(key))path.push(Math.floor(key/4));path.reverse();path.unshift(start.index);path.push(end.index);
+ if(new Set(path).size!==path.length||path.length<5)fail(kind+': selected endpoints produce a short or self-overlapping route.');
  let offset=r()<.5?1/3:2/3;
- path.forEach((index,i)=>{const from=i?direction(index,path[i-1]):vertical?'north':'west',to=i<path.length-1?direction(index,path[i+1]):vertical?'south':'east',next=r()<.28?(offset===1/3?2/3:1/3):offset;m.sectors[index].routes.push(route(kind,from,to,offset,next));m.sectors[index].terrain=kind==='river'?'wetland':'plain';offset=next;});
- return {id,kind,cells:path};
+ path.forEach((index,i)=>{const from=i?direction(index,path[i-1]):start.side,to=i<path.length-1?direction(index,path[i+1]):end.side,next=r()<.28?(offset===1/3?2/3:1/3):offset;m.sectors[index].routes.push(route(kind,from,to,offset,next));m.sectors[index].terrain=kind==='river'?'wetland':'plain';offset=next;});
+ return {id,kind,cells:path,start:{...start},end:{...end}};
 }
 function zones(m,tutorial,r){
  const distance=Array(N).fill(Infinity),done=new Set(),noise=all().map(()=>r()*.4);tutorial.forEach(c=>distance[c.index]=0);
@@ -156,8 +161,8 @@ export function generateWorld(seed,options={},onProgress=()=>{}){
   try{
    report(0);let m=blank();const placements=[];for(const rotation of [0,90,180,270])for(let y=0;y<H;y++)for(let x=0;x<W;x++){try{tutorialCells(x,y,rotation);placements.push({x,y,rotation});}catch{}}
    const p=pick(placements,r);m=placeTutorial(m,p.x,p.y,p.rotation);const tutorial=tutorialCells(p.x,p.y,p.rotation),reserved=new Set(tutorial.map(c=>c.index));
-   const layout=corridors(r);report(1);const features=[feature(m,'river',layout.lines[0],layout.vertical,reserved,r,'river-1'),feature(m,'river',layout.lines[1],layout.vertical,reserved,r,'river-2')];
-   report(2);features.push(feature(m,'cliff',layout.lines[2],layout.vertical,reserved,r,'cliff-1'));
+   report(1);const endpoints=sampleBoundaryEndpoints(r);const features=[feature(m,'river',endpoints[0],endpoints[1],reserved,r,'river-1'),feature(m,'river',endpoints[2],endpoints[3],reserved,r,'river-2')];
+   report(2);features.push(feature(m,'cliff',endpoints[4],endpoints[5],reserved,r,'cliff-1'));
    report(3);zones(m,tutorial,r);for(const i of all())if(!reserved.has(i)&&!m.sectors[i].routes.length)m.sectors[i].terrain=r()<.23?'forest':'plain';
    report(4);const groups=settlements(m,tutorial,o,r);
    report(5);const crossings=roads(m,features,groups,r);
