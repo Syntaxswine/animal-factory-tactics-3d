@@ -1,6 +1,6 @@
 import {WIDTH as W,HEIGHT as H,SIDES,STEP,OPPOSITE,blank,route,validate,warnings,placeTutorial,tutorialCells} from './overmap-model.js';
 
-export const GENERATOR_VERSION='strategic-plan-1';
+export const GENERATOR_VERSION='strategic-plan-2';
 export const STAGES=['Tutorial','Rivers','Cliffs','Difficulty zoning','Settlements and fortresses','Roads','Bridges and gates','Validation'];
 export const DEFAULTS={villages:6,towns:3,cities:2,maxAttempts:40};
 const interior=i=>i%W>0&&i%W<W-1&&Math.floor(i/W)>0&&Math.floor(i/W)<H-1;
@@ -13,7 +13,7 @@ const fail=message=>{throw Error(message);};
 function random(seed){let a=seed>>>0;return ()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
 const pick=(a,r)=>a[Math.floor(r()*a.length)];
 function shuffled(a,r){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
-function settings(options){const o={...DEFAULTS,...options};for(const [k,min,max]of [['villages',0,30],['towns',1,15],['cities',0,10],['maxAttempts',1,100]])if(!Number.isInteger(o[k])||o[k]<min||o[k]>max)fail(`${k} must be a whole number from ${min} to ${max}.`);return o;}
+function settings(options){const o={...DEFAULTS,...options};for(const [k,min,max]of [['villages',0,30],['towns',1,15],['cities',2,2],['maxAttempts',1,100]])if(!Number.isInteger(o[k])||o[k]<min||o[k]>max)fail(`${k} must be a whole number from ${min} to ${max}.`);return o;}
 
 // Three separated corridors permit two rivers and a cliff chain without ambiguous
 // river/cliff intersections. Orientation, corridors, meanders and ports are seeded.
@@ -49,7 +49,7 @@ function settlements(m,tutorial,o,r){
  const town=tutorial[4].index,second=pick(neighbors(town).filter(i=>land(i)&&interior(i)&&m.sectors[i].difficulty==='easy'),r);if(second===undefined)fail('Starting town has no free adjoining easy sector.');assign('town',[town,second],'town-1');
  for(const [kind,count]of [['town',o.towns-1],['village',o.villages],['city',o.cities]])for(let n=0;n<count;n++){
   const size=kind==='town'?2:kind==='city'?3+Math.floor(r()*3):1;let group;
-  for(const start of shuffled(all().filter(land),r)){group=cluster(start,size);if(group)break;}
+  for(const start of shuffled(all().filter(i=>land(i)&&(kind!=='city'||m.sectors[i].difficulty==='hard')),r)){group=cluster(start,size);if(group)break;}
   if(!group)fail(`No compatible space for ${kind} ${n+1}.`);assign(kind,group,`${kind}-${n+(kind==='town'?2:1)}`);
  }
  for(const [difficulty,count]of [['easy',1],['medium',2],['hard',2]])for(let n=0;n<count;n++){const i=pick(all().filter(i=>land(i)&&m.sectors[i].difficulty===difficulty),r);if(i===undefined)fail(`No space for ${difficulty} fortress.`);used.add(i);Object.assign(m.sectors[i],{role:'fortress',name:`${difficulty} fortress ${n+1}`,owner:'red-hats',facilities:[]});}
@@ -121,6 +121,8 @@ export function validateGenerated(m){
  const connected=new Set(sites.slice(0,1)),roadQueue=[...connected];for(const i of roadQueue)for(const side of roadSides(i)){const j=neighbor(i,side);if(j!==null&&roadSides(j).has(OPPOSITE[side])&&!connected.has(j)){connected.add(j);roadQueue.push(j);}}check(sites.every(i=>connected.has(i)),'Roads do not connect every settlement sector and fortress.');
  const groups=new Map();m.sectors.forEach((s,i)=>{if(s.settlementId){if(!groups.has(s.settlementId))groups.set(s.settlementId,[]);groups.get(s.settlementId).push(i);}});
  for(const [id,cells]of groups){const role=m.sectors[cells[0]].role,expected=role==='village'?[1,1]:role==='town'?[2,2]:[3,5];check(cells.length>=expected[0]&&cells.length<=expected[1],`${id}: invalid settlement size.`);const joined=new Set([cells[0]]),q=[cells[0]];for(const i of q)for(const j of neighbors(i))if(cells.includes(j)&&!joined.has(j)){joined.add(j);q.push(j);}check(joined.size===cells.length,`${id}: settlement is not contiguous.`);check(cells.every(i=>m.sectors[i].role===role),`${id}: constituent roles do not match.`);if(id==='town-1')check(cells.every(interior),'Starting town must be fully inland.');const facilities=cells.flatMap(i=>m.sectors[i].facilities);if(role==='town')check(facilities.filter(f=>f==='workshop').length===1,`${id}: town needs one workshop.`);if(role==='city')check(facilities.filter(f=>f==='factory').length===1&&facilities.filter(f=>f==='workshop').length>=1&&facilities.filter(f=>f==='workshop').length<=3,`${id}: city needs one factory and 1–3 workshops.`);}
+ check(m.sectors.filter(s=>s.role==='city').every(s=>s.difficulty==='hard'),'Every city sector must be in the hard zone.');
+ check([...groups.values()].filter(g=>m.sectors[g[0]].role==='city').length===2,'The hard zone must contain exactly two cities.');
  for(const [role,key]of [['town','towns'],['city','cities'],['village','villages']]){counts[key]=[...groups.values()].filter(g=>m.sectors[g[0]].role===role).length;if(m.generation?.options)check(counts[key]===m.generation.options[key],`Expected ${m.generation.options[key]} ${key}.`);}
  return {valid:errors.length===0,errors:[...new Set(errors)],counts};
 }

@@ -15,6 +15,7 @@ test('seed range produces complete valid worlds, different geography and all tut
  for(const seed of [0,...Array.from({length:30},(_,i)=>i+1),4294967295]){
   const m=generateWorld(seed),report=validateGenerated(m);assert.equal(report.valid,true,`Seed ${seed}: ${report.errors.join('\n')}`);
   assert.deepEqual([report.counts.easy,report.counts.medium,report.counts.hard],[150,150,150]);
+  const cities=m.sectors.filter(s=>s.role==='city');assert.equal(new Set(cities.map(s=>s.settlementId)).size,2);assert.ok(cities.every(s=>s.difficulty==='hard'));
   rotations.add(m.tutorialPlacement.rotation);shapes.add(JSON.stringify(m.generation.features.map(f=>f.cells)));
   const p=m.tutorialPlacement,cells=tutorialCells(p.x,p.y,p.rotation),town=cells[4].index;
   for(const [i,s]of m.sectors.entries())if(s.settlementId==='town-1')assert.ok(i%30>0&&i%30<29&&Math.floor(i/30)>0&&Math.floor(i/30)<14);
@@ -24,13 +25,13 @@ test('seed range produces complete valid worlds, different geography and all tut
  assert.equal(rotations.size,4);assert.ok(shapes.size>20);
 });
 test('configured settlement counts and facilities survive saving and editor undo',()=>{
- const m=generateWorld(42,{villages:2,towns:1,cities:1});assert.deepEqual([m.generation.counts.villages,m.generation.counts.towns,m.generation.counts.cities],[2,1,1]);
+ const m=generateWorld(42,{villages:2,towns:1,cities:2});assert.deepEqual([m.generation.counts.villages,m.generation.counts.towns,m.generation.counts.cities],[2,1,2]);
  const d=new SketchDocument(demo()),before=structuredClone(d.map);d.replace(m);const saved=JSON.stringify(d.map);d.undo();assert.deepEqual(d.map,before);d.redo();assert.equal(JSON.stringify(d.map),saved);
  assert.equal(validateGenerated(new SketchDocument(JSON.parse(saved)).map).valid,true);
 });
 test('invalid or exhausted generation never changes the current document',()=>{
  const d=new SketchDocument(demo()),before=JSON.stringify(d.map);
- for(const run of [()=>generateWorld(-1),()=>generateWorld(2,{towns:0}),()=>generateWorld(1,{maxAttempts:1})]){assert.throws(()=>d.replace(run()));assert.equal(JSON.stringify(d.map),before);assert.equal(d.past.length,0);}
+ for(const run of [()=>generateWorld(-1),()=>generateWorld(2,{cities:1}),()=>generateWorld(2,{towns:0}),()=>generateWorld(1,{maxAttempts:1})]){assert.throws(()=>d.replace(run()));assert.equal(JSON.stringify(d.map),before);assert.equal(d.past.length,0);}
  assert.throws(()=>generateWorld(1,{maxAttempts:1}),/failed after 1 deterministic attempts/);
 });
 test('validation catches broken zones, edges, gates, roads and tutorial escape edits',()=>{
@@ -42,4 +43,5 @@ test('validation catches broken zones, edges, gates, roads and tutorial escape e
  assert.match(rejected(m=>{const s=m.sectors.find(s=>s.tutorialStep===1);s.travel.push(['north','east','south','west'].find(d=>!s.travel.includes(d)));}),/Tutorial|Travel/);
  assert.match(rejected(m=>{const f=m.generation.features[0];m.sectors[f.cells[0]].routes.find(r=>r.kind==='river').from.offset=.5;}),/Invalid properties/);
  assert.match(rejected(m=>m.sectors.find(s=>s.gate==='bridge').gateGuards=16),/guards/);
+ assert.match(rejected(m=>{const city=m.sectors.find(s=>s.role==='city'),easy=m.sectors.find(s=>s.role==='countryside'&&s.difficulty==='easy');city.difficulty='easy';easy.difficulty='hard';}),/Every city sector must be in the hard zone/);
 });

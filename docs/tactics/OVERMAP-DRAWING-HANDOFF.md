@@ -13,7 +13,8 @@ Re-randomize tutorial remain available for focused drawing studies.
 3. One cliff chain with two world-edge connections.
 4. Exactly 150 easy, 150 medium, 150 hard. Easy is connected, includes the tutorial,
    and never directly borders hard.
-5. Configurable villages/towns/cities (defaults 6/3/2, including starting town).
+5. Configurable villages/towns (defaults 6/3, including starting town), plus exactly
+   two cities entirely within the hard zone.
    Villages occupy one sector, towns two, cities three to five. Towns have one
    workshop; cities one factory and one to three workshops. Facilities occupy
    constituent sectors. Settlement/facility IDs persist. Fortresses: 1 easy,
@@ -79,3 +80,7 @@ Tests cover many seeds, deterministic retries, all rotations, counts, roads,
 gates, disconnected edits, atomic failures and persistence. Browser checks cover
 same/different seeds, worker progress, save/load, undo, cancellation, invalid
 settings and mobile layout. Screenshots live under artifacts/overmap/ locally.
+
+Generator version strategic-plan-2 requires exactly two hard-zone cities, with
+every constituent sector in hard territory. Existing saves retain their original
+layout; Check world reports older arrangements that violate this updated rule.
