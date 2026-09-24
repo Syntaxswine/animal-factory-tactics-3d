@@ -1,3 +1,4 @@
+import {applyRuntimeCharacter} from '../character-properties.js';
 import {updateCliffSupports} from '../cliff-support.js';
 import {recordCliffTraversal} from '../cliff-traversal.js';
 import {COMBAT_ROUND_MINUTES as ROUND_MINUTES} from '../game-clock.js';
@@ -84,9 +85,9 @@ export function createGame(seed=1947,definition=factoryMap(),detect=true,difficu
  const s={difficulty:difficulty==='easy'?'easy':'standard',map:structuredClone(definition.terrain),upper:structuredClone(definition.upper),stairs:structuredClone(definition.stairs),climbs:structuredClone(definition.climbs||[]),props:structuredClone(definition.props||[]),sectors:structuredClone(definition.sectors),edges:{...definition.edges},edgeLocks:structuredClone(definition.edgeLocks||{}),definition:structuredClone(definition),units:[],phase:'explore',round:0,selected:0,visible:new Set(),seen:new Set(),detected:new Set(),glimpses:{},log:[],seed,perceptionSeed:seed,revision:0,queue:[],enemyIndex:0,contacts:{},effect:null};
  const add=(team,name,species,x,y,weapon,z=0)=>spawnUnit(s,{team,name,species,x,y,z,weapon,medical:team==='squad'?[0,25,50,100][s.units.length]:0});
  const cast=options.cast?options.cast.map(c=>[c.name,c.species,c.weapon]):DEFAULT_CAST;
- definition.starts.forEach((p,i)=>{if(cast[i])add('squad',cast[i][0],cast[i][1],p.x,p.y,cast[i][2],levelOf(p));});
+ definition.starts.forEach((p,i)=>{if(cast[i]){add('squad',cast[i][0],p.species||cast[i][1],p.x,p.y,p.weapon||cast[i][2],levelOf(p));if(p.outfit)s.units.at(-1).outfit=p.outfit;applyRuntimeCharacter(s.units.at(-1),p);}});
  const names=['Boris','Lev','Grigori','Oleg','Pavel','Igor','Anton','Vadim','Yuri','Sasha','Pyotr','Nikolai'];
- definition.guards.forEach((g,i)=>{add('guard',names[i]||`Guard ${i+1}`,g.species,g.x,g.y,g.weapon,levelOf(g));if(g.outfit)s.units.at(-1).outfit=g.outfit;if(Number.isFinite(g.heading))s.units.at(-1).heading=g.heading;});
+ definition.guards.forEach((g,i)=>{add('guard',names[i]||`Guard ${i+1}`,g.species,g.x,g.y,g.weapon,levelOf(g));applyRuntimeCharacter(s.units.at(-1),g);if(g.outfit)s.units.at(-1).outfit=g.outfit;if(Number.isFinite(g.heading))s.units.at(-1).heading=g.heading;});
  for(const g of guards(s))g.post={x:g.x,y:g.y,z:levelOf(g),heading:g.heading}; // a guard's start tile and heading are its post
  // G3 behind its knob: the campaign (createWorld) draws an archetype per guard from a hash of the seed and the guard's index; plain createGame leaves the G2 base numbers.
  let rosterSeed=(options.rosterSeed??seed)>>>0;for(const c of String(definition.name||''))rosterSeed=Math.imul(rosterSeed^c.charCodeAt(0),16777619)>>>0;

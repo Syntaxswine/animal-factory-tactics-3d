@@ -4,7 +4,7 @@
   "revision": "e529f4b3d512d32cea522d701d01ebe8488af013",
   "overrides": {
     "blocks.js": {
-      "reason": "Preserve authored door locks across block extraction and placement.",
+      "reason": "Preserve authored door locks across block extraction and placement. Preserve and remap character links on block duplication.",
       "upstreamSha256": "4c4961c7c9897640dafca906384569f5337bfabbc2a907adb88ca8e64a733bf4"
     },
     "connections.js": {
@@ -12,11 +12,11 @@
       "upstreamSha256": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f"
     },
     "editor-model.js": {
-      "reason": "Preserve donkey guide outfits and allow supported cliff tiles at water edges. Author tagged cliff links using supported adjacent levels.",
+      "reason": "Preserve donkey guide outfits and allow supported cliff tiles at water edges. Author tagged cliff links using supported adjacent levels. Assign permanent identities at character creation.",
       "upstreamSha256": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262"
     },
     "engine.js": {
-      "reason": "Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events.",
+      "reason": "Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events. Expose saved character metadata and display names during playtesting.",
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
     "environment.js": {
@@ -32,7 +32,7 @@
       "upstreamSha256": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f"
     },
     "maps.js": {
-      "reason": "Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP.",
+      "reason": "Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks.",
       "upstreamSha256": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73"
     },
     "progression.js": {
@@ -50,16 +50,16 @@
   },
   "files": {
     "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
-    "blocks.js": "c57a672d9a279dd7a61b60008ffeabd09b84ed3f70a4ed30d9ae5f7728b6fb12",
+    "blocks.js": "5241515dbbc9f62cddcd01eab19ea3a7b48bf26c5bc766e9b77e7dcd157537b7",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
-    "editor-model.js": "1a336919d293a9d3b355eead92039074dbafd7583cb452615cbc75341dccc3e0",
-    "engine.js": "c3482dc0ab52c237c5cbad809d8e3813e00ec0389c3efbb24be40f26f93b52c6",
+    "editor-model.js": "10dda96c0af9e22e2eb9449daff706924267c15c9e6f490fcf2baa3b6cefb0a2",
+    "engine.js": "925aad3105daff19d489c535b3c2cdafd43c6dafebc247dc846d3b6c671fd91b",
     "environment.js": "0030f1ad61122c0d0f989f32da362837a03938def60be417f88492fb22d3a666",
     "explosives.js": "d28c8600c983f8a018a32e84a137836b81165d80924587f0195f23a540a64fa4",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "521036500cfc6e0965e9b2db6b47ea33ca7996bf74d24648fd734da5ba20742f",
-    "maps.js": "825c42a394654f2decf9a48f04fda20932473b63ca0d50ba66c97690847e24b3",
+    "maps.js": "1bc2b745e8fe48692c73fee2ebadf185ef863d7beb744907cf6eb972714e2375",
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",

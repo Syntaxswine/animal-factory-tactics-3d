@@ -16,13 +16,13 @@ function focus(x,y,span=24){view.x=x;view.y=y;view.span=span;dirty=true;}
 function home(){view.preset='0';$('camera').value='0';const p=documentModel?.map.starts[0];focus(p?.x??11.5,p?.y??11.5,22);}
 async function open(text){
  const next=text instanceof EditingDocument?text:new EditingDocument().open(text),ticket=++serial;documentModel=next;workspaces[next.block?'block':'map']=next;loading=true;selection=null;scene.preview(null);$('properties').textContent='';$('selected').textContent='Choose a cell or object.';$('visual-note').textContent='';
- $('name').textContent=next.map.name;$('counts').textContent=`${next.size} × ${next.size} · ${next.block?'Block':next.map.guards.length+' guards'} · ${next.map.props.length} props`;
+ $('name').textContent=next.map.name;$('counts').textContent=`${next.size} × ${next.size} · ${next.block?'Block':next.map.guards.length+' placed characters'} · ${next.map.props.length} props`;
  $('floor').value='0';scene.options.level=0;$('sector-x').max=$('sector-y').max=next.block?1:10;$('sector-x').value=$('sector-y').value='1';home();status('Loading modeled scenery and starts…');$('export').disabled=false;
  await scene.open(next);if(ticket!==serial)return;loading=false;tools.reset();status(scene.diagnostics.length?'Some visuals are unavailable. See scene diagnostics.':next.block?'Edit this reusable block, then save it to the library.':'Select a build tool to edit. Right-drag or WASD pans.');dirty=true;
 }
 async function factory(){try{status('Opening authored factory…');const r=await fetch('./default-factory.json',{cache:'no-store'});if(!r.ok)throw Error('Factory could not load: HTTP '+r.status);await open(await r.text());}catch(e){status(e.message);}}
 function inspect(x,y){const p=scene.pick(x,y,canvas.clientWidth,canvas.clientHeight);if(!p||!documentModel)return null;return documentModel.inspect(p.x,p.y,scene.options.level,{...scene.options,mode:$('pick-mode').value});}
-function select(value){selection=value;scene.select(value);$('selected').textContent=value?`${value.label} · ${value.x}, ${value.y} · floor ${value.z+1}`:'Choose a cell or object.';$('properties').textContent=value?JSON.stringify(value.data,null,2):'';
+function select(value){selection=value;scene.select(value);$('selected').textContent=value?`${value.label} · ${value.x}, ${value.y} · floor ${value.z+1}`:'Choose a cell or object.';$('properties').textContent=value&&value.type!=='unit'?JSON.stringify(value.data,null,2):'';tools.selectionChanged();
  const notes=[];if(value?.type==='unit'){if(value.data.species==='hen'&&value.data.weapon!=='hands')notes.push('Saved weapon: '+value.data.weapon+'. The hen model currently has no armed pose.');if(value.data.id.startsWith('start'))notes.push('Squad start marker. Species and rifle are illustrative.');}$('visual-note').textContent=notes.join(' ');
 }
 $('factory').onclick=()=>{if(tools.guardReplace())factory();};$('home').onclick=home;$('overview').onclick=()=>{const size=documentModel?.size||240;focus((size-1)/2,(size-1)/2,size*1.55);};
@@ -53,8 +53,8 @@ document.addEventListener('keydown',e=>{
 for(const item of PREVIEW_FOOTPRINTS){const li=document.createElement('li');li.textContent=item.name+' · '+item.tiles.join('×');$('cargo').append(li);}
 new ResizeObserver(()=>dirty=true).observe(canvas);window.addEventListener('pagehide',()=>scene.dispose(),{once:true});
 // Programmatic inspection shares the same opening and picking paths as the UI.
-async function changed(){loading=true;try{await scene.update(documentModel);select(null);$('name').textContent=documentModel.map.name;$('counts').textContent=`${documentModel.size} × ${documentModel.size} · ${documentModel.map.guards.length} guards · ${documentModel.map.props.length} props`;dirty=true;}finally{loading=false;}}
+async function changed(){loading=true;try{const identity=selection?.data?.character?.id;await scene.update(documentModel);select(identity?documentModel.characterSelection(identity):null);$('name').textContent=documentModel.map.name;$('counts').textContent=`${documentModel.size} × ${documentModel.size} · ${documentModel.map.guards.length} placed characters · ${documentModel.map.props.length} props`;dirty=true;}finally{loading=false;}}
 async function switchWorkspace(mode){if(loading)return;const next=workspaces[mode]||new EditingDocument().open(JSON.stringify(mode==='block'?extractBlock(blockCanvas('New block')):blankMap('New design')));await open(next);}
 const tools=installEditing({canvas,scene,getDocument:()=>documentModel,getSelection:()=>selection,open,changed,status,isLoading:()=>loading,switchWorkspace,hasUnsaved:()=>Object.values(workspaces).some(d=>d.changed)});
-window.editor3d={open,apply:command=>tools.apply(command),validate:()=>documentModel.validate(),export:()=>documentModel.export(),inspect:(x,y,z,options)=>documentModel.inspect(x,y,z,options),get document(){return documentModel;},get scene(){return scene;},get loading(){return loading;},get selection(){return selection;},view};
+window.editor3d={open,select,changed,apply:command=>tools.apply(command),validate:()=>documentModel.validate(),export:()=>documentModel.export(),inspect:(x,y,z,options)=>documentModel.inspect(x,y,z,options),get document(){return documentModel;},get scene(){return scene;},get loading(){return loading;},get selection(){return selection;},view};
 requestAnimationFrame(render);factory();

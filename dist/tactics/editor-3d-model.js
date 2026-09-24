@@ -16,7 +16,7 @@ export class InspectionDocument {
   map.props??=[];
   if(block){map.terrain=map.terrain.slice(0,24).map(row=>row.slice(0,24));map.starts=[];map.exits=[];}
   this.original=structuredClone(original);this.map=map;this.size=block?24:240;this.block=block;
-  this.units=[...map.starts.map((p,i)=>({...p,id:'start-'+i,species:['horse','goat','donkey','sheep'][i],weapon:'rifle',heading:0,role:'Squad start '+(i+1)})),...map.guards.map((p,i)=>({...p,id:'guard-'+i,role:'Guard '+(i+1)}))];
+  this.units=[...map.starts.map((p,i)=>({...p,id:'start-'+i,species:p.species||['horse','goat','donkey','sheep'][i],weapon:p.weapon||'rifle',heading:0,role:'Squad start '+(i+1)})),...map.guards.map((p,i)=>({...p,id:'guard-'+i,role:'Guard '+(i+1)}))];
   return this;
  }
  export(){return JSON.stringify(this.original,null,2);}

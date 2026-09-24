@@ -1,3 +1,4 @@
+import {characters,characterName,characterDiagnostics,copyCharacters,ensureCharacterIdentities} from './character-properties.js';
 import {isCliff,CLIFF_LIMIT} from './cliff-map.js';
 import {TOWERS,towerSlots,towerPost} from './tower-geometry.js';
 import {LIGHT_FORMS} from './light-sources.js';
@@ -10,8 +11,8 @@ import {connectionSet} from './core/connections.js';
 import {EDGES,propCells} from './core/environment.js';
 export function brushPoint(p){const x=Math.floor(p.x+.5),y=Math.floor(p.y+.5),dx=p.x-x,dy=p.y-y,axis=Math.abs(dx)>Math.abs(dy)?'e':'s';return {x,y,z:p.z,edge:edgeKey(axis,x-(axis==='e'&&dx<0?1:0),y-(axis==='s'&&dy<0?1:0),p.z)};}
 export class EditingDocument extends InspectionDocument {
- open(text){super.open(text);if(!this.block)mapStartMinutes(this.map);this.editor=createEditor(this.block?openBlock(this.original):this.map);this.changed=false;this.revision=0;return this;}
- refresh(){if(this.block){const original={...this.original,...extractBlock(this.editor.map)};if(!this.editor.map.blockConnections?.['0,0'])delete original.connections;const display=new InspectionDocument().open(JSON.stringify(original));this.map=display.map;this.original=original;}else{this.map=this.editor.map;this.original=this.map;}this.units=[...this.map.starts.map((p,i)=>({...p,id:'start-'+i,species:['horse','goat','donkey','sheep'][i],weapon:'rifle',heading:0,role:'Squad start '+(i+1)})),...this.map.guards.map((p,i)=>({...p,id:'guard-'+i,role:'Guard '+(i+1)}))];this.changed=true;this.revision++;}
+ open(text){super.open(text);if(!this.block)mapStartMinutes(this.map);this.editor=createEditor(this.block?openBlock(this.original):this.map);this.refresh();this.changed=false;this.revision=0;return this;}
+ refresh(){if(this.block){const original={...this.original,...extractBlock(this.editor.map)};if(!this.editor.map.blockConnections?.['0,0'])delete original.connections;const display=new InspectionDocument().open(JSON.stringify(original));this.map=display.map;this.original=original;}else{this.map=this.editor.map;this.original=this.map;}this.units=[...this.map.starts.map((p,i)=>({...p,id:'start-'+i,species:p.species||['horse','goat','donkey','sheep'][i],weapon:p.weapon||'rifle',heading:0,role:characterName(p,'Squad start '+(i+1))})),...this.map.guards.map((p,i)=>({...p,id:'guard-'+i,role:characterName(p,(p.character?.category==='npc'?'NPC ':'Guard ')+(i+1))}))];this.changed=true;this.revision++;}
  preview(command){
   const {tool,start,end=start,options={}}=command;
   if(!start||![start.x,start.y,start.z??0].every(Number.isInteger))return {ok:false,error:'Choose a map cell.'};
@@ -24,7 +25,7 @@ export class EditingDocument extends InspectionDocument {
   if(!points.length)return {ok:false,error:'Choose a cell inside the map.'};
   try{
    for(const p of points){
-    let actualTool=tool,actualOptions=options;
+    let actualTool=tool==='npc'?'guard':tool,actualOptions=tool==='npc'?{...options,category:'npc'}:options;
     if(['cliff','erase-cliff'].includes(tool)){
      const existing=candidate.map.props.find(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(start.z||0));
      if(isCliff(existing))applyBrush(candidate,'erase-prop',p.x,p.y,'',{level:start.z||0});
@@ -53,6 +54,26 @@ export class EditingDocument extends InspectionDocument {
   }catch(e){return {ok:false,error:e.message,cells:points,edges};}
  }
  apply(command){const result=this.preview(command);if(result.ok){replaceMap(this.editor,result.map);this.refresh();}return result;}
+ character(id){return characters(this.editor.map).find(r=>r.p.character?.id===id);}
+ characterSelection(id){const u=this.units.find(p=>p.character?.id===id);return u?{x:u.x,y:u.y,z:u.z||0,type:'unit',label:characterName(u,u.role),data:u,cells:[{x:u.x,y:u.y,z:u.z||0}]}:null;}
+ updateCharacter(id,patch){
+  const row=this.character(id);if(!row)throw Error('This character no longer exists.');
+  const map=structuredClone(this.editor.map),p=map[row.field][row.index];
+  for(const key of ['species','outfit','weapon','heading'])if(Object.hasOwn(patch,key))p[key]=patch[key];
+  const allowed=['displayName','scriptId','faction','attitude','canTalk','dialogueRef','canSell','shopInventoryRef','shopPricingRef','references','model','visualVariant'];
+  for(const key of allowed)if(Object.hasOwn(patch.character||{},key))p.character[key]=structuredClone(patch.character[key]);
+  p.character.id=id;this.replace(map);return this.characterSelection(id);
+ }
+ duplicateCharacter(id,point){
+  const row=this.character(id);if(!row)throw Error('This character no longer exists.');
+  if(row.field==='starts')throw Error('Squad slots are fixed. Duplicate a placed guard or NPC.');
+  if(!point||![point.x,point.y,point.z??0].every(Number.isInteger))throw Error('Choose a destination tile.');
+  if(point.x<0||point.y<0||point.x>=this.size||point.y>=this.size||(point.z||0)<0||(point.z||0)>2)throw Error('Keep the duplicate inside the current map or block.');
+  const [copy]=copyCharacters([row.p],this.editor.map);Object.assign(copy,{x:point.x,y:point.y,z:point.z||0});delete copy.towerPost;
+  this.replace({...this.editor.map,guards:[...this.editor.map.guards,copy]});return copy.character.id;
+ }
+ characterResources(resources){this.replace({...this.editor.map,characterResources:structuredClone(resources)});}
+ characterWarnings(){return characterDiagnostics(this.editor.map);}
  undo(){if(!this.editor||!undo(this.editor))return false;this.refresh();return true;}
  redo(){if(!this.editor||!redo(this.editor))return false;this.refresh();return true;}
  doorLock(selection,difficulty){
@@ -88,7 +109,7 @@ export class EditingDocument extends InspectionDocument {
  }
  lightMode(selection,mode){if(selection?.type!=='prop'||!LIGHT_FORMS[selection.data.kind])throw Error('Select a lamp or fire first.');if(!['auto','on','off'].includes(mode))throw Error('Choose a light schedule.');const p=selection.data;this.replace({...this.editor.map,props:this.editor.map.props.map(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(p.z||0)&&q.kind===p.kind?{...q,lightMode:mode}:q)});}
  startTime(minutes){if(this.block)throw Error("Start time belongs to a full map.");const time={...this.map.time,startMinutes:minutes};mapStartMinutes({time});this.replace({...this.editor.map,time});}
- replace(map){if(!this.block)mapStartMinutes(map);if(this.block)validateBlock(extractBlock(map));const errors=validateMap(map,{connectivity:false});if(errors.length)throw Error(errors[0]);replaceMap(this.editor,map);this.refresh();}
+ replace(map){map=ensureCharacterIdentities(structuredClone(map));if(!this.block)mapStartMinutes(map);if(this.block)validateBlock(extractBlock(map));const errors=validateMap(map,{connectivity:false});if(errors.length)throw Error(errors[0]);replaceMap(this.editor,map);this.refresh();}
  capture(sx,sy){if(this.block)throw Error('Capture a sector from a full map.');return validateBlock(extractBlock(this.editor.map,sx,sy));}
  place(block,sx,sy){if(this.block)throw Error('Place blocks in a full map.');this.replace(placeBlock(this.editor.map,block,sx,sy));}
  connections(types){if(!this.block)throw Error('Open a block to assign its connections.');connectionSet(this.editor.map,0,0,types);this.replace({...this.editor.map,blockConnections:{'0,0':types}});}

@@ -9,6 +9,9 @@ import {generateConnectedMap} from '../dist/tactics/editor-3d-generator.js';
 import {generateConnectedMap as originalGenerator} from '../dist/tactics/block-generator.js';
 import {emptyFeaturePlan} from '../dist/tactics/core/feature-plan.js';
 
+// Independently executed edits mint different UUIDs; compare all other saved fields.
+const withoutIds=m=>{const c=structuredClone(m);for(const p of [...(c.starts||[]),...(c.guards||[])])if(p.character)delete p.character.id;return c;};
+
 test('editable blocks preserve their portable format and reject cross-boundary edits atomically',()=>{
  const raw={...extractBlock(blockCanvas('Reusable')),authorNote:'Keep this'},d=new EditingDocument().open(JSON.stringify(raw));
  const initial=d.export();assert.equal(d.apply({tool:'prop',start:{x:23,y:8,z:0},options:{propKind:'workbench-metal'}}).ok,false);assert.equal(d.export(),initial);
@@ -18,7 +21,7 @@ test('editable blocks preserve their portable format and reject cross-boundary e
  const portable=validateBlock(JSON.parse(d.export()));assert.equal(portable.guards[0].outfit,'red-hats');assert.equal(portable.authorNote,'Keep this');assert.equal(portable.terrain.length,24);assert.equal(d.map.starts.length,0);
  assert.ok(d.undo());assert.equal(d.map.guards.length,0);assert.ok(d.redo());assert.equal(d.export(),JSON.stringify(portable,null,2));
  const map=new EditingDocument().open(JSON.stringify(blankMap('Assembly'))),before=map.export();
- map.place(portable,2,3);assert.deepEqual(map.map,placeBlock(JSON.parse(before),portable,2,3));assert.equal(map.map.guards[0].x,54);assert.equal(map.capture(2,3).guards[0].outfit,'red-hats');map.undo();assert.equal(map.export(),before);
+ map.place(portable,2,3);assert.deepEqual(withoutIds(map.map),withoutIds(placeBlock(JSON.parse(before),portable,2,3)));assert.equal(map.map.guards[0].x,54);assert.equal(map.capture(2,3).guards[0].outfit,'red-hats');map.undo();assert.equal(map.export(),before);
 });
 
 test('connections and connected generation match the existing generator and retain undo',()=>{
@@ -33,8 +36,8 @@ test('3D edit commands match existing editor operations; previews and rejection 
  const raw=blankMap('Tutorial'),d=new EditingDocument().open(JSON.stringify(raw)),core=createEditor(raw);
  const room={tool:'room',start:{x:6,y:6,z:0},options:{width:6,height:5}};
  const saved=d.export();assert.equal(d.preview(room).ok,true);assert.equal(d.export(),saved);assert.equal(d.editor.undo.length,0);
- assert.ok(d.apply(room).ok);applyBrush(core,'room',6,6,undefined,room.options);assert.deepEqual(d.map,core.map);
- const guard={tool:'guard',start:{x:8,y:8,z:0},options:{species:'goat',weapon:'rifle',heading:90}};assert.ok(d.apply(guard).ok);applyBrush(core,'guard',8,8,undefined,guard.options);assert.deepEqual(d.map,core.map);
+ assert.ok(d.apply(room).ok);applyBrush(core,'room',6,6,undefined,room.options);assert.deepEqual(withoutIds(d.map),withoutIds(core.map));
+ const guard={tool:'guard',start:{x:8,y:8,z:0},options:{species:'goat',weapon:'rifle',heading:90}};assert.ok(d.apply(guard).ok);applyBrush(core,'guard',8,8,undefined,guard.options);assert.deepEqual(withoutIds(d.map),withoutIds(core.map));
  const before=d.export();assert.equal(d.apply({tool:'prop',start:guard.start,options:{propKind:'crate-stack'}}).ok,false);assert.equal(d.export(),before);
  assert.ok(d.undo());assert.equal(d.map.guards.length,0);assert.ok(d.redo());assert.equal(d.export(),before);assert.deepEqual(d.validate(),[]);assert.equal(parseMap(d.export()).guards.length,1);
 });
