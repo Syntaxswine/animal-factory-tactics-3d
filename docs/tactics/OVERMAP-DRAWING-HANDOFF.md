@@ -133,3 +133,18 @@ interior, and penalizes excess bends. Unroutable pairs, short paths or failed
 crossing/reachability constraints reject the attempt; endpoints are not shifted
 to force a solution. Stored feature records retain start/end positions and sides.
 The earlier shared-orientation notes above describe superseded versions.
+
+Version strategic-plan-9 permits towns, villages and cities on river sectors
+with usable crossing geometry. The current conservative road graph admits river
+sectors with opposing river ports and accessible land on both banks; bend-sector
+crossings still need richer bank-level routing. Fortresses remain on land.
+
+The normal spaced bridge plan is retained. A settlement on one of its bridges
+replaces the standalone bridge symbol, retaining the crossing. Other river
+settlements receive additional crossings (crossingOrigin: settlement), which do
+not consume the planned-bridge quota or its spacing budget. Multiple adjoining
+sectors of one settlement can each cross the river. All crossing roads connect
+to the site network, including their bank approaches. Validation requires the
+planned quota, permits only settlement-based extras, and rejects a river
+settlement without a crossing. UI counts distinguish standalone bridges from
+settlement crossings; save/export retain both the river and crossing metadata.

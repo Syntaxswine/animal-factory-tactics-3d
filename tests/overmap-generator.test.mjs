@@ -106,3 +106,16 @@ test('independently sampled ends yield mixed, same and opposite edges without mo
  }
  assert.ok(mixedWithinWorld);for(const types of Object.values(kinds))assert.deepEqual([...types].sort(),['mixed','opposite','same']);
 });
+
+test('river settlements replace planned bridges or add extra connected crossings',()=>{
+ const found={planned:false,extra:false};const roles=new Set();
+ for(const seed of [0,2,7,42]){const m=generateWorld(seed);assert.equal(validateGenerated(m).valid,true);
+  for(const sector of m.sectors)if(['town','village','city'].includes(sector.role)&&sector.routes.some(r=>r.kind==='river')){
+   roles.add(sector.role);assert.equal(sector.gate,'bridge');assert.ok(sector.routes.some(r=>r.kind==='road'));assert.ok(sector.settlementId);if(sector.crossingOrigin==='planned-bridge')found.planned=true;if(sector.crossingOrigin==='settlement')found.extra=true;
+  }
+  for(const f of m.generation.features.filter(f=>f.kind==='river')){const crossings=f.cells.map(i=>m.sectors[i]).filter(s=>s.gate==='bridge');assert.equal(crossings.filter(s=>s.crossingOrigin==='planned-bridge').length,Math.ceil(f.cells.length/5));assert.equal(crossings.length,Math.ceil(f.cells.length/5)+crossings.filter(s=>s.crossingOrigin==='settlement').length);}
+  const saved=JSON.parse(JSON.stringify(m));assert.equal(validateGenerated(saved).valid,true);
+ }
+ assert.deepEqual(found,{planned:true,extra:true});assert.deepEqual([...roles].sort(),['city','town','village']);
+ const m=generateWorld(7),extra=m.sectors.find(s=>s.crossingOrigin==='settlement');assert.ok(extra);extra.gate='none';assert.match(validateGenerated(m).errors.join(' '),/River settlement must provide a crossing/);
+});

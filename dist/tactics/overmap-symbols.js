@@ -39,7 +39,7 @@ export function drawSector(s,{ports=false,overlay='difficulty',detail=false,rim=
   if(kind==='river')g.append(svg('path',{d:path(r),class:'river-center'}));
   if(kind==='cliff')for(let t=.08;t<.98;t+=.12){const p=point(r,t),q=point(r,t+.01),dx=q[0]-p[0],dy=q[1]-p[1],len=Math.hypot(dx,dy)||1;g.append(svg('path',{d:`M${p} l${-dy/len*7},${dx/len*7}`,class:'cliff-tick'}));}
  }
- if(s.gate!=='none'){
+ if(s.gate!=='none'&&!(s.gate==='bridge'&&['town','village','city'].includes(s.role))){
   const obstacle=s.gate==='bridge'?'river':'cliff';let hit;
   for(const a of s.routes.filter(r=>r.kind==='road'))for(const b of s.routes.filter(r=>r.kind===obstacle))hit ||= crossing(a,b);
   if(hit){const gate=svg('g',{transform:`translate(${hit.x} ${hit.y}) rotate(${hit.angle})`});gate.append(svg('rect',{x:-15,y:-7,width:30,height:14,class:'gate-deck'}),icon(s.gate,0,0,.7));g.append(gate);}

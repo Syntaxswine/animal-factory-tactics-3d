@@ -17,6 +17,7 @@ try{
  // Cancel immediately in the same browser event turn, before the worker responds.
  const beforeCancel=await snapshot();await page.evaluate(()=>{document.getElementById('generate-world').click();document.getElementById('cancel-generation').click();});assert.equal(await snapshot(),beforeCancel);
  await page.locator('#validate-world').click();assert.match(await page.locator('#generation-checks').innerText(),/checks pass/);
+ const riverSite=page.locator('.sector-cell').filter({has:page.locator('.river')}).filter({has:page.locator('.symbol-city, .symbol-town, .symbol-village')}).first();await riverSite.click();assert.equal(await page.locator('#detail .gate-deck').count(),0);assert.ok(await page.locator('#detail .road').count()>0);assert.ok(await page.locator('#detail .river').count()>0);
  await fs.mkdir('artifacts/overmap',{recursive:true});await page.screenshot({path:'artifacts/overmap/generated-world.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  assert.deepEqual(errors,[]);console.log('Seeded world browser checks passed: initial generation, different/same seeds, save/load, rejected settings, randomize, undo, cancel and mobile layout.');

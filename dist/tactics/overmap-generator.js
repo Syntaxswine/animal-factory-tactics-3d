@@ -1,9 +1,10 @@
 import {WIDTH as W,HEIGHT as H,SIDES,STEP,OPPOSITE,blank,route,validate,warnings,placeTutorial,tutorialCells} from './overmap-model.js';
 
-export const GENERATOR_VERSION='strategic-plan-8';
+export const GENERATOR_VERSION='strategic-plan-9';
 export const STAGES=['Tutorial','Rivers','Cliffs','Difficulty zoning','Settlements and fortresses','Roads','Bridges and gates','Validation'];
 export const DEFAULTS={villages:3,towns:4,cities:5,maxAttempts:40};
 export const SETTLEMENT_ZONES={easy:{towns:2,villages:1,cities:[[3,3]]},medium:{towns:1,villages:2,cities:[[3,4],[4,4]]},hard:{towns:1,villages:0,cities:[[3,4],[5,5]]}};
+export const isSettlement=s=>['city','town','village'].includes(s.role);
 const interior=i=>i%W>0&&i%W<W-1&&Math.floor(i/W)>0&&Math.floor(i/W)<H-1;
 const N=W*H,all=()=>Array.from({length:N},(_,i)=>i),xy=i=>[i%W,Math.floor(i/W)];
 export function neighbor(i,side){const [x,y]=xy(i),[dx,dy]=STEP[side];return x+dx<0||x+dx>=W||y+dy<0||y+dy>=H?null:(y+dy)*W+x+dx;}
@@ -52,7 +53,8 @@ function zones(m,tutorial,r){
 function settlements(m,tutorial,o,r){
  const groups=[],used=new Set(tutorial.map(c=>c.index)),settlementBuffer=new Set();
  const land=i=>!used.has(i)&&!m.sectors[i].routes.length;
- const settlementLand=i=>land(i)&&!settlementBuffer.has(i);
+ const barriers=barrierMap(m);
+ const settlementLand=i=>!used.has(i)&&!settlementBuffer.has(i)&&(land(i)||barriers.get(i)?.kind==='river'&&crossingAxis(m,i,barriers));
  const cluster=(start,count)=>{const group=[start];while(group.length<count){const candidates=[...new Set(group.flatMap(neighbors))].filter(i=>settlementLand(i)&&!group.includes(i)&&m.sectors[i].difficulty===m.sectors[start].difficulty);if(!candidates.length)return null;group.push(pick(candidates,r));}return group;};
  const assign=(kind,cells,id)=>{cells.forEach(i=>{used.add(i);Object.assign(m.sectors[i],{role:kind,name:`${kind==='town'&&id==='town-1'?'Starting town':kind+' '+id.split('-')[1]}`,settlementId:id,owner:'red-hats',terrain:'plain',facilities:[]});});
   if(kind==='town')m.sectors[cells[0]].facilities=['workshop'];
@@ -78,8 +80,10 @@ function selectRoadCrossings(m,features,r){
   // Random greedy trials operate only on potential road crossings. Gates are
   // materialized after roads are routed through these crossing constraints.
   for(let attempt=0;attempt<40&&!found;attempt++){const local=[];for(const i of shuffled(f.cells,r))if(crossingAxis(m,i,barriers)&&!local.some(j=>near(i,j))&&![...chosen].some(j=>near(i,j))){local.push(i);if(local.length===target){found=local;break;}}}
-  if(!found)fail(`${f.kind}: cannot fit ${target} spaced road crossings.`);found.forEach(i=>chosen.add(i));
- }return chosen;
+  if(!found)fail(`${f.kind}: cannot fit ${target} spaced road crossings.`);found.forEach(i=>{chosen.add(i);if(f.kind==='river')m.sectors[i].crossingOrigin='planned-bridge';});
+ }
+ for(const [i,f]of barriers)if(f.kind==='river'&&isSettlement(m.sectors[i])){if(!crossingAxis(m,i,barriers))fail('River settlement has no usable crossing.');if(!chosen.has(i))m.sectors[i].crossingOrigin='settlement';chosen.add(i);}
+ return chosen;
 }
 function landEdges(m,i,barriers,crossings){
  if(m.sectors[i].role==='tutorial'||barriers.has(i))return [];
@@ -100,7 +104,7 @@ function roads(m,features,groups,r){
   if(end===undefined)fail('Road routing could not connect a location across the reserved geography.');
   while(end!==start){const e=prev.get(end);for(let i=1;i<e.path.length;i++)link(e.path[i-1],e.path[i]);end=e.from;}
  }
- for(const target of targets)connect(target);
+ for(const target of targets){if(barriers.has(target)){const axis=crossingAxis(m,target,barriers);if(!axis||!crossings.has(target))fail('River settlement cannot join the road network.');connect(axis.ends[0]);link(axis.ends[0],target);link(target,axis.ends[1]);}else connect(target);}
  for(const i of crossings){const {ends}=crossingAxis(m,i,barriers);connect(ends[0]);link(ends[0],i);link(i,ends[1]);}
  // A crossing must continue on both banks, not merely terminate at a landing.
  const destinations=new Set(targets);
@@ -112,7 +116,7 @@ function gates(m,crossings,r){for(const i of crossings){const river=m.sectors[i]
 
 export function validateGenerated(m){
  const errors=[];try{validate(m);}catch(e){return {valid:false,errors:[e.message],counts:{}};}
- const count=predicate=>m.sectors.filter(predicate).length,counts={easy:count(s=>s.difficulty==='easy'),medium:count(s=>s.difficulty==='medium'),hard:count(s=>s.difficulty==='hard'),bridges:count(s=>s.gate==='bridge'),passages:count(s=>s.gate==='passage')};
+ const count=predicate=>m.sectors.filter(predicate).length,counts={easy:count(s=>s.difficulty==='easy'),medium:count(s=>s.difficulty==='medium'),hard:count(s=>s.difficulty==='hard'),bridges:count(s=>s.gate==='bridge'&&!isSettlement(s)),settlementCrossings:count(s=>s.gate==='bridge'&&isSettlement(s)),passages:count(s=>s.gate==='passage')};
  const check=(condition,message)=>{if(!condition)errors.push(message);};
  for(const z of ['easy','medium','hard'])check(counts[z]===150,`${z}: expected 150 sectors, found ${counts[z]}.`);
  check(!all().some(i=>m.sectors[i].difficulty==='easy'&&neighbors(i).some(j=>m.sectors[j].difficulty==='hard')),'Easy and hard regions touch without a medium buffer.');
@@ -127,10 +131,11 @@ export function validateGenerated(m){
  const barriers=barrierMap(m),crossings=new Set(all().filter(i=>m.sectors[i].gate!=='none'));
  for(const kind of ['river','cliff']){
   const cells=all().filter(i=>barriers.get(i)?.kind===kind),edgeCount=cells.reduce((n,i)=>n+[barriers.get(i).from,barriers.get(i).to].filter(p=>neighbor(i,p.side)===null).length,0);check(edgeCount===(kind==='river'?4:2),`${kind}: expected ${kind==='river'?4:2} world-edge connections, found ${edgeCount}.`);
-  const remaining=new Set(cells);while(remaining.size){const chain=[remaining.values().next().value];remaining.delete(chain[0]);for(const i of chain)for(const p of [barriers.get(i).from,barriers.get(i).to]){const j=neighbor(i,p.side);if(remaining.has(j)){remaining.delete(j);chain.push(j);}}if(kind==='river'){check(chain.length>=5,'River is shorter than five sectors.');check(chain.filter(i=>m.sectors[i].gate==='bridge').length===Math.ceil(chain.length/5),'River bridge count must round up to one per five river sectors.');}}
+  const remaining=new Set(cells);while(remaining.size){const chain=[remaining.values().next().value];remaining.delete(chain[0]);for(const i of chain)for(const p of [barriers.get(i).from,barriers.get(i).to]){const j=neighbor(i,p.side);if(remaining.has(j)){remaining.delete(j);chain.push(j);}}if(kind==='river'){check(chain.length>=5,'River is shorter than five sectors.');check(chain.filter(i=>m.sectors[i].gate==='bridge'&&m.sectors[i].crossingOrigin==='planned-bridge').length===Math.ceil(chain.length/5),'Planned river bridge count must round up to one per five river sectors; extra settlement crossings are additional.');}}
  }
- const bridges=[...crossings].filter(i=>m.sectors[i].gate==='bridge');check(!bridges.some((i,n)=>bridges.slice(n+1).some(j=>near(i,j))),'Bridge sectors touch, including diagonally.');
+ const bridges=[...crossings].filter(i=>m.sectors[i].gate==='bridge'&&m.sectors[i].crossingOrigin==='planned-bridge');check(!bridges.some((i,n)=>bridges.slice(n+1).some(j=>near(i,j))),'Bridge sectors touch, including diagonally.');
  for(const i of crossings){const s=m.sectors[i],axis=crossingAxis(m,i,barriers);check(!!axis&&s.routes.some(r=>r.kind==='road'&&axis.sides.includes(r.from.side)&&axis.sides.includes(r.to.side)&&r.from.side!==r.to.side),`Gate at ${i%W+1},${Math.floor(i/W)+1} lacks a crossing road.`);check(Number.isInteger(s.gateGuards)&&s.gateGuards>=2&&s.gateGuards<=15,'Gate guards must number 2–15.');check(barriers.get(i)?.kind===(s.gate==='bridge'?'river':'cliff'),'Gate type does not match its obstacle.');}
+ for(const [i,f]of barriers)if(f.kind==='river'){const s=m.sectors[i];if(isSettlement(s))check(s.gate==='bridge','River settlement must provide a crossing.');if(s.gate==='bridge')check(s.crossingOrigin==='planned-bridge'||s.crossingOrigin==='settlement'&&isSettlement(s),'Additional river crossings must belong to a settlement.');}
  for(const [i]of barriers)check(!m.sectors[i].routes.some(r=>r.kind==='road')||crossings.has(i),'Road crosses a barrier without a gate.');
  for(const i of all())errors.push(...warnings(m,i).map(s=>`Sector ${i%W+1},${Math.floor(i/W)+1}: ${s}`));
  // Conservative strategic graph: barrier sectors are crossed only at gates.
