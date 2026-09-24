@@ -24,7 +24,7 @@ test('one destination click paths to a remote upper tile and back through the au
 });
 test('cross-floor clicks do not invent routes or bypass AP limits',()=>{
  const s=fixture(),u=s.units[0];s.phase='player';u.ap=7;assert.equal(move(s,u,11,8,1),false);
- u.ap=30;s.climbs=[];assert.equal(move(s,u,11,8,1),false);
+ u.ap=30;s.climbs=[];s.props=[];assert.equal(move(s,u,11,8,1),false);
 });
 test('ordinary upper floors use their own height and route through stairs',()=>{
  const m=blankMap();m.starts[0]={x:8,y:8,z:0};m.stairs=[{x:8,y:8,z:0}];for(let x=8;x<=10;x++)setTerrain(m,x,8,1,'floor');

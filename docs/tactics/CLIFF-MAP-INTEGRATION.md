@@ -1,5 +1,7 @@
 # Cliff map integration and climbing handoff
 
+This records the original terrain integration. Current automatic full-ledge walking surfaces and climb routes are documented in [Cross-floor navigation](CROSS-FLOOR-NAVIGATION.md). Traversal core changes now live in `tools/core-cliff-adapter.mjs`.
+
 The 3D editor now paints ledges and crags into saved maps and reusable blocks. The battle renderer displays the same joined geometry. This supersedes the study-only status in the September 23 cliff review.
 
 ## Authoring

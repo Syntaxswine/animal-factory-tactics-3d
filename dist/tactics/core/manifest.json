@@ -32,7 +32,7 @@
       "upstreamSha256": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f"
     },
     "maps.js": {
-      "reason": "Validate cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP.",
+      "reason": "Validate cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Derive flat cliff caps and routes; validate both landings and price climbs at 8 AP.",
       "upstreamSha256": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73"
     },
     "progression.js": {
@@ -53,13 +53,13 @@
     "blocks.js": "c57a672d9a279dd7a61b60008ffeabd09b84ed3f70a4ed30d9ae5f7728b6fb12",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
     "editor-model.js": "793c22e5818d81c86dd039c4d6dd145c6445c70ace05e3537c74ac628bbd7a91",
-    "engine.js": "c3482dc0ab52c237c5cbad809d8e3813e00ec0389c3efbb24be40f26f93b52c6",
+    "engine.js": "6c8698c0d3a7e4fd2f5fe4c9bb1b12f25c61f7075eecfd9aa72c743f746116a1",
     "environment.js": "0030f1ad61122c0d0f989f32da362837a03938def60be417f88492fb22d3a666",
     "explosives.js": "d28c8600c983f8a018a32e84a137836b81165d80924587f0195f23a540a64fa4",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "521036500cfc6e0965e9b2db6b47ea33ca7996bf74d24648fd734da5ba20742f",
-    "maps.js": "dd72d40d942e2def22ad278d15ce18211508cd76c7bd3eadba61360f2269c731",
+    "maps.js": "32fd60d710ba9e5da3a88592bbee00cbb17ae7804f83406ac1ecc4b5b80a859a",
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",
