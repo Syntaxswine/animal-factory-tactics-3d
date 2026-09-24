@@ -1,6 +1,6 @@
 import {WIDTH as W,HEIGHT as H,SIDES,STEP,OPPOSITE,blank,route,validate,warnings,placeTutorial,tutorialCells} from './overmap-model.js';
 
-export const GENERATOR_VERSION='strategic-plan-6';
+export const GENERATOR_VERSION='strategic-plan-7';
 export const STAGES=['Tutorial','Rivers','Cliffs','Difficulty zoning','Settlements and fortresses','Roads','Bridges and gates','Validation'];
 export const DEFAULTS={villages:3,towns:4,cities:5,maxAttempts:40};
 export const SETTLEMENT_ZONES={easy:{towns:2,villages:1,cities:[[3,3]]},medium:{towns:1,villages:2,cities:[[3,4],[4,4]]},hard:{towns:1,villages:0,cities:[[3,4],[5,5]]}};
@@ -62,7 +62,7 @@ function settlements(m,tutorial,o,r){
    if(!group)fail('No compatible space for '+difficulty+' '+kind+' ('+size+' sectors).');assign(kind,group,kind+'-'+(++serial[kind]));
   }
  }
- for(const [difficulty,count]of [['easy',1],['medium',2],['hard',2]])for(let n=0;n<count;n++){const i=pick(all().filter(i=>land(i)&&m.sectors[i].difficulty===difficulty&&(difficulty!=='easy'||[town,second].every(t=>sectorDistance(i,t)>=4))),r);if(i===undefined)fail(`No space for ${difficulty} fortress.`);used.add(i);Object.assign(m.sectors[i],{role:'fortress',name:`${difficulty} fortress ${n+1}`,owner:'red-hats',facilities:[]});}
+ for(const [difficulty,count]of [['easy',1],['medium',2],['hard',2]])for(let n=0;n<count;n++){const i=pick(all().filter(i=>land(i)&&m.sectors[i].difficulty===difficulty&&all().filter(j=>m.sectors[j].role==='fortress').every(j=>sectorDistance(i,j)>=4)&&(difficulty!=='easy'||[town,second].every(t=>sectorDistance(i,t)>=4))),r);if(i===undefined)fail(`No space for ${difficulty} fortress.`);used.add(i);Object.assign(m.sectors[i],{role:'fortress',name:`${difficulty} fortress ${n+1}`,owner:'red-hats',facilities:[]});}
  return groups;
 }
 function barrierMap(m){return new Map(m.sectors.flatMap((s,i)=>{const f=s.routes.find(r=>r.kind==='river'||r.kind==='cliff');return f?[[i,f]]:[];}));}
@@ -117,6 +117,7 @@ export function validateGenerated(m){
   let exits=0;for(const c of tutorial.slice(0,4)){check(m.sectors[c.index].routes.length===0,'A generated route entered the tutorial plateau.');for(const side of m.sectors[c.index].travel){const j=neighbor(c.index,side);if(!tutorial.slice(0,4).some(c=>c.index===j)){exits++;check(j===tutorial[4].index,'Tutorial exit does not lead to its town.');}}}check(exits===1,'Tutorial must have exactly one descent to its town.');}
  for(const [z,n]of [['easy',1],['medium',2],['hard',2]])check(count(s=>s.role==='fortress'&&s.difficulty===z)===n,`Expected ${n} ${z} fortress(es).`);
  check(m.sectors.filter(s=>s.role==='fortress').every(s=>s.facilities.length===0),'Fortresses must not have civilian facilities.');
+ const fortresses=all().filter(i=>m.sectors[i].role==='fortress');check(fortresses.every((i,n)=>fortresses.slice(n+1).every(j=>sectorDistance(i,j)>=4)),'Every pair of fortresses must be at least four sectors apart, including diagonally.');
  const startingTown=all().filter(i=>m.sectors[i].settlementId==='town-1');for(const i of all().filter(i=>m.sectors[i].role==='fortress'&&m.sectors[i].difficulty==='easy'))check(startingTown.length>0&&startingTown.every(t=>sectorDistance(i,t)>=4),'Easy fortress must be at least four sectors from every starting-town sector.');
  const barriers=barrierMap(m),crossings=new Set(all().filter(i=>m.sectors[i].gate!=='none'));
  for(const kind of ['river','cliff']){

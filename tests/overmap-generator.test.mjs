@@ -15,6 +15,7 @@ test('seed range produces complete valid worlds, different geography and all tut
  for(const seed of [0,...Array.from({length:30},(_,i)=>i+1),4294967295]){
   const m=generateWorld(seed),report=validateGenerated(m);assert.equal(report.valid,true,`Seed ${seed}: ${report.errors.join('\n')}`);
   assert.deepEqual(settlementSpacingErrors(m),[]);
+  const forts=m.sectors.flatMap((s,i)=>s.role==='fortress'?[i]:[]);for(let a=0;a<forts.length;a++)for(let b=a+1;b<forts.length;b++)assert.ok(Math.max(Math.abs(forts[a]%30-forts[b]%30),Math.abs(Math.floor(forts[a]/30)-Math.floor(forts[b]/30)))>=4);
   const fortress=m.sectors.findIndex(s=>s.role==='fortress'&&s.difficulty==='easy');for(const [i,s]of m.sectors.entries())if(s.settlementId==='town-1')assert.ok(Math.max(Math.abs(i%30-fortress%30),Math.abs(Math.floor(i/30)-Math.floor(fortress/30)))>=4);
   for(const s of m.sectors){const ends=new Set(s.routes.filter(r=>r.kind==='road').flatMap(r=>[r.from.side,r.to.side]).filter(side=>side!=='center'));if(ends.size===1)assert.ok(['city','town','village','fortress'].includes(s.role));}
   assert.deepEqual([report.counts.easy,report.counts.medium,report.counts.hard],[150,150,150]);
@@ -87,4 +88,11 @@ test('validator rejects a fortress too near the starting town and detached cross
  const a=roads.sectors.findIndex((s,i)=>clean(i)&&clean(neighbor(i,'east'))&&['north','south','west'].every(d=>clean(neighbor(i,d)))&&['north','south','east'].every(d=>clean(neighbor(neighbor(i,'east'),d))));
  assert.ok(a>=0);const b=neighbor(a,'east');roads.sectors[a].routes=[route('road','east','center')];roads.sectors[b].routes=[route('road','west','center')];
  const errors=validateGenerated(roads).errors.join(' ');assert.match(errors,/Orphaned roads/);assert.match(errors,/Road dead ends/);
+});
+
+test('validation rejects fortresses placed within four sectors of each other',()=>{
+ const m=generateWorld(7),forts=m.sectors.flatMap((s,i)=>s.role==='fortress'?[i]:[]),first=forts[0],second=forts[1];
+ const close=['north','east','south','west'].map(side=>neighbor(first,side)).find(i=>i!==null&&m.sectors[i].role==='countryside');assert.notEqual(close,undefined);
+ [m.sectors[second],m.sectors[close]]=[m.sectors[close],m.sectors[second]];
+ assert.match(validateGenerated(m).errors.join(' '),/Every pair of fortresses must be at least four sectors apart/);
 });

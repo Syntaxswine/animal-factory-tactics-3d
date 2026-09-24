@@ -112,3 +112,8 @@ any non-destination landing with one road edge is connected back into the networ
 without using that same crossing as its return path. Roads may terminate at
 settlements or fortresses. All road-bearing sectors must belong to the connected
 site network; disconnected components and empty-land dead ends are rejected.
+
+Version strategic-plan-7 also requires every pair of fortresses, across all
+difficulty zones, to have Chebyshev distance >= 4. Placement and post-edit
+validation enforce this while retaining the existing fortress counts and the
+easy fortress distance from both starting-town sectors.
