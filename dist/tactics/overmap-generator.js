@@ -1,6 +1,6 @@
 import {WIDTH as W,HEIGHT as H,SIDES,STEP,OPPOSITE,blank,route,validate,warnings,placeTutorial,tutorialCells} from './overmap-model.js';
 
-export const GENERATOR_VERSION='strategic-plan-4';
+export const GENERATOR_VERSION='strategic-plan-5';
 export const STAGES=['Tutorial','Rivers','Cliffs','Difficulty zoning','Settlements and fortresses','Roads','Bridges and gates','Validation'];
 export const DEFAULTS={villages:3,towns:4,cities:5,maxAttempts:40};
 export const SETTLEMENT_ZONES={easy:{towns:2,villages:1,cities:[[3,3]]},medium:{towns:1,villages:2,cities:[[3,4],[4,4]]},hard:{towns:1,villages:0,cities:[[3,4],[5,5]]}};
@@ -44,19 +44,20 @@ function zones(m,tutorial,r){
  const order=all().sort((a,b)=>distance[a]-distance[b]||a-b);order.forEach((i,n)=>m.sectors[i].difficulty=n<150?'easy':n<300?'medium':'hard');
 }
 function settlements(m,tutorial,o,r){
- const groups=[],used=new Set(tutorial.map(c=>c.index));
+ const groups=[],used=new Set(tutorial.map(c=>c.index)),settlementBuffer=new Set();
  const land=i=>!used.has(i)&&!m.sectors[i].routes.length;
- const cluster=(start,count)=>{const group=[start];while(group.length<count){const candidates=[...new Set(group.flatMap(neighbors))].filter(i=>land(i)&&!group.includes(i)&&m.sectors[i].difficulty===m.sectors[start].difficulty);if(!candidates.length)return null;group.push(pick(candidates,r));}return group;};
+ const settlementLand=i=>land(i)&&!settlementBuffer.has(i);
+ const cluster=(start,count)=>{const group=[start];while(group.length<count){const candidates=[...new Set(group.flatMap(neighbors))].filter(i=>settlementLand(i)&&!group.includes(i)&&m.sectors[i].difficulty===m.sectors[start].difficulty);if(!candidates.length)return null;group.push(pick(candidates,r));}return group;};
  const assign=(kind,cells,id)=>{cells.forEach(i=>{used.add(i);Object.assign(m.sectors[i],{role:kind,name:`${kind==='town'&&id==='town-1'?'Starting town':kind+' '+id.split('-')[1]}`,settlementId:id,owner:'red-hats',terrain:'plain',facilities:[]});});
   if(kind==='town')m.sectors[cells[0]].facilities=['workshop'];
   if(kind==='city'){m.sectors[cells[0]].facilities=['factory'];for(const i of shuffled(cells,r).slice(0,1+Math.floor(r()*3)))m.sectors[i].facilities.push('workshop');}
-  cells.forEach(i=>{m.sectors[i].facilityIds=Object.fromEntries(m.sectors[i].facilities.map(f=>[f,`${id}-${f}-${i}`]));});groups.push({id,kind,cells});
+  cells.forEach(i=>{m.sectors[i].facilityIds=Object.fromEntries(m.sectors[i].facilities.map(f=>[f,`${id}-${f}-${i}`]));});groups.push({id,kind,cells});for(const i of cells)for(const j of all())if(near(i,j))settlementBuffer.add(j);
  };
  const town=tutorial[4].index,second=pick(neighbors(town).filter(i=>land(i)&&interior(i)&&m.sectors[i].difficulty==='easy'),r);if(second===undefined)fail('Starting town has no free adjoining easy sector.');assign('town',[town,second],'town-1');
  const serial={town:1,village:0,city:0};
  for(const [difficulty,rule]of Object.entries(SETTLEMENT_ZONES)){
   const requests=[...rule.cities.map(([min,max])=>['city',min+Math.floor(r()*(max-min+1))]),...Array.from({length:rule.towns-(difficulty==='easy'?1:0)},()=>['town',2]),...Array.from({length:rule.villages},()=>['village',2])];
-  for(const [kind,size]of requests){let group;for(const start of shuffled(all().filter(i=>land(i)&&m.sectors[i].difficulty===difficulty),r)){group=cluster(start,size);if(group)break;}
+  for(const [kind,size]of requests){let group;for(const start of shuffled(all().filter(i=>settlementLand(i)&&m.sectors[i].difficulty===difficulty),r)){group=cluster(start,size);if(group)break;}
    if(!group)fail('No compatible space for '+difficulty+' '+kind+' ('+size+' sectors).');assign(kind,group,kind+'-'+(++serial[kind]));
   }
  }
@@ -129,6 +130,7 @@ export function validateGenerated(m){
  const connected=new Set(sites.slice(0,1)),roadQueue=[...connected];for(const i of roadQueue)for(const side of roadSides(i)){const j=neighbor(i,side);if(j!==null&&roadSides(j).has(OPPOSITE[side])&&!connected.has(j)){connected.add(j);roadQueue.push(j);}}check(sites.every(i=>connected.has(i)),'Roads do not connect every settlement sector and fortress.');
  const groups=new Map();m.sectors.forEach((s,i)=>{if(s.settlementId){if(!groups.has(s.settlementId))groups.set(s.settlementId,[]);groups.get(s.settlementId).push(i);}});
  for(const [id,cells]of groups){const role=m.sectors[cells[0]].role,expected=role==='village'||role==='town'?[2,2]:[3,5];check(cells.length>=expected[0]&&cells.length<=expected[1],`${id}: invalid settlement size.`);const joined=new Set([cells[0]]),q=[cells[0]];for(const i of q)for(const j of neighbors(i))if(cells.includes(j)&&!joined.has(j)){joined.add(j);q.push(j);}check(joined.size===cells.length,`${id}: settlement is not contiguous.`);check(cells.every(i=>m.sectors[i].role===role),`${id}: constituent roles do not match.`);check(cells.every(i=>m.sectors[i].difficulty===m.sectors[cells[0]].difficulty),`${id}: settlement crosses difficulty zones.`);if(id==='town-1')check(cells.every(interior),'Starting town must be fully inland.');const facilities=cells.flatMap(i=>m.sectors[i].facilities);if(role==='town')check(facilities.filter(f=>f==='workshop').length===1,`${id}: town needs one workshop.`);if(role==='city')check(facilities.filter(f=>f==='factory').length===1&&facilities.filter(f=>f==='workshop').length>=1&&facilities.filter(f=>f==='workshop').length<=3,`${id}: city needs one factory and 1–3 workshops.`);}
+ errors.push(...settlementSpacingErrors(m));
  counts.zones={};
  for(const [difficulty,rule]of Object.entries(SETTLEMENT_ZONES)){
   const inZone=[...groups.values()].filter(g=>m.sectors[g[0]].difficulty===difficulty),citySizes=inZone.filter(g=>m.sectors[g[0]].role==='city').map(g=>g.length).sort((a,b)=>a-b);
@@ -158,4 +160,15 @@ export function generateWorld(seed,options={},onProgress=()=>{}){
   }catch(e){const reason=`${STAGES[stage]}: ${e.message}`;failures[reason]=(failures[reason]||0)+1;}
  }
  const reasons=Object.entries(failures).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([reason,n])=>`${n} attempt(s): ${reason}`).join('\n');fail(`Seed ${seed} failed after ${o.maxAttempts} deterministic attempts. Current map was preserved.\n${reasons}`);
+}
+
+export function settlementSpacingErrors(m){
+ const settlements=m.sectors.flatMap((s,i)=>['city','town','village'].includes(s.role)?[{s,i}]:[]),errors=new Set();
+ for(let a=0;a<settlements.length;a++)for(let b=a+1;b<settlements.length;b++){
+  const left=settlements[a],right=settlements[b];if(!near(left.i,right.i))continue;
+  if(left.s.settlementId&&left.s.settlementId===right.s.settlementId)continue;
+  const names=[left.s.settlementId||'sector '+(left.i+1),right.s.settlementId||'sector '+(right.i+1)].sort();
+  errors.add(names.join(' and ')+': different settlements need a one-sector gap, including diagonally.');
+ }
+ return [...errors];
 }

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {generateWorld,validateGenerated,STAGES,neighbor,SETTLEMENT_ZONES,boundaryOrientation,BOUNDARY_POSITION_WEIGHTS} from '../dist/tactics/overmap-generator.js';
-import {SketchDocument,demo,tutorialCells} from '../dist/tactics/overmap-model.js';
+import {generateWorld,validateGenerated,STAGES,neighbor,SETTLEMENT_ZONES,boundaryOrientation,BOUNDARY_POSITION_WEIGHTS,settlementSpacingErrors} from '../dist/tactics/overmap-generator.js';
+import {SketchDocument,demo,tutorialCells,blank} from '../dist/tactics/overmap-model.js';
 
 test('same seed and versioned inputs reproduce the actual arrangement and retry sequence',()=>{
  const trace=[],a=generateWorld(1,{},p=>trace.push(p)),b=generateWorld(1);
@@ -14,6 +14,7 @@ test('seed range produces complete valid worlds, different geography and all tut
  const shapes=new Set(),rotations=new Set();
  for(const seed of [0,...Array.from({length:30},(_,i)=>i+1),4294967295]){
   const m=generateWorld(seed),report=validateGenerated(m);assert.equal(report.valid,true,`Seed ${seed}: ${report.errors.join('\n')}`);
+  assert.deepEqual(settlementSpacingErrors(m),[]);
   assert.deepEqual([report.counts.easy,report.counts.medium,report.counts.hard],[150,150,150]);
   const cities=m.sectors.filter(s=>s.role==='city');assert.equal(new Set(cities.map(s=>s.settlementId)).size,5);
   for(const [zone,rule]of Object.entries(SETTLEMENT_ZONES)){const z=report.counts.zones[zone];assert.equal(z.towns,rule.towns);assert.equal(z.villages,rule.villages);assert.equal(z.cities.length,rule.cities.length);rule.cities.forEach(([min,max],i)=>assert.ok(z.cities[i]>=min&&z.cities[i]<=max));}
@@ -59,4 +60,18 @@ test('finished worlds include north/south and east/west river and cliff exits',(
  const edges={river:new Set(),cliff:new Set()};
  for(let seed=0;seed<50;seed++){const m=generateWorld(seed);for(const s of m.sectors)for(const r of s.routes)if(edges[r.kind])for(const p of [r.from,r.to]){const i=m.sectors.indexOf(s);if(neighbor(i,p.side)===null)edges[r.kind].add(p.side);}}
  for(const set of Object.values(edges))assert.deepEqual([...set].sort(),['east','north','south','west']);
+});
+
+test('settlement spacing permits own sectors but rejects other settlements at edges or corners',()=>{
+ const m=blank(),put=(x,y,role,id)=>Object.assign(m.sectors[y*30+x],{role,settlementId:id});
+ put(5,5,'city','city-a');put(6,5,'city','city-a');assert.deepEqual(settlementSpacingErrors(m),[]);
+ put(7,5,'town','town-a');assert.match(settlementSpacingErrors(m).join(' '),/one-sector gap/);
+ m.sectors[5*30+7]=blank().sectors[0];put(7,6,'city','city-b');assert.match(settlementSpacingErrors(m).join(' '),/diagonally/);
+ m.sectors[6*30+7]=blank().sectors[0];put(8,5,'village','village-a');assert.deepEqual(settlementSpacingErrors(m),[]);
+ put(7,5,'fortress',undefined);assert.deepEqual(settlementSpacingErrors(m),[]);
+});
+test('whole-world validation reports a newly placed settlement breaking the gap',()=>{
+ const m=generateWorld(7),i=m.sectors.findIndex(s=>s.role==='city'),j=['north','east','south','west'].map(d=>neighbor(i,d)).find(j=>j!==null&&m.sectors[j].role==='countryside');
+ assert.notEqual(j,undefined);Object.assign(m.sectors[j],{role:'village',settlementId:'new-village'});
+ assert.match(validateGenerated(m).errors.join(' '),/one-sector gap/);
 });

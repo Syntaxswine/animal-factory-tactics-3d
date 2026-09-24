@@ -97,3 +97,10 @@ constraint rejection/retries. The existing parallel-corridor family still shares
 its orientation among the two rivers and cliff chain, with paired opposite-edge
 exits; individual ends are not sampled independently. Both orientations remain
 available, and tests verify all four sides occur in finished worlds.
+
+Version strategic-plan-5 reserves a one-sector buffer around each completed
+city, town and village before placing another settlement. Edge and diagonal
+contact between different settlement IDs is forbidden; connected sectors within
+one settlement remain allowed. Roads, fortresses and non-settlement terrain may
+occupy the gap. Zone counts, settlement sizes and facility requirements are
+unchanged. Whole-world validation also checks spacing after editing or import.
