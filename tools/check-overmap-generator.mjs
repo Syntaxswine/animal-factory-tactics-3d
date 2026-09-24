@@ -12,7 +12,7 @@ try{
  await page.locator('#world-seed').fill('42');await page.locator('#generate-world').click();await complete();const second=await snapshot();assert.notEqual(first,second);
  await page.locator('#generate-world').click();await complete();assert.equal(await snapshot(),second);
  await page.locator('#save').click();await page.locator('#blank').click();await page.locator('#load').click();assert.match(await page.locator('#generation-report').innerText(),/Seed 42/);
- await page.locator('#world-towns').fill('0');await page.locator('#generate-world').click();await page.waitForFunction(()=>document.getElementById('status').textContent.includes('towns must'));assert.match(await page.locator('#generation-report').innerText(),/Seed 42/);await page.locator('#world-towns').fill('3');
+ assert.ok(await page.locator('#world-towns').evaluate(el=>el.readOnly));await page.locator('#world-seed').fill('-1');await page.locator('#generate-world').click();await page.waitForFunction(()=>document.getElementById('status').textContent.includes('Seed must'));assert.match(await page.locator('#generation-report').innerText(),/Seed 42/);await page.locator('#world-seed').fill('42');
  await page.locator('#randomize-world').click();await complete();assert.doesNotMatch(await page.locator('#generation-report').innerText(),/Seed 42 ·/);await page.locator('#undo').click();assert.match(await page.locator('#generation-report').innerText(),/Seed 42/);
  // Cancel immediately in the same browser event turn, before the worker responds.
  const beforeCancel=await snapshot();await page.evaluate(()=>{document.getElementById('generate-world').click();document.getElementById('cancel-generation').click();});assert.equal(await snapshot(),beforeCancel);

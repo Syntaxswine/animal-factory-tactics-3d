@@ -13,12 +13,14 @@ Re-randomize tutorial remain available for focused drawing studies.
 3. One cliff chain with two world-edge connections.
 4. Exactly 150 easy, 150 medium, 150 hard. Easy is connected, includes the tutorial,
    and never directly borders hard.
-5. Configurable villages/towns (defaults 6/3, including starting town), plus exactly
-   two cities entirely within the hard zone.
-   Villages occupy one sector, towns two, cities three to five. Towns have one
-   workshop; cities one factory and one to three workshops. Facilities occupy
-   constituent sectors. Settlement/facility IDs persist. Fortresses: 1 easy,
-   2 medium, 2 hard. Settlements and fortresses initially belong to Red Hats.
+5. Zone-controlled settlements. Towns and villages each occupy two adjoining
+   sectors. Easy: two towns (including the starting town), one village, one
+   three-sector city. Medium: one town, two villages, one 3–4-sector city and
+   one four-sector city. Hard: one town, no villages, one 3–4-sector city and
+   one five-sector city. Each settlement stays entirely in its assigned zone.
+   Towns have one workshop; cities one factory and one to three workshops.
+   Facilities occupy constituent sectors. Settlement/facility IDs persist.
+   Fortresses remain 1 easy, 2 medium, 2 hard. Initial ownership is Red Hats.
 6. Roads connect every settlement sector and fortress. Routing reserves eligible
    road crossings under spacing/count constraints before gates are materialized.
 7. Bridges and cliff passages at road crossings. Bridge targets round up to one
@@ -81,6 +83,9 @@ gates, disconnected edits, atomic failures and persistence. Browser checks cover
 same/different seeds, worker progress, save/load, undo, cancellation, invalid
 settings and mobile layout. Screenshots live under artifacts/overmap/ locally.
 
-Generator version strategic-plan-2 requires exactly two hard-zone cities, with
-every constituent sector in hard territory. Existing saves retain their original
-layout; Check world reports older arrangements that violate this updated rule.
+Generator version strategic-plan-3 replaces the previous global count controls
+with the zone-specific schedule above: four towns, three villages and five cities
+in total. Validation checks counts and sorted city-size requirements separately
+in each zone, rejects settlements spanning zones, and checks adjacency and
+facilities. Older saves retain their original arrangement; regenerate to apply
+these rules. Check world reports old or edited layouts that violate them.

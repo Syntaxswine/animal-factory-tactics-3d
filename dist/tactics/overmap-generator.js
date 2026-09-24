@@ -1,8 +1,9 @@
 import {WIDTH as W,HEIGHT as H,SIDES,STEP,OPPOSITE,blank,route,validate,warnings,placeTutorial,tutorialCells} from './overmap-model.js';
 
-export const GENERATOR_VERSION='strategic-plan-2';
+export const GENERATOR_VERSION='strategic-plan-3';
 export const STAGES=['Tutorial','Rivers','Cliffs','Difficulty zoning','Settlements and fortresses','Roads','Bridges and gates','Validation'];
-export const DEFAULTS={villages:6,towns:3,cities:2,maxAttempts:40};
+export const DEFAULTS={villages:3,towns:4,cities:5,maxAttempts:40};
+export const SETTLEMENT_ZONES={easy:{towns:2,villages:1,cities:[[3,3]]},medium:{towns:1,villages:2,cities:[[3,4],[4,4]]},hard:{towns:1,villages:0,cities:[[3,4],[5,5]]}};
 const interior=i=>i%W>0&&i%W<W-1&&Math.floor(i/W)>0&&Math.floor(i/W)<H-1;
 const N=W*H,all=()=>Array.from({length:N},(_,i)=>i),xy=i=>[i%W,Math.floor(i/W)];
 export function neighbor(i,side){const [x,y]=xy(i),[dx,dy]=STEP[side];return x+dx<0||x+dx>=W||y+dy<0||y+dy>=H?null:(y+dy)*W+x+dx;}
@@ -13,7 +14,7 @@ const fail=message=>{throw Error(message);};
 function random(seed){let a=seed>>>0;return ()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
 const pick=(a,r)=>a[Math.floor(r()*a.length)];
 function shuffled(a,r){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
-function settings(options){const o={...DEFAULTS,...options};for(const [k,min,max]of [['villages',0,30],['towns',1,15],['cities',2,2],['maxAttempts',1,100]])if(!Number.isInteger(o[k])||o[k]<min||o[k]>max)fail(`${k} must be a whole number from ${min} to ${max}.`);return o;}
+function settings(options){const o={...DEFAULTS,...options};for(const [k,min,max]of [['villages',3,3],['towns',4,4],['cities',5,5],['maxAttempts',1,100]])if(!Number.isInteger(o[k])||o[k]<min||o[k]>max)fail(`${k} must be a whole number from ${min} to ${max}.`);return o;}
 
 // Three separated corridors permit two rivers and a cliff chain without ambiguous
 // river/cliff intersections. Orientation, corridors, meanders and ports are seeded.
@@ -47,10 +48,12 @@ function settlements(m,tutorial,o,r){
   cells.forEach(i=>{m.sectors[i].facilityIds=Object.fromEntries(m.sectors[i].facilities.map(f=>[f,`${id}-${f}-${i}`]));});groups.push({id,kind,cells});
  };
  const town=tutorial[4].index,second=pick(neighbors(town).filter(i=>land(i)&&interior(i)&&m.sectors[i].difficulty==='easy'),r);if(second===undefined)fail('Starting town has no free adjoining easy sector.');assign('town',[town,second],'town-1');
- for(const [kind,count]of [['town',o.towns-1],['village',o.villages],['city',o.cities]])for(let n=0;n<count;n++){
-  const size=kind==='town'?2:kind==='city'?3+Math.floor(r()*3):1;let group;
-  for(const start of shuffled(all().filter(i=>land(i)&&(kind!=='city'||m.sectors[i].difficulty==='hard')),r)){group=cluster(start,size);if(group)break;}
-  if(!group)fail(`No compatible space for ${kind} ${n+1}.`);assign(kind,group,`${kind}-${n+(kind==='town'?2:1)}`);
+ const serial={town:1,village:0,city:0};
+ for(const [difficulty,rule]of Object.entries(SETTLEMENT_ZONES)){
+  const requests=[...rule.cities.map(([min,max])=>['city',min+Math.floor(r()*(max-min+1))]),...Array.from({length:rule.towns-(difficulty==='easy'?1:0)},()=>['town',2]),...Array.from({length:rule.villages},()=>['village',2])];
+  for(const [kind,size]of requests){let group;for(const start of shuffled(all().filter(i=>land(i)&&m.sectors[i].difficulty===difficulty),r)){group=cluster(start,size);if(group)break;}
+   if(!group)fail('No compatible space for '+difficulty+' '+kind+' ('+size+' sectors).');assign(kind,group,kind+'-'+(++serial[kind]));
+  }
  }
  for(const [difficulty,count]of [['easy',1],['medium',2],['hard',2]])for(let n=0;n<count;n++){const i=pick(all().filter(i=>land(i)&&m.sectors[i].difficulty===difficulty),r);if(i===undefined)fail(`No space for ${difficulty} fortress.`);used.add(i);Object.assign(m.sectors[i],{role:'fortress',name:`${difficulty} fortress ${n+1}`,owner:'red-hats',facilities:[]});}
  return groups;
@@ -120,10 +123,15 @@ export function validateGenerated(m){
  const roadSides=i=>new Set(m.sectors[i].routes.filter(r=>r.kind==='road').flatMap(r=>[r.from.side,r.to.side]).filter(s=>s!=='center'));
  const connected=new Set(sites.slice(0,1)),roadQueue=[...connected];for(const i of roadQueue)for(const side of roadSides(i)){const j=neighbor(i,side);if(j!==null&&roadSides(j).has(OPPOSITE[side])&&!connected.has(j)){connected.add(j);roadQueue.push(j);}}check(sites.every(i=>connected.has(i)),'Roads do not connect every settlement sector and fortress.');
  const groups=new Map();m.sectors.forEach((s,i)=>{if(s.settlementId){if(!groups.has(s.settlementId))groups.set(s.settlementId,[]);groups.get(s.settlementId).push(i);}});
- for(const [id,cells]of groups){const role=m.sectors[cells[0]].role,expected=role==='village'?[1,1]:role==='town'?[2,2]:[3,5];check(cells.length>=expected[0]&&cells.length<=expected[1],`${id}: invalid settlement size.`);const joined=new Set([cells[0]]),q=[cells[0]];for(const i of q)for(const j of neighbors(i))if(cells.includes(j)&&!joined.has(j)){joined.add(j);q.push(j);}check(joined.size===cells.length,`${id}: settlement is not contiguous.`);check(cells.every(i=>m.sectors[i].role===role),`${id}: constituent roles do not match.`);if(id==='town-1')check(cells.every(interior),'Starting town must be fully inland.');const facilities=cells.flatMap(i=>m.sectors[i].facilities);if(role==='town')check(facilities.filter(f=>f==='workshop').length===1,`${id}: town needs one workshop.`);if(role==='city')check(facilities.filter(f=>f==='factory').length===1&&facilities.filter(f=>f==='workshop').length>=1&&facilities.filter(f=>f==='workshop').length<=3,`${id}: city needs one factory and 1–3 workshops.`);}
- check(m.sectors.filter(s=>s.role==='city').every(s=>s.difficulty==='hard'),'Every city sector must be in the hard zone.');
- check([...groups.values()].filter(g=>m.sectors[g[0]].role==='city').length===2,'The hard zone must contain exactly two cities.');
- for(const [role,key]of [['town','towns'],['city','cities'],['village','villages']]){counts[key]=[...groups.values()].filter(g=>m.sectors[g[0]].role===role).length;if(m.generation?.options)check(counts[key]===m.generation.options[key],`Expected ${m.generation.options[key]} ${key}.`);}
+ for(const [id,cells]of groups){const role=m.sectors[cells[0]].role,expected=role==='village'||role==='town'?[2,2]:[3,5];check(cells.length>=expected[0]&&cells.length<=expected[1],`${id}: invalid settlement size.`);const joined=new Set([cells[0]]),q=[cells[0]];for(const i of q)for(const j of neighbors(i))if(cells.includes(j)&&!joined.has(j)){joined.add(j);q.push(j);}check(joined.size===cells.length,`${id}: settlement is not contiguous.`);check(cells.every(i=>m.sectors[i].role===role),`${id}: constituent roles do not match.`);check(cells.every(i=>m.sectors[i].difficulty===m.sectors[cells[0]].difficulty),`${id}: settlement crosses difficulty zones.`);if(id==='town-1')check(cells.every(interior),'Starting town must be fully inland.');const facilities=cells.flatMap(i=>m.sectors[i].facilities);if(role==='town')check(facilities.filter(f=>f==='workshop').length===1,`${id}: town needs one workshop.`);if(role==='city')check(facilities.filter(f=>f==='factory').length===1&&facilities.filter(f=>f==='workshop').length>=1&&facilities.filter(f=>f==='workshop').length<=3,`${id}: city needs one factory and 1–3 workshops.`);}
+ counts.zones={};
+ for(const [difficulty,rule]of Object.entries(SETTLEMENT_ZONES)){
+  const inZone=[...groups.values()].filter(g=>m.sectors[g[0]].difficulty===difficulty),citySizes=inZone.filter(g=>m.sectors[g[0]].role==='city').map(g=>g.length).sort((a,b)=>a-b);
+  const actual={towns:inZone.filter(g=>m.sectors[g[0]].role==='town').length,villages:inZone.filter(g=>m.sectors[g[0]].role==='village').length,cities:citySizes};counts.zones[difficulty]=actual;
+  check(actual.towns===rule.towns,difficulty+': expected '+rule.towns+' towns.');check(actual.villages===rule.villages,difficulty+': expected '+rule.villages+' villages.');
+  check(citySizes.length===rule.cities.length&&rule.cities.every(([min,max],i)=>citySizes[i]>=min&&citySizes[i]<=max),difficulty+': city sizes must be '+rule.cities.map(([a,b])=>a===b?String(a):a+'–'+b).join(', ')+' sectors.');
+ }
+ for(const [role,key]of [['town','towns'],['city','cities'],['village','villages']])counts[key]=[...groups.values()].filter(g=>m.sectors[g[0]].role===role).length;
  return {valid:errors.length===0,errors:[...new Set(errors)],counts};
 }
 
