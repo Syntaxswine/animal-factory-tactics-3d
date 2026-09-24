@@ -46,9 +46,9 @@ export function drawSector(s,{ports=false,overlay='difficulty',detail=false,rim=
   else g.append(icon(s.gate,76,77,.65));
  }
  for(const {side,opening}of rim){const edge=svg('g',{transform:`rotate(${{north:0,east:90,south:180,west:270}[side]} 50 50)`});edge.append(svg('path',{d:opening?'M0 5H40 M60 5H100':'M0 5H100',class:'plateau-rim'}));for(let x=5;x<100;x+=10)if(!opening||x<40||x>60)edge.append(svg('path',{d:`M${x} 5V0`,class:'plateau-rim'}));if(opening)edge.append(svg('path',{d:'M42 0H58 M44 3H56 M46 6H54',class:'plateau-rim'}));g.append(edge);}
- if(s.role==='tutorial')g.append(svg('rect',{x:3,y:3,width:94,height:94,class:'tutorial-area'}));
+ if(s.tutorialStep||s.role==='tutorial')g.append(svg('rect',{x:3,y:3,width:94,height:94,class:'tutorial-area'}));
  if(s.role!=='countryside'){g.append(svg('circle',{cx:50,cy:38,r:24,class:'site-disc'}),icon(s.role,50,38,.8));}
- if(s.role==='tutorial'&&s.tutorialStep){const label=svg('text',{x:50,y:78,class:'tutorial-label'});label.textContent=s.tutorialStep===1?'1 · START':'STEP '+s.tutorialStep;g.append(label);}
+ if(s.tutorialStep){const label=svg('text',{x:50,y:78,class:'tutorial-label'});label.textContent=s.tutorialStep===1?'S · START':s.tutorialStep===5?'T · TOWN':'TUTORIAL';g.append(label);}
  s.facilities.forEach((f,i)=>{g.append(svg('circle',{cx:26+i*42,cy:79,r:16,class:'site-disc'}),icon(f,26+i*42,79,.55));});
  if(ports)for(const r of s.routes)for(const p of [r.from,r.to]){const [x,y]=anchor(p);g.append(svg('circle',{cx:x,cy:y,r:detail?2.4:3.4,class:'port port-'+r.kind}));}
  for(const side of s.travel){const [x,y]=anchor({side,offset:.5});const angle={north:-90,south:90,west:180,east:0}[side];g.append(svg('path',{d:'M-10-3H-3V-6L4 0-3 6V3H-10',transform:`translate(${x} ${y}) rotate(${angle})`,class:'travel-port'}));}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {anchor,route,blank,demo,validate,warnings,SketchDocument,WIDTH,HEIGHT,plateauRim} from '../dist/tactics/overmap-model.js';
+import {anchor,route,blank,demo,validate,warnings,SketchDocument,WIDTH,HEIGHT,plateauRim,placeTutorial,tutorialCells} from '../dist/tactics/overmap-model.js';
 import {point,curve,crossing} from '../dist/tactics/overmap-symbols.js';
 
 test('north one-third to south two-thirds bends east with exact boundary anchors',()=>{
@@ -53,17 +53,30 @@ test('example river combines straight stretches and bends while keeping attachme
  assert.ok(rivers.filter(r=>r.from.offset===r.to.offset).length>=5);
  assert.ok(rivers.some(r=>r.from.offset<r.to.offset));assert.ok(rivers.some(r=>r.from.offset>r.to.offset));
 });
-test('tutorial preserves the authored plateau footprint with one descent into an interior town',()=>{
- const m=validate(demo()),indices=m.sectors.flatMap((s,i)=>s.role==='tutorial'?[i]:[]),inside=new Set(indices),steps={north:-WIDTH,south:WIDTH,east:1,west:-1};
- assert.equal(indices.length,5);assert.deepEqual(indices.map(i=>m.sectors[i].tutorialStep).sort(),[1,2,3,4,5]);
- const exits=[];
- for(const i of indices){assert.equal(m.sectors[i].difficulty,'easy');assert.deepEqual(warnings(m,i),[]);
-  for(const side of m.sectors[i].travel)if(!inside.has(i+steps[side]))exits.push(i+steps[side]);
+test('tutorial includes the town and preserves TOO / XXO / XSO',()=>{
+ const m=demo(),cells=tutorialCells(2,3,0);
+ assert.deepEqual(cells.map(c=>[c.x-2,c.y-3]),[[1,2],[0,2],[1,1],[0,1],[0,0]]);
+ assert.equal(m.sectors.filter(s=>s.role==='tutorial').length,4);assert.equal(m.sectors[cells[0].index].tutorialStep,1);
+ assert.equal(m.sectors[cells[4].index].role,'town');assert.equal(m.sectors[cells[4].index].terrain,'plain');
+ assert.equal(cells.slice(0,4).flatMap(c=>plateauRim(m,c.index)).filter(r=>r.opening).length,1);
+ for(const c of cells){assert.equal(m.sectors[c.index].difficulty,'easy');assert.deepEqual(warnings(m,c.index),[]);}
+});
+test('all rotations can be placed wherever occupied cells fit and the town is interior',()=>{
+ for(const rotation of [0,90,180,270])for(let y=0;y<HEIGHT;y++)for(let x=0;x<WIDTH;x++){
+  let cells;try{cells=tutorialCells(x,y,rotation);}catch{continue;}
+  const m=placeTutorial(blank(),x,y,rotation),town=cells[4];assert.ok(town.x>0&&town.x<WIDTH-1&&town.y>0&&town.y<HEIGHT-1);
+  assert.equal(cells.length,5);assert.equal(m.sectors[cells[0].index].tutorialStep,1);
  }
- assert.equal(exits.length,1);const town=exits[0];assert.equal(m.sectors[town].role,'town');assert.ok(town%WIDTH>0&&town%WIDTH<WIDTH-1&&town>=WIDTH&&town<WIDTH*(HEIGHT-1));
- assert.equal(m.sectors[town+WIDTH].role,'town');assert.ok(m.sectors[town+WIDTH].facilities.includes('workshop'));
- assert.deepEqual(indices.map(i=>[i%WIDTH-2,Math.floor(i/WIDTH)-3]),[[0,0],[0,1],[1,1],[0,2],[1,2]]);
- for(const i of indices){assert.equal(m.sectors[i].terrain,'plateau');for(const rim of plateauRim(m,i))assert.ok(!inside.has(i+steps[rim.side]));}
- assert.equal(indices.flatMap(i=>plateauRim(m,i)).filter(r=>r.opening).length,1);
- const d=new SketchDocument(m);d.edit(indices[0],s=>s.name='Landing');d.undo();d.redo();assert.equal(validate(JSON.parse(JSON.stringify(d.map))).sectors[indices[0]].tutorialStep,1);
+ assert.throws(()=>placeTutorial(blank(),0,0,0),/town/);
+ assert.doesNotThrow(()=>placeTutorial(blank(),1,HEIGHT-3,0));
+});
+test('moving and rotating restores underlying sectors, retains edits, and is undoable and portable',()=>{
+ const original=blank();original.sectors[3*WIDTH+2].name='Original terrain';const d=new SketchDocument(placeTutorial(original,2,3));
+ d.edit(tutorialCells(2,3)[0].index,s=>{s.name='Landing';s.routes=[route('river','north','south',1/3,2/3)];});
+ const before=JSON.stringify(d.map);d.replace(placeTutorial(d.map,15,8,90));
+ assert.equal(d.map.sectors[3*WIDTH+2].name,'Original terrain');const start=tutorialCells(15,8,90)[0].index;
+ assert.equal(d.map.sectors[start].name,'Landing');assert.equal(d.map.sectors[start].routes[0].from.side,'east');
+ const copy=validate(JSON.parse(JSON.stringify(d.map)));assert.deepEqual(placeTutorial(copy,2,3,0).sectors,d.past.at(-1).sectors);
+ d.undo();assert.equal(JSON.stringify(d.map),before);d.redo();assert.equal(d.map.tutorialPlacement.rotation,90);
+ const saved=JSON.stringify(d.map);assert.throws(()=>d.replace(placeTutorial(d.map,0,0)));assert.equal(JSON.stringify(d.map),saved);
 });

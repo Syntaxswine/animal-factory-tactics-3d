@@ -59,7 +59,7 @@ must explicitly introduce template IDs, generation/library versions, seed,
 settlement membership, tutorial locks, authored entry areas and retained actual
 arrangements. Do not treat this drawing example as generator output.
 
-The tutorial footprint is now authored as XOO / XXO / XXO; its local maps still need authoring. Keep deferred
+The tutorial footprint is now authored as TOO / XXO / XSO; its local maps still need authoring. Keep deferred
 generation choices (bridge rounding, river-network count and diagonal bridge
 adjacency) explicit. Ownership values are planning overlays, not control logic.
 There is no new simulation clock or militia, incident, trading or logistics code.
@@ -77,19 +77,28 @@ Browser screenshots are local artifacts under `artifacts/overmap/`.
 
 ## Tutorial and river drawing follow-up
 
-The user supplied the exact footprint XOO / XXO / XXO, now represented as a
-plateau. Stage 1 occupies the upper-left sector. The proposed stage order runs
-south, east, south, west, with one descent from the bottom-left sector to an
-interior two-sector starting town and workshop. The exit position and stage
-order are editable assumptions; the footprint follows the user's design.
+The corrected footprint is TOO / XXO / XSO: T is the town, S is the start,
+and X is a tutorial sector. The five-sector group therefore contains four
+plateau sectors (S + three X) and one town. The only plateau descent leads from
+the upper-left X into T. O positions are outside the template and are untouched.
 
-Cliff rims surround contiguous plateau terrain and open only at declared travel
-edges. These are map graphics, not enforced gameplay barriers or tactical cliff
-geometry. Stage numbers persist through save/load and undo. Older sketches
-remain valid. Use Example for the updated drawing; old saved sketches preserve
-their contents.
+The user explicitly permits rotations, superseding the proposal's initial
+no-rotation restriction. Placement controls rotate the entire occupied footprint
+by 0/90/180/270 degrees and translate it anywhere all five sectors fit, provided
+the town is not on any overmap boundary. Other members may touch the boundary.
+The placement anchor is the top-left of the rotated occupied bounding rectangle.
 
-The river now contains straight stretches at both third positions plus occasional
-eastward and westward bends. Each shared boundary offset is reused by both
-neighbors. Tests cover continuity, variation, the exact five-sector footprint,
-plateau rim, single declared descent and interior starting town.
+Optional tutorialPlacement metadata stores anchor, rotation and the five covered
+background sectors. Moving restores the old background and preserves edited group
+properties, rotating travel directions and path endpoints together. Placement is
+validated before mutation, undoable, and retained by save/load and export/import.
+Old sketches without placement metadata remain valid; use Example to load the
+corrected template. The old arrangement is not silently rewritten on load.
+
+Cliff rims are planning graphics, not tactical geometry or enforced travel rules.
+The template town has a workshop marker; broader settlement membership, road
+routing to the surrounding world and full generator constraints remain deferred.
+
+The river retains straight stretches and occasional bends. Tests cover the exact
+corrected footprint, all rotations and legal boundary positions, town rejection,
+background restoration, property/connection rotation, undo and persistence.

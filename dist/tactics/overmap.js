@@ -1,4 +1,4 @@
-import {WIDTH,HEIGHT,SIDES,ROLES,TERRAINS,slots,fraction,route,blank,demo,validate,warnings,SketchDocument,plateauRim} from './overmap-model.js';
+import {WIDTH,HEIGHT,SIDES,ROLES,TERRAINS,slots,fraction,route,blank,demo,validate,warnings,SketchDocument,plateauRim,placeTutorial,tutorialCells} from './overmap-model.js';
 import {svg,drawSector,icon,LEGEND,crossing} from './overmap-symbols.js';
 const $=id=>document.getElementById(id),doc=new SketchDocument(),STORAGE='animal-factory-overmap-sketch-v1';
 let selected=7*WIDTH+7;
@@ -23,7 +23,7 @@ function drawGrid(){
  });
  const colors=$('overlay').value==='difficulty'?[['Easy','#dbe0c1'],['Medium','#ebd7ad'],['Hard','#e2bbb0'],['Unassigned','#ece4cf']]:$('overlay').value==='ownership'?[['Player','#c3d9d5'],['Red Hats','#e4b6a7'],['Neutral','#d7d3c1'],['Unassigned','#ece4cf']]:[['Landscape','#ece4cf']];
  $('overlay-key').replaceChildren(...colors.map(([label,color])=>{const span=document.createElement('span'),chip=document.createElement('i');chip.className='swatch';chip.style.background=color;span.append(chip,label);return span;}));
- const tutorial=doc.map.sectors.filter(s=>s.role==='tutorial');$('tutorial-summary').textContent=`Tutorial: ${tutorial.length} / 5 sectors. Example footprint: XOO / XXO / XXO. Plateau descent proposed at the bottom-left sector.`;$('find-start').disabled=!tutorial.length;
+ const tutorial=doc.map.sectors.filter(s=>s.tutorialStep||s.role==='tutorial');$('tutorial-summary').textContent=`Tutorial: ${tutorial.length} / 5 sectors. Town + three tutorial sectors + start. Footprint: TOO / XXO / XSO; any quarter-turn.`;$('find-start').disabled=!tutorial.length;
  $('counts').textContent=`450 sectors · ${doc.map.sectors.filter(s=>s.routes.some(r=>r.kind==='river')).length} river sectors · ${doc.map.sectors.filter(s=>s.gate==='bridge').length} bridges`;
 }
 function drawDetail(s){
@@ -37,9 +37,9 @@ function pathEditor(r,index){
  return root;
 }
 function render(){
- const s=doc.map.sectors[selected];$('map-name').value=doc.map.name;$('map-caption').textContent=doc.map.name;$('sector-title').textContent=`${String(selected%WIDTH+1).padStart(2,'0')} / ${String(Math.floor(selected/WIDTH)+1).padStart(2,'0')}`;
+ const s=doc.map.sectors[selected];const placement=doc.map.tutorialPlacement;if(placement){$('tutorial-x').value=placement.x+1;$('tutorial-y').value=placement.y+1;$('tutorial-rotation').value=placement.rotation;}$('map-name').value=doc.map.name;$('map-caption').textContent=doc.map.name;$('sector-title').textContent=`${String(selected%WIDTH+1).padStart(2,'0')} / ${String(Math.floor(selected/WIDTH)+1).padStart(2,'0')}`;
  drawGrid();drawDetail(s);
- $('tutorial-step-label').hidden=s.role!=='tutorial';$('tutorial-step').value=s.tutorialStep||'';
+ $('tutorial-step-label').hidden=!['tutorial','town'].includes(s.role);$('tutorial-step').value=s.tutorialStep||'';
  $('sector-name').value=s.name;for(const id of ['terrain','role','difficulty','owner','gate'])$(id).value=s[id];for(const id of ['factory','workshop'])$(id).checked=s.facilities.includes(id);
  $('routes').replaceChildren(...s.routes.map(pathEditor));if(!s.routes.length)$('routes').textContent='No paths in this sector.';
  for(const side of SIDES)$('travel-'+side).checked=s.travel.includes(side);
@@ -49,8 +49,9 @@ function render(){
  $('undo').disabled=!doc.past.length;$('redo').disabled=!doc.future.length;
 }
 for(const side of SIDES){const l=document.createElement('label');l.className='check';const input=document.createElement('input');input.type='checkbox';input.id='travel-'+side;input.onchange=()=>edit(s=>{s.travel=SIDES.filter(v=>$('travel-'+v).checked);});l.append(input,side);$('travel').append(l);}
-for(const id of ['terrain','role','difficulty','owner','gate'])$(id).onchange=()=>edit(s=>{s[id]=$(id).value;if(s.role!=='tutorial')delete s.tutorialStep;});
+for(const id of ['terrain','role','difficulty','owner','gate'])$(id).onchange=()=>edit(s=>{s[id]=$(id).value;if(!['tutorial','town'].includes(s.role))delete s.tutorialStep;});
 $('tutorial-step').onchange=()=>edit(s=>{if($('tutorial-step').value)s.tutorialStep=Number($('tutorial-step').value);else delete s.tutorialStep;});
+$('place-tutorial').onclick=()=>attempt(()=>{const x=Number($('tutorial-x').value)-1,y=Number($('tutorial-y').value)-1,rotation=Number($('tutorial-rotation').value);doc.replace(placeTutorial(doc.map,x,y,rotation));selected=tutorialCells(x,y,rotation)[0].index;render();status('Tutorial group placed. Its town is inside the map boundary. Undo restores the previous placement.');});
 $('find-start').onclick=()=>{selected=doc.map.sectors.findIndex(s=>s.role==='tutorial'&&s.tutorialStep===1);if(selected<0)selected=doc.map.sectors.findIndex(s=>s.role==='tutorial');if(selected<0)return;render();$('overmap').querySelector(`[data-sector="${selected}"]`).scrollIntoView({block:'nearest',inline:'nearest'});status('Tutorial plateau selected. Stage order and descent location are editable; local cliff geometry is not connected yet.');};
 $('sector-name').onchange=()=>edit(s=>s.name=$('sector-name').value.trim());
 for(const id of ['factory','workshop'])$(id).onchange=()=>edit(s=>s.facilities=['factory','workshop'].filter(v=>$(v).checked));
