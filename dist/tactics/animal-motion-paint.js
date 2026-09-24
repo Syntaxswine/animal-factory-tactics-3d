@@ -1,3 +1,5 @@
+import {createDonkeyStrawHat} from './donkey-straw-hat.js';
+import {applyDonkeyHawaiian,DONKEY_GUIDE_OUTFIT} from './donkey-hawaiian.js';
 import {createModelPaint} from './horse-model-paint.js';
 import {cowNeckPaint,COW_NECK_PAINT} from './cow-neck-paint.js';
 import {rabbitPaintLayers,RABBIT_CLOTH_PAINT,RABBIT_EYE_PAINT} from './rabbit-paint-layers.js';
@@ -22,5 +24,7 @@ export async function createAnimalPaint(renderer,worker,profile,loader,outfit='n
  const paint=createModelPaint(renderer,worker,main,options),dispose=paint.dispose;
  const tailored=profile.id==='hen'||profile.id==='pig-director';
  const disposeUniform=outfit==='red-hats'&&profile.id!=='pig-foreman'?(tailored?await applyTailoredRedHat(renderer,paint.material,await load(base+profile.id+'-red-hat-paint-v1.png'),profile):await applyRedHatUniform(renderer,paint.material,await load(RED_HAT_UNIFORM_PAINT),profile)):null;
- paint.dispose=()=>{disposeUniform?.();dispose();textures.forEach(t=>t.dispose());};return paint;
+ const guideHat=profile.id==='donkey'&&outfit===DONKEY_GUIDE_OUTFIT?createDonkeyStrawHat(worker):null;
+ const disposeHawaiian=profile.id==='donkey'&&outfit===DONKEY_GUIDE_OUTFIT?applyDonkeyHawaiian(paint.material):null;
+ paint.dispose=()=>{guideHat?.dispose();disposeHawaiian?.();disposeUniform?.();dispose();textures.forEach(t=>t.dispose());};return paint;
 }

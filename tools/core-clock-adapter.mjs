@@ -5,10 +5,10 @@ export const clockOverrides={
  'blocks.js':'Preserve authored door locks across block extraction and placement.',
  'progression.js':'Use canonical 1-100 stats and derived resources for opted-in characters.',
  'explosives.js':'Use physical tower heights, weapon skills and endurance-aware explosive previews.',
- 'maps.js':'Validate cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal.',
+ 'maps.js':'Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal.',
  'projectiles.js':'Trace open tower windows, elevated occupants and welded cliff surfaces.',
  'environment.js':'Register authored light and cliff footprints and collision rules.',
- 'editor-model.js':'Allow supported cliff tiles at water edges.',
+ 'editor-model.js':'Preserve donkey guide outfits and allow supported cliff tiles at water edges.',
  'engine.js':'Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks.',
  'world.js':'Use the shared clock, one-minute completed rounds, and exploration pacing.'
 };
@@ -18,11 +18,13 @@ export function adaptCoreClock(name,data){
  let s=data.toString();
  if(name==='environment.js'){return Buffer.from("import {CLIFF_PROPS} from '../cliff-map.js';\nimport {LIGHT_PROPS} from '../light-sources.js';\n"+s+'\nObject.assign(PROPS,LIGHT_PROPS,CLIFF_PROPS);\n');}
  if(name==='editor-model.js'){
+  s=once(s,"if(options.outfit==='red-hats')next.outfit='red-hats';","if(options.outfit==='red-hats'||next.species==='donkey'&&options.outfit==='blue-hawaiian')next.outfit=options.outfit;");
   s="import {isCliff} from '../cliff-map.js';\n"+s;
   s=once(s,'!floorTerrain(terrainAt(m,q.x,q.y,q.z))||propAt(m,q.x,q.y,q.z)',"!(floorTerrain(terrainAt(m,q.x,q.y,q.z))||isCliff(p)&&terrainAt(m,q.x,q.y,q.z)==='water')||propAt(m,q.x,q.y,q.z)");
   return Buffer.from(s);
  }
  if(name==='maps.js'){
+  s=once(s,"!['normal','red-hats'].includes(g.outfit)","!['normal','red-hats'].includes(g.outfit)&&!(g.species==='donkey'&&g.outfit==='blue-hawaiian')");
   s="import {isCliff,cliffMapErrors} from '../cliff-map.js';\n"+s;
   s=once(s,'const propPositions=new Set();',"errors.push(...cliffMapErrors(raw));const propPositions=new Set();");
   s=once(s,'!floorTerrain(terrainAt(raw,q.x,q.y,q.z))',"!(floorTerrain(terrainAt(raw,q.x,q.y,q.z))||isCliff(p)&&terrainAt(raw,q.x,q.y,q.z)==='water')");
