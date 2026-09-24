@@ -1,3 +1,4 @@
+import {pickFloorSurface} from './battle-floor-picking.js';
 import {prepareLadderRoute} from './ladder-preparation.js';
 import {CliffMapScene} from './cliff-map-scene.js';
 import {BattleLoot} from './battle-loot.js';
@@ -113,16 +114,19 @@ export class BattleRenderer extends HybridRenderer {
  prune(){} // Reuse each actor's model across visibility changes.
  pick(x,y,width,height){
   const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
+  const floorHit=pickFloorSurface(this.state,ray.ray,this.level??2);
   const roots=[...this.actors.entries()].filter(([,root])=>root.visible);
   for(const hit of ray.intersectObjects(roots.map(([,root])=>root),true)){
+   if(floorHit&&hit.distance>floorHit.distance+.02)continue;
    let object=hit.object,visible=true;
    while(object){if(!object.visible)visible=false;const entry=roots.find(([,root])=>root===object);if(entry&&visible)return entry[0];object=object.parent;}
   }
   return null;
  }
+ pickGround(x,y,width,height,maxLevel){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return pickFloorSurface(this.state,ray.ray,maxLevel);}
  pickLoot(x,y,width,height){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return this.loot.pick(ray);}
  draw(ctx,state,...args){
-  this.loot.sync(state,args[3]);
+  this.loot.sync(state,args[4]?.maxLevel??args[3]);
   this.state=state;this.captureCombat(state);this.shotEffects.hide();
   const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.traversal.active?.event.unitId===u.id?{...u,presentationLevel:args[3]}:this.combat.display(u));
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
@@ -132,7 +136,7 @@ export class BattleRenderer extends HybridRenderer {
   const now=this.presentationNow??performance.now(),reduced=!!this.reducedMotion?.matches;
   this.combat.observe(state,now,reduced);this.traversal.observe(state,now,reduced);
   for(const u of state.units){const m=this.models.get(u.id);if(!m)continue;
-   const visible=personVisible(state,u)&&(this.level===undefined||(u.z||0)===this.level),available=u.hp>0&&visible&&!reduced;
+   const visible=personVisible(state,u)&&(this.level===undefined||(u.z||0)<=this.level),available=u.hp>0&&visible&&!reduced;
    if(m.draw&&(!available||now-m.drawStart>=DRAW_DURATION_MS)){m.draw.dispose();m.draw=null;m.drawRequested=false;m.signature=null;}
    if(!available){m.drawRequested=false;if(m.weapon!==u.weapon)m.drawSkipWeapon=u.weapon;}
    if(m.weapon&&m.weapon!==u.weapon&&available&&!m.profile.unarmed&&u.weapon!=='hands'&&this.traversal.active?.event.unitId!==u.id)m.drawRequested=true;

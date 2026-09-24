@@ -79,21 +79,21 @@ export class HybridRenderer{
   }
   return mesh;
  }
- draw(ctx,state,view,width,height,level,{editor=false}={}){
+ draw(ctx,state,view,width,height,level,{editor=false,maxLevel=level}={}){
   const drawStart=performance.now();
   const scale=28*Math.sqrt(2)*view.zoom,baseY=view.y+(editor?0:level*FLOOR_PIXELS*view.zoom),camera=this.camera;
   if(this.width!==width||this.height!==height){this.renderer.setSize(width,height,false);this.width=width;this.height=height;}
   camera.left=-view.x/scale;camera.right=(width-view.x)/scale;camera.top=baseY/scale;camera.bottom=(baseY-height)/scale;camera.near=.1;camera.far=1600;camera.position.set(Math.sqrt(3/8)*800,400,Math.sqrt(3/8)*800);camera.lookAt(0,0,0);camera.updateProjectionMatrix();camera.updateMatrixWorld();
   let world;if(state.geometryMode==='hybrid')world=hybridWorld(state);else{const signature=JSON.stringify([state.terrain,state.upper,state.edges,state.props,state.stairs]);if(signature!==this.mapSignature){this.mapSignature=signature;this.editorWorld=buildWorld(state);}world=this.editorWorld;}
-  const seen=editor?null:state.seen,rebuild=this.world!==world||this.seenCount!==seen?.size||this.level!==level;if(rebuild){this.rebuild(world,seen,level,state);this.world=world;this.seenCount=seen?.size;this.level=level;}
+  const seen=editor?null:state.seen,rebuild=this.world!==world||this.seenCount!==seen?.size||this.level!==maxLevel;if(rebuild){this.rebuild(world,seen,maxLevel,state);this.world=world;this.seenCount=seen?.size;this.level=maxLevel;}
   const units=editor?[...state.starts.map((p,i)=>({...p,id:i,species:['horse','goat','donkey','sheep'][i],weapon:'rifle',hp:100,team:'squad'})),...state.guards.map((p,i)=>({...p,id:i+4,hp:100,team:'guard'}))]:state.units;
   for(const mesh of this.actors.values())mesh.visible=false;const picking=[];
-  for(const u of units){if(u.away||u.casualty==='captured'||(u.presentationLevel??u.z??0)!==level||!editor&&u.team!=='squad'&&!state.detected.has(u.id)&&!(u.hp<=0&&state.seen.has(key(u.x,u.y,u.z||0))))continue;
+  for(const u of units){if(u.away||u.casualty==='captured'||(u.presentationLevel??u.z??0)>maxLevel||!editor&&u.team!=='squad'&&!state.detected.has(u.id)&&!(u.hp<=0&&state.seen.has(key(u.x,u.y,u.z||0))))continue;
    // Only initialize artwork near the viewport; large maps do not preload every pose.
    const center=new THREE.Vector3(...toWorld(u)).project(camera),px=(center.x+1)*width/2,py=(1-center.y)*height/2;if(px< -200||px>width+200||py< -200||py>height+200)continue;
    const mesh=this.actor(u);if(!mesh)continue;mesh.visible=true;const box=new THREE.Box3().setFromObject(mesh),points=[];for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z])points.push(new THREE.Vector3(x,y,z).project(camera));const xs=points.map(p=>(p.x+1)*width/2),ys=points.map(p=>(1-p.y)*height/2);picking.push({id:u.id,x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys),px,py});
   }
-  this.prune();this.animateMaterials(performance.now()/1000);this.lights?.update(state,level,this.state?.clock?.minutes??480,this.reducedMotion?.matches?null:(this.presentationNow??0)/1000);this.daylight?.update(this.state?.clock?.minutes??480,camera,this.presentationNow??0);if(this.lights)this.lights.render(this.renderer,camera);else this.renderer.render(this.scene,camera);ctx.drawImage(this.renderer.domElement,0,0,width,height);this.drawTimes??=[];this.drawTimes.push(performance.now()-drawStart);if(this.drawTimes.length>120)this.drawTimes.shift();return picking;
+  this.prune();this.animateMaterials(performance.now()/1000);this.lights?.update(state,maxLevel,this.state?.clock?.minutes??480,this.reducedMotion?.matches?null:(this.presentationNow??0)/1000);this.daylight?.update(this.state?.clock?.minutes??480,camera,this.presentationNow??0);if(this.lights)this.lights.render(this.renderer,camera);else this.renderer.render(this.scene,camera);ctx.drawImage(this.renderer.domElement,0,0,width,height);this.drawTimes??=[];this.drawTimes.push(performance.now()-drawStart);if(this.drawTimes.length>120)this.drawTimes.shift();return picking;
  }
  animateMaterials(time){for(const m of this.materials.values())if(m.userData.waterTime)m.userData.waterTime.value=time;}
  stats(){return {meshes:this.structures.children.length,actors:this.actors.size,cachedPoses:this.textures.size,textures:this.renderer.info.memory.textures,geometries:this.renderer.info.memory.geometries,calls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,drawTimes:[...this.drawTimes||[]],diagnostics:[...this.diagnostics],unsupported:this.world?.diagnostics||[]};}
