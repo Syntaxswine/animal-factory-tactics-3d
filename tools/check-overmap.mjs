@@ -5,7 +5,7 @@ const require=createRequire(import.meta.url),{chromium}=require(process.env.PLAY
 const browser=await chromium.launch({channel:'msedge',headless:true});
 try{
  const page=await browser.newPage({viewport:{width:1600,height:1150}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('http://127.0.0.1:4323/tactics/overmap.html');await page.locator('.sector-cell').last().waitFor();
+ await page.goto('http://127.0.0.1:4323/tactics/overmap.html');await page.locator('.sector-cell').last().waitFor();await page.waitForFunction(()=>document.getElementById('status').textContent.startsWith('World generated'));await page.locator('#demo').click();
  assert.equal(await page.locator('.sector-cell').count(),450);
  await page.getByLabel('river 1 to offset',{exact:true}).selectOption(String(1/3));
  assert.ok((await page.locator('#warnings').innerText()).includes('no matching attachment'));

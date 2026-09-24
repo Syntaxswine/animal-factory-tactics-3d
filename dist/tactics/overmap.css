@@ -3,3 +3,5 @@
 .tutorial-area{fill:#f0cc72;fill-opacity:.5;stroke:#a97521;stroke-width:3}.tutorial-label{font-size:15px;font-weight:900;text-anchor:middle;fill:#554019}.tutorial-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;font-size:12px;border-bottom:1px solid var(--line)}.tutorial-summary button{flex:none}[hidden]{display:none!important}
 
 .plateau-rim{stroke:#715039;stroke-width:2;fill:none}.symbol-plateau{fill:#d5be85;stroke:#715039}
+
+.generation-panel{border-top:3px solid var(--ink);padding:14px 0}.generation-controls{display:flex;align-items:end;flex-wrap:wrap;gap:10px}.generation-controls label{width:110px}.generation-controls label:first-child{width:160px}.generation-controls button:first-of-type{background:var(--red);color:var(--paper)}#generation-report{font-size:13px;font-weight:700}#generation-checks{white-space:pre-wrap;font:12px/1.6 system-ui}.generation-panel details{margin-top:8px;padding-top:8px}

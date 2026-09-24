@@ -8,6 +8,7 @@ export const OPPOSITE={north:'south',south:'north',east:'west',west:'east'};
 export const STEP={north:[0,-1],south:[0,1],east:[1,0],west:[-1,0]};
 export const slots=kind=>kind==='road'?[.5]:[1/3,2/3];
 export function anchor({side,offset}){
+ if(side==='center')return [50,50];
  if(side==='north')return [offset*100,0];
  if(side==='south')return [offset*100,100];
  if(side==='west')return [0,offset*100];
@@ -39,7 +40,7 @@ export function validate(m){
   for(const [key,allowed,max]of [['facilities',['factory','workshop'],2],['travel',SIDES,4]])if(!Array.isArray(s[key])||s[key].length>max||new Set(s[key]).size!==s[key].length||s[key].some(v=>!has(allowed,v)))fail();
   if(s.tutorialStep!==undefined&&(!Number.isInteger(s.tutorialStep)||s.tutorialStep<1||s.tutorialStep>5||!['tutorial','town'].includes(s.role)))fail();
   if(!Array.isArray(s.routes)||s.routes.length>12)fail();
-  for(const r of s.routes){if(!r||!has(KINDS,r.kind))fail();for(const p of [r.from,r.to])if(!p||!has(SIDES,p.side)||!slots(r.kind).some(n=>Math.abs(n-p.offset)<1e-9)||typeof p.offset!=='number')fail();if(r.from.side===r.to.side&&r.from.offset===r.to.offset)fail();}
+  for(const r of s.routes){if(!r||!has(KINDS,r.kind))fail();for(const p of [r.from,r.to])if(!p||!has(r.kind==='road'?[...SIDES,'center']:SIDES,p.side)||!slots(r.kind).some(n=>Math.abs(n-p.offset)<1e-9)||typeof p.offset!=='number')fail();if(r.from.side===r.to.side&&r.from.offset===r.to.offset)fail();}
  });
  if(m.tutorialPlacement){const p=m.tutorialPlacement,cells=tutorialCells(p.x,p.y,p.rotation);if(!Array.isArray(p.underlay)||p.underlay.length!==5||p.underlay.some((v,i)=>!v||v.index!==cells[i].index))throw Error('Invalid tutorial placement backup.');const background=blank();for(const v of p.underlay)background.sectors[v.index]=v.sector;validate(background);}
  return m;
@@ -47,6 +48,7 @@ export function validate(m){
 export function warnings(m,index){
  const s=m.sectors[index],x=index%WIDTH,y=Math.floor(index/WIDTH),out=[];
  for(const r of s.routes)for(const p of [r.from,r.to]){
+  if(p.side==='center')continue;
   const [dx,dy]=STEP[p.side],nx=x+dx,ny=y+dy;if(nx<0||nx>=WIDTH||ny<0||ny>=HEIGHT)continue;
   const other=m.sectors[ny*WIDTH+nx];
   if(!other.routes.some(q=>q.kind===r.kind&&[q.from,q.to].some(e=>e.side===OPPOSITE[p.side]&&Math.abs(e.offset-p.offset)<1e-9)))out.push(`${r.kind} at ${p.side} ${fraction(p.offset)} has no matching attachment in sector ${nx+1},${ny+1}.`);
@@ -82,7 +84,7 @@ export function tutorialCells(x,y,rotation=0){
  return cells;
 }
 function rotateSector(s,turns){
- const out=structuredClone(s),rotate=p=>{for(let i=0;i<turns;i++){if(p.side==='east'||p.side==='west')p.offset=Math.abs(p.offset-.5)<1e-9?.5:p.offset<.5?2/3:1/3;p.side=SIDES[(SIDES.indexOf(p.side)+1)%4];}return p;};
+ const out=structuredClone(s),rotate=p=>{if(p.side==='center')return p;for(let i=0;i<turns;i++){if(p.side==='east'||p.side==='west')p.offset=Math.abs(p.offset-.5)<1e-9?.5:p.offset<.5?2/3:1/3;p.side=SIDES[(SIDES.indexOf(p.side)+1)%4];}return p;};
  out.travel=out.travel.map(side=>SIDES[(SIDES.indexOf(side)+turns)%4]);
  out.routes=out.routes.map(r=>({...r,from:rotate({...r.from}),to:rotate({...r.to})}));return out;
 }

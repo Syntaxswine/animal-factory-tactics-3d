@@ -1,7 +1,7 @@
 import {anchor,ROLES} from './overmap-model.js';
 const NS='http://www.w3.org/2000/svg';
 export function svg(tag,attrs={},children=[]){const el=document.createElementNS(NS,tag);for(const [k,v]of Object.entries(attrs))el.setAttribute(k,v);el.append(...children);return el;}
-const inward={north:[0,1],south:[0,-1],west:[1,0],east:[-1,0]};
+const inward={center:[0,0],north:[0,1],south:[0,-1],west:[1,0],east:[-1,0]};
 export function curve(r){const a=anchor(r.from),b=anchor(r.to),u=inward[r.from.side],v=inward[r.to.side];return [a,[a[0]+u[0]*44,a[1]+u[1]*44],[b[0]+v[0]*44,b[1]+v[1]*44],b];}
 export function point(r,t){const [a,b,c,d]=curve(r),s=1-t;return [0,1].map(i=>s*s*s*a[i]+3*s*s*t*b[i]+3*s*t*t*c[i]+t*t*t*d[i]);}
 export function path(r){const [a,b,c,d]=curve(r);return `M${a} C${b} ${c} ${d}`;}
