@@ -1,6 +1,6 @@
 import {WIDTH as W,HEIGHT as H,SIDES,STEP,OPPOSITE,blank,route,validate,warnings,placeTutorial,tutorialCells} from './overmap-model.js';
 
-export const GENERATOR_VERSION='strategic-plan-5';
+export const GENERATOR_VERSION='strategic-plan-6';
 export const STAGES=['Tutorial','Rivers','Cliffs','Difficulty zoning','Settlements and fortresses','Roads','Bridges and gates','Validation'];
 export const DEFAULTS={villages:3,towns:4,cities:5,maxAttempts:40};
 export const SETTLEMENT_ZONES={easy:{towns:2,villages:1,cities:[[3,3]]},medium:{towns:1,villages:2,cities:[[3,4],[4,4]]},hard:{towns:1,villages:0,cities:[[3,4],[5,5]]}};
@@ -9,6 +9,7 @@ const N=W*H,all=()=>Array.from({length:N},(_,i)=>i),xy=i=>[i%W,Math.floor(i/W)];
 export function neighbor(i,side){const [x,y]=xy(i),[dx,dy]=STEP[side];return x+dx<0||x+dx>=W||y+dy<0||y+dy>=H?null:(y+dy)*W+x+dx;}
 const neighbors=i=>SIDES.map(s=>neighbor(i,s)).filter(i=>i!==null);
 const direction=(a,b)=>SIDES.find(s=>neighbor(a,s)===b);
+export const sectorDistance=(a,b)=>{const [x,y]=xy(a),[u,v]=xy(b);return Math.max(Math.abs(x-u),Math.abs(y-v));};
 const near=(a,b)=>{const [x,y]=xy(a),[u,v]=xy(b);return Math.max(Math.abs(x-u),Math.abs(y-v))<=1;};
 const fail=message=>{throw Error(message);};
 function random(seed){let a=seed>>>0;return ()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
@@ -61,7 +62,7 @@ function settlements(m,tutorial,o,r){
    if(!group)fail('No compatible space for '+difficulty+' '+kind+' ('+size+' sectors).');assign(kind,group,kind+'-'+(++serial[kind]));
   }
  }
- for(const [difficulty,count]of [['easy',1],['medium',2],['hard',2]])for(let n=0;n<count;n++){const i=pick(all().filter(i=>land(i)&&m.sectors[i].difficulty===difficulty),r);if(i===undefined)fail(`No space for ${difficulty} fortress.`);used.add(i);Object.assign(m.sectors[i],{role:'fortress',name:`${difficulty} fortress ${n+1}`,owner:'red-hats',facilities:[]});}
+ for(const [difficulty,count]of [['easy',1],['medium',2],['hard',2]])for(let n=0;n<count;n++){const i=pick(all().filter(i=>land(i)&&m.sectors[i].difficulty===difficulty&&(difficulty!=='easy'||[town,second].every(t=>sectorDistance(i,t)>=4))),r);if(i===undefined)fail(`No space for ${difficulty} fortress.`);used.add(i);Object.assign(m.sectors[i],{role:'fortress',name:`${difficulty} fortress ${n+1}`,owner:'red-hats',facilities:[]});}
  return groups;
 }
 function barrierMap(m){return new Map(m.sectors.flatMap((s,i)=>{const f=s.routes.find(r=>r.kind==='river'||r.kind==='cliff');return f?[[i,f]]:[];}));}
@@ -86,16 +87,19 @@ function roads(m,features,groups,r){
  const barriers=barrierMap(m),crossings=selectRoadCrossings(m,features,r),links=Array.from({length:N},()=>new Set()),network=new Set(),noise=all().map(()=>r()*.5);
  const link=(a,b)=>{links[a].add(direction(a,b));links[b].add(direction(b,a));network.add(a);network.add(b);};
  const targets=[...groups.flatMap(g=>g.cells),...all().filter(i=>m.sectors[i].role==='fortress')];network.add(targets[0]);
- function connect(start){
-  if(network.has(start))return;const dist=Array(N).fill(Infinity),prev=new Map(),done=new Set();dist[start]=0;let end;
-  for(let n=0;n<N;n++){let at=-1;for(let i=0;i<N;i++)if(!done.has(i)&&(at<0||dist[i]<dist[at]))at=i;if(at<0||!Number.isFinite(dist[at]))break;if(network.has(at)){end=at;break;}done.add(at);
-   for(const e of landEdges(m,at,barriers,crossings)){const cost=dist[at]+e.cost+noise[e.to];if(cost<dist[e.to]){dist[e.to]=cost;prev.set(e.to,{from:at,path:e.path});}}
+ function connect(start,exclude=null,force=false){
+  if(network.has(start)&&!force)return;const dist=Array(N).fill(Infinity),prev=new Map(),done=new Set();dist[start]=0;let end;
+  for(let n=0;n<N;n++){let at=-1;for(let i=0;i<N;i++)if(!done.has(i)&&(at<0||dist[i]<dist[at]))at=i;if(at<0||!Number.isFinite(dist[at]))break;if(network.has(at)&&at!==start){end=at;break;}done.add(at);
+   for(const e of landEdges(m,at,barriers,crossings)){if(exclude!==null&&e.path.includes(exclude))continue;const cost=dist[at]+e.cost+noise[e.to];if(cost<dist[e.to]){dist[e.to]=cost;prev.set(e.to,{from:at,path:e.path});}}
   }
   if(end===undefined)fail('Road routing could not connect a location across the reserved geography.');
   while(end!==start){const e=prev.get(end);for(let i=1;i<e.path.length;i++)link(e.path[i-1],e.path[i]);end=e.from;}
  }
  for(const target of targets)connect(target);
  for(const i of crossings){const {ends}=crossingAxis(m,i,barriers);connect(ends[0]);link(ends[0],i);link(i,ends[1]);}
+ // A crossing must continue on both banks, not merely terminate at a landing.
+ const destinations=new Set(targets);
+ for(const i of crossings)for(const end of crossingAxis(m,i,barriers).ends)if(links[end].size===1&&!destinations.has(end))connect(end,i,true);
  links.forEach((set,i)=>{const sides=[...set];if(sides.length===2)m.sectors[i].routes.push(route('road',...sides));else for(const side of sides)m.sectors[i].routes.push(route('road',side,'center'));});
  return crossings;
 }
@@ -113,6 +117,7 @@ export function validateGenerated(m){
   let exits=0;for(const c of tutorial.slice(0,4)){check(m.sectors[c.index].routes.length===0,'A generated route entered the tutorial plateau.');for(const side of m.sectors[c.index].travel){const j=neighbor(c.index,side);if(!tutorial.slice(0,4).some(c=>c.index===j)){exits++;check(j===tutorial[4].index,'Tutorial exit does not lead to its town.');}}}check(exits===1,'Tutorial must have exactly one descent to its town.');}
  for(const [z,n]of [['easy',1],['medium',2],['hard',2]])check(count(s=>s.role==='fortress'&&s.difficulty===z)===n,`Expected ${n} ${z} fortress(es).`);
  check(m.sectors.filter(s=>s.role==='fortress').every(s=>s.facilities.length===0),'Fortresses must not have civilian facilities.');
+ const startingTown=all().filter(i=>m.sectors[i].settlementId==='town-1');for(const i of all().filter(i=>m.sectors[i].role==='fortress'&&m.sectors[i].difficulty==='easy'))check(startingTown.length>0&&startingTown.every(t=>sectorDistance(i,t)>=4),'Easy fortress must be at least four sectors from every starting-town sector.');
  const barriers=barrierMap(m),crossings=new Set(all().filter(i=>m.sectors[i].gate!=='none'));
  for(const kind of ['river','cliff']){
   const cells=all().filter(i=>barriers.get(i)?.kind===kind),edgeCount=cells.reduce((n,i)=>n+[barriers.get(i).from,barriers.get(i).to].filter(p=>neighbor(i,p.side)===null).length,0);check(edgeCount===(kind==='river'?4:2),`${kind}: expected ${kind==='river'?4:2} world-edge connections, found ${edgeCount}.`);
@@ -128,6 +133,7 @@ export function validateGenerated(m){
  const sites=all().filter(i=>['town','city','village','fortress'].includes(m.sectors[i].role));
  const roadSides=i=>new Set(m.sectors[i].routes.filter(r=>r.kind==='road').flatMap(r=>[r.from.side,r.to.side]).filter(s=>s!=='center'));
  const connected=new Set(sites.slice(0,1)),roadQueue=[...connected];for(const i of roadQueue)for(const side of roadSides(i)){const j=neighbor(i,side);if(j!==null&&roadSides(j).has(OPPOSITE[side])&&!connected.has(j)){connected.add(j);roadQueue.push(j);}}check(sites.every(i=>connected.has(i)),'Roads do not connect every settlement sector and fortress.');
+ const roadCells=all().filter(i=>roadSides(i).size>0);check(roadCells.every(i=>connected.has(i)),'Orphaned roads are disconnected from the settlement road network.');check(roadCells.every(i=>roadSides(i).size!==1||sites.includes(i)),'Road dead ends must terminate at a settlement or fortress, not an empty crossing landing.');
  const groups=new Map();m.sectors.forEach((s,i)=>{if(s.settlementId){if(!groups.has(s.settlementId))groups.set(s.settlementId,[]);groups.get(s.settlementId).push(i);}});
  for(const [id,cells]of groups){const role=m.sectors[cells[0]].role,expected=role==='village'||role==='town'?[2,2]:[3,5];check(cells.length>=expected[0]&&cells.length<=expected[1],`${id}: invalid settlement size.`);const joined=new Set([cells[0]]),q=[cells[0]];for(const i of q)for(const j of neighbors(i))if(cells.includes(j)&&!joined.has(j)){joined.add(j);q.push(j);}check(joined.size===cells.length,`${id}: settlement is not contiguous.`);check(cells.every(i=>m.sectors[i].role===role),`${id}: constituent roles do not match.`);check(cells.every(i=>m.sectors[i].difficulty===m.sectors[cells[0]].difficulty),`${id}: settlement crosses difficulty zones.`);if(id==='town-1')check(cells.every(interior),'Starting town must be fully inland.');const facilities=cells.flatMap(i=>m.sectors[i].facilities);if(role==='town')check(facilities.filter(f=>f==='workshop').length===1,`${id}: town needs one workshop.`);if(role==='city')check(facilities.filter(f=>f==='factory').length===1&&facilities.filter(f=>f==='workshop').length>=1&&facilities.filter(f=>f==='workshop').length<=3,`${id}: city needs one factory and 1–3 workshops.`);}
  errors.push(...settlementSpacingErrors(m));

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {generateWorld,validateGenerated,STAGES,neighbor,SETTLEMENT_ZONES,boundaryOrientation,BOUNDARY_POSITION_WEIGHTS,settlementSpacingErrors} from '../dist/tactics/overmap-generator.js';
-import {SketchDocument,demo,tutorialCells,blank} from '../dist/tactics/overmap-model.js';
+import {SketchDocument,demo,tutorialCells,blank,route} from '../dist/tactics/overmap-model.js';
 
 test('same seed and versioned inputs reproduce the actual arrangement and retry sequence',()=>{
  const trace=[],a=generateWorld(1,{},p=>trace.push(p)),b=generateWorld(1);
@@ -15,6 +15,8 @@ test('seed range produces complete valid worlds, different geography and all tut
  for(const seed of [0,...Array.from({length:30},(_,i)=>i+1),4294967295]){
   const m=generateWorld(seed),report=validateGenerated(m);assert.equal(report.valid,true,`Seed ${seed}: ${report.errors.join('\n')}`);
   assert.deepEqual(settlementSpacingErrors(m),[]);
+  const fortress=m.sectors.findIndex(s=>s.role==='fortress'&&s.difficulty==='easy');for(const [i,s]of m.sectors.entries())if(s.settlementId==='town-1')assert.ok(Math.max(Math.abs(i%30-fortress%30),Math.abs(Math.floor(i/30)-Math.floor(fortress/30)))>=4);
+  for(const s of m.sectors){const ends=new Set(s.routes.filter(r=>r.kind==='road').flatMap(r=>[r.from.side,r.to.side]).filter(side=>side!=='center'));if(ends.size===1)assert.ok(['city','town','village','fortress'].includes(s.role));}
   assert.deepEqual([report.counts.easy,report.counts.medium,report.counts.hard],[150,150,150]);
   const cities=m.sectors.filter(s=>s.role==='city');assert.equal(new Set(cities.map(s=>s.settlementId)).size,5);
   for(const [zone,rule]of Object.entries(SETTLEMENT_ZONES)){const z=report.counts.zones[zone];assert.equal(z.towns,rule.towns);assert.equal(z.villages,rule.villages);assert.equal(z.cities.length,rule.cities.length);rule.cities.forEach(([min,max],i)=>assert.ok(z.cities[i]>=min&&z.cities[i]<=max));}
@@ -74,4 +76,15 @@ test('whole-world validation reports a newly placed settlement breaking the gap'
  const m=generateWorld(7),i=m.sectors.findIndex(s=>s.role==='city'),j=['north','east','south','west'].map(d=>neighbor(i,d)).find(j=>j!==null&&m.sectors[j].role==='countryside');
  assert.notEqual(j,undefined);Object.assign(m.sectors[j],{role:'village',settlementId:'new-village'});
  assert.match(validateGenerated(m).errors.join(' '),/one-sector gap/);
+});
+
+test('validator rejects a fortress too near the starting town and detached crossing-style stubs',()=>{
+ const base=generateWorld(7),m=structuredClone(base),town=m.sectors.findIndex(s=>s.settlementId==='town-1'),fort=m.sectors.findIndex(s=>s.role==='fortress'&&s.difficulty==='easy');
+ const close=m.sectors.findIndex((s,i)=>s.role==='countryside'&&s.difficulty==='easy'&&Math.max(Math.abs(i%30-town%30),Math.abs(Math.floor(i/30)-Math.floor(town/30)))<4);
+ assert.ok(close>=0);[m.sectors[fort],m.sectors[close]]=[m.sectors[close],m.sectors[fort]];
+ assert.match(validateGenerated(m).errors.join(' '),/at least four sectors/);
+ const roads=structuredClone(base),clean=i=>i!==null&&!roads.sectors[i].routes.length&&roads.sectors[i].role==='countryside';
+ const a=roads.sectors.findIndex((s,i)=>clean(i)&&clean(neighbor(i,'east'))&&['north','south','west'].every(d=>clean(neighbor(i,d)))&&['north','south','east'].every(d=>clean(neighbor(neighbor(i,'east'),d))));
+ assert.ok(a>=0);const b=neighbor(a,'east');roads.sectors[a].routes=[route('road','east','center')];roads.sectors[b].routes=[route('road','west','center')];
+ const errors=validateGenerated(roads).errors.join(' ');assert.match(errors,/Orphaned roads/);assert.match(errors,/Road dead ends/);
 });

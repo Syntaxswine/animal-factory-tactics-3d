@@ -104,3 +104,11 @@ contact between different settlement IDs is forbidden; connected sectors within
 one settlement remain allowed. Roads, fortresses and non-settlement terrain may
 occupy the gap. Zone counts, settlement sizes and facility requirements are
 unchanged. Whole-world validation also checks spacing after editing or import.
+
+Version strategic-plan-6 places the easy fortress at Chebyshev distance >= 4
+from both starting-town sectors (diagonal steps count). Validation checks this
+after edits/imports too. Crossing landings no longer form empty dead-end spurs:
+any non-destination landing with one road edge is connected back into the network
+without using that same crossing as its return path. Roads may terminate at
+settlements or fortresses. All road-bearing sectors must belong to the connected
+site network; disconnected components and empty-land dead ends are rejected.
