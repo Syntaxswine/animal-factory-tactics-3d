@@ -89,3 +89,11 @@ in total. Validation checks counts and sorted city-size requirements separately
 in each zone, rejects settlements spanning zones, and checks adjacency and
 facilities. Older saves retain their original arrangement; regenerate to apply
 these rules. Check world reports old or edited layouts that violate them.
+
+Version strategic-plan-4 weights north/south boundary positions at 1 and east/west
+positions at 0.5. Edge length is counted separately: on 30 × 15 sectors, the
+corridor orientation selection is 80% north/south and 20% east/west before
+constraint rejection/retries. The existing parallel-corridor family still shares
+its orientation among the two rivers and cliff chain, with paired opposite-edge
+exits; individual ends are not sampled independently. Both orientations remain
+available, and tests verify all four sides occur in finished worlds.

@@ -1,6 +1,6 @@
 import {WIDTH as W,HEIGHT as H,SIDES,STEP,OPPOSITE,blank,route,validate,warnings,placeTutorial,tutorialCells} from './overmap-model.js';
 
-export const GENERATOR_VERSION='strategic-plan-3';
+export const GENERATOR_VERSION='strategic-plan-4';
 export const STAGES=['Tutorial','Rivers','Cliffs','Difficulty zoning','Settlements and fortresses','Roads','Bridges and gates','Validation'];
 export const DEFAULTS={villages:3,towns:4,cities:5,maxAttempts:40};
 export const SETTLEMENT_ZONES={easy:{towns:2,villages:1,cities:[[3,3]]},medium:{towns:1,villages:2,cities:[[3,4],[4,4]]},hard:{towns:1,villages:0,cities:[[3,4],[5,5]]}};
@@ -18,7 +18,12 @@ function settings(options){const o={...DEFAULTS,...options};for(const [k,min,max
 
 // Three separated corridors permit two rivers and a cliff chain without ambiguous
 // river/cliff intersections. Orientation, corridors, meanders and ports are seeded.
-function corridors(r){const vertical=r()<.5,span=vertical?W:H;const starts=[];for(let a=1;a<span-1;a++)for(let b=a+3;b<span-1;b++)for(let c=b+3;c<span-1;c++)starts.push([a,b,c]);return {vertical,lines:shuffled(pick(starts,r),r)};}
+export const BOUNDARY_POSITION_WEIGHTS={north:1,south:1,east:.5,west:.5};
+export function boundaryOrientation(r,width=W,height=H){
+ const ns=width*(BOUNDARY_POSITION_WEIGHTS.north+BOUNDARY_POSITION_WEIGHTS.south),ew=height*(BOUNDARY_POSITION_WEIGHTS.east+BOUNDARY_POSITION_WEIGHTS.west);
+ return r()<ns/(ns+ew);
+}
+function corridors(r){const vertical=boundaryOrientation(r),span=vertical?W:H;const starts=[];for(let a=1;a<span-1;a++)for(let b=a+3;b<span-1;b++)for(let c=b+3;c<span-1;c++)starts.push([a,b,c]);return {vertical,lines:shuffled(pick(starts,r),r)};}
 function feature(m,kind,base,vertical,reserved,r,id){
  const length=vertical?H:W,span=vertical?W:H,toIndex=(a,b)=>vertical?b*W+a:a*W+b;
  const occupied=new Set(m.sectors.flatMap((s,i)=>s.routes.length?[i]:[]));
@@ -148,7 +153,7 @@ export function generateWorld(seed,options={},onProgress=()=>{}){
    report(4);const groups=settlements(m,tutorial,o,r);
    report(5);const crossings=roads(m,features,groups,r);
    report(6);gates(m,crossings,r);
-   m.name=`Generated world · ${seed}`;m.generation={seed,version:GENERATOR_VERSION,contentLibraryVersion:'schematic-symbols-1',attempt:attempt+1,options:o,stages:STAGES,features,settlements:groups,scope:'strategic-plan'};
+   m.name=`Generated world · ${seed}`;m.generation={seed,version:GENERATOR_VERSION,contentLibraryVersion:'schematic-symbols-1',attempt:attempt+1,options:o,stages:STAGES,features,settlements:groups,scope:'strategic-plan',boundaryPositionWeights:{...BOUNDARY_POSITION_WEIGHTS}};
    report(7);const result=validateGenerated(m);if(!result.valid)fail(result.errors.slice(0,4).join(' '));m.generation.counts=result.counts;return m;
   }catch(e){const reason=`${STAGES[stage]}: ${e.message}`;failures[reason]=(failures[reason]||0)+1;}
  }

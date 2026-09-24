@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {generateWorld,validateGenerated,STAGES,neighbor,SETTLEMENT_ZONES} from '../dist/tactics/overmap-generator.js';
+import {generateWorld,validateGenerated,STAGES,neighbor,SETTLEMENT_ZONES,boundaryOrientation,BOUNDARY_POSITION_WEIGHTS} from '../dist/tactics/overmap-generator.js';
 import {SketchDocument,demo,tutorialCells} from '../dist/tactics/overmap-model.js';
 
 test('same seed and versioned inputs reproduce the actual arrangement and retry sequence',()=>{
@@ -46,4 +46,17 @@ test('validation catches broken zones, edges, gates, roads and tutorial escape e
  assert.match(rejected(m=>{const f=m.generation.features[0];m.sectors[f.cells[0]].routes.find(r=>r.kind==='river').from.offset=.5;}),/Invalid properties/);
  assert.match(rejected(m=>m.sectors.find(s=>s.gate==='bridge').gateGuards=16),/guards/);
  assert.match(rejected(m=>{const city=m.sectors.find(s=>s.role==='city'),easy=m.sectors.find(s=>s.role==='countryside'&&s.difficulty==='easy');city.difficulty='easy';easy.difficulty='hard';}),/settlement crosses difficulty zones|city sizes must/);
+});
+
+test('boundary selection combines edge length with half weight for east/west positions',()=>{
+ assert.deepEqual(BOUNDARY_POSITION_WEIGHTS,{north:1,south:1,east:.5,west:.5});
+ assert.equal(boundaryOrientation(()=>.799999),true);assert.equal(boundaryOrientation(()=>.8),false);
+ // Equal-sized edges still retain the per-position 2:1 preference.
+ assert.equal(boundaryOrientation(()=>.66,20,20),true);assert.equal(boundaryOrientation(()=>.67,20,20),false);
+ const choices=Array.from({length:1000},(_,i)=>boundaryOrientation(()=>(i+.5)/1000));assert.equal(choices.filter(Boolean).length,800);
+});
+test('finished worlds include north/south and east/west river and cliff exits',()=>{
+ const edges={river:new Set(),cliff:new Set()};
+ for(let seed=0;seed<50;seed++){const m=generateWorld(seed);for(const s of m.sectors)for(const r of s.routes)if(edges[r.kind])for(const p of [r.from,r.to]){const i=m.sectors.indexOf(s);if(neighbor(i,p.side)===null)edges[r.kind].add(p.side);}}
+ for(const set of Object.values(edges))assert.deepEqual([...set].sort(),['east','north','south','west']);
 });
