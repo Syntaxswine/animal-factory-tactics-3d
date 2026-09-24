@@ -1,4 +1,4 @@
-import {WIDTH,HEIGHT,SIDES,ROLES,TERRAINS,slots,fraction,route,blank,demo,validate,warnings,SketchDocument,plateauRim,placeTutorial,tutorialCells} from './overmap-model.js';
+import {WIDTH,HEIGHT,SIDES,ROLES,TERRAINS,slots,fraction,route,blank,demo,validate,warnings,SketchDocument,plateauRim,placeTutorial,tutorialCells,randomizeTutorial} from './overmap-model.js';
 import {svg,drawSector,icon,LEGEND,crossing} from './overmap-symbols.js';
 const $=id=>document.getElementById(id),doc=new SketchDocument(),STORAGE='animal-factory-overmap-sketch-v1';
 let selected=7*WIDTH+7;
@@ -51,6 +51,7 @@ function render(){
 for(const side of SIDES){const l=document.createElement('label');l.className='check';const input=document.createElement('input');input.type='checkbox';input.id='travel-'+side;input.onchange=()=>edit(s=>{s.travel=SIDES.filter(v=>$('travel-'+v).checked);});l.append(input,side);$('travel').append(l);}
 for(const id of ['terrain','role','difficulty','owner','gate'])$(id).onchange=()=>edit(s=>{s[id]=$(id).value;if(!['tutorial','town'].includes(s.role))delete s.tutorialStep;});
 $('tutorial-step').onchange=()=>edit(s=>{if($('tutorial-step').value)s.tutorialStep=Number($('tutorial-step').value);else delete s.tutorialStep;});
+$('randomize-tutorial').onclick=()=>attempt(()=>{doc.replace(randomizeTutorial(doc.map));const p=doc.map.tutorialPlacement;selected=tutorialCells(p.x,p.y,p.rotation)[0].index;render();$('overmap').querySelector(`[data-sector="${selected}"]`).scrollIntoView({block:'nearest',inline:'nearest'});status(`Tutorial moved to anchor ${p.x+1}, ${p.y+1}, rotated ${p.rotation}°. Undo restores the previous position. This button randomizes the tutorial group.`);});
 $('place-tutorial').onclick=()=>attempt(()=>{const x=Number($('tutorial-x').value)-1,y=Number($('tutorial-y').value)-1,rotation=Number($('tutorial-rotation').value);doc.replace(placeTutorial(doc.map,x,y,rotation));selected=tutorialCells(x,y,rotation)[0].index;render();status('Tutorial group placed. Its town is inside the map boundary. Undo restores the previous placement.');});
 $('find-start').onclick=()=>{selected=doc.map.sectors.findIndex(s=>s.role==='tutorial'&&s.tutorialStep===1);if(selected<0)selected=doc.map.sectors.findIndex(s=>s.role==='tutorial');if(selected<0)return;render();$('overmap').querySelector(`[data-sector="${selected}"]`).scrollIntoView({block:'nearest',inline:'nearest'});status('Tutorial plateau selected. Stage order and descent location are editable; local cliff geometry is not connected yet.');};
 $('sector-name').onchange=()=>edit(s=>s.name=$('sector-name').value.trim());

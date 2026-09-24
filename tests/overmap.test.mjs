@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {anchor,route,blank,demo,validate,warnings,SketchDocument,WIDTH,HEIGHT,plateauRim,placeTutorial,tutorialCells} from '../dist/tactics/overmap-model.js';
+import {anchor,route,blank,demo,validate,warnings,SketchDocument,WIDTH,HEIGHT,plateauRim,placeTutorial,tutorialCells,randomizeTutorial} from '../dist/tactics/overmap-model.js';
 import {point,curve,crossing} from '../dist/tactics/overmap-symbols.js';
 
 test('north one-third to south two-thirds bends east with exact boundary anchors',()=>{
@@ -79,4 +79,15 @@ test('moving and rotating restores underlying sectors, retains edits, and is und
  const copy=validate(JSON.parse(JSON.stringify(d.map)));assert.deepEqual(placeTutorial(copy,2,3,0).sectors,d.past.at(-1).sectors);
  d.undo();assert.equal(JSON.stringify(d.map),before);d.redo();assert.equal(d.map.tutorialPlacement.rotation,90);
  const saved=JSON.stringify(d.map);assert.throws(()=>d.replace(placeTutorial(d.map,0,0)));assert.equal(JSON.stringify(d.map),saved);
+});
+
+test('re-randomize changes position and rotation, preserves edits and supports undo',()=>{
+ const d=new SketchDocument(demo());d.edit(tutorialCells(2,3)[0].index,s=>s.name='My start');
+ for(const value of [0,.25,.5,.75,.999999]){
+  const before=structuredClone(d.map),p=before.tutorialPlacement;d.replace(randomizeTutorial(d.map,()=>value));const next=d.map.tutorialPlacement;
+  assert.notEqual(next.rotation,p.rotation);assert.ok(next.x!==p.x||next.y!==p.y);
+  const cells=tutorialCells(next.x,next.y,next.rotation);assert.equal(d.map.sectors[cells[0].index].name,'My start');
+  d.undo();assert.deepEqual(d.map,before);d.redo();
+ }
+ assert.doesNotThrow(()=>randomizeTutorial(blank(),()=>0));
 });

@@ -97,3 +97,14 @@ export function placeTutorial(map,x,y,rotation=0){
  const underlay=cells.map(c=>({index:c.index,sector:structuredClone(next.sectors[c.index])}));
  cells.forEach((c,i)=>next.sectors[c.index]=content[i]);next.tutorialPlacement={x,y,rotation,underlay};return validate(next);
 }
+
+export function randomizeTutorial(map,random=Math.random){
+ const previous=map.tutorialPlacement,choices=[];
+ for(const rotation of [0,90,180,270])for(let y=0;y<HEIGHT;y++)for(let x=0;x<WIDTH;x++){
+  if(previous&&(rotation===previous.rotation||x===previous.x&&y===previous.y))continue;
+  try{tutorialCells(x,y,rotation);choices.push({x,y,rotation});}catch{/* Outside the map or town on the boundary. */}
+ }
+ if(!choices.length)throw Error('No alternative tutorial placement fits this map.');
+ const value=random();if(!Number.isFinite(value)||value<0||value>=1)throw Error('Random value must be between zero (inclusive) and one (exclusive).');
+ const {x,y,rotation}=choices[Math.floor(value*choices.length)];return placeTutorial(map,x,y,rotation);
+}

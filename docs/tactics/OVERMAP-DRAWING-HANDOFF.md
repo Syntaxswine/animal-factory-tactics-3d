@@ -102,3 +102,8 @@ routing to the surrounding world and full generator constraints remain deferred.
 The river retains straight stretches and occasional bends. Tests cover the exact
 corrected footprint, all rotations and legal boundary positions, town rejection,
 background restoration, property/connection rotation, undo and persistence.
+
+The toolbar now includes Re-randomize tutorial. Each click chooses a different
+valid anchor and quarter-turn rotation, preserves group edits and underlying
+terrain, and selects the relocated start. It is one undo step. This randomizes
+the tutorial placement only; full-world generation remains deferred.
