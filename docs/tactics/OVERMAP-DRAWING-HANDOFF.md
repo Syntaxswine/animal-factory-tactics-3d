@@ -1,8 +1,8 @@
 # Overmap generator and editor handoff
 
 Entry: tactics/overmap.html. It opens generated seed 7. Generate seed reproduces
-a seed/settings combination; Re-randomize world chooses a new seed. Example and
-Re-randomize tutorial remain available for focused drawing studies.
+a seed/settings combination; Re-randomize world chooses a new seed. Example remains available for focused drawing studies. The former tutorial
+randomization button is now Fresh world and rerolls the entire world.
 
 ## Generation order
 
@@ -117,3 +117,8 @@ Version strategic-plan-7 also requires every pair of fortresses, across all
 difficulty zones, to have Chebyshev distance >= 4. Placement and post-edit
 validation enforce this while retaining the existing fortress counts and the
 easy fortress distance from both starting-town sectors.
+
+The main toolbar Fresh world button uses the same fresh-seed generation path as
+Re-randomize world. It regenerates all elements, retains validation/cancellation
+and undo, and does not merely move the tutorial. Manual tutorial placement and
+rotation remain in their existing controls.
