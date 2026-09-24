@@ -171,3 +171,24 @@ For each completed section/batch append: scope, commit, evidence path/viewer, te
 Use the relevant focused tests and browser review harnesses while iterating. At implementation delivery run `npm run check` and `npm run build:tactics-3d`; the recorded baseline is 507 passing tests. Counts will change as coverage grows. Do not rerun the full implementation suite for a documentation-only checklist update.
 
 Recommended next character work: **reconcile the reviewed horse proof with canonical's integrated posture and casualty implementation**, then refine uncovered combinations using the section review gates.
+
+## Cliff traversal coverage — requested 24 September 2026
+
+Current work-branch baseline: `1eed00e` wires the reviewed horse/rifle ascent
+into gameplay. All animals can use the 8 AP climb action; unsupported animation
+combinations currently use the ordinary movement fallback. See
+[Live cliff animation integration](CLIFF-LIVE-ANIMATION.md).
+
+- [ ] Adapt and visually review cliff ascent for goat, bull, cow, donkey, sheep,
+  skunk, rabbit, dog, pig foreman, pig director and hen. Preserve each animal's
+  anatomy; the hen needs an appropriate wing-and-toe route.
+- [ ] Author and integrate cliff descent for all twelve character variants,
+  including the horse.
+- [ ] Expand reviewed equipment coverage beyond horse/rifle, using shared weapon
+  stowing and restoration. Include the unarmed donkey town-guide outfit and hat.
+- [ ] Verify each enabled combination in gameplay: 8 AP charged once, supported
+  landings, all four directions, cancellation, casualty/equipment interruption,
+  reduced motion, save/load and exact final positioning. Record visual evidence
+  and remaining unsupported combinations before claiming complete coverage.
+
+This entry records future work; it does not mark those animations as implemented.
