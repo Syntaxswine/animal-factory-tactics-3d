@@ -1,10 +1,11 @@
 import {WIDTH as W,HEIGHT as H,SIDES,STEP,OPPOSITE,blank,route,validate,warnings,placeTutorial,tutorialCells} from './overmap-model.js';
 
-export const GENERATOR_VERSION='strategic-plan-9';
+export const GENERATOR_VERSION='strategic-plan-10';
 export const STAGES=['Tutorial','Rivers','Cliffs','Difficulty zoning','Settlements and fortresses','Roads','Bridges and gates','Validation'];
 export const DEFAULTS={villages:3,towns:4,cities:5,maxAttempts:40};
 export const SETTLEMENT_ZONES={easy:{towns:2,villages:1,cities:[[3,3]]},medium:{towns:1,villages:2,cities:[[3,4],[4,4]]},hard:{towns:1,villages:0,cities:[[3,4],[5,5]]}};
 export const isSettlement=s=>['city','town','village'].includes(s.role);
+const reachesInland=i=>Math.min(i%W,W-1-i%W,Math.floor(i/W),H-1-Math.floor(i/W))>=2;
 const interior=i=>i%W>0&&i%W<W-1&&Math.floor(i/W)>0&&Math.floor(i/W)<H-1;
 const N=W*H,all=()=>Array.from({length:N},(_,i)=>i),xy=i=>[i%W,Math.floor(i/W)];
 export function neighbor(i,side){const [x,y]=xy(i),[dx,dy]=STEP[side];return x+dx<0||x+dx>=W||y+dy<0||y+dy>=H?null:(y+dy)*W+x+dx;}
@@ -31,15 +32,15 @@ function feature(m,kind,start,end,reserved,r,id){
  const first=neighbor(start.index,OPPOSITE[start.side]),last=neighbor(end.index,OPPOSITE[end.side]);
  if(first===null||last===null||[start.index,end.index,first,last].some(i=>blocked.has(i)))fail(kind+': chosen endpoints meet reserved terrain.');
  const allowed=i=>!blocked.has(i)&&i!==start.index&&i!==end.index&&(interior(i)||i===first||i===last);
- // Direction is part of the search state so bends have a stable cost. Endpoints
+ // Track direction and whether the route has reached two sectors inland. Endpoints
  // are fixed before routing; impossible pairs reject the attempt, never move ends.
  const noise=all().map(()=>r()*.9),dist=new Map(),previous=new Map(),open=[];
- const initial=first*4+SIDES.indexOf(OPPOSITE[start.side]);dist.set(initial,0);open.push({key:initial,cost:0});let finish;
- while(open.length){open.sort((a,b)=>b.cost-a.cost||b.key-a.key);const item=open.pop();if(item.cost!==dist.get(item.key))continue;const i=Math.floor(item.key/4),heading=item.key%4;if(i===last){finish=item.key;break;}
-  for(let d=0;d<4;d++){const j=neighbor(i,SIDES[d]);if(j===null||!allowed(j))continue;const key=j*4+d,cost=item.cost+1+noise[j]+(d===heading?0:1.8);if(cost<(dist.get(key)??Infinity)){dist.set(key,cost);previous.set(key,item.key);open.push({key,cost});}}
+ const initial=(first*4+SIDES.indexOf(OPPOSITE[start.side]))*2+Number(reachesInland(first));dist.set(initial,0);open.push({key:initial,cost:0});let finish;
+ while(open.length){open.sort((a,b)=>b.cost-a.cost||b.key-a.key);const item=open.pop();if(item.cost!==dist.get(item.key))continue;const i=Math.floor(item.key/8),heading=Math.floor(item.key/2)%4,inland=item.key%2;if(i===last&&inland){finish=item.key;break;}
+  for(let d=0;d<4;d++){const j=neighbor(i,SIDES[d]);if(j===null||!allowed(j))continue;const key=(j*4+d)*2+Number(inland||reachesInland(j)),cost=item.cost+1+noise[j]+(reachesInland(j)?0:3)+(d===heading?0:1.8);if(cost<(dist.get(key)??Infinity)){dist.set(key,cost);previous.set(key,item.key);open.push({key,cost});}}
  }
  if(finish===undefined)fail(kind+': no route between the selected boundary endpoints.');
- const path=[];for(let key=finish;key!==undefined;key=previous.get(key))path.push(Math.floor(key/4));path.reverse();path.unshift(start.index);path.push(end.index);
+ const path=[];for(let key=finish;key!==undefined;key=previous.get(key))path.push(Math.floor(key/8));path.reverse();path.unshift(start.index);path.push(end.index);
  if(new Set(path).size!==path.length||path.length<5)fail(kind+': selected endpoints produce a short or self-overlapping route.');
  let offset=r()<.5?1/3:2/3;
  path.forEach((index,i)=>{const from=i?direction(index,path[i-1]):start.side,to=i<path.length-1?direction(index,path[i+1]):end.side,next=r()<.28?(offset===1/3?2/3:1/3):offset;m.sectors[index].routes.push(route(kind,from,to,offset,next));m.sectors[index].terrain=kind==='river'?'wetland':'plain';offset=next;});
@@ -131,7 +132,7 @@ export function validateGenerated(m){
  const barriers=barrierMap(m),crossings=new Set(all().filter(i=>m.sectors[i].gate!=='none'));
  for(const kind of ['river','cliff']){
   const cells=all().filter(i=>barriers.get(i)?.kind===kind),edgeCount=cells.reduce((n,i)=>n+[barriers.get(i).from,barriers.get(i).to].filter(p=>neighbor(i,p.side)===null).length,0);check(edgeCount===(kind==='river'?4:2),`${kind}: expected ${kind==='river'?4:2} world-edge connections, found ${edgeCount}.`);
-  const remaining=new Set(cells);while(remaining.size){const chain=[remaining.values().next().value];remaining.delete(chain[0]);for(const i of chain)for(const p of [barriers.get(i).from,barriers.get(i).to]){const j=neighbor(i,p.side);if(remaining.has(j)){remaining.delete(j);chain.push(j);}}if(kind==='river'){check(chain.length>=5,'River is shorter than five sectors.');check(chain.filter(i=>m.sectors[i].gate==='bridge'&&m.sectors[i].crossingOrigin==='planned-bridge').length===Math.ceil(chain.length/5),'Planned river bridge count must round up to one per five river sectors; extra settlement crossings are additional.');}}
+  const remaining=new Set(cells);while(remaining.size){const chain=[remaining.values().next().value];remaining.delete(chain[0]);for(const i of chain)for(const p of [barriers.get(i).from,barriers.get(i).to]){const j=neighbor(i,p.side);if(remaining.has(j)){remaining.delete(j);chain.push(j);}}check(chain.some(reachesInland),`${kind} must reach at least two sectors inward from the nearest map edge.`);if(kind==='river'){check(chain.length>=5,'River is shorter than five sectors.');check(chain.filter(i=>m.sectors[i].gate==='bridge'&&m.sectors[i].crossingOrigin==='planned-bridge').length===Math.ceil(chain.length/5),'Planned river bridge count must round up to one per five river sectors; extra settlement crossings are additional.');}}
  }
  const bridges=[...crossings].filter(i=>m.sectors[i].gate==='bridge'&&m.sectors[i].crossingOrigin==='planned-bridge');check(!bridges.some((i,n)=>bridges.slice(n+1).some(j=>near(i,j))),'Bridge sectors touch, including diagonally.');
  for(const i of crossings){const s=m.sectors[i],axis=crossingAxis(m,i,barriers);check(!!axis&&s.routes.some(r=>r.kind==='road'&&axis.sides.includes(r.from.side)&&axis.sides.includes(r.to.side)&&r.from.side!==r.to.side),`Gate at ${i%W+1},${Math.floor(i/W)+1} lacks a crossing road.`);check(Number.isInteger(s.gateGuards)&&s.gateGuards>=2&&s.gateGuards<=15,'Gate guards must number 2–15.');check(barriers.get(i)?.kind===(s.gate==='bridge'?'river':'cliff'),'Gate type does not match its obstacle.');}

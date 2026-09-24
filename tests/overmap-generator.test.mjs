@@ -26,7 +26,7 @@ test('seed range produces complete valid worlds, different geography and all tut
   const p=m.tutorialPlacement,cells=tutorialCells(p.x,p.y,p.rotation),town=cells[4].index;
   for(const [i,s]of m.sectors.entries())if(s.settlementId==='town-1')assert.ok(i%30>0&&i%30<29&&Math.floor(i/30)>0&&Math.floor(i/30)<14);
   assert.equal(m.sectors[town].settlementId,'town-1');assert.equal(m.sectors.filter(s=>s.settlementId==='town-1').length,2);
-  for(const f of m.generation.features){assert.ok(f.cells.length>=5);const boundary=[];for(const i of f.cells){const r=m.sectors[i].routes.find(r=>r.kind===f.kind);for(const e of [r.from,r.to])if(neighbor(i,e.side)===null)boundary.push(e);}assert.equal(boundary.length,2);}
+  for(const f of m.generation.features){assert.ok(f.cells.length>=5);assert.ok(f.cells.some(i=>Math.min(i%30,29-i%30,Math.floor(i/30),14-Math.floor(i/30))>=2),`${seed}: ${f.kind} must reach two sectors inland`);const boundary=[];for(const i of f.cells){const r=m.sectors[i].routes.find(r=>r.kind===f.kind);for(const e of [r.from,r.to])if(neighbor(i,e.side)===null)boundary.push(e);}assert.equal(boundary.length,2);}
  }
  assert.equal(rotations.size,4);assert.ok(shapes.size>20);
 });
@@ -109,7 +109,7 @@ test('independently sampled ends yield mixed, same and opposite edges without mo
 
 test('river settlements replace planned bridges or add extra connected crossings',()=>{
  const found={planned:false,extra:false};const roles=new Set();
- for(const seed of [0,2,7,42]){const m=generateWorld(seed);assert.equal(validateGenerated(m).valid,true);
+ for(const seed of [0,2,4,7,42]){const m=generateWorld(seed);assert.equal(validateGenerated(m).valid,true);
   for(const sector of m.sectors)if(['town','village','city'].includes(sector.role)&&sector.routes.some(r=>r.kind==='river')){
    roles.add(sector.role);assert.equal(sector.gate,'bridge');assert.ok(sector.routes.some(r=>r.kind==='road'));assert.ok(sector.settlementId);if(sector.crossingOrigin==='planned-bridge')found.planned=true;if(sector.crossingOrigin==='settlement')found.extra=true;
   }
@@ -118,4 +118,14 @@ test('river settlements replace planned bridges or add extra connected crossings
  }
  assert.deepEqual(found,{planned:true,extra:true});assert.deepEqual([...roles].sort(),['city','town','village']);
  const m=generateWorld(7),extra=m.sectors.find(s=>s.crossingOrigin==='settlement');assert.ok(extra);extra.gate='none';assert.match(validateGenerated(m).errors.join(' '),/River settlement must provide a crossing/);
+});
+
+test('same-edge rivers reach inland in the reported seed, and shallow edited features fail validation',()=>{
+ const m=generateWorld(3069806278);
+ for(const f of m.generation.features){assert.ok(f.cells.some(i=>Math.min(i%30,29-i%30,Math.floor(i/30),14-Math.floor(i/30))>=2));assert.equal(new Set(f.cells).size,f.cells.length);}
+ assert.ok(m.generation.features.some(f=>f.kind==='river'&&f.start.side===f.end.side));
+ for(const kind of ['river','cliff']){const edited=structuredClone(m);for(const s of edited.sectors)s.routes=s.routes.filter(r=>r.kind!==kind);
+  for(let x=5;x<=9;x++)edited.sectors[30+x].routes.push({kind,from:{side:'west',offset:1/3},to:{side:'east',offset:1/3}});
+  assert.ok(validateGenerated(edited).errors.includes(kind+' must reach at least two sectors inward from the nearest map edge.'));
+ }
 });

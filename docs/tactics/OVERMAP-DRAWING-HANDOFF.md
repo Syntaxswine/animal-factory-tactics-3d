@@ -148,3 +148,10 @@ to the site network, including their bank approaches. Validation requires the
 planned quota, permits only settlement-based extras, and rejects a river
 settlement without a crossing. UI counts distinguish standalone bridges from
 settlement crossings; save/export retain both the river and crossing metadata.
+
+Version strategic-plan-10 requires each river and cliff to reach a sector at
+least two cells from every map boundary (boundary row = 0, third row = 2).
+Routing tracks this requirement while retaining the sampled endpoints, with
+a shallow-cell cost to favor inward sweeps over retraced detours. Same-edge
+routes remain supported. Validation independently checks actual connected
+feature cells, including edited/imported worlds, rather than trusting metadata.
