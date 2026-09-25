@@ -157,7 +157,7 @@ export function detectionChance(s,a,b){
  if(coverAgainst(s,a,b))chance*=.45;
  return Math.max(.01,chance*Math.exp(-woodlandDepth(s,a,b)*.35));
 }
-export function notices(s,a,b){if(a.team==='guard'&&b.team==='squad'&&!playerThreat(s,a))return false;
+export function notices(s,a,b){if(a.team==='guard'&&b.team==='squad'&&!playerThreat(s,a)&&!(combatBehavior(a)!=='fight'&&(s.engaged||['player','enemy'].includes(s.phase))))return false;
  if(s.rules?.awareness)return canSee(s,a,b);
  const records=a.noticed||(a.noticed={}),old=records[b.id];
  if(!canSee(s,a,b)){delete records[b.id];return false;}
@@ -173,7 +173,7 @@ export function notices(s,a,b){if(a.team==='guard'&&b.team==='squad'&&!playerThr
 // Every trigger that can put several guards in Alert at once (a refresh's sightings, a gunshot's alarm ring) is one cascade: a listener that
 // declined a shout is not re-asked by the next guard the same trigger alerts.
 export function refresh(s){return cascade(s,()=>refreshNow(s));}
-function refreshNow(s){updateCliffSupports(s);
+function refreshNow(s){settleCivilianFear(s);updateCliffSupports(s);
  updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});
  const oldDetected=s.detected,oldVisible=s.visible,oldGlimpses=s.glimpses||{};
  for(const u of s.units){const at=u.x+','+u.y+','+levelOf(u);u.moved=!!u.fired||u.lastAt!==at;u.lastAt=at;u.fired=false;}s.visible=terrainVisibility(s,squad(s));s.detected=new Set(guards(s).filter(g=>squad(s).some(p=>canSee(s,p,g))).map(g=>g.id));
@@ -275,7 +275,7 @@ export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel
 }
 function random(s){s.seed=(Math.imul(s.seed,1664525)+1013904223)>>>0;return s.seed/4294967296;}
 function combatDamage(s,u,damage,fatal=false,source=null){provokeCharacter(s,u,source);
- const living=alive(u),before=u.hp;u.hp=Math.max(0,u.hp-damage);injuryStrain(u,before-u.hp);
+ const living=alive(u),before=u.hp;u.hp=Math.max(0,u.hp-damage);injuryStrain(u,before-u.hp);if(u.team==="guard"&&combatBehavior(u)!=="fight"&&before>u.hp){u.npcFrightened=true;u.npcFearTicks=ALERT_ROUNDS*REALTIME_ROUND_TICKS;u.civilianFlee=true;if(source)u.threat={x:source.x,y:source.y,z:levelOf(source)};}
  if(u.team==='guard'&&living&&u.hp>0)struck(s,u,source);
  if(u.hp>0)return;
  if(living)killRelief(source,u);
@@ -493,7 +493,7 @@ function searchCells(s,g,center){const cells=[];for(const [dx,dy] of [[6,0],[-6,
 export const searchGoal=g=>g.search?.cells[g.search.index]||null;
 const atFix=(s,g,dest)=>fixGoals(s,dest).has(key(g.x,g.y,levelOf(g)));
 function homeGoals(s,g){const p=g.post;if(!p)return new Set();const o=occupant(s,p.x,p.y,levelOf(p));return walkable(s,p.x,p.y,levelOf(p))&&(!o||o===g)?new Set([key(p.x,p.y,levelOf(p))]):fixGoals(s,p);}
-export function setState(s,g,state,fix=null,{swept=false,quiet=false}={}){if(g.character){if(combatBehavior(g)!=="fight"&&state!=="rest"){g.threat=fix||g.threat||g.lastKnown;g.state=combatBehavior(g)==="flee"?"broken":"cowering";g.alert=false;g.overwatch=null;if(combatBehavior(g)==="cower")g.stance="kneeling";return;}if(!hostileToPlayer(s,g)&&state!=="rest")return;}
+export function setState(s,g,state,fix=null,{swept=false,quiet=false}={}){if(g.character){if(combatBehavior(g)!=="fight"&&state!=="rest"){if(!g.npcFrightened&&!["alert","broken"].includes(state))return;g.npcFrightened=true;g.npcFearTicks=ALERT_ROUNDS*REALTIME_ROUND_TICKS;g.threat=fix||g.threat||g.lastKnown;g.state=combatBehavior(g)==="flee"||g.civilianFlee?"broken":"seeking-cover";g.alert=false;g.overwatch=null;return;}if(!hostileToPlayer(s,g)&&state!=="rest")return;}
  const from=stateOf(g);
  if(from===state){ // a repeat of the same trigger refreshes the fix and the counters, nothing else
   if(state==='suspicious'){if(fix)g.lastHeard=fix;g.searchSteps=suspicionSteps(g);}
@@ -631,7 +631,7 @@ function realtimeStep(s,g,dest,quota,goals=fixGoals(s,dest)){
 // ticks and drop to Searching; searching guards visit the neighbouring report cells, sweeping at each, then stand down; a guard standing down
 // walks back to its post and rests, wary; a broken guard runs from the last threat for two rounds' worth of ticks. refresh() opens the fight
 // the moment an alert guard could reach the squad within two turns.
-export function stepInvestigation(s){
+export function stepInvestigation(s){if(['explore','won'].includes(s.phase)&&!s.engaged&&!s.fires?.length&&!guards(s).some(g=>playerThreat(s,g)&&active(g)))for(const g of guards(s))if(g.npcFrightened)g.npcFearTicks=Math.max(0,(g.npcFearTicks||0)-1);settleCivilianFear(s);
  if(!['explore','won'].includes(s.phase))return false;let acted=false;const quota={left:REALTIME_SEARCHES};
  for(const g of guards(s)){
   if(g.burningTurns)continue;if(combatBehavior(g)!=='fight'){acted=civilianStep(s,g,false)||acted;continue;}if(!playerThreat(s,g))continue;const st=stateOf(g);if(st==='rest')continue;
@@ -660,4 +660,39 @@ export function resolveOverwatch(s,g){if(!playerThreat(s,g))return;if(s.phase!==
 
 export function allocateSkill(s,u,skill){if(!canControl(s,u)||s.queue.length||!['explore','won'].includes(s.phase)||!train(u,skill))return false;log(s,u.name+' trained '+skill+'.');refresh(s);return true;}
 
-function civilianStep(s,g,turn){if(!g.threat)return false;if(combatBehavior(g)==="cower"){g.stance="kneeling";g.overwatch=null;if(turn)g.ap=0;return false;}let moved=false;for(let n=0;n<(turn?Math.ceil(g.maxAp):1);n++){const p=fleeStep(s,g);if(!p||turn&&p.cost>g.ap)break;stepTo(s,g,p);if(turn)g.ap-=p.cost;moved=true;}if(turn)g.ap=0;return moved;}
+function settleCivilianFear(s){
+ if(!['explore','won'].includes(s.phase)||s.engaged||s.fires?.length||guards(s).some(g=>playerThreat(s,g)&&active(g)))return;
+ for(const g of guards(s))if(g.npcFrightened&&(g.npcFearTicks||0)<=0){g.npcFrightened=false;g.civilianFlee=false;g.threat=null;g.lastKnown=null;g.lastHeard=null;g.state='rest';g.alert=false;}
+}
+// Bounded local search: prefer nearby cover that screens the known threat.
+function civilianCoverStep(s,g){
+ const origin={...g,stance:'standing'},open=[{p:origin,cost:0,first:null}],seen=new Map([[key(g.x,g.y,levelOf(g)),0]]);let best=null,visited=0;
+ while(open.length&&visited++<256){open.sort((a,b)=>b.cost-a.cost);const node=open.pop(),p=node.p;
+  if(coverAgainst(s,g.threat,p)){
+   const score=node.cost+(lineOfSight(s,g.threat,{...g,...p,stance:'kneeling'})?6:0);
+   if(!best||score<best.score)best={...node,score};
+  }
+  if(node.cost>=24)continue;
+  for(const q of movementNeighbors(s,origin,p)){if(levelOf(q)!==levelOf(g)||occupant(s,q.x,q.y,levelOf(q))||onFire(s,q))continue;
+   const cost=node.cost+q.cost,k=key(q.x,q.y,levelOf(q));if(cost>24||cost>=(seen.get(k)??Infinity))continue;
+   seen.set(k,cost);open.push({p:q,cost,first:node.first||q});
+  }
+ }
+ return best;
+}
+function civilianStep(s,g,turn){
+ if(!g.threat)return false;
+ let changed=false;g.overwatch=null;
+ for(let n=0;n<(turn?Math.ceil(g.maxAp):1);n++){
+ const close=s.units.filter(u=>u!==g&&alive(u)&&levelOf(u)===levelOf(g)&&distance(g,u)<=10&&lineOfSight(s,g,u)).sort((a,b)=>distance(g,a)-distance(g,b))[0];
+ if(close){g.civilianFlee=true;g.threat={x:close.x,y:close.y,z:levelOf(close)};}
+ const flee=combatBehavior(g)==='flee'||g.civilianFlee;
+  const cover=flee?null:civilianCoverStep(s,g);
+  if(!flee&&cover&&!cover.first){changed||=g.stance!=='kneeling';g.stance='kneeling';g.state='cowering';break;}
+  // No reachable cover: stay low rather than walking toward the danger.
+  if(!flee&&!cover){changed||=g.stance!=='kneeling';g.stance='kneeling';g.state='cowering';break;}
+  g.stance='standing';g.state=flee?'broken':'seeking-cover';const p=flee?fleeStep(s,g):cover.first;
+  if(!p||turn&&p.cost>g.ap)break;stepTo(s,g,p);if(turn)g.ap-=p.cost;changed=true;
+ }
+ if(turn)g.ap=0;return changed;
+}

@@ -60,3 +60,11 @@ export function hostileToPlayer(s,u){
 }
 export const playerThreat=(s,u)=>hostileToPlayer(s,u)&&combatBehavior(u)==='fight';
 export function provokeCharacter(s,u,source){if(u?.team==='guard'&&u.character&&source?.team==='squad'){u.hostileToPlayer=true;u.character.attitude='hostile';}}
+
+// Shared readiness hook for the future dialogue interaction system.
+export function characterTalkStatus(s,u){
+ if(!u?.character?.canTalk)return {ok:false,reason:'This character has no dialogue configured'};
+ if(u.npcFrightened||s.engaged||['player','enemy'].includes(s.phase)||s.units.some(g=>g.hp>0&&playerThreat(s,g)&&(g.alert||['alert','searching','suspicious','broken'].includes(g.state))))return {ok:false,reason:'Too frightened to talk until the fighting is over'};
+ if(hostileToPlayer(s,u))return {ok:false,reason:'This character is hostile toward the player'};
+ return {ok:true,dialogueRef:u.character.dialogueRef};
+}
