@@ -38,7 +38,7 @@ export function paintFoliageMaterial(material,kind,texture){
   `);
   if(road&&road.grass!=='grass'&&road.grass!=='cover-grass'){
    shader.fragmentShader=GRASS_GLSL+SAND_GLSL+shader.fragmentShader;
-   const base=road.grass==='sand'?'sandPaint(vNaturePosition.xz)':road.grass==='meadow-sand'?'mix(meadowPaint(vNaturePosition.xz,-1.),sandPaint(vNaturePosition.xz),sandCoverage(vNaturePosition.xz,.5))':'meadowPaint(vNaturePosition.xz,'+Number(road.grass.slice(-1)).toFixed(1)+')';
+   const base=road.grass==='concrete'?'pow((vec3(127.,128.,113.)+mod(floor(vNaturePosition.x*128.)*73.+floor(vNaturePosition.z*128.)*97.,17.)-8.)/255.,vec3(2.2))':road.grass==='sand'?'sandPaint(vNaturePosition.xz)':road.grass==='meadow-sand'?'mix(meadowPaint(vNaturePosition.xz,-1.),sandPaint(vNaturePosition.xz),sandCoverage(vNaturePosition.xz,.5))':'meadowPaint(vNaturePosition.xz,'+Number(road.grass.slice(-1)).toFixed(1)+')';
    shader.fragmentShader=shader.fragmentShader.replace('diffuseColor.rgb*=paint;','diffuseColor.rgb*=paint; diffuseColor.rgb='+base+';');
   }
   if(road){const expression={nw:'1.-uv.x-uv.y',ne:'uv.x-uv.y',se:'uv.x+uv.y-1.',sw:'uv.y-uv.x'}[road.corner];

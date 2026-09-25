@@ -4,9 +4,10 @@ Use Paint terrain in the 3D editor. Each terrain ID stores its road corner,
 background surface and optional concrete border; both halves are walkable.
 The corner label identifies the asphalt half, not the grass half.
 
-The catalog has 64 variants: NW/NE/SE/SW, plain/bordered, and eight backgrounds:
+The catalog has 72 variants: NW/NE/SE/SW, plain/bordered, and nine backgrounds:
 ordinary grass, dark cover grass, four cliff meadow variants, cliff sand and
-meadow/sand blend. Existing meadow/sand GLSL recipes are reused. Dark grass is
+meadow/sand blend, and concrete. Concrete is a complete half-tile surface,
+separate from the optional narrow concrete border. Existing meadow/sand GLSL recipes are reused. Dark grass is
 visual only on these road tiles and does not grant woodland concealment.
 
 The border is a flat concrete-colored strip 0.09 tile wide centered on the
