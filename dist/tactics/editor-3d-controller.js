@@ -60,7 +60,7 @@ export class EditingDocument extends InspectionDocument {
   const row=this.character(id);if(!row)throw Error('This character no longer exists.');
   const map=structuredClone(this.editor.map),p=map[row.field][row.index];
   for(const key of ['species','outfit','weapon','heading'])if(Object.hasOwn(patch,key))p[key]=patch[key];
-  const allowed=['displayName','scriptId','faction','attitude','canTalk','dialogueRef','canSell','shopInventoryRef','shopPricingRef','references','model','visualVariant'];
+  const allowed=['displayName','scriptId','faction','attitude','combatBehavior','canTalk','dialogueRef','canSell','shopInventoryRef','shopPricingRef','references','model','visualVariant'];
   for(const key of allowed)if(Object.hasOwn(patch.character||{},key))p.character[key]=structuredClone(patch.character[key]);
   p.character.id=id;this.replace(map);return this.characterSelection(id);
  }

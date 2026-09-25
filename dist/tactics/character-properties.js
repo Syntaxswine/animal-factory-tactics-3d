@@ -1,5 +1,6 @@
 // Data-only hooks. No field is evaluated as code or changes allegiance implicitly.
 export const FACTIONS=['player','red-hats','civilians','unaffiliated'];
+export const COMBAT_BEHAVIORS=['fight','cower','flee'];
 export const ATTITUDES=['friendly','neutral','hostile'];
 export const RESOURCE_TYPES=['dialogues','shopInventories','shopPricing'];
 const plain=v=>v&&typeof v==='object'&&!Array.isArray(v);
@@ -7,7 +8,7 @@ const token=/^[a-zA-Z][a-zA-Z0-9_-]{0,79}$/;
 export const newCharacterId=()=> 'char_'+crypto.randomUUID();
 export const characters=map=>[...(map.starts||[]).map((p,index)=>({p,index,field:'starts'})),...(map.guards||[]).map((p,index)=>({p,index,field:'guards'}))];
 export function characterDefaults(field='guards',category=field==='starts'?'squad':'combat'){
- return {id:newCharacterId(),displayName:'',scriptId:'',category,faction:field==='starts'?'player':'unaffiliated',attitude:field==='starts'?'friendly':category==='npc'?'neutral':'hostile',canTalk:false,dialogueRef:'',canSell:false,shopInventoryRef:'',shopPricingRef:'',references:[]};
+ return {id:newCharacterId(),displayName:'',scriptId:'',category,faction:field==='starts'?'player':'unaffiliated',attitude:field==='starts'?'friendly':category==='npc'?'neutral':'hostile',combatBehavior:category==='npc'?'cower':'fight',canTalk:false,dialogueRef:'',canSell:false,shopInventoryRef:'',shopPricingRef:'',references:[]};
 }
 export function ensureCharacterIdentities(map){for(const {p,field}of characters(map))if(p.character===undefined)p.character=characterDefaults(field);return map;}
 export const characterName=(p,fallback='Unnamed character')=>p.character?.displayName||p.character?.scriptId||fallback;
@@ -20,6 +21,7 @@ export function characterErrors(map){
   if(typeof c.displayName!=='string'||c.displayName.length>100)errors.push(label+': display name must be at most 100 characters.');
   if(typeof c.scriptId!=='string'||c.scriptId&&!token.test(c.scriptId))errors.push(label+': Script ID must start with a letter and use letters, numbers, underscores or hyphens (80 characters maximum).');
   if(c.scriptId&&scripts.has(c.scriptId))errors.push(label+': duplicate Script ID '+c.scriptId+'.');if(c.scriptId)scripts.add(c.scriptId);
+  if(c.combatBehavior!==undefined&&!COMBAT_BEHAVIORS.includes(c.combatBehavior))errors.push(label+': choose fight, cower or flee.');
   if(!FACTIONS.includes(c.faction)||!ATTITUDES.includes(c.attitude)||!['squad','combat','npc'].includes(c.category))errors.push(label+': choose a listed faction, attitude and placement category.');
   if(typeof c.canTalk!=='boolean'||typeof c.canSell!=='boolean')errors.push(label+': capability flags must be checkboxes.');
   for(const key of ['dialogueRef','shopInventoryRef','shopPricingRef'])if(typeof c[key]!=='string'||c[key]&&!token.test(c[key]))errors.push(label+': invalid '+key+'. Use a readable resource identifier, not code or a URL.');
@@ -45,3 +47,16 @@ export function copyCharacters(rows,destination){
 export function copyBlockCharacters(block,destination){const d=structuredClone(block);ensureCharacterIdentities(d);d.guards=copyCharacters(d.guards,destination);return d;}
 export function mergeCharacterResources(map,source){if(!source.characterResources)return;map.characterResources??={};for(const type of RESOURCE_TYPES)map.characterResources[type]=[...new Set([...(map.characterResources[type]||[]),...(source.characterResources[type]||[])])];}
 export function applyRuntimeCharacter(unit,source){if(!source?.character)return;unit.character=structuredClone(source.character);unit.characterId=source.character.id;if(source.character.displayName)unit.name=source.character.displayName;}
+
+// Allegiance does not change controller ownership: NPCs remain autonomous.
+export const combatBehavior=u=>u.character?.combatBehavior||(u.character?.category==='npc'?'cower':'fight');
+export function hostileToPlayer(s,u){
+ if(u.team!=='guard')return false;
+ if(u.hostileToPlayer)return true;
+ if(!u.character)return true;
+ const faction=u.character.faction;
+ if(faction!=='unaffiliated'&&s.units.some(p=>p.team==='squad'&&(p.character?.faction||'player')===faction))return false;
+ return u.character.attitude==='hostile';
+}
+export const playerThreat=(s,u)=>hostileToPlayer(s,u)&&combatBehavior(u)==='fight';
+export function provokeCharacter(s,u,source){if(u?.team==='guard'&&u.character&&source?.team==='squad'){u.hostileToPlayer=true;u.character.attitude='hostile';}}

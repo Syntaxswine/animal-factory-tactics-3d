@@ -16,7 +16,7 @@
       "upstreamSha256": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262"
     },
     "engine.js": {
-      "reason": "Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events. Expose saved character metadata and display names during playtesting.",
+      "reason": "Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events. Apply character identity, allegiance, hostility and noncombatant reactions during playtesting.",
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
     "environment.js": {
@@ -53,7 +53,7 @@
     "blocks.js": "5241515dbbc9f62cddcd01eab19ea3a7b48bf26c5bc766e9b77e7dcd157537b7",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
     "editor-model.js": "10dda96c0af9e22e2eb9449daff706924267c15c9e6f490fcf2baa3b6cefb0a2",
-    "engine.js": "925aad3105daff19d489c535b3c2cdafd43c6dafebc247dc846d3b6c671fd91b",
+    "engine.js": "d36f5e300aff031a083004e0eb6c71c320bfe7b2225c3d76e7d7bbef978f0631",
     "environment.js": "0030f1ad61122c0d0f989f32da362837a03938def60be417f88492fb22d3a666",
     "explosives.js": "d28c8600c983f8a018a32e84a137836b81165d80924587f0195f23a540a64fa4",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",

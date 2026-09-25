@@ -1,4 +1,4 @@
-import {applyRuntimeCharacter} from '../character-properties.js';
+import {applyRuntimeCharacter,combatBehavior,hostileToPlayer,playerThreat,provokeCharacter} from '../character-properties.js';
 import {updateCliffSupports} from '../cliff-support.js';
 import {recordCliffTraversal} from '../cliff-traversal.js';
 import {COMBAT_ROUND_MINUTES as ROUND_MINUTES} from '../game-clock.js';
@@ -132,7 +132,7 @@ export function reachable(s,u,budget){
 // Turn mode is for opponents who can hurt you soon: an alert guard is a threat when, within this many of its own turns of walking (routes, doors and
 // walls as they are), it can stand where a squad member is inside its weapon's range with a clear line of fire (melee: on an adjacent tile). See RULES.md, Local alerts.
 export const THREAT_TURNS=2;
-export function threatens(s,g){
+export function threatens(s,g){if(!playerThreat(s,g))return false;
  if(!alive(g)||g.burningTurns)return false;
  const w=WEAPONS[g.weapon],melee=w.mag===0,range=melee?1:w.range,budget=THREAT_TURNS*g.maxAp,walk=budget/movementCost(g);
  const near=squad(s).filter(p=>Math.hypot(g.x-p.x,g.y-p.y)<=range+walk+1);if(!near.length)return false;
@@ -157,7 +157,7 @@ export function detectionChance(s,a,b){
  if(coverAgainst(s,a,b))chance*=.45;
  return Math.max(.01,chance*Math.exp(-woodlandDepth(s,a,b)*.35));
 }
-export function notices(s,a,b){
+export function notices(s,a,b){if(a.team==='guard'&&b.team==='squad'&&!playerThreat(s,a))return false;
  if(s.rules?.awareness)return canSee(s,a,b);
  const records=a.noticed||(a.noticed={}),old=records[b.id];
  if(!canSee(s,a,b)){delete records[b.id];return false;}
@@ -179,7 +179,7 @@ function refreshNow(s){updateCliffSupports(s);
  for(const u of s.units){const at=u.x+','+u.y+','+levelOf(u);u.moved=!!u.fired||u.lastAt!==at;u.lastAt=at;u.fired=false;}s.visible=terrainVisibility(s,squad(s));s.detected=new Set(guards(s).filter(g=>squad(s).some(p=>canSee(s,p,g))).map(g=>g.id));
  s.glimpses={};for(const g of guards(s))if(!s.detected.has(g.id)&&squad(s).some(p=>perceive(s,p,g)===1))s.glimpses[g.id]=s.rules?.awareness?approximate(g):{x:g.x,y:g.y,z:levelOf(g)};
  for(const g of guards(s))if(s.detected.has(g.id))s.contacts[g.id]={x:g.x,y:g.y,z:levelOf(g),...(g.towerPost?{towerElevation:TOWER_HEIGHT}:{})};
- if(s.queue.length&&[...s.detected].some(id=>!oldDetected.has(id))){s.queue=[];log(s,'Movement stopped: new opponent spotted.');}
+ if(s.queue.length&&[...s.detected].some(id=>!oldDetected.has(id)&&playerThreat(s,unit(s,id)))){s.queue=[];log(s,'Movement stopped: new opponent spotted.');}
  else if(s.queue.length&&Object.keys(s.glimpses).some(id=>!oldGlimpses[id]&&!oldDetected.has(Number(id)))){s.queue=[];log(s,'Movement stopped: movement glimpsed.');}
  if(s.visible!==oldVisible||s.seen.size<s.visible.size)for(const k of s.visible)s.seen.add(k);
  if(!squad(s).length){if(!s.defeat){const escaped=s.units.filter(u=>u.team==='squad'&&u.away),converted=[];for(const u of s.units.filter(u=>u.team==='squad'&&!u.away&&!['captured','dead','quit'].includes(u.casualty))){u.casualty=u.casualty==='stable'?'captured':'dead';u.bleedTurns=0;u.recoveryTurns=0;u.ap=0;u.overwatch=null;syncWeapons(u);converted.push(u);}
@@ -188,15 +188,15 @@ log(s,converted.length===0&&s.units.some(u=>u.team==='squad'&&u.casualty==='quit
  if(!alive(unit(s,s.selected)))s.selected=squad(s)[0].id;
  s.exposed={};for(const g of guards(s))if(s.detected.has(g.id)){const zones=new Set();for(const u of squad(s))if(canSee(s,u,g))for(const zone of visibleZones(s,u,g))zones.add(zone);s.exposed[g.id]=[...zones];}
  const pending=s.units.some(u=>['bleeding','stable'].includes(u.casualty)||alive(u)&&u.burningTurns>0)||(s.fires?.length||0)>0; // a stabilized comrade is still down: the turns keep coming until it stands
- if(!guards(s).length&&!pending){if(s.phase!=='won'){log(s,'Local map cleared. Explore or gather at the travel marker.');s.queue=[];}s.phase='won';s.alerted=new Set();s.engaged=false;contactEnds(s);if(!squad(s).length)return refreshNow(s);/* the last body walked out: the re-entry declares the defeat (review round 2) */s.revision++;return;}
+ if(!guards(s).some(g=>playerThreat(s,g))&&!pending&&!s.engaged){if(s.phase!=='won'){log(s,'Local map cleared. Explore or gather at the travel marker.');s.queue=[];}s.phase='won';s.alerted=new Set();s.engaged=false;contactEnds(s);if(!squad(s).length)return refreshNow(s);/* the last body walked out: the re-entry declares the defeat (review round 2) */s.revision++;return;}
  for(const g of guards(s))reconcile(s,g);
  for(const g of guards(s)){const targets=squad(s).filter(p=>notices(s,g,p));if(targets.length)identified(s,g,targets.sort((a,b)=>distance(g,a)-distance(g,b))[0]);
   else{const moving=squad(s).filter(p=>perceive(s,g,p)===1);if(moving.length)suspect(s,g,approximate(moving.sort((a,b)=>distance(g,a)-distance(g,b))[0]));}}
  // Hearing or seeing something is not a fight yet: only a guard that can bring a comrade under fire within two turns, a pending casualty or fire,
  // or the squad itself opening fire (engaged, until it ends that turn) holds turn mode.
- const wasAlert=s.alerted||new Set(),nowAlert=new Set(guards(s).filter(active).map(g=>g.id));s.alerted=nowAlert;
+ const wasAlert=s.alerted||new Set(),nowAlert=new Set(guards(s).filter(g=>playerThreat(s,g)&&active(g)).map(g=>g.id));s.alerted=nowAlert;
  const fresh=guards(s).filter(g=>nowAlert.has(g.id)&&!wasAlert.has(g.id)),heard=()=>fresh.some(g=>squad(s).some(p=>canSee(s,g,p)))?'You have been seen, but they are too far to reach you yet.':'You are pretty sure someone heard that.';
- const threat=guards(s).some(g=>g.alert&&threatens(s,g)),contact=pending||!!s.engaged||threat;let warned=false;
+ const threat=guards(s).some(g=>playerThreat(s,g)&&g.alert&&threatens(s,g)),contact=pending||!!s.engaged||threat;let warned=false;
  if(['explore','won'].includes(s.phase)&&contact){s.phase='player';s.round++;s.queue=[];if(s.rules?.social&&!s.fight)s.fight={casualty:false}; // G5: a clean win lifts the squad
   // AP is live across the engagement: a fight that resumes while guards were already alert continues with the AP the squad has; a fresh fight gets a full turn. Guards always start theirs full.
   // freshFight is set by entering a map and by Area clear, so a fight on a new map is fresh even when its guards kept an alert from before.
@@ -257,7 +257,7 @@ export function coverAgainst(s,a,b){
  return cells.some(([x,y])=>tile(s,x,y,levelOf(b))==='crate'||PROPS[propAt(s,x,y,levelOf(b))?.kind]?.cover>0||(EDGES[s.edges[edgeBetween(b,{x,y,z:levelOf(b)})]]?.cover||0)>0);
 }
 const retaliationToken=Symbol('retaliation');
-export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel='hip'){
+export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel='hip'){if(a?.team==='guard'&&!playerThreat(s,a))return {ok:false,reason:'Character does not fight the player'};
  if(!a||!b||!alive(a)||!alive(b)||a.team===b.team&&token!==retaliationToken)return {ok:false,reason:'Choose a living opponent'};
  if(WEAPONS[a.weapon].blast)return explosivePreview(s,a,b,WEAPONS[a.weapon]);
  if(!Object.hasOwn(AIM_ZONES,zone))return {ok:false,reason:'Choose an aim location'};
@@ -274,7 +274,7 @@ export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel
  return {ok:!reason,reason,cost,rounds,aimLevel:aiming.level,chance:Math.round(chance),cover,heightCover,coverPenalty,rangePenalty,damage:damageAfterResistance(b,Math.round(weaponDamage(w,range)*aim.damage)),rawDamage:Math.round(weaponDamage(w,range)*aim.damage),pellets:w.pellets||1,zone,range:effectiveRange,tankChance:melee?0:tankExplosionChance(b,zone),obstruction};
 }
 function random(s){s.seed=(Math.imul(s.seed,1664525)+1013904223)>>>0;return s.seed/4294967296;}
-function combatDamage(s,u,damage,fatal=false,source=null){
+function combatDamage(s,u,damage,fatal=false,source=null){provokeCharacter(s,u,source);
  const living=alive(u),before=u.hp;u.hp=Math.max(0,u.hp-damage);injuryStrain(u,before-u.hp);
  if(u.team==='guard'&&living&&u.hp>0)struck(s,u,source);
  if(u.hp>0)return;
@@ -321,7 +321,7 @@ function explodeTanks(s,wearer,source=null){
 export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,aimLevel='hip'){
  if(s.queue.length)return false;
  if(reaction?!(s.phase==='enemy'&&a?.team==='squad'&&alive(a)&&!a.burningTurns&&a.overwatch?.weapon===a.weapon&&a.overwatch.heading===a.heading&&!burst&&zone==='torso'&&withinOverwatch(a,b)&&canSee(s,a,b)):byAI?!(s.phase==='enemy'&&a?.team==='guard'&&alive(a)&&!a.burningTurns):!canControl(s,a))return false;
- const p=previewAttack(s,reaction?{...a,ap:WEAPONS[a.weapon].cost}:a,b,burst,zone,null,reaction?'hip':aimLevel);if(!p.ok)return false;a.overwatch=null;
+ if(byAI&&!playerThreat(s,a))return false;const p=previewAttack(s,reaction?{...a,ap:WEAPONS[a.weapon].cost}:a,b,burst,zone,null,reaction?'hip':aimLevel);if(!p.ok)return false;a.overwatch=null;
  a.fired=true;
  // Orienting reflex: an attack from outside the victim's field spins it toward the attacker (turning is free).
  if(!inCone(b,a)){b.heading=headingTo(b,a);b.facing=Math.cos(b.heading*Math.PI/180)-Math.sin(b.heading*Math.PI/180)>=0?1:-1;log(s,b.name+' spins toward the attack.');}
@@ -410,7 +410,7 @@ export function stepEnemy(s){
  if(s.phase!=='enemy')return false;
  const g=s.units[s.enemyIndex];
  if(!g){newRound(s);s.phase='player';refresh(s);log(s,`Squad turn / ${s.round}.`);return true;}
- if(g.team!=='guard'||!alive(g)||g.burningTurns>0||!active(g)||g.ap<1){s.enemyIndex++;return true;}
+ if(g.team==='guard'&&alive(g)&&!g.burningTurns&&combatBehavior(g)!=='fight'){civilianStep(s,g,true);s.enemyIndex++;refresh(s);return true;}if(g.team!=='guard'||!playerThreat(s,g)||!alive(g)||g.burningTurns>0||!active(g)||g.ap<1){s.enemyIndex++;return true;}
  const targets=squad(s).filter(p=>notices(s,g,p)).sort((a,b)=>distance(g,a)-distance(g,b));
  const target=targets[0];if(target)identified(s,g,target);
  if(stateOf(g)==='broken')return fleeTurn(s,g,target);
@@ -493,7 +493,7 @@ function searchCells(s,g,center){const cells=[];for(const [dx,dy] of [[6,0],[-6,
 export const searchGoal=g=>g.search?.cells[g.search.index]||null;
 const atFix=(s,g,dest)=>fixGoals(s,dest).has(key(g.x,g.y,levelOf(g)));
 function homeGoals(s,g){const p=g.post;if(!p)return new Set();const o=occupant(s,p.x,p.y,levelOf(p));return walkable(s,p.x,p.y,levelOf(p))&&(!o||o===g)?new Set([key(p.x,p.y,levelOf(p))]):fixGoals(s,p);}
-export function setState(s,g,state,fix=null,{swept=false,quiet=false}={}){
+export function setState(s,g,state,fix=null,{swept=false,quiet=false}={}){if(g.character){if(combatBehavior(g)!=="fight"&&state!=="rest"){g.threat=fix||g.threat||g.lastKnown;g.state=combatBehavior(g)==="flee"?"broken":"cowering";g.alert=false;g.overwatch=null;if(combatBehavior(g)==="cower")g.stance="kneeling";return;}if(!hostileToPlayer(s,g)&&state!=="rest")return;}
  const from=stateOf(g);
  if(from===state){ // a repeat of the same trigger refreshes the fix and the counters, nothing else
   if(state==='suspicious'){if(fix)g.lastHeard=fix;g.searchSteps=suspicionSteps(g);}
@@ -550,7 +550,7 @@ function mourn(s,dead,killer){for(const g of guards(s)){if(!g.social||g===dead||
  if(g.social.stress>(traitsOf(g)?.nerve??50)&&stateOf(g)!=='broken'&&!g.burningTurns)setState(s,g,'broken',from);
  else if(s.detected?.has(g.id))log(s,g.name+' saw '+dead.name+' fall.');}}
 // Shot at, hit or miss: a broken guard learns where the shooter is and keeps running; anyone else is Alert toward the shooter. A colleague's bullet tells it nothing.
-function targeted(s,b,a){if(!a||a.team===b.team)return;const fix={x:a.x,y:a.y,z:levelOf(a)};const st=stateOf(b);if(st==='broken'){b.threat=fix;b.lastKnown=fix;}else if(st==='alert')b.lastKnown=fix;else setState(s,b,'alert',fix);}
+function targeted(s,b,a){provokeCharacter(s,b,a);if(!a||a.team===b.team)return;const fix={x:a.x,y:a.y,z:levelOf(a)};const st=stateOf(b);if(st==='broken'){b.threat=fix;b.lastKnown=fix;}else if(st==='alert')b.lastKnown=fix;else setState(s,b,'alert',fix);}
 const onFire=(s,q)=>!!s.fires?.some(f=>f.x===q.x&&f.y===q.y&&f.z===levelOf(q));
 // A hit that leaves the guard standing: at or below NERVE of its health its nerve breaks for BROKEN_ROUNDS; otherwise it is Alert toward the shooter.
 function struck(s,u,source){const fix=source&&source.team!==u.team&&Number.isFinite(source.x)?{x:source.x,y:source.y,z:levelOf(source)}:null;u.hitRound=s.round;const st=stateOf(u);
@@ -634,7 +634,7 @@ function realtimeStep(s,g,dest,quota,goals=fixGoals(s,dest)){
 export function stepInvestigation(s){
  if(!['explore','won'].includes(s.phase))return false;let acted=false;const quota={left:REALTIME_SEARCHES};
  for(const g of guards(s)){
-  if(g.burningTurns)continue;const st=stateOf(g);if(st==='rest')continue;
+  if(g.burningTurns)continue;if(combatBehavior(g)!=='fight'){acted=civilianStep(s,g,false)||acted;continue;}if(!playerThreat(s,g))continue;const st=stateOf(g);if(st==='rest')continue;
   if(st==='broken'){const p=fleeStep(s,g);if(p)stepTo(s,g,p);else{const seen=squad(s).find(q=>notices(s,g,q));if(seen){setState(s,g,'alert',{x:seen.x,y:seen.y,z:levelOf(seen)},{quiet:true});identified(s,g,seen);bark(s,g,g.name+' is cornered and turns to fight.','alert');acted=true;continue;}}
    acted=true;if(++g.brokenTicks>=brokenRoundsOf(g)*REALTIME_ROUND_TICKS)setState(s,g,g.lastKnown?'alert':'standdown');continue;}
   const dest=st==='suspicious'?g.lastHeard:st==='alert'?g.lastKnown:st==='searching'?searchGoal(g):g.post;
@@ -656,6 +656,8 @@ export function stepInvestigation(s){
 export const overwatchRange=u=>Math.max(1,Math.min(WEAPONS[u.weapon].range,u.overwatch?.range??u.watchRange??WEAPONS[u.weapon].range));
 export const withinOverwatch=(u,b)=>Math.hypot(u.x-b.x,u.y-b.y)+Math.max(0,levelOf(b)-levelOf(u))<=overwatchRange(u);
 export function setOverwatch(s,u,range=overwatchRange(u)){if(!Number.isFinite(range)||range<1||range>WEAPONS[u.weapon].range)return false;if(!canControl(s,u)||s.phase!=='player'||s.queue.length||u.overwatch||!WEAPONS[u.weapon].mag||u.ammo[u.weapon]<1||u.ap<WEAPONS[u.weapon].cost)return false;u.ap-=WEAPONS[u.weapon].cost;u.watchRange=range;u.overwatch={weapon:u.weapon,heading:u.heading,range};log(s,u.name+' reserved one overwatch shot.');return true;}
-export function resolveOverwatch(s,g){if(s.phase!=='enemy'||!alive(g))return;for(const u of squad(s)){const watch=u.overwatch;if(!watch)continue;if(watch.weapon!==u.weapon||watch.heading!==u.heading){u.overwatch=null;continue;}if(withinOverwatch(u,g)&&canSee(s,u,g)&&previewAttack(s,{...u,ap:WEAPONS[u.weapon].cost},g).ok){attack(s,u,g,false,false,'torso',true);if(!alive(g)||s.phase!=='enemy')break;}}}
+export function resolveOverwatch(s,g){if(!playerThreat(s,g))return;if(s.phase!=='enemy'||!alive(g))return;for(const u of squad(s)){const watch=u.overwatch;if(!watch)continue;if(watch.weapon!==u.weapon||watch.heading!==u.heading){u.overwatch=null;continue;}if(withinOverwatch(u,g)&&canSee(s,u,g)&&previewAttack(s,{...u,ap:WEAPONS[u.weapon].cost},g).ok){attack(s,u,g,false,false,'torso',true);if(!alive(g)||s.phase!=='enemy')break;}}}
 
 export function allocateSkill(s,u,skill){if(!canControl(s,u)||s.queue.length||!['explore','won'].includes(s.phase)||!train(u,skill))return false;log(s,u.name+' trained '+skill+'.');refresh(s);return true;}
+
+function civilianStep(s,g,turn){if(!g.threat)return false;if(combatBehavior(g)==="cower"){g.stance="kneeling";g.overwatch=null;if(turn)g.ap=0;return false;}let moved=false;for(let n=0;n<(turn?Math.ceil(g.maxAp):1);n++){const p=fleeStep(s,g);if(!p||turn&&p.cost>g.ap)break;stepTo(s,g,p);if(turn)g.ap-=p.cost;moved=true;}if(turn)g.ap=0;return moved;}
