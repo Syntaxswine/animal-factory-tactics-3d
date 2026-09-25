@@ -1,3 +1,5 @@
+import {bankSet} from './ramp-banks.js';
+import {isRamp} from './cliff-ramps.js';
 import {rampSupportAt} from './cliff-ramps.js';
 import {characters,characterName,characterDiagnostics,copyCharacters,ensureCharacterIdentities} from './character-properties.js';
 import {isCliff,CLIFF_LIMIT} from './cliff-map.js';
@@ -108,6 +110,7 @@ export class EditingDocument extends InspectionDocument {
   const p=selection.data,targets=points.map(q=>({x:q.x-p.x,y:q.y-p.y,z:(q.z||0)-(p.z||0)}));
   this.replace({...this.editor.map,props:this.editor.map.props.map(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(p.z||0)&&q.kind===p.kind?{...q,lightTargets:targets}:q)});
  }
+ addRampBanks(selection,surface='dirt'){if(selection?.type!=='prop'||!isRamp(selection.data))throw Error('Select a ramp first.');if(!['dirt','grass','sand'].includes(surface))throw Error('Choose a bank surface.');const candidate=createEditor(this.editor.map);for(const p of bankSet(selection.data,surface)){if(this.block&&(p.x<0||p.y<0||p.x>=24||p.y>=24))throw Error('Banks must fit inside the block.');const error=applyBrush(candidate,'prop',p.x,p.y,'',{level:p.z,propKind:p.kind,rotated:false});if(error)throw Error(error);}this.replace(candidate.map);}
  lightMode(selection,mode){if(selection?.type!=='prop'||!LIGHT_FORMS[selection.data.kind])throw Error('Select a lamp or fire first.');if(!['auto','on','off'].includes(mode))throw Error('Choose a light schedule.');const p=selection.data;this.replace({...this.editor.map,props:this.editor.map.props.map(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(p.z||0)&&q.kind===p.kind?{...q,lightMode:mode}:q)});}
  startTime(minutes){if(this.block)throw Error("Start time belongs to a full map.");const time={...this.map.time,startMinutes:minutes};mapStartMinutes({time});this.replace({...this.editor.map,time});}
  replace(map){map=ensureCharacterIdentities(structuredClone(map));if(!this.block)mapStartMinutes(map);if(this.block)validateBlock(extractBlock(map));const errors=validateMap(map,{connectivity:false});if(errors.length)throw Error(errors[0]);replaceMap(this.editor,map);this.refresh();}

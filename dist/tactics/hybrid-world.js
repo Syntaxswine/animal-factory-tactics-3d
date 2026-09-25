@@ -1,3 +1,4 @@
+import {isRampBank} from './ramp-banks.js';
 import {isRamp,rampInfo,RAMP_PROPS} from './cliff-ramps.js';
 import {cliffSupportAt} from './cliff-support.js';
 import {isCliff} from './cliff-map.js';
@@ -56,7 +57,7 @@ export function buildWorld(map){
    for(let i=0;i<=4;i++){const t=i/4;box(`edge:${key}:bar:${i}`,'fence',kind,axis==='e'?[x+.5,z*D.floorSpacing+1,y-.5+t]:[x-.5+t,z*D.floorSpacing+1,y+.5],[.035,2,.035],{edge:key},{blocksShot:false,blocksSight:false});}
   }else diagnostics.push({source:`edge:${key}`,kind,message:'Unsupported edge'});
  }
- for(const p of map.props||[]){if(isRamp(p)){const r=rampInfo(p),rule=RAMP_PROPS[p.kind],id='prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind;box(id,'prop',p.kind,[(r.low.x+r.high.x)/2,r.z*D.floorSpacing+1,(r.low.y+r.high.y)/2],[rule.w,2,rule.h],{prop:id,x:p.x,y:p.y,z:p.z||0},{blocksShot:false,blocksSight:false});continue;}
+ for(const p of map.props||[]){if(isRampBank(p)){const id='prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind;box(id,'prop',p.kind,[p.x,(p.z||0)*D.floorSpacing+1,p.y],[1,2,1],{prop:id,x:p.x,y:p.y,z:p.z||0},{blocksShot:false,blocksSight:false});continue;}if(isRamp(p)){const r=rampInfo(p),rule=RAMP_PROPS[p.kind],id='prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind;box(id,'prop',p.kind,[(r.low.x+r.high.x)/2,r.z*D.floorSpacing+1,(r.low.y+r.high.y)/2],[rule.w,2,rule.h],{prop:id,x:p.x,y:p.y,z:p.z||0},{blocksShot:false,blocksSight:false});continue;}
   if(isCliff(p))continue;
   if(LIGHT_FORMS[p.kind])continue;
   const id=`prop:${p.x},${p.y},${p.z||0}:${p.kind}`;

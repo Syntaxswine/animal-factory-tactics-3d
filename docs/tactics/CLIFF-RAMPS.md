@@ -33,3 +33,19 @@ existing walking presentation; dedicated slope foot placement is not added.
 
 Review: tactics/cliff-ramp-study.html. This is the cardinal ramp implementation;
 diagonal river/cliff contour extensions remain separate work.
+
+## Cliff-to-ramp bank set
+
+Select a ramp, choose Dirt/Grass/Sand under Ramp bank surface, then click
+Add banks to selected ramp. This atomically places four one-cell transition
+pieces on each side. Existing props are never overwritten. The eight tiles
+are solid and cannot be walked on; the centre ramp keeps its ordinary walking
+route. Add full cliff ledges along the outer edge and at the high end to form
+the surrounding plateau, as illustrated by the updated ramp study.
+
+Bank steps 0–3 match the ramp elevation at their inner edges and rise through
+a curved deposited-material profile to the two-metre cliff top. Left/right
+pieces and all four uphill directions share matching seams. Individual bank
+pieces are also available as rampbank props. The rendered triangles are reused
+for tactical ray occlusion. Editor undo, blocked placement and block export
+are covered by regression tests. This is the first visual pass on the join.
