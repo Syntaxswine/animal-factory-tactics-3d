@@ -1,3 +1,4 @@
+import {rampSupportAt} from '../cliff-ramps.js';
 import {applyRuntimeCharacter,combatBehavior,hostileToPlayer,playerThreat,provokeCharacter} from '../character-properties.js';
 import {updateCliffSupports} from '../cliff-support.js';
 import {recordCliffTraversal} from '../cliff-traversal.js';
@@ -54,7 +55,7 @@ export const movementModeOf=u=>u?.sneaking?'sneak':u?.running?'run':'walk';
 export const movementMultiplier=u=>MOVEMENT_MODES[movementModeOf(u)].apMultiplier;
 export const movementCost=u=>STANCES[stanceOf(u)].moveCost*movementMultiplier(u);
 export const effectiveStealth=u=>Math.min(100,Math.max(0,(u.stealth||0)+(u.sneaking?20:0)));
-export function movementNeighbors(s,u,p=u,stairs){if(towerForUnit(s,u))return [];return neighbors(s,p,stairs).filter(q=>(levelOf(q)===levelOf(p)||stanceOf(u)==='standing')&&!(levelOf(q)===levelOf(p)&&q.x!==p.x&&q.y!==p.y&&[occupant(s,q.x,p.y,levelOf(p)),occupant(s,p.x,q.y,levelOf(p))].some(v=>v&&v!==u))).map(q=>({...q,cost:q.kind==='cliff'?8:(levelOf(q)===levelOf(p)?STANCES[stanceOf(u)].moveCost*q.cost:q.cost)*movementMultiplier(u)}));}
+export function movementNeighbors(s,u,p=u,stairs){if(towerForUnit(s,u))return [];return neighbors(s,p,stairs).filter(q=>(q.kind==='ramp'||levelOf(q)===levelOf(p)||stanceOf(u)==='standing')&&!(levelOf(q)===levelOf(p)&&q.x!==p.x&&q.y!==p.y&&[occupant(s,q.x,p.y,levelOf(p)),occupant(s,p.x,q.y,levelOf(p))].some(v=>v&&v!==u))).map(q=>({...q,cost:q.kind==='cliff'?8:(q.kind==='ramp'||levelOf(q)===levelOf(p)?STANCES[stanceOf(u)].moveCost*q.cost:q.cost)*movementMultiplier(u)}));}
 export const key=tileKey;
 export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,unitBaseHeight(a)-unitBaseHeight(b));
 export const alive=u=>u.hp>0&&!u.away&&u.casualty!=='quit'; // A unit that crossed the map edge is off this map: not a target, not an occupant, not controllable here; a merc that quit (G5) has left the squad.
@@ -101,7 +102,7 @@ export function createGame(seed=1947,definition=factoryMap(),detect=true,difficu
  if(detect)refresh(s);log(s,`Local map ready / ${definition.guards.length} guards.`);return s;
 }
 // Visibility and projectiles share solid geometry, but bodies do not occlude sight.
-export function zoneVisible(s,a,b,zone='torso'){
+export function zoneVisible(s,a,b,zone='torso'){a={...a,cliffSupport:rampSupportAt(s,a)||a.cliffSupport};b={...b,cliffSupport:rampSupportAt(s,b)||b.cliffSupport};
  const origin={x:a.x,y:a.y,h:unitBaseHeight(a)+eyeHeight(a)},end=unitBaseHeight(b)+(b.hp===undefined?eyeHeight(b):targetHeight(b,zone));
  const direction={x:b.x-a.x,y:b.y-a.y,h:end-origin.h},length=Math.hypot(direction.x,direction.y,direction.h);
  if(length<1e-7)return true;
@@ -610,7 +611,7 @@ export function boundedRoute(s,g,goals,budget){if(towerForUnit(s,g))return null;
   if(goals.has(p.k))return trace(p.k);
   const hp=p.f-p.g;if(hp<bestH){bestH=hp;best=p;}
   // Lean expansion: the same legality as movementNeighbors (level changes need standing, no cutting a corner past a body) checked against the precomputed occupied set.
-  for(const n of neighbors(s,p,stairs)){const same=n.z===p.z;if(!same&&stanceOf(g)!=='standing')continue;if(same&&n.x!==p.x&&n.y!==p.y&&(occupied.has(key(n.x,p.y,p.z))||occupied.has(key(p.x,n.y,p.z))))continue;const k=key(n.x,n.y,n.z),c=p.g+(n.kind==='cliff'?8:same?unit*n.cost:n.cost*movementMultiplier(g));if(occupied.has(k)||c>=(scores.get(k)??Infinity))continue;scores.set(k,c);const q={x:n.x,y:n.y,z:n.z,kind:n.kind,cost:n.kind==='cliff'?8:same?unit*n.cost:n.cost*movementMultiplier(g)};parents.set(k,{parent:p.k,point:q});push({...q,k,g:c,f:c+h(q)});}}
+  for(const n of neighbors(s,p,stairs)){const same=n.kind==='ramp'||n.z===p.z;if(!same&&stanceOf(g)!=='standing')continue;if(same&&n.x!==p.x&&n.y!==p.y&&(occupied.has(key(n.x,p.y,p.z))||occupied.has(key(p.x,n.y,p.z))))continue;const k=key(n.x,n.y,n.z),c=p.g+(n.kind==='cliff'?8:same?unit*n.cost:n.cost*movementMultiplier(g));if(occupied.has(k)||c>=(scores.get(k)??Infinity))continue;scores.set(k,c);const q={x:n.x,y:n.y,z:n.z,kind:n.kind,cost:n.kind==='cliff'?8:same?unit*n.cost:n.cost*movementMultiplier(g)};parents.set(k,{parent:p.k,point:q});push({...q,k,g:c,f:c+h(q)});}}
  // Out of budget: head for the closest tile explored (partial route), or give up when nothing is closer than where the guard stands.
  return best===first||!Number.isFinite(bestH)?null:trace(best.k);
 }

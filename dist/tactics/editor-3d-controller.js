@@ -1,3 +1,4 @@
+import {rampSupportAt} from './cliff-ramps.js';
 import {characters,characterName,characterDiagnostics,copyCharacters,ensureCharacterIdentities} from './character-properties.js';
 import {isCliff,CLIFF_LIMIT} from './cliff-map.js';
 import {TOWERS,towerSlots,towerPost} from './tower-geometry.js';
@@ -12,7 +13,7 @@ import {EDGES,propCells} from './core/environment.js';
 export function brushPoint(p){const x=Math.floor(p.x+.5),y=Math.floor(p.y+.5),dx=p.x-x,dy=p.y-y,axis=Math.abs(dx)>Math.abs(dy)?'e':'s';return {x,y,z:p.z,edge:edgeKey(axis,x-(axis==='e'&&dx<0?1:0),y-(axis==='s'&&dy<0?1:0),p.z)};}
 export class EditingDocument extends InspectionDocument {
  open(text){super.open(text);if(!this.block)mapStartMinutes(this.map);this.editor=createEditor(this.block?openBlock(this.original):this.map);this.refresh();this.changed=false;this.revision=0;return this;}
- refresh(){if(this.block){const original={...this.original,...extractBlock(this.editor.map)};if(!this.editor.map.blockConnections?.['0,0'])delete original.connections;const display=new InspectionDocument().open(JSON.stringify(original));this.map=display.map;this.original=original;}else{this.map=this.editor.map;this.original=this.map;}this.units=[...this.map.starts.map((p,i)=>({...p,id:'start-'+i,species:p.species||['horse','goat','donkey','sheep'][i],weapon:p.weapon||'rifle',heading:0,role:characterName(p,'Squad start '+(i+1))})),...this.map.guards.map((p,i)=>({...p,id:'guard-'+i,role:characterName(p,(p.character?.category==='npc'?'NPC ':'Guard ')+(i+1))}))];this.changed=true;this.revision++;}
+ refresh(){if(this.block){const original={...this.original,...extractBlock(this.editor.map)};if(!this.editor.map.blockConnections?.['0,0'])delete original.connections;const display=new InspectionDocument().open(JSON.stringify(original));this.map=display.map;this.original=original;}else{this.map=this.editor.map;this.original=this.map;}this.units=[...this.map.starts.map((p,i)=>({...p,id:'start-'+i,species:p.species||['horse','goat','donkey','sheep'][i],weapon:p.weapon||'rifle',heading:0,role:characterName(p,'Squad start '+(i+1))})),...this.map.guards.map((p,i)=>({...p,id:'guard-'+i,role:characterName(p,(p.character?.category==='npc'?'NPC ':'Guard ')+(i+1))}))];for(const u of this.units){const support=rampSupportAt(this.map,u);if(support)u.cliffSupport=support;}this.changed=true;this.revision++;}
  preview(command){
   const {tool,start,end=start,options={}}=command;
   if(!start||![start.x,start.y,start.z??0].every(Number.isInteger))return {ok:false,error:'Choose a map cell.'};

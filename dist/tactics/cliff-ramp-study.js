@@ -1,0 +1,7 @@
+import {HybridRenderer} from './hybrid-renderer.js';import {buildWorld} from './hybrid-world.js';import {CliffMapScene} from './cliff-map-scene.js';import {rampInfo} from './cliff-ramps.js';
+const hybrid=new HybridRenderer(),cliffs=new CliffMapScene(hybrid.scene),{renderer,camera,scene}=hybrid;document.querySelector('#scene').append(renderer.domElement);renderer.setSize(900,600);renderer.setPixelRatio(devicePixelRatio);
+function render(){renderer.render(scene,camera);}
+function update(){const direction=document.querySelector('#direction').value,map={terrain:Array.from({length:28},()=>Array(28).fill('ground-grass')),props:[],upper:[{},{}],stairs:[],edges:{}};
+ for(const [i,surface]of ['grass','sand','road','concrete'].entries()){const p={x:5+i*5,y:9,z:0,kind:'ramp-'+surface+'-'+direction},r=rampInfo(p);map.props.push(p,{x:r.exit.x,y:r.exit.y,z:0,kind:'cliff-ledge',cliffMask:15,cliffSand:surface==='sand'?1:0});map.upper[0][r.exit.x+','+r.exit.y]='floor';}
+ hybrid.rebuild(buildWorld(map),null,1,map);cliffs.rebuild(map,1,{editor:true});camera.left=-14;camera.right=14;camera.top=9.333;camera.bottom=-9.333;camera.near=.1;camera.far=100;camera.position.set(26,20,29);camera.lookAt(14,0,10);camera.updateProjectionMatrix();render();document.querySelector('#status').textContent=direction+' uphill · grass / sand / asphalt / concrete';window.rampStudy={hybrid,map,render,update};}
+hybrid.onReady=render;document.querySelector('#direction').onchange=update;update();

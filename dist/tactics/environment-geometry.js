@@ -26,5 +26,6 @@ export function environmentGeometries(){
  const tuft=new THREE.BufferGeometry();tuft.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));tuft.computeVertexNormals();g['grass-tuft']=tuft;
  const p=g.wedge.attributes.position;for(let i=0;i<p.count;i++)if(p.getY(i)<0)p.setY(i,-.5+(p.getX(i)+.5)*.88);p.needsUpdate=true;g.wedge.computeVertexNormals();
  for(const geometry of Object.values(g)){geometry.computeBoundingBox();const b=geometry.boundingBox,s=new THREE.Vector3(),c=new THREE.Vector3();b.getSize(s);b.getCenter(c);geometry.translate(-c.x,-c.y,-c.z);geometry.scale(1/s.x,1/s.y,1/s.z);geometry.computeBoundingSphere();}
+ g.ramp=new THREE.BoxGeometry(1,1,1);const rp=g.ramp.attributes.position;for(let i=0;i<rp.count;i++)if(rp.getY(i)>0)rp.setY(i,rp.getX(i));rp.needsUpdate=true;g.ramp.computeVertexNormals();
  return g;
 }

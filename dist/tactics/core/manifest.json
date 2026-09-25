@@ -16,11 +16,11 @@
       "upstreamSha256": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262"
     },
     "engine.js": {
-      "reason": "Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events. Apply character identity, allegiance, hostility and noncombatant reactions during playtesting.",
+      "reason": "Use walking costs and live ramp support at combat query positions. Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events. Apply character identity, allegiance, hostility and noncombatant reactions during playtesting.",
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
     "environment.js": {
-      "reason": "Register fully traversable diagonal road-edge terrain. Register authored light and cliff footprints and collision rules.",
+      "reason": "Register cardinal cliff ramps. Register fully traversable diagonal road-edge terrain. Register authored light and cliff footprints and collision rules.",
       "upstreamSha256": "424fa8b3f1287ac42a84f24e853ed382dabfd51bae10940fe62caa2b460d123a"
     },
     "explosives.js": {
@@ -32,7 +32,7 @@
       "upstreamSha256": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f"
     },
     "maps.js": {
-      "reason": "Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks.",
+      "reason": "Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks.",
       "upstreamSha256": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73"
     },
     "progression.js": {
@@ -40,7 +40,7 @@
       "upstreamSha256": "8cf9aed74b163167aa7e432ad0c744ab9d3f55a30d5a3f3eaf218c163bde4e23"
     },
     "projectiles.js": {
-      "reason": "Trace open tower windows, elevated occupants and welded cliff surfaces. Use physical cliff caps instead of phantom upper slabs.",
+      "reason": "Intersect the continuous ramp solid. Trace open tower windows, elevated occupants and welded cliff surfaces. Use physical cliff caps instead of phantom upper slabs.",
       "upstreamSha256": "f8b2afc98c686cd892189d17f4fe7cb7ae7c16b8d8f2f8609ca78cf8b3192674"
     },
     "world.js": {
@@ -53,17 +53,17 @@
     "blocks.js": "5241515dbbc9f62cddcd01eab19ea3a7b48bf26c5bc766e9b77e7dcd157537b7",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
     "editor-model.js": "10dda96c0af9e22e2eb9449daff706924267c15c9e6f490fcf2baa3b6cefb0a2",
-    "engine.js": "3dbbab7c68721a593c741eb5dca431116740e2b9462c768481071bae68340f7f",
-    "environment.js": "3d817aaa70be728104aaf9f0dc7ab6eb46ea9e77580d7b6e50b7e74592a3df6b",
+    "engine.js": "221bc21ad19154b9cbe4bee9a78ca254a73de4cb5f521ec1d0ae140caa141a17",
+    "environment.js": "d4e203530f17385b67a34375e68f2d4ba171ba88f952f1bdd395cfb68ed7e6bd",
     "explosives.js": "d28c8600c983f8a018a32e84a137836b81165d80924587f0195f23a540a64fa4",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "521036500cfc6e0965e9b2db6b47ea33ca7996bf74d24648fd734da5ba20742f",
-    "maps.js": "1bc2b745e8fe48692c73fee2ebadf185ef863d7beb744907cf6eb972714e2375",
+    "maps.js": "df2d787f876eef958bb7ed8a95e047a5cd40ead502d2b9369e6bbe1cb65764e0",
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",
-    "projectiles.js": "0775aef5481741fc70cdcd610edac1d50bcdc123c27aef9346f225b3f97de46a",
+    "projectiles.js": "c19846a3272eaf81b09364a4c98b167443102a70907dff56f213869a11733797",
     "recruits.js": "5e4495962cdad3d0b57f0d1784bddbf54fa785e6e00a9ae932cfb7dbbbeeb81b",
     "sector-rules.js": "d20ee872471a503a60ac706655b19f9ba9857c41882dd6cc6a08d61e3572132a",
     "visibility.js": "17d3de4a6aca835dc176ac3fcc9f460fb12aae83bf5d2c0154b29a789ed5dc48",

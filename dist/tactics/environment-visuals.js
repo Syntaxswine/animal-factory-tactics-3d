@@ -1,3 +1,4 @@
+import {isRamp,rampInfo} from './cliff-ramps.js';
 import {isCliff} from './cliff-map.js';
 import {PROPS,propCells} from './environment.js';
 import {environmentModel} from './environment-models.js';
@@ -12,6 +13,10 @@ export function environmentVisuals(world,map){
  const add=(id,source,kind,material,center,size,shape='box',rotation=[0,0,0])=>result.push({id,source,kind,material,center,size,shape,rotation});
  for(const p of map.props||[]){
   if(isCliff(p))continue;
+  if(isRamp(p)){const r=rampInfo(p),yaw={east:0,south:-Math.PI/2,west:Math.PI,north:Math.PI/2}[r.direction],center=[(r.low.x+r.high.x)/2,r.z*D.floorSpacing+1,(r.low.y+r.high.y)/2],source={x:p.x,y:p.y,z:p.z||0,prop:'prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind};
+   add('ramp:'+p.x+','+p.y+':rock',source,'ramp','sand',center,[4,2,1],'ramp');result.at(-1).yaw=yaw;
+   add('ramp:'+p.x+','+p.y+':surface',source,'ramp',r.surface==='road'?'ground-asphalt':r.surface==='concrete'?'ground-concrete':r.surface==='grass'?'ground-grass':'sand',[center[0],center[1]+.01,center[2]],[Math.sqrt(20),.02,1],'box',[0,0,Math.atan(.5)]);result.at(-1).yaw=yaw;continue;
+  }
   const rule=PROPS[p.kind];if(!rule)continue;
   const id=`prop:${p.x},${p.y},${p.z||0}:${p.kind}`,source={prop:id,x:p.x,y:p.y,z:p.z||0},base=(p.z||0)*D.floorSpacing;
   if(p.kind.startsWith('roof-')){
