@@ -1,9 +1,11 @@
+import {buildBarrierGate} from './barrier-gate.js';
 import * as THREE from './vendor/three.module.js';
 import {buildStairGuardTower} from './stair-guard-tower.js';
 import {buildWoodenGuardTower} from './wooden-guard-tower.js';
 import {softBox} from './painted-environment-scene.js';
 
 export const FURNITURE_FORMS=[
+ {id:'barrier-gate',name:'Lifting barrier gate',tiles:[1,3],note:'Striped lifting boom and geared pedestal, with a clear far end. Exact 1×3 footprint; reusable opening pose.'},
  {id:'spotlight',name:'Sweeping spotlight',tiles:[1,1],light:true,note:'Industrial searchlight on a swivel post; one to three authored aim points.'},
  {"id":"wood-ladder-tower","name":"Timber ladder guardhouse","tiles":[6,5],"source":"wood-stair-tower","light":false,"note":"Three-story guardhouse with its searchlight opposite the exterior ladder and guarded landing."},
  {"id":"iron-ladder-tower","name":"Iron ladder guardhouse","tiles":[6,5],"source":"iron-stair-tower","light":false,"note":"Three-story guardhouse with an exterior ladder and guarded entry landing."},
@@ -95,11 +97,12 @@ export function createFurnitureLibrary(atlas,cargo){
     if(wall){for(const o of fixture.children)if(o.position.y>.75)o.position.y-=.75;head.rotation.x=.35;const cable=fixture.children.find(o=>o.geometry?.type==='TubeGeometry'&&o.parent===fixture);if(cable)cable.scale.y=.4;}
     return fixture;
  }
- function build(id,skin='honey',{burning=true}={}){
+ function build(id,skin='honey',{burning=true,openness=0}={}){
   if(disposed)throw Error('Furniture library disposed');
   const form=FURNITURE_FORMS.find(f=>f.id===id);if(!form||!Object.hasOwn(FURNITURE_FINISHES,skin))throw Error('Invalid furniture form/finish');
   const source=form.source||id,ladder=!!form.source;const root=new THREE.Group();root.name=id;const timber=wood(skin),warm=wood(skin,1);
-  if(['iron-searchlight-stair-tower','wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower','wood-large-wrap-tower','iron-large-wrap-tower'].includes(source)){buildStairGuardTower(root,{box,wood,iron,material,skin,cargo,metal:id.startsWith('iron-'),wrap:source.includes('-wrap-'),large:source.includes('-large-'),ladder,wideExit:id==='iron-searchlight-ladder-tower'});
+  if(id==='barrier-gate'){buildBarrierGate(root,{box,cyl,material,iron,brass},openness);}
+  else if(['iron-searchlight-stair-tower','wood-stair-tower','iron-stair-tower','wood-wrap-tower','iron-wrap-tower','wood-large-wrap-tower','iron-large-wrap-tower'].includes(source)){buildStairGuardTower(root,{box,wood,iron,material,skin,cargo,metal:id.startsWith('iron-'),wrap:source.includes('-wrap-'),large:source.includes('-large-'),ladder,wideExit:id==='iron-searchlight-ladder-tower'});
    if(source==='iron-searchlight-stair-tower'){
     // Compact rear bracket scales about the wall face to retain the six-tile footprint.
     const H=root.userData.stairTower.deckHeight,x=0,lightMount=new THREE.Group();lightMount.name='searchlight-mount';lightMount.position.x=root.userData.stairTower.coreOffsetX;lightMount.rotation.y=ladder?-Math.PI/2:0;if(ladder){const scale=.55;lightMount.scale.setScalar(scale);lightMount.position.x-=1.5*(1-scale);lightMount.position.y=H*(1-scale);}root.add(lightMount);
