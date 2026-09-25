@@ -20,7 +20,7 @@
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
     "environment.js": {
-      "reason": "Register authored light and cliff footprints and collision rules.",
+      "reason": "Register fully traversable diagonal road-edge terrain. Register authored light and cliff footprints and collision rules.",
       "upstreamSha256": "424fa8b3f1287ac42a84f24e853ed382dabfd51bae10940fe62caa2b460d123a"
     },
     "explosives.js": {
@@ -54,7 +54,7 @@
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
     "editor-model.js": "10dda96c0af9e22e2eb9449daff706924267c15c9e6f490fcf2baa3b6cefb0a2",
     "engine.js": "3dbbab7c68721a593c741eb5dca431116740e2b9462c768481071bae68340f7f",
-    "environment.js": "0030f1ad61122c0d0f989f32da362837a03938def60be417f88492fb22d3a666",
+    "environment.js": "3d817aaa70be728104aaf9f0dc7ab6eb46ea9e77580d7b6e50b7e74592a3df6b",
     "explosives.js": "d28c8600c983f8a018a32e84a137836b81165d80924587f0195f23a540a64fa4",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",

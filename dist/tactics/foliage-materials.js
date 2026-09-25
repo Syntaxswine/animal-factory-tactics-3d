@@ -1,6 +1,9 @@
+import {GRASS_GLSL} from './painted-grass.js';
+import {SAND_GLSL} from './painted-sand.js';
+import {DIAGONAL_ROADS,diagonalRoad} from './diagonal-roads.js';
 import * as T from './vendor/three.module.js';
 export const FOLIAGE_ATLAS='../assets/environment/painted/foliage-atlas-v1.png';
-export const FOLIAGE_MATERIALS=new Set(['cover-grass','grass','grass-blade','foliage','leaf-light','pine','bark']);
+export const FOLIAGE_MATERIALS=new Set([...DIAGONAL_ROADS,'cover-grass','grass','grass-blade','foliage','leaf-light','pine','bark']);
 // Mirrored repetition makes both sides of every texture boundary meet, even
 // where hand-painted source edges differ. Insets keep mip filtering in a panel.
 export function mirroredPaintUV(u,v,panel){
@@ -8,11 +11,12 @@ export function mirroredPaintUV(u,v,panel){
  return [o[0]+.004+mirror(u)*.492,o[1]+.004+mirror(v)*.492];
 }
 export function paintFoliageMaterial(material,kind,texture){
+ const road=diagonalRoad(kind),cacheKind=kind;if(road)kind=road.grass==='cover-grass'?'cover-grass':'grass';
  const panel=kind==='pine'?2:kind==='bark'?3:kind==='cover-grass'||kind==='grass'||kind==='grass-blade'?0:1;
  const offset=[[0,.5],[.5,.5],[0,0],[.5,0]][panel];
  material.map.dispose();material.map=texture;material.roughness=1;
  material.color.setHex(kind==='cover-grass'?0x77956e:kind==='leaf-light'?0xe5edb8:kind==='grass-blade'?0xbcca83:0xd4ddbf);
- material.customProgramCacheKey=()=> 'painted-foliage-v2-'+kind;
+ material.customProgramCacheKey=()=> 'painted-foliage-v2-'+cacheKind;
  material.onBeforeCompile=shader=>{
   shader.vertexShader='varying vec3 vNaturePosition,vNatureNormal,vNatureLocal;\n'+shader.vertexShader;
   shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
@@ -32,6 +36,14 @@ export function paintFoliageMaterial(material,kind,texture){
    ${kind==='grass-blade'?`paint=mix(vec3(.12,.23,.055),vec3(.35,.46,.15),clamp(vNatureLocal.y+.5,0.,1.));`:''}
    diffuseColor.rgb*=paint;
   `);
+  if(road&&road.grass!=='grass'&&road.grass!=='cover-grass'){
+   shader.fragmentShader=GRASS_GLSL+SAND_GLSL+shader.fragmentShader;
+   const base=road.grass==='sand'?'sandPaint(vNaturePosition.xz)':road.grass==='meadow-sand'?'mix(meadowPaint(vNaturePosition.xz,-1.),sandPaint(vNaturePosition.xz),sandCoverage(vNaturePosition.xz,.5))':'meadowPaint(vNaturePosition.xz,'+Number(road.grass.slice(-1)).toFixed(1)+')';
+   shader.fragmentShader=shader.fragmentShader.replace('diffuseColor.rgb*=paint;','diffuseColor.rgb*=paint; diffuseColor.rgb='+base+';');
+  }
+  if(road){const expression={nw:'1.-uv.x-uv.y',ne:'uv.x-uv.y',se:'uv.x+uv.y-1.',sw:'uv.y-uv.x'}[road.corner];
+   shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>',    '#include <alphamap_fragment>\n vec2 uv=fract(vNaturePosition.xz+.5); float rd=('+expression+')/1.41421356; float grain=mod(floor(vNaturePosition.x*128.)*73.+floor(vNaturePosition.z*128.)*97.,17.)-8.; vec3 paving=pow((vec3(61.,66.,63.)+grain)/255.,vec3(2.2)); if(rd>=0.)diffuseColor.rgb=paving; '+(road.border?'if(abs(rd)<.045)diffuseColor.rgb=pow((vec3(127.,128.,113.)+grain)/255.,vec3(2.2));':''));
+  }
   if(kind==='grass-blade')shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>','outgoingLight=max(outgoingLight,diffuseColor.rgb*.75);\n#include <opaque_fragment>');
  };
  material.needsUpdate=true;

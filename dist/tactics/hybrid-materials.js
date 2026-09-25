@@ -1,3 +1,4 @@
+import {diagonalRoad} from './diagonal-roads.js';
 // Flat procedural surfaces: no baked architectural perspective or stretched wall art.
 // Pure UV mapping is shared with numeric material-density checks.
 export const MATERIAL_DENSITY=Object.freeze({brickWidth:.5,brickCourse:.2,texturePeriod:1});
@@ -35,6 +36,7 @@ export function surfacePixels(kind,size=128){
  return {data,width:size,height:size};
 }
 export function materialKind(box){
+ if(diagonalRoad(box.material))return box.material;
  if(box.material==='bark'||box.material==='grass-blade')return box.material;
  if(['steel','leaf-light','pine','foliage','water','linen','screen','dark-metal','rust','red','olive','metal','wood','sand'].includes(box.material))return box.material;
  if(box.material==='woodland')return box.kind==='floor'?'cover-grass':'foliage';

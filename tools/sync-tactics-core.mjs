@@ -1,3 +1,4 @@
+import {adaptCoreRoads,roadOverrides} from './core-road-adapter.mjs';
 import {adaptCoreCharacters,characterOverrides} from './core-character-adapter.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,8 +17,8 @@ const files={},overrides={},pending=['engine.js','world.js','editor-model.js','b
 while(pending.length){
  const name=pending.pop();if(files[name])continue;
  if(!/^[\w-]+\.js$/.test(name))throw Error('Unexpected core dependency: '+name);
- const upstream=git('show',`${revision}:dist/tactics/${name}`),data=adaptCoreCharacters(name,adaptCoreCliffs(name,adaptCoreClock(name,upstream)));
- if(clockOverrides[name]||cliffOverrides[name]||characterOverrides[name])overrides[name]={reason:[clockOverrides[name],cliffOverrides[name],characterOverrides[name]].filter(Boolean).join(' '),upstreamSha256:createHash('sha256').update(upstream).digest('hex')};
+ const upstream=git('show',`${revision}:dist/tactics/${name}`),data=adaptCoreRoads(name,adaptCoreCharacters(name,adaptCoreCliffs(name,adaptCoreClock(name,upstream))));
+ if(roadOverrides[name]||clockOverrides[name]||cliffOverrides[name]||characterOverrides[name])overrides[name]={reason:[roadOverrides[name],clockOverrides[name],cliffOverrides[name],characterOverrides[name]].filter(Boolean).join(' '),upstreamSha256:createHash('sha256').update(upstream).digest('hex')};
  files[name]=createHash('sha256').update(data).digest('hex');
  for(const match of data.toString().matchAll(/(?:from\s*|import\s*)['"]\.\/([^'"]+)['"]/g))pending.push(match[1]);
  if(check){if(!fs.readFileSync(path.join(out,name)).equals(data))throw Error('Core differs from upstream: '+name);}
