@@ -1,3 +1,5 @@
+import {isRampTerrain} from '../dist/tactics/cliff-ramp-surfaces.js';
+import {cliffTileGeometry} from '../dist/tactics/cliff-tiles.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {PROPS,EDGES,GROUNDS} from '../dist/tactics/environment.js';
@@ -10,7 +12,11 @@ test('complete model catalog renders finite geometry without mutating collision 
  const geometries=environmentGeometries();
  try{for(const kind of Object.keys(PROPS))for(const rotated of [false,true]){
   const map=mapFor(kind,rotated,kind.startsWith('roof-')?1:0),world=buildWorld(map),before=JSON.stringify(world.boxes),saved=JSON.stringify(map),hit=traceWorld(world,[-3,.4,0],[3,.4,0]);
-  const parts=environmentVisuals(world,map);assert(parts.some(p=>p.source.prop?.endsWith(':'+kind)),kind);
+  const parts=environmentVisuals(world,map);
+  if(isRampTerrain({kind})){
+   const g=cliffTileGeometry('mixed',[],{ramps:map.props});assert(g.attributes.position.count>0,kind);for(const name of ['position','normal'])assert([...g.attributes[name].array].every(Number.isFinite),kind);g.dispose();
+   assert(!parts.some(p=>p.source.prop?.endsWith(':'+kind)),'joined terrain must not also render a box');
+  }else assert(parts.some(p=>p.source.prop?.endsWith(':'+kind)),kind);
   for(const p of parts){assert(p.center.every(Number.isFinite)&&p.size.every(n=>Number.isFinite(n)&&n>0),p.id);assert(geometries[p.shape||'box'],p.id);}
   assert.equal(JSON.stringify(world.boxes),before);assert.equal(JSON.stringify(map),saved);assert.deepEqual(traceWorld(world,[-3,.4,0],[3,.4,0]),hit);
  }}finally{for(const g of Object.values(geometries))g.dispose();}

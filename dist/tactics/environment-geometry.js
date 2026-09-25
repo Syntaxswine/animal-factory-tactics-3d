@@ -1,4 +1,3 @@
-import {bankTriangles} from './ramp-banks.js';
 import * as THREE from './vendor/three.module.js';
 export function environmentGeometries(){
  const g={box:new THREE.BoxGeometry(1,1,1),cylinder:new THREE.CylinderGeometry(.5,.5,1,12),taper:new THREE.CylinderGeometry(.3,.5,1,9),cone:new THREE.ConeGeometry(.5,1,10),crown:new THREE.IcosahedronGeometry(.5,1),cushion:new THREE.SphereGeometry(.5,12,8),leaf:new THREE.OctahedronGeometry(.5),ring:new THREE.TorusGeometry(.35,.15,5,12),wedge:new THREE.BoxGeometry(1,1,1)};
@@ -27,7 +26,5 @@ export function environmentGeometries(){
  const tuft=new THREE.BufferGeometry();tuft.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));tuft.computeVertexNormals();g['grass-tuft']=tuft;
  const p=g.wedge.attributes.position;for(let i=0;i<p.count;i++)if(p.getY(i)<0)p.setY(i,-.5+(p.getX(i)+.5)*.88);p.needsUpdate=true;g.wedge.computeVertexNormals();
  for(const geometry of Object.values(g)){geometry.computeBoundingBox();const b=geometry.boundingBox,s=new THREE.Vector3(),c=new THREE.Vector3();b.getSize(s);b.getCenter(c);geometry.translate(-c.x,-c.y,-c.z);geometry.scale(1/s.x,1/s.y,1/s.z);geometry.computeBoundingSphere();}
- g.ramp=new THREE.BoxGeometry(1,1,1);const rp=g.ramp.attributes.position;for(let i=0;i<rp.count;i++)if(rp.getY(i)>0)rp.setY(i,rp.getX(i));rp.needsUpdate=true;g.ramp.computeVertexNormals();
- for(const side of ['left','right'])for(let step=0;step<4;step++){const b=new THREE.BufferGeometry();b.setAttribute('position',new THREE.Float32BufferAttribute(bankTriangles(step,side).flat(),3));b.computeVertexNormals();g['rampbank-'+side+'-'+step]=b;}
  return g;
 }

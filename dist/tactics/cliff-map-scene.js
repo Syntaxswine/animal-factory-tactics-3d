@@ -3,6 +3,8 @@ import {createCliffTiles} from './cliff-tiles.js';
 import {isCliff,cliffTiles} from './cliff-map.js';
 import {DIMENSIONS} from './hybrid-world.js';
 import {terrainKnown} from './battle-visibility.js';
+import {isRampTerrain} from './cliff-ramp-surfaces.js';
+import {propCells} from './core/environment.js';
 // Clip visibility after welding: discovering a neighbor must never reshape rock.
 export function hideUnknownCliffTriangles(geometry,known){
  const positions=geometry.attributes.position,indices=[],groups=[];
@@ -19,12 +21,12 @@ export function hideUnknownCliffTriangles(geometry,known){
 export class CliffMapScene {
  constructor(scene){this.group=new T.Group();scene.add(this.group);this.parts=[];}
  rebuild(map,level,{editor=false}={}){
-  const props=(map.props||[]).filter(p=>isCliff(p)&&(p.z||0)<=level),known=(x,y,z)=>editor||terrainKnown(map,z?`${x},${y},${z}`:`${x},${y}`);
-  const signature=JSON.stringify([props,level,editor,props.map(p=>[known(p.x,p.y,p.z||0),(map.map||map.terrain)?.[p.y]?.[p.x]==='water'])]);if(signature===this.signature)return;this.signature=signature;this.clear();
+  const props=(map.props||[]).filter(p=>(isCliff(p)||isRampTerrain(p))&&(p.z||0)<=level),known=(x,y,z)=>editor||terrainKnown(map,z?`${x},${y},${z}`:`${x},${y}`);
+  const signature=JSON.stringify([props,level,editor,props.flatMap(p=>(isRampTerrain(p)?propCells(p):[p]).map(q=>[known(q.x,q.y,q.z||0),(map.map||map.terrain)?.[q.y]?.[q.x]==='water']))]);if(signature===this.signature)return;this.signature=signature;this.clear();
   for(let z=0;z<=level;z++){
-   const tiles=cliffTiles(props,z);if(!tiles.length)continue;
-   const wet=props.some(p=>(p.z||0)===z&&(map.map||map.terrain)?.[p.y]?.[p.x]==='water'),part=createCliffTiles('mixed',tiles,{water:wet});
-   if(!editor){const visible=new Set(props.filter(p=>(p.z||0)===z&&known(p.x,p.y,z)).map(p=>p.x+','+p.y));hideUnknownCliffTriangles(part.mesh.geometry,(x,y)=>visible.has(x+','+y));}
+   const tiles=cliffTiles(props,z),ramps=props.filter(p=>isRampTerrain(p)&&(p.z||0)===z);if(!tiles.length&&!ramps.length)continue;
+   const wet=props.some(p=>(p.z||0)===z&&(map.map||map.terrain)?.[p.y]?.[p.x]==='water'),part=createCliffTiles('mixed',tiles,{water:wet,ramps});
+   if(!editor)hideUnknownCliffTriangles(part.mesh.geometry,(x,y)=>known(x,y,z));
    part.root.position.set(-.5,z*DIMENSIONS.floorSpacing,-.5);
    if(editor&&z<level)for(const material of part.original)material.color.multiplyScalar(.38);
    this.parts.push(part);this.group.add(part.root);

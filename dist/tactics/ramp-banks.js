@@ -2,8 +2,8 @@
 export const BANK_PROPS=Object.fromEntries(['dirt','grass','sand'].flatMap(surface=>['north','east','south','west'].flatMap(direction=>['left','right'].flatMap(side=>[0,1,2,3].map(step=>['rampbank-'+surface+'-'+direction+'-'+side+'-'+step,{w:1,h:1,solid:true,cover:0}])))));
 export const isRampBank=p=>!!BANK_PROPS[p?.kind];
 export function bankInfo(p){if(!isRampBank(p))return null;const [_,surface,direction,side,step]=p.kind.split('-');return {surface,direction,side,step:Number(step)};}
-export function bankHeight(step,u,v){const t=(step+u)/4,bank=v<.65?.55*Math.pow(v/.65,1.7):.55+.45*Math.min(1,(v-.65)/.18);return 2*(t+(1-t)*bank);}
-export function bankTriangles(step,side){const triangles=[],n=12,point=(u,v)=>[u-.5,bankHeight(step,u,v), (side==='left'?-1:1)*(v-.5)],tri=(a,b,c)=>{if(side==='left')triangles.push(a,c,b);else triangles.push(a,b,c);};
+export function bankHeight(step,u,v){const t=(step+u)/4,w=Math.max(0,Math.min(1,v)),bank=w*w*(3-2*w);return 2*(t+(1-t)*bank);}
+export function bankTriangles(step,side){const triangles=[],n=8,point=(u,v)=>[u-.5,bankHeight(step,u,v), (side==='left'?-1:1)*(v-.5)],tri=(a,b,c)=>{if(side==='left')triangles.push(a,c,b);else triangles.push(a,b,c);};
  for(let i=0;i<n;i++)for(let j=0;j<n;j++){const a=point(i/n,j/n),b=point((i+1)/n,j/n),c=point((i+1)/n,(j+1)/n),d=point(i/n,(j+1)/n);tri(a,c,b);tri(a,d,c);}
  for(const edge of [Array.from({length:n+1},(_,i)=>point(i/n,0)),Array.from({length:n+1},(_,i)=>point(1,i/n)),Array.from({length:n+1},(_,i)=>point(1-i/n,1)),Array.from({length:n+1},(_,i)=>point(0,1-i/n))])for(let i=0;i<n;i++){const a=edge[i],b=edge[i+1],c=[b[0],0,b[2]],d=[a[0],0,a[2]];tri(a,b,c);tri(a,c,d);}
  return triangles;

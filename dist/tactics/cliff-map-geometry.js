@@ -2,17 +2,18 @@ import * as T from './vendor/three.module.js';
 import {CLIFF_HEIGHT} from './cliff-models.js';
 import {cliffTileGeometry} from './cliff-tiles.js';
 import {cliffTiles,isCliff} from './cliff-map.js';
+import {isRampTerrain} from './cliff-ramp-surfaces.js';
 
 // Collision uses the same welded triangles as rendering, in tactical coordinates.
 // Awareness filters fixture props into fresh arrays; key by cliff content to reuse geometry.
 const cache=new Map();
 export function cliffGeometry(props=[]){
- const signature=JSON.stringify(props.filter(isCliff));
+ const signature=JSON.stringify(props.filter(p=>isCliff(p)||isRampTerrain(p)));
  let entry=cache.get(signature);if(entry)return entry;
  const index=new Map();
  for(let level=0;level<3;level++){
   const tiles=cliffTiles(props,level);if(!tiles.length)continue;
-  const geometry=cliffTileGeometry('mixed',tiles),a=geometry.attributes.position;
+  const geometry=cliffTileGeometry('mixed',tiles,{ramps:props.filter(p=>isRampTerrain(p)&&(p.z||0)===level)}),a=geometry.attributes.position;
   for(let i=0;i<a.count;i+=3){
    const points=[0,1,2].map(j=>new T.Vector3(a.getX(i+j)-.5,a.getY(i+j)+level*3,a.getZ(i+j)-.5));
    const xs=points.map(p=>p.x),ys=points.map(p=>p.z),triangle={points,level};

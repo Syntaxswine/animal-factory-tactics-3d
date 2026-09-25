@@ -11,7 +11,7 @@ export const GRASS_GLSL=`
  vec3 meadowRepeat(vec2 uv,vec2 offset){vec2 p=uv*2.+offset,w=smoothstep(vec2(.65),vec2(1.),uv);return mix(mix(meadowSource(p),meadowSource(p-vec2(2,0)),w.x),mix(meadowSource(p-vec2(0,2)),meadowSource(p-vec2(2,2)),w.x),w.y);}
  vec3 meadowPaint(vec2 world,float variantOverride){vec2 cell=floor(world/2.),uv=fract(world/2.);float variant=variantOverride<0.?mod(cell.x*7.+cell.y*11.,4.):variantOverride;float fade=pow(sin(uv.x*3.14159265)*sin(uv.y*3.14159265),2.);return mix(meadowRepeat(uv,vec2(0)),meadowRepeat(uv,vec2(2.37,3.71)*variant),fade*.85);}
 `;
-export function createPaintedGrass({unlit=false,variant=-1,rim=false,sand=false,tint=0xffffff}={}){
+export function createPaintedGrass({unlit=false,variant=-1,rim=false,sand=false,ramps=false,tint=0xffffff}={}){
  if(!Number.isInteger(variant)||variant< -1||variant>=PAINTED_GRASS.variants)throw Error('Invalid meadow variant');
  const material=unlit?new T.MeshBasicMaterial({toneMapped:false}):new T.MeshStandardMaterial({roughness:1,flatShading:true});
  const grassTint={value:new T.Color(tint)};material.userData.grassTint=grassTint;
@@ -21,6 +21,21 @@ export function createPaintedGrass({unlit=false,variant=-1,rim=false,sand=false,
   s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMeadow=(modelMatrix*vec4(position,1.)).xz;'+(rim?'vMeadowRim=cliffRim;vMeadowUp=abs(normal.y);':'')+(sand?'vSandBlend=sandBlend;vSandWorld=(modelMatrix*vec4(position,1.)).xyz;vSandNormal=normalize(mat3(modelMatrix)*normal);':''));
   s.fragmentShader='varying vec2 vMeadow;uniform float meadowVariant;uniform vec3 grassTint;\n'+(rim?'varying float vMeadowRim;varying float vMeadowUp;\n':'')+(sand?'varying float vSandBlend;varying vec3 vSandWorld;varying vec3 vSandNormal;\n'+SAND_GLSL:'')+GRASS_GLSL+s.fragmentShader;
   s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb=meadowPaint(vMeadow,meadowVariant)*grassTint;'+(sand?'diffuseColor.rgb=mix(diffuseColor.rgb,sandSurface(vSandWorld,vSandNormal),sandCoverage(vMeadow,vSandBlend));':'')+(rim?'\nfloat wear=gn(vec3(vMeadow*4.,2.));float edge=1.-smoothstep(.035,.14+wear*.04,vMeadowRim/max(.08,vMeadowUp));vec3 soil=vec3(.105,.069,.034)*(.85+wear*.3);diffuseColor.rgb=mix(diffuseColor.rgb,soil,edge*.93'+(sand?'*(1.-sandCoverage(vMeadow,vSandBlend))':'')+');':''));
+  if(ramps){
+   s.vertexShader='attribute vec3 rampPaint;varying vec3 vRampPaint;\n'+s.vertexShader;
+   s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvRampPaint=rampPaint;');
+   s.fragmentShader='varying vec3 vRampPaint;\n'+s.fragmentShader;
+   s.fragmentShader=s.fragmentShader.replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
+    float grain=gn(vec3(vMeadow*34.,3.)),mottle=gn(vec3(vMeadow*3.,1.));
+    vec3 earth=mix(vec3(.095,.066,.034),vec3(.235,.176,.094),floor(mottle*5.)/5.)*(.87+grain*.28);
+    diffuseColor.rgb=mix(diffuseColor.rgb,earth,vRampPaint.x);
+    vec3 asphalt=vec3(.042,.049,.045)*(.80+grain*.55)+step(.72,grain)*.014;
+    vec2 slab=abs(fract((vMeadow+.5)/2.)-.5);float joint=smoothstep(.485,.499,max(slab.x,slab.y));
+    vec3 concrete=vec3(.34,.33,.275)*(.84+mottle*.18+grain*.1)*(1.-joint*.18);
+    diffuseColor.rgb=mix(diffuseColor.rgb,asphalt,vRampPaint.y);
+    diffuseColor.rgb=mix(diffuseColor.rgb,concrete,vRampPaint.z);
+   `);
+  }
  };
- material.customProgramCacheKey=()=>`cliff-meadow-v3-${unlit}-${rim}-${sand}`;return material;
+ material.customProgramCacheKey=()=>`cliff-meadow-v4-${unlit}-${rim}-${sand}-${ramps}`;return material;
 }

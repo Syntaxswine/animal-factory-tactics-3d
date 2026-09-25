@@ -1,1 +1,12 @@
-<!doctype html><meta charset="utf-8"><link rel="icon" href="data:,"><title>Cliff ramps</title><style>body{margin:24px;background:#eee5cf;color:#302f27;font:16px system-ui}#scene{width:900px;height:600px}select{font:inherit;padding:8px}canvas{display:block}</style><h1>Cardinal cliff ramps</h1><p>Grass · sand · asphalt · concrete. Four-tile run, two-metre rise, ordinary walking.</p><label>Uphill direction <select id="direction"><option>east</option><option>south</option><option>west</option><option>north</option></select></label><div id="scene"></div><p id="status"></p><script type="module" src="cliff-ramp-study.js"></script>
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>Broad cliff ramps</title>
+<style>body{margin:24px;background:#eee5cf;color:#302f27;font:16px system-ui}h1{margin-bottom:8px}#scene{max-width:1200px;width:100%;margin-top:18px}select{font:inherit;padding:6px}canvas{display:block;max-width:100%}.controls{display:flex;gap:16px;flex-wrap:wrap}label{display:grid;gap:5px}p{max-width:1000px}</style>
+<h1>Broad cliff ramps</h1><p>A broad opening in a continuous cliff wall. Matching crags continue along the same front on both sides; the plateau carries on behind the ramp.</p>
+<div class="controls">
+<label>Width<select id="width"><option>6</option><option selected>8</option><option>10</option></select></label>
+<label>Uphill<select id="direction"><option>east</option><option>south</option><option>west</option><option>north</option></select></label>
+<label>Finish<select id="surface"><option value="grass">Meadow grass</option><option value="sand">Sand</option><option value="road">Asphalt</option><option value="concrete">Concrete</option></select></label>
+<label>Banks<select id="bank"><option value="dirt">Earth / grass</option><option value="grass">Grass</option><option value="sand">Sand / grass</option></select></label>
+<label>Cliff wall<select id="wall"><option value="crag">Impassable crag</option><option value="ledge">Climbable ledge</option></select></label>
+<label>View<select id="view"><option value="front">Approach</option><option value="side">Side</option><option value="rear">Plateau</option></select></label>
+<label>Scale<select id="scale"><option value="close">Close</option><option value="gameplay">Gameplay</option></select></label>
+</div><div id="scene"></div><p id="status"></p><p>Editor: choose <strong>Cut broad cliff ramp</strong>, set the width and uphill direction, then click the leftmost toe looking uphill. The preview covers the full slope, outer banks and landing. One undo restores the original terrain.</p><script type="module" src="cliff-ramp-study.js"></script>

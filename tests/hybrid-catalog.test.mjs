@@ -1,3 +1,4 @@
+import {isRampTerrain} from '../dist/tactics/cliff-ramp-surfaces.js';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {PROPS} from '../dist/tactics/environment.js';
 import {propParts} from '../dist/tactics/hybrid-props.js';
@@ -6,7 +7,9 @@ import {buildWorld,traceWorld,DIMENSIONS} from '../dist/tactics/hybrid-world.js'
 import {createWorld,currentMap,travel} from '../dist/tactics/world.js';
 import {squad,guards,refresh} from '../dist/tactics/engine.js';
 test('catalog silhouettes are finite, distinguish open containers and retain structure openings',()=>{
- for(const [kind,rule]of Object.entries(PROPS)){if(rule.groundLayer)continue;const parts=propParts(kind,rule.w,rule.h,rule.tall?2:.8);assert.ok(parts.length,kind);for(const p of parts){assert.ok(p.center.every(Number.isFinite),kind);assert.ok(p.size.every(n=>Number.isFinite(n)&&n>0),kind);}}
+ for(const [kind,rule]of Object.entries(PROPS)){if(rule.groundLayer)continue;if(isRampTerrain({kind})){
+ const w=buildWorld({terrain:[['yard']],props:[{kind,x:0,y:0,z:0}],edges:{},upper:[]}),p=w.boxes.find(p=>p.kind==='prop');assert.ok(p,kind);assert.ok(p.size.every(n=>Number.isFinite(n)&&n>0));assert.equal(p.blocksShot,false,'terrain rays own occlusion');continue;
+ }const parts=propParts(kind,rule.w,rule.h,rule.tall?2:.8);assert.ok(parts.length,kind);for(const p of parts){assert.ok(p.center.every(Number.isFinite),kind);assert.ok(p.size.every(n=>Number.isFinite(n)&&n>0),kind);}}
  assert.ok(propParts('wooden-crate-open',1,1,.8).some(p=>p.name==='lid'));
  assert.equal(propParts('wooden-crate-closed',1,1,.8).some(p=>p.name==='lid'),false);
  const m=blankMap();m.props=[{x:8,y:8,z:0,kind:'table-steel'}];const w=buildWorld(m);
