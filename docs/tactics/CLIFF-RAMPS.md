@@ -81,3 +81,13 @@ Fog is filtered per discovered cell after welding. Discovering a ramp's high end
 - The broader 935-test run initially had six failures. Five catalog/build assertions were corrected or updated for the terrain ownership change and pass in the focused rerun. One unrelated existing hen/wooden-spotlight-tower tail collision (0.0067036543 m) was reproduced identically in the source editor worktree. It remains open; this is not a claim that the entire regression suite is clean.
 
 Integration branch: `work/cliff-ramp-refinement`, based on editor ramp commit `7d5b154`. No merge to canonical is part of this delivery.
+
+## Crest obstruction correction — 2026-09-24
+
+Following visual approval of `e63f064`, the architect found that ramp links checked only the upper logical boundary. A wall at the lower-level crest could therefore be crossed.
+
+The generated core adapter now uses one shared crest check for runtime navigation and map validation. Both the ramp's base-level boundary and the landing-level boundary must be open, in either travel direction. Walls, solid fences and closed doors block the link. Opening or removing the barrier restores it; ordinary same-level door behavior is unchanged. Editor placement/import rejects obstructed crests. The existing movement-step validation also prevents a previously queued crossing from passing a newly added barrier without spending movement.
+
+Verification: 19 focused ramp, navigation, editor, pinned-core and packaging tests pass. New regressions cover all cardinal directions and both base levels, blockers on either or both levels, ascent/descent, opening/removal, editor transaction safety, and queued movement. A live browser probe confirmed lower-level crest blocking in both directions, validation rejection and reopening. Core regeneration verification and the 3D Pages build pass. No visual assets changed.
+
+Hostile subagent review: **9/10**; all three new regression tests independently rerun and passed.
