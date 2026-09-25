@@ -1,3 +1,4 @@
+import {expandPlaceholder} from './sector-placeholder.js';
 import {parseMap,terrainAt,edgeKey} from './core/maps.js';
 import {isBlock,openBlock} from './core/blocks.js';
 import {propAt,propCells} from './core/environment.js';
@@ -8,7 +9,7 @@ const at=(p,x,y,z)=>p.x===x&&p.y===y&&(p.z||0)===z;
 export class InspectionDocument {
  open(text){
   if(typeof text!=='string'||text.length>4*1024*1024)throw Error('Choose a map or block JSON file under 4 MB.');
-  const original=JSON.parse(text),block=isBlock(original);
+  let original=JSON.parse(text);if(original?.kind==='sector-placeholder'){original=expandPlaceholder(original);text=JSON.stringify(original);}const block=isBlock(original);
   // Keep the portable document intact, including extension fields. Legacy map
   // migration is deliberately deferred until the editable milestone.
   if(!block&&original?.version!==2)throw Error('Inspection supports version 2 maps and version 1 blocks. Convert legacy maps with the existing editor first.');

@@ -1,3 +1,4 @@
+import {expandPlaceholder} from './sector-placeholder.js';
 import {blockCanvas,extractBlock} from './core/blocks.js';
 import {blankMap} from './core/maps.js';
 import {PREVIEW_FOOTPRINTS} from './editor-3d-model.js';
@@ -57,4 +58,8 @@ async function changed(){loading=true;try{const identity=selection?.data?.charac
 async function switchWorkspace(mode){if(loading)return;const next=workspaces[mode]||new EditingDocument().open(JSON.stringify(mode==='block'?extractBlock(blockCanvas('New block')):blankMap('New design')));await open(next);}
 const tools=installEditing({canvas,scene,getDocument:()=>documentModel,getSelection:()=>selection,open,changed,status,isLoading:()=>loading,switchWorkspace,hasUnsaved:()=>Object.values(workspaces).some(d=>d.changed)});
 window.editor3d={open,select,changed,apply:command=>tools.apply(command),validate:()=>documentModel.validate(),export:()=>documentModel.export(),inspect:(x,y,z,options)=>documentModel.inspect(x,y,z,options),get document(){return documentModel;},get scene(){return scene;},get loading(){return loading;},get selection(){return selection;},view};
-requestAnimationFrame(render);factory();
+async function initialMap(){
+ const params=new URLSearchParams(location.search),id=params.get('sectorTemplate');if(!id){await factory();return;}
+ try{if(!/^[a-z0-9-]+$/.test(id))throw Error('Invalid template identifier.');const variant=params.get('variant')||'placeholder.json';if(!/^[a-zA-Z0-9_-]+\.json$/.test(variant))throw Error('Invalid variant filename.');status('Opening sector map…');const r=await fetch('./sector-library/'+id+'/'+variant);if(!r.ok)throw Error('Template unavailable: HTTP '+r.status);const entry=await r.json(),orientation=Number(params.get('orientation')||0);if(entry.kind!=='sector-placeholder'){if(orientation!==0)throw Error('Authored maps open in their saved orientation.');await open(JSON.stringify(entry));$('overview').click();return;}if(!Number.isInteger(orientation)||!entry.allowedTransforms?.[orientation])throw Error('Unsupported orientation.');await open(JSON.stringify(expandPlaceholder(entry,entry.allowedTransforms[orientation])));$('overview').click();status('Placeholder sector. Save an authored variant after editing; campaign assignment is not enabled.');}catch(e){status('Cannot open template: '+e.message);}
+}
+requestAnimationFrame(render);initialMap();

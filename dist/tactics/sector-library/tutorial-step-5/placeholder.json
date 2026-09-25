@@ -1,0 +1,43 @@
+{
+  "id": "tutorial-step-5",
+  "kind": "sector-placeholder",
+  "version": 1,
+  "status": "placeholder",
+  "role": "town",
+  "facilities": [],
+  "difficulties": [
+    "easy"
+  ],
+  "config": {
+    "feature": null,
+    "roads": []
+  },
+  "tutorialStep": 5,
+  "travel": [
+    "south"
+  ],
+  "allowedTransforms": [
+    {
+      "turns": 0,
+      "mirror": false
+    },
+    {
+      "turns": 1,
+      "mirror": false
+    },
+    {
+      "turns": 2,
+      "mirror": false
+    },
+    {
+      "turns": 3,
+      "mirror": false
+    }
+  ],
+  "variants": [
+    "placeholder.json"
+  ],
+  "notes": [
+    "Layout reservation only. Author plateau perimeter, elevations and the town connection as one five-sector group."
+  ]
+}

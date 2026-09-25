@@ -1,0 +1,989 @@
+{
+  "version": 1,
+  "scope": "Exhaustive current single-feature boundary configurations; content and difficulty are authoring axes, not finished maps.",
+  "orientedGeometryCount": 80,
+  "entries": [
+    {
+      "id": "city--land-road-e",
+      "role": "city",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city--land-road-en",
+      "role": "city",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city--land-road-ens",
+      "role": "city",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city--land-road-ensw",
+      "role": "city",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 1
+    },
+    {
+      "id": "city--land-road-ew",
+      "role": "city",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 2
+    },
+    {
+      "id": "city--river-e1-w1-road-ns",
+      "role": "city",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city--river-e1-w2-road-ns",
+      "role": "city",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-factory--land-road-e",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "factory"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-factory--land-road-en",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "factory"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-factory--land-road-ens",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "factory"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-factory--land-road-ensw",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "factory"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 1
+    },
+    {
+      "id": "city-factory--land-road-ew",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "factory"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 2
+    },
+    {
+      "id": "city-factory--river-e1-w1-road-ns",
+      "role": "city",
+      "feature": "river",
+      "facilities": [
+        "factory"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-factory--river-e1-w2-road-ns",
+      "role": "city",
+      "feature": "river",
+      "facilities": [
+        "factory"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-factory-workshop--land-road-e",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "factory",
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-factory-workshop--land-road-en",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "factory",
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-factory-workshop--land-road-ens",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "factory",
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-factory-workshop--land-road-ensw",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "factory",
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 1
+    },
+    {
+      "id": "city-factory-workshop--land-road-ew",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "factory",
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 2
+    },
+    {
+      "id": "city-factory-workshop--river-e1-w1-road-ns",
+      "role": "city",
+      "feature": "river",
+      "facilities": [
+        "factory",
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-factory-workshop--river-e1-w2-road-ns",
+      "role": "city",
+      "feature": "river",
+      "facilities": [
+        "factory",
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-workshop--land-road-e",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-workshop--land-road-en",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-workshop--land-road-ens",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-workshop--land-road-ensw",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 1
+    },
+    {
+      "id": "city-workshop--land-road-ew",
+      "role": "city",
+      "feature": "land",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 2
+    },
+    {
+      "id": "city-workshop--river-e1-w1-road-ns",
+      "role": "city",
+      "feature": "river",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "city-workshop--river-e1-w2-road-ns",
+      "role": "city",
+      "feature": "river",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--cliff-e1-n1-road-none",
+      "role": "countryside",
+      "feature": "cliff",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 8
+    },
+    {
+      "id": "countryside--cliff-e1-n2-road-none",
+      "role": "countryside",
+      "feature": "cliff",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--cliff-e1-s1-road-none",
+      "role": "countryside",
+      "feature": "cliff",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--cliff-e1-w1-road-none",
+      "role": "countryside",
+      "feature": "cliff",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--cliff-e1-w1-road-ns",
+      "role": "countryside",
+      "feature": "cliff",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--cliff-e1-w2-road-none",
+      "role": "countryside",
+      "feature": "cliff",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--cliff-e1-w2-road-ns",
+      "role": "countryside",
+      "feature": "cliff",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--land-road-en",
+      "role": "countryside",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--land-road-ens",
+      "role": "countryside",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--land-road-ensw",
+      "role": "countryside",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 1
+    },
+    {
+      "id": "countryside--land-road-ew",
+      "role": "countryside",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 2
+    },
+    {
+      "id": "countryside--land-road-none",
+      "role": "countryside",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 1
+    },
+    {
+      "id": "countryside--river-e1-n1-road-none",
+      "role": "countryside",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 8
+    },
+    {
+      "id": "countryside--river-e1-n2-road-none",
+      "role": "countryside",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--river-e1-s1-road-none",
+      "role": "countryside",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--river-e1-w1-road-none",
+      "role": "countryside",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--river-e1-w1-road-ns",
+      "role": "countryside",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--river-e1-w2-road-none",
+      "role": "countryside",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "countryside--river-e1-w2-road-ns",
+      "role": "countryside",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "fortress--land-road-e",
+      "role": "fortress",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "fortress--land-road-en",
+      "role": "fortress",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "fortress--land-road-ens",
+      "role": "fortress",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "fortress--land-road-ensw",
+      "role": "fortress",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 1
+    },
+    {
+      "id": "fortress--land-road-ew",
+      "role": "fortress",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 2
+    },
+    {
+      "id": "town--land-road-e",
+      "role": "town",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "town--land-road-en",
+      "role": "town",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "town--land-road-ens",
+      "role": "town",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "town--land-road-ensw",
+      "role": "town",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 1
+    },
+    {
+      "id": "town--land-road-ew",
+      "role": "town",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 2
+    },
+    {
+      "id": "town--river-e1-w1-road-ns",
+      "role": "town",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "town--river-e1-w2-road-ns",
+      "role": "town",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "town-workshop--land-road-e",
+      "role": "town",
+      "feature": "land",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "town-workshop--land-road-en",
+      "role": "town",
+      "feature": "land",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "town-workshop--land-road-ens",
+      "role": "town",
+      "feature": "land",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "town-workshop--land-road-ensw",
+      "role": "town",
+      "feature": "land",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 1
+    },
+    {
+      "id": "town-workshop--land-road-ew",
+      "role": "town",
+      "feature": "land",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 2
+    },
+    {
+      "id": "town-workshop--river-e1-w1-road-ns",
+      "role": "town",
+      "feature": "river",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "town-workshop--river-e1-w2-road-ns",
+      "role": "town",
+      "feature": "river",
+      "facilities": [
+        "workshop"
+      ],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "tutorial-step-1",
+      "role": "tutorial",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "tutorial-step-2",
+      "role": "tutorial",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "tutorial-step-3",
+      "role": "tutorial",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "tutorial-step-4",
+      "role": "tutorial",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "tutorial-step-5",
+      "role": "town",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "village--land-road-e",
+      "role": "village",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "village--land-road-en",
+      "role": "village",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "village--land-road-ens",
+      "role": "village",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "village--land-road-ensw",
+      "role": "village",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium"
+      ],
+      "orientations": 1
+    },
+    {
+      "id": "village--land-road-ew",
+      "role": "village",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium"
+      ],
+      "orientations": 2
+    },
+    {
+      "id": "village--river-e1-w1-road-ns",
+      "role": "village",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium"
+      ],
+      "orientations": 4
+    },
+    {
+      "id": "village--river-e1-w2-road-ns",
+      "role": "village",
+      "feature": "river",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium"
+      ],
+      "orientations": 4
+    }
+  ]
+}
