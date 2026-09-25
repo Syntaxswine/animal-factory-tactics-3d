@@ -129,3 +129,15 @@ test('same-edge rivers reach inland in the reported seed, and shallow edited fea
   assert.ok(validateGenerated(edited).errors.includes(kind+' must reach at least two sectors inward from the nearest map edge.'));
  }
 });
+
+test('tutorial start must reach all five sectors through reciprocal declared connections',()=>{
+ const base=generateWorld(7),p=base.tutorialPlacement,cells=tutorialCells(p.x,p.y,p.rotation);
+ for(const isolated of cells){const m=structuredClone(base);
+  for(const side of ['north','east','south','west']){const j=neighbor(isolated.index,side);if(j!==null)m.sectors[j].travel=m.sectors[j].travel.filter(s=>neighbor(j,s)!==isolated.index);}
+  m.sectors[isolated.index].travel=[];
+  assert.match(validateGenerated(m).errors.join(' '),/All five tutorial sectors.*reachable from the start/);
+ }
+ const oneWay=structuredClone(base);oneWay.sectors[cells[0].index].travel=[];
+ assert.match(validateGenerated(oneWay).errors.join(' '),/All five tutorial sectors.*reachable from the start/);
+ assert.equal(validateGenerated(JSON.parse(JSON.stringify(base))).valid,true);
+});

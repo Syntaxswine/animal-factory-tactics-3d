@@ -8,7 +8,9 @@ randomization button is now Fresh world and rerolls the entire world.
 
 1. Reserve and rotate the tutorial: TOO / XXO / XSO. The five occupied sectors
    include the town and starting sector. Four form the plateau; one descent leads
-   into the inland town. The town gains its second adjoining sector at step 5.
+   into the inland town. All five sectors must be reachable from the start via
+   reciprocal declared travel connections. The town gains its second adjoining
+   sector at step 5.
 2. Two river networks, four total world-edge connections, minimum length five.
 3. One cliff chain with two world-edge connections.
 4. Exactly 150 easy, 150 medium, 150 hard. Easy is connected, includes the tutorial,
@@ -24,7 +26,9 @@ randomization button is now Fresh world and rerolls the entire world.
 6. Roads connect every settlement sector and fortress. Routing reserves eligible
    road crossings under spacing/count constraints before gates are materialized.
 7. Bridges and cliff passages at road crossings. Bridge targets round up to one
-   per five sectors of each river; no edge or diagonal bridge adjacency. Gate
+   per five sectors of each river; planned bridges cannot adjoin, including
+   diagonally. Settlement crossings replace a planned bridge or add an extra
+   crossing exempt from bridge spacing. Gate
    guards number 2–15; cliff passages use the lower 2–7 range.
 8. Independent structural, attachment, count, tutorial, road and reachability
    checks. Failed attempts retry deterministically, at most 40 in the UI.
@@ -155,3 +159,35 @@ Routing tracks this requirement while retaining the sampled endpoints, with
 a shallow-cell cost to favor inward sweeps over retraced detours. Same-edge
 routes remain supported. Validation independently checks actual connected
 feature cells, including edited/imported worlds, rather than trusting metadata.
+
+## Confirmed changes to the original proposal
+
+Later placement instructions supersede the original proposal: villages occupy
+two adjoining sectors, the TOO / XXO / XSO tutorial may use any of four rotations
+at any valid location with its town inland, and river settlements provide
+crossings even when adjoining sectors of the same settlement also cross.
+Different settlements still require their one-sector gap. These are intentional
+rules, not outstanding generator defects.
+
+## Deferred local-map work and prerequisite inventory
+
+Local-map assignment and opening assigned sectors in the tactical editor are
+deferred. Before building those libraries, produce an exhaustive inventory of
+every supported tile combination from the allowed rules, not merely combinations
+observed in a sample of seeds. Include:
+
+- River and cliff entry/exit sides and one-third/two-thirds attachment offsets,
+  straight and bent paths, and which combinations are currently prohibited.
+- Road ends, bends, junctions and crossings, with their precise attachments.
+- Countryside, settlement and fortress roles; difficulty and facility variants;
+  ordinary bridges, settlement crossings and cliff passages.
+- Tutorial roles and declared travel, world-edge restrictions, and rotations.
+- Required bank access and high/low cliff-side elevations once those contracts
+  are defined; label unresolved combinations rather than claiming compatibility.
+
+Provide simple diagrams and stable identifiers for each canonical combination,
+listing rotation equivalents separately so reusable artwork is not counted as
+four unrelated assets. Distinguish valid strategic combinations from templates
+actually available, and export a machine-readable catalog alongside the visual
+checklist. This inventory is a prerequisite, not a claim that tactical templates
+or their entrance/elevation verification already exist.
