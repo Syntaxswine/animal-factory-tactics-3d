@@ -1,5 +1,6 @@
 import {diagonalRoad,ROAD_CORNERS} from './diagonal-roads.js';
 import {STRUCTURE_PRESETS} from './editor-structure-presets.js';
+import {rampStroke} from './editor-ramp-stroke.js';
 import {previewCanopy,canopyCells} from './editor-canopies.js';
 import {bankSet} from './ramp-banks.js';
 import {isRamp} from './cliff-ramps.js';
@@ -30,6 +31,15 @@ export class EditingDocument extends InspectionDocument {
   if(tool==='cliff'&&points.length>CLIFF_LIMIT)return {ok:false,error:'Paint at most '+CLIFF_LIMIT+' cliff tiles at a time.'};
   if(!points.length)return {ok:false,error:'Choose a cell inside the map.'};
   try{
+   if(tool==='ramp'){
+    const plan=rampStroke(candidate.map,start,end,options.rampSurface||'grass');
+    for(const p of plan.landings){if(terrainAt(candidate.map,p.x,p.y,p.z)==='void'){const error=applyBrush(candidate,'floor',p.x,p.y,'',{level:p.z});if(error)throw Error(error);}}
+    for(const p of plan.lanes){cells.push(...propCells(p));const error=applyBrush(candidate,'prop',p.x,p.y,'',{level:p.z,propKind:p.kind,rotated:false});if(error)throw Error(error);}
+    if(cells.some(p=>p.x<0||p.y<0||p.x>=this.size||p.y>=this.size))throw Error('The whole ramp must fit inside the map or block.');
+    if(this.block)validateBlock(extractBlock(candidate.map));
+    const errors=validateMap(candidate.map,{connectivity:false});
+    return {ok:!errors.length,error:errors[0]||'',cells,edges,map:candidate.map,orientation:plan.orientation};
+   }
    for(const p of points){
     let actualTool=tool==='npc'?'guard':tool,actualOptions=tool==='npc'?{...options,category:'npc'}:options;
     if(['cliff','erase-cliff'].includes(tool)){

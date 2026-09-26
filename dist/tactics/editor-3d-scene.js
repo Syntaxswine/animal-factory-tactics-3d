@@ -112,6 +112,12 @@ export class InspectionScene {
  }
  draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.lights.update(this.document?.map,this.options.level,this.previewMinutes??mapStartMinutes(this.document?.map),this.reducedMotion?.matches?null:performance.now()/1000,true);this.daylight.update(this.previewMinutes??mapStartMinutes(this.document?.map),this.camera,0,true);this.lights.render(this.renderer,this.camera);}
  pick(x,y,width,height){return floorPoint(this.camera,x,y,width,height,this.options.level);}
+ pickCliff(x,y,width,height){
+  const raycaster=new T.Raycaster();raycaster.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
+  let nearest=null,distance=Infinity;
+  for(const p of this.document?.map.props||[]){if(p.kind!=='cliff-ledge'||(p.cliffMask??15)!==15||(p.z||0)!==this.options.level)continue;const h=(p.z||0)*D.floorSpacing,hit=raycaster.ray.intersectBox(new T.Box3(new T.Vector3(p.x-.5,h,p.y-.5),new T.Vector3(p.x+.5,h+2,p.y+.5)),new T.Vector3());if(!hit)continue;const d=hit.distanceTo(raycaster.ray.origin);if(d<distance){distance=d;nearest={x:p.x+Math.max(-.49,Math.min(.49,hit.x-p.x)),y:p.y+Math.max(-.49,Math.min(.49,hit.z-p.y)),z:p.z||0};}}
+  return nearest;
+ }
  preview(result){
   if(this.previewArrow){this.previewArrow.removeFromParent();this.previewArrow.line.material.dispose();this.previewArrow.cone.material.dispose();this.previewArrow=null;}
   if(this.previewMesh){this.previewMesh.removeFromParent();this.previewMesh.geometry.dispose();this.previewMesh.material.dispose();this.previewMesh.dispose();this.previewMesh=null;}

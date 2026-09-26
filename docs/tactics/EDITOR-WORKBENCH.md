@@ -15,3 +15,9 @@ Altitude 4 is a nonwalkable roof layer, not a fourth gameplay floor. Only roof m
 ## Verification
 
 Run `node --test tests/editor-workbench.test.mjs`, the editor browser check `tools/check-editor-workbench.mjs`, core sync check and the 3D build. Existing roof, ramp and block tests remain applicable. Browser screenshots are written under ignored `artifacts/editor-workbench/`.
+
+## Ramp wall strokes
+
+Ramps default to **Drag along cliff wall**. At the lower altitude, click the exposed face of a full, straight ledge and drag along the wall to choose the width. The wall determines the uphill direction; the stroke snaps along that straight face. Every selected cliff tile receives a parallel four-tile ramp lane, with missing upper landing floors added automatically. Grass, sand, asphalt and concrete surfaces are supported. Obstacles, discontinuous walls and out-of-bounds footprints reject the whole edit; undo/redo treats the complete width as one change. Adjacent lanes permit sideways movement at equal height. Individual ramp placement remains available, with its manual direction selector and R shortcut. Joining banks remain separately placed.
+
+Checks: `tests/editor-ramp-stroke.test.mjs` and `tools/check-editor-ramp-stroke.mjs` (real visible-face mouse drag).
