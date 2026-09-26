@@ -16,7 +16,8 @@ function painted(material,{striped=false}={}){
  };material.customProgramCacheKey=()=>`barrier-paint-v1-${striped}`;
  return material;
 }
-export function buildBarrierGate(root,{box,cyl,material,iron,brass},openness=0){
+export function buildBarrierGate(root,{box,cyl,material,iron,brass},openness=0,{mirrored=false}={}){
+ const instance=root,assembly=new T.Group();assembly.name='gate-assembly';assembly.scale.z=mirrored?-1:1;instance.add(assembly);root=assembly;
  const enamel=painted(material('barrier-oxide',0x9e4431)),ivory=painted(material('barrier-ivory',0xded1a7)),striped=painted(material('barrier-stripes',0xffffff),{striped:true});
  const part=(name,parent,mat,p,s)=>{const mesh=box(parent,mat,p,s);mesh.name=name;return mesh;};
  part('pedestal-foot',root,iron,[0,.055,-1.20],[.48,.11,.48]);
@@ -39,8 +40,8 @@ export function buildBarrierGate(root,{box,cyl,material,iron,brass},openness=0){
  part('counterweight-link',arm,iron,[.27,0,-.045],[.08,.065,.30]);
  part('counterweight',arm,enamel,[.30,0,-.15],[.16,.24,.22]);
  for(const [name,p]of [['hinge',BARRIER_GATE.hinge],['operator',[.42,.65,-1.20]],['lane-center',[0,0,0]]]){const a=new T.Object3D();a.name=name;a.position.fromArray(p);root.add(a);}
- root.userData.barrierGate={tiles:[1,3],pivot:[...BARRIER_GATE.hinge],openAngle:BARRIER_GATE.openAngle};
- setBarrierGateOpen(root,openness);
+ instance.userData.barrierGate={tiles:[1,3],pivot:[0,1.07,mirrored?1.2:-1.2],openAngle:BARRIER_GATE.openAngle,mirrored};
+ setBarrierGateOpen(instance,openness);
 }
 // Stateless absolute pose: repeatable when scrubbing, reversing, or restoring.
 export function setBarrierGateOpen(root,amount){

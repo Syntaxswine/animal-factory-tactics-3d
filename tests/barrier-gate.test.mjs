@@ -37,3 +37,27 @@ test('gate instances share resources but their opening poses remain independent'
  for(let i=0;i<200;i++){setBarrierGateOpen(a.root,(i%100)/100);library.build('barrier-gate');}assert.deepEqual(library.stats(),stats);assert.equal(b.root.userData.barrierGate.openness,1);
  library.dispose();library.dispose();assert.deepEqual(library.stats(),{geometries:0,materials:0,textures:0});
 });
+
+test('opposite-side gate reflects every part and anchor throughout the opening sweep',()=>{
+ const library=createFurnitureLibrary(atlas,atlas),a=library.build('barrier-gate').root,b=library.build('barrier-gate-mirrored').root;
+ try{
+  assert.deepEqual(b.userData.barrierGate.pivot,[0,1.07,1.2]);
+  const original=[],reflected=[];a.traverse(o=>{if(o.isMesh)original.push(o);});b.traverse(o=>{if(o.isMesh)reflected.push(o);});assert.equal(original.length,reflected.length);
+  for(let step=0;step<=180;step++){
+   setBarrierGateOpen(a,step/180);setBarrierGateOpen(b,step/180);
+   const bounds=new T.Box3().setFromObject(b);assert.ok(bounds.min.x>=-.5&&bounds.max.x<=.5&&bounds.min.z>=-1.5&&bounds.max.z<=1.5);
+   for(let i=0;i<original.length;i++){
+    assert.equal(original[i].geometry,reflected[i].geometry);assert.equal(original[i].material,reflected[i].material);
+    const pos=original[i].geometry.attributes.position;
+    for(let j=0;j<pos.count;j++){
+     const p=new T.Vector3().fromBufferAttribute(pos,j).applyMatrix4(original[i].matrixWorld),q=new T.Vector3().fromBufferAttribute(pos,j).applyMatrix4(reflected[i].matrixWorld);p.z=-p.z;assert.ok(p.distanceTo(q)<1e-8);
+    }
+   }
+   for(const name of ['hinge','operator','lane-center']){const p=point(a,name);p.z=-p.z;assert.ok(p.distanceTo(point(b,name))<1e-8);}
+  }
+  // A road pair occupies adjacent 1×3 footprints without touching boom tips.
+  a.position.z=-1.5;b.position.z=1.5;setBarrierGateOpen(a,0);setBarrierGateOpen(b,0);
+  assert.ok(new T.Box3().setFromObject(a).max.z<new T.Box3().setFromObject(b).min.z);
+  setBarrierGateOpen(a,.25);assert.equal(b.userData.barrierGate.openness,0);
+ }finally{library.dispose();}
+});
