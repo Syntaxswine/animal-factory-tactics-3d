@@ -1,3 +1,4 @@
+import {edgeCells} from './core/maps.js';
 import {nearbyCliffClimbs} from './cliff-actions.js';
 import {captureEncounter,restoreEncounter} from './encounter-save.js';
 import {getSave,putSave} from './save-store.js';
@@ -27,6 +28,7 @@ if(new URLSearchParams(location.search).has('editorPlaytest')){
  const back=document.createElement('button');back.id='return-editor';back.textContent='Return to editor';back.onclick=()=>{window.opener?.focus();window.close();};document.querySelector('header').append(back);
  document.querySelector('aside h1').textContent='Playtest: '+definition.name;
 }
+if(new URLSearchParams(location.search).get('study')==='wall-xray')document.querySelector('aside h1').textContent=definition.name;
 let cliffViewState=null,cliffViewId=0;
 let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false,lastLadderPreparing=false;
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
@@ -43,7 +45,7 @@ const target=()=>state.units.find(u=>u.id===targetId&&u.hp>0&&state.detected.has
 const mercStatus=u=>u.away?'Away':u.casualty==='captured'?'Captured':u.casualty==='quit'?'Left squad':u.hp>0?`${stanceOf(u)} · ${movementModeOf(u)} · ${u.hp} HP · ${u.ap} AP · ${Math.floor(u.stamina)} stamina`:u.casualty==='bleeding'?`Bleeding · ${u.bleedTurns} turns`:u.casualty==='stable'?'Stabilized':'Dead';
 const message=text=>{$('message').textContent=text;};
 const project=u=>({x:view.x+(u.x-u.y)*28*view.zoom,y:view.y+(u.x+u.y)*14*view.zoom-((u.z||0)-level+((u.towerPost?TOWER_HEIGHT:u.towerElevation||0)/2.12))*FLOOR_PIXELS*view.zoom});
-function focus(x,y){overviewMode=false;view.zoom=1.15;view.x=width/2-(x-y)*28*view.zoom;view.y=height*.55-(x+y)*14*view.zoom;$('hint').textContent='Click ground to move · Shift-drag to select mercs · Drag to pan · Scroll to zoom';}
+function focus(x,y){overviewMode=false;view.zoom=1.15;view.x=width/2-(x-y)*28*view.zoom;view.y=height*.55-(x+y)*14*view.zoom;$('hint').textContent='Hover for wall X-ray | Click doors to pass | Shift-drag select | Drag pan | Scroll zoom';}
 function center(){const u=selected();level=u.z||0;$('floor').value=level;focus(u.x,u.y);}
 function overview(){const w=definition.width,h=definition.height;overviewMode=true;view.zoom=Math.min((width-50)/((w+h)*28),(height-60)/((w+h)*14));view.x=width/2-(w-h)*14*view.zoom;view.y=30;$('hint').textContent='Click the map to inspect an area · Center returns to your squad';}
 function resize(){const box=canvas.getBoundingClientRect();width=box.width;height=box.height;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(state){if(overviewMode)overview();else center();}}
@@ -99,15 +101,22 @@ function click(x,y,shift=false){
  if(hit!==null){const u=state.units.find(u=>u.id===hit);if(selectable(u)){selectMerc(u.id,shift);}else if(u.hp<=0&&nearbyLoot(state,selected()).some(p=>p.body===u.id)){characterScreen.show(state.selected);}else if(state.detected.has(u.id)&&u.hp>0)targetId=u.id;sync();return;}
  const pile=renderer.pickLoot(x,y,width,height);if(pile){if(nearbyLoot(state,selected()).includes(pile))characterScreen.show(state.selected);else message('Move beside the supplies to pick them up.');return;}
  if(paused()||renderer.busy||shift)return;
+ const door=renderer.pickDoor(x,y,width,height,level);
+ if(door){const u=selected(),cells=edgeCells(door),beside=cells.some(p=>p.x===u.x&&p.y===u.y&&p.z===(u.z||0));
+  if(!beside||u.towerPost){message('Stand beside this door on the same floor to use it.');return;}
+  if(state.edgeLocks?.[door]){message('Door locked. Use Pick lock or Force door in the action panel.');return;}
+  const to=cells.find(p=>p.x!==u.x||p.y!==u.y);const ok=move(state,u,to.x,to.y,to.z);message(ok?'Moving through the door.':'Door route unavailable. Check AP, stamina and the other side.');sync();return;
+ }
  const px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom),tx=Math.round((px+py)/2),ty=Math.round((py-px)/2);
  if(selectedIds.size>1?moveGroup(state,[...selectedIds],selected(),tx,ty,level):move(state,selected(),tx,ty,level)){targetId=null;message('');}else message('Cannot move there now. Check the route, floor, AP and stamina. Walk or catch your breath if exhausted.');sync();
 }
 canvas.addEventListener('pointerdown',e=>{if(e.button!==0||drag)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,select:e.shiftKey};canvas.setPointerCapture(e.pointerId);});
-canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)drag.moved=true;if(drag.moved&&!drag.select){view.x+=e.clientX-drag.lastX;view.y+=e.clientY-drag.lastY;}drag.lastX=e.clientX;drag.lastY=e.clientY;});
+canvas.addEventListener('pointermove',e=>{const bounds=canvas.getBoundingClientRect();renderer.wallXray.setPointer(e.clientX-bounds.left,e.clientY-bounds.top);if(!drag||drag.id!==e.pointerId)return;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)drag.moved=true;if(drag.moved&&!drag.select){view.x+=e.clientX-drag.lastX;view.y+=e.clientY-drag.lastY;}drag.lastX=e.clientX;drag.lastY=e.clientY;});
 canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const d=drag;drag=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);const r=canvas.getBoundingClientRect();if(d.select&&d.moved){const ids=rectangleMembers(state.units,level,{x:d.x-r.left,y:d.y-r.top},{x:e.clientX-r.left,y:e.clientY-r.top},u=>project(renderer.displayUnit(u)));if(ids.length){selectedIds=new Set(ids);if(!selectedIds.has(state.selected))state.selected=ids[0];targetId=null;state.queue=[];message(ids.length+' mercs selected. Ground clicks move the group; stance buttons affect the group; Fire and Reload use the primary merc.');sync();}else message('No mercs in that rectangle.');}else if(!d.moved)click(e.clientX-r.left,e.clientY-r.top,d.select);});
-canvas.addEventListener('pointercancel',()=>{drag=null;});
+canvas.addEventListener('pointerleave',()=>renderer.wallXray.setPointer(null,null));
+canvas.addEventListener('pointercancel',()=>{drag=null;renderer.wallXray.setPointer(null,null);});
 canvas.addEventListener('lostpointercapture',()=>{drag=null;});
-window.addEventListener('blur',()=>{drag=null;});
+window.addEventListener('blur',()=>{drag=null;renderer.wallXray.setPointer(null,null);});
 canvas.addEventListener('wheel',e=>{e.preventDefault();const box=canvas.getBoundingClientRect(),x=e.clientX-box.left,y=e.clientY-box.top,old=view.zoom;view.zoom=Math.max(.08,Math.min(3,old*Math.exp(-e.deltaY*.001)));view.x=x-(x-view.x)*view.zoom/old;view.y=y-(y-view.y)*view.zoom/old;},{passive:false});
 document.addEventListener('keydown',e=>{if(characterScreen.open)return;if(e.key==='Escape'&&!paused()){drag=null;state.queue=[];targetId=null;sync();}});
 function action(fn){if(paused()||renderer.busy)return;const ok=fn();renderer.captureCombat(state);message(ok?'':'Action unavailable.');sync();}
@@ -124,7 +133,7 @@ function action(fn){if(paused()||renderer.busy)return;const ok=fn();renderer.cap
  $('fire').onclick=()=>action(()=>{const t=target();return t&&attack(state,selected(),t,false,false,'torso',false,$('aim-level').value);});
  $('stop').onclick=()=>{if(paused())return;state.queue=[];sync();};$('floor').onchange=()=>{level=+$('floor').value;sync();};
 $('pause').onclick=()=>{userPaused=!userPaused;frameClock.reset();sync();};
-document.addEventListener('visibilitychange',()=>{frameClock.reset();sync();if(document.hidden&&!storageBusy&&!autoDisabled&&(performance.now()-lastAuto>=30000||state.round!==autoRound))autosave();});
+document.addEventListener('visibilitychange',()=>{renderer.wallXray.setPointer(null,null);frameClock.reset();sync();if(document.hidden&&!storageBusy&&!autoDisabled&&(performance.now()-lastAuto>=30000||state.round!==autoRound))autosave();});
 window.addEventListener('pageshow',()=>frameClock.reset());
 new ResizeObserver(resize).observe(canvas);resize();if(initialState)installState(initialState);else restart();
 if(new URLSearchParams(location.search).get('view')==='overview')overview();

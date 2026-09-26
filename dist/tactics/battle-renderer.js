@@ -1,3 +1,4 @@
+import {WallXray,pickWallDoor} from './wall-xray.js';
 import {prepareLadderRoute} from './ladder-preparation.js';
 import {CliffMapScene} from './cliff-map-scene.js';
 import {BattleLoot} from './battle-loot.js';
@@ -25,7 +26,7 @@ import {motionPreference} from './settings-3d.js';
 // Reuse only the environment/camera presentation. No hybrid combat mode.
 export class BattleRenderer extends HybridRenderer {
  constructor(onReady=()=>{}){
-  super(onReady);this.daylight=new DaylightRig(this.scene,this.renderer);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
+  super(onReady);this.wallXray=new WallXray();this.daylight=new DaylightRig(this.scene,this.renderer);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
   this.cliffs=new CliffMapScene(this.scene);this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
   this.loot=new BattleLoot(this.scene);this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
@@ -120,6 +121,7 @@ export class BattleRenderer extends HybridRenderer {
   }
   return null;
  }
+ pickDoor(x,y,width,height,level){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return pickWallDoor(ray,this.chunks||new Map(),level);}
  pickLoot(x,y,width,height){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return this.loot.pick(ray);}
  draw(ctx,state,...args){
   this.loot.sync(state,args[3]);
@@ -142,7 +144,7 @@ export class BattleRenderer extends HybridRenderer {
  equipmentState(id){return this.traversal.active?.event.unitId===id?(this.traversal.active.motion?.climb.equipmentState||'carried'):this.models.get(id)?.draw||this.models.get(id)?.drawRequested?'drawing':'carried';}
  displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){
-  this.generation++;
+  this.generation++;this.wallXray.dispose();
   this.loot.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();this.paintedEnvironment.dispose();
   this.motion.clear();
   this.traversal.clear();this.combat.clear();this.shotEffects.dispose();
