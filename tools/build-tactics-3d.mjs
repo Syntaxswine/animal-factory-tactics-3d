@@ -10,3 +10,5 @@ fs.writeFileSync(new URL('.pages-output/README.md',root),'# Animal Factory Tacti
 console.log('Built Animal Factory Tactics 3D landing page.');
 
 fs.cpSync(new URL('dist/tactics/sector-library/',root),new URL('.pages-output/tactics/sector-library/',root),{recursive:true});
+import {checkModuleClosure} from './check-module-closure.mjs';
+checkModuleClosure(new URL('.pages-output/',root),['tactics/battle-3d.js','tactics/editor-3d.js','tactics/title-3d.js']);
