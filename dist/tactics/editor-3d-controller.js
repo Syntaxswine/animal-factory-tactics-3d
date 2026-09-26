@@ -1,3 +1,6 @@
+import {diagonalRoad,ROAD_CORNERS} from './diagonal-roads.js';
+import {STRUCTURE_PRESETS} from './editor-structure-presets.js';
+import {previewCanopy,canopyCells} from './editor-canopies.js';
 import {bankSet} from './ramp-banks.js';
 import {isRamp} from './cliff-ramps.js';
 import {rampSupportAt} from './cliff-ramps.js';
@@ -17,7 +20,7 @@ export class EditingDocument extends InspectionDocument {
  open(text){super.open(text);if(!this.block)mapStartMinutes(this.map);this.editor=createEditor(this.block?openBlock(this.original):this.map);this.refresh();this.changed=false;this.revision=0;return this;}
  refresh(){if(this.block){const original={...this.original,...extractBlock(this.editor.map)};if(!this.editor.map.blockConnections?.['0,0'])delete original.connections;const display=new InspectionDocument().open(JSON.stringify(original));this.map=display.map;this.original=original;}else{this.map=this.editor.map;this.original=this.map;}this.units=[...this.map.starts.map((p,i)=>({...p,id:'start-'+i,species:p.species||['horse','goat','donkey','sheep'][i],weapon:p.weapon||'rifle',heading:0,role:characterName(p,'Squad start '+(i+1))})),...this.map.guards.map((p,i)=>({...p,id:'guard-'+i,role:characterName(p,(p.character?.category==='npc'?'NPC ':'Guard ')+(i+1))}))];for(const u of this.units){const support=rampSupportAt(this.map,u);if(support)u.cliffSupport=support;}this.changed=true;this.revision++;}
  preview(command){
-  const {tool,start,end=start,options={}}=command;
+  let {tool,start,end=start,options={}}=command;const prefab=tool==='prefab'?STRUCTURE_PRESETS[options.preset]:null;if(tool==='prefab'&&!prefab)return {ok:false,error:'Choose a preset structure.'};if(prefab){tool='room';options={...options,width:prefab.width,height:prefab.height};}if(start?.z===3)return previewCanopy(this.editor.map,command,this.size);
   if(!start||![start.x,start.y,start.z??0].every(Number.isInteger))return {ok:false,error:'Choose a map cell.'};
   if(this.block&&(['squad','exit'].includes(tool)||[start,end].some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24)))return {ok:false,error:'Keep block edits inside 24 × 24 tiles; squad and travel markers belong to full maps.'};
   const foliage=['foliage-cover','clear-foliage'].includes(tool),shapeTool=foliage||['cliff','erase-cliff'].includes(tool)?'woodland':tool;
@@ -48,12 +51,13 @@ export class EditingDocument extends InspectionDocument {
     else if(tool==='room'){const w=options.rotated?options.height:options.width,h=options.rotated?options.width:options.height;for(let y=0;y<h;y++)for(let x=0;x<w;x++)cells.push({x:p.x+x,y:p.y+y,z:start.z||0});}
     else cells.push({...p,z:start.z||0});
    }
+   if(prefab)for(const object of prefab.objects){const pos=options.rotated?{x:start.x+prefab.height-1-object.y,y:start.y+object.x}:{x:start.x+object.x,y:start.y+object.y};const error=applyBrush(candidate,'prop',pos.x,pos.y,'',{level:start.z||0,propKind:object.kind,rotated:!!options.rotated});if(error)return {ok:false,error,cells,edges};}
    if(foliage&&!cells.length)return {ok:false,error:tool==='clear-foliage'?'No foliage cover to clear here.':'No uncovered outdoor ground here. Water, structures and props are skipped.',cells,edges};
    // Connectivity is allowed to be temporarily broken while designing a room.
    if(this.block){if(cells.some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24))return {ok:false,error:'The whole footprint must fit inside the block.',cells,edges};validateBlock(extractBlock(candidate.map));}
    if(candidate.map.edgeLocks)for(const key of Object.keys(candidate.map.edgeLocks))if(!EDGES[candidate.map.edges[key]]?.opensTo)delete candidate.map.edgeLocks[key];
    const errors=validateMap(candidate.map,{connectivity:false});
-   return {ok:!errors.length,error:errors[0]||'',cells,edges,map:candidate.map};
+   const named=(options.propKind||'').match(/north|east|south|west/)?.[0],orientation=named?({north:[0,-1],east:[1,0],south:[0,1],west:[-1,0]})[named]:['prop','roof-tile','room'].includes(tool)?options.rotated?[0,1]:[1,0]:null;return {ok:!errors.length,error:errors[0]||'',cells,edges,map:candidate.map,orientation};
   }catch(e){return {ok:false,error:e.message,cells:points,edges};}
  }
  apply(command){const result=this.preview(command);if(result.ok){replaceMap(this.editor,result.map);this.refresh();}return result;}
@@ -91,11 +95,11 @@ export class EditingDocument extends InspectionDocument {
  }
  rename(name){name=name.trim();if(!name||name.length>60)return {ok:false,error:'Use a name from 1 to 60 characters.'};replaceMap(this.editor,{...this.editor.map,name});this.refresh();return {ok:true};}
  rotate(selection){
-  if(selection?.type!=='prop')return {ok:false,error:'Select a prop to rotate.'};
-  if(isCliff(selection.data))return {ok:false,error:'Change cliff corner masks instead of rotating props.'};
+  if(selection?.type==='edge'){const map=structuredClone(this.editor.map),[axis,x,y,z]=selection.edge.split(':'),next=edgeKey(axis==='e'?'s':'e',+x,+y,+(z||0));if(map.edges[next])return {ok:false,error:'The rotated boundary is occupied.'};map.edges[next]=map.edges[selection.edge];delete map.edges[selection.edge];if(map.edgeLocks?.[selection.edge]){map.edgeLocks[next]=map.edgeLocks[selection.edge];delete map.edgeLocks[selection.edge];}try{this.replace(map);return {ok:true};}catch(e){return {ok:false,error:e.message};}}if(selection?.type==='tile'){const info=diagonalRoad(selection.data.terrain);if(!info)return {ok:false,error:'This terrain has no directional variant.'};return this.apply({tool:'texture',start:selection,options:{groundKind:selection.data.terrain.replace('-'+info.corner,'-'+ROAD_CORNERS[(ROAD_CORNERS.indexOf(info.corner)+1)%4])}});}if(selection?.type==='unit'){const map=structuredClone(this.editor.map),all=[...map.starts,...map.guards],p=all.find(p=>p.character?.id===selection.data.character?.id&&p.x===selection.x&&p.y===selection.y);if(!p)return {ok:false,error:'Character no longer exists.'};p.heading=((p.heading||0)+90)%360;this.replace(map);return {ok:true};}if(selection?.type==='prop'&&selection.data.z===3){const map=structuredClone(this.editor.map),p=map.canopies.find(p=>p.x===selection.data.x&&p.y===selection.data.y);if(!p)return {ok:false,error:'Roof no longer exists.'};p.rotated=!p.rotated;this.replace(map);return {ok:true};}if(selection?.type!=='prop')return {ok:false,error:'Select an object to rotate.'};
+  if(isCliff(selection.data)){const map=structuredClone(this.editor.map),p=map.props.find(p=>p.x===selection.data.x&&p.y===selection.data.y&&(p.z||0)===(selection.data.z||0)),mask=p.cliffMask??15;p.cliffMask=((mask<<1)&15)|(mask>>3);try{this.replace(map);return {ok:true};}catch(e){return {ok:false,error:e.message};}}if(isRamp(selection.data)||selection.data.kind.startsWith('rampbank-')){const map=structuredClone(this.editor.map),p=map.props.find(p=>p.x===selection.data.x&&p.y===selection.data.y&&(p.z||0)===(selection.data.z||0));p.kind=p.kind.replace(/north|east|south|west/,d=>({north:'east',east:'south',south:'west',west:'north'})[d]);try{this.replace(map);return {ok:true};}catch(e){return {ok:false,error:e.message};}}
   const p=selection.data,candidate=createEditor(this.editor.map);applyBrush(candidate,'erase-prop',p.x,p.y,'',{level:p.z||0});
   const error=applyBrush(candidate,'prop',p.x,p.y,'',{level:p.z||0,propKind:p.kind,rotated:!p.rotated});
-  if(error)return {ok:false,error};if(p.condition!==undefined)candidate.map.props.at(-1).condition=p.condition;if(p.lightMode)candidate.map.props.at(-1).lightMode=p.lightMode;if(p.lightTargets)candidate.map.props.at(-1).lightTargets=structuredClone(p.lightTargets);const errors=validateMap(candidate.map,{connectivity:false});if(errors.length)return {ok:false,error:errors[0]};
+  if(error)return {ok:false,error};Object.assign(candidate.map.props.at(-1),structuredClone(p),{rotated:!p.rotated});if(p.condition!==undefined)candidate.map.props.at(-1).condition=p.condition;if(p.lightMode)candidate.map.props.at(-1).lightMode=p.lightMode;if(p.lightTargets)candidate.map.props.at(-1).lightTargets=structuredClone(p.lightTargets);const errors=validateMap(candidate.map,{connectivity:false});if(errors.length)return {ok:false,error:errors[0]};
   if(this.block){try{validateBlock(extractBlock(candidate.map));}catch(e){return {ok:false,error:e.message};}}
   replaceMap(this.editor,candidate.map);this.refresh();return {ok:true};
  }

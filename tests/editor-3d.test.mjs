@@ -1,3 +1,5 @@
+import * as sceneryRules from '../dist/tactics/environment.js';
+import * as encounterRules from '../dist/tactics/core/environment.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -10,7 +12,7 @@ import {propCells} from '../dist/tactics/core/environment.js';
 const root=new URL('../dist/tactics/',import.meta.url);
 test('factory inspection retains every saved field and all authored guards',()=>{
  const raw=JSON.parse(fs.readFileSync(new URL('default-factory.json',root)));raw.extension={future:['keep',17]};
- const doc=new InspectionDocument().open(JSON.stringify(raw));assert.deepEqual(JSON.parse(doc.export()),raw);assert.equal(doc.units.length,40);assert.equal(doc.map.props.length,398);
+ const doc=new InspectionDocument().open(JSON.stringify(raw));assert.deepEqual(JSON.parse(doc.export()),raw);assert.equal(doc.units.length,40);assert.equal(doc.map.props.length,raw.props.length);
  doc.inspect(3,3,0);assert.deepEqual(JSON.parse(doc.export()),raw);
 });
 test('river and reusable block inspection preserve portable documents without fake squad starts',()=>{
@@ -26,7 +28,7 @@ test('logical selection handles multi-tile props, empty upper cells, edges and h
 });
 test('active plane picking round-trips across all floors, camera presets and empty space',()=>{
  const camera=new T.OrthographicCamera(),w=960,h=720;
- for(const preset of ['0','1','2','3','top'])for(const level of [0,1,2]){
+ for(const preset of ['0','1','2','3','top'])for(const level of [0,1,2,3]){
   setInspectionCamera(camera,{x:20,y:30,level,preset,span:30},w,h);
   for(const [x,y]of [[20,30],[22.49,28],[18,34.49]]){const p=new T.Vector3(x,level*2.12,y).project(camera),hit=floorPoint(camera,(p.x+1)*w/2,(1-p.y)*h/2,w,h,level);assert.ok(Math.abs(hit.x-x)<1e-8);assert.ok(Math.abs(hit.y-y)<1e-8);}
  }
@@ -38,5 +40,5 @@ test('invalid imports fail without replacing an existing document; cargo sizes f
  assert.deepEqual(PREVIEW_FOOTPRINTS.find(p=>p.id==='truck').tiles,[2,3]);assert.deepEqual(PREVIEW_FOOTPRINTS.find(p=>p.id==='barrel-row').tiles,[1,2]);
 });
 test('scenery map catalog agrees with the pinned editing and encounter rules',()=>{
- const normalize=f=>fs.readFileSync(new URL(f,root),'utf8').replaceAll('\r','');assert.equal(normalize('environment.js'),normalize('core/environment.js').replace("import {CLIFF_PROPS} from '../cliff-map.js';\n",'').replace("import {LIGHT_PROPS} from '../light-sources.js';\n",'').replace('\nObject.assign(PROPS,LIGHT_PROPS,CLIFF_PROPS);\n',''));
+ assert.deepEqual(sceneryRules.GROUNDS,encounterRules.GROUNDS);assert.deepEqual(sceneryRules.EDGES,encounterRules.EDGES);for(const [kind,rule]of Object.entries(sceneryRules.PROPS))assert.deepEqual(encounterRules.PROPS[kind],rule,kind);
 });

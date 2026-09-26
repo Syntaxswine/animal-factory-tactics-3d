@@ -1,3 +1,4 @@
+import {canopyErrors} from './editor-canopies.js';
 import {STAT_DEFINITIONS} from './character-stats.js';
 import {TOOLS} from './inventory-tools.js';
 import {GROUNDS,EDGES,PROPS} from './core/environment.js';
@@ -9,7 +10,7 @@ const fail=()=>{throw Error('This save is damaged or incomplete. Your current en
 const terrain=new Set(['yard','floor','crate','void','water','bridge','woodland',...GROUNDS]);
 const finite=n=>Number.isFinite(n)&&n>=0;
 export function validateSavedState(s){
- if(!s||!s.definition||validateMap(s.definition,{connectivity:false}).length)fail();
+ if(!s||!s.definition||validateMap(s.definition,{connectivity:false}).length||canopyErrors(s).length)fail();
  if(!['explore','player','enemy','won','lost'].includes(s.phase)||!Number.isInteger(s.round)||s.round<0||!finite(s.clock?.minutes)||!Number.isInteger(s.enemyIndex)||s.enemyIndex<0)fail();
  if(!Array.isArray(s.map)||s.map.length!==s.definition.height||s.map.some(r=>!Array.isArray(r)||r.length!==s.definition.width||r.some(t=>!terrain.has(t))))fail();
  for(const key of ['upper','props','stairs','climbs','units','loot','log','queue'])if(!Array.isArray(s[key]))fail();

@@ -78,7 +78,7 @@ export class InspectionScene {
  rebuild(){
   if(!this.document)return;const started=performance.now(),{level,roofs,walls}=this.options,source=this.document.map;
   this.cliffs.rebuild(source,level,{editor:true});
-  const map={...source,coverOccupiedProps:source.props,props:source.props.filter(p=>!PAINTED_PROP_FORMS[p.kind]&&(roofs||!p.kind.startsWith('roof-')))};
+  const map={...source,canopies:roofs?source.canopies:[],coverOccupiedProps:source.props,props:source.props.filter(p=>!PAINTED_PROP_FORMS[p.kind]&&(roofs||!p.kind.startsWith('roof-')))};
   const world={...this.world,boxes:this.world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood')&&(walls||!b.source.edge)&&(roofs||b.kind!=='roof'))};
   const groups=new Map(),matrix=new T.Matrix4(),q=new T.Quaternion(),yaw=new T.Quaternion(),euler=new T.Euler(),position=new T.Vector3(),scale=new T.Vector3();
   const add=(geometry,material,m,z,x,y)=>{const mat=this.dim(material,z),key=`${Math.floor(x/16)},${Math.floor(y/16)}:${geometry.uuid}:${mat.uuid}`;if(!groups.has(key))groups.set(key,{geometry,material:mat,matrices:[]});groups.get(key).matrices.push(m.clone());};
@@ -113,11 +113,13 @@ export class InspectionScene {
  draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.lights.update(this.document?.map,this.options.level,this.previewMinutes??mapStartMinutes(this.document?.map),this.reducedMotion?.matches?null:performance.now()/1000,true);this.daylight.update(this.previewMinutes??mapStartMinutes(this.document?.map),this.camera,0,true);this.lights.render(this.renderer,this.camera);}
  pick(x,y,width,height){return floorPoint(this.camera,x,y,width,height,this.options.level);}
  preview(result){
+  if(this.previewArrow){this.previewArrow.removeFromParent();this.previewArrow.line.material.dispose();this.previewArrow.cone.material.dispose();this.previewArrow=null;}
   if(this.previewMesh){this.previewMesh.removeFromParent();this.previewMesh.geometry.dispose();this.previewMesh.material.dispose();this.previewMesh.dispose();this.previewMesh=null;}
   if(!result){this.select(null);return;}
   const cells=result.cells||[],z=this.options.level;
   const geometry=new T.PlaneGeometry(.98,.98),material=new T.MeshBasicMaterial({color:result.ok?0x91ddba:0xff6655,transparent:true,opacity:.4,depthTest:false,side:T.DoubleSide});
   const mesh=new T.InstancedMesh(geometry,material,cells.length),matrix=new T.Matrix4();cells.forEach((p,i)=>{matrix.makeRotationX(-Math.PI/2);matrix.setPosition(p.x,z*D.floorSpacing+.06,p.y);mesh.setMatrixAt(i,matrix);});mesh.renderOrder=19;mesh.frustumCulled=false;this.scene.add(mesh);this.previewMesh=mesh;
+  if(result.orientation&&cells.length){const x=cells.reduce((n,p)=>n+p.x,0)/cells.length,y=cells.reduce((n,p)=>n+p.y,0)/cells.length;this.previewArrow=new T.ArrowHelper(new T.Vector3(result.orientation[0],0,result.orientation[1]),new T.Vector3(x,z*D.floorSpacing+.12,y),1.6,0xffe5a5,.4,.25);for(const part of [this.previewArrow.line,this.previewArrow.cone]){part.material.depthTest=false;part.renderOrder=21;}this.scene.add(this.previewArrow);}
   this.highlight.material.color.setHex(result.ok?0xffe5a5:0xff6655);this.select(result.edges?.length?{type:'edge',edges:result.edges}:{cells});
  }
  clearMarkers(){for(const object of this.markers.children)if(object.isArrowHelper||object.type==='ArrowHelper'){object.line.material.dispose();object.cone.material.dispose();}this.markers.clear();}

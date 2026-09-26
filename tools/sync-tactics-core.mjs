@@ -1,3 +1,4 @@
+import {adaptCoreCanopies,canopyOverrides} from './core-canopy-adapter.mjs';
 import {adaptCoreRoofs,roofOverrides} from './core-roof-adapter.mjs';
 import {adaptCoreRamps,rampOverrides} from './core-ramp-adapter.mjs';
 import {adaptCoreRoads,roadOverrides} from './core-road-adapter.mjs';
@@ -19,8 +20,8 @@ const files={},overrides={},pending=['engine.js','world.js','editor-model.js','b
 while(pending.length){
  const name=pending.pop();if(files[name])continue;
  if(!/^[\w-]+\.js$/.test(name))throw Error('Unexpected core dependency: '+name);
- const upstream=git('show',`${revision}:dist/tactics/${name}`),data=adaptCoreRoofs(name,adaptCoreRamps(name,adaptCoreRoads(name,adaptCoreCharacters(name,adaptCoreCliffs(name,adaptCoreClock(name,upstream))))));
- if(roofOverrides[name]||rampOverrides[name]||roadOverrides[name]||clockOverrides[name]||cliffOverrides[name]||characterOverrides[name])overrides[name]={reason:[roofOverrides[name],rampOverrides[name],roadOverrides[name],clockOverrides[name],cliffOverrides[name],characterOverrides[name]].filter(Boolean).join(' '),upstreamSha256:createHash('sha256').update(upstream).digest('hex')};
+ const upstream=git('show',`${revision}:dist/tactics/${name}`),data=adaptCoreCanopies(name,adaptCoreRoofs(name,adaptCoreRamps(name,adaptCoreRoads(name,adaptCoreCharacters(name,adaptCoreCliffs(name,adaptCoreClock(name,upstream)))))));
+ if(canopyOverrides[name]||roofOverrides[name]||rampOverrides[name]||roadOverrides[name]||clockOverrides[name]||cliffOverrides[name]||characterOverrides[name])overrides[name]={reason:[canopyOverrides[name],roofOverrides[name],rampOverrides[name],roadOverrides[name],clockOverrides[name],cliffOverrides[name],characterOverrides[name]].filter(Boolean).join(' '),upstreamSha256:createHash('sha256').update(upstream).digest('hex')};
  files[name]=createHash('sha256').update(data).digest('hex');
  for(const match of data.toString().matchAll(/(?:from\s*|import\s*)['"]\.\/([^'"]+)['"]/g))pending.push(match[1]);
  if(check){if(!fs.readFileSync(path.join(out,name)).equals(data))throw Error('Core differs from upstream: '+name);}

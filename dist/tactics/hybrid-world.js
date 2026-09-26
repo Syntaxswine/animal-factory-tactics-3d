@@ -1,3 +1,4 @@
+import {canopyPresentation} from './editor-canopies.js';
 import {roofVisualKind} from './climbable-roofs.js';
 import {isRampBank} from './ramp-banks.js';
 import {isRamp,rampInfo,RAMP_PROPS} from './cliff-ramps.js';
@@ -21,7 +22,7 @@ export function projectWorld([x,y,z],{azimuth,elevation}=GAME_CAMERA){
 const supportedProps=new Set(Object.keys(PROPS));
 const grounds=new Set(['yard','floor','bridge','woodland','water',...GROUNDS]);
 const chunk=8, D=DIMENSIONS;
-export function buildWorld(map){
+export function buildWorld(map){map=canopyPresentation(map);
  const boxes=[],diagnostics=[],ids=new Set();
  let hasWoodland=false;
  const roofs=new Map();for(const p of map.props||[])if(p.kind.startsWith('roof-'))for(const q of propCells(p))roofs.set(`${q.x},${q.y},${q.z}`,p);

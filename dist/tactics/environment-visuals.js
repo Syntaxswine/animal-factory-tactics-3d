@@ -1,3 +1,4 @@
+import {canopyPresentation} from './editor-canopies.js';
 import {roofVisualKind} from './climbable-roofs.js';
 import {bankInfo,BANK_YAW} from './ramp-banks.js';
 import {isRamp,rampInfo} from './cliff-ramps.js';
@@ -8,7 +9,7 @@ import {DIMENSIONS as D} from './hybrid-world.js';
 import {grassTufts,coverUndergrowth} from './foliage-models.js';
 
 // The visual catalog deliberately does not replace simulation collision volumes.
-export function environmentVisuals(world,map){
+export function environmentVisuals(world,map){map=canopyPresentation(map);
  const result=world.boxes.filter(b=>b.kind!=='prop'&&!b.id.includes(':slope:'));
  const occupied=new Set((map.coverOccupiedProps||map.props||[]).flatMap(p=>(isCliff(p)?[p]:propCells(p)).map(c=>`${c.x},${c.y},${p.z||0}`)));
  for(const b of world.boxes)if(!occupied.has(`${b.source.x},${b.source.y},${b.source.z||0}`))result.push(...grassTufts(b),...coverUndergrowth(b));
