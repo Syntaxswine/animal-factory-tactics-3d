@@ -11,6 +11,7 @@ test('encounter loads the complete authored factory rather than the training tem
  const roofs=map.props.filter(p=>p.kind.startsWith('roof-climbable-'));
  assert.equal(roofs.length,38); // Includes the two original demo roofs, now climbable.
  for(const [x,y,w,h,kind] of [[8,1,8,8,'flat'],[13,12,10,8,'sloped']])for(let dy=0;dy<h;dy+=2)for(let dx=0;dx<w;dx+=2)assert(roofs.some(p=>p.x===x+dx&&p.y===y+dy&&p.z===1&&p.kind==='roof-climbable-corrugated-'+kind));assert.equal(Object.keys(map.edges).length,1576);
+ for(const field of ['props','guards','edges','terrain','upper'])assert.deepEqual(map[field],JSON.parse(raw)[field],field);
  assert.deepEqual(JSON.parse(raw),JSON.parse(fs.readFileSync(new URL('../Factory-test.json',import.meta.url))));
 });
 test('a missing or malformed authored map fails visibly instead of falling back',async()=>{
