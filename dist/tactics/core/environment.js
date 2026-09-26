@@ -1,3 +1,4 @@
+import {ROOF_KINDS,climbableRoofKind} from '../climbable-roofs.js';
 import {BANK_PROPS} from '../ramp-banks.js';
 import {RAMP_PROPS} from '../cliff-ramps.js';
 import {DIAGONAL_ROADS} from '../diagonal-roads.js';
@@ -27,7 +28,7 @@ for(const [kind,{base,scale}]of Object.entries(TREE_VARIANTS))PROPS[kind]={...PR
 PROPS.bush={w:1,h:1,cover:25,solid:false,visualHeight:32};
 PROPS.reeds={w:1,h:1,cover:0,solid:false,visualHeight:48};
 // Whole walkable roof modules, drawn underneath actors on an existing supported level.
-for(const kind of ['roof-corrugated-flat','roof-corrugated-sloped','roof-flat-parapet'])PROPS[kind]={w:2,h:2,cover:kind==='roof-flat-parapet'?25:0,solid:false,groundLayer:true};
+for(const kind of [...ROOF_KINDS,...ROOF_KINDS.map(climbableRoofKind)])PROPS[kind]={w:2,h:2,cover:kind.endsWith('flat-parapet')?25:0,solid:false,groundLayer:true};
 for(const kind of ['wooden-crate','supply-chest','medicine-cabinet','toolbox'])for(const state of ['closed','open'])PROPS[kind+'-'+state]={w:1,h:1,cover:kind==='toolbox'?0:25,solid:true,tall:kind==='medicine-cabinet'};
 for(const kind of ['first-aid-kit','wire-cutters','spare-parts','gun-pistol','gun-rifle','gun-assault','ammo-pistol','ammo-rifle','ammo-assault'])PROPS[kind]={w:1,h:1,cover:0,solid:false,visualHeight:12};
 EDGES['fence-cut'].art='fence-cut';

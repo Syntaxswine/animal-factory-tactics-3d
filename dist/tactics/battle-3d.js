@@ -75,7 +75,7 @@ function sync(){
  for(const [key,aim] of Object.entries(AIM_LEVELS))$('aim-level').querySelector('[value='+key+']').textContent=aim.label+' · '+shotAim(WEAPONS[u.weapon],key).cost+' AP';
  $('aim-level').disabled=!supportsAim(WEAPONS[u.weapon]);
  $('fire').disabled=paused()||renderer.busy||!preview?.ok||!canControl(state,u)||!!state.queue.length;
- const climb=climbPreview(state,u,level);climbButton.textContent=climb.label+(combatCosts(state)?' · '+(climb.cost??3)+' AP':climb.kind==='tower'?' · 30 sec':'');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||'Use the stairs or ladder at the gold entrance ring.';
+ const climb=climbPreview(state,u,level);climbButton.textContent=climb.label+(combatCosts(state)?' · '+(climb.cost??3)+' AP':climb.kind==='tower'?' · 30 sec':'');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||(climb.kind==='roof'?'Climb this roof edge.':climb.kind==='tower'?'Use the stairs or ladder at the gold entrance ring.':'Use this ladder or stair connection.');
  $('reload').disabled=paused()||renderer.busy||!canControl(state,u)||!!state.queue.length||!WEAPONS[u.weapon].mag;
  $('end').disabled=paused()||renderer.busy||state.phase!=='player'||!!state.queue.length;
  $('stop').disabled=paused()||!state.queue.length;
@@ -119,7 +119,7 @@ function action(fn){if(paused()||renderer.busy)return;const ok=fn();renderer.cap
  document.querySelector('header a').onclick=async e=>{e.preventDefault();const href=e.currentTarget.href;try{await saveGame('auto');location.href=href;}catch(error){message('Could not save before leaving: '+error.message);}};
  $('restart').onclick=async()=>{try{await saveGame('auto');restart();}catch(e){message('Restart cancelled: could not preserve the autosave. '+e.message);}};$('center').onclick=center;$('overview').onclick=overview;
  $('reload').onclick=()=>action(()=>reload(state,selected()));$('end').onclick=()=>action(()=>endTurn(state));
- climbButton.onclick=()=>action(()=>{const preview=climbPreview(state,selected(),level),ok=performClimb(state,selected(),level);if(ok&&preview.kind==='ladder'){level=preview.destination.z;$('floor').value=level;}return ok;});
+ climbButton.onclick=()=>action(()=>{const preview=climbPreview(state,selected(),level),ok=performClimb(state,selected(),level);if(ok&&preview.kind!=='tower'){level=preview.destination.z;$('floor').value=level;}return ok;});
  $('aim-level').onchange=()=>{lastUI='';sync();};
  $('fire').onclick=()=>action(()=>{const t=target();return t&&attack(state,selected(),t,false,false,'torso',false,$('aim-level').value);});
  $('stop').onclick=()=>{if(paused())return;state.queue=[];sync();};$('floor').onchange=()=>{level=+$('floor').value;sync();};

@@ -1,3 +1,4 @@
+import {roofVisualKind} from './climbable-roofs.js';
 import {bankInfo,BANK_YAW} from './ramp-banks.js';
 import {isRamp,rampInfo} from './cliff-ramps.js';
 import {isCliff} from './cliff-map.js';
@@ -22,7 +23,7 @@ export function environmentVisuals(world,map){
   const rule=PROPS[p.kind];if(!rule)continue;
   const id=`prop:${p.x},${p.y},${p.z||0}:${p.kind}`,source={prop:id,x:p.x,y:p.y,z:p.z||0},base=(p.z||0)*D.floorSpacing;
   if(p.kind.startsWith('roof-')){
-   if(p.kind==='roof-corrugated-sloped')add(id+':sheet',source,'roof','metal',[p.x+.5,base-D.slab-.16,p.y+.5],[2,.32,2],'wedge',[0,p.rotated?-Math.PI/2:0,0]);
+   if(roofVisualKind(p.kind)==='roof-corrugated-sloped')add(id+':sheet',source,'roof','metal',[p.x+.5,base-D.slab-.16,p.y+.5],[2,.32,2],'wedge',[0,p.rotated?-Math.PI/2:0,0]);
    // Corrugation and folded eaves remain below the walkable top of the roof.
    if(p.kind.includes('corrugated'))for(let i=0;i<14;i++)add(id+':rib:'+i,source,'roof','metal',p.rotated?[p.x+.5,base-.007,p.y-.45+i*.145]:[p.x-.45+i*.145,base-.007,p.y+.5],p.rotated?[2,.018,.025]:[.025,.018,2]);
    continue;

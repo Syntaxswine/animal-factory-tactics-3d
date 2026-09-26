@@ -1,3 +1,4 @@
+import {automaticRoofClimbs} from '../climbable-roofs.js';
 import {rampSupportAt} from '../cliff-ramps.js';
 import {applyRuntimeCharacter,combatBehavior,hostileToPlayer,playerThreat,provokeCharacter} from '../character-properties.js';
 import {updateCliffSupports} from '../cliff-support.js';
@@ -237,7 +238,7 @@ export function setStance(s,u,stance){
  if(combatCosts(s))u.ap-=2;u.overwatch=null;u.stance=stance;refresh(s);log(s,u.name+' is '+stance+'.');return true;
 }
 
-export function navigationState(s){const known=p=>s.seen.has(key(p.x,p.y,levelOf(p))),knowledge=new Set(s.seen);for(const p of s.climbs)if(known(p)||known({x:p.x+p.dx,y:p.y+p.dy,z:p.z+1}))for(const q of [p,{x:p.x,y:p.y,z:p.z+1},{x:p.x+p.dx,y:p.y+p.dy,z:p.z+1}])knowledge.add(key(q.x,q.y,q.z));return {...s,knowledge,edges:Object.fromEntries(Object.entries(s.edges).filter(([k])=>edgeCells(k).some(known))),props:s.props.filter(p=>propCells(p).some(known)),stairs:s.stairs.filter(p=>known(p)||known({...p,z:p.z+1})),climbs:s.climbs.filter(p=>known(p)||known({x:p.x+p.dx,y:p.y+p.dy,z:p.z+1})),units:s.units.filter(p=>p.team==='squad'||s.detected.has(p.id))};}
+export function navigationState(s){const climbs=[...s.climbs,...automaticRoofClimbs(s)];const known=p=>s.seen.has(key(p.x,p.y,levelOf(p))),knowledge=new Set(s.seen);for(const p of climbs)if(known(p)||known({x:p.x+p.dx,y:p.y+p.dy,z:p.z+1}))for(const q of [p,{x:p.x,y:p.y,z:p.z+1},{x:p.x+p.dx,y:p.y+p.dy,z:p.z+1}])knowledge.add(key(q.x,q.y,q.z));return {...s,knowledge,edges:Object.fromEntries(Object.entries(s.edges).filter(([k])=>edgeCells(k).some(known))),props:s.props.filter(p=>propCells(p).some(known)),stairs:s.stairs.filter(p=>known(p)||known({...p,z:p.z+1})),climbs:climbs.filter(p=>known(p)||known({x:p.x+p.dx,y:p.y+p.dy,z:p.z+1})),units:s.units.filter(p=>p.team==='squad'||s.detected.has(p.id))};}
 export function navigationPath(s,u,x,y,z=levelOf(u)){if(!inBounds(x,y,z))return null;return pathTo(navigationState(s),u,x,y,z);}
 
 export function move(s,u,x,y,z=levelOf(u)){

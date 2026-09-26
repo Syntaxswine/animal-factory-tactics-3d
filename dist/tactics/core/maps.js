@@ -1,3 +1,4 @@
+import {automaticRoofLinksAt} from '../climbable-roofs.js';
 import {rampMoveAllowed,rampLinks,rampErrors,rampInfo,isRamp} from '../cliff-ramps.js';
 import {characterErrors} from '../character-properties.js';
 import {towerForUnit,towerEntry} from '../tower-geometry.js';
@@ -36,7 +37,7 @@ export const roofTop=p=>({x:p.x+p.dx,y:p.y+p.dy,z:p.z+1});
 export const roofValid=(m,p)=>inBounds(p.x,p.y,p.z)&&p.z<2&&Math.abs(p.dx)+Math.abs(p.dy)===1&&Number.isInteger(p.dx)&&Number.isInteger(p.dy)&&passable(m,p)&&passable(m,roofTop(p))&&terrainAt(m,p.x,p.y,p.z+1)==='void'&&!blockedEdge(m,{x:p.x,y:p.y,z:p.z+1},roofTop(p));
 const roofCache=new WeakMap();
 function roofIndex(m){const links=m.climbs;if(!links)return new Map();if(roofCache.has(links))return roofCache.get(links);const index=new Map();for(const p of links)for(const q of [p,roofTop(p)]){const k=tileKey(q.x,q.y,q.z);if(!index.has(k))index.set(k,[]);index.get(k).push(p);}roofCache.set(links,index);return index;}
-export function roofNeighbors(m,p){return (roofIndex(m).get(tileKey(p.x,p.y,levelOf(p)))||[]).filter(q=>roofValid(m,q)).map(q=>({...((levelOf(p)===q.z)?roofTop(q):{x:q.x,y:q.y,z:q.z}),cost:q.kind==='cliff'?8:6,kind:q.kind==='cliff'?'cliff':'roof'}));}
+export function roofNeighbors(m,p){return [...(roofIndex(m).get(tileKey(p.x,p.y,levelOf(p)))||[]),...automaticRoofLinksAt(m,p)].filter((q,i,all)=>all.findIndex(r=>r.x===q.x&&r.y===q.y&&r.z===q.z&&r.dx===q.dx&&r.dy===q.dy)===i&&roofValid(m,q)).map(q=>({...((levelOf(p)===q.z)?roofTop(q):{x:q.x,y:q.y,z:q.z}),cost:q.kind==='cliff'?8:6,kind:q.kind==='cliff'?'cliff':'roof'}));}
 export function roofEndpoint(m,p){return (m.climbs||[]).some(q=>[q,roofTop(q)].some(r=>r.x===p.x&&r.y===p.y&&r.z===levelOf(p)));}
 
 export function canStep(m,a,b){return neighbors(m,a).some(p=>p.x===b.x&&p.y===b.y&&p.z===levelOf(b));}

@@ -1,3 +1,4 @@
+import {roofVisualKind} from './climbable-roofs.js';
 import {isRampBank} from './ramp-banks.js';
 import {isRamp,rampInfo,RAMP_PROPS} from './cliff-ramps.js';
 import {cliffSupportAt} from './cliff-support.js';
@@ -65,10 +66,10 @@ export function buildWorld(map){
   if(p.kind.startsWith('roof-')){
    // Roof slabs remain at their saved floor index. Edge details use real geometry.
    const h=(p.z||0)*D.floorSpacing,source={prop:id,x:p.x,y:p.y,z:p.z||0};
-   if(p.kind==='roof-flat-parapet')for(const [suffix,c,size]of [['west',[p.x-.44,h+.2,p.y+.5],[.12,.4,2]],['east',[p.x+1.44,h+.2,p.y+.5],[.12,.4,2]],['north',[p.x+.5,h+.2,p.y-.44],[2,.4,.12]],['south',[p.x+.5,h+.2,p.y+1.44],[2,.4,.12]]])box(id+':'+suffix,'roof','concrete',c,size,source);
+   if(roofVisualKind(p.kind)==='roof-flat-parapet')for(const [suffix,c,size]of [['west',[p.x-.44,h+.2,p.y+.5],[.12,.4,2]],['east',[p.x+1.44,h+.2,p.y+.5],[.12,.4,2]],['north',[p.x+.5,h+.2,p.y-.44],[2,.4,.12]],['south',[p.x+.5,h+.2,p.y+1.44],[2,.4,.12]]])box(id+':'+suffix,'roof','concrete',c,size,source);
    // Sloped sheet undersides rise to the existing walkable datum: feet stay on the
    // canonical floor. Eight thin strips are an explicit low-poly approximation.
-   if(p.kind==='roof-corrugated-sloped')for(let i=0;i<8;i++){const depth=.04+(7-i)*.035;box(id+':slope:'+i,'roof','metal',p.rotated?[p.x+.5,h-D.slab-depth/2,p.y-.5+(i+.5)/4]:[p.x-.5+(i+.5)/4,h-D.slab-depth/2,p.y+.5],p.rotated?[2,depth,.25]:[.25,depth,2],source);}
+   if(roofVisualKind(p.kind)==='roof-corrugated-sloped')for(let i=0;i<8;i++){const depth=.04+(7-i)*.035;box(id+':slope:'+i,'roof','metal',p.rotated?[p.x+.5,h-D.slab-depth/2,p.y-.5+(i+.5)/4]:[p.x-.5+(i+.5)/4,h-D.slab-depth/2,p.y+.5],p.rotated?[2,depth,.25]:[.25,depth,2],source);}
    continue;
   }
   const cells=propCells(p),xs=cells.map(q=>q.x),ys=cells.map(q=>q.y),w=Math.max(...xs)-p.x+1,d=Math.max(...ys)-p.y+1;
