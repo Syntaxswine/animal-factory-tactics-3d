@@ -6,7 +6,7 @@ import {nearbyLoot} from './battle-inventory.js';
 import {nearbyInteractions,performInteraction} from './field-actions.js';
 import {createCharacterScreen} from './character-screen.js';
 import {AIM_LEVELS,shotAim,supportsAim} from './aim-levels.js';
-import {climbTower,towerClimbPreview} from './tower-actions.js';
+import {climbPreview,performClimb} from './ladder-actions.js';
 import {TOWER_HEIGHT} from './tower-geometry.js';
 import {illuminationAt} from './awareness.js';
 import {FrameClock,formatClock,timeOfDay,turnBased} from './game-clock.js';
@@ -63,7 +63,7 @@ function sync(){
  selectedIds=pruneSelection(state,selectedIds);
  if(selectedIds.size&&!selectedIds.has(state.selected))state.selected=[...selectedIds][0];
  const u=selected(),t=target(),preview=t?previewAttack(state,u,t,false,'torso',null,$('aim-level').value):null;
- const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,Math.floor(v.stamina),v.medkits,v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,renderer.traversal.preparing,userPaused]);
+ const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,level,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,Math.floor(v.stamina),v.medkits,v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,renderer.traversal.preparing,userPaused]);
  if(signature===lastUI)return;lastUI=signature;
  fieldPanel.replaceChildren();for(const entry of nearbyInteractions(state,u)){const b=document.createElement('button'),p=entry.preview;b.textContent=entry.label+' · '+(p.cost?p.cost+' AP':'1 min')+(p.chance!==undefined?' · '+p.chance+'%':'')+(p.amount>0?' · +'+Math.floor(p.amount):'');b.disabled=paused()||renderer.busy||!p.ok;b.title=p.reason||('Stamina cost: '+p.stamina);b.onclick=()=>action(()=>performInteraction(state,selected(),entry.kind,entry.target));fieldPanel.append(b);}
  for(const entry of nearbyCliffClimbs(state,u)){const b=document.createElement('button');b.textContent=entry.label+' · 8 AP';b.disabled=paused()||renderer.busy||!entry.ok;b.title=entry.reason||'Traverse this ledge';b.onclick=()=>action(()=>move(state,selected(),entry.to.x,entry.to.y,entry.to.z));fieldPanel.append(b);}
@@ -75,7 +75,7 @@ function sync(){
  for(const [key,aim] of Object.entries(AIM_LEVELS))$('aim-level').querySelector('[value='+key+']').textContent=aim.label+' · '+shotAim(WEAPONS[u.weapon],key).cost+' AP';
  $('aim-level').disabled=!supportsAim(WEAPONS[u.weapon]);
  $('fire').disabled=paused()||renderer.busy||!preview?.ok||!canControl(state,u)||!!state.queue.length;
- const climb=towerClimbPreview(state,u);climbButton.textContent=(climb.descending?'Descend tower':'Climb tower')+(combatCosts(state)?' · 6 AP':' · 30 sec');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||'Use the stairs or ladder at the gold entrance ring.';
+ const climb=climbPreview(state,u,level);climbButton.textContent=climb.label+(combatCosts(state)?' · '+(climb.cost??3)+' AP':climb.kind==='tower'?' · 30 sec':'');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||'Use the stairs or ladder at the gold entrance ring.';
  $('reload').disabled=paused()||renderer.busy||!canControl(state,u)||!!state.queue.length||!WEAPONS[u.weapon].mag;
  $('end').disabled=paused()||renderer.busy||state.phase!=='player'||!!state.queue.length;
  $('stop').disabled=paused()||!state.queue.length;
@@ -119,10 +119,10 @@ function action(fn){if(paused()||renderer.busy)return;const ok=fn();renderer.cap
  document.querySelector('header a').onclick=async e=>{e.preventDefault();const href=e.currentTarget.href;try{await saveGame('auto');location.href=href;}catch(error){message('Could not save before leaving: '+error.message);}};
  $('restart').onclick=async()=>{try{await saveGame('auto');restart();}catch(e){message('Restart cancelled: could not preserve the autosave. '+e.message);}};$('center').onclick=center;$('overview').onclick=overview;
  $('reload').onclick=()=>action(()=>reload(state,selected()));$('end').onclick=()=>action(()=>endTurn(state));
- climbButton.onclick=()=>action(()=>climbTower(state,selected()));
+ climbButton.onclick=()=>action(()=>{const preview=climbPreview(state,selected(),level),ok=performClimb(state,selected(),level);if(ok&&preview.kind==='ladder'){level=preview.destination.z;$('floor').value=level;}return ok;});
  $('aim-level').onchange=()=>{lastUI='';sync();};
  $('fire').onclick=()=>action(()=>{const t=target();return t&&attack(state,selected(),t,false,false,'torso',false,$('aim-level').value);});
- $('stop').onclick=()=>{if(paused())return;state.queue=[];sync();};$('floor').onchange=()=>{level=+$('floor').value;};
+ $('stop').onclick=()=>{if(paused())return;state.queue=[];sync();};$('floor').onchange=()=>{level=+$('floor').value;sync();};
 $('pause').onclick=()=>{userPaused=!userPaused;frameClock.reset();sync();};
 document.addEventListener('visibilitychange',()=>{frameClock.reset();sync();if(document.hidden&&!storageBusy&&!autoDisabled&&(performance.now()-lastAuto>=30000||state.round!==autoRound))autosave();});
 window.addEventListener('pageshow',()=>frameClock.reset());
