@@ -22,8 +22,8 @@ test('rectangular props rotate their complete model around the saved footprint a
   for(let i=0;i<normal.length;i++){const p=normal[i],q=rotated[i],x=p.center[0]-(rule.w-1)/2,z=p.center[2]-(rule.h-1)/2;assert(Math.abs(q.center[0]-((rule.h-1)/2-z))<1e-10);assert(Math.abs(q.center[2]-((rule.w-1)/2+x))<1e-10);assert.equal(q.center[1],p.center[1]);assert.equal(q.yaw,-Math.PI/2);}
  }
 });
-test('model primitives have finite triangle surfaces and unit extents, including a continuous roof slope',()=>{
- const geometries=environmentGeometries();try{for(const [name,g]of Object.entries(geometries)){g.computeBoundingBox();const size=g.boundingBox.getSize(new THREE.Vector3());for(const n of size)assert(Math.abs(n-1)<1e-5,name);for(const attribute of [g.attributes.position,g.attributes.normal])assert([...attribute.array].every(Number.isFinite),name);assert((g.index?.count||g.attributes.position.count)>0);}}
+test('model primitives have finite triangle surfaces and explicit extents, including a continuous roof slope',()=>{
+ const geometries=environmentGeometries();try{for(const [name,g]of Object.entries(geometries)){g.computeBoundingBox();const size=g.boundingBox.getSize(new THREE.Vector3());const bank=name.startsWith('rampbank-');assert.deepEqual(size.toArray().map(n=>Math.round(n*1e5)/1e5),bank?[1,2,1]:[1,1,1],name);if(bank){assert.deepEqual(g.boundingBox.min.toArray(),[-.5,0,-.5]);assert.deepEqual(g.boundingBox.max.toArray(),[.5,2,.5]);}for(const attribute of [g.attributes.position,g.attributes.normal])assert([...attribute.array].every(Number.isFinite),name);assert((g.index?.count||g.attributes.position.count)>0);}}
  finally{for(const g of Object.values(geometries))g.dispose();}
 });
 test('all boundary and ground types retain support and windows retain their opening',()=>{

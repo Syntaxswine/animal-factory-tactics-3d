@@ -1,3 +1,4 @@
+import {WOODEN_LIGHT_MOUNT} from './tower-geometry.js';
 import * as THREE from './vendor/three.module.js';
 import {buildStairGuardTower} from './stair-guard-tower.js';
 import {buildWoodenGuardTower} from './wooden-guard-tower.js';
@@ -110,7 +111,7 @@ export function createFurnitureLibrary(atlas,cargo){
 
    }else if(id==='wooden-guard-tower'||id==='wooden-spotlight-tower'){buildWoodenGuardTower(root,{box,wood,iron,skin});
    if(id==='wooden-spotlight-tower'){
-    addSearchlight(root,[-1.35,root.userData.tower.deckHeight,-1.10]).rotation.y=Math.PI;
+    addSearchlight(root,[WOODEN_LIGHT_MOUNT.x,root.userData.tower.deckHeight,WOODEN_LIGHT_MOUNT.y]).rotation.y=Math.PI;
    }
 
   }else if(id==='cooking-fire'){

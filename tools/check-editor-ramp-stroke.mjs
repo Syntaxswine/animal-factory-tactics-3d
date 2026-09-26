@@ -5,7 +5,7 @@ const require=createRequire(import.meta.url),{chromium}=require(process.env.PLAY
 const browser=await chromium.launch({channel:'msedge',headless:true}),page=await browser.newPage({viewport:{width:1400,height:1000}}),errors=[];
 page.on('pageerror',e=>errors.push(e.message));
 try{
- await page.goto('http://127.0.0.1:4323/tactics/editor-3d.html?editing=1');
+ await page.goto((process.env.TACTICS_BASE_URL||'http://127.0.0.1:4323')+'/tactics/editor-3d.html?editing=1');
  await page.waitForFunction(()=>window.editor3d?.document&&!editor3d.loading);
  await page.evaluate(async()=>{await editor3d.apply({tool:'cliff',start:{x:10,y:7,z:0},end:{x:10,y:11,z:0}});});
  await page.click('[data-group=ramps]');

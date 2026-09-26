@@ -1,12 +1,14 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {PROPS} from '../dist/tactics/environment.js';
+import {environmentVisuals} from '../dist/tactics/environment-visuals.js';
+import {environmentGeometries} from '../dist/tactics/environment-geometry.js';
 import {propParts} from '../dist/tactics/hybrid-props.js';
 import {blankMap} from '../dist/tactics/maps.js';
 import {buildWorld,traceWorld,DIMENSIONS} from '../dist/tactics/hybrid-world.js';
 import {createWorld,currentMap,travel} from '../dist/tactics/world.js';
 import {squad,guards,refresh} from '../dist/tactics/engine.js';
 test('catalog silhouettes are finite, distinguish open containers and retain structure openings',()=>{
- for(const [kind,rule]of Object.entries(PROPS)){if(rule.groundLayer)continue;const parts=propParts(kind,rule.w,rule.h,rule.tall?2:.8);assert.ok(parts.length,kind);for(const p of parts){assert.ok(p.center.every(Number.isFinite),kind);assert.ok(p.size.every(n=>Number.isFinite(n)&&n>0),kind);}}
+ for(const [kind,rule]of Object.entries(PROPS)){if(rule.groundLayer)continue;let parts;if(kind.startsWith('ramp-')||kind.startsWith('rampbank-')){const map={terrain:[['yard']],props:[{kind,x:0,y:0,z:0}],edges:{}},world=buildWorld(map);parts=environmentVisuals(world,map).filter(p=>p.kind==='ramp'||p.kind==='ramp-bank');assert.equal(parts.length,kind.startsWith('ramp-')?2:1,kind);const geometries=environmentGeometries();try{for(const p of parts)assert(geometries[p.shape],kind);}finally{Object.values(geometries).forEach(g=>g.dispose());}assert(world.boxes.filter(b=>b.source.prop).every(b=>!b.blocksShot&&!b.blocksSight));}else parts=propParts(kind,rule.w,rule.h,rule.tall?2:.8);assert.ok(parts.length,kind);for(const p of parts){assert.ok(p.center.every(Number.isFinite),kind);assert.ok(p.size.every(n=>Number.isFinite(n)&&n>0),kind);}}
  assert.ok(propParts('wooden-crate-open',1,1,.8).some(p=>p.name==='lid'));
  assert.equal(propParts('wooden-crate-closed',1,1,.8).some(p=>p.name==='lid'),false);
  const m=blankMap();m.props=[{x:8,y:8,z:0,kind:'table-steel'}];const w=buildWorld(m);

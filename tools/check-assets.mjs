@@ -1,7 +1,15 @@
 import {TRUCK_PAINT} from '../dist/tactics/canvas-truck-paint.js';
+import {RAMP_PROPS} from '../dist/tactics/cliff-ramps.js';
+import {BANK_PROPS} from '../dist/tactics/ramp-banks.js';
+import {DIAGONAL_ROADS} from '../dist/tactics/diagonal-roads.js';
+import {ROOF_KINDS,climbableRoofKind} from '../dist/tactics/climbable-roofs.js';
+import {environmentGeometries} from '../dist/tactics/environment-geometry.js';
+import {environmentVisuals} from '../dist/tactics/environment-visuals.js';
+import {buildWorld} from '../dist/tactics/hybrid-world.js';
+import {surfacePixels} from '../dist/tactics/hybrid-materials.js';
 import {CARGO_ATLAS} from '../dist/tactics/painted-cargo.js';
 import {PAINTED_ATLAS} from '../dist/tactics/painted-environment-scene.js';
-import {FOLIAGE_ATLAS} from '../dist/tactics/foliage-materials.js';
+import {FOLIAGE_ATLAS,FOLIAGE_MATERIALS} from '../dist/tactics/foliage-materials.js';
 import {PROPS,EDGES,GROUNDS} from '../dist/tactics/environment.js';
 import {CHARACTER_SPECIES,ARMED_WEAPONS,characterArt} from '../dist/tactics/character-art.js';
 import {readFile,readdir} from 'node:fs/promises';
@@ -49,7 +57,17 @@ for(const type of ['mill','bakery','bottler','dairy'])await checkPNG(`assets/mac
 for(const file of ['index.html','sprites.html','app.js','engine.js','people.js','renderer.js','isometric.js','style.css'])await readFile(new URL(file,root));
 const environment=JSON.parse(await readFile(new URL('assets/environment/manifest.json',root)));
 const artIds=[...Object.keys(PROPS),...new Set(Object.values(EDGES).map(r=>r.art).filter(Boolean)),...GROUNDS];
-assert.deepEqual(environment.assets.map(a=>a.id).sort(),artIds.sort());
+// Procedural assets and roof aliases have real render paths, not independent PNGs.
+const proceduralProps=[...Object.keys(RAMP_PROPS),...Object.keys(BANK_PROPS)],roofAliases=ROOF_KINDS.map(climbableRoofKind),nonRaster=new Set([...proceduralProps,...roofAliases,...DIAGONAL_ROADS]);
+assert.deepEqual(environment.assets.map(a=>a.id).sort(),artIds.filter(id=>!nonRaster.has(id)).sort());
+const geometries=environmentGeometries();
+try{for(const kind of [...proceduralProps,...roofAliases]){
+ assert(PROPS[kind],kind);const z=roofAliases.includes(kind)?1:0,map={terrain:[['yard']],upper:[{'0,0':'floor'}],props:[{kind,x:0,y:0,z}],edges:{}};
+ const parts=environmentVisuals(buildWorld(map),map).filter(p=>p.source.prop?.endsWith(':'+kind));assert(parts.length,kind);
+ for(const p of parts){const g=geometries[p.shape||'box'];assert(g?.attributes.position.count,kind);assert([...g.attributes.position.array].every(Number.isFinite),kind);assert(p.size.every(n=>Number.isFinite(n)&&n>0),kind);}
+}}finally{Object.values(geometries).forEach(g=>g.dispose());}
+for(const kind of ROOF_KINDS)assert(environment.assets.some(a=>a.id===kind),kind);
+for(const kind of DIAGONAL_ROADS){assert(GROUNDS.includes(kind),kind);assert(FOLIAGE_MATERIALS.has(kind),kind);const {data:pixels}=surfacePixels(kind,16);assert.equal(pixels.length,16*16*4,kind);assert(pixels.some(v=>v!==0),kind);}
 for(const a of environment.assets)await checkPNG('assets/environment/'+a.file,1254,1254,a.kind==='terrain'?2:6);
 // Validate the actual runtime overrides as well as catalog paths.
 const active=new Set(environment.assets.map(a=>(DOOR_ART[a.id]||PROP_ART[a.id])?.file||a.file));

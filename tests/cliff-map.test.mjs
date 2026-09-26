@@ -28,8 +28,15 @@ test('invalid cliff edits reject without changing other props, starts or shared 
  assert.equal(paint(d,{cliffMask:1},{x:11,y:10,z:0}).ok,false);assert.equal(d.export(),before);
  assert.equal(paint(d,{cliffMask:16}).ok,false);assert.equal(d.export(),before);
  assert.equal(paint(d,{},d.map.starts[0]).ok,false);assert.equal(d.export(),before);
- assert.equal(d.rotate({type:'prop',data:d.map.props[0]}).ok,false);
+
  assert.ok(cliffMapErrors({props:Array.from({length:513},(_,x)=>({kind:'cliff-ledge',x,y:0}))})[0].includes('512'));
+});
+test('cliff mask rotations restore after four turns and reject incompatible neighbors atomically',()=>{
+ const d=new EditingDocument().open(JSON.stringify(blankMap()));assert(paint(d,{cliffMask:3}).ok);const before=d.export();
+ for(const mask of [6,12,9,3]){assert(d.rotate({type:'prop',data:d.map.props[0]}).ok);assert.equal(d.map.props[0].cliffMask,mask);}
+ assert.equal(d.export(),before);
+ assert(paint(d,{cliffMask:3},{x:11,y:10,z:0}).ok);const paired=d.export();
+ assert.equal(d.rotate({type:'prop',data:d.map.props[0]}).ok,false);assert.equal(d.export(),paired);
 });
 test('water accepts cliffs without authorizing walking or ordinary props on water',()=>{
  const map=blankMap();map.terrain[10][10]='water';const d=new EditingDocument().open(JSON.stringify(map));

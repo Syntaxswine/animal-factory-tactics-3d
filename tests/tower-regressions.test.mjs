@@ -14,7 +14,8 @@ function world(p,x,h,y){const c=towerCenter(p);return {x:c.x+(p.rotated?-y:x),y:
 test('visible perimeter rails shadow every prone body region and prevent spotlight identification',()=>{
  const library=createFurnitureLibrary(new T.Texture(),new T.Texture());
  try{for(const rotated of [false,true]){
-  const p={kind:'wooden-spotlight-tower',x:20,y:20,z:0,rotated,lightMode:'on'},q=world(p,-1.35,0,-16.02);
+  // The north-edge mount casts the middle rail's shadow near -5.4; -7 lies in the gap.
+  const p={kind:'wooden-spotlight-tower',x:20,y:20,z:0,rotated,lightMode:'on'},q=world(p,-1.35,0,-5.40);
   p.lightTargets=[{x:q.x-p.x,y:q.y-p.y,z:0}];
   const map=blankMap();map.props=[p];map.time={startMinutes:1260};const s=createGame(1,map,false,'easy',{awareness:true});
   const target=s.units[0];Object.assign(target,{x:q.x,y:q.y,stance:'prone',sneaking:true});
@@ -27,7 +28,7 @@ test('visible perimeter rails shadow every prone body region and prevent spotlig
    assert.equal(towerBlocksSegment(p,source,end),true);assert.equal(illuminationAt(s,target,zone),.12);
   }
   assert.equal(spotlightReveals(s,observer,target,()=>['head','torso','legs']),false);
-  const clear=world(p,-1.35,0,-20);Object.assign(target,{x:clear.x,y:clear.y});Object.assign(observer,{x:clear.x-2,y:clear.y});
+  const clear=world(p,-1.35,0,-7);Object.assign(target,{x:clear.x,y:clear.y});Object.assign(observer,{x:clear.x-2,y:clear.y});
   assert.ok(illuminationAt(s,target)>.12);assert.equal(spotlightReveals(s,observer,target,()=>['torso']),true);
   // A gap between rails stays open instead of treating the whole railing as a wall.
   assert.equal(towerBlocksSegment(p,world(p,-1.35,7.06,2),world(p,-1.35,7.06,3)),false);

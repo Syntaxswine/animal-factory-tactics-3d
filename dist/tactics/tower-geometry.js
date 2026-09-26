@@ -5,6 +5,8 @@ export function ironTowerDoor(wide=false,H=TOWER_HEIGHT){const half=wide?IRON_LA
  add('door-lintel',[1.45,H+(wide?2.00:1.88),-.8],[.16,wide?.20:.24,wide?2*half:.92]);
  for(const z of [-.8-half,-.8+half])add('door-jamb',[1.45,H+height/2,z],[.16,height,.065]);return parts;
 }
+// North-edge mount clears the northwest lookout while staying opposite the ladder.
+export const WOODEN_LIGHT_MOUNT={x:-1.35,y:-1.90};
 export const WOODEN_LADDER={z:1.55,width:.76,exitWidth:.94,railTop:7.28};
 // Structural surfaces shared by beam, sight and projectile queries. Windows are gaps.
 export const TOWER_HEIGHT=6.36;
