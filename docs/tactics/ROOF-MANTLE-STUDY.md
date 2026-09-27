@@ -30,11 +30,11 @@ Choose an animal and outfit, then use the four camera angles, grey form, timelin
 
 ## Implementation boundary
 
-`createRoofMantle(worker, profile)` exposes absolute `apply(progress, {origin, heading})`, `restore()` and `dispose()` methods. It accepts the eleven authored mammal rigs with a rifle or empty hands at a two-unit roof. `createHenRoofMantle` provides the same playback/lifecycle interface for the unarmed hen. Local +X enters the roof, +Z is anatomical right, and the roof lip is X=0/Y=2. The rig must be unscaled beneath an identity parent.
+`createRoofMantle(worker, profile)` exposes absolute `apply(progress, {origin, heading})`, `restore()` and `dispose()` methods. It accepts the eleven authored mammal rigs with the full equipment catalog at a two-unit roof. See [equipment inspection](ROOF-MANTLE-WEAPON-REVIEW.md) for the weapon matrix, attachment corrections and review evidence. `createHenRoofMantle` provides the same playback/lifecycle interface for the unarmed hen. Local +X enters the roof, +Z is anatomical right, and the roof lip is X=0/Y=2. The rig must be unscaled beneath an identity parent.
 
 The proof keeps a hand planted while repositioning the other and while gathering the feet. Hoof soles, rifle and limb lengths remain rigid. Temporary corrections keep the shirt hem tucked, finish hidden cuff paint, extend the buried pastern overlap and let the soft sling lie against the roof. Restoration returns the original transforms, material hooks and geometry attributes exactly.
 
-The existing cliff/ladder animation and gameplay traversal are unchanged. This is an animation study for user/architect review; other weapons, approach/landing, descent, pathfinding and gameplay timing remain separate integration work.
+The existing cliff/ladder animation and gameplay traversal are unchanged. This is an animation study for user/architect review; approach/landing, descent, pathfinding and gameplay timing remain separate integration work.
 
 ## Hostile review
 
