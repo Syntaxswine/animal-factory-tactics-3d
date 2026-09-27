@@ -7,7 +7,7 @@ import {pathToFileURL} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {checkModuleClosure} from '../tools/check-module-closure.mjs';
 
-test('3D distribution includes the entire encounter, editor and title module graphs',()=>{
+test('3D distribution includes the entire encounter, editor, title and overmap module graphs',()=>{
  execFileSync(process.execPath,['tools/build-tactics-3d.mjs'],{cwd:new URL('../',import.meta.url),stdio:'pipe'});
 });
 test('deployment validation catches missing transitive and worker imports while handling cycles',()=>{

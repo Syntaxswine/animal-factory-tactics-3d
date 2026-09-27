@@ -1,3 +1,4 @@
+import {travelPanel} from './overmap-travel-panel.js';
 import {validateGenerated} from './overmap-generator.js';
 import {WIDTH,HEIGHT,SIDES,ROLES,TERRAINS,slots,fraction,route,blank,demo,validate,warnings,SketchDocument,plateauRim,placeTutorial,tutorialCells} from './overmap-model.js';
 import {svg,drawSector,icon,LEGEND,crossing} from './overmap-symbols.js';
@@ -10,13 +11,15 @@ for(const [id,values]of [['terrain',TERRAINS],['role',ROLES],['difficulty',['una
 function edit(fn){attempt(()=>{doc.edit(selected,fn);render();status('Sector updated. Save to keep this sketch; Undo restores the previous change.');});}
 function textNode(text,attrs){const n=svg('text',attrs);n.textContent=text;return n;}
 function drawGrid(){
- const host=$('overmap');host.replaceChildren();
+ const host=$('overmap'),travelState=travelUI.state;host.replaceChildren();
  for(let x=0;x<WIDTH;x++)host.append(textNode(x+1,{x:x*100+50,y:-8,class:'coord'}));
  for(let y=0;y<HEIGHT;y++)host.append(textNode(y+1,{x:-13,y:y*100+54,class:'coord'}));
  doc.map.sectors.forEach((s,i)=>{
   const x=i%WIDTH,y=Math.floor(i/WIDTH),g=svg('g',{transform:`translate(${x*100} ${y*100})`,class:'sector-cell',role:'button',tabindex:i===selected?0:-1,'aria-label':`Sector ${x+1}, ${y+1}: ${s.name||s.role}, ${s.difficulty}`,'aria-pressed':String(i===selected),'data-sector':i});
   const title=svg('title');title.textContent=`${x+1},${y+1} · ${s.name||s.role}\n${s.routes.map(r=>r.kind+': '+r.from.side+' '+fraction(r.from.offset)+' → '+r.to.side+' '+fraction(r.to.offset)).join('\n')}`;
   g.append(title,drawSector(s,{ports:$('ports').checked,overlay:$('overlay').value,rim:plateauRim(doc.map,i)}),svg('rect',{width:100,height:100,class:'cell-border'}));
+  if(travelState.route.some(e=>e.to===i))g.append(svg('rect',{x:12,y:12,width:76,height:76,fill:'none',stroke:'#275f76','stroke-width':5,'stroke-dasharray':'9 6','pointer-events':'none'}));
+  if(i===travelState.position)g.append(svg('circle',{cx:50,cy:50,r:17,fill:'#275f76',stroke:'#fff4d6','stroke-width':5,'pointer-events':'none'}));
   if(i===selected)g.append(svg('rect',{x:2,y:2,width:96,height:96,class:'selection'}));
   const choose=()=>{selected=i;render();};g.onclick=choose;
   g.onkeydown=e=>{let next=i;if(e.key==='ArrowRight')next=y*WIDTH+Math.min(WIDTH-1,x+1);else if(e.key==='ArrowLeft')next=y*WIDTH+Math.max(0,x-1);else if(e.key==='ArrowUp')next=Math.max(0,y-1)*WIDTH+x;else if(e.key==='ArrowDown')next=Math.min(HEIGHT-1,y+1)*WIDTH+x;else if(e.key!=='Enter'&&e.key!==' ')return;e.preventDefault();selected=next;render();$('overmap').querySelector(`[data-sector="${selected}"]`).focus();};
@@ -38,6 +41,7 @@ function pathEditor(r,index){
  return root;
 }
 function render(){
+ travelUI.render();
  const s=doc.map.sectors[selected];const placement=doc.map.tutorialPlacement;if(placement){$('tutorial-x').value=placement.x+1;$('tutorial-y').value=placement.y+1;$('tutorial-rotation').value=placement.rotation;}$('map-name').value=doc.map.name;$('map-caption').textContent=doc.map.name;$('sector-title').textContent=`${String(selected%WIDTH+1).padStart(2,'0')} / ${String(Math.floor(selected/WIDTH)+1).padStart(2,'0')}`;
  drawGrid();drawDetail(s);showGenerationReport();
  $('tutorial-step-label').hidden=!['tutorial','town'].includes(s.role);$('tutorial-step').value=s.tutorialStep||'';
@@ -93,6 +97,7 @@ $('export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(
 $('export-svg').onclick=async()=>{try{const response=await fetch('overmap.css');if(!response.ok)throw Error('Could not load map styles.');const drawing=$('overmap').cloneNode(true);drawing.setAttribute('xmlns','http://www.w3.org/2000/svg');drawing.setAttribute('width','3000');drawing.setAttribute('height','1500');drawing.removeAttribute('style');drawing.style.fontFamily='system-ui, sans-serif';drawing.querySelectorAll('.selection').forEach(n=>n.remove());drawing.querySelectorAll('[tabindex]').forEach(n=>n.removeAttribute('tabindex'));const style=svg('style');style.textContent=await response.text();drawing.prepend(style);const url=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(drawing)],{type:'image/svg+xml'})),a=document.createElement('a');a.href=url;a.download='animal-factory-overmap.svg';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status('Map graphic exported as a standalone SVG with the current overlay and attachment marks.');}catch(e){status(e.message);}};
 $('import').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>2_000_000)throw Error('Sketch files must be smaller than 2 MB.');const data=validate(JSON.parse(await file.text()));doc.replace(data);render();status('Sketch imported. Undo restores the previous sketch.');}catch(err){status('Import failed: '+err.message);}finally{e.target.value='';}};
 for(const kind of [...LEGEND,'road','river','cliff','travel']){const item=document.createElement('div');item.className='legend-item';const drawing=svg('svg',{viewBox:'0 0 100 100','aria-hidden':'true'});if(['road','river','cliff'].includes(kind))drawing.append(drawSector({...blank().sectors[0],routes:[route(kind,'west','east')]},{ports:true,overlay:'none'}));else if(kind==='travel')drawing.append(svg('path',{d:'M20 45H63V30L85 50 63 70V55H20Z',class:'travel-port'}));else drawing.append(icon(kind,50,50,1.15));item.append(drawing,kind==='travel'?'Travel declaration':kind);$('legend').append(item);}
+const travelUI=travelPanel({getMap:()=>doc.map,getSelected:()=>selected,onLoadMap:map=>{doc.replace(map);},onChange:render});
 render();
 
 generateWorldUI(Number($('world-seed').value));
