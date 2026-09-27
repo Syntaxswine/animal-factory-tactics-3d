@@ -2,7 +2,7 @@ import {TRUCK_PAINT} from '../dist/tactics/canvas-truck-paint.js';
 import {RAMP_PROPS} from '../dist/tactics/cliff-ramps.js';
 import {BANK_PROPS} from '../dist/tactics/ramp-banks.js';
 import {DIAGONAL_ROADS} from '../dist/tactics/diagonal-roads.js';
-import {ROOF_KINDS,climbableRoofKind} from '../dist/tactics/climbable-roofs.js';
+import {ROOF_KINDS,GAP_ROOF_KINDS,climbableRoofKind} from '../dist/tactics/climbable-roofs.js';
 import {environmentGeometries} from '../dist/tactics/environment-geometry.js';
 import {environmentVisuals} from '../dist/tactics/environment-visuals.js';
 import {buildWorld} from '../dist/tactics/hybrid-world.js';
@@ -58,7 +58,7 @@ for(const file of ['index.html','sprites.html','app.js','engine.js','people.js',
 const environment=JSON.parse(await readFile(new URL('assets/environment/manifest.json',root)));
 const artIds=[...Object.keys(PROPS),...new Set(Object.values(EDGES).map(r=>r.art).filter(Boolean)),...GROUNDS];
 // Procedural assets and roof aliases have real render paths, not independent PNGs.
-const proceduralProps=[...Object.keys(RAMP_PROPS),...Object.keys(BANK_PROPS)],roofAliases=ROOF_KINDS.map(climbableRoofKind),nonRaster=new Set([...proceduralProps,...roofAliases,...DIAGONAL_ROADS]);
+const proceduralProps=[...Object.keys(RAMP_PROPS),...Object.keys(BANK_PROPS)],roofAliases=ROOF_KINDS.map(climbableRoofKind),nonRaster=new Set([...proceduralProps,...roofAliases,...GAP_ROOF_KINDS,...DIAGONAL_ROADS]);
 assert.deepEqual(environment.assets.map(a=>a.id).sort(),artIds.filter(id=>!nonRaster.has(id)).sort());
 const geometries=environmentGeometries();
 try{for(const kind of [...proceduralProps,...roofAliases]){

@@ -15,3 +15,23 @@ The default factory now uses climbable modules on the two main single-story roof
 The flag is encoded by the prop kind, so map export/import, undo/redo, reusable blocks and encounter persistence retain it without special migration. Rendering shares the original geometry and textures. Derived links are calculated from the current prop footprint and checked against current collision data; they aren't written as duplicate manual climb markers. Core changes are recorded in `tools/core-roof-adapter.mjs` and reproduced by the core sync script.
 
 Checks: `tests/climbable-roofs.test.mjs`, `tests/ladder-actions.test.mjs`, `tests/cliff-map.test.mjs`, browser checks `tools/check-climbable-roofs.mjs` and `tools/check-roof-button.mjs`, core sync check and 3D build.
+
+## Parapets and ladder openings
+
+Parapets are physical low walls, not mantle targets. Both ordinary parapet roofs
+and the legacy `roof-climbable-flat-parapet` now block direct roof climbing. Their
+closed perimeter also blocks walking in either direction and diagonal corner
+cutting. A door drawn on a closed parapet boundary does not bypass that wall.
+
+The Roofs selector adds four `roof-flat-parapet-gap-*` modules (north/east/south/
+west). Each has one tile of opening on the named side, and seven solid one-tile
+parapet sections around the rest of its 2×2 footprint. Rotate turns the opening
+clockwise along with the rendered walls. The opening itself does not grant
+mantling: use the existing ladder tool, with an upper floor landing just outside
+the opening. Units climb onto that landing and walk through the gap. A ladder
+or stairwell coming up inside the roof remains valid as well.
+
+Old saved IDs remain accepted; the misleading legacy name is labelled blocked
+in the editor. New gap variants support history, export/import, blocks and the
+fourth decorative roof level. Movement obstruction and rendered wall segments
+come from the same parapet edge definitions.

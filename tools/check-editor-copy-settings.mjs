@@ -6,7 +6,7 @@ page.on('pageerror',e=>errors.push(e.message));
 try{
  await page.goto((process.env.TACTICS_BASE_URL||'http://127.0.0.1:4323')+'/tactics/editor-3d.html?editing=1');
  await page.waitForFunction(()=>window.editor3d?.document&&!editor3d.loading);
- const roofs=['roof-corrugated-sloped','roof-corrugated-flat','roof-flat-parapet','roof-climbable-corrugated-sloped','roof-climbable-corrugated-flat','roof-climbable-flat-parapet'];
+ const roofs=['roof-corrugated-sloped','roof-corrugated-flat','roof-flat-parapet','roof-climbable-corrugated-sloped','roof-climbable-corrugated-flat','roof-climbable-flat-parapet',...['north','east','south','west'].map(side=>'roof-flat-parapet-gap-'+side)];
  for(const [i,kind] of [...roofs,'table-wood'].entries()){
   const roof=kind.startsWith('roof-'),z=roof?1:0,x=10+i*3;
   assert((await page.evaluate(async({kind,roof,z,x})=>editor3d.apply({tool:roof?'roof-tile':'prop',start:{x,y:10,z},options:{propKind:kind,rotated:true}}),{kind,roof,z,x})).ok);
@@ -20,5 +20,5 @@ try{
   assert.equal(await page.isChecked('#rotated'),true);
   assert.equal(await page.locator(`[data-group=${roof?'roofs':'objects'}]`).getAttribute('aria-pressed'),'true');
  }
- assert.deepEqual(errors,[]);console.log('Copy preserves all six roof variants and objects across filtered categories, including rotation.');
+ assert.deepEqual(errors,[]);console.log('Copy preserves roof and parapet-gap variants and objects across filtered categories, including rotation.');
 }finally{await browser.close();}

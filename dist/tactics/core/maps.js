@@ -1,5 +1,5 @@
 import {canopyErrors} from '../editor-canopies.js';
-import {automaticRoofLinksAt} from '../climbable-roofs.js';
+import {automaticRoofLinksAt,parapetBlocks,parapetAt} from '../climbable-roofs.js';
 import {rampMoveAllowed,rampLinks,rampErrors,rampInfo,isRamp} from '../cliff-ramps.js';
 import {characterErrors} from '../character-properties.js';
 import {towerForUnit,towerEntry} from '../tower-geometry.js';
@@ -18,7 +18,7 @@ export function terrainAt(m,x,y,z=0){if(!inBounds(x,y,z))return 'void';if(m.know
 export function setTerrain(m,x,y,z,value){if(!inBounds(x,y,z))return false;if(!z)m.terrain[y][x]=value;else if(value==='void')delete m.upper[z-1][tileKey(x,y)];else m.upper[z-1][tileKey(x,y)]=value;return true;}
 export const passable=(m,p)=>floorTerrain(terrainAt(m,p.x,p.y,levelOf(p)))&&!propBlocks(m,p.x,p.y,levelOf(p));
 export function edgeBetween(a,b){if(levelOf(a)!==levelOf(b)||Math.abs(a.x-b.x)+Math.abs(a.y-b.y)!==1)return null;return a.x!==b.x?edgeKey('e',Math.min(a.x,b.x),a.y,levelOf(a)):edgeKey('s',a.x,Math.min(a.y,b.y),levelOf(a));}
-export function blockedEdge(m,a,b){const k=edgeBetween(a,b);return !k||!!EDGES[m.edges?.[k]]?.solid;}
+export function blockedEdge(m,a,b){const k=edgeBetween(a,b);return !k||parapetBlocks(m,a,b)||!!EDGES[m.edges?.[k]]?.solid;}
 export function openDoorBetween(m,a,b){const k=edgeBetween(a,b),next=EDGES[m.edges?.[k]]?.opensTo;if(!next||m.edgeLocks?.[k])return false;m.edges[k]=next;return true;}
 export function sightEdge(m,a,b,{height=1.3,offset=.5}={}){const k=edgeBetween(a,b);if(!k)return true;const rule=EDGES[m.edges?.[k]];if(rule?.window)return !(height>=1&&height<=2.4&&offset>=.15&&offset<=.85);return !!rule?.opaque;}
 export function edgeCells(k){const [axis,xs,ys,zs]=k.split(':'),x=Number(xs),y=Number(ys),z=Number(zs||0);return [{x,y,z},{x:x+(axis==='e'?1:0),y:y+(axis==='s'?1:0),z}];}
@@ -28,14 +28,14 @@ export const stairKey=(x,y,z)=>`${x},${y},${z}`;
 export function stairSet(m){return new Map((m.stairs||[]).map(p=>[stairKey(p.x,p.y,p.z),p.kind==='ladder'?3:2]));}
 export function neighbors(m,p,stairs=stairSet(m),includeDiagonals=true){
  const z=levelOf(p),out=[];
- for(const b of [{x:p.x+1,y:p.y,z},{x:p.x-1,y:p.y,z},{x:p.x,y:p.y+1,z},{x:p.x,y:p.y-1,z}])if(passable(m,b)&&(!blockedEdge(m,p,b)||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo&&!m.edgeLocks?.[edgeBetween(p,b)]))out.push({...b,cost:1});
+ for(const b of [{x:p.x+1,y:p.y,z},{x:p.x-1,y:p.y,z},{x:p.x,y:p.y+1,z},{x:p.x,y:p.y-1,z}])if(passable(m,b)&&!parapetBlocks(m,p,b)&&(!blockedEdge(m,p,b)||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo&&!m.edgeLocks?.[edgeBetween(p,b)]))out.push({...b,cost:1});
  if(includeDiagonals)for(const dx of [-1,1])for(const dy of [-1,1]){const a={x:p.x+dx,y:p.y,z},b={x:p.x,y:p.y+dy,z},q={x:p.x+dx,y:p.y+dy,z};if(passable(m,a)&&passable(m,b)&&passable(m,q)&&!blockedEdge(m,p,a)&&!blockedEdge(m,p,b)&&!blockedEdge(m,a,q)&&!blockedEdge(m,b,q))out.push({...q,cost:1.5});}
  for(const dz of [-1,1])if(stairs.has(stairKey(p.x,p.y,Math.min(z,z+dz)))&&passable(m,{x:p.x,y:p.y,z:z+dz}))out.push({x:p.x,y:p.y,z:z+dz,cost:stairs.get(stairKey(p.x,p.y,Math.min(z,z+dz)))});for(const link of roofNeighbors(m,p))out.push(link);return out.filter(b=>rampMoveAllowed(m,p,b)).concat(rampLinks(m,p).filter(b=>passable(m,b)&&!blockedEdge(m,{...p,z:Math.max(levelOf(p),levelOf(b))},{...b,z:Math.max(levelOf(p),levelOf(b))})));
 }
 
 // Marked roof edges connect an outdoor foothold to the adjacent upper platform.
 export const roofTop=p=>({x:p.x+p.dx,y:p.y+p.dy,z:p.z+1});
-export const roofValid=(m,p)=>inBounds(p.x,p.y,p.z)&&p.z<2&&Math.abs(p.dx)+Math.abs(p.dy)===1&&Number.isInteger(p.dx)&&Number.isInteger(p.dy)&&passable(m,p)&&passable(m,roofTop(p))&&terrainAt(m,p.x,p.y,p.z+1)==='void'&&!blockedEdge(m,{x:p.x,y:p.y,z:p.z+1},roofTop(p));
+export const roofValid=(m,p)=>inBounds(p.x,p.y,p.z)&&p.z<2&&Math.abs(p.dx)+Math.abs(p.dy)===1&&Number.isInteger(p.dx)&&Number.isInteger(p.dy)&&passable(m,p)&&passable(m,roofTop(p))&&!parapetAt(m,roofTop(p))&&terrainAt(m,p.x,p.y,p.z+1)==='void'&&!blockedEdge(m,{x:p.x,y:p.y,z:p.z+1},roofTop(p));
 const roofCache=new WeakMap();
 function roofIndex(m){const links=m.climbs;if(!links)return new Map();if(roofCache.has(links))return roofCache.get(links);const index=new Map();for(const p of links)for(const q of [p,roofTop(p)]){const k=tileKey(q.x,q.y,q.z);if(!index.has(k))index.set(k,[]);index.get(k).push(p);}roofCache.set(links,index);return index;}
 export function roofNeighbors(m,p){return [...(roofIndex(m).get(tileKey(p.x,p.y,levelOf(p)))||[]),...automaticRoofLinksAt(m,p)].filter((q,i,all)=>all.findIndex(r=>r.x===q.x&&r.y===q.y&&r.z===q.z&&r.dx===q.dx&&r.dy===q.dy)===i&&roofValid(m,q)).map(q=>({...((levelOf(p)===q.z)?roofTop(q):{x:q.x,y:q.y,z:q.z}),cost:q.kind==='cliff'?8:6,kind:q.kind==='cliff'?'cliff':'roof'}));}
