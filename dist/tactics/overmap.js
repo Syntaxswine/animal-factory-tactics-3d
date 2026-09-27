@@ -11,20 +11,21 @@ for(const [id,values]of [['terrain',TERRAINS],['role',ROLES],['difficulty',['una
 function edit(fn){attempt(()=>{doc.edit(selected,fn);render();status('Sector updated. Save to keep this sketch; Undo restores the previous change.');});}
 function textNode(text,attrs){const n=svg('text',attrs);n.textContent=text;return n;}
 function drawGrid(){
- const host=$('overmap'),travelState=travelUI.state;host.replaceChildren();
+ const host=$('overmap');host.replaceChildren();
  for(let x=0;x<WIDTH;x++)host.append(textNode(x+1,{x:x*100+50,y:-8,class:'coord'}));
  for(let y=0;y<HEIGHT;y++)host.append(textNode(y+1,{x:-13,y:y*100+54,class:'coord'}));
  doc.map.sectors.forEach((s,i)=>{
   const x=i%WIDTH,y=Math.floor(i/WIDTH),g=svg('g',{transform:`translate(${x*100} ${y*100})`,class:'sector-cell',role:'button',tabindex:i===selected?0:-1,'aria-label':`Sector ${x+1}, ${y+1}: ${s.name||s.role}, ${s.difficulty}`,'aria-pressed':String(i===selected),'data-sector':i});
   const title=svg('title');title.textContent=`${x+1},${y+1} · ${s.name||s.role}\n${s.routes.map(r=>r.kind+': '+r.from.side+' '+fraction(r.from.offset)+' → '+r.to.side+' '+fraction(r.to.offset)).join('\n')}`;
   g.append(title,drawSector(s,{ports:$('ports').checked,overlay:$('overlay').value,rim:plateauRim(doc.map,i)}),svg('rect',{width:100,height:100,class:'cell-border'}));
-  if(travelState.route.some(e=>e.to===i))g.append(svg('rect',{x:12,y:12,width:76,height:76,fill:'none',stroke:'#275f76','stroke-width':5,'stroke-dasharray':'9 6','pointer-events':'none'}));
-  if(i===travelState.position)g.append(svg('circle',{cx:50,cy:50,r:17,fill:'#275f76',stroke:'#fff4d6','stroke-width':5,'pointer-events':'none'}));
   if(i===selected)g.append(svg('rect',{x:2,y:2,width:96,height:96,class:'selection'}));
-  const choose=()=>{selected=i;render();};g.onclick=choose;
-  g.onkeydown=e=>{let next=i;if(e.key==='ArrowRight')next=y*WIDTH+Math.min(WIDTH-1,x+1);else if(e.key==='ArrowLeft')next=y*WIDTH+Math.max(0,x-1);else if(e.key==='ArrowUp')next=Math.max(0,y-1)*WIDTH+x;else if(e.key==='ArrowDown')next=Math.min(HEIGHT-1,y+1)*WIDTH+x;else if(e.key!=='Enter'&&e.key!==' ')return;e.preventDefault();selected=next;render();$('overmap').querySelector(`[data-sector="${selected}"]`).focus();};
+  const choose=()=>{selected=i;travelUI.chooseDestination(i);render();};g.onclick=choose;
+  g.onkeydown=e=>{let next=i;if(e.key==='ArrowRight')next=y*WIDTH+Math.min(WIDTH-1,x+1);else if(e.key==='ArrowLeft')next=y*WIDTH+Math.max(0,x-1);else if(e.key==='ArrowUp')next=Math.max(0,y-1)*WIDTH+x;else if(e.key==='ArrowDown')next=Math.min(HEIGHT-1,y+1)*WIDTH+x;else if(e.key!=='Enter'&&e.key!==' ')return;else {e.preventDefault();choose();return;}e.preventDefault();selected=next;render();$('overmap').querySelector(`[data-sector="${selected}"]`).focus();};
   host.append(g);
  });
+ const drawings=travelUI.drawing,palette=['#275f76','#a3422a','#536b24','#713e80'];
+ for(const [n,g]of drawings.entries())if(g.route.length)host.append(svg('polyline',{points:[g.position,...g.route.map(i=>({x:i%WIDTH+.5,y:Math.floor(i/WIDTH)+.5}))].map(p=>p.x*100+','+p.y*100).join(' '),fill:'none',stroke:palette[n%4],'stroke-width':g.selected?9:5,'stroke-dasharray':g.selected?'':'12 7','pointer-events':'none'}));
+ for(const [n,g]of drawings.entries()){const same=drawings.filter(d=>d.position.x===g.position.x&&d.position.y===g.position.y),offset=(same.indexOf(g)-(same.length-1)/2)*32,marker=svg('g',{transform:`translate(${g.position.x*100+offset} ${g.position.y*100})`,role:'button',tabindex:0,'aria-label':'Select '+g.name,class:'travel-marker'});marker.append(svg('circle',{r:g.selected?22:17,fill:palette[n%4],stroke:'#fff4d6','stroke-width':5}));const choose=e=>{e.stopPropagation();travelUI.chooseGroup(g.id);};marker.onclick=choose;marker.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose(e);}};host.append(marker);}
  const colors=$('overlay').value==='difficulty'?[['Easy','#dbe0c1'],['Medium','#ebd7ad'],['Hard','#e2bbb0'],['Unassigned','#ece4cf']]:$('overlay').value==='ownership'?[['Player','#c3d9d5'],['Red Hats','#e4b6a7'],['Neutral','#d7d3c1'],['Unassigned','#ece4cf']]:[['Landscape','#ece4cf']];
  $('overlay-key').replaceChildren(...colors.map(([label,color])=>{const span=document.createElement('span'),chip=document.createElement('i');chip.className='swatch';chip.style.background=color;span.append(chip,label);return span;}));
  const tutorial=doc.map.sectors.filter(s=>s.tutorialStep||s.role==='tutorial');$('tutorial-summary').textContent=`Tutorial: ${tutorial.length} / 5 sectors. Town + three tutorial sectors + start. Footprint: TOO / XXO / XSO; any quarter-turn.`;$('find-start').disabled=!tutorial.length;
