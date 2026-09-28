@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Window shattering study</title>
+<style>body{margin:0;background:#29332e;color:#ecddb9;font:15px system-ui}header,footer{padding:12px 20px}h1{font:28px Georgia;margin:0 0 8px}p{margin:8px 0}nav{display:flex;gap:12px;align-items:center;flex-wrap:wrap}button,select{background:#46503d;color:#fff0cc;border:1px solid #87916b;padding:7px;font:inherit}button{cursor:pointer}input[type=range]{width:180px}#scene{height:calc(100vh - 240px);min-height:360px;position:relative}canvas{display:block;width:100%;height:100%}a{color:#eac878}.labels{position:absolute;inset:0;pointer-events:none}.label{position:absolute;transform:translate(-50%,-50%);font-weight:600;text-shadow:0 2px 3px #000}#status{font-variant-numeric:tabular-nums}</style></head>
+<body><header><h1>Window shattering</h1><p>All glass falls clear of the opening. Brick · concrete · corrugated metal.</p><nav>
+<button id="smash">Smash</button><button id="pause">Pause</button><button id="reset">Restore glass</button>
+<label>Time <input id="time" type="range" min="0" max="2.2" step="0.01" value="0"></label>
+<label>Window <select id="kind"><option value="all">All three</option><option value="window-brick">Brick</option><option value="window-concrete">Concrete</option><option value="window-corrugated">Corrugated</option></select></label>
+<label>View <select id="view"><option value="three">Three-quarter</option><option value="front">Front</option><option value="rear">Rear</option><option value="side">Side</option></select></label>
+<label>Scale <select id="scale"><option value="close">Close</option><option value="gameplay">Gameplay</option></select></label>
+<label>Break toward <select id="direction"><option value="1">Front</option><option value="-1">Back</option></select></label>
+<label>Speed <select id="speed"><option value="1">Normal</option><option value="0.25">Quarter speed</option></select></label>
+<label><input id="sound" type="checkbox" checked>Sound</label></nav></header>
+<main id="scene"><div class="labels" id="labels"></div></main>
+<footer><p id="status">Intact</p><p id="audio-status">Sound plays when you press Smash; scrubbing is silent.</p><p>Animation study. Damage, saved broken states, and jumping through windows await gameplay integration.</p><small>Sound: <a href="https://opengameart.org/content/glass-break">Glass Break — Till Behrend</a>, <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>. Submitted by TinyWorlds.</small></footer>
+<script type="module" src="./window-shatter-study.js"></script></body></html>
