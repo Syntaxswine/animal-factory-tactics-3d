@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';import {createRequire} from 'node:module';
+import {blank,route} from '../dist/tactics/overmap-model.js';
+const require=createRequire(import.meta.url),{chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
+const map=blank();for(let i=0;i<8;i++)map.sectors[i].routes=[route('road','west','east')];map.sectors[0].owner='player';Object.assign(map.sectors[1],{facilities:['factory'],owner:'red-hats'});Object.assign(map.sectors[4],{role:'fortress',owner:'red-hats'});
+const browser=await chromium.launch({channel:'msedge',headless:true}),page=await browser.newPage({viewport:{width:1500,height:1050}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+const state=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('animal-factory-overmap-travel-v1')).state);
+try{
+ await page.goto((process.env.TACTICS_BASE_URL||'http://127.0.0.1:4323')+'/tactics/overmap.html');await page.waitForFunction(()=>document.getElementById('status').textContent.startsWith('World generated'),null,{timeout:60000});
+ await page.locator('#import').setInputFiles({name:'logistics.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(map))});await page.locator('#travel-groups button').first().click();await page.locator('#militia-train').click();assert.equal((await state()).logistics.money,4500);
+ await page.locator('#logistics-week').click();assert.equal((await state()).logistics.militia[0],4);assert.equal((await state()).logistics.raiders.length,0);
+ for(let i=0;i<3;i++)await page.locator('#travel-go').click();assert.equal((await state()).logistics.raiders.length,1);assert.ok(await page.locator('polyline[marker-end="url(#red-route-arrow)"]').count()>0);
+ await page.locator('#logistics-panel').scrollIntoViewIfNeeded();await page.screenshot({path:'artifacts/overmap-logistics.png'});
+ await page.locator('#travel-save').click();const before=(await state()).clock.minutes;await page.reload();await page.waitForFunction(()=>document.getElementById('status').textContent.startsWith('World generated'),null,{timeout:60000});await page.locator('#travel-load').click();await page.locator('#travel-save').click();assert.equal((await state()).clock.minutes,before);
+ await page.locator('#logistics-day').click();assert.equal((await state()).logistics.pending.kind,'raiders');assert.match(await page.locator('#logistics-encounter').textContent(),/Encounter required/);assert.equal(await page.locator('#logistics-day').isDisabled(),true);
+ await page.locator('#logistics-encounter button').click();assert.equal((await state()).logistics.pending,null);assert.equal((await state()).logistics.raiders.length,0);assert.deepEqual(errors,[]);console.log('Logistics browser checks passed: training debit/completion, delivery timer, Red Hat route, persistence and contact handoff.');
+}finally{await browser.close();}

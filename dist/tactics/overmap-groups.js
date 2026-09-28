@@ -3,14 +3,14 @@ import {advanceClock} from './game-clock.js';
 export function createGroups(map){const state=createTravel(map);return {version:2,clock:{...state.clock},selectedId:null,nextId:2,groups:[{id:'group-1',name:'Group 1',state,waitMinutes:0}]};}
 export const arrival=(session,g)=>session.clock.minutes+g.waitMinutes+travelPreview(g.state).travelMinutes+travelPreview(g.state).restMinutes;
 export function splitGroup(session,id,memberIds){
- const group=session.groups.find(g=>g.id===id);if(!group||group.state.route.length||group.state.progress)throw Error('Split a group while it is stationary.');
+ if(session.logistics?.pending)throw Error('Resolve the encounter first.');const group=session.groups.find(g=>g.id===id);if(!group||group.training||group.state.route.length||group.state.progress)throw Error('Split a group while it is stationary.');
  const chosen=new Set(memberIds),members=group.state.members.filter(u=>chosen.has(u.id));
  if(!members.length||members.length===group.state.members.length)throw Error('Choose some members, leaving at least one in the original group.');
  const number=session.nextId++,state=structuredClone(group.state);state.members=members;group.state.members=group.state.members.filter(u=>!chosen.has(u.id));state.restRequired=state.restRequired&&members.some(u=>fatigue(u)>RESUME_AT)||members.some(u=>fatigue(u)>=REST_AT);group.state.restRequired=group.state.restRequired&&group.state.members.some(u=>fatigue(u)>RESUME_AT);
  const next={id:`group-${number}`,name:`Group ${number}`,state,waitMinutes:0};session.groups.push(next);session.selectedId=next.id;return next;
 }
 export function destinationPreview(session,map,id,destination){
- const group=session.groups.find(g=>g.id===id);if(!group)throw Error('Select a group first.');
+ const group=session.groups.find(g=>g.id===id);if(!group)throw Error('Select a group first.');if(group.training)throw Error('This group is training militia. Cancel the assignment before moving.');
  const state=structuredClone(group.state);setDestination(state,map,destination);if(!state.route.length)throw Error('This group is already in that sector.');
  const preview=travelPreview(state),others=session.groups.filter(g=>g.id!==id&&g.state.route.at(-1)?.to===destination);
  const ownArrival=session.clock.minutes+preview.travelMinutes+preview.restMinutes;

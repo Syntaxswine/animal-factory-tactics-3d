@@ -30,10 +30,10 @@ export function travelEdges(map,index){
   return [{from:index,to,road}];
  });
 }
-export function planRoute(map,start,destination,members){
+export function planRoute(map,start,destination,members,{roadsOnly=false}={}){
  const land=groupPace(members),road=groupPace(members,true),cost=new Map([[start,0]]),prev=new Map(),pending=new Set([start]);
  while(pending.size){let at=[...pending].reduce((a,b)=>cost.get(a)<=cost.get(b)?a:b);pending.delete(at);if(at===destination)break;
-  for(const edge of travelEdges(map,at)){const minutes=(edge.road?road:land).minutes,total=cost.get(at)+minutes;if(total<(cost.get(edge.to)??Infinity)){cost.set(edge.to,total);prev.set(edge.to,{...edge,minutes});pending.add(edge.to);}}
+  for(const edge of travelEdges(map,at)){if(roadsOnly&&!edge.road)continue;const minutes=(edge.road?road:land).minutes,total=cost.get(at)+minutes;if(total<(cost.get(edge.to)??Infinity)){cost.set(edge.to,total);prev.set(edge.to,{...edge,minutes});pending.add(edge.to);}}
  }
  if(!cost.has(destination))throw Error('No traversable route. Rivers and cliffs require a connected crossing; tutorial edges require travel connections.');
  const route=[];for(let at=destination;at!==start;){const edge=prev.get(at);route.unshift(edge);at=edge.from;}return route;

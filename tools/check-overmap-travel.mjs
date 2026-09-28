@@ -20,7 +20,7 @@ try{
  const ordered=await stored();const etas=await page.evaluate(async s=>{const {arrival}=await import('./overmap-groups.js');return s.groups.map(g=>arrival(s,g));},ordered.state);assert.equal(etas[0],etas[1]);
  await page.locator('#travel-go').click();assert.equal((await stored()).state.clock.minutes,540);
  await page.reload();await page.waitForFunction(()=>document.getElementById('status').textContent.startsWith('World generated'),{},{timeout:60000});await page.locator('#travel-load').click();assert.equal(await page.locator('#travel-groups button').count(),2);assert.equal((await page.locator('#travel-clock').textContent()).includes('09:00'),true);
- await page.locator('#travel-next').click();const arrived=await stored();assert.ok(arrived.state.groups.every(g=>g.state.position===destination&&!g.state.route.length));assert.equal(arrived.state.clock.minutes,etas[0]);
+ for(let i=0;i<30;i++){const current=await stored();if(current.state.groups.every(g=>g.state.position===destination&&!g.state.route.length))break;if(current.state.logistics?.pending)await page.locator('#logistics-encounter button').click();await page.locator('#travel-next').click();}const arrived=await stored();assert.ok(arrived.state.groups.every(g=>g.state.position===destination&&!g.state.route.length));assert.equal(arrived.state.clock.minutes,etas[0]);
  await page.getByRole('button',{name:'Select Group 1',exact:true}).click();assert.equal(await page.locator('#travel-groups button').first().getAttribute('aria-pressed'),'true');
  assert.deepEqual(errors,[]);console.log('Group travel browser checks passed: explicit selection, split, single-click popup, route line, cancel, coordinated arrivals, shared clock and saved orders.');
 }finally{await browser.close();}
