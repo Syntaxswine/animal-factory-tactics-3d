@@ -11,7 +11,7 @@ const grid=new T.GridHelper(30,30,0x787658,0x939071);grid.position.y=-.003;grid.
 const materials=new Map(),wallGeometry=new T.BoxGeometry(1,1,1),frameMaterial=new T.MeshStandardMaterial({color:0x514f3c,roughness:.85});
 for(const kind of WINDOW_TYPES){const form=kind==='window-brick'?'brick':kind==='window-corrugated'?'metal':'concrete',p=surfacePixels(form,128),texture=new T.DataTexture(p.data,p.width,p.height);texture.colorSpace=T.SRGBColorSpace;texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.needsUpdate=true;materials.set(kind,new T.MeshStandardMaterial({map:texture,roughness:.94}));}
 let display=new T.Group(),windows=[],labels=[],time=-1,playing=false,last=performance.now();scene.add(display);
-const audio=new Audio('../assets/audio/glass-breaking-cc0.wav');audio.preload='auto';audio.volume=.65;
+const audio=new Audio('../assets/audio/glass-smash-rubberduck-cc0.ogg');audio.preload='auto';audio.volume=.65;
 audio.addEventListener('error',()=>{$('audio-status').textContent='Sound could not load; visual playback remains available.';});
 function stopAudio(){audio.pause();audio.currentTime=0;}
 function box(parent,material,x,y,z,w,h,d){const mesh=new T.Mesh(wallGeometry,material);mesh.position.set(x,y,z);mesh.scale.set(w,h,d);parent.add(mesh);return mesh;}
@@ -28,9 +28,9 @@ function rebuild(){stopAudio();for(const w of windows)w.dispose();display.remove
 function resize(){const host=$('scene'),w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);const span=$('scale').value==='gameplay'?h/85:Math.max(3.25,($('kind').value==='all'?8.5:3)*h/w);camera.left=-span*w/h/2;camera.right=span*w/h/2;camera.top=span/2;camera.bottom=-span/2;camera.near=.01;camera.far=100;
  const pos={three:[4,3.2,6],front:[0,2,7],rear:[-4,3.2,-6],side:[7,3.5,1.8]}[$('view').value];camera.position.set(...pos);camera.lookAt(0,.9,0);camera.updateProjectionMatrix();render();}
 function render(){windows.forEach(w=>w.sample(time));renderer.render(scene,camera);for(const {label,point}of labels){const p=point.clone().project(camera);label.style.left=(p.x+1)*$('scene').clientWidth/2+'px';label.style.top=(1-p.y)*$('scene').clientHeight/2+'px';}
- $('time').value=Math.max(0,time);$('status').textContent=time<0?'Intact — ready to smash':`${time.toFixed(2)} s · ${windows.every(w=>w.diagnostics().settled)?'All glass on the ground; opening clear':time<.1?'Glass breaks free':'Shards falling clear of the wall'} · ${windows.length*70} shards`;
+ $('time').value=Math.max(0,time);$('status').textContent=time<0?'Intact — ready to smash':`${time.toFixed(2)} s · ${time>=SHATTER_DURATION?'Glass cleared away; opening empty':windows.every(w=>w.diagnostics().settled)?'Landed glass fading away':time<.1?'Glass breaks free':'Shards falling clear of the wall'} · ${windows.length*70} shards`;
  $('pause').textContent=playing?'Pause':'Resume';}
-$('smash').onclick=()=>{time=0;playing=true;last=performance.now();stopAudio();if($('sound').checked){audio.playbackRate=Number($('speed').value);audio.play().then(()=>{$('audio-status').textContent='CC0 glass break · Till Behrend';}).catch(()=>{$('audio-status').textContent='Sound playback was blocked; press Smash to retry.';});}render();};
+$('smash').onclick=()=>{time=0;playing=true;last=performance.now();stopAudio();if($('sound').checked){audio.playbackRate=Number($('speed').value);audio.play().then(()=>{$('audio-status').textContent='CC0 glass smash · rubberduck';}).catch(()=>{$('audio-status').textContent='Sound playback was blocked; press Smash to retry.';});}render();};
 $('pause').onclick=()=>{if(time<0||time>=SHATTER_DURATION)return;playing=!playing;last=performance.now();stopAudio();render();};
 $('reset').onclick=()=>{playing=false;time=-1;stopAudio();render();};
 $('time').oninput=()=>{playing=false;time=Number($('time').value);stopAudio();render();};

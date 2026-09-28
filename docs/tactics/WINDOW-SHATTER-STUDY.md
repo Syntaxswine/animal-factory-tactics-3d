@@ -18,7 +18,8 @@ across the opening. The surrounding wall and narrow perimeter frame stay intact.
 - Eject fragments clear of the wall thickness over 0.10 seconds.
 - Tumble and fall under gravity, with varied outward and sideways scatter.
 - Give each shard a small ground bounce, then settle it flat on the floor.
-- Retain the fallen glass until reset or disposal. The timeline ends at 2.2 seconds.
+- After landing, fade the shards from 1.3 to 2.2 seconds, then hide them completely.
+  Rewinding restores their opacity; resetting restores the intact pane.
 
 Fragment triangles partition the whole pane; they are not a particle substitute
 that leaves the original glass visible. One dynamic mesh renders all fragments
@@ -54,11 +55,13 @@ three wall-window types represented here.
 
 ## Sound
 
-`assets/audio/glass-breaking-cc0.wav` is **Glass Break** by Till Behrend, submitted
-by TinyWorlds with the author's permission. The original recording is unchanged.
-Source: https://opengameart.org/content/glass-break
+`assets/audio/glass-smash-rubberduck-cc0.ogg` is **bfh1_glass_breaking_01** by
+rubberduck from *75 CC0 breaking / falling / hit sfx*. The original recording is
+unchanged. This replaces the original Till Behrend recording as the study default.
+Source: https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx
 License: https://creativecommons.org/publicdomain/zero/1.0/
-The shipped `GLASS-BREAK-LICENSE.md` records provenance and the legal-code link.
+The shipped `GLASS-SMASH-RUBBERDUCK-LICENSE.md` records provenance and legal links.
+The earlier recording and its license remain available for comparison by developers.
 
 Audio only starts from the Smash button, at .65 volume; scrubbing is silent.
 Pause, reset, changing windows, hiding the tab, and muting stop playback.
@@ -67,19 +70,21 @@ when smashing all three windows to avoid stacking identical recordings.
 
 ## Validation and hostile review
 
-- **12 focused tests pass**: canonical inventory, pane partition/area, seed
+- **15 focused tests pass**: canonical inventory, pane partition/area, seed
   repeatability, visibility swap, sampled wall/floor clearance, final flat shards,
   mirrored bursts, rigid triangle shape, rewind, settle, invalid time/type, disposal.
-- Packaged viewer: **64 configurations / 448 sampled states**, plus 20 rebuild
+- Packaged viewer: **64 configurations / 512 sampled states**, plus 20 rebuild
   cycles without increasing retained geometry count. No browser/module/asset errors.
-- WAV decodes as stereo, approximately 1.31 seconds. Button playback succeeds.
+- The replacement OGG decodes in the browser and button playback succeeds.
 - `npm run build:tactics-3d` passes and includes the viewer, effect, audio, license,
   and module-closure validation.
 - Independent hostile review: **9/10**, after replacing a straight debris strip
-  with varied depth scatter. Approval is for the animation study.
+  with varied depth scatter. The disappearance/sound revision also passes 9/10.
+  Approval is for the animation study.
 
 Reproduce with `node --test tests/window-shatter.test.mjs` and
 `npm run build:tactics-3d`, then run `node tools/window-shatter-review.mjs` with
 `PLAYWRIGHT_PATH` pointing to an installed Playwright package. The browser check
 serves `.pages-output` itself; `REVIEW_ROOT=dist` can instead check source assets.
-Screenshots and reports go to uncommitted `artifacts/window-shatter/`.
+The fade revision additionally checks complete disappearance, silent scrubbing, and
+rewind visibility/opacity restoration. Screenshots and reports go to uncommitted `artifacts/window-shatter/`.

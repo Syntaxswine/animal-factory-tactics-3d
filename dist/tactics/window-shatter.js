@@ -4,6 +4,7 @@ import {DIMENSIONS as D} from './hybrid-world.js';
 // Presentation only. The game owns damage, passage permission and saved state.
 export const WINDOW_TYPES=Object.freeze(['window-brick','window-concrete','window-corrugated']);
 export const SHATTER_DURATION=2.2;
+export const SHATTER_FADE_START=1.3;
 export const WINDOW_PANE=Object.freeze({width:.95,bottom:D.windowBottom+.025,top:D.windowTop-.025});
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function rng(seed){let s=seed>>>0;return()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296;};}
@@ -47,7 +48,9 @@ export function createWindowShatter({kind='window-brick',seed=17,direction=1}={}
  const shine=new T.LineSegments(shineGeometry,shineMaterial);group.add(shine);
  const triangle=Array.from({length:3},()=>new T.Vector3()),q=new T.Quaternion(),e=new T.Euler();let current=-1,disposed=false;
  function sample(time){if(disposed)throw new Error('Window shatter is disposed');if(!Number.isFinite(time))throw new Error('Time must be finite');current=time;
-  pane.visible=shine.visible=time<0;shards.visible=time>=0;if(time<0)return;
+  const fade=clamp((time-SHATTER_FADE_START)/(SHATTER_DURATION-SHATTER_FADE_START),0,1);
+  material.opacity=.85*(1-fade*fade*(3-2*fade));
+  pane.visible=shine.visible=time<0;shards.visible=time>=0&&time<SHATTER_DURATION;if(time<0)return;
   pieces.forEach((piece,i)=>{const pose=shardPose(piece,time,direction);q.setFromEuler(e.set(...pose.rotation,'ZYX'));
    piece.local.forEach((point,j)=>triangle[j].set(...point).applyQuaternion(q));
    const lift=Math.max(0,.003-pose.position[1]-Math.min(...triangle.map(v=>v.y)));
@@ -56,5 +59,5 @@ export function createWindowShatter({kind='window-brick',seed=17,direction=1}={}
  }
  function dispose(){if(disposed)return;disposed=true;group.removeFromParent();for(const g of [geometry,paneGeometry,shineGeometry])g.dispose();for(const m of [material,paneMaterial,shineMaterial])m.dispose();}
  sample(-1);
- return {group,pieces,sample,dispose,diagnostics:()=>({kind,time:current,shards:pieces.length,intact:pane.visible,settled:current>=0&&pieces.every(p=>shardPose(p,current,direction).settled),bounds:Array.from(positions)})};
+ return {group,pieces,sample,dispose,diagnostics:()=>({kind,time:current,shards:pieces.length,intact:pane.visible,shardsVisible:shards.visible,opacity:material.opacity,cleared:current>=SHATTER_DURATION,settled:current>=0&&pieces.every(p=>shardPose(p,current,direction).settled),bounds:Array.from(positions)})};
 }

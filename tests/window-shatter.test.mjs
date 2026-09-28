@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {WINDOW_TYPES,WINDOW_PANE,SHATTER_DURATION,fracturePane,shardPose,createWindowShatter} from '../dist/tactics/window-shatter.js';
+import {WINDOW_TYPES,WINDOW_PANE,SHATTER_DURATION,SHATTER_FADE_START,fracturePane,shardPose,createWindowShatter} from '../dist/tactics/window-shatter.js';
 import {DIMENSIONS as D} from '../dist/tactics/hybrid-world.js';
 import {EDGES} from '../dist/tactics/environment.js';
 
@@ -113,6 +113,55 @@ test('rewind and replay exactly restore geometry with no accumulated drift',()=>
 test('late sampling remains settled without shards sinking or continuing to drift',()=>{
  const effect=createWindowShatter();effect.sample(SHATTER_DURATION);const settled=bounds(effect);
  effect.sample(1000);assert.deepEqual(bounds(effect),settled);assert.equal(effect.diagnostics().settled,true);effect.dispose();
+});
+
+test('glass stays fully visible during flight and only fades after every shard has landed',()=>{
+ for(const kind of WINDOW_TYPES)for(const direction of [-1,1])for(const seed of [0,17,201,4294967295]){
+  const effect=createWindowShatter({kind,direction,seed}),shards=effect.group.children[0];
+  effect.sample(0);const fullOpacity=shards.material.opacity;
+  for(let i=0;i<=130;i++){
+   const time=SHATTER_FADE_START*i/130;effect.sample(time);
+   near(shards.material.opacity,fullOpacity);assert.equal(shards.visible,true);
+  }
+  assert.equal(effect.diagnostics().settled,true,`${kind}: fading began before glass finished landing`);
+  let opacity=fullOpacity;
+  for(let i=1;i<20;i++){
+   const time=SHATTER_FADE_START+(SHATTER_DURATION-SHATTER_FADE_START)*i/20;effect.sample(time);
+   assert.equal(effect.diagnostics().settled,true);assert.equal(shards.visible,true);
+   assert.ok(shards.material.opacity<opacity&&shards.material.opacity>0);
+   opacity=shards.material.opacity;
+  }
+  effect.dispose();
+ }
+});
+
+test('cleanup hides all glass and reflections at completion and on late sampling',()=>{
+ for(const kind of WINDOW_TYPES)for(const direction of [-1,1]){
+  const effect=createWindowShatter({kind,direction});
+  for(const time of [SHATTER_DURATION,SHATTER_DURATION+1,1000]){
+   effect.sample(time);assert.equal(effect.diagnostics().cleared,true);
+   assert.ok(effect.group.children.every(mesh=>!mesh.visible));
+   near(effect.group.children[0].material.opacity,0);
+  }
+  effect.dispose();
+ }
+});
+
+test('rewinding after cleanup restores shard opacity and visibility, or the complete intact pane',()=>{
+ for(const kind of WINDOW_TYPES)for(const direction of [-1,1]){
+  const effect=createWindowShatter({kind,direction}),[shards,pane,shine]=effect.group.children;
+  effect.sample(.4);const visibleOpacity=shards.material.opacity,geometry=bounds(effect);
+  const fadeMidpoint=(SHATTER_FADE_START+SHATTER_DURATION)/2;
+  effect.sample(fadeMidpoint);const fadedOpacity=shards.material.opacity;
+  effect.sample(1000);assert.equal(shards.visible,false);
+  effect.sample(fadeMidpoint);near(shards.material.opacity,fadedOpacity);assert.equal(shards.visible,true);
+  effect.sample(.4);near(shards.material.opacity,visibleOpacity);assert.deepEqual(bounds(effect),geometry);
+  assert.equal(shards.visible,true);assert.equal(pane.visible,false);assert.equal(shine.visible,false);assert.equal(effect.diagnostics().cleared,false);
+  effect.sample(-1);near(shards.material.opacity,visibleOpacity);
+  assert.equal(shards.visible,false);assert.equal(pane.visible,true);assert.equal(shine.visible,true);
+  effect.sample(0);near(shards.material.opacity,visibleOpacity);assert.equal(shards.visible,true);
+  effect.dispose();
+ }
 });
 
 test('invalid window types and nonfinite sampling time fail before corrupting geometry',()=>{
