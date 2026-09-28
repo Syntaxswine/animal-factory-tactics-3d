@@ -5,7 +5,37 @@
 Viewer: `tactics/weighted-window-study.html`. This extends the approved weighted
 roll study into a complete window crossing, without fitting an animal yet.
 
-## Sequence and constraints
+## Current default: sill-braced entry plus roll
+
+The user's follow-up asked to mix the first half of the earlier window animation
+with the new roll. The default **Sill-braced vault** now adapts that sequence to
+the mannequin: crouch, break glass, plant the left palm on the sill, push and tuck,
+pass through, release into a short ballistic drop, then roll and kneel. Duration
+is approximately 5.08 seconds. The Entry selector retains the original forward
+dive for direct comparison. This does not replace the horse animation yet.
+
+The left palm stays fixed on the sill through the supported lift and crossing.
+The hips advance during the latter lift once the knees clear the sill; forward
+speed continues across the lift/crossing boundary. Release matches the airborne
+mass-center velocity (3 units/s forward, .7 upward). After release, the same
+gravity and unchanged window dimensions apply. Contact markers now distinguish
+the elevated sill from floor contacts. The hand approach retains its original
+elbow bend and eases wrist orientation, avoiding a previously detected IK snap.
+
+Independent hostile review: **9/10** for the combined mannequin study. Eleven
+new tests cover full capsule/frame clearance, fixed bone lengths/masses, planted
+sill contact, hand-timed glass, release velocity, ballistic motion, the continuous
+forward weight transfer, dense pose continuity and final kneel. The four focused
+suites pass **44 tests**. Packaged browser review covers both entries in **12
+view/envelope configurations and 1,212 scrub samples**, plus playback/reset and
+glass cleanup; no browser/asset errors. Build passes.
+
+New pure API: `sampleBracedWindow(time)` in `weighted-window-braced.js`, with
+`BRACED_PHASES`, `BRACED_RELEASE`, `BRACED_LANDING`, and `BRACED_DURATION`.
+This remains authored support/impact motion with ballistic free flight, not a
+force, anatomical-joint-limit or self-collision solver. Animal fitting is pending.
+
+## Original forward-dive comparison: sequence and constraints
 
 The approximately 4.26-second sequence loads a planted-foot jump, pushes off,
 extends through the window, tucks after clearing the frame, lands into a back
@@ -51,7 +81,7 @@ segments, points, mass properties, contacts, phase/mode, ballistic velocity when
 in flight, and glass time. Nonfinite times fail; finite times clamp. Browser API:
 `window.weightedWindowStudy.seek(time)` and `diagnostics()`.
 
-## Validation
+## Original forward-dive validation
 
 Independent hostile review: **9/10** for this bounded weighted-dive prototype.
 Ten independent tests cover exact whole-segment capsule/frame distance (with
@@ -65,6 +95,6 @@ plus playback/reset, without browser or asset errors. The 3D package build passe
 
 Commands:
 
-- `node --test tests/weighted-window.test.mjs tests/weighted-roll.test.mjs tests/window-shatter.test.mjs`
+- `node --test tests/weighted-window-braced.test.mjs tests/weighted-window.test.mjs tests/weighted-roll.test.mjs tests/window-shatter.test.mjs`
 - `npm run build:tactics-3d`
 - `node tools/weighted-window-review.mjs` (configured Playwright runtime required)

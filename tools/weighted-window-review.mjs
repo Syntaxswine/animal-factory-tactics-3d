@@ -12,11 +12,13 @@ page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.statu
 try{
  await page.goto(`http://127.0.0.1:${server.address().port}/tactics/weighted-window-study.html`);await page.waitForFunction(()=>window.weightedWindowStudy);
  let configurations=0,samples=0;
- for(const view of ['side','three','front'])for(const envelope of [true,false]){
-  await page.selectOption('#view',view);await page.locator('#envelope').setChecked(envelope);
-  for(let i=0;i<=86;i++){const d=await page.evaluate(t=>window.weightedWindowStudy.seek(t),i*.05);assert.ok(d.center.every(Number.isFinite));if(d.mode!=='ballistic flight')assert.ok(d.contacts.length>0);if(i>=75)assert.equal(d.balanced,true);samples++;}
-  configurations++;if(envelope)for(const t of [0,.65,.9,1.1,1.35,1.46,1.7,2.4,3.9]){await page.evaluate(t=>window.weightedWindowStudy.seek(t),t);await page.screenshot({path:path.join(out,`${view}-${t}.png`)});}
+ for(const entry of ['braced','dive'])for(const view of ['side','three','front'])for(const envelope of [true,false]){
+  await page.selectOption('#entry',entry);await page.selectOption('#view',view);await page.locator('#envelope').setChecked(envelope);
+  const duration=await page.evaluate(()=>window.weightedWindowStudy.diagnostics().duration);
+  for(let i=0;i<=100;i++){const d=await page.evaluate(t=>window.weightedWindowStudy.seek(t),duration*i/100);assert.ok(d.center.every(Number.isFinite));if(d.mode==='static kneel')assert.equal(d.balanced,true);samples++;}
+  configurations++;if(envelope)for(const t of entry==='braced'?[0,.78,1.08,1.4,1.8,2.02,2.3,2.55,3,4.9]:[0,.65,.9,1.1,1.35,1.46,1.7,2.4,3.9]){await page.evaluate(t=>window.weightedWindowStudy.seek(t),t);await page.screenshot({path:path.join(out,`${entry}-${view}-${t}.png`)});}
  }
- await page.selectOption('#view','side');await page.check('#envelope');await page.click('#reset');await page.click('#play');await page.waitForFunction(()=>window.weightedWindowStudy.diagnostics().time>=4.25);assert.equal(await page.evaluate(()=>window.weightedWindowStudy.diagnostics().balanced),true);await page.click('#reset');assert.equal(await page.evaluate(()=>window.weightedWindowStudy.diagnostics().time),0);assert.deepEqual(errors,[]);
+ for(const entry of ['braced','dive']){await page.selectOption('#entry',entry);await page.selectOption('#view','three');await page.check('#envelope');await page.click('#reset');await page.click('#play');await page.waitForFunction(()=>{const s=window.weightedWindowStudy.diagnostics();return s.time>=s.duration;});assert.equal(await page.evaluate(()=>window.weightedWindowStudy.diagnostics().balanced),true);assert.equal(await page.evaluate(()=>window.weightedWindowStudy.diagnostics().glass.cleared),true);await page.click('#reset');assert.equal(await page.evaluate(()=>window.weightedWindowStudy.diagnostics().time),0);}
+ assert.deepEqual(errors,[]);
  const report={configurations,samples,errors};await fs.writeFile(path.join(out,'browser-report.json'),JSON.stringify(report,null,2));console.log(report);
 }finally{await browser.close();await new Promise(r=>server.close(r));}

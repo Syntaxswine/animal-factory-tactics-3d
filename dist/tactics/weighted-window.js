@@ -45,3 +45,5 @@ export function sampleWeightedWindow(time){
  const mass=massProperties(state.points,state.segments),contacts=[];for(const s of state.segments)for(const id of [s.a,s.b])if(state.points[id][1]-s.radius<.004)contacts.push({segment:s.name,id,point:[state.points[id][0],0,state.points[id][2]]});
  return {...state,...mass,contacts,time,phase:WINDOW_PHASES.find(p=>time<=p.end).label,mode,velocity,balanced:supportContains(mass.center,contacts),glassTime:time<WINDOW_IMPACT?-1:time-WINDOW_IMPACT};
 }
+
+export {pose as weightedPose,blend as blendWeightedPose,translate as centerWeightedPose};
