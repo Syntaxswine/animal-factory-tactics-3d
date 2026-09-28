@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {QUADRANTS,tutorialMap} from '../tools/generate-tutorial-plateau.mjs';
+import {parseMap,terrainAt,roofNeighbors,neighbors,passable} from '../dist/tactics/core/maps.js';
+const maps=QUADRANTS.map(q=>({q,m:tutorialMap(q)}));
+const at=(x,y)=>maps.find(({q})=>q.x===x&&q.y===y).m;
+test('four saved variants round-trip as valid maps with closed tiers and summit starts',()=>{for(const {q,m}of maps){const saved=JSON.parse(fs.readFileSync(new URL('../dist/tactics/sector-library/tutorial-step-'+q.step+'/rough-plateau.json',import.meta.url)));assert.deepEqual(saved,m);assert.deepEqual(parseMap(JSON.stringify(saved)),m);assert.equal(m.climbs.length,0);assert.equal(m.stairs.length,0);assert.ok(!m.props.some(p=>p.kind.startsWith('ramp')));assert.ok(m.props.length<=512);for(const p of [...m.starts,...m.exits]){assert.equal(p.z,2);assert.ok(passable(m,p));}for(const p of m.props){const low={x:p.x,y:p.y,z:p.z},high={...low,z:p.z+1};assert.equal(passable(m,low),false);assert.equal(roofNeighbors(m,high).length,0);assert.ok(neighbors(m,high).every(n=>n.z===high.z));}}});
+test('terrain and cliff bands match across all four shared edges on every level',()=>{for(const k of [0,1])for(let n=0;n<240;n++)for(let z=0;z<3;z++){assert.equal(terrainAt(at(0,k),239,n,z),terrainAt(at(1,k),0,n,z));assert.equal(terrainAt(at(k,0),n,239,z),terrainAt(at(k,1),n,0,z));}const cliff=(m,x,y,z)=>m.props.some(p=>p.x===x&&p.y===y&&p.z===z);for(const k of [0,1])for(let n=0;n<240;n++)for(let z=0;z<2;z++){assert.equal(cliff(at(0,k),239,n,z),cliff(at(1,k),0,n,z));assert.equal(cliff(at(k,0),n,239,z),cliff(at(k,1),n,0,z));}});
+test('outer seams are exactly 160 tiles from center; inner seams are 80 tiles',()=>{const m=at(1,1);assert.equal(terrainAt(m,159,0,1),'ground-dirt');assert.equal(terrainAt(m,160,0,1),'void');assert.equal(terrainAt(m,79,0,2),'ground-grass');assert.equal(terrainAt(m,80,0,2),'void');});
