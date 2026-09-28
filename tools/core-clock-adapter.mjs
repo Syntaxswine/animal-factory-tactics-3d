@@ -84,9 +84,14 @@ export function adaptCoreClock(name,data){
   return Buffer.from(s);
  }
  if(name==='engine.js'){
-  s="import {equipmentDropRate,noEquipmentDrops,weaponCondition,initializeWeaponCondition,damageHeldWeapon} from '../loot-policy.js';\n"+s;
+  s="import {equipmentDropRate,noEquipmentDrops,weaponCondition,initializeWeaponCondition,damageHeldWeapon,heldWeaponJammed,heldWeaponItem,weaponJams} from '../loot-policy.js';\n"+s;
+  s=once(s,"if(a.burningTurns>0)reason=", "if(heldWeaponJammed(a))reason='Weapon jammed: clear jam with Reload';else if(a.burningTurns>0)reason=");
+  s=once(s,'s.effect={...sequence[0],trajectories,explosions,explosion:explosions.at(-1),sequence};', 's.effect=sequence.length?{...sequence[0],trajectories,explosions,explosion:explosions.at(-1),sequence}:null;');
+  s=once(s,'  f.left--;shooter.overwatch=null;', "  if(weaponJams(s,shooter,f.weapon,w)){shooter.overwatch=null;log(s,shooter.name+': '+w.short+' jammed. Clear jam before firing.');frames.pop();continue;}\n  f.left--;shooter.overwatch=null;");
+  s=once(s,'const w=WEAPONS[u.weapon],count=', "if(heldWeaponJammed(u)){if(s.queue.length||combatCosts(s)&&u.ap<3)return false;if(combatCosts(s))u.ap-=3;delete heldWeaponItem(u).jammed;u.overwatch=null;log(s,u.name+' cleared the weapon jam.');return true;}const w=WEAPONS[u.weapon],count=");
+  s=once(s,'g.ammo[g.weapon]===0&&reload(s,g,true)', '(g.ammo[g.weapon]===0||heldWeaponJammed(g))&&reload(s,g,true)');
   s=once(s,'initInventory(u,WEAPONS);', 'initInventory(u,WEAPONS);initializeWeaponCondition(s,u);');
-  s=once(s,"items.push({type:'weapon',kind:i.kind,rounds:i.rounds})", "items.push({type:'weapon',kind:i.kind,rounds:i.rounds,condition:weaponCondition(s,u,i)})");
+  s=once(s,"items.push({type:'weapon',kind:i.kind,rounds:i.rounds})", "items.push({type:'weapon',kind:i.kind,rounds:i.rounds,condition:weaponCondition(s,u,i),...(i.jammed?{jammed:true}:{})})");
   s=once(s,"const hitZone=w.blast?'torso':pelletZone||shot?.zone||f.zone;", "const hitZone=w.blast?'torso':pelletZone||shot?.zone||f.zone;damageHeldWeapon(s,victim,hitZone,rawAmount);");
   s=once(s,'export function rollLoot(s,u){syncWeapons(u);', 'export function rollLoot(s,u){if(noEquipmentDrops(u))return [];syncWeapons(u);');
   s=once(s,'/* bare hands are not an item */', "/* bare hands are not an item */if(!['weapon','ammo'].includes(i.type)||i.type==='ammo'&&!(i.count>0))continue;if(lootRandom(s)>=equipmentDropRate(s,u))continue;");

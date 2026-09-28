@@ -223,5 +223,20 @@ hits generate corpse loot. Armor/endurance do not protect the gun, and torso,
 head, leg hits or blast damage do not count as weapon hits. Separate pellet hits
 can each damage the weapon. Dropped weapons retain condition and loaded rounds;
 transfers and encounter saves preserve the value. The character inventory shows
-condition as a percentage. Weapon condition currently records wear only; firing
-penalties, jamming and weapon repair economics are not yet implemented.
+condition as a percentage. Weapon condition now controls jamming as described below; accuracy/damage penalties
+and weapon repair economics remain unimplemented.
+
+### Low-condition firearm jams
+
+A firearm below 10% condition has a 20% chance to jam on each attempted round.
+Exactly 10% does not roll. Burst rounds roll individually; shotguns roll once per
+shell, not per pellet. Melee, thrown explosives, launchers and flamethrowers are
+excluded from this firearm-jam rule. A jam stops that burst, spends the attack's
+normal AP, and does not consume its unfired round or emit a shot effect.
+
+Reload becomes Clear jam (3 AP during combat, free outside combat). Clearing does
+not refill the magazine or spend reserve ammunition; reload again if needed.
+Guards use the same clearing action. Jam state is stored on the individual weapon,
+survives transfers/drops and saves, and appears in its inventory card. The separate
+saved jam RNG does not consume accuracy or loot rolls. Clearing never repairs the
+weapon, so the below-10% chance still applies on the next shot.

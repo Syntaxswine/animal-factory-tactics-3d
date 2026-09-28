@@ -12,7 +12,7 @@ import {shotAim} from '../aim-levels.js';
 import {initializeStats,weaponAccuracy,damageAfterResistance} from '../character-stats.js';
 import {spendStamina,spendMovement,canMoveStamina,recoverStamina} from '../stamina.js';
 import {starterTools} from '../inventory-tools.js';
-import {equipmentDropRate,noEquipmentDrops,weaponCondition,initializeWeaponCondition,damageHeldWeapon} from '../loot-policy.js';
+import {equipmentDropRate,noEquipmentDrops,weaponCondition,initializeWeaponCondition,damageHeldWeapon,heldWeaponJammed,heldWeaponItem,weaponJams} from '../loot-policy.js';
 import {explosivePreview,explosiveTrajectory,detonate} from './explosives.js';
 import {initPersonality,initGuardSocial,socialRoll,friendlyReaction,helped,settleStress,injuryStrain,killRelief,collapse} from './personalities.js';
 import {partnerLost,stabilizedPartner,cleanWin,onContract} from './happiness.js';
@@ -272,7 +272,7 @@ export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel
  const cover=!melee&&coverAgainst(s,a,b),heightCover=!melee&&levelOf(b)>levelOf(a)&&(a.x!==b.x||a.y!==b.y),coverPenalty=cover?25:heightCover?15:0,rangePenalty=melee?0:Math.max(0,levelOf(b)-levelOf(a)),effectiveRange=Math.max(0,w.range-rangePenalty);
  const chance=Math.max(10,Math.min(95,weaponAccuracy(a)+(melee?10:0)+(w.accuracy||0)+aim.accuracy+aiming.accuracy-(melee?0:Math.max(0,range+rangePenalty-3)/Math.max(1,w.range-3)*(w.rangeLoss??25))-coverPenalty-(rounds>1?10:0)));
  let reason='';
- if(a.burningTurns>0)reason='On fire: running in panic';else if(melee&&zone!=='torso')reason='Aimed shots require a firearm';else if(!visible)reason='Target not visible';else if(!inCone(a,b))reason='Outside personal sight cone';else if(range>effectiveRange)reason='Out of range';else if(!lineOfSight(s,a,b))reason='Line of fire blocked';else if(!canSee(s,a,b))reason='Not identified: face the target';else if(!melee&&!zoneVisible(s,a,b,zone))reason=AIM_ZONES[zone].label+' hidden by cover';else if(w.mag&&a.ammo[a.weapon]<rounds)reason='Reload required';else if(combatCosts(s)&&a.ap<cost)reason='Not enough AP';
+ if(heldWeaponJammed(a))reason='Weapon jammed: clear jam with Reload';else if(a.burningTurns>0)reason='On fire: running in panic';else if(melee&&zone!=='torso')reason='Aimed shots require a firearm';else if(!visible)reason='Target not visible';else if(!inCone(a,b))reason='Outside personal sight cone';else if(range>effectiveRange)reason='Out of range';else if(!lineOfSight(s,a,b))reason='Line of fire blocked';else if(!canSee(s,a,b))reason='Not identified: face the target';else if(!melee&&!zoneVisible(s,a,b,zone))reason=AIM_ZONES[zone].label+' hidden by cover';else if(w.mag&&a.ammo[a.weapon]<rounds)reason='Reload required';else if(combatCosts(s)&&a.ap<cost)reason='Not enough AP';
  let obstruction=null;
  if(!reason&&!melee&&!w.incendiary){const path=bulletTrajectory(s,a,b,{accurate:true,zone,reach:w.range*1.5},()=>0);if(path.unitId!==b.id){const unit=s.units.find(u=>u.id===path.unitId);obstruction=unit?{kind:'unit',id:unit.id,name:unit.name,friendly:unit.team===a.team}:{kind:path.kind};}}
  return {ok:!reason,reason,cost,rounds,aimLevel:aiming.level,chance:Math.round(chance),cover,heightCover,coverPenalty,rangePenalty,damage:damageAfterResistance(b,Math.round(weaponDamage(w,range)*aim.damage)),rawDamage:Math.round(weaponDamage(w,range)*aim.damage),pellets:w.pellets||1,zone,range:effectiveRange,tankChance:melee?0:tankExplosionChance(b,zone),obstruction};
@@ -339,6 +339,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
  cascade(s,()=>{while(frames.length){ // one attack, replies included, is one trigger for the guards it alerts
   const f=frames.at(-1),shooter=f.a,target=f.b,w=WEAPONS[f.weapon];
   if(!f.left||!alive(shooter)||shooter.burningTurns||w.mag&&shooter.ammo[f.weapon]<1){frames.pop();continue;}
+  if(weaponJams(s,shooter,f.weapon,w)){shooter.overwatch=null;log(s,shooter.name+': '+w.short+' jammed. Clear jam before firing.');frames.pop();continue;}
   f.left--;shooter.overwatch=null;shooter.heading=headingTo(shooter,f.aim);shooter.facing=(f.aim.x-shooter.x)-(f.aim.y-shooter.y)>=0?1:-1;
   emitNoise(s,shooter,w.mag?30:2);if(w.mag)alarm(s,shooter,w.range*2);if(w.mag)shooter.ammo[f.weapon]--;
   const accurate=w.blast?false:random(s)*100<f.p.chance,ballistic=w.mag&&!w.incendiary;
@@ -373,7 +374,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   }
  }
  }});
- s.effect={...sequence[0],trajectories,explosions,explosion:explosions.at(-1),sequence};
+ s.effect=sequence.length?{...sequence[0],trajectories,explosions,explosion:explosions.at(-1),sequence}:null;
  refresh(s);if(byAI)resolveOverwatch(s,a);return true;
 }
 
@@ -389,14 +390,14 @@ export function equipCutters(s,u,slot){
 }
 export function stowWeapon(s,u,slot){if(!canControl(s,u)||s.queue.length||![0,1].includes(slot)||!u.slots[slot])return false;const slots=[...u.slots],kind=slots[slot];slots[slot]=null;const layout=gridLayout({...u,slots});if(!layout.ok)return false;u.slots=slots;storeLayout(u,layout);if(u.weapon===kind)u.weapon='hands';u.overwatch=null;log(s,'Equipment moved to backpack.');return true;}
 export function arrangeInventory(s,u,key,cell){if(!canControl(s,u)||s.queue.length||!placeItem(u,key,cell))return false;log(s,'Backpack rearranged.');return true;}
-export function reload(s,u,byAI=false){if(byAI?!(s.phase==='enemy'&&u?.team==='guard'&&alive(u)&&!u.burningTurns):!canControl(s,u))return false;const w=WEAPONS[u.weapon],count=Math.min(w.mag-u.ammo[u.weapon],reserve(u,u.weapon));if(s.queue.length||!w.mag||count<=0||(combatCosts(s)&&u.ap<3))return false;if(combatCosts(s))u.ap-=3;u.overwatch=null;u.ammo[u.weapon]+=count;consumeAmmo(u,u.weapon,count);syncWeapons(u);log(s,u.name+' reloaded '+count+' rounds.');return true;}
+export function reload(s,u,byAI=false){if(byAI?!(s.phase==='enemy'&&u?.team==='guard'&&alive(u)&&!u.burningTurns):!canControl(s,u))return false;if(heldWeaponJammed(u)){if(s.queue.length||combatCosts(s)&&u.ap<3)return false;if(combatCosts(s))u.ap-=3;delete heldWeaponItem(u).jammed;u.overwatch=null;log(s,u.name+' cleared the weapon jam.');return true;}const w=WEAPONS[u.weapon],count=Math.min(w.mag-u.ammo[u.weapon],reserve(u,u.weapon));if(s.queue.length||!w.mag||count<=0||(combatCosts(s)&&u.ap<3))return false;if(combatCosts(s))u.ap-=3;u.overwatch=null;u.ammo[u.weapon]+=count;consumeAmmo(u,u.weapon,count);syncWeapons(u);log(s,u.name+' reloaded '+count+' rounds.');return true;}
 // Same floor, own tile or a cardinal neighbour, no barrier between: the reach for loot, bodies and hand-overs.
 export const adjacentTo=(s,u,p)=>levelOf(u)===levelOf(p)&&Math.abs(unitBaseHeight(u)-unitBaseHeight(p))<.1&&Math.abs(u.x-p.x)+Math.abs(u.y-p.y)<=1&&(u.x===p.x&&u.y===p.y||!blockedEdge(s,u,p));
 // Loot rolls use their own stream so a body's contents never move a bullet (see socialSeed in personalities.js for the same idea).
 function lootRandom(s){s.lootSeed=(Math.imul(s.lootSeed??(s.seed^0x51ed270b),1664525)+1013904223)>>>0;return s.lootSeed/4294967296;}
 // What a fallen guard's body holds, rolled once at the fall from what it actually carried: every gun with the rounds it had loaded,
 // 40-100% of each reserve stack (the rest spilled, spent or ruined), nothing it did not carry. See RULES.md, Bodies as containers.
-export function rollLoot(s,u){if(noEquipmentDrops(u))return [];syncWeapons(u);const items=[];for(const i of u.pack){if(i.type==='weapon'&&i.kind==='hands')continue;/* bare hands are not an item */if(!['weapon','ammo'].includes(i.type)||i.type==='ammo'&&!(i.count>0))continue;if(lootRandom(s)>=equipmentDropRate(s,u))continue;if(i.type==='weapon')items.push({type:'weapon',kind:i.kind,rounds:i.rounds,condition:weaponCondition(s,u,i)});else if(i.type==='ammo'&&i.count>0){const kept=Math.ceil(i.count*(.4+.6*lootRandom(s)));if(kept>0)items.push({type:'ammo',kind:i.kind,count:kept});}}return items;}
+export function rollLoot(s,u){if(noEquipmentDrops(u))return [];syncWeapons(u);const items=[];for(const i of u.pack){if(i.type==='weapon'&&i.kind==='hands')continue;/* bare hands are not an item */if(!['weapon','ammo'].includes(i.type)||i.type==='ammo'&&!(i.count>0))continue;if(lootRandom(s)>=equipmentDropRate(s,u))continue;if(i.type==='weapon')items.push({type:'weapon',kind:i.kind,rounds:i.rounds,condition:weaponCondition(s,u,i),...(i.jammed?{jammed:true}:{})});else if(i.type==='ammo'&&i.count>0){const kept=Math.ceil(i.count*(.4+.6*lootRandom(s)));if(kept>0)items.push({type:'ammo',kind:i.kind,count:kept});}}return items;}
 // A body is a closed container until a comrade searches it; supply piles and dropped items are open.
 export const SEARCH_COST=3;
 export const pileOpen=p=>p.body===undefined||!!p.searched;
@@ -422,7 +423,7 @@ export function stepEnemy(s){
   const targetZone=target&&['torso','head','legs','weapon'].find(zone=>previewAttack(s,g,target,false,zone).ok);
   if(targetZone){attack(s,g,target,false,true,targetZone);return true;}
   if(target&&previewAttack(s,g,target).reason==='Not enough AP'){g.ap=0;s.enemyIndex++;return true;}
-  if(WEAPONS[g.weapon].mag&&g.ammo[g.weapon]===0&&reload(s,g,true))return true;}
+  if(WEAPONS[g.weapon].mag&&(g.ammo[g.weapon]===0||heldWeaponJammed(g))&&reload(s,g,true))return true;}
  // Alert guards close on their last fix; searching guards walk the report cells, one per round, and fire only once they identify someone (Alert again).
  const dest=stateOf(g)==='alert'?g.lastKnown:searchGoal(g);
  if(!dest){if(stateOf(g)==='searching')setState(s,g,'standdown');else g.heading=(g.heading+45)%360;g.ap=0;s.enemyIndex++;refresh(s);return true;}
