@@ -186,7 +186,9 @@ stabilize actions continue using their existing small-kit supplies.
 ### Reusable 3D chest
 
 medical-chest.js exports createMedicalChest(), a floor-rooted Three.js group with
-an approximately 2:1 footprint, lid, straps, latches, handles and medical plaques.
+an approximately 2:1 footprint, modeled lid, latches and top handle. Straps,
+medical crosses with their cream backgrounds, and side handles are flat face
+textures, with no added geometry or separate shadows.
 Call its userData.dispose() when releasing an instance. BattleLoot renders it
 for ground piles containing a large medical kit, replacing the generic box and
 updating the model when pile contents change. Existing picking, visibility and
