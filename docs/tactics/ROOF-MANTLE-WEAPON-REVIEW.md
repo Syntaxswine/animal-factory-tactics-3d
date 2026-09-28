@@ -37,7 +37,11 @@ The browser matrix passed **289 animal/outfit/equipment combinations and 11,560 
 
 **9/10 hostile review passed** for the bounded all-equipment mantle study. All **214 focused/regression tests pass** (144 equipment plus 70 existing motion tests), and the Pages build/module-closure check passes. Independent visual inspection covers every weapon type on the horse, with stressed pig/skunk, original/Red Hat, grip, side/rear and belt-attachment checks.
 
-The subsequent pig weight-transfer and early-left-shift revisions rechecked all 52 pig/outfit/equipment combinations (2,080 rendered samples) without browser errors. The complete regression command in [the motion study](ROOF-MANTLE-STUDY.md) now passes 222 tests, including eight weight-transfer regressions. Both pigs received a fresh 9/10 hostile visual review.
+The subsequent pig weight-transfer and early-left-shift revisions rechecked all 52 pig/outfit/equipment combinations (2,080 rendered samples) without browser errors. That revision passed 222 tests, including eight pig weight-transfer regressions. Both pigs received a fresh 9/10 hostile visual review.
+
+The all-animal style transfer additionally moves the HMG clear of the torso during settling/gathering, and moves the skunk HMG laterally while the character leans around its plume. Five new tests check actual posed-tail triangle crossings, containment and 2 mm separation. Disabling that offset in an isolated negative control reproduces the feed-lid and ammunition-belt intersection. This corrects attachment presentation without changing the weapon or tail geometry. The sling remains an authored path rather than a gravity simulation. See [the current motion study](ROOF-MANTLE-STUDY.md) for the complete validation commands and integration boundary.
+
+After the all-animal style transfer, the complete roof-and-cliff browser matrix passed **578 animal/outfit/equipment combinations and 23,120 rendered samples**, with no browser errors. All 13 horse equipment modes also completed normal-speed playback on each surface. The full repository check passes **1,231 tests** plus asset verification; the Pages build/module-closure check passes.
 
 Reproduce with:
 
@@ -47,6 +51,6 @@ node tools/roof-mantle-weapons-review.mjs
 node tools/build-tactics-3d.mjs
 ```
 
-The browser tool uses `REVIEW_URL` (default port 4439) and `PLAYWRIGHT_PATH`. Optional `ANIMALS` and `WEAPONS` comma-separated filters support focused reruns. Reports are local under `artifacts/roof-mantle-weapons/`.
+The browser tool uses `REVIEW_URL` (default port 4439) and `PLAYWRIGHT_PATH`. Set `SURFACES=roof,cliff` to check both ledges; the default is roof only. Optional `ANIMALS` and `WEAPONS` comma-separated filters support focused reruns. Reports are local under `artifacts/roof-mantle-weapons/`.
 
 This is equipment presentation approval for the authored mantle study. It does not establish traversal rules, gameplay integration, handling during approach/descent, or a new approval of the underlying weapon artwork. The previously documented hen apron strain limitation remains unchanged.

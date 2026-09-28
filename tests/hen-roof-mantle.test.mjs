@@ -60,3 +60,31 @@ test('apron hem has a two-millimetre roof gap and no degenerate triangle after d
  for(let i=0;i<index.count;i+=3){const triangle=new T.Triangle(points[index.getX(i)],points[index.getX(i+1)],points[index.getX(i+2)]);assert.ok(triangle.getArea()>1e-9,'degenerate apron triangle at '+r.time);}
  }
 }));
+
+test('hen presses the upper breast over the lip and shifts left before the lead foot lifts',()=>withClip((w,m)=>{
+ const mesh=w.parts.find(p=>p.name==='fitted waistcoat'),chest=[...new Set(mesh.geometry.index.array)].filter(i=>{const p=new T.Vector3().fromBufferAttribute(mesh.geometry.attributes.position,i);return p.x>.10&&p.y>.98&&p.y<1.15&&Math.abs(p.z)<.15;});assert(chest.length>10);
+ const lift=m.phases.find(p=>p.label==='Right leg over'),joint=name=>m.skeleton.bones.find(b=>b.name===name).getWorldPosition(V());
+ for(const time of [lift.start-.001,lift.start+.025]){
+  const r=m.apply(time/m.duration),center=chest.reduce((sum,i)=>sum.add(mesh.getVertexPosition(i,V()).applyMatrix4(mesh.matrixWorld)),V()).multiplyScalar(1/chest.length),left=joint('wing -1'),right=joint('wing 1');
+  assert(center.x>.06&&center.y>2.025,'upper breast must already be above and inside the lip');
+  assert((right.y-left.y)/left.distanceTo(right)>Math.sin(15*Math.PI/180),'left wing shoulder must visibly drop before the foot lift');
+  assert(joint('breast').z-joint('pelvis').z<-.10,'breast has not shifted toward the braced left wing');
+  assert(r.contacts.find(c=>c.id==='wing-1').planted,'left wing-tip support released during the press');
+  if(time<lift.start){const foot=r.contacts.find(c=>c.id==='foot1');assert(foot.point[0]<0&&foot.point[1]<1.85,'foot lifted before the upper-body transfer');}
+ }
+}));
+
+test('hen settles the feathered belly and low feet while unloading one wing',()=>withClip((w,m)=>{
+ const mesh=w.parts.find(p=>p.name==='feathered body'),belly=[...new Set(mesh.geometry.index.array)].filter(i=>{const p=new T.Vector3().fromBufferAttribute(mesh.geometry.attributes.position,i);return p.x>.12&&p.y>.50&&p.y<.90&&Math.abs(p.z)<.20;});assert(belly.length>10);
+ const flat=m.phases.find(p=>p.label==='Lie flat');
+ for(const fraction of [.25,.5,.9]){const r=m.apply((flat.start+(flat.end-flat.start)*fraction)/m.duration),points=belly.map(i=>mesh.getVertexPosition(i,V()).applyMatrix4(mesh.matrixWorld));
+  assert(points.filter(p=>p.x>0&&p.y>=1.998&&p.y<2.04).length>=3,'feathered belly is suspended above the roof');
+  assert(r.contacts.find(c=>c.id==='foot-1').planted,'low trailing foot should share the settled support');
+  assert(r.contacts.find(c=>c.id==='wing1').planted&&!r.contacts.find(c=>c.id==='wing-1').planted,'one wing should visibly unload during the belly pause');
+ }
+}));
+
+test('hen gathers a foot underneath before raising the hips and keeps the other foot planted',()=>withClip((w,m)=>{
+ const gather=m.phases.find(p=>p.label==='Gather legs underneath'),start=m.apply(gather.start/m.duration),height=start.root[1];
+ for(const fraction of [.1,.2,.3,.4]){const r=m.apply((gather.start+(gather.end-gather.start)*fraction)/m.duration);assert(Math.abs(r.root[1]-height)<1e-10,'hips rise before the first foot is gathered');assert(r.contacts.find(c=>c.id==='foot-1').planted,'trailing foot slides while it should support the gather');}
+}));
