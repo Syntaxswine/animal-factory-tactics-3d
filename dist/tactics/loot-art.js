@@ -1,3 +1,4 @@
+import {noEquipmentDrops} from './loot-policy.js';
 import {tileKey,levelOf} from './maps.js';
 // Shared inventory and ground-loot sprites; legacy casualty dressing only before loot transfer.
 export const LOOT_WEAPONS=['pistol','rifle','assault'];
@@ -18,7 +19,7 @@ export function drawLootPile(ctx,load,pile,point,zoom){
  return drawn;
 }
 export function deathDropArt(unit){
- if(unit.lootDropped||unit.hp>0||['bleeding','stable','captured'].includes(unit.casualty)||!LOOT_WEAPONS.includes(unit.weapon))return [];
+ if(noEquipmentDrops(unit)||unit.lootDropped||unit.hp>0||['bleeding','stable','captured'].includes(unit.casualty)||!LOOT_WEAPONS.includes(unit.weapon))return [];
  const weapon=unit.weapon;
  const drops=[{src:`../assets/environment/loot/gun-${weapon}.png`,size:weapon==='pistol'?23:40,dx:-4,dy:-2}];
  if((unit.ammo?.[weapon]??0)>0)drops.push({src:`../assets/environment/loot/ammo-${weapon}.png`,size:17,dx:11,dy:5});

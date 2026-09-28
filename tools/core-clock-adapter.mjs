@@ -84,6 +84,12 @@ export function adaptCoreClock(name,data){
   return Buffer.from(s);
  }
  if(name==='engine.js'){
+  s="import {equipmentDropRate,noEquipmentDrops,weaponCondition,initializeWeaponCondition,damageHeldWeapon} from '../loot-policy.js';\n"+s;
+  s=once(s,'initInventory(u,WEAPONS);', 'initInventory(u,WEAPONS);initializeWeaponCondition(s,u);');
+  s=once(s,"items.push({type:'weapon',kind:i.kind,rounds:i.rounds})", "items.push({type:'weapon',kind:i.kind,rounds:i.rounds,condition:weaponCondition(s,u,i)})");
+  s=once(s,"const hitZone=w.blast?'torso':pelletZone||shot?.zone||f.zone;", "const hitZone=w.blast?'torso':pelletZone||shot?.zone||f.zone;damageHeldWeapon(s,victim,hitZone,rawAmount);");
+  s=once(s,'export function rollLoot(s,u){syncWeapons(u);', 'export function rollLoot(s,u){if(noEquipmentDrops(u))return [];syncWeapons(u);');
+  s=once(s,'/* bare hands are not an item */', "/* bare hands are not an item */if(!['weapon','ammo'].includes(i.type)||i.type==='ammo'&&!(i.count>0))continue;if(lootRandom(s)>=equipmentDropRate(s,u))continue;");
   s="import {starterTools} from '../inventory-tools.js';\n"+s;
   s=once(s,'levelOf(u)===levelOf(p)&&Math.abs(u.x-p.x)', 'levelOf(u)===levelOf(p)&&Math.abs(unitBaseHeight(u)-unitBaseHeight(p))<.1&&Math.abs(u.x-p.x)');
   s=once(s,'body:u.id,searched:false,items:rollLoot(s,u)', 'body:u.id,...(u.towerPost?{towerPost:structuredClone(u.towerPost)}:{}),searched:false,items:rollLoot(s,u)');

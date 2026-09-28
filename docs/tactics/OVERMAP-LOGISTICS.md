@@ -194,3 +194,34 @@ for ground piles containing a large medical kit, replacing the generic box and
 updating the model when pile contents change. Existing picking, visibility and
 floor placement remain in effect. The longer inventory icon remains lightweight
 SVG. medical-chest-study.html provides a rotatable review of the shared model.
+
+## Equipment drops
+
+Player-trained militia carry playerTrainedMilitia: true in each encounter roster
+entry. Tactical integration must retain that marker when spawning them. The core
+loot function returns no equipment for marked units on every difficulty, and
+legacy corpse decoration suppresses their weapon sprites. Saves retain the flag.
+Actual militia tactical spawning remains a separate integration milestone.
+
+Ordinary enemy weapon and ammunition stacks roll independently: Easy 75%,
+Standard 50%, Hard 25%. The rate table lives in loot-policy.js for tuning.
+A successful ammunition drop retains the existing 40–100% quantity roll; a
+successful gun drop preserves loaded rounds. Supplies already placed in the map
+and deliberate inventory transfers are unchanged. Loot uses its own saved RNG
+stream and is generated once on death. Hard's rate is prepared for the future
+Hard mode; the current tactical mode selector still offers Easy and Standard.
+
+### Dropped weapon condition
+
+Enemy weapons start at 100% on Easy, 75% on Standard, and 50% on the future
+Hard setting. Existing explicit condition is retained. Merc starting weapons use
+100%; authored supply weapons without a condition display 100%.
+
+Confirmed weapon-zone impacts subtract one condition point per rounded point of
+raw impact damage (minimum one), clamped to zero. This happens before lethal
+hits generate corpse loot. Armor/endurance do not protect the gun, and torso,
+head, leg hits or blast damage do not count as weapon hits. Separate pellet hits
+can each damage the weapon. Dropped weapons retain condition and loaded rounds;
+transfers and encounter saves preserve the value. The character inventory shows
+condition as a percentage. Weapon condition currently records wear only; firing
+penalties, jamming and weapon repair economics are not yet implemented.

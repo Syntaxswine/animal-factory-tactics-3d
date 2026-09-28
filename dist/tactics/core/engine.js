@@ -12,6 +12,7 @@ import {shotAim} from '../aim-levels.js';
 import {initializeStats,weaponAccuracy,damageAfterResistance} from '../character-stats.js';
 import {spendStamina,spendMovement,canMoveStamina,recoverStamina} from '../stamina.js';
 import {starterTools} from '../inventory-tools.js';
+import {equipmentDropRate,noEquipmentDrops,weaponCondition,initializeWeaponCondition,damageHeldWeapon} from '../loot-policy.js';
 import {explosivePreview,explosiveTrajectory,detonate} from './explosives.js';
 import {initPersonality,initGuardSocial,socialRoll,friendlyReaction,helped,settleStress,injuryStrain,killRelief,collapse} from './personalities.js';
 import {partnerLost,stabilizedPartner,cleanWin,onContract} from './happiness.js';
@@ -95,7 +96,7 @@ export function createGame(seed=1947,definition=factoryMap(),detect=true,difficu
  // G3 behind its knob: the campaign (createWorld) draws an archetype per guard from a hash of the seed and the guard's index; plain createGame leaves the G2 base numbers.
  let rosterSeed=(options.rosterSeed??seed)>>>0;for(const c of String(definition.name||''))rosterSeed=Math.imul(rosterSeed^c.charCodeAt(0),16777619)>>>0;
  s.rules={social:!!options.social,awareness:!!options.awareness,rosterSeed};if(s.rules.social)for(const [i,g] of guards(s).entries()){g.archetype=drawArchetype(rosterSeed,i);g.traits={...ARCHETYPES[g.archetype].traits};initGuardSocial(g);}
- for(const u of s.units){initInventory(u,WEAPONS);if(u.team==='squad'){initProgression(u);initPersonality(u,s.rules.social);}}s.loot=definition.starts.map((p,i)=>({...p,items:[{type:'ammo',kind:i%2?'rifle':'pistol',count:i%2?5:8}]}));
+ for(const u of s.units){initInventory(u,WEAPONS);initializeWeaponCondition(s,u);if(u.team==='squad'){initProgression(u);initPersonality(u,s.rules.social);}}s.loot=definition.starts.map((p,i)=>({...p,items:[{type:'ammo',kind:i%2?'rifle':'pistol',count:i%2?5:8}]}));
  if(definition.name==='Factory test')for(const [i,kind]of ['shotgun','sniper','smg','hmg'].entries())s.loot[i].items.push({type:'weapon',kind,rounds:WEAPONS[kind].mag},{type:'ammo',kind,count:12});
  if(definition.name==='Factory test')for(const [i,kind]of ['grenade','launcher','rpg'].entries())s.loot[i+1].items.push({type:'weapon',kind,rounds:WEAPONS[kind].mag},{type:'ammo',kind,count:kind==='grenade'?6:3});
  if(definition.name==='Factory test')s.loot[0].items.push({type:'weapon',kind:'flamethrower',rounds:4},{type:'ammo',kind:'flamethrower',count:4});
@@ -354,7 +355,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   const impacts=blastResult?blastResult.hits:pelletHits||[{unit:victim,damage:Math.round(Math.round(weaponDamage(w,Math.hypot(shooter.x-victim.x,shooter.y-victim.y))*AIM_ZONES[shot?.zone||f.zone].damage)*(shooter.team==='guard'&&!w.incendiary?.65:1))}];
   const reacted=new Set();
   for(const {unit:victim,damage:rawAmount,zone:pelletZone}of impacts){const amount=damageAfterResistance(victim,rawAmount);
-  const hitZone=w.blast?'torso':pelletZone||shot?.zone||f.zone;
+  const hitZone=w.blast?'torso':pelletZone||shot?.zone||f.zone;damageHeldWeapon(s,victim,hitZone,rawAmount);
   if(victim.team==='guard')targeted(s,victim,shooter);
   const tankChance=w.mag?tankExplosionChance(victim,hitZone):0,standing=s.units.filter(alive);
   if(tankChance>0&&random(s)<tankChance){const blast=explodeTanks(s,victim,shooter);explosions.push(blast);event.explosions.push(blast);}
@@ -395,7 +396,7 @@ export const adjacentTo=(s,u,p)=>levelOf(u)===levelOf(p)&&Math.abs(unitBaseHeigh
 function lootRandom(s){s.lootSeed=(Math.imul(s.lootSeed??(s.seed^0x51ed270b),1664525)+1013904223)>>>0;return s.lootSeed/4294967296;}
 // What a fallen guard's body holds, rolled once at the fall from what it actually carried: every gun with the rounds it had loaded,
 // 40-100% of each reserve stack (the rest spilled, spent or ruined), nothing it did not carry. See RULES.md, Bodies as containers.
-export function rollLoot(s,u){syncWeapons(u);const items=[];for(const i of u.pack){if(i.type==='weapon'&&i.kind==='hands')continue;/* bare hands are not an item */if(i.type==='weapon')items.push({type:'weapon',kind:i.kind,rounds:i.rounds});else if(i.type==='ammo'&&i.count>0){const kept=Math.ceil(i.count*(.4+.6*lootRandom(s)));if(kept>0)items.push({type:'ammo',kind:i.kind,count:kept});}}return items;}
+export function rollLoot(s,u){if(noEquipmentDrops(u))return [];syncWeapons(u);const items=[];for(const i of u.pack){if(i.type==='weapon'&&i.kind==='hands')continue;/* bare hands are not an item */if(!['weapon','ammo'].includes(i.type)||i.type==='ammo'&&!(i.count>0))continue;if(lootRandom(s)>=equipmentDropRate(s,u))continue;if(i.type==='weapon')items.push({type:'weapon',kind:i.kind,rounds:i.rounds,condition:weaponCondition(s,u,i)});else if(i.type==='ammo'&&i.count>0){const kept=Math.ceil(i.count*(.4+.6*lootRandom(s)));if(kept>0)items.push({type:'ammo',kind:i.kind,count:kept});}}return items;}
 // A body is a closed container until a comrade searches it; supply piles and dropped items are open.
 export const SEARCH_COST=3;
 export const pileOpen=p=>p.body===undefined||!!p.searched;

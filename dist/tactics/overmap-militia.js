@@ -20,7 +20,7 @@ export function trainMilitia(roster){
  return {basic:roster.basic+recruited-medium,medium:roster.medium+medium-high,high:roster.high+high,rounds:roster.rounds+1};
 }
 export function militiaLoadout(roster){
- return Object.keys(MILITIA_WEAPONS).flatMap(tier=>Array.from({length:roster[tier]},(_,i)=>({tier,weapon:MILITIA_WEAPONS[tier][i%2]})));
+ return Object.keys(MILITIA_WEAPONS).flatMap(tier=>Array.from({length:roster[tier]},(_,i)=>({tier,weapon:MILITIA_WEAPONS[tier][i%2],playerTrainedMilitia:true})));
 }
 export function sectorLeadership(session,sector){
  return Math.max(1,...session.groups.filter(g=>g.state.position===sector&&!g.state.progress).flatMap(g=>g.state.members.map(u=>Math.max(1,Math.min(100,Number(u.stats?.leadership)||1)))));
