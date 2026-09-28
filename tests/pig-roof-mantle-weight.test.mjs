@@ -29,6 +29,18 @@ function elbows(worker){
 }
 
 for(const id of ['pig-foreman','pig-director']){
+ test(id+': anatomical left weight shift is established before the right leg swings',()=>setup(id,(worker,motion)=>{
+  const lead=motion.phases.find(p=>p.label==='Right leg over'),joint=name=>worker.bones.find(b=>b.name===name).getWorldPosition(V());
+  // Measure posed joints in roof space, not authored Euler values: combined
+  // forward bend and hip rotation can cancel a nominal "left lean".
+  for(const t of [lead.start-.001,lead.start+.04,(lead.start*3+lead.end)/4]){
+   const result=motion.apply(t/motion.duration),left=joint('upperArm-1'),right=joint('upperArm1'),hips=joint('hips'),center=left.clone().add(right).multiplyScalar(.5);
+   assert((right.y-left.y)/left.distanceTo(right)>Math.sin(15*Math.PI/180),'left shoulder does not visibly drop before leg swing at '+t);
+   assert(center.z-hips.z<-.05,'upper body has not shifted anatomically left at '+t);
+   if(t<lead.start){const foot=result.contacts.find(c=>c.id==='foot1');assert(foot.point[1]<1.8&&foot.point[0]<0,'lead foot already climbed before left weight shift');}
+  }
+ }));
+
  test(id+': the upper chest is over the lip before the right leg starts swinging onto the roof',()=>setup(id,(worker,motion)=>{
   const lead=motion.phases.find(p=>p.label==='Right leg over'),mesh=worker.parts[0],chest=[];
   for(const i of new Set(mesh.geometry.index.array)){
