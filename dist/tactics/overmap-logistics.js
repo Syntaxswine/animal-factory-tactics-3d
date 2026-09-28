@@ -68,10 +68,25 @@ export function startMilitiaTraining(session,map,id){
  l.money-=l.militiaCost;g.training={sector,leadership,endsAt:session.clock.minutes+duration,paid:l.militiaCost};log(l,g.name+' assigned to train four militia.',session.clock.minutes);
 }
 export function cancelMilitiaTraining(session,id){const g=session.groups.find(g=>g.id===id);if(!g?.training)throw Error('This group is not training.');delete g.training;}
+function validateSavedEnemies(session,map){
+ const l=session.logistics,ids=new Set(session.groups.map(g=>g.id));
+ for(const g of [...l.convoys,...l.raiders]){
+  if(!g||typeof g.id!=='string'||!g.id.length||ids.has(g.id)||!number(g.waitMinutes))throw Error('Invalid saved enemy group.');
+  ids.add(g.id);validateTravel(g.state,map);
+  if(g.state.clock.minutes!==session.clock.minutes)throw Error('Saved enemy clock mismatch.');
+ }
+ for(const c of l.convoys)if(!l.forts.some(f=>f.index===c.fort))throw Error('Unknown saved convoy destination.');
+ const p=l.pending;if(p===null)return;
+ if(!p||!['fortress','convoy','raiders'].includes(p.kind)||!Number.isInteger(p.sector)||!map.sectors[p.sector]||!Array.isArray(p.groupIds)||!p.groupIds.length||new Set(p.groupIds).size!==p.groupIds.length||p.groupIds.some(id=>!session.groups.some(g=>g.id===id)))throw Error('Invalid saved encounter handoff.');
+ if(p.kind==='fortress'){
+  if(!l.forts.some(f=>f.index===p.sector&&f.owner==='red-hats'))throw Error('Saved encounter requires an enemy fortress.');
+ }else if(!(p.kind==='convoy'?l.convoys:l.raiders).some(g=>g.id===p.enemyId))throw Error('Saved encounter references a missing enemy.');
+}
 export function validateLogistics(session,map){const l=session.logistics;if(!l)return;if(l.version!==1||!Number.isInteger(l.nextId)||l.nextId<1||!number(l.money)||!(l.militiaCost===null||number(l.militiaCost))||!number(l.weapons)||!Array.isArray(l.forts)||!Array.isArray(l.convoys)||!Array.isArray(l.raiders)||!Array.isArray(l.log)||!l.militia||typeof l.militia!=='object')throw Error('Invalid logistics save.');
  if(l.forts.length>450||l.convoys.length>1000||l.raiders.length>1000||l.log.length>80||new Set(l.forts.map(f=>f.index)).size!==l.forts.length)throw Error('Invalid logistics inventory.');
  normalizeMilitia(session,map);
  for(const f of l.forts)if(map.sectors[f.index]?.role!=='fortress'||!['player','red-hats'].includes(f.owner)||!Number.isInteger(f.stock)||f.stock<0||!(f.readyAt===null||number(f.readyAt))||!number(f.nextDispatch))throw Error('Invalid fortress schedule.');
+ validateSavedEnemies(session,map);
  const assigned=new Set();
  for(const g of session.groups)if(g.training){
   const t=g.training,key=militiaKey(map,t.sector);

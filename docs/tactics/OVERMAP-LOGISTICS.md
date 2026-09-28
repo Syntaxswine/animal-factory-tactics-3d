@@ -103,3 +103,18 @@ assignment restrictions, completion, deterministic time and save round trips.
 `tools/check-overmap-logistics.mjs` covers the packaged browser UI, arrows,
 training, persistence and encounter pause. Existing group-travel checks continue
 to test split groups and synchronized arrival while resolving tester handoffs.
+
+## Save-validation regression tester
+
+Run `node --test tests/overmap-logistics-save.test.mjs` from the repository root.
+This automated tester exercises the same group and logistics validators used by
+Load. It rejects absent enemy movement state, broken routes, invalid crossing
+progress, mismatched clocks, invalid waits, duplicate IDs, missing convoy
+fortresses, and stale or malformed encounter references. Positive controls check
+partial journeys continue identically after JSON save/load and all three encounter
+kinds remain paused until resolved. The suite runs in the normal test command too.
+
+Design clarification: sharing a sector triggers engagement regardless of the
+units' fractional positions. No mid-road geometric collision rule is added here.
+Recruitment already due when a player arrives may supply a squad at the fortress;
+that behavior is retained. Tactical spawn positions still await combat integration.
