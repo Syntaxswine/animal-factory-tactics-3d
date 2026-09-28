@@ -37,6 +37,8 @@ The browser matrix passed **289 animal/outfit/equipment combinations and 11,560 
 
 **9/10 hostile review passed** for the bounded all-equipment mantle study. All **214 focused/regression tests pass** (144 equipment plus 70 existing motion tests), and the Pages build/module-closure check passes. Independent visual inspection covers every weapon type on the horse, with stressed pig/skunk, original/Red Hat, grip, side/rear and belt-attachment checks.
 
+The subsequent pig weight-transfer revision rechecked all 52 pig/outfit/equipment combinations (2,080 rendered samples) without browser errors. The complete regression command in [the motion study](ROOF-MANTLE-STUDY.md) now passes 220 tests, including six new weight-transfer regressions. Both pigs received a fresh 9/10 hostile visual review.
+
 Reproduce with:
 
 ```text

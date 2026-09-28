@@ -65,7 +65,7 @@ export function createRoofMantle(worker,profile){
  ];
  for(const [i,key]of Object.entries(pig?.keys||{}))Object.assign(keys[i],key);
  const approachOffset=roofMantleApproachOffset(worker);for(let i=0;i<3;i++)keys[i].p[0]-=approachOffset;
- function body(k){root.position.fromArray(k.p);named.hips.rotation.set(k.hipLean||0,k.hipYaw||0,k.hipPitch||0);named.spine.rotation.set(k.sideLean||0,0,k.lean||0);named.head.rotation.z=-(k.hipPitch||0)*.65;root.updateMatrixWorld(true);}
+ function body(k){root.position.fromArray(k.p);named.hips.rotation.set(k.hipLean||0,k.hipYaw||0,k.hipPitch||0);named.spine.rotation.set(k.sideLean||0,0,k.lean||0);named.head.rotation.z=-(k.hipPitch||0)*.65+(k.headLift||0);root.updateMatrixWorld(true);}
  const free=keys.map(k=>{worker.pose('neutral');body(k);return Object.fromEntries(limbs.map(l=>[l.id,{p:l.c.localToWorld(l.offset.clone()),q:l.c.getWorldQuaternion(Q())}]));});
  // Wide paws/boots need raised toes in the flat pose and must lift before
  // advancing through the face. Hooved characters retain the approved path.
@@ -119,6 +119,7 @@ export function createRoofMantle(worker,profile){
    const restPole=rest.get(l.b).clone().sub(rest.get(l.a)),fold=V(-.1,1,l.side*.3),bodyPole=restPole.clone().applyQuaternion(named.hips.getWorldQuaternion(Q()));
    const basePole=V(.12,.05,l.side*.7);let pole=index===0||last?restPole:index===1?restPole.clone().lerp(basePole,w):index===5?basePole.clone().lerp(fold,w):index<6?basePole:fold;
    if(index===7)pole=fold.clone().lerp(bodyPole,w);if(index===8)pole=bodyPole;if(index===9)pole=bodyPole.clone().lerp(fold,ease(l.side===-1?u/.6:(u-.4)/.6));if(index===10)pole=fold.clone().lerp(restPole,w);
+   pig?.footPole?.({index,u,side:l.side,pole});
    const error=solve(l,target,q,pole),planted=index<=1||index>=10||index===6&&l.side===1&&u===1||index===9&&(l.side===-1?u>=.6:u===1);
    contacts.push({id:l.id,kind:planted?(target.y>1?'roof':'floor'):'free',point:target.toArray(),planted,error});
   }
@@ -130,7 +131,7 @@ export function createRoofMantle(worker,profile){
    if(index===9){const shift=ease(l.side===-1?u/.25:(u-.25)/.5);target.copy(hands[9][i]).lerp(hands[10][i],shift);target.y+=.06*Math.sin(Math.PI*shift);}
    if(index===10){const release=ease(u/.7);target.copy(hands[10][i]).lerp(l.c.localToWorld(l.offset.clone()),release);target.y+=.18*Math.sin(Math.PI*release);q.slerp(freeQ,release);}
    pig?.handPath({index,u,side:l.side,i,target,hands});
-   const freePole=l.b.getWorldPosition(V()).sub(l.a.getWorldPosition(V())),holdPole=V(-.4,.1+(index===9&&['goat','bull','sheep','skunk'].includes(profile.id)?.4*Math.sin(Math.PI*u):0),l.side*.8),pole=index===1?freePole.lerp(holdPole,w):index===10?holdPole.lerp(freePole,ease(u/.7)):holdPole,error=solve(l,target,q,pole),planted=pig?.plantedHand({index})??(index>=3&&index<=6||index===8||index===7&&(l.side===-1?(u<=.4||u>=.65):(u>=.4&&u<=.65))||index===9&&(l.side===-1?u>=.25:(u<=.25||u>=.75))||index===10&&u===0);
+   const freePole=l.b.getWorldPosition(V()).sub(l.a.getWorldPosition(V())),holdPole=V(-.4,.1+(index===9&&['goat','bull','sheep','skunk'].includes(profile.id)?.4*Math.sin(Math.PI*u):0),l.side*.8),pole=index===1?freePole.lerp(holdPole,w):index===10?holdPole.lerp(freePole,ease(u/.7)):holdPole,error=solve(l,target,q,pole),planted=pig?.plantedHand({index,u,side:l.side})??(index>=3&&index<=6||index===8||index===7&&(l.side===-1?(u<=.4||u>=.65):(u>=.4&&u<=.65))||index===9&&(l.side===-1?u>=.25:(u<=.25||u>=.75))||index===10&&u===0);
    asset.update(target.clone().sub(root.position),q,handBlend);contacts.push({id:l.id,kind:planted?'roof':'free',point:target.toArray(),planted,error});
   }else for(const {l,asset}of grips)asset.update(l.c.localToWorld(l.offset.clone()).sub(root.position),l.c.getWorldQuaternion(Q()),handBlend);
   for(const {o,p,q,scale}of carryHelpers){o.visible=handBlend<1;o.position.copy(p);o.quaternion.copy(q);o.scale.copy(scale).multiplyScalar(1-handBlend);}
