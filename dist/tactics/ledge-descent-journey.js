@@ -1,14 +1,14 @@
 import {createLedgeDescent} from './ledge-descent.js';
 import {createHenLedgeDescent} from './hen-ledge-descent.js';
 import {roofAnimationFrame} from './roof-journey.js';
-import {cliffAnimationFrame} from './cliff-journey.js';
+import {cliffClearanceFrame} from './cliff-journey.js';
 import {cliffSupportAt} from './cliff-support.js';
 import {toWorld} from './hybrid-world.js';
 export function supportsLedgeDescent(u){return !!u&&u.hp>0&&!u.away&&!u.casualty&&(u.species==='hen'?u.weapon==='hands':['horse','goat','bull','cow','donkey','sheep','skunk','rabbit','dog','pig-foreman','pig-director'].includes(u.species)&&(u.weapon==='rifle'||u.species==='donkey'&&u.weapon==='hands'));}
 export function descentAnimationFrame(state,event,unit){
  if(event?.direction!=='down'||!['roof','cliff'].includes(event.kind)||!supportsLedgeDescent(unit))return null;
  const reverse={...event,direction:'up',from:event.to,to:event.from};
- const frame=event.kind==='roof'?roofAnimationFrame(state,reverse,unit):cliffAnimationFrame(state,reverse,{...unit,species:'horse',weapon:'rifle'});
+ const frame=event.kind==='roof'?roofAnimationFrame(state,reverse,unit):cliffClearanceFrame(state,reverse,unit);
  if(!frame)return null;
  // The ground landing must also be free; the reversed ascent gate checks the lip.
  const a=event.to;

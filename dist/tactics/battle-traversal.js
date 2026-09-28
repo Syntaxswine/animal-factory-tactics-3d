@@ -1,6 +1,6 @@
 import {descentAnimationFrame,createDescentJourney,supportsLedgeDescent} from './ledge-descent-journey.js';
 import {roofAnimationFrame,createRoofJourney,supportsRoofMantle} from './roof-journey.js';
-import {cliffAnimationFrame,createCliffJourney} from './cliff-journey.js';
+import {cliffAnimationFrame,createCliffJourney,supportsCliffMantle} from './cliff-journey.js';
 import {supportsStow} from './equipment-stow.js';
 import {createLadderJourney} from './ladder-journey.js';
 import {towerCenter,WOODEN_LADDER} from './tower-geometry.js';
@@ -16,7 +16,7 @@ export function canAnimateLadder(event,unit){
 export class BattleTraversal {
  constructor(prepare=null){this.prepare=prepare;this.lastId=0;this.lastCliffId=0;this.lastRoofId=0;this.active=null;this.queue=[];}
  observe(state,now,reduced=false){const event=state.towerTraversal;if(event&&event.id>this.lastId){this.lastId=event.id;const unit=state.units.find(u=>u.id===event.unitId);if(!reduced&&unit?.team==='squad'&&canAnimateLadder(event,unit))this.queue.push(structuredClone(event));}for(const e of state.cliffTraversals||[]){if(e.id<=this.lastCliffId)continue;this.lastCliffId=e.id;const u=state.units.find(u=>u.id===e.unitId),frame=!reduced&&u?.team==='squad'&&(e.direction==='down'?descentAnimationFrame(state,e,u):cliffAnimationFrame(state,e,u));if(frame)this.queue.push({...structuredClone(e),frame});}for(const e of state.roofTraversals||[]){if(e.id<=this.lastRoofId)continue;this.lastRoofId=e.id;const u=state.units.find(u=>u.id===e.unitId),frame=!reduced&&u?.team==='squad'&&(e.direction==='down'?descentAnimationFrame(state,e,u):roofAnimationFrame(state,e,u));if(frame)this.queue.push({...structuredClone(e),frame});}if(!this.active&&this.queue.length)this.active={event:this.queue.shift(),start:null};
-  const a=this.active;if(a){const u=state.units.find(u=>u.id===a.event.unitId);if(reduced||!u||u.hp<=0||u.away||u.casualty||!(['roof','cliff'].includes(a.event.kind)&&a.event.direction==='down'?supportsLedgeDescent(u):a.event.kind==='roof'?supportsRoofMantle(u):a.event.kind==='cliff'?u.species==='horse'&&u.weapon==='rifle':canAnimateLadder(a.event,u))||a.weapon&&a.weapon!==u.weapon||a.start!==null&&now-a.start>=(a.motion?.duration??6)*1000)this.finish();}
+  const a=this.active;if(a){const u=state.units.find(u=>u.id===a.event.unitId);if(reduced||!u||u.hp<=0||u.away||u.casualty||!(['roof','cliff'].includes(a.event.kind)&&a.event.direction==='down'?supportsLedgeDescent(u):a.event.kind==='roof'?supportsRoofMantle(u):a.event.kind==='cliff'?supportsCliffMantle(u):canAnimateLadder(a.event,u))||a.weapon&&a.weapon!==u.weapon||a.start!==null&&now-a.start>=(a.motion?.duration??6)*1000)this.finish();}
  }
  pose(model,unit,now){const a=this.active;if(!a||a.event.unitId!==unit.id)return false;
   if(!['cliff','roof'].includes(a.event.kind)&&this.prepare&&!a.ready){
