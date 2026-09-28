@@ -80,7 +80,7 @@ export function travelPreview(state){
 export function validateTravel(state,map){
  const fail=()=>{throw Error('Invalid saved travel session. Reset the travel test to start again.');};
  if(!state||state.version!==1||!Number.isInteger(state.position)||!map.sectors[state.position]||!Number.isFinite(state.clock?.minutes)||state.clock.minutes<0||!Array.isArray(state.members)||!state.members.length||state.members.length>32||typeof state.restRequired!=='boolean'||!Array.isArray(state.route)||state.route.length>WIDTH*HEIGHT||!Number.isFinite(state.progress)||state.progress<0)fail();
- for(const u of state.members){if(typeof u.name!=='string'||u.name.length>100||!Number.isFinite(fatigue(u))||fatigue(u)<0||fatigue(u)>100)fail();sectorMinutes(u.stats?.agility);}
+ for(const u of state.members){if((u.hp!==undefined&&(!Number.isFinite(u.hp)||u.hp<0))||(u.maxHp!==undefined&&(!Number.isFinite(u.maxHp)||u.maxHp<=0||u.hp>u.maxHp)))fail();if(typeof u.name!=='string'||u.name.length>100||!Number.isFinite(fatigue(u))||fatigue(u)<0||fatigue(u)>100)fail();sectorMinutes(u.stats?.agility);}
  let at=state.position;for(const edge of state.route){if(edge.from!==at||!travelEdges(map,at).some(e=>e.to===edge.to&&e.road===edge.road))fail();at=edge.to;}
  if(state.route.length?state.progress>=groupPace(state.members,state.route[0].road).minutes:state.progress!==0)fail();
  if(state.members.some(u=>fatigue(u)>=REST_AT))state.restRequired=true;return state;

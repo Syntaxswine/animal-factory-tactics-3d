@@ -1,10 +1,11 @@
+import {interruptRest} from './overmap-rest.js';
 import {militiaMinutes,militiaKey,militiaAt,militiaCount,militiaLoadout,trainMilitia,sectorLeadership,normalizeMilitia} from './overmap-militia.js';
 import {createTravel,planRoute,validateTravel} from './overmap-travel.js';
 import {advanceGroups} from './overmap-groups.js';
 export const WEEK=7*1440;
 const number=(v)=>Number.isFinite(v)&&v>=0;
 const name=(map,i)=>map.sectors[i]?.name||`Sector ${i%30+1}, ${Math.floor(i/30)+1}`;
-const idle=g=>!g.state.route.length&&!g.state.progress&&!g.training;
+const idle=g=>!g.state.route.length&&!g.state.progress&&!g.training&&!g.rest;
 const troops=()=>Array.from({length:4},(_,i)=>({id:i,name:'Red Hat '+(i+1),stats:{agility:50},social:{fatigue:0}}));
 function entry(map,position,clock,id){const state=createTravel(map,troops());state.position=position;state.clock={...clock};return {id,state,waitMinutes:0};}
 function log(l,text,time){l.log.push({text,time});if(l.log.length>80)l.log.shift();}
@@ -33,8 +34,8 @@ function contact(session,map,previous=new Map()){
  const l=session.logistics;if(l.pending)return true;
  for(const g of session.groups){for(const [kind,list]of [['convoy',l.convoys],['raiders',l.raiders]])for(const enemy of list){const same=g.state.position===enemy.state.position;
   const swap=previous.get(g.id)===enemy.state.position&&previous.get(enemy.id)===g.state.position;
-  if(same||swap){l.pending={kind,enemyId:enemy.id,sector:g.state.position,militia:militiaCount(militiaAt(session,map,g.state.position)),militiaRoster:militiaLoadout(militiaAt(session,map,g.state.position)),groupIds:session.groups.filter(q=>q.state.position===g.state.position).map(q=>q.id)};log(l,kind==='convoy'?'Weapons convoy intercepted. Encounter required.':'Red Hats reached mercenaries. Encounter required.',session.clock.minutes);return true;}}
-  const fort=l.forts.find(f=>f.owner==='red-hats'&&f.index===g.state.position);if(fort){l.pending={kind:'fortress',sector:fort.index,militia:militiaCount(militiaAt(session,map,fort.index)),militiaRoster:militiaLoadout(militiaAt(session,map,fort.index)),groupIds:[g.id]};log(l,'Fortress assault ready. Encounter required.',session.clock.minutes);return true;}
+  if(same||swap){l.pending={kind,enemyId:enemy.id,sector:g.state.position,militia:militiaCount(militiaAt(session,map,g.state.position)),militiaRoster:militiaLoadout(militiaAt(session,map,g.state.position)),groupIds:session.groups.filter(q=>q.state.position===g.state.position).map(q=>q.id)};interruptRest(session,l.pending.groupIds);log(l,kind==='convoy'?'Weapons convoy intercepted. Encounter required.':'Red Hats reached mercenaries. Encounter required.',session.clock.minutes);return true;}}
+  const fort=l.forts.find(f=>f.owner==='red-hats'&&f.index===g.state.position);if(fort){l.pending={kind:'fortress',sector:fort.index,militia:militiaCount(militiaAt(session,map,fort.index)),militiaRoster:militiaLoadout(militiaAt(session,map,fort.index)),groupIds:[g.id]};interruptRest(session,l.pending.groupIds);log(l,'Fortress assault ready. Encounter required.',session.clock.minutes);return true;}
  }return false;
 }
 // Minute-sized strategic ticks make large skips and repeated short steps identical,

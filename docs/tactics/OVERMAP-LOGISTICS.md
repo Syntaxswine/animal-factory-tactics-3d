@@ -118,3 +118,25 @@ Design clarification: sharing a sector triggers engagement regardless of the
 units' fractional positions. No mid-road geometric collision rule is added here.
 Recruitment already due when a player arrives may supply a squad at the fortress;
 that behavior is retained. Tactical spawn positions still await combat integration.
+
+## Mercenary sector rest
+
+Select a stationary group and choose Rest · 8 hours. The assignment applies to
+all members of that group; split a group first to rest only some mercenaries.
+Rest cannot overlap travel or militia training. It does not immediately skip time:
+use the shared clock controls or Advance to rest completion. Other groups and
+enemy logistics continue, and an encounter can stop the advance early.
+
+Eight hours restore up to 15 HP (capped at each merc's maximum) and clear fatigue.
+Recovery is proportional to elapsed sleep: 5 HP every 160 minutes, including
+fractional recovery between those times. Fatigue loses the same fraction of its
+starting amount: after 160 minutes, two-thirds remains. Recovery is computed from
+a saved starting snapshot, so small ticks and large advances agree. Sleep never
+revives a dead merc. Missing HP in older strategic tester rosters starts at full
+health using the strength-derived maximum.
+
+An attack wakes participating groups before the encounter handoff, retaining
+only recovery already earned. Wake group allows voluntary early interruption
+with the same proportional recovery. Other sleeping groups retain assignments.
+The assignment and HP/fatigue survive save/load. Tactical health transfer remains
+part of the future battle integration.
