@@ -9,5 +9,5 @@ try{
   const s=createGame(42,blankMap(),true,'easy',{statSystem:true});const vera=s.units.find(u=>u.name==='Vera');createCharacterScreen({getState:()=>s}).show(vera.id);
  });
  const card=page.locator('.dossier-backpack .dossier-item').filter({hasText:'Large medical chest'});await card.waitFor();assert.match(await card.textContent(),/10\/10 sector treatments/);assert.equal(await card.evaluate(e=>e.style.gridColumn),'span 2');
- await card.locator('img').evaluate(img=>img.decode());await card.screenshot({path:'artifacts/large-medical-chest.png'});assert.deepEqual(errors,[]);console.log('Medical chest browser check passed: starter inventory, two cells, charges, deployed chest artwork.');
+ await card.locator('img').evaluate(img=>img.decode());await card.screenshot({path:'artifacts/large-medical-chest.png'});await page.goto((process.env.TACTICS_BASE_URL||'http://127.0.0.1:4361')+'/tactics/medical-chest-study.html');await page.locator('canvas').waitFor();await page.screenshot({path:'artifacts/medical-chest-3d.png'});await page.locator('#rotation').fill('130');await page.locator('#rotation').dispatchEvent('input');await page.screenshot({path:'artifacts/medical-chest-3d-back.png'});assert.deepEqual(errors,[]);console.log('Medical chest browser check passed: starter inventory, two cells, charges, deployed chest artwork.');
 }finally{await browser.close();}

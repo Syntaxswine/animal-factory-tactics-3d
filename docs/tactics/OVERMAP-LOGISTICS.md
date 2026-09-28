@@ -182,3 +182,13 @@ removed. Giving, dropping, looting, arranging and saving retain each chest's own
 remaining charges; chests never merge. The inventory uses a chest illustration
 and displays remaining charges out of ten. Tactical single-target heal and
 stabilize actions continue using their existing small-kit supplies.
+
+### Reusable 3D chest
+
+medical-chest.js exports createMedicalChest(), a floor-rooted Three.js group with
+an approximately 2:1 footprint, lid, straps, latches, handles and medical plaques.
+Call its userData.dispose() when releasing an instance. BattleLoot renders it
+for ground piles containing a large medical kit, replacing the generic box and
+updating the model when pile contents change. Existing picking, visibility and
+floor placement remain in effect. The longer inventory icon remains lightweight
+SVG. medical-chest-study.html provides a rotatable review of the shared model.
