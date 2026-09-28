@@ -4,7 +4,8 @@ export const supportsStow=id=>Object.hasOwn(STOW_MODES,id);
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 // Shared equipment presentation, independent of locomotion and tactical inventory.
 // Apply after the body pose. Restore before the next carry/weapon pose.
-export function createEquipmentStow(worker,profile,{riflePlacement}={}){
+export function createEquipmentStow(worker,profile,{riflePlacement,slingWaist=-.18}={}){
+ if(!Number.isFinite(slingWaist))throw Error('Invalid sling waist');
  const gun=worker.weapon,id=gun?.id||'rifle',mode=STOW_MODES[id];if(!supportsStow(id))throw Error('No stowed placement for '+id);
  // A fixture may preserve an already reviewed rifle placement without changing other loadouts.
  if(id!=='rifle')riflePlacement=undefined;
@@ -19,7 +20,7 @@ export function createEquipmentStow(worker,profile,{riflePlacement}={}){
  let state='carried',disposed=false,saved;
  const save=()=>[gun.root,gun.mount,gun.hose].filter(Boolean).map(o=>({o,visible:o.visible,p:o.position.clone(),q:o.quaternion.clone(),scale:o.scale.clone()}));saved=save();
  function restore(){for(const {o,visible,p,q,scale}of saved){o.visible=visible;o.position.copy(p);o.quaternion.copy(q);o.scale.copy(scale);}sling.visible=false;if(holder)holder.visible=false;state='carried';root.updateMatrixWorld(true);gun.updateHose?.(root);}
- function updateSling(position){const path=new T.CatmullRomCurve3([position.clone(),V(-.18,.17,-.18),V(.025,.22,-.17),V(front,.10,-.13),V(front,-.18,.14),position.clone()]).getPoints(32);for(let i=0;i<path.length;i++){const across=V(1,0,0).cross(path[Math.min(i+1,32)].clone().sub(path[Math.max(0,i-1)])).normalize().multiplyScalar(.017);for(const side of [-1,1]){const p=root.worldToLocal(spine.localToWorld(path[i].clone().addScaledVector(across,side)));geometry.attributes.position.setXYZ(i*2+(side===1?1:0),p.x,p.y,p.z);}}geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
+ function updateSling(position){const path=new T.CatmullRomCurve3([position.clone(),V(-.18,.17,-.18),V(.025,.22,-.17),V(front,.10,-.13),V(front,slingWaist,.14),position.clone()]).getPoints(32);for(let i=0;i<path.length;i++){const across=V(1,0,0).cross(path[Math.min(i+1,32)].clone().sub(path[Math.max(0,i-1)])).normalize().multiplyScalar(.017);for(const side of [-1,1]){const p=root.worldToLocal(spine.localToWorld(path[i].clone().addScaledVector(across,side)));geometry.attributes.position.setXYZ(i*2+(side===1?1:0),p.x,p.y,p.z);}}geometry.attributes.position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
  function sync(){if(disposed)throw Error('Equipment stow is disposed');if(state!=='stowed')return;root.updateMatrixWorld(true);if(mode==='sling'){const point=id==='rifle'?gun.anchors.stock.getWorldPosition(V()):gun.root.localToWorld(center.clone());updateSling(spine.worldToLocal(point));}gun.updateHose?.(root);}
  function apply(){const placement=riflePlacement;if(disposed)throw Error('Equipment stow is disposed');material.opacity=1;material.transparent=false;if(worker.weapon!==gun)throw Error('Equipment changed during stow');if(state!=='stowed'){saved=save();state='stowed';}root.updateMatrixWorld(true);const parentQ=root.getWorldQuaternion(new T.Quaternion()).invert(),spineQ=spine.getWorldQuaternion(new T.Quaternion()).premultiply(parentQ),position=V(),axis=V(0,.9,profile.id==='skunk'?-.12:.42).normalize();
   if(mode==='empty'){gun.root.visible=false;sling.visible=false;return;}
