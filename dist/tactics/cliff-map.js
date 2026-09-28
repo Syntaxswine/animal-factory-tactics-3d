@@ -1,10 +1,10 @@
 // Saved cliff tiles. Ground occupancy is separate from future elevated traversal.
 export const CLIFF_PROPS=Object.freeze(Object.fromEntries(['ledge','crag'].map(family=>['cliff-'+family,{w:1,h:1,solid:true,cover:0,cliff:true}])));
 export const isCliff=p=>!!CLIFF_PROPS[p?.kind];
-export const CLIFF_LIMIT=512;
+export const CLIFF_LIMIT=1024;
 export function cliffMapErrors(map){
  const tiles=(map.props||[]).filter(isCliff);
- if(tiles.length>CLIFF_LIMIT)return ['A map supports at most 512 cliff tiles.'];
+ if(tiles.length>CLIFF_LIMIT)return ['A map supports at most 1024 cliff tiles.'];
  for(const p of tiles){
   if(p.rotated)return ['Cliff contours use the corner mask, not prop rotation.'];
   if(p.cliffMask!==undefined&&(!Number.isInteger(p.cliffMask)||p.cliffMask<1||p.cliffMask>15))return ['Cliff corner mask must be 1–15.'];

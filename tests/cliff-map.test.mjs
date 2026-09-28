@@ -29,7 +29,7 @@ test('invalid cliff edits reject without changing other props, starts or shared 
  assert.equal(paint(d,{cliffMask:16}).ok,false);assert.equal(d.export(),before);
  assert.equal(paint(d,{},d.map.starts[0]).ok,false);assert.equal(d.export(),before);
 
- assert.ok(cliffMapErrors({props:Array.from({length:513},(_,x)=>({kind:'cliff-ledge',x,y:0}))})[0].includes('512'));
+ assert.ok(cliffMapErrors({props:Array.from({length:1025},(_,x)=>({kind:'cliff-ledge',x,y:0}))})[0].includes('1024'));
 });
 test('cliff mask rotations restore after four turns and reject incompatible neighbors atomically',()=>{
  const d=new EditingDocument().open(JSON.stringify(blankMap()));assert(paint(d,{cliffMask:3}).ok);const before=d.export();
