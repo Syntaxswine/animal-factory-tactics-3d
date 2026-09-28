@@ -4,11 +4,16 @@ import {createAnimalPaint} from './animal-motion-paint.js';
 import {createRedHatCap} from './red-hat-model.js';
 import {LIGHT_ATLAS} from './horse-light-model.js';
 import {createLedgeDescent} from './ledge-descent.js';
+import {createHenLedgeDescent} from './hen-ledge-descent.js';
+import {createWeaponModel} from './weapon-models.js';
 import {createCliffMantleSurface} from './cliff-mantle.js';
 import {createPaintedGrass} from './painted-grass.js';
 
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search);
-const profile=ANIMAL_MOTION_CATALOG.find(p=>p.id==='horse');
+for(const p of ANIMAL_MOTION_CATALOG){
+ const option=document.createElement('option');option.value=p.id;option.textContent=p.label;$('animal').append(option);
+}
+let profile=ANIMAL_MOTION_CATALOG[0];
 const selections=['animal','outfit','weapon','surface','view','scale'];
 for(const id of selections)if([...$(id).options].some(o=>o.value===params.get(id)))$(id).value=params.get(id);
 
@@ -38,33 +43,43 @@ const markers=Array.from({length:4},()=>{
  const m=new T.Mesh(new T.SphereGeometry(.025,10,8),new T.MeshBasicMaterial({color:0xf5e987,depthTest:false}));
  m.renderOrder=4;dots.add(m);return m;
 });
-let worker,paint,cap,motion,texture,loading=false,playing=false,last=0,progress=0,closed=false;
+let worker,paint,cap,motion,texture,selectedWeapon,loading=false,reloadPending=false,playing=false,last=0,progress=0,closed=false;
 function stop(){playing=false;$('play').textContent='Play';}
 function disposeActor(){
  if(!worker)return;
- scene.remove(worker.root);motion?.dispose();cap?.dispose();paint?.dispose();worker.skeleton.dispose();worker.dispose();
- worker=paint=cap=motion=null;
+ scene.remove(worker.root);motion?.dispose();cap?.dispose();paint?.dispose();selectedWeapon?.dispose();worker.skeleton.dispose();worker.dispose();
+ worker=paint=cap=motion=selectedWeapon=null;
 }
 async function load(){
- if(loading||closed)return;
- loading=true;stop();window.ledgeDescentStudy.ready=false;$('play').disabled=$('progress').disabled=true;
- $('status').textContent='Loading character…';const outfit=$('outfit').value;
+ if(closed)return;
+ if(loading){reloadPending=true;return;}
+ loading=true;reloadPending=false;stop();window.ledgeDescentStudy.ready=false;$('play').disabled=$('progress').disabled=true;
+ $('status').textContent='Loading character…';
+ const animal=$('animal').value;profile=ANIMAL_MOTION_CATALOG.find(p=>p.id===animal);
+ const guideOption=$('outfit').querySelector('[value="blue-hawaiian"]');
+ guideOption.disabled=animal!=='donkey';
+ if(guideOption.disabled&&$('outfit').value==='blue-hawaiian')$('outfit').value='normal';
+ const outfit=$('outfit').value,unarmed=profile.unarmed||outfit==='blue-hawaiian';
+ $('weapon').value=unarmed?'hands':'rifle';$('weapon').disabled=true;
+ const weapon=$('weapon').value;
  try{
   disposeActor();
   const response=await fetch(profile.file);if(!response.ok)throw Error(profile.label+' mesh failed to load');
   const data=await response.json();if(closed)return;
-  worker=profile.create(data,texture);paint=await createAnimalPaint(renderer,worker,profile,loader,outfit);
+  worker=profile.create(data,texture);
+  if(!profile.unarmed&&weapon==='hands'){selectedWeapon=createWeaponModel('hands',texture);worker.equipWeapon(selectedWeapon);}
+  paint=await createAnimalPaint(renderer,worker,profile,loader,outfit);
   for(const p of worker.parts){p.material=paint.material;p.castShadow=p.receiveShadow=true;}
   cap=outfit==='red-hats'?await createRedHatCap(renderer,worker,profile,loader):null;
   if(closed){disposeActor();return;}
-  motion=createLedgeDescent(worker,profile);$('phases').replaceChildren();
+  motion=profile.unarmed?createHenLedgeDescent(worker,profile):createLedgeDescent(worker,profile);$('phases').replaceChildren();
   for(const p of motion.phases){
    const b=document.createElement('button');b.textContent=p.label;
    b.onclick=()=>window.ledgeDescentStudy.seek((p.start+p.end)/(2*motion.duration));$('phases').append(b);
   }
-  scene.add(worker.root);window.ledgeDescentStudy.ready=true;$('play').disabled=$('progress').disabled=false;render();
+  scene.add(worker.root);Object.assign(window.ledgeDescentStudy,{outfit,weapon});window.ledgeDescentStudy.ready=true;$('play').disabled=$('progress').disabled=false;render();
  }catch(e){$('status').textContent=e.message;console.error(e);}
- finally{loading=false;if(outfit!==$('outfit').value&&!closed)load();}
+ finally{loading=false;if(!closed&&(reloadPending||animal!==$('animal').value||outfit!==$('outfit').value||weapon!==$('weapon').value))load();}
 }
 function render(){
  showSurface();if(!motion)return;
@@ -88,6 +103,7 @@ function render(){
 }
 window.ledgeDescentStudy={ready:false,renderer,scene,camera,cliff,seek(p){stop();progress=T.MathUtils.clamp(p,0,1);render();},render};
 $('surface').onchange=render;$('outfit').onchange=load;
+$('animal').onchange=()=>{progress=0;load();};
 for(const id of ['view','scale','grey','contacts'])$(id).oninput=render;
 $('progress').oninput=()=>window.ledgeDescentStudy.seek(+$('progress').value);
 $('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Pause':'Play';if(progress===1)progress=0;last=performance.now();};
