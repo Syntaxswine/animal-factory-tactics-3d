@@ -4,7 +4,7 @@ import {createGroups,validateGroups,orderGroup,splitGroup} from '../dist/tactics
 import {ensureLogistics,advanceLogistics,startMilitiaTraining} from '../dist/tactics/overmap-logistics.js';
 import {startGroupRest} from '../dist/tactics/overmap-rest.js';
 import {firstAidMinutes,startFirstAid,stopFirstAid} from '../dist/tactics/overmap-first-aid.js';
-function setup(){const map=blank(),s=createGroups(map),g=s.groups[0];map.sectors[0].owner='player';ensureLogistics(s,map);g.state.members.forEach(u=>Object.assign(u,{hp:40,maxHp:100,medkits:1,stats:{...u.stats,medical:50}}));return {map,s,g};}
+function setup(){const map=blank(),s=createGroups(map),g=s.groups[0];map.sectors[0].owner='player';ensureLogistics(s,map);g.state.members.forEach(u=>Object.assign(u,{hp:40,maxHp:100,medkits:1,pack:[],stats:{...u.stats,medical:50}}));return {map,s,g};}
 test('medical anchors and intermediate times',()=>{assert.equal(firstAidMinutes(1),2880);assert.equal(firstAidMinutes(50),1440);assert.equal(firstAidMinutes(100),480);assert.equal(firstAidMinutes(75),960);for(let n=2;n<=100;n++)assert.ok(firstAidMinutes(n)<firstAidMinutes(n-1));});
 test('best eligible medic consumes one kit and fully heals all stationary groups in sector',()=>{
  const {map,s,g}=setup();g.state.members[1].stats.medical=100;const other=structuredClone(g);other.id='other';other.state.members.forEach(u=>u.id+=20);s.groups.push(other);other.state.members[0].hp=0;other.state.members[1].hp=99;

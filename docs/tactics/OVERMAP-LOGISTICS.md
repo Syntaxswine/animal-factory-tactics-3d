@@ -166,3 +166,19 @@ Stopping treatment or an attack preserves healing already earned. An attack ends
 the sector's treatment at the encounter handoff. The shared clock continues enemy
 logistics during treatment. Assignments, patients, kits and HP persist in saves.
 Actual campaign/tactical inventory and health transfer remain future integration.
+
+## Large medical chest
+
+A large medical kit is represented as a chest: a nonstacking backpack item with
+count 1, two horizontal inventory cells and ten sector-treatment charges.
+Its item kind is largeMedicalKit, type tool, with charges from 1 to 10. The
+medicalChest() factory creates a full chest. Its provisional carried weight is
+5 kg. New test rosters give Vera one chest; existing saves are not refilled.
+
+First aid prefers a carried chest over loose medical kits, spending one charge
+when a sector treatment begins. Interrupted or cancelled treatments retain the
+existing no-refund policy. After the tenth treatment the depleted consumable is
+removed. Giving, dropping, looting, arranging and saving retain each chest's own
+remaining charges; chests never merge. The inventory uses a chest illustration
+and displays remaining charges out of ten. Tactical single-target heal and
+stabilize actions continue using their existing small-kit supplies.

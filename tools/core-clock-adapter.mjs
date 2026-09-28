@@ -1,7 +1,7 @@
 // Explicit, reproducible changes to the pinned dependency. Never edit core/.
 export const clockOverrides={
  'connections.js':'Require neighboring authored doors to agree on lock difficulty.',
- 'inventory.js':'Support carried tools, stack merging and their weight.',
+ 'inventory.js':'Support carried tools, weight and nonstacking two-cell medical chests.',
  'blocks.js':'Preserve authored door locks across block extraction and placement.',
  'progression.js':'Use canonical 1-100 stats and derived resources for opted-in characters.',
  'explosives.js':'Use physical tower heights, weapon skills and endurance-aware explosive previews.',
@@ -43,11 +43,13 @@ export function adaptCoreClock(name,data){
   return Buffer.from(s);
  }
  if(name==='inventory.js'){
+  s=once(s,'export const itemSpan=i=>', 'export const itemSpan=i=>isMedicalChest(i)?2:');
+  s=once(s,'export function accepts(u,item){', 'export function accepts(u,item){if(!validMedicalChest(item))return false;');
 
-  s="import {TOOLS} from '../inventory-tools.js';\n"+s;
+  s="import {TOOLS,isMedicalChest,validMedicalChest} from '../inventory-tools.js';\n"+s;
   s=once(s,"i.type==='weapon'?(WEIGHT[i.kind]||0):i.count*.03", "i.type==='weapon'?(WEIGHT[i.kind]||0):i.type==='tool'?(TOOLS[i.kind]?.weight||0)*i.count:i.count*.03");
-  s=once(s,"if(item.type==='ammo'&&u.pack.some(i=>i.type==='ammo'&&i.kind===item.kind))return true;", "if(['ammo','tool'].includes(item.type)&&u.pack.some(i=>i.type===item.type&&i.kind===item.kind))return true;");
-  s=once(s,"const existing=u.pack.find(i=>i.type==='ammo'&&i.kind===item.kind)","const existing=u.pack.find(i=>i.type===item.type&&i.kind===item.kind)");
+  s=once(s,"if(item.type==='ammo'&&u.pack.some(i=>i.type==='ammo'&&i.kind===item.kind))return true;", "if(!isMedicalChest(item)&&['ammo','tool'].includes(item.type)&&u.pack.some(i=>i.type===item.type&&i.kind===item.kind))return true;");
+  s=once(s,"const existing=u.pack.find(i=>i.type==='ammo'&&i.kind===item.kind)","const existing=u.pack.find(i=>!isMedicalChest(item)&&i.type===item.type&&i.kind===item.kind)");
   return Buffer.from(s);
  }
  if(name==='blocks.js'){

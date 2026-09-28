@@ -1,3 +1,4 @@
+import {validMedicalChest,medicalChest} from './inventory-tools.js';
 import {WIDTH,HEIGHT,SIDES,STEP,OPPOSITE} from './overmap-model.js';
 import {createClock,advanceClock} from './game-clock.js';
 import {MERC_STATS} from './character-stats.js';
@@ -38,7 +39,7 @@ export function planRoute(map,start,destination,members,{roadsOnly=false}={}){
  if(!cost.has(destination))throw Error('No traversable route. Rivers and cliffs require a connected crossing; tutorial edges require travel connections.');
  const route=[];for(let at=destination;at!==start;){const edge=prev.get(at);route.unshift(edge);at=edge.from;}return route;
 }
-export function createTravel(map,members=Object.entries(MERC_STATS).map(([name,stats],id)=>({id,name,medkits:1,stats:{...stats},social:{fatigue:0}}))){
+export function createTravel(map,members=Object.entries(MERC_STATS).map(([name,stats],id)=>({id,name,medkits:1,pack:name==='Vera'?[medicalChest()]:[],stats:{...stats},social:{fatigue:0}}))){
  groupPace(members);const start=map.sectors.findIndex(s=>s.role==='tutorial'&&s.tutorialStep===1);
  return {version:1,position:start<0?0:start,clock:createClock(),members:structuredClone(members),route:[],progress:0,restRequired:members.some(u=>fatigue(u)>=REST_AT)};
 }
@@ -46,7 +47,7 @@ export function setDestination(state,map,destination){
  if(state.progress>0)throw Error('Finish the current sector crossing before changing the route.');
  state.route=planRoute(map,state.position,destination,state.members);
 }
-function changeFatigue(state,delta){for(const u of state.members){u.social??={};u.social.fatigue=Math.max(0,Math.min(100,fatigue(u)+delta));}}
+function changeFatigue(state,delta){for(const u of state.members){if(u.pack!==undefined&&(!Array.isArray(u.pack)||u.pack.some(i=>!validMedicalChest(i))))fail();u.social??={};u.social.fatigue=Math.max(0,Math.min(100,fatigue(u)+delta));}}
 // Stops exactly at the threshold, retaining fractional progress through the edge.
 export function travelUntilStop(state,map){
  if(state.restRequired||state.members.some(u=>fatigue(u)>=REST_AT)){state.restRequired=true;return {minutes:0,restRequired:true};}

@@ -1,3 +1,4 @@
+import {sectorMedicalCharges,consumeSectorMedical} from './inventory-tools.js';
 import {mercMaxHp} from './overmap-rest.js';
 export function firstAidMinutes(skill){const n=Math.max(1,Math.min(100,Number(skill)||1));return Math.round(n<=50?2880-(n-1)*1440/49:1440-(n-50)*960/50);}
 const present=(g,sector)=>g.state.position===sector&&!g.state.progress&&!g.state.route.length;
@@ -7,12 +8,12 @@ export function startFirstAid(session,id){
  if(!g||g.firstAid||g.rest||g.training||g.state.route.length||g.state.progress||g.waitMinutes||session.logistics?.pending)throw Error('Select an idle group in a sector for first aid.');
  const sector=g.state.position;
  if(session.groups.some(q=>q.firstAid?.sector===sector))throw Error('First aid is already underway in this sector.');
- const doctor=g.state.members.filter(u=>living(u)&&Number.isInteger(u.medkits)&&u.medkits>0).sort((a,b)=>(b.stats?.medical??1)-(a.stats?.medical??1))[0];
+ const doctor=g.state.members.filter(u=>living(u)&&sectorMedicalCharges(u)>0).sort((a,b)=>(b.stats?.medical??1)-(a.stats?.medical??1))[0];
  if(!doctor)throw Error('A conscious mercenary with a medical kit is required.');
  const patients=session.groups.filter(q=>present(q,sector)).flatMap(q=>q.state.members).filter(u=>living(u)&&(u.hp??mercMaxHp(u))<mercMaxHp(u)).map(u=>({id:u.id,hp:u.hp,maxHp:mercMaxHp(u)}));
  if(!patients.length)throw Error('No wounded mercenaries in this sector need first aid.');
  const skill=Math.max(1,Math.min(100,doctor.stats?.medical??1));
- doctor.medkits--;g.firstAid={sector,doctorId:doctor.id,skill,startedAt:session.clock.minutes,duration:firstAidMinutes(skill),patients};
+ consumeSectorMedical(doctor);g.firstAid={sector,doctorId:doctor.id,skill,startedAt:session.clock.minutes,duration:firstAidMinutes(skill),patients};
 }
 export function updateFirstAid(session){
  for(const g of session.groups){const a=g.firstAid;if(!a)continue;
