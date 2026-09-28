@@ -1,15 +1,15 @@
-# Pool-style roof mantle — twelve-animal study
+# Pool-style roof and cliff mantle — twelve-animal study
 
-Viewer: `tactics/roof-mantle-study.html`. The approved pose sheet is linked from the viewer and shipped as `assets/characters/roof-mantle-keyframes.png`.
+Viewer: `tactics/roof-mantle-study.html`. Choose **Surface: Roof / Cliff**, or open `tactics/roof-mantle-study.html?surface=cliff`. Both surfaces retain the approved two-unit wall height. The cliff mode uses the existing grass-and-rock tile kit, with the same lip and landing plane as the roof. The approved pose sheet is linked from the viewer and shipped as `assets/characters/roof-mantle-keyframes.png`.
 
-This separate 6.25-second study covers all twelve completed animals, both original and Red Hat outfits, and the unarmed donkey guide. It follows the user's revised roof-mantle sequence. The character presses the roof to waist height, leans forward and to his anatomical left, swings the right leg over, and slides fully belly-down onto the roof. He then gathers his legs, stands, and readies the rifle. The flat pose is held for 0.3 seconds so it can be judged before animation integration.
+This separate 6.25-second study covers all twelve completed animals, both original and Red Hat outfits, and the unarmed donkey guide. It transfers the user-approved pig sequence (`ef58cd6`) to the roster: press the chest over the lip and shift anatomically left **before** the right leg rises, slide onto the belly, gather the legs, stand and ready the weapon. The settled pose is held for 0.3 seconds so it can be judged before animation integration.
 
 | Time | Action |
 | --- | --- |
 | 0–0.65 s | Stow rifle |
 | 0.65–1.4 s | Crouch, jump, grab and catch weight |
 | 1.4–2.2 s | Press to waist |
-| 2.2–2.7 s | Lean forward and left |
+| 2.2–2.7 s | Chest over lip and anatomical-left weight shift; legs still hang |
 | 2.7–3.35 s | Right leg over |
 | 3.35–4 s | Slide belly onto roof with alternating palm replants |
 | 4–4.3 s | Lie flat |
@@ -19,60 +19,47 @@ This separate 6.25-second study covers all twelve completed animals, both origin
 
 ## Species adaptations
 
-- Horse, goat, bull, cow, donkey, sheep, skunk, rabbit and dog retain the approved support sequence. Larger boots and paws lift before passing through the roof face; the sheep shirt remains beneath its waistcoat.
-- Both pigs use wider palms, clear their bellies before advancing, and keep both hands planted while gathering their shorter/heavier bodies. Their waistband and waistcoat move together.
-- The hen has a separate unarmed, wing-assisted mantle: breast press, right-leg lead, low belly pause, then a foot-supported rise. No hands or weapon grips are added. Temporary apron/feather contact corrections leave rigid toes and bone lengths intact. The apron maintains 2 mm of roof clearance to avoid coplanar flicker. Its authored drape can stretch and compress triangles at the lip; this is a study correction, not a cloth simulation, and garment strain remains a future polish item.
+- Horse, goat, bull, cow, donkey, sheep, skunk, rabbit and dog use `worker-mantle-profile.js` for the earlier chest-first left turn. The left palm remains planted through the leg lift; the right palm replants during the slide before the left moves. Each species has a reviewed belly-settle height and torso angle. Knees unfold early enough during gathering to keep the trousers above the landing. Larger boots and paws still lift before passing through the face; the sheep shirt remains beneath its waistcoat.
+- Both pigs press the upper chest over the lip, turn left and lower the left shoulder **before** the right leg swings up. The left palm stays fixed through this early shift; the right arm relaxes and then replants during the slide. They settle into an uneven, belly-and-hip-supported sprawl, soften one elbow and briefly unload the left palm. The left palm replants before the right moves to gather their shorter/heavier bodies. Their waistband and waistcoat move together; proportions and the 6.25-second duration are unchanged.
+- The hen has a separate unarmed, wing-assisted mantle: breast and left wing take the load before the right foot lifts, followed by a low belly pause with asymmetric feet and one wing briefly relaxed. The right foot gathers before the pelvis rises. No hands or weapon grips are added. Temporary apron/feather contact corrections leave rigid toes and bone lengths intact. The apron maintains 2 mm of roof clearance to avoid coplanar flicker. Its authored drape can stretch and compress triangles at the lip; this is a study correction, not a cloth simulation, and garment strain remains a future polish item.
 - The donkey guide wears the blue Hawaiian shirt and straw hat and climbs empty-handed.
+- The HMG sits slightly farther off the back during the settled/gather poses to clear the independently bending torso. The skunk additionally shifts it laterally while leaning so the receiver, ammunition, bipod and sling clear the plume. Weapon and tail geometry are unchanged. The sling remains an authored path rather than a simulated strap with weight or sway.
 
 ## Review controls
 
-Choose an animal and outfit, then use the four camera angles, grey form, timeline or phase buttons. Selection is reflected in the URL. **Full climb** and **Gameplay** use a fixed camera; **Close** follows the character. Contact guides distinguish planted supports from moving limbs. Use the fixed side/rear views to assess weight transfer rather than relying only on the tracking camera.
+Choose a surface, animal and outfit, then use the four camera angles, grey form, timeline or phase buttons. Selection is reflected in the URL. Surface switching keeps the current pose for direct comparison. **Full climb** and **Gameplay** use a fixed camera; **Close** follows the character. Contact guides distinguish planted supports from moving limbs. Use the fixed side/rear views to assess weight transfer rather than relying only on the tracking camera.
 
 ## Implementation boundary
 
-`createRoofMantle(worker, profile)` exposes absolute `apply(progress, {origin, heading})`, `restore()` and `dispose()` methods. It accepts the eleven authored mammal rigs with a rifle or empty hands at a two-unit roof. `createHenRoofMantle` provides the same playback/lifecycle interface for the unarmed hen. Local +X enters the roof, +Z is anatomical right, and the roof lip is X=0/Y=2. The rig must be unscaled beneath an identity parent.
+`createRoofMantle(worker, profile)` exposes absolute `apply(progress, {origin, heading})`, `restore()` and `dispose()` methods. It accepts the eleven authored mammal rigs with the full equipment catalog at a two-unit roof. See [equipment inspection](ROOF-MANTLE-WEAPON-REVIEW.md) for the weapon matrix, attachment corrections and review evidence. `createHenRoofMantle` provides the same playback/lifecycle interface for the unarmed hen. Local +X enters the roof, +Z is anatomical right, and the roof lip is X=0/Y=2. The rig must be unscaled beneath an identity parent.
 
 The proof keeps a hand planted while repositioning the other and while gathering the feet. Hoof soles, rifle and limb lengths remain rigid. Temporary corrections keep the shirt hem tucked, finish hidden cuff paint, extend the buried pastern overlap and let the soft sling lie against the roof. Restoration returns the original transforms, material hooks and geometry attributes exactly.
 
-The existing cliff/ladder animation and gameplay traversal are unchanged. This is an animation study for user/architect review; other weapons, approach/landing, descent, pathfinding and gameplay timing remain separate integration work.
+`createCliffMantle(worker, profile)` selects the same mammal or hen animation for the natural cliff study. `createCliffMantleSurface()` supplies the matching tile-kit surface. The older horse-only `createCliffClimb` and its gameplay journey remain unchanged. This is an animation study for user/architect review; approach/landing, descent, pathfinding and gameplay timing remain separate integration work.
 
 ## Hostile review
 
-**9/10 each** for all twelve animals, including original/Red Hat outfits and the donkey guide. Independent fixed-camera playback, close rear/side views and 58 px/unit review confirmed species silhouettes, planted support, flat pause, costume coverage and full-length playback. The hen passed after independent checks of both outfits, actual feather/toe support, apron clearance and normal-time playback. Close-view faceting remains a polish item.
+**9/10 each** for the nine revised nonpig mammals, reviewed sequentially on roof and cliff in original/Red Hat outfits. The donkey guide also passes. Both pigs retain their separately approved reference sequence. A separate reviewer scored the hen **9/10** on both surfaces and outfits after fresh multi-angle renders and normal-speed playback.
 
-## Verification
+The revised timing is checked at the end of the lean, before the lead foot enters the ledge. A shoulder-midpoint and chest-axis check guards against a nominal left rotation that leaves the upper body outside the lip. Belly tests use central front garment vertices, excluding sleeves, coat hems and tails. Gathering checks require actual rendered finger or foot contact, not merely a declared marker.
 
-- **70 focused tests pass**, including eight existing cliff-climb regression tests. The original seven horse tests remain. The roster suite adds four dense contact/clearance/continuity/lifecycle checks per mammal, roster coverage and an unarmed guide regression. Hen tests check rigid bones, visible wing/toe contact after cloth correction, continuous support, original endpoint geometry, surface clearance, deterministic placement and restoration.
-- Browser review exercises 6,600 samples in 600 combinations of animal, outfit, view, scale and grey/painted rendering. All 25 animal/outfit pairs also receive actual indexed-surface clearance sweeps, including hats. Normal-time playback covers every species. After the final hen garment correction, another 528 samples across 48 configurations and both outfit surface sweeps passed without browser errors.
-- The 3D Pages build includes the viewer and dependencies with module-closure validation. Existing gameplay traversal is untouched.
+Review found and corrected a skunk HMG/plume intersection. The new triangle-level tests check receiver, ammunition, bipod and sling against the posed tail, including enclosure and 2 mm surface clearance. An isolated negative control disabling the new lateral offset fails on the feed lid and ammunition belt at 2.600 seconds. No tail or weapon geometry was changed.
 
-Reproduce unit checks with `node --test tests/roof-mantle.test.mjs tests/animal-roof-mantle.test.mjs tests/hen-roof-mantle.test.mjs tests/cliff-climb.test.mjs`. Set `PLAYWRIGHT_PATH` to a Playwright installation, start a local server on port 4439 (or use `REVIEW_URL`), then run `node tools/animal-roof-mantle-review.mjs`. Optional `ANIMALS=hen` filters a focused rerun. Local evidence is saved under `artifacts/animal-roof-mantle/`.
+Remaining polish: some close-up trouser compression and the hen's broad apron folds; straps and garments use authored deformation rather than physical simulation. Per-animal visual gates primarily inspect rifle presentation, with extra HMG views for the skunk and rabbit. The complete equipment matrix adds numeric and browser coverage; it does not imply a new art approval of every weapon model.
 
-## Live gameplay integration
+## Verification and reproduction
 
-The editor branch wires the reviewed upward mantles through committed roof
-movement events. Both the Climb roof button and normal navigation can trigger
-them. The existing six-AP roof cost and stamina rules are unchanged; rendering
-never commits another movement or charges additional time. The 3D core adapter
-records single-unit, group and AI roof moves, while presentation animates the
-visible squad using its existing traversal queue.
+The completed all-animal revision passes **1,231 repository tests** and tactical asset verification (`npm run check`). The Pages build and module-closure check also pass. The character browser matrix passes **13,200 rendered pose samples across 1,200 configurations**, including 50 indexed outfit/surface clearance sweeps. The equipment browser matrix passes **578 combinations and 23,120 rendered samples**, plus 26 normal-speed horse equipment playbacks across the two surfaces. Neither browser matrix reports errors.
 
-`roof-journey.js` joins the authored motion to exact source and destination tile
-centers. The authored two-unit lip is aligned with the game's 2.12-unit floor
-spacing without scaling the skeleton. Supported mammals use rifle or empty
-hands; the hen uses the separate unarmed route. Original and Red Hat outfits
-remain on the same rig. Descent, other weapons, raised parapets and obstructed
-landing strips retain the normal movement presentation. These are presentation
-fallbacks, not new movement prohibitions.
+- The focused motion/equipment suites include 28 semantic checks for the nine nonpig mammals, eight pig weight-transfer regressions, twelve hen tests, five actual skunk HMG/tail tests, and fourteen cliff adapter/surface/packaging checks, alongside the existing dense motion and complete equipment suites.
+- The browser motion matrix covers all 25 animal/outfit pairs on both surfaces: four views, three scales, grey/painted rendering, indexed-surface clearance sweeps including hats, and normal-speed playback.
+- The browser equipment matrix covers the complete supported catalog in both outfits on both surfaces, plus the unarmed hen and donkey guide. Every weapon mode also receives normal-speed horse playback.
+- The Pages build checks module closure for the shared worker profile, natural cliff surface adapter and study viewer. The older cliff gameplay journey is retained and tested separately.
 
-Casualty, weapon changes, reduced motion, explicit cleanup and normal completion
-restore equipment and temporary geometry. Roof events are removed on save and
-restore so a completed climb cannot replay. A saved unit remains at the committed
-landing with its original AP/stamina charges.
+Run the full repository checks with `npm run check`, then package with `npm run build:tactics-3d`. For focused development:
 
-Validation: 70 authored mantle/cliff tests passed; 16 new live integration tests
-passed, covering all twelve rigs, cardinal frames, interruption and save/load.
-Existing traversal/cliff gameplay checks also passed. Built-package browser test
-`tools/check-roof-gameplay.mjs` clicks the real Climb roof button on a marked flat
-roof, verifies animation and exact landing, and checks no extra AP charge or
-renderer errors. Core synchronization, asset audit and Pages build passed.
+```text
+node --test tests/roof-mantle.test.mjs tests/animal-roof-mantle.test.mjs tests/animal-mantle-style.test.mjs tests/pig-roof-mantle-weight.test.mjs tests/hen-roof-mantle.test.mjs tests/roof-mantle-weapons.test.mjs tests/skunk-mantle-equipment.test.mjs tests/cliff-mantle.test.mjs tests/cliff-climb.test.mjs tests/cliff-gameplay-animation.test.mjs
+```
+
+Set `PLAYWRIGHT_PATH` to a Playwright installation, start a local server on port 4439 (or set `REVIEW_URL`), and set `SURFACES=roof,cliff`. Run `node tools/animal-roof-mantle-review.mjs` and `node tools/roof-mantle-weapons-review.mjs`. Optional comma-separated `ANIMALS` and `WEAPONS` filters support focused reruns. Surface names are included in reports and screenshots; evidence stays under `artifacts/animal-roof-mantle/` and `artifacts/roof-mantle-weapons/`.

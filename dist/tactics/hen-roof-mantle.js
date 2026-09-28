@@ -16,15 +16,27 @@ function build(worker,profile){
  const legs=worker.parts.filter(p=>p.name.includes('scaly leg')).map(p=>({p,position:p.geometry.attributes.position.clone(),workingPosition:p.geometry.attributes.position.clone()}));
  const paint=createHenRoofMantlePaint(worker);
  const phases=HEN_ROOF_MANTLE_PHASES,duration=phases.at(-1).end;let disposed=false,result=null;
- const keys=[{p:[-.65,0,0]},{p:[-.65,0,0]},{p:[-.65,-.10,0],pitch:-.12},{p:[-.42,.48,0]},{p:[-.42,.48,0]},{p:[-.40,1.15,0],pitch:-.12},{p:[-.34,1.23,.08],pitch:-.45,roll:-.28},{p:[-.20,1.48,.13],pitch:-.70,roll:-.25},{p:[.85,1.53,.22],pitch:-1.45,yaw:.40},{p:[.85,1.53,.22],pitch:-1.45,yaw:.40},{p:[.85,1.70,.22],pitch:-.85},{p:[.85,2,.22]},{p:[.85,2,.22]}];
+ // The breast and left wing take the load before either foot clears the lip.
+ const keys=[{p:[-.65,0,0]},{p:[-.65,0,0]},{p:[-.65,-.10,0],pitch:-.12},{p:[-.42,.48,0]},{p:[-.42,.48,0]},{p:[-.40,1.15,0],pitch:-.12},{p:[-.19,1.47,.08],pitch:-1.00,roll:-.55,yaw:.60},{p:[-.19,1.47,.13],pitch:-1.00,roll:-.55,yaw:.60},{p:[.85,1.53,.22],pitch:-1.45,roll:-.12,yaw:.60},{p:[.85,1.53,.22],pitch:-1.45,roll:-.12,yaw:.60},{p:[.85,1.70,.22],pitch:-.85},{p:[.85,2,.22]},{p:[.85,2,.22]}];
  function body(k){root.position.fromArray(k.p);named.pelvis.rotation.set(k.roll||0,k.yaw||0,k.pitch||0);named.head.rotation.z=-(k.pitch||0)*.65;root.updateMatrixWorld(true);}
  const free=keys.map(k=>{rig.reset();body(k);return Object.fromEntries(rig.limbs.map(l=>[l.id,{p:l.c.localToWorld(l.offset.clone()),q:l.c.getWorldQuaternion(Q())}]));});
  const wings=keys.map((k,i)=>[-1,1].map(s=>i<3||i>10?free[i]['wing'+s].p:i<=7?V(0,2,s*.34):V(1.05,2,.22+s*.44)));
  free[7].foot1.q.identity();
+ // Let the raised right wing relax during the left-sided press.
+ wings[6][1]=free[6].wing1.p.clone();wings[7][1]=free[7].wing1.p.clone();
+ wings[9][0].y=2.06;
  const feet=keys.map((k,i)=>[-1,1].map(s=>i<=2?V(-.56,0,s*.157):i===7&&s===1?V(.20,2,.40):i>=10?V(.94,2,.22+s*.157):free[i]['foot'+s].p.clone().add(V(0,i===8||i===9?.05:0,0))));
+ // Keep the free legs hanging during the press; settle the toes low on
+ // the roof instead of suspending both feet behind a wing-supported body.
+ for(const i of [6,7]){feet[i][0].set(-.55,1.65,.23);free[i]['foot-1'].q.identity();}feet[6][1].set(-.35,1.75,.48);free[6].foot1.q.identity();
+ for(const i of [8,9]){feet[i][0].set(.32,2,.40);feet[i][1].set(.55,2.06,.70);free[i]['foot-1'].q.identity();free[i].foot1.q.identity();}
  function apply(progress,{heading=0,origin=[0,0,0]}={}){
   if(disposed)throw Error('Hen roof mantle disposed');root.parent?.updateMatrixWorld(true);if(root.scale.distanceTo(V(1,1,1))>1e-8||(root.parent&&!root.parent.matrixWorld.elements.every((v,i)=>Math.abs(v-(i%5===0?1:0))<1e-8)))throw Error('Hen roof mantle requires an unscaled actor under an identity parent');if(!Number.isFinite(progress)||!Number.isFinite(heading)||origin.length!==3||!origin.every(Number.isFinite))throw Error('Invalid hen roof mantle playback');
-  for(const row of legs){row.workingPosition.array.set(row.position.array);row.p.geometry.setAttribute('position',row.workingPosition);}for(const row of soft){row.workingPosition.array.set(row.position.array);row.workingNormal.array.set(row.normal.array);row.p.geometry.setAttribute('position',row.workingPosition);row.p.geometry.setAttribute('normal',row.workingNormal);}rig.reset();for(const row of legs){const a=row.p.geometry.attributes.position;for(let j=0;j<a.count;j++){const y=row.position.getY(j);a.setY(j,y+.25*ease((y-.20)/.11)*ease((T.MathUtils.clamp(progress,0,1)*duration-.85)/.4)*(1-ease((T.MathUtils.clamp(progress,0,1)*duration-4.95)/.65)));}a.needsUpdate=true;}feather.geometry.setAttribute('skinIndex',featherIndices);feather.geometry.setAttribute('skinWeight',featherWeights);const value=T.MathUtils.clamp(progress,0,1),time=value*duration,index=phases.findIndex(p=>time<=p.end),i=index<0?phases.length-1:index,ph=phases[i],u=ease((time-ph.start)/(ph.end-ph.start)),a=keys[i],b=keys[i+1],k={p:a.p.map((n,j)=>T.MathUtils.lerp(n,b.p[j],u))};for(const key of['pitch','roll','yaw'])k[key]=T.MathUtils.lerp(a[key]||0,b[key]||0,i===9?ease((u-.42)/.58):u);if(i===7)k.p[1]+=.02*Math.sin(Math.PI*u);body(k);paint.set(ease(time/.65)*(1-ease((time-5.6)/.65)));const contacts=[];
+  for(const row of legs){row.workingPosition.array.set(row.position.array);row.p.geometry.setAttribute('position',row.workingPosition);}for(const row of soft){row.workingPosition.array.set(row.position.array);row.workingNormal.array.set(row.normal.array);row.p.geometry.setAttribute('position',row.workingPosition);row.p.geometry.setAttribute('normal',row.workingNormal);}rig.reset();for(const row of legs){const a=row.p.geometry.attributes.position;for(let j=0;j<a.count;j++){const y=row.position.getY(j);a.setY(j,y+.25*ease((y-.20)/.11)*ease((T.MathUtils.clamp(progress,0,1)*duration-.85)/.4)*(1-ease((T.MathUtils.clamp(progress,0,1)*duration-4.95)/.65)));}a.needsUpdate=true;}feather.geometry.setAttribute('skinIndex',featherIndices);feather.geometry.setAttribute('skinWeight',featherWeights);const value=T.MathUtils.clamp(progress,0,1),time=value*duration,index=phases.findIndex(p=>time<=p.end),i=index<0?phases.length-1:index,ph=phases[i],u=ease((time-ph.start)/(ph.end-ph.start)),a=keys[i],b=keys[i+1],k={p:a.p.map((n,j)=>T.MathUtils.lerp(n,b.p[j],u))};for(const key of['pitch','roll','yaw'])k[key]=T.MathUtils.lerp(a[key]||0,b[key]||0,i===9?ease((u-.42)/.58):u);
+  if(i===7)k.p[1]+=.10*Math.sin(Math.PI*u);
+  // Gather the right foot underneath before lifting the pelvis off the apron.
+  if(i===9)k.p[1]=T.MathUtils.lerp(a.p[1],b.p[1],ease((u-.48)/.52));
+  body(k);paint.set(ease(time/.65)*(1-ease((time-5.6)/.65)));const contacts=[];
   // Let the apron hang outside the feathered flank, then drape its free
   // hem on the roof. Folding it inward would intersect the round torso.
   const apron=soft.find(row=>row.p.name==='continuous apron'),fold=ease(time/.65)*(1-ease((time-5.6)/.65));if(fold){const a=apron.p.geometry.attributes;for(let j=0;j<a.position.count;j++){const p=V().fromBufferAttribute(apron.position,j);p.x*=1+.14*fold;p.z*=1+.14*fold;a.position.setXYZ(j,p.x,p.y,p.z);}}
@@ -33,16 +45,19 @@ function build(worker,profile){
     if(i<2||i>=11)target=l.c.localToWorld(l.offset.clone());
     if(i===2)target=free[2][l.id].p.clone().lerp(wings[3][j],u);
     if(i>=3&&i<=6){target=wings[i][j].clone();planted=true;}
-    if(i===7){const shift=side===1?(u<.25?ease(u/.25):u<.70?1:ease((u-.70)/.30)):ease((u-.25)/.45),middle=V(.57,2,.50);target=side===1?(u<.70?wings[7][j].clone().lerp(middle,shift):middle.clone().lerp(wings[8][j],shift)):wings[7][j].clone().lerp(wings[8][j],shift);target.y+=.035*Math.sin(Math.PI*shift);planted=shift===0||shift===1;}
-    if(i===8){target=wings[8][j].clone();planted=true;}if(i===9){const release=side===1?ease((u-.48)/.26):ease((u-.74)/.26);target=wings[8][j].clone().lerp(l.c.localToWorld(l.offset.clone()),release);planted=release===0;}
+    if(i===5&&side===1){target=wings[5][j].clone().lerp(wings[6][j],u);planted=u===0;}
+    if(i===6&&side===1){target=wings[6][j].clone().lerp(wings[7][j],u);planted=false;}
+    if(i===7){const shift=side===1?(u<.25?ease(u/.25):u<.70?1:ease((u-.70)/.30)):ease((u-.25)/.45),middle=V(.68,2,.50);target=side===1?(u<.70?wings[7][j].clone().lerp(middle,shift):middle.clone().lerp(wings[8][j],shift)):wings[7][j].clone().lerp(wings[8][j],shift);target.y+=.035*Math.sin(Math.PI*shift);planted=side===1?(u>=.25&&u<=.70)||u===1:shift===0||shift===1;}
+    if(i===8){target=wings[8][j].clone().lerp(wings[9][j],u);planted=side===1||u===0;}if(i===9){const release=side===1?ease((u-.48)/.26):ease((u-.74)/.26);target=wings[9][j].clone();if(side===-1)target.y=T.MathUtils.lerp(2.06,2,ease(u/.25));target.lerp(l.c.localToWorld(l.offset.clone()),release);planted=release===0&&(side===1||u>=.25);}
     if(i===10){target=l.c.localToWorld(l.offset.clone());planted=false;}
    }else{
     q.copy(free[i][l.id].q).slerp(free[i+1][l.id].q,u);
     if(i<=1||i>=10){q.identity();planted=true;}
     if(i===2){q.identity();}
     if(i===6&&side===1){const t=ease((u-.32)/.68);target.copy(feet[6][j]).lerp(feet[7][j],t);target.y=T.MathUtils.lerp(feet[6][j].y,2,ease(u/.35))+.12*Math.sin(Math.PI*u);q.slerp(Q(),u);}
-    if(i===7){target.y+=.18*Math.sin(Math.PI*u);}
-    if(i===9){const t=side===1?ease(u/.48):ease((u-.48)/.52);target.copy(feet[9][j]).lerp(feet[10][j],t);target.y+=.015*Math.sin(Math.PI*t);q.copy(free[9][l.id].q).slerp(Q(),t);planted=t===1;}
+    if(i===7){target.y+=(side===-1?.30:.18)*Math.sin(Math.PI*u);}
+    if(i===8&&side===-1)planted=true;
+    if(i===9){const t=side===1?ease(u/.48):ease((u-.48)/.52);target.copy(feet[9][j]).lerp(feet[10][j],t);target.y+=.015*Math.sin(Math.PI*t);q.copy(free[9][l.id].q).slerp(Q(),t);planted=t===1||(side===-1&&t===0);}
    }
    if(wing)l.pole.set(-.4,1,-side*.15);
    if(!wing){const fold=i===6?(side===1?u:0):i===7?(side===1?1:u):i===8?1:i===9?1-u:0;l.pole.set(-1,0,side*.15).lerp(V(.2,1,side*.7),fold);}

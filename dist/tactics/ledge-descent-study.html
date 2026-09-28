@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Ledge descent · Animal Factory</title>
+<style>
+:root{color-scheme:dark}body{margin:0;background:#202b26;color:#f5ead1;font:15px system-ui}header{padding:18px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}h1{font:600 23px Georgia;margin:0}label{display:flex;align-items:center;gap:7px}select,button{background:#35483a;color:inherit;border:1px solid #849578;padding:7px;border-radius:4px}button{cursor:pointer}button:disabled{opacity:.5;cursor:wait}#scene{display:block;width:100%;height:auto;max-height:78vh;object-fit:contain}footer{padding:12px 24px}#progress{width:min(700px,65vw)}#status{margin:8px 0;color:#d4dbb8}.note{font-size:13px;color:#aebfae}a{color:#ebca8f}#phases{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+</style>
+<header>
+ <h1 id="heading">Roof descent</h1>
+ <label>Surface<select id="surface"><option value="roof">Roof</option><option value="cliff">Cliff</option></select></label>
+ <label>Animal<select id="animal"></select></label>
+ <label>Outfit<select id="outfit"><option value="normal">Original</option><option value="red-hats">Red Hat</option><option value="blue-hawaiian">Blue Hawaiian guide · donkey</option></select></label>
+ <label>Weapon<select id="weapon"><option value="rifle">Rifle</option><option value="hands">Unarmed</option></select></label>
+ <label>View<select id="view"><option value="three">Three-quarter</option><option value="side">Side</option><option value="front">From the ledge</option><option value="rear">From below</option></select></label>
+ <label>Scale<select id="scale"><option value="full">Full descent</option><option value="close">Close</option><option value="game">Gameplay · 58 px/unit</option></select></label>
+ <label><input id="grey" type="checkbox">Grey form</label>
+ <label><input id="contacts" type="checkbox">Contact guides</label>
+ <button id="play" disabled>Play</button>
+</header>
+<canvas id="scene" aria-label="Animated animal descending a ledge"></canvas>
+<footer>
+ <input aria-label="Animation progress" id="progress" type="range" min="0" max="1" step=".001" value="0" disabled>
+ <span id="time"></span>
+ <p id="status" role="status">Loading character…</p>
+ <div id="phases"></div>
+ <p class="note">Twelve animals on a two-unit roof or cliff, in Original and Red Hat outfits. Donkey also has its unarmed Blue Hawaiian guide outfit. Mammals crouch, hold the edge with the left hand, hop down, release and land; the unarmed hen uses its own wing-braced descent. Left refers to the character. This study does not change gameplay traversal.</p>
+ <a href="roof-mantle-study.html">Compare the climb up</a>
+</footer>
+<script type="module" src="ledge-descent-study.js"></script>
+</html>
