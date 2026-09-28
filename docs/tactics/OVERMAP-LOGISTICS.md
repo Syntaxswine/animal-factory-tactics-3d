@@ -140,3 +140,29 @@ only recovery already earned. Wake group allows voluntary early interruption
 with the same proportional recovery. Other sleeping groups retain assignments.
 The assignment and HP/fatigue survive save/load. Tactical health transfer remains
 part of the future battle integration.
+
+## Sector first aid
+
+First Aid assigns the selected stationary group to provide treatment. The highest
+raw medical skill among its conscious mercenaries carrying a medical kit sets the
+duration. One kit is consumed at assignment start, consistent with the existing
+consumable medical supplies; cancellation does not refund it. The strategic tester
+starts new merc rosters with one kit per merc, matching tactical squad defaults.
+Old saves with no kit count do not receive free supplies on load.
+
+Medical skill 1 takes 48 hours, 50 takes 24 hours, and 100 takes 8 hours. Values
+between anchors interpolate linearly in minutes. Intelligence does not alter these
+explicit medical-skill timing anchors. Each wounded, living merc already stationary
+in the sector is registered as a patient, including mercs in other groups and the
+medic. Their initial missing HP heals proportionally over the assignment, capped
+at maximum HP. New arrivals require a later assignment; patients who depart stop
+receiving treatment and are removed. Dead or incapacitated mercs need the separate
+tactical casualty/stabilization system rather than revival by this assignment.
+
+Only one first-aid assignment runs per sector. The assigned group cannot move,
+split, rest or train militia while providing care. Other groups' patients may
+sleep while receiving treatment; neither system can overwrite higher current HP.
+Stopping treatment or an attack preserves healing already earned. An attack ends
+the sector's treatment at the encounter handoff. The shared clock continues enemy
+logistics during treatment. Assignments, patients, kits and HP persist in saves.
+Actual campaign/tactical inventory and health transfer remain future integration.

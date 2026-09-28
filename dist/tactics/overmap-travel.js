@@ -38,7 +38,7 @@ export function planRoute(map,start,destination,members,{roadsOnly=false}={}){
  if(!cost.has(destination))throw Error('No traversable route. Rivers and cliffs require a connected crossing; tutorial edges require travel connections.');
  const route=[];for(let at=destination;at!==start;){const edge=prev.get(at);route.unshift(edge);at=edge.from;}return route;
 }
-export function createTravel(map,members=Object.entries(MERC_STATS).map(([name,stats],id)=>({id,name,stats:{...stats},social:{fatigue:0}}))){
+export function createTravel(map,members=Object.entries(MERC_STATS).map(([name,stats],id)=>({id,name,medkits:1,stats:{...stats},social:{fatigue:0}}))){
  groupPace(members);const start=map.sectors.findIndex(s=>s.role==='tutorial'&&s.tutorialStep===1);
  return {version:1,position:start<0?0:start,clock:createClock(),members:structuredClone(members),route:[],progress:0,restRequired:members.some(u=>fatigue(u)>=REST_AT)};
 }
@@ -80,7 +80,7 @@ export function travelPreview(state){
 export function validateTravel(state,map){
  const fail=()=>{throw Error('Invalid saved travel session. Reset the travel test to start again.');};
  if(!state||state.version!==1||!Number.isInteger(state.position)||!map.sectors[state.position]||!Number.isFinite(state.clock?.minutes)||state.clock.minutes<0||!Array.isArray(state.members)||!state.members.length||state.members.length>32||typeof state.restRequired!=='boolean'||!Array.isArray(state.route)||state.route.length>WIDTH*HEIGHT||!Number.isFinite(state.progress)||state.progress<0)fail();
- for(const u of state.members){if((u.hp!==undefined&&(!Number.isFinite(u.hp)||u.hp<0))||(u.maxHp!==undefined&&(!Number.isFinite(u.maxHp)||u.maxHp<=0||u.hp>u.maxHp)))fail();if(typeof u.name!=='string'||u.name.length>100||!Number.isFinite(fatigue(u))||fatigue(u)<0||fatigue(u)>100)fail();sectorMinutes(u.stats?.agility);}
+ for(const u of state.members){if(u.medkits!==undefined&&(!Number.isInteger(u.medkits)||u.medkits<0))fail();if((u.hp!==undefined&&(!Number.isFinite(u.hp)||u.hp<0))||(u.maxHp!==undefined&&(!Number.isFinite(u.maxHp)||u.maxHp<=0||u.hp>u.maxHp)))fail();if(typeof u.name!=='string'||u.name.length>100||!Number.isFinite(fatigue(u))||fatigue(u)<0||fatigue(u)>100)fail();sectorMinutes(u.stats?.agility);}
  let at=state.position;for(const edge of state.route){if(edge.from!==at||!travelEdges(map,at).some(e=>e.to===edge.to&&e.road===edge.road))fail();at=edge.to;}
  if(state.route.length?state.progress>=groupPace(state.members,state.route[0].road).minutes:state.progress!==0)fail();
  if(state.members.some(u=>fatigue(u)>=REST_AT))state.restRequired=true;return state;
