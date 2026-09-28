@@ -11,7 +11,23 @@ const browser=await chromium.launch({channel:'msedge',headless:true}),page=await
 page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400&&!r.url().endsWith('favicon.ico'))errors.push(r.status()+' '+r.url());});
 try{
  await page.goto(`http://127.0.0.1:${server.address().port}/tactics/weighted-window-study.html`);await page.waitForFunction(()=>window.weightedWindowStudy);
+ assert.equal(await page.evaluate(()=>window.weightedWindowStudy.profilesReady),true);
  let configurations=0,samples=0;
+ const species=await page.locator('#species option:enabled').evaluateAll(nodes=>nodes.map(n=>n.value));
+ assert.equal(species.length,12);assert.equal(await page.locator('#species option[value=hen]').evaluate(el=>el.disabled),true);
+ for(const profile of species){
+  await page.selectOption('#species',profile);await page.evaluate(()=>window.weightedWindowStudy.seek(1.8));
+  const d=await page.evaluate(()=>window.weightedWindowStudy.diagnostics());assert.equal(d.profile,profile);
+  assert.ok(d.collisions.overlaps.some(h=>h.a==='pelvis / lower back'&&h.b==='head'));
+  for(let i=0;i<d.segments.length;i++){assert.equal(d.renderedEnvelopes[i].radius,d.collisions.segments[i].radius);if(d.collisions.overlaps.some(h=>h.a===d.segments[i].name||h.b===d.segments[i].name))assert.equal(d.renderedEnvelopes[i].color,0xff4c54);}
+  await page.screenshot({path:path.join(out,`collision-${profile}.png`),fullPage:true});
+ }
+ await page.selectOption('#species','mannequin');await page.uncheck('#envelope');
+ assert.ok(await page.evaluate(()=>window.weightedWindowStudy.diagnostics().renderedEnvelopes.some(m=>m.visible&&m.color===0xff4c54)));
+ await page.uncheck('#warnings');assert.ok(await page.evaluate(()=>window.weightedWindowStudy.diagnostics().renderedEnvelopes.every(m=>!m.visible)));
+ assert.ok(await page.evaluate(()=>window.weightedWindowStudy.diagnostics().collisions.overlaps.length>0));
+ await page.check('#warnings');await page.check('#envelope');
+
  for(const entry of ['braced','dive'])for(const view of ['side','three','front'])for(const envelope of [true,false]){
   await page.selectOption('#entry',entry);await page.selectOption('#view',view);await page.locator('#envelope').setChecked(envelope);
   const duration=await page.evaluate(()=>window.weightedWindowStudy.diagnostics().duration);
@@ -20,5 +36,5 @@ try{
  }
  for(const entry of ['braced','dive']){await page.selectOption('#entry',entry);await page.selectOption('#view','three');await page.check('#envelope');await page.click('#reset');await page.click('#play');await page.waitForFunction(()=>{const s=window.weightedWindowStudy.diagnostics();return s.time>=s.duration;});assert.equal(await page.evaluate(()=>window.weightedWindowStudy.diagnostics().balanced),true);assert.equal(await page.evaluate(()=>window.weightedWindowStudy.diagnostics().glass.cleared),true);await page.click('#reset');assert.equal(await page.evaluate(()=>window.weightedWindowStudy.diagnostics().time),0);}
  assert.deepEqual(errors,[]);
- const report={configurations,samples,errors};await fs.writeFile(path.join(out,'browser-report.json'),JSON.stringify(report,null,2));console.log(report);
+ const report={configurations,samples,speciesProfiles:species.length,errors};await fs.writeFile(path.join(out,'browser-report.json'),JSON.stringify(report,null,2));console.log(report);
 }finally{await browser.close();await new Promise(r=>server.close(r));}

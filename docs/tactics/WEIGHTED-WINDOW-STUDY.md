@@ -5,6 +5,52 @@
 Viewer: `tactics/weighted-window-study.html`. This extends the approved weighted
 roll study into a complete window crossing, without fitting an animal yet.
 
+## Status: animation held; collision diagnostics added
+
+The independent physics review supersedes the earlier 9/10 motion assessments.
+The motion has impossible joint folds, self-intersections, unsupported weight
+transfer and an abrupt impact. Passing the earlier geometric tests did not
+establish plausible dynamics. No animation or gameplay integration is approved
+by this diagnostic update.
+
+The viewer now checks full segment capsules against nonadjacent capsules, the
+actual solid window/frame boxes, and the ground. Red highlights overlap deeper
+than 0.001 tile; amber highlights contact/clearance under 0.020 tile. The pair list
+reports penetration or clearance in tiles; the diameter table is twice the exact
+radius used for both detection and rendering. Warnings remain inspectable when
+body envelopes or the wall are hidden. The highlight toggle hides colors only,
+not the report. Baseline capsule overlaps can exist even in a neutral pose;
+these are conservative proxy warnings, not confirmed mesh penetration.
+
+The Thickness selector includes the original mannequin and 11 mammal profiles
+measured from source meshes and actual rest-pose skin weights. Hen is explicitly
+unsupported because its bird chain needs a separate envelope. The generator
+`tools/build-body-envelope-profiles.mjs` records source hashes, axes, vertex
+counts, maximum-distance witnesses and exclusions in
+`dist/tactics/body-envelope-profiles.json`. Measurements round upward; no animal
+or opening is shrunk. Regenerate when source meshes or rig construction change.
+
+Species selection replaces only radii: bones, authored pose and 81 kg mass stay
+unchanged. Maximum-radius capsules overestimate especially around muzzles, ears,
+horns and caps. Tails, utility parts, equipment and red-hat variants are excluded.
+Skin-weight partitions and these transferred radii do not certify containment of
+a posed animal. Shared joints, structural bridges and pairs connected through one
+bridge are excluded from self checks; adjacent foldbacks require joint limits or
+more detailed geometry. This is a warning tool, not a response/physics solver.
+
+At 1.8 seconds the original mannequin reports head/chest overlap of 0.215 tile
+and head/pelvis overlap of approximately 0.182 tile. The current motion must be
+corrected; the detector does not suppress these known failures.
+
+Validation for collision diagnostics: **9/10 hostile review**, applying only to
+this warning feature. The reviewer independently compared 10,000 randomized
+segment/segment and segment/box cases against separate numerical minimization.
+All 55 focused tests pass (8 new diagnostic tests plus 47 existing geometric
+regressions); build passes. Browser checks cover 12 thickness choices, exact
+rendered/detected radius equality, warning toggles, the known head/pelvis overlap,
+12 entry/view/envelope combinations, 1,212 samples and playback/reset with no
+browser or asset errors. None of these results approves the held animation.
+
 ## Current default: finish in the adjacent tile
 
 The user requested a shorter finish: occupy the tile directly beyond the window,
@@ -30,7 +76,7 @@ rear knee, then raises the torso with those lower-body contacts fixed. This fixe
 an earlier gather that moved its loaded foot across the floor. Knee clearance
 constraints and an earlier rear-foot withdrawal avoid clipping the wall.
 
-Independent hostile review: **9/10** for the compact mannequin study.
+Earlier hostile review: **9/10**, withdrawn as motion approval after the independent physics audit.
 
 Fourteen independent tests cover the complete endpoint footprint, exact capsule
 clearance, fixed dimensions/mass, sill grip, glass contact, continuous release,
@@ -93,7 +139,7 @@ in flight, and glass time. Nonfinite times fail; finite times clamp. Browser API
 
 ## Original forward-dive validation
 
-Independent hostile review: **9/10** for this bounded weighted-dive prototype.
+Earlier geometric review scored **9/10**; it did not validate anatomical or dynamic plausibility.
 Ten independent tests cover exact whole-segment capsule/frame distance (with
 negative controls), floor clearance, preserved mass/length, ballistic mass-center
 acceleration, continuous release velocity, fixed push-off feet, contact-timed
@@ -105,6 +151,6 @@ plus playback/reset, without browser or asset errors. The 3D package build passe
 
 Commands:
 
-- `node --test tests/weighted-window-braced.test.mjs tests/weighted-window.test.mjs tests/weighted-roll.test.mjs tests/window-shatter.test.mjs`
+- `node --test tests/body-collisions.test.mjs tests/weighted-window-braced.test.mjs tests/weighted-window.test.mjs tests/weighted-roll.test.mjs tests/window-shatter.test.mjs`
 - `npm run build:tactics-3d`
 - `node tools/weighted-window-review.mjs` (configured Playwright runtime required)

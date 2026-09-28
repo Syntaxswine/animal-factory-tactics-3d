@@ -1,0 +1,4548 @@
+{
+ "schemaVersion": 1,
+ "units": "world units; one tile is 1",
+ "method": {
+  "name": "maximum rest-vertex distance to anatomical segment",
+  "command": "node tools/build-body-envelope-profiles.mjs",
+  "partition": "Each indexed, rendered body vertex is assigned by its strongest normalized skin weight. Spine-weighted vertices below the spine root use lower torso; skull/neck parts above the shoulder midpoint use neck; remaining spine vertices use chest. Left/right radii aggregate by maximum.",
+  "radius": "Maximum Euclidean distance to the finite source axis, rounded upward to one microunit. No percentile trimming, animal rescaling or species number substitutions.",
+  "coverage": "Conservative per-category point envelopes in neutral source pose, not retargeted whole-animal capsule containment or physical collision validation."
+ },
+ "profiles": {
+  "horse": {
+   "label": "Horse worker",
+   "source": {
+    "file": "horse-10k-data.json",
+    "sha256": "5b2b0c0aa62fdf592af4d638c97dd4916ed1a7638f2c3b53815ae4d681305271",
+    "triangles": 10300
+   },
+   "supported": true,
+   "radii": {
+    "lowerTorso": 0.261233,
+    "chest": 0.219366,
+    "neck": 0.266966,
+    "head": 0.34404,
+    "upperArm": 0.102957,
+    "forearm": 0.146117,
+    "hand": 0.072379,
+    "thigh": 0.215254,
+    "shin": 0.119479,
+    "foot": 0.154125
+   },
+   "diameters": {
+    "lowerTorso": 0.522466,
+    "chest": 0.438732,
+    "neck": 0.533932,
+    "head": 0.68808,
+    "upperArm": 0.205914,
+    "forearm": 0.292234,
+    "hand": 0.144758,
+    "thigh": 0.430508,
+    "shin": 0.238958,
+    "foot": 0.30825
+   },
+   "measurements": {
+    "lowerTorso": {
+     "vertices": 657,
+     "maxRadius": 0.261232,
+     "axisPairs": [
+      [
+       [
+        0,
+        0.8,
+        0
+       ],
+       [
+        -0.025,
+        1.08,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 1276,
+      "position": [
+       -0.053317,
+       0.767743,
+       0.253691
+      ],
+      "dominantBone": "hips",
+      "axisIndex": 0
+     }
+    },
+    "chest": {
+     "vertices": 624,
+     "maxRadius": 0.219365,
+     "axisPairs": [
+      [
+       [
+        -0.025,
+        1.08,
+        0
+       ],
+       [
+        -0.045,
+        1.191,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 649,
+      "position": [
+       -0.115322,
+       1.2287,
+       0.20434
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "neck": {
+     "vertices": 124,
+     "maxRadius": 0.266965,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        0
+       ],
+       [
+        -0.065,
+        1.3,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified skull jaw neck and ears",
+      "vertex": 568,
+      "position": [
+       0.207567,
+       1.291195,
+       -0.015708
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "head": {
+     "vertices": 1141,
+     "maxRadius": 0.34404,
+     "axisPairs": [
+      [
+       [
+        -0.065,
+        1.3,
+        0
+       ],
+       [
+        -0.065,
+        1.44,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified skull jaw neck and ears",
+      "vertex": 656,
+      "position": [
+       0.278974,
+       1.35094,
+       0.006732
+      ],
+      "dominantBone": "head",
+      "axisIndex": 0
+     }
+    },
+    "upperArm": {
+     "vertices": 417,
+     "maxRadius": 0.102957,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        -0.205
+       ],
+       [
+        0.022,
+        0.991,
+        -0.344
+       ]
+      ],
+      [
+       [
+        -0.045,
+        1.191,
+        0.205
+       ],
+       [
+        0.022,
+        0.991,
+        0.344
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 184,
+      "position": [
+       -0.07313,
+       1.035697,
+       -0.212982
+      ],
+      "dominantBone": "upperArm-1",
+      "axisIndex": 0
+     }
+    },
+    "forearm": {
+     "vertices": 932,
+     "maxRadius": 0.146117,
+     "axisPairs": [
+      [
+       [
+        0.022,
+        0.991,
+        -0.344
+       ],
+       [
+        0.061,
+        0.742,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.022,
+        0.991,
+        0.344
+       ],
+       [
+        0.061,
+        0.742,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 672,
+      "position": [
+       -0.049947,
+       1.018202,
+       0.219767
+      ],
+      "dominantBone": "forearm1",
+      "axisIndex": 1
+     }
+    },
+    "hand": {
+     "vertices": 283,
+     "maxRadius": 0.072379,
+     "axisPairs": [
+      [
+       [
+        0.061,
+        0.742,
+        -0.355
+       ],
+       [
+        0.072,
+        0.712,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.061,
+        0.742,
+        0.355
+       ],
+       [
+        0.072,
+        0.712,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "forearm and hand 1",
+      "vertex": 226,
+      "position": [
+       0.135979,
+       0.717812,
+       0.32166
+      ],
+      "dominantBone": "hand1",
+      "axisIndex": 1
+     }
+    },
+    "thigh": {
+     "vertices": 355,
+     "maxRadius": 0.215254,
+     "axisPairs": [
+      [
+       [
+        -0.03,
+        0.77,
+        -0.12
+       ],
+       [
+        0.024,
+        0.475,
+        -0.196
+       ]
+      ],
+      [
+       [
+        -0.03,
+        0.77,
+        0.12
+       ],
+       [
+        0.024,
+        0.475,
+        0.196
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 689,
+      "position": [
+       -0.211219,
+       0.748869,
+       0.005775
+      ],
+      "dominantBone": "thigh1",
+      "axisIndex": 1
+     }
+    },
+    "shin": {
+     "vertices": 260,
+     "maxRadius": 0.119478,
+     "axisPairs": [
+      [
+       [
+        0.024,
+        0.475,
+        -0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        0.024,
+        0.475,
+        0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 819,
+      "position": [
+       -0.018655,
+       0.472958,
+       0.084414
+      ],
+      "dominantBone": "shin1",
+      "axisIndex": 1
+     }
+    },
+    "foot": {
+     "vertices": 435,
+     "maxRadius": 0.154125,
+     "axisPairs": [
+      [
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ],
+       [
+        0.085,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        -0.035,
+        0.12,
+        0.232
+       ],
+       [
+        0.085,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "exposed hoof 1",
+      "vertex": 105,
+      "position": [
+       -0.026611,
+       0.274018,
+       0.237749
+      ],
+      "dominantBone": "hoof1",
+      "axisIndex": 1
+     }
+    }
+   },
+   "sourceVertices": 5228,
+   "excludedParts": [],
+   "limitations": [
+    "Thickness-only overlay: authored mannequin lengths, joint positions, motion and mass remain unchanged.",
+    "The maximum-radius capsule intentionally overestimates empty space around muzzle, ears, horns, cap and clothing.",
+    "Dominant rest-pose skin weights partition vertices; blended deformation, inter-category triangles and posed garment bulging are not certified.",
+    "Terminal head/foot proxy lengths are 0.14/0.12 world units, matching the mannequin; other axes use source rig joints.",
+    "Source outfit only. Red hats, stowed/carried weapons, straps, auxiliary grip meshes and excluded tail/utility parts require separate envelopes."
+   ]
+  },
+  "goat": {
+   "label": "Goat worker",
+   "source": {
+    "file": "goat-10k-data.json",
+    "sha256": "3a588535644c9d253dd302c5b1cd69afc8837e828be43f18b9c9b0dfc9d35b2e",
+    "triangles": 9994
+   },
+   "supported": true,
+   "radii": {
+    "lowerTorso": 0.257352,
+    "chest": 0.220213,
+    "neck": 0.088352,
+    "head": 0.276688,
+    "upperArm": 0.09631,
+    "forearm": 0.140142,
+    "hand": 0.072379,
+    "thigh": 0.212385,
+    "shin": 0.119666,
+    "foot": 0.149366
+   },
+   "diameters": {
+    "lowerTorso": 0.514704,
+    "chest": 0.440426,
+    "neck": 0.176704,
+    "head": 0.553376,
+    "upperArm": 0.19262,
+    "forearm": 0.280284,
+    "hand": 0.144758,
+    "thigh": 0.42477,
+    "shin": 0.239332,
+    "foot": 0.298732
+   },
+   "measurements": {
+    "lowerTorso": {
+     "vertices": 579,
+     "maxRadius": 0.257351,
+     "axisPairs": [
+      [
+       [
+        0,
+        0.8,
+        0
+       ],
+       [
+        -0.025,
+        1.08,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 1227,
+      "position": [
+       -0.052513,
+       0.767743,
+       0.249863
+      ],
+      "dominantBone": "hips",
+      "axisIndex": 0
+     }
+    },
+    "chest": {
+     "vertices": 402,
+     "maxRadius": 0.220212,
+     "axisPairs": [
+      [
+       [
+        -0.025,
+        1.08,
+        0
+       ],
+       [
+        -0.045,
+        1.191,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 601,
+      "position": [
+       0.041798,
+       1.164908,
+       0.204855
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "neck": {
+     "vertices": 112,
+     "maxRadius": 0.088351,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        0
+       ],
+       [
+        -0.065,
+        1.3,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified goat skull ears and swept horns",
+      "vertex": 658,
+      "position": [
+       0.025659,
+       1.28954,
+       -0.013699
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "head": {
+     "vertices": 1388,
+     "maxRadius": 0.276687,
+     "axisPairs": [
+      [
+       [
+        -0.065,
+        1.3,
+        0
+       ],
+       [
+        -0.065,
+        1.44,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified goat skull ears and swept horns",
+      "vertex": 697,
+      "position": [
+       0.211674,
+       1.41522,
+       -0.00274
+      ],
+      "dominantBone": "head",
+      "axisIndex": 0
+     }
+    },
+    "upperArm": {
+     "vertices": 430,
+     "maxRadius": 0.096309,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        -0.205
+       ],
+       [
+        0.022,
+        0.991,
+        -0.344
+       ]
+      ],
+      [
+       [
+        -0.045,
+        1.191,
+        0.205
+       ],
+       [
+        0.022,
+        0.991,
+        0.344
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 609,
+      "position": [
+       -0.067244,
+       1.044991,
+       0.209275
+      ],
+      "dominantBone": "upperArm1",
+      "axisIndex": 1
+     }
+    },
+    "forearm": {
+     "vertices": 656,
+     "maxRadius": 0.140142,
+     "axisPairs": [
+      [
+       [
+        0.022,
+        0.991,
+        -0.344
+       ],
+       [
+        0.061,
+        0.742,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.022,
+        0.991,
+        0.344
+       ],
+       [
+        0.061,
+        0.742,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 628,
+      "position": [
+       -0.059107,
+       1.018922,
+       0.233177
+      ],
+      "dominantBone": "forearm1",
+      "axisIndex": 1
+     }
+    },
+    "hand": {
+     "vertices": 346,
+     "maxRadius": 0.072379,
+     "axisPairs": [
+      [
+       [
+        0.061,
+        0.742,
+        -0.355
+       ],
+       [
+        0.072,
+        0.712,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.061,
+        0.742,
+        0.355
+       ],
+       [
+        0.072,
+        0.712,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "forearm and hand -1",
+      "vertex": 345,
+      "position": [
+       0.135979,
+       0.717812,
+       -0.32166
+      ],
+      "dominantBone": "hand-1",
+      "axisIndex": 0
+     }
+    },
+    "thigh": {
+     "vertices": 324,
+     "maxRadius": 0.212384,
+     "axisPairs": [
+      [
+       [
+        -0.03,
+        0.77,
+        -0.12
+       ],
+       [
+        0.024,
+        0.475,
+        -0.196
+       ]
+      ],
+      [
+       [
+        -0.03,
+        0.77,
+        0.12
+       ],
+       [
+        0.024,
+        0.475,
+        0.196
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 670,
+      "position": [
+       -0.20774,
+       0.748869,
+       0.00568
+      ],
+      "dominantBone": "thigh1",
+      "axisIndex": 1
+     }
+    },
+    "shin": {
+     "vertices": 281,
+     "maxRadius": 0.119666,
+     "axisPairs": [
+      [
+       [
+        0.024,
+        0.475,
+        -0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        0.024,
+        0.475,
+        0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 806,
+      "position": [
+       -0.035879,
+       0.473065,
+       0.092402
+      ],
+      "dominantBone": "shin1",
+      "axisIndex": 1
+     }
+    },
+    "foot": {
+     "vertices": 557,
+     "maxRadius": 0.149366,
+     "axisPairs": [
+      [
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ],
+       [
+        0.085,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        -0.035,
+        0.12,
+        0.232
+       ],
+       [
+        0.085,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "exposed cloven hoof -1",
+      "vertex": 109,
+      "position": [
+       -0.032,
+       0.268883,
+       -0.22
+      ],
+      "dominantBone": "hoof-1",
+      "axisIndex": 0
+     }
+    }
+   },
+   "sourceVertices": 5075,
+   "excludedParts": [],
+   "limitations": [
+    "Thickness-only overlay: authored mannequin lengths, joint positions, motion and mass remain unchanged.",
+    "The maximum-radius capsule intentionally overestimates empty space around muzzle, ears, horns, cap and clothing.",
+    "Dominant rest-pose skin weights partition vertices; blended deformation, inter-category triangles and posed garment bulging are not certified.",
+    "Terminal head/foot proxy lengths are 0.14/0.12 world units, matching the mannequin; other axes use source rig joints.",
+    "Source outfit only. Red hats, stowed/carried weapons, straps, auxiliary grip meshes and excluded tail/utility parts require separate envelopes."
+   ]
+  },
+  "bull": {
+   "label": "Bull worker",
+   "source": {
+    "file": "bull-10k-data.json",
+    "sha256": "e3b0c07ceb64fcf61fd27eee63234367980550da7e48924c655ed680790097b7",
+    "triangles": 9998
+   },
+   "supported": true,
+   "radii": {
+    "lowerTorso": 0.265946,
+    "chest": 0.22376,
+    "neck": 0.118439,
+    "head": 0.3061,
+    "upperArm": 0.102671,
+    "forearm": 0.174781,
+    "hand": 0.072379,
+    "thigh": 0.220336,
+    "shin": 0.119666,
+    "foot": 0.149747
+   },
+   "diameters": {
+    "lowerTorso": 0.531892,
+    "chest": 0.44752,
+    "neck": 0.236878,
+    "head": 0.6122,
+    "upperArm": 0.205342,
+    "forearm": 0.349562,
+    "hand": 0.144758,
+    "thigh": 0.440672,
+    "shin": 0.239332,
+    "foot": 0.299494
+   },
+   "measurements": {
+    "lowerTorso": {
+     "vertices": 585,
+     "maxRadius": 0.265945,
+     "axisPairs": [
+      [
+       [
+        0,
+        0.8,
+        0
+       ],
+       [
+        -0.025,
+        1.08,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 1222,
+      "position": [
+       -0.096723,
+       0.782495,
+       0.247114
+      ],
+      "dominantBone": "hips",
+      "axisIndex": 0
+     }
+    },
+    "chest": {
+     "vertices": 428,
+     "maxRadius": 0.223759,
+     "axisPairs": [
+      [
+       [
+        -0.025,
+        1.08,
+        0
+       ],
+       [
+        -0.045,
+        1.191,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 248,
+      "position": [
+       0.060397,
+       1.13378,
+       -0.203251
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "neck": {
+     "vertices": 126,
+     "maxRadius": 0.118438,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        0
+       ],
+       [
+        -0.065,
+        1.3,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified bull skull ears and short horns",
+      "vertex": 689,
+      "position": [
+       -0.180026,
+       1.270802,
+       0.002737
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "head": {
+     "vertices": 1192,
+     "maxRadius": 0.3061,
+     "axisPairs": [
+      [
+       [
+        -0.065,
+        1.3,
+        0
+       ],
+       [
+        -0.065,
+        1.44,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified bull skull ears and short horns",
+      "vertex": 967,
+      "position": [
+       0.230631,
+       1.395356,
+       0.079368
+      ],
+      "dominantBone": "head",
+      "axisIndex": 0
+     }
+    },
+    "upperArm": {
+     "vertices": 479,
+     "maxRadius": 0.10267,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        -0.205
+       ],
+       [
+        0.022,
+        0.991,
+        -0.344
+       ]
+      ],
+      [
+       [
+        -0.045,
+        1.191,
+        0.205
+       ],
+       [
+        0.022,
+        0.991,
+        0.344
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 223,
+      "position": [
+       -0.094894,
+       1.051861,
+       -0.225743
+      ],
+      "dominantBone": "upperArm-1",
+      "axisIndex": 0
+     }
+    },
+    "forearm": {
+     "vertices": 682,
+     "maxRadius": 0.174781,
+     "axisPairs": [
+      [
+       [
+        0.022,
+        0.991,
+        -0.344
+       ],
+       [
+        0.061,
+        0.742,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.022,
+        0.991,
+        0.344
+       ],
+       [
+        0.061,
+        0.742,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 220,
+      "position": [
+       -0.093391,
+       1.008933,
+       -0.213955
+      ],
+      "dominantBone": "forearm-1",
+      "axisIndex": 0
+     }
+    },
+    "hand": {
+     "vertices": 346,
+     "maxRadius": 0.072379,
+     "axisPairs": [
+      [
+       [
+        0.061,
+        0.742,
+        -0.355
+       ],
+       [
+        0.072,
+        0.712,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.061,
+        0.742,
+        0.355
+       ],
+       [
+        0.072,
+        0.712,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "forearm and hand -1",
+      "vertex": 345,
+      "position": [
+       0.135979,
+       0.717812,
+       -0.32166
+      ],
+      "dominantBone": "hand-1",
+      "axisIndex": 0
+     }
+    },
+    "thigh": {
+     "vertices": 295,
+     "maxRadius": 0.220335,
+     "axisPairs": [
+      [
+       [
+        -0.03,
+        0.77,
+        -0.12
+       ],
+       [
+        0.024,
+        0.475,
+        -0.196
+       ]
+      ],
+      [
+       [
+        -0.03,
+        0.77,
+        0.12
+       ],
+       [
+        0.024,
+        0.475,
+        0.196
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 684,
+      "position": [
+       -0.217328,
+       0.748869,
+       0.005942
+      ],
+      "dominantBone": "thigh1",
+      "axisIndex": 1
+     }
+    },
+    "shin": {
+     "vertices": 258,
+     "maxRadius": 0.119666,
+     "axisPairs": [
+      [
+       [
+        0.024,
+        0.475,
+        -0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        0.024,
+        0.475,
+        0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 820,
+      "position": [
+       -0.035879,
+       0.473065,
+       0.092402
+      ],
+      "dominantBone": "shin1",
+      "axisIndex": 1
+     }
+    },
+    "foot": {
+     "vertices": 551,
+     "maxRadius": 0.149746,
+     "axisPairs": [
+      [
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ],
+       [
+        0.085,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        -0.035,
+        0.12,
+        0.232
+       ],
+       [
+        0.085,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "exposed cloven hoof 1",
+      "vertex": 106,
+      "position": [
+       -0.04,
+       0.26961,
+       0.236
+      ],
+      "dominantBone": "hoof1",
+      "axisIndex": 1
+     }
+    }
+   },
+   "sourceVertices": 4942,
+   "excludedParts": [
+    {
+     "name": "bull tail",
+     "vertices": 142
+    }
+   ],
+   "limitations": [
+    "Thickness-only overlay: authored mannequin lengths, joint positions, motion and mass remain unchanged.",
+    "The maximum-radius capsule intentionally overestimates empty space around muzzle, ears, horns, cap and clothing.",
+    "Dominant rest-pose skin weights partition vertices; blended deformation, inter-category triangles and posed garment bulging are not certified.",
+    "Terminal head/foot proxy lengths are 0.14/0.12 world units, matching the mannequin; other axes use source rig joints.",
+    "Source outfit only. Red hats, stowed/carried weapons, straps, auxiliary grip meshes and excluded tail/utility parts require separate envelopes."
+   ]
+  },
+  "cow": {
+   "label": "Cow worker",
+   "source": {
+    "file": "cow-10k-data.json",
+    "sha256": "ab40e8592c80ca98b1d96ff2ab5fbda07cb011b1f08414ce2143dcb522515392",
+    "triangles": 10184
+   },
+   "supported": true,
+   "radii": {
+    "lowerTorso": 0.258441,
+    "chest": 0.220089,
+    "neck": 0.186177,
+    "head": 0.317313,
+    "upperArm": 0.100117,
+    "forearm": 0.141555,
+    "hand": 0.072379,
+    "thigh": 0.20096,
+    "shin": 0.119659,
+    "foot": 0.149747
+   },
+   "diameters": {
+    "lowerTorso": 0.516882,
+    "chest": 0.440178,
+    "neck": 0.372354,
+    "head": 0.634626,
+    "upperArm": 0.200234,
+    "forearm": 0.28311,
+    "hand": 0.144758,
+    "thigh": 0.40192,
+    "shin": 0.239318,
+    "foot": 0.299494
+   },
+   "measurements": {
+    "lowerTorso": {
+     "vertices": 571,
+     "maxRadius": 0.25844,
+     "axisPairs": [
+      [
+       [
+        0,
+        0.8,
+        0
+       ],
+       [
+        -0.025,
+        1.08,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 137,
+      "position": [
+       -0.047246,
+       0.785524,
+       -0.253672
+      ],
+      "dominantBone": "hips",
+      "axisIndex": 0
+     }
+    },
+    "chest": {
+     "vertices": 515,
+     "maxRadius": 0.220089,
+     "axisPairs": [
+      [
+       [
+        -0.025,
+        1.08,
+        0
+       ],
+       [
+        -0.045,
+        1.191,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 206,
+      "position": [
+       -0.113607,
+       1.224784,
+       -0.206376
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "neck": {
+     "vertices": 319,
+     "maxRadius": 0.186177,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        0
+       ],
+       [
+        -0.065,
+        1.3,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "neckerchief knot",
+      "vertex": 16,
+      "position": [
+       0.131582,
+       1.260231,
+       0
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "head": {
+     "vertices": 1057,
+     "maxRadius": 0.317313,
+     "axisPairs": [
+      [
+       [
+        -0.065,
+        1.3,
+        0
+       ],
+       [
+        -0.065,
+        1.44,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified cow skull ears and forehead tuft",
+      "vertex": 640,
+      "position": [
+       0.252299,
+       1.403877,
+       0.00301
+      ],
+      "dominantBone": "head",
+      "axisIndex": 0
+     }
+    },
+    "upperArm": {
+     "vertices": 401,
+     "maxRadius": 0.100116,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        -0.205
+       ],
+       [
+        0.022,
+        0.991,
+        -0.344
+       ]
+      ],
+      [
+       [
+        -0.045,
+        1.191,
+        0.205
+       ],
+       [
+        0.022,
+        0.991,
+        0.344
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 576,
+      "position": [
+       -0.081157,
+       1.05382,
+       0.207776
+      ],
+      "dominantBone": "upperArm1",
+      "axisIndex": 1
+     }
+    },
+    "forearm": {
+     "vertices": 717,
+     "maxRadius": 0.141555,
+     "axisPairs": [
+      [
+       [
+        0.022,
+        0.991,
+        -0.344
+       ],
+       [
+        0.061,
+        0.742,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.022,
+        0.991,
+        0.344
+       ],
+       [
+        0.061,
+        0.742,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 210,
+      "position": [
+       -0.040881,
+       1.014672,
+       -0.219408
+      ],
+      "dominantBone": "forearm-1",
+      "axisIndex": 0
+     }
+    },
+    "hand": {
+     "vertices": 314,
+     "maxRadius": 0.072379,
+     "axisPairs": [
+      [
+       [
+        0.061,
+        0.742,
+        -0.355
+       ],
+       [
+        0.072,
+        0.712,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.061,
+        0.742,
+        0.355
+       ],
+       [
+        0.072,
+        0.712,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "forearm and hand -1",
+      "vertex": 347,
+      "position": [
+       0.135979,
+       0.717812,
+       -0.32166
+      ],
+      "dominantBone": "hand-1",
+      "axisIndex": 0
+     }
+    },
+    "thigh": {
+     "vertices": 311,
+     "maxRadius": 0.200959,
+     "axisPairs": [
+      [
+       [
+        -0.03,
+        0.77,
+        -0.12
+       ],
+       [
+        0.024,
+        0.475,
+        -0.196
+       ]
+      ],
+      [
+       [
+        -0.03,
+        0.77,
+        0.12
+       ],
+       [
+        0.024,
+        0.475,
+        0.196
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 658,
+      "position": [
+       -0.183531,
+       0.713515,
+       0.003286
+      ],
+      "dominantBone": "thigh1",
+      "axisIndex": 1
+     }
+    },
+    "shin": {
+     "vertices": 272,
+     "maxRadius": 0.119659,
+     "axisPairs": [
+      [
+       [
+        0.024,
+        0.475,
+        -0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        0.024,
+        0.475,
+        0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 811,
+      "position": [
+       -0.035877,
+       0.473065,
+       0.092409
+      ],
+      "dominantBone": "shin1",
+      "axisIndex": 1
+     }
+    },
+    "foot": {
+     "vertices": 555,
+     "maxRadius": 0.149746,
+     "axisPairs": [
+      [
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ],
+       [
+        0.085,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        -0.035,
+        0.12,
+        0.232
+       ],
+       [
+        0.085,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "exposed cloven hoof 1",
+      "vertex": 106,
+      "position": [
+       -0.04,
+       0.26961,
+       0.236
+      ],
+      "dominantBone": "hoof1",
+      "axisIndex": 1
+     }
+    }
+   },
+   "sourceVertices": 5032,
+   "excludedParts": [
+    {
+     "name": "cow tail",
+     "vertices": 142
+    }
+   ],
+   "limitations": [
+    "Thickness-only overlay: authored mannequin lengths, joint positions, motion and mass remain unchanged.",
+    "The maximum-radius capsule intentionally overestimates empty space around muzzle, ears, horns, cap and clothing.",
+    "Dominant rest-pose skin weights partition vertices; blended deformation, inter-category triangles and posed garment bulging are not certified.",
+    "Terminal head/foot proxy lengths are 0.14/0.12 world units, matching the mannequin; other axes use source rig joints.",
+    "Source outfit only. Red hats, stowed/carried weapons, straps, auxiliary grip meshes and excluded tail/utility parts require separate envelopes."
+   ]
+  },
+  "donkey": {
+   "label": "Donkey worker",
+   "source": {
+    "file": "donkey-10k-data.json",
+    "sha256": "5ba3bc38971fa92dac50b9232623383de41e3338879fccf3d669baf896a33566",
+    "triangles": 10110
+   },
+   "supported": true,
+   "radii": {
+    "lowerTorso": 0.266286,
+    "chest": 0.224797,
+    "neck": 0.303636,
+    "head": 0.343353,
+    "upperArm": 0.108421,
+    "forearm": 0.176897,
+    "hand": 0.072379,
+    "thigh": 0.207879,
+    "shin": 0.123703,
+    "foot": 0.153802
+   },
+   "diameters": {
+    "lowerTorso": 0.532572,
+    "chest": 0.449594,
+    "neck": 0.607272,
+    "head": 0.686706,
+    "upperArm": 0.216842,
+    "forearm": 0.353794,
+    "hand": 0.144758,
+    "thigh": 0.415758,
+    "shin": 0.247406,
+    "foot": 0.307604
+   },
+   "measurements": {
+    "lowerTorso": {
+     "vertices": 489,
+     "maxRadius": 0.266286,
+     "axisPairs": [
+      [
+       [
+        0,
+        0.8,
+        0
+       ],
+       [
+        -0.025,
+        1.08,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected work trousers seat and legs",
+      "vertex": 984,
+      "position": [
+       -0.082824,
+       0.790769,
+       0.252909
+      ],
+      "dominantBone": "hips",
+      "axisIndex": 0
+     }
+    },
+    "chest": {
+     "vertices": 251,
+     "maxRadius": 0.224797,
+     "axisPairs": [
+      [
+       [
+        -0.025,
+        1.08,
+        0
+       ],
+       [
+        -0.045,
+        1.191,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 514,
+      "position": [
+       0.090168,
+       1.081489,
+       0.193048
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "neck": {
+     "vertices": 370,
+     "maxRadius": 0.303635,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        0
+       ],
+       [
+        -0.065,
+        1.3,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified donkey skull muzzle and long ears",
+      "vertex": 691,
+      "position": [
+       0.220193,
+       1.4041,
+       0.004736
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "head": {
+     "vertices": 1209,
+     "maxRadius": 0.343353,
+     "axisPairs": [
+      [
+       [
+        -0.065,
+        1.3,
+        0
+       ],
+       [
+        -0.065,
+        1.44,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified donkey skull muzzle and long ears",
+      "vertex": 15,
+      "position": [
+       -0.083069,
+       1.761192,
+       -0.12
+      ],
+      "dominantBone": "head",
+      "axisIndex": 0
+     }
+    },
+    "upperArm": {
+     "vertices": 393,
+     "maxRadius": 0.108421,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        -0.205
+       ],
+       [
+        0.022,
+        0.991,
+        -0.344
+       ]
+      ],
+      [
+       [
+        -0.045,
+        1.191,
+        0.205
+       ],
+       [
+        0.022,
+        0.991,
+        0.344
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 553,
+      "position": [
+       -0.089652,
+       1.033959,
+       0.22551
+      ],
+      "dominantBone": "upperArm1",
+      "axisIndex": 1
+     }
+    },
+    "forearm": {
+     "vertices": 741,
+     "maxRadius": 0.176896,
+     "axisPairs": [
+      [
+       [
+        0.022,
+        0.991,
+        -0.344
+       ],
+       [
+        0.061,
+        0.742,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.022,
+        0.991,
+        0.344
+       ],
+       [
+        0.061,
+        0.742,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 210,
+      "position": [
+       -0.076362,
+       0.909292,
+       -0.208048
+      ],
+      "dominantBone": "forearm-1",
+      "axisIndex": 0
+     }
+    },
+    "hand": {
+     "vertices": 295,
+     "maxRadius": 0.072379,
+     "axisPairs": [
+      [
+       [
+        0.061,
+        0.742,
+        -0.355
+       ],
+       [
+        0.072,
+        0.712,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.061,
+        0.742,
+        0.355
+       ],
+       [
+        0.072,
+        0.712,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "forearm and hand -1",
+      "vertex": 338,
+      "position": [
+       0.135979,
+       0.717812,
+       -0.32166
+      ],
+      "dominantBone": "hand-1",
+      "axisIndex": 0
+     }
+    },
+    "thigh": {
+     "vertices": 305,
+     "maxRadius": 0.207878,
+     "axisPairs": [
+      [
+       [
+        -0.03,
+        0.77,
+        -0.12
+       ],
+       [
+        0.024,
+        0.475,
+        -0.196
+       ]
+      ],
+      [
+       [
+        -0.03,
+        0.77,
+        0.12
+       ],
+       [
+        0.024,
+        0.475,
+        0.196
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected work trousers seat and legs",
+      "vertex": 516,
+      "position": [
+       0.151254,
+       0.756154,
+       -0.017273
+      ],
+      "dominantBone": "thigh-1",
+      "axisIndex": 0
+     }
+    },
+    "shin": {
+     "vertices": 304,
+     "maxRadius": 0.123703,
+     "axisPairs": [
+      [
+       [
+        0.024,
+        0.475,
+        -0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        0.024,
+        0.475,
+        0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected work trousers seat and legs",
+      "vertex": 666,
+      "position": [
+       -0.025177,
+       0.46969,
+       0.082599
+      ],
+      "dominantBone": "shin1",
+      "axisIndex": 1
+     }
+    },
+    "foot": {
+     "vertices": 570,
+     "maxRadius": 0.153802,
+     "axisPairs": [
+      [
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ],
+       [
+        0.085,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        -0.035,
+        0.12,
+        0.232
+       ],
+       [
+        0.085,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "exposed hoof -1",
+      "vertex": 105,
+      "position": [
+       -0.022742,
+       0.273802,
+       -0.231755
+      ],
+      "dominantBone": "hoof-1",
+      "axisIndex": 0
+     }
+    }
+   },
+   "sourceVertices": 4927,
+   "excludedParts": [
+    {
+     "name": "donkey tail and tuft",
+     "vertices": 152
+    }
+   ],
+   "limitations": [
+    "Thickness-only overlay: authored mannequin lengths, joint positions, motion and mass remain unchanged.",
+    "The maximum-radius capsule intentionally overestimates empty space around muzzle, ears, horns, cap and clothing.",
+    "Dominant rest-pose skin weights partition vertices; blended deformation, inter-category triangles and posed garment bulging are not certified.",
+    "Terminal head/foot proxy lengths are 0.14/0.12 world units, matching the mannequin; other axes use source rig joints.",
+    "Source outfit only. Red hats, stowed/carried weapons, straps, auxiliary grip meshes and excluded tail/utility parts require separate envelopes."
+   ]
+  },
+  "sheep": {
+   "label": "Sheep worker",
+   "source": {
+    "file": "sheep-10k-data.json",
+    "sha256": "c299886b93848d9cf3f0a3c27d45d18b8badedeaac3f4c758db16ce3faf16fd6",
+    "triangles": 10476
+   },
+   "supported": true,
+   "radii": {
+    "lowerTorso": 0.306234,
+    "chest": 0.29506,
+    "neck": 0.190451,
+    "head": 0.279832,
+    "upperArm": 0.097978,
+    "forearm": 0.104902,
+    "hand": 0.072379,
+    "thigh": 0.207879,
+    "shin": 0.123703,
+    "foot": 0.148635
+   },
+   "diameters": {
+    "lowerTorso": 0.612468,
+    "chest": 0.59012,
+    "neck": 0.380902,
+    "head": 0.559664,
+    "upperArm": 0.195956,
+    "forearm": 0.209804,
+    "hand": 0.144758,
+    "thigh": 0.415758,
+    "shin": 0.247406,
+    "foot": 0.29727
+   },
+   "measurements": {
+    "lowerTorso": {
+     "vertices": 727,
+     "maxRadius": 0.306233,
+     "axisPairs": [
+      [
+       [
+        0,
+        0.8,
+        0
+       ],
+       [
+        -0.025,
+        1.08,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 565,
+      "position": [
+       0.093989,
+       1.052766,
+       0.283374
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "chest": {
+     "vertices": 595,
+     "maxRadius": 0.295059,
+     "axisPairs": [
+      [
+       [
+        -0.025,
+        1.08,
+        0
+       ],
+       [
+        -0.045,
+        1.191,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 574,
+      "position": [
+       0.073855,
+       1.092979,
+       0.277703
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "neck": {
+     "vertices": 302,
+     "maxRadius": 0.19045,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        0
+       ],
+       [
+        -0.065,
+        1.3,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "neckerchief end 1",
+      "vertex": 11,
+      "position": [
+       0.136529,
+       1.201954,
+       0.056556
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "head": {
+     "vertices": 1197,
+     "maxRadius": 0.279831,
+     "axisPairs": [
+      [
+       [
+        -0.065,
+        1.3,
+        0
+       ],
+       [
+        -0.065,
+        1.44,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified sheep skull ears and wool",
+      "vertex": 4,
+      "position": [
+       -0.118382,
+       1.459546,
+       -0.273996
+      ],
+      "dominantBone": "head",
+      "axisIndex": 0
+     }
+    },
+    "upperArm": {
+     "vertices": 285,
+     "maxRadius": 0.097977,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        -0.205
+       ],
+       [
+        0.022,
+        0.991,
+        -0.344
+       ]
+      ],
+      [
+       [
+        -0.045,
+        1.191,
+        0.205
+       ],
+       [
+        0.022,
+        0.991,
+        0.344
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 26,
+      "position": [
+       0.033374,
+       1.086447,
+       -0.393253
+      ],
+      "dominantBone": "upperArm-1",
+      "axisIndex": 0
+     }
+    },
+    "forearm": {
+     "vertices": 667,
+     "maxRadius": 0.104902,
+     "axisPairs": [
+      [
+       [
+        0.022,
+        0.991,
+        -0.344
+       ],
+       [
+        0.061,
+        0.742,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.022,
+        0.991,
+        0.344
+       ],
+       [
+        0.061,
+        0.742,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 613,
+      "position": [
+       -0.079738,
+       1.015087,
+       0.335422
+      ],
+      "dominantBone": "forearm1",
+      "axisIndex": 1
+     }
+    },
+    "hand": {
+     "vertices": 295,
+     "maxRadius": 0.072379,
+     "axisPairs": [
+      [
+       [
+        0.061,
+        0.742,
+        -0.355
+       ],
+       [
+        0.072,
+        0.712,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.061,
+        0.742,
+        0.355
+       ],
+       [
+        0.072,
+        0.712,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "forearm and hand -1",
+      "vertex": 338,
+      "position": [
+       0.135979,
+       0.717812,
+       -0.32166
+      ],
+      "dominantBone": "hand-1",
+      "axisIndex": 0
+     }
+    },
+    "thigh": {
+     "vertices": 295,
+     "maxRadius": 0.207878,
+     "axisPairs": [
+      [
+       [
+        -0.03,
+        0.77,
+        -0.12
+       ],
+       [
+        0.024,
+        0.475,
+        -0.196
+       ]
+      ],
+      [
+       [
+        -0.03,
+        0.77,
+        0.12
+       ],
+       [
+        0.024,
+        0.475,
+        0.196
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected work trousers seat and legs",
+      "vertex": 489,
+      "position": [
+       0.151254,
+       0.756154,
+       -0.017273
+      ],
+      "dominantBone": "thigh-1",
+      "axisIndex": 0
+     }
+    },
+    "shin": {
+     "vertices": 287,
+     "maxRadius": 0.123703,
+     "axisPairs": [
+      [
+       [
+        0.024,
+        0.475,
+        -0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        0.024,
+        0.475,
+        0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected work trousers seat and legs",
+      "vertex": 635,
+      "position": [
+       -0.025177,
+       0.46969,
+       0.082599
+      ],
+      "dominantBone": "shin1",
+      "axisIndex": 1
+     }
+    },
+    "foot": {
+     "vertices": 504,
+     "maxRadius": 0.148634,
+     "axisPairs": [
+      [
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ],
+       [
+        0.085,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        -0.035,
+        0.12,
+        0.232
+       ],
+       [
+        0.085,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "exposed cloven hoof 1",
+      "vertex": 68,
+      "position": [
+       -0.024,
+       0.268149,
+       0.22
+      ],
+      "dominantBone": "hoof1",
+      "axisIndex": 1
+     }
+    }
+   },
+   "sourceVertices": 5154,
+   "excludedParts": [
+    {
+     "name": "short woolly tail",
+     "vertices": 102
+    }
+   ],
+   "limitations": [
+    "Thickness-only overlay: authored mannequin lengths, joint positions, motion and mass remain unchanged.",
+    "The maximum-radius capsule intentionally overestimates empty space around muzzle, ears, horns, cap and clothing.",
+    "Dominant rest-pose skin weights partition vertices; blended deformation, inter-category triangles and posed garment bulging are not certified.",
+    "Terminal head/foot proxy lengths are 0.14/0.12 world units, matching the mannequin; other axes use source rig joints.",
+    "Source outfit only. Red hats, stowed/carried weapons, straps, auxiliary grip meshes and excluded tail/utility parts require separate envelopes."
+   ]
+  },
+  "skunk": {
+   "label": "Skunk worker",
+   "source": {
+    "file": "skunk-10k-data.json",
+    "sha256": "c1176d473c045f08f6a5cfa3eeb210b10c3e0e7585a80ac1f4852460a9765c5f",
+    "triangles": 9998
+   },
+   "supported": true,
+   "radii": {
+    "lowerTorso": 0.254157,
+    "chest": 0.218099,
+    "neck": 0.088114,
+    "head": 0.258898,
+    "upperArm": 0.094865,
+    "forearm": 0.137984,
+    "hand": 0.072379,
+    "thigh": 0.212482,
+    "shin": 0.119666,
+    "foot": 0.141445
+   },
+   "diameters": {
+    "lowerTorso": 0.508314,
+    "chest": 0.436198,
+    "neck": 0.176228,
+    "head": 0.517796,
+    "upperArm": 0.18973,
+    "forearm": 0.275968,
+    "hand": 0.144758,
+    "thigh": 0.424964,
+    "shin": 0.239332,
+    "foot": 0.28289
+   },
+   "measurements": {
+    "lowerTorso": {
+     "vertices": 533,
+     "maxRadius": 0.254157,
+     "axisPairs": [
+      [
+       [
+        0,
+        0.8,
+        0
+       ],
+       [
+        -0.025,
+        1.08,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 1125,
+      "position": [
+       -0.063861,
+       0.786725,
+       0.245644
+      ],
+      "dominantBone": "hips",
+      "axisIndex": 0
+     }
+    },
+    "chest": {
+     "vertices": 381,
+     "maxRadius": 0.218099,
+     "axisPairs": [
+      [
+       [
+        -0.025,
+        1.08,
+        0
+       ],
+       [
+        -0.045,
+        1.191,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 554,
+      "position": [
+       0.047594,
+       1.084851,
+       0.205605
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "neck": {
+     "vertices": 114,
+     "maxRadius": 0.088114,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        0
+       ],
+       [
+        -0.065,
+        1.3,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified skunk skull rounded ears and muzzle",
+      "vertex": 458,
+      "position": [
+       0.025658,
+       1.29392,
+       -0.002712
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "head": {
+     "vertices": 877,
+     "maxRadius": 0.258898,
+     "axisPairs": [
+      [
+       [
+        -0.065,
+        1.3,
+        0
+       ],
+       [
+        -0.065,
+        1.44,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified skunk skull rounded ears and muzzle",
+      "vertex": 499,
+      "position": [
+       0.193884,
+       1.41392,
+       -0.002712
+      ],
+      "dominantBone": "head",
+      "axisIndex": 0
+     }
+    },
+    "upperArm": {
+     "vertices": 413,
+     "maxRadius": 0.094865,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        -0.205
+       ],
+       [
+        0.022,
+        0.991,
+        -0.344
+       ]
+      ],
+      [
+       [
+        -0.045,
+        1.191,
+        0.205
+       ],
+       [
+        0.022,
+        0.991,
+        0.344
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 575,
+      "position": [
+       -0.05282,
+       1.023789,
+       0.220369
+      ],
+      "dominantBone": "upperArm1",
+      "axisIndex": 1
+     }
+    },
+    "forearm": {
+     "vertices": 636,
+     "maxRadius": 0.137984,
+     "axisPairs": [
+      [
+       [
+        0.022,
+        0.991,
+        -0.344
+       ],
+       [
+        0.061,
+        0.742,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.022,
+        0.991,
+        0.344
+       ],
+       [
+        0.061,
+        0.742,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 572,
+      "position": [
+       -0.035678,
+       1.011692,
+       0.220369
+      ],
+      "dominantBone": "forearm1",
+      "axisIndex": 1
+     }
+    },
+    "hand": {
+     "vertices": 326,
+     "maxRadius": 0.072379,
+     "axisPairs": [
+      [
+       [
+        0.061,
+        0.742,
+        -0.355
+       ],
+       [
+        0.072,
+        0.712,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.061,
+        0.742,
+        0.355
+       ],
+       [
+        0.072,
+        0.712,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "forearm and hand -1",
+      "vertex": 334,
+      "position": [
+       0.135979,
+       0.717812,
+       -0.32166
+      ],
+      "dominantBone": "hand-1",
+      "axisIndex": 0
+     }
+    },
+    "thigh": {
+     "vertices": 288,
+     "maxRadius": 0.212482,
+     "axisPairs": [
+      [
+       [
+        -0.03,
+        0.77,
+        -0.12
+       ],
+       [
+        0.024,
+        0.475,
+        -0.196
+       ]
+      ],
+      [
+       [
+        -0.03,
+        0.77,
+        0.12
+       ],
+       [
+        0.024,
+        0.475,
+        0.196
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 630,
+      "position": [
+       -0.207859,
+       0.748869,
+       0.005683
+      ],
+      "dominantBone": "thigh1",
+      "axisIndex": 1
+     }
+    },
+    "shin": {
+     "vertices": 250,
+     "maxRadius": 0.119666,
+     "axisPairs": [
+      [
+       [
+        0.024,
+        0.475,
+        -0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        0.024,
+        0.475,
+        0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 756,
+      "position": [
+       -0.035879,
+       0.473065,
+       0.092402
+      ],
+      "dominantBone": "shin1",
+      "axisIndex": 1
+     }
+    },
+    "foot": {
+     "vertices": 747,
+     "maxRadius": 0.141444,
+     "axisPairs": [
+      [
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ],
+       [
+        0.085,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        -0.035,
+        0.12,
+        0.232
+       ],
+       [
+        0.085,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "work boot -1",
+      "vertex": 128,
+      "position": [
+       0.159101,
+       0.000549,
+       -0.247714
+      ],
+      "dominantBone": "hoof-1",
+      "axisIndex": 0
+     }
+    }
+   },
+   "sourceVertices": 4565,
+   "excludedParts": [
+    {
+     "name": "skunk tail plume",
+     "vertices": 502
+    }
+   ],
+   "limitations": [
+    "Thickness-only overlay: authored mannequin lengths, joint positions, motion and mass remain unchanged.",
+    "The maximum-radius capsule intentionally overestimates empty space around muzzle, ears, horns, cap and clothing.",
+    "Dominant rest-pose skin weights partition vertices; blended deformation, inter-category triangles and posed garment bulging are not certified.",
+    "Terminal head/foot proxy lengths are 0.14/0.12 world units, matching the mannequin; other axes use source rig joints.",
+    "Source outfit only. Red hats, stowed/carried weapons, straps, auxiliary grip meshes and excluded tail/utility parts require separate envelopes."
+   ]
+  },
+  "pig-foreman": {
+   "label": "Pig foreman",
+   "source": {
+    "file": "pig-foreman-10k-data.json",
+    "sha256": "4e63017607f7ef4d90b6dba384ce4852436a0cd66e48aed8646be95c7892f7a8",
+    "triangles": 9988
+   },
+   "supported": true,
+   "radii": {
+    "lowerTorso": 0.401051,
+    "chest": 0.393596,
+    "neck": 0.176676,
+    "head": 0.312616,
+    "upperArm": 0.132192,
+    "forearm": 0.112667,
+    "hand": 0.072379,
+    "thigh": 0.341651,
+    "shin": 0.150676,
+    "foot": 0.141445
+   },
+   "diameters": {
+    "lowerTorso": 0.802102,
+    "chest": 0.787192,
+    "neck": 0.353352,
+    "head": 0.625232,
+    "upperArm": 0.264384,
+    "forearm": 0.225334,
+    "hand": 0.144758,
+    "thigh": 0.683302,
+    "shin": 0.301352,
+    "foot": 0.28289
+   },
+   "measurements": {
+    "lowerTorso": {
+     "vertices": 621,
+     "maxRadius": 0.40105,
+     "axisPairs": [
+      [
+       [
+        0.003485,
+        0.713754,
+        0
+       ],
+       [
+        -0.027185,
+        1.024431,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected trousers belt and braces",
+      "vertex": 832,
+      "position": [
+       0.314254,
+       0.882656,
+       0.233789
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "chest": {
+     "vertices": 661,
+     "maxRadius": 0.393596,
+     "axisPairs": [
+      [
+       [
+        -0.027185,
+        1.024431,
+        0
+       ],
+       [
+        -0.045,
+        1.131,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 119,
+      "position": [
+       0.103527,
+       1.044478,
+       -0.370716
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "neck": {
+     "vertices": 144,
+     "maxRadius": 0.176676,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.131,
+        0
+       ],
+       [
+        -0.065,
+        1.3,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified pig skull folded ears and snout",
+      "vertex": 469,
+      "position": [
+       0.11266,
+       1.299651,
+       0.010071
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "head": {
+     "vertices": 1235,
+     "maxRadius": 0.312615,
+     "axisPairs": [
+      [
+       [
+        -0.065,
+        1.3,
+        0
+       ],
+       [
+        -0.065,
+        1.44,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "skull service cap crown band and visor",
+      "vertex": 180,
+      "position": [
+       0.213307,
+       1.582383,
+       -0.000729
+      ],
+      "dominantBone": "head",
+      "axisIndex": 0
+     }
+    },
+    "upperArm": {
+     "vertices": 309,
+     "maxRadius": 0.132191,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.131,
+        -0.265
+       ],
+       [
+        0.022,
+        0.931,
+        -0.404
+       ]
+      ],
+      [
+       [
+        -0.045,
+        1.131,
+        0.265
+       ],
+       [
+        0.022,
+        0.931,
+        0.404
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 129,
+      "position": [
+       -0.028342,
+       1.243113,
+       -0.333028
+      ],
+      "dominantBone": "upperArm-1",
+      "axisIndex": 0
+     }
+    },
+    "forearm": {
+     "vertices": 562,
+     "maxRadius": 0.112666,
+     "axisPairs": [
+      [
+       [
+        0.022,
+        0.931,
+        -0.404
+       ],
+       [
+        0.061,
+        0.682,
+        -0.415
+       ]
+      ],
+      [
+       [
+        0.022,
+        0.931,
+        0.404
+       ],
+       [
+        0.061,
+        0.682,
+        0.415
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 820,
+      "position": [
+       -0.087797,
+       0.951683,
+       0.389487
+      ],
+      "dominantBone": "forearm1",
+      "axisIndex": 1
+     }
+    },
+    "hand": {
+     "vertices": 325,
+     "maxRadius": 0.072379,
+     "axisPairs": [
+      [
+       [
+        0.061,
+        0.682,
+        -0.415
+       ],
+       [
+        0.072,
+        0.652,
+        -0.415
+       ]
+      ],
+      [
+       [
+        0.061,
+        0.682,
+        0.415
+       ],
+       [
+        0.072,
+        0.652,
+        0.415
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "forearm and hand -1",
+      "vertex": 333,
+      "position": [
+       0.135979,
+       0.657812,
+       -0.38166
+      ],
+      "dominantBone": "hand-1",
+      "axisIndex": 0
+     }
+    },
+    "thigh": {
+     "vertices": 189,
+     "maxRadius": 0.34165,
+     "axisPairs": [
+      [
+       [
+        -0.033405,
+        0.68686,
+        -0.1488
+       ],
+       [
+        0.026202,
+        0.44628,
+        -0.230561
+       ]
+      ],
+      [
+       [
+        -0.033405,
+        0.68686,
+        0.1488
+       ],
+       [
+        0.026202,
+        0.44628,
+        0.230561
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected trousers belt and braces",
+      "vertex": 454,
+      "position": [
+       0.287443,
+       0.661578,
+       0.020978
+      ],
+      "dominantBone": "thigh1",
+      "axisIndex": 1
+     }
+    },
+    "shin": {
+     "vertices": 95,
+     "maxRadius": 0.150675,
+     "axisPairs": [
+      [
+       [
+        0.026202,
+        0.44628,
+        -0.230561
+       ],
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        0.026202,
+        0.44628,
+        0.230561
+       ],
+       [
+        -0.035,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected trousers belt and braces",
+      "vertex": 0,
+      "position": [
+       0.017449,
+       0.443409,
+       -0.38104
+      ],
+      "dominantBone": "shin-1",
+      "axisIndex": 0
+     }
+    },
+    "foot": {
+     "vertices": 719,
+     "maxRadius": 0.141444,
+     "axisPairs": [
+      [
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ],
+       [
+        0.085,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        -0.035,
+        0.12,
+        0.232
+       ],
+       [
+        0.085,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "work boot -1",
+      "vertex": 128,
+      "position": [
+       0.159101,
+       0.000549,
+       -0.247714
+      ],
+      "dominantBone": "hoof-1",
+      "axisIndex": 0
+     }
+    }
+   },
+   "sourceVertices": 4860,
+   "excludedParts": [
+    {
+     "name": "pig curly tail",
+     "vertices": 152
+    }
+   ],
+   "limitations": [
+    "Thickness-only overlay: authored mannequin lengths, joint positions, motion and mass remain unchanged.",
+    "The maximum-radius capsule intentionally overestimates empty space around muzzle, ears, horns, cap and clothing.",
+    "Dominant rest-pose skin weights partition vertices; blended deformation, inter-category triangles and posed garment bulging are not certified.",
+    "Terminal head/foot proxy lengths are 0.14/0.12 world units, matching the mannequin; other axes use source rig joints.",
+    "Source outfit only. Red hats, stowed/carried weapons, straps, auxiliary grip meshes and excluded tail/utility parts require separate envelopes."
+   ]
+  },
+  "pig-director": {
+   "label": "Pig director",
+   "source": {
+    "file": "pig-director-10k-data.json",
+    "sha256": "01173d8ef0102f2528aebdd7ac0cac39e7b3bba242075dfec6181bc565d18e82",
+    "triangles": 9998
+   },
+   "supported": true,
+   "radii": {
+    "lowerTorso": 0.411628,
+    "chest": 0.363985,
+    "neck": 0.221662,
+    "head": 0.331547,
+    "upperArm": 0.147254,
+    "forearm": 0.151217,
+    "hand": 0.072379,
+    "thigh": 0.373101,
+    "shin": 0.164991,
+    "foot": 0.144396
+   },
+   "diameters": {
+    "lowerTorso": 0.823256,
+    "chest": 0.72797,
+    "neck": 0.443324,
+    "head": 0.663094,
+    "upperArm": 0.294508,
+    "forearm": 0.302434,
+    "hand": 0.144758,
+    "thigh": 0.746202,
+    "shin": 0.329982,
+    "foot": 0.288792
+   },
+   "measurements": {
+    "lowerTorso": {
+     "vertices": 691,
+     "maxRadius": 0.411627,
+     "axisPairs": [
+      [
+       [
+        0,
+        0.8,
+        0
+       ],
+       [
+        -0.025,
+        1.08,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt waistcoat and sleeves",
+      "vertex": 537,
+      "position": [
+       0.393958,
+       0.968365,
+       -0.059044
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "chest": {
+     "vertices": 346,
+     "maxRadius": 0.363984,
+     "axisPairs": [
+      [
+       [
+        -0.025,
+        1.08,
+        0
+       ],
+       [
+        -0.045,
+        1.191,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt waistcoat and sleeves",
+      "vertex": 746,
+      "position": [
+       0.304118,
+       1.080022,
+       0.155455
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "neck": {
+     "vertices": 73,
+     "maxRadius": 0.221661,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        0
+       ],
+       [
+        -0.065,
+        1.3,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified director skull folded ears and snout",
+      "vertex": 484,
+      "position": [
+       0.161653,
+       1.292906,
+       0.002123
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "head": {
+     "vertices": 1000,
+     "maxRadius": 0.331546,
+     "axisPairs": [
+      [
+       [
+        -0.065,
+        1.3,
+        0
+       ],
+       [
+        -0.065,
+        1.44,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified director skull folded ears and snout",
+      "vertex": 488,
+      "position": [
+       0.259072,
+       1.510002,
+       0
+      ],
+      "dominantBone": "head",
+      "axisIndex": 0
+     }
+    },
+    "upperArm": {
+     "vertices": 415,
+     "maxRadius": 0.147254,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        -0.29
+       ],
+       [
+        0.022,
+        0.991,
+        -0.429
+       ]
+      ],
+      [
+       [
+        -0.045,
+        1.191,
+        0.29
+       ],
+       [
+        0.022,
+        0.991,
+        0.429
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt waistcoat and sleeves",
+      "vertex": 249,
+      "position": [
+       0.019412,
+       1.32321,
+       -0.297434
+      ],
+      "dominantBone": "upperArm-1",
+      "axisIndex": 0
+     }
+    },
+    "forearm": {
+     "vertices": 688,
+     "maxRadius": 0.151217,
+     "axisPairs": [
+      [
+       [
+        0.022,
+        0.991,
+        -0.429
+       ],
+       [
+        0.061,
+        0.742,
+        -0.44
+       ]
+      ],
+      [
+       [
+        0.022,
+        0.991,
+        0.429
+       ],
+       [
+        0.061,
+        0.742,
+        0.44
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt waistcoat and sleeves",
+      "vertex": 908,
+      "position": [
+       -0.060733,
+       1.013462,
+       0.304432
+      ],
+      "dominantBone": "forearm1",
+      "axisIndex": 1
+     }
+    },
+    "hand": {
+     "vertices": 327,
+     "maxRadius": 0.072379,
+     "axisPairs": [
+      [
+       [
+        0.061,
+        0.742,
+        -0.44
+       ],
+       [
+        0.072,
+        0.712,
+        -0.44
+       ]
+      ],
+      [
+       [
+        0.061,
+        0.742,
+        0.44
+       ],
+       [
+        0.072,
+        0.712,
+        0.44
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "forearm and hand -1",
+      "vertex": 332,
+      "position": [
+       0.135979,
+       0.717812,
+       -0.40666
+      ],
+      "dominantBone": "hand-1",
+      "axisIndex": 0
+     }
+    },
+    "thigh": {
+     "vertices": 295,
+     "maxRadius": 0.3731,
+     "axisPairs": [
+      [
+       [
+        -0.03,
+        0.77,
+        -0.12
+       ],
+       [
+        0.024,
+        0.475,
+        -0.196
+       ]
+      ],
+      [
+       [
+        -0.03,
+        0.77,
+        0.12
+       ],
+       [
+        0.024,
+        0.475,
+        0.196
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected dress trousers",
+      "vertex": 541,
+      "position": [
+       0.334219,
+       0.736,
+       0.017917
+      ],
+      "dominantBone": "thigh1",
+      "axisIndex": 1
+     }
+    },
+    "shin": {
+     "vertices": 196,
+     "maxRadius": 0.164991,
+     "axisPairs": [
+      [
+       [
+        0.024,
+        0.475,
+        -0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        0.024,
+        0.475,
+        0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected dress trousers",
+      "vertex": 25,
+      "position": [
+       0.112823,
+       0.424,
+       -0.334444
+      ],
+      "dominantBone": "shin-1",
+      "axisIndex": 0
+     }
+    },
+    "foot": {
+     "vertices": 828,
+     "maxRadius": 0.144395,
+     "axisPairs": [
+      [
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ],
+       [
+        0.085,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        -0.035,
+        0.12,
+        0.232
+       ],
+       [
+        0.085,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "dress boot -1",
+      "vertex": 148,
+      "position": [
+       -0.137266,
+       0.018159,
+       -0.236483
+      ],
+      "dominantBone": "hoof-1",
+      "axisIndex": 0
+     }
+    }
+   },
+   "sourceVertices": 4859,
+   "excludedParts": [
+    {
+     "name": "pig curly tail",
+     "vertices": 152
+    }
+   ],
+   "limitations": [
+    "Thickness-only overlay: authored mannequin lengths, joint positions, motion and mass remain unchanged.",
+    "The maximum-radius capsule intentionally overestimates empty space around muzzle, ears, horns, cap and clothing.",
+    "Dominant rest-pose skin weights partition vertices; blended deformation, inter-category triangles and posed garment bulging are not certified.",
+    "Terminal head/foot proxy lengths are 0.14/0.12 world units, matching the mannequin; other axes use source rig joints.",
+    "Source outfit only. Red hats, stowed/carried weapons, straps, auxiliary grip meshes and excluded tail/utility parts require separate envelopes."
+   ]
+  },
+  "rabbit": {
+   "label": "Rabbit worker",
+   "source": {
+    "file": "rabbit-10k-data.json",
+    "sha256": "49747783c5411bc013c84ba99e92857b319cabe75057f5d078cebc7586be40bd",
+    "triangles": 10156
+   },
+   "supported": true,
+   "radii": {
+    "lowerTorso": 0.258441,
+    "chest": 0.220089,
+    "neck": 0.186177,
+    "head": 0.328249,
+    "upperArm": 0.100117,
+    "forearm": 0.141555,
+    "hand": 0.072379,
+    "thigh": 0.20096,
+    "shin": 0.119659,
+    "foot": 0.150784
+   },
+   "diameters": {
+    "lowerTorso": 0.516882,
+    "chest": 0.440178,
+    "neck": 0.372354,
+    "head": 0.656498,
+    "upperArm": 0.200234,
+    "forearm": 0.28311,
+    "hand": 0.144758,
+    "thigh": 0.40192,
+    "shin": 0.239318,
+    "foot": 0.301568
+   },
+   "measurements": {
+    "lowerTorso": {
+     "vertices": 571,
+     "maxRadius": 0.25844,
+     "axisPairs": [
+      [
+       [
+        0,
+        0.8,
+        0
+       ],
+       [
+        -0.025,
+        1.08,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 137,
+      "position": [
+       -0.047246,
+       0.785524,
+       -0.253672
+      ],
+      "dominantBone": "hips",
+      "axisIndex": 0
+     }
+    },
+    "chest": {
+     "vertices": 520,
+     "maxRadius": 0.220089,
+     "axisPairs": [
+      [
+       [
+        -0.025,
+        1.08,
+        0
+       ],
+       [
+        -0.045,
+        1.191,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 206,
+      "position": [
+       -0.113607,
+       1.224784,
+       -0.206376
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "neck": {
+     "vertices": 368,
+     "maxRadius": 0.186177,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        0
+       ],
+       [
+        -0.065,
+        1.3,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "neckerchief knot",
+      "vertex": 16,
+      "position": [
+       0.131582,
+       1.260231,
+       0
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "head": {
+     "vertices": 1018,
+     "maxRadius": 0.328248,
+     "axisPairs": [
+      [
+       [
+        -0.065,
+        1.3,
+        0
+       ],
+       [
+        -0.065,
+        1.44,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified rabbit skull and leaf ears",
+      "vertex": 37,
+      "position": [
+       -0.065168,
+       1.736574,
+       -0.14068
+      ],
+      "dominantBone": "head",
+      "axisIndex": 0
+     }
+    },
+    "upperArm": {
+     "vertices": 401,
+     "maxRadius": 0.100116,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        -0.205
+       ],
+       [
+        0.022,
+        0.991,
+        -0.344
+       ]
+      ],
+      [
+       [
+        -0.045,
+        1.191,
+        0.205
+       ],
+       [
+        0.022,
+        0.991,
+        0.344
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 576,
+      "position": [
+       -0.081157,
+       1.05382,
+       0.207776
+      ],
+      "dominantBone": "upperArm1",
+      "axisIndex": 1
+     }
+    },
+    "forearm": {
+     "vertices": 717,
+     "maxRadius": 0.141555,
+     "axisPairs": [
+      [
+       [
+        0.022,
+        0.991,
+        -0.344
+       ],
+       [
+        0.061,
+        0.742,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.022,
+        0.991,
+        0.344
+       ],
+       [
+        0.061,
+        0.742,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected shirt and sleeves",
+      "vertex": 210,
+      "position": [
+       -0.040881,
+       1.014672,
+       -0.219408
+      ],
+      "dominantBone": "forearm-1",
+      "axisIndex": 0
+     }
+    },
+    "hand": {
+     "vertices": 314,
+     "maxRadius": 0.072379,
+     "axisPairs": [
+      [
+       [
+        0.061,
+        0.742,
+        -0.355
+       ],
+       [
+        0.072,
+        0.712,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.061,
+        0.742,
+        0.355
+       ],
+       [
+        0.072,
+        0.712,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "forearm and hand -1",
+      "vertex": 347,
+      "position": [
+       0.135979,
+       0.717812,
+       -0.32166
+      ],
+      "dominantBone": "hand-1",
+      "axisIndex": 0
+     }
+    },
+    "thigh": {
+     "vertices": 311,
+     "maxRadius": 0.200959,
+     "axisPairs": [
+      [
+       [
+        -0.03,
+        0.77,
+        -0.12
+       ],
+       [
+        0.024,
+        0.475,
+        -0.196
+       ]
+      ],
+      [
+       [
+        -0.03,
+        0.77,
+        0.12
+       ],
+       [
+        0.024,
+        0.475,
+        0.196
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 658,
+      "position": [
+       -0.183531,
+       0.713515,
+       0.003286
+      ],
+      "dominantBone": "thigh1",
+      "axisIndex": 1
+     }
+    },
+    "shin": {
+     "vertices": 272,
+     "maxRadius": 0.119659,
+     "axisPairs": [
+      [
+       [
+        0.024,
+        0.475,
+        -0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        0.024,
+        0.475,
+        0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected overalls seat and legs",
+      "vertex": 811,
+      "position": [
+       -0.035877,
+       0.473065,
+       0.092409
+      ],
+      "dominantBone": "shin1",
+      "axisIndex": 1
+     }
+    },
+    "foot": {
+     "vertices": 576,
+     "maxRadius": 0.150784,
+     "axisPairs": [
+      [
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ],
+       [
+        0.085,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        -0.035,
+        0.12,
+        0.232
+       ],
+       [
+        0.085,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "furry rabbit foot 1",
+      "vertex": 99,
+      "position": [
+       0.202744,
+       0.026,
+       0.226
+      ],
+      "dominantBone": "hoof1",
+      "axisIndex": 1
+     }
+    }
+   },
+   "sourceVertices": 5068,
+   "excludedParts": [
+    {
+     "name": "rabbit tail",
+     "vertices": 92
+    }
+   ],
+   "limitations": [
+    "Thickness-only overlay: authored mannequin lengths, joint positions, motion and mass remain unchanged.",
+    "The maximum-radius capsule intentionally overestimates empty space around muzzle, ears, horns, cap and clothing.",
+    "Dominant rest-pose skin weights partition vertices; blended deformation, inter-category triangles and posed garment bulging are not certified.",
+    "Terminal head/foot proxy lengths are 0.14/0.12 world units, matching the mannequin; other axes use source rig joints.",
+    "Source outfit only. Red hats, stowed/carried weapons, straps, auxiliary grip meshes and excluded tail/utility parts require separate envelopes."
+   ]
+  },
+  "dog": {
+   "label": "Dog guard",
+   "source": {
+    "file": "dog-guard-10k-data.json",
+    "sha256": "7f940dfb71a63e02d19c73f0a443045aa5361c022aba611251bba2ed23bd7284",
+    "triangles": 10446
+   },
+   "supported": true,
+   "radii": {
+    "lowerTorso": 0.285481,
+    "chest": 0.254334,
+    "neck": 0.186177,
+    "head": 0.288021,
+    "upperArm": 0.088341,
+    "forearm": 0.116037,
+    "hand": 0.072379,
+    "thigh": 0.210802,
+    "shin": 0.115157,
+    "foot": 0.147841
+   },
+   "diameters": {
+    "lowerTorso": 0.570962,
+    "chest": 0.508668,
+    "neck": 0.372354,
+    "head": 0.576042,
+    "upperArm": 0.176682,
+    "forearm": 0.232074,
+    "hand": 0.144758,
+    "thigh": 0.421604,
+    "shin": 0.230314,
+    "foot": 0.295682
+   },
+   "measurements": {
+    "lowerTorso": {
+     "vertices": 623,
+     "maxRadius": 0.285481,
+     "axisPairs": [
+      [
+       [
+        0,
+        0.8,
+        0
+       ],
+       [
+        -0.025,
+        1.08,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected jacket shirt and sleeves",
+      "vertex": 150,
+      "position": [
+       0.072679,
+       1.004578,
+       -0.270728
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "chest": {
+     "vertices": 422,
+     "maxRadius": 0.254333,
+     "axisPairs": [
+      [
+       [
+        -0.025,
+        1.08,
+        0
+       ],
+       [
+        -0.045,
+        1.191,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected jacket shirt and sleeves",
+      "vertex": 715,
+      "position": [
+       0.055623,
+       1.103649,
+       0.240222
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "neck": {
+     "vertices": 356,
+     "maxRadius": 0.186177,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        0
+       ],
+       [
+        -0.065,
+        1.3,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "neckerchief knot",
+      "vertex": 16,
+      "position": [
+       0.131582,
+       1.260231,
+       0
+      ],
+      "dominantBone": "spine",
+      "axisIndex": 0
+     }
+    },
+    "head": {
+     "vertices": 912,
+     "maxRadius": 0.288021,
+     "axisPairs": [
+      [
+       [
+        -0.065,
+        1.3,
+        0
+       ],
+       [
+        -0.065,
+        1.44,
+        0
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "unified dog skull and upright ears",
+      "vertex": 563,
+      "position": [
+       0.223021,
+       1.406,
+       0
+      ],
+      "dominantBone": "head",
+      "axisIndex": 0
+     }
+    },
+    "upperArm": {
+     "vertices": 323,
+     "maxRadius": 0.08834,
+     "axisPairs": [
+      [
+       [
+        -0.045,
+        1.191,
+        -0.205
+       ],
+       [
+        0.022,
+        0.991,
+        -0.344
+       ]
+      ],
+      [
+       [
+        -0.045,
+        1.191,
+        0.205
+       ],
+       [
+        0.022,
+        0.991,
+        0.344
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected jacket shirt and sleeves",
+      "vertex": 35,
+      "position": [
+       0.033425,
+       1.087518,
+       -0.379481
+      ],
+      "dominantBone": "upperArm-1",
+      "axisIndex": 0
+     }
+    },
+    "forearm": {
+     "vertices": 688,
+     "maxRadius": 0.116036,
+     "axisPairs": [
+      [
+       [
+        0.022,
+        0.991,
+        -0.344
+       ],
+       [
+        0.061,
+        0.742,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.022,
+        0.991,
+        0.344
+       ],
+       [
+        0.061,
+        0.742,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected jacket shirt and sleeves",
+      "vertex": 774,
+      "position": [
+       -0.076367,
+       1.018554,
+       0.288963
+      ],
+      "dominantBone": "forearm1",
+      "axisIndex": 1
+     }
+    },
+    "hand": {
+     "vertices": 314,
+     "maxRadius": 0.072379,
+     "axisPairs": [
+      [
+       [
+        0.061,
+        0.742,
+        -0.355
+       ],
+       [
+        0.072,
+        0.712,
+        -0.355
+       ]
+      ],
+      [
+       [
+        0.061,
+        0.742,
+        0.355
+       ],
+       [
+        0.072,
+        0.712,
+        0.355
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "forearm and hand -1",
+      "vertex": 347,
+      "position": [
+       0.135979,
+       0.717812,
+       -0.32166
+      ],
+      "dominantBone": "hand-1",
+      "axisIndex": 0
+     }
+    },
+    "thigh": {
+     "vertices": 326,
+     "maxRadius": 0.210801,
+     "axisPairs": [
+      [
+       [
+        -0.03,
+        0.77,
+        -0.12
+       ],
+       [
+        0.024,
+        0.475,
+        -0.196
+       ]
+      ],
+      [
+       [
+        -0.03,
+        0.77,
+        0.12
+       ],
+       [
+        0.024,
+        0.475,
+        0.196
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected trousers seat and legs",
+      "vertex": 533,
+      "position": [
+       -0.201304,
+       0.725699,
+       -0.005416
+      ],
+      "dominantBone": "thigh-1",
+      "axisIndex": 0
+     }
+    },
+    "shin": {
+     "vertices": 189,
+     "maxRadius": 0.115157,
+     "axisPairs": [
+      [
+       [
+        0.024,
+        0.475,
+        -0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        0.024,
+        0.475,
+        0.196
+       ],
+       [
+        -0.035,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "connected trousers seat and legs",
+      "vertex": 403,
+      "position": [
+       -0.013303,
+       0.469206,
+       -0.087202
+      ],
+      "dominantBone": "shin-1",
+      "axisIndex": 0
+     }
+    },
+    "foot": {
+     "vertices": 566,
+     "maxRadius": 0.147841,
+     "axisPairs": [
+      [
+       [
+        -0.035,
+        0.12,
+        -0.232
+       ],
+       [
+        0.085,
+        0.12,
+        -0.232
+       ]
+      ],
+      [
+       [
+        -0.035,
+        0.12,
+        0.232
+       ],
+       [
+        0.085,
+        0.12,
+        0.232
+       ]
+      ]
+     ],
+     "witness": {
+      "part": "furry dog foot 1",
+      "vertex": 81,
+      "position": [
+       -0.034615,
+       0.267719,
+       0.238
+      ],
+      "dominantBone": "hoof1",
+      "axisIndex": 1
+     }
+    }
+   },
+   "sourceVertices": 4719,
+   "excludedParts": [
+    {
+     "name": "dog tail",
+     "vertices": 252
+    },
+    {
+     "name": "utility pouch -1",
+     "vertices": 77
+    },
+    {
+     "name": "utility pouch 1",
+     "vertices": 77
+    },
+    {
+     "name": "utility belt",
+     "vertices": 128
+    }
+   ],
+   "limitations": [
+    "Thickness-only overlay: authored mannequin lengths, joint positions, motion and mass remain unchanged.",
+    "The maximum-radius capsule intentionally overestimates empty space around muzzle, ears, horns, cap and clothing.",
+    "Dominant rest-pose skin weights partition vertices; blended deformation, inter-category triangles and posed garment bulging are not certified.",
+    "Terminal head/foot proxy lengths are 0.14/0.12 world units, matching the mannequin; other axes use source rig joints.",
+    "Source outfit only. Red hats, stowed/carried weapons, straps, auxiliary grip meshes and excluded tail/utility parts require separate envelopes."
+   ]
+  },
+  "hen": {
+   "label": "Hen worker",
+   "source": {
+    "file": "hen-10k-data.json",
+    "sha256": "c71bbdd6be9b229d4127f8043564a95ed17e30edcd12fcce6a0e8809041322c5",
+    "triangles": 10348
+   },
+   "supported": false,
+   "reason": "The bird rig has wings and shanks, not the mannequin arm/thigh chain. A mammal thickness transfer would imply a false fit.",
+   "radii": null,
+   "diameters": null
+  }
+ }
+}
