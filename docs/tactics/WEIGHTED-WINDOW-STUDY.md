@@ -5,35 +5,45 @@
 Viewer: `tactics/weighted-window-study.html`. This extends the approved weighted
 roll study into a complete window crossing, without fitting an animal yet.
 
-## Current default: sill-braced entry plus roll
+## Current default: finish in the adjacent tile
 
-The user's follow-up asked to mix the first half of the earlier window animation
-with the new roll. The default **Sill-braced vault** now adapts that sequence to
-the mannequin: crouch, break glass, plant the left palm on the sill, push and tuck,
-pass through, release into a short ballistic drop, then roll and kneel. Duration
-is approximately 5.08 seconds. The Entry selector retains the original forward
-dive for direct comparison. This does not replace the horse animation yet.
+The user requested a shorter finish: occupy the tile directly beyond the window,
+not travel three tiles. The default sill-braced entry now brings the hips inside
+before a low-speed drop, makes a short tucked rocking landing, braces on the
+palms, gathers the legs, and raises the torso into a kneel. This deliberately
+replaces the long forward roll with a compact finish; it is not a full somersault.
+The sequence lasts approximately 5.27 seconds. The original forward-dive option
+remains available as a labeled comparison and still has its longer travel.
 
-The left palm stays fixed on the sill through the supported lift and crossing.
-The hips advance during the latter lift once the knees clear the sill; forward
-speed continues across the lift/crossing boundary. Release matches the airborne
-mass-center velocity (3 units/s forward, .7 upward). After release, the same
-gravity and unchanged window dimensions apply. Contact markers now distinguish
-the elevated sill from floor contacts. The hand approach retains its original
-elbow bend and eases wrist orientation, avoiding a previously detected IK snap.
+The actual world places windows on tile edges. With the study's wall at local
+X=0, the adjacent destination tile is X=[0,1], Z=[-.5,.5]. The viewer now uses
+one-unit grid squares with the correct offset and outlines that destination.
+The entire final capsule footprint lies in X=[.0961,.9939], so the hands/feet
+fit as well as the root. No body scaling, window resizing, or final-position snap
+is used. Tests derive this convention independently from the canonical world.
 
-Independent hostile review: **9/10** for the combined mannequin study. Eleven
-new tests cover full capsule/frame clearance, fixed bone lengths/masses, planted
-sill contact, hand-timed glass, release velocity, ballistic motion, the continuous
-forward weight transfer, dense pose continuity and final kneel. The four focused
-suites pass **44 tests**. Packaged browser review covers both entries in **12
-view/envelope configurations and 1,212 scrub samples**, plus playback/reset and
-glass cleanup; no browser/asset errors. Build passes.
+The sill hand remains fixed through the supported crossing. The wrist lifts
+over the sill before retracting. Release velocity matches the ballistic drop;
+most lateral travel now happens while braced. The compact gather establishes
+palm support, sweeps the legs outward using fixed-length IK, plants the feet and
+rear knee, then raises the torso with those lower-body contacts fixed. This fixes
+an earlier gather that moved its loaded foot across the floor. Knee clearance
+constraints and an earlier rear-foot withdrawal avoid clipping the wall.
 
-New pure API: `sampleBracedWindow(time)` in `weighted-window-braced.js`, with
-`BRACED_PHASES`, `BRACED_RELEASE`, `BRACED_LANDING`, and `BRACED_DURATION`.
-This remains authored support/impact motion with ballistic free flight, not a
-force, anatomical-joint-limit or self-collision solver. Animal fitting is pending.
+Independent hostile review: **9/10** for the compact mannequin study.
+
+Fourteen independent tests cover the complete endpoint footprint, exact capsule
+clearance, fixed dimensions/mass, sill grip, glass contact, continuous release,
+ballistic drop, planted finishing feet, true final support polygon, deterministic
+scrubbing and dense pose continuity. The four focused suites pass 47 tests.
+Packaged browser review covers both entries in 12 view/envelope configurations
+and 1,212 scrub samples, plus playback/reset and glass cleanup. Build passes.
+
+API: `sampleBracedWindow(time)` in `weighted-window-braced.js`, with
+`DESTINATION_TILE`, `BRACED_PHASES`, `BRACED_RELEASE`, `BRACED_LANDING`, and
+`BRACED_DURATION`. This remains authored support/impact motion with ballistic
+free flight, not a force, anatomical-joint-limit or self-collision solver.
+Animal fitting and gameplay integration remain pending.
 
 ## Original forward-dive comparison: sequence and constraints
 

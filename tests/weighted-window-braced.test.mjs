@@ -2,7 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {sampleBracedWindow,BRACED_DURATION,BRACED_PHASES,BRACED_IMPACT,BRACED_RELEASE,BRACED_LANDING,WINDOW_OPENING} from '../dist/tactics/weighted-window-braced.js';
 import {sampleWeightedRoll} from '../dist/tactics/weighted-roll.js';
+import {buildWorld} from '../dist/tactics/hybrid-world.js';
 const distance=(a,b)=>Math.hypot(...a.map((v,i)=>v-b[i]));
+function insideSupport(center,contacts){
+ const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]),points=[...new Map(contacts.filter(c=>c.surface==='ground').map(c=>{const p=[c.point[0],c.point[2]];return [p.join(','),p];})).values()].sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+ const half=ps=>{const h=[];for(const p of ps){while(h.length>1&&cross(h.at(-2),h.at(-1),p)<=0)h.pop();h.push(p);}return h;},hull=[...half(points).slice(0,-1),...half([...points].reverse()).slice(0,-1)],p=[center[0],center[2]];
+ return hull.length>=3&&hull.every((a,i)=>cross(a,hull[(i+1)%hull.length],p)>=-1e-9);
+}
 // Exact distance from a finite segment to an axis-aligned box. The squared
 // distance is quadratic between crossings of the box's coordinate planes.
 function segmentBoxDistance(a,b,lo,hi){
@@ -56,7 +62,7 @@ test('free flight has independently calculated ballistic COM and no fictitious c
 
 test('release preserves velocity and landing retains forward momentum into the roll',()=>{
  const dt=.0001,a=sampleBracedWindow(BRACED_RELEASE-dt),b=sampleBracedWindow(BRACED_RELEASE),c=sampleBracedWindow(BRACED_RELEASE+dt),before=b.center.map((v,i)=>(v-a.center[i])/dt),after=c.center.map((v,i)=>(v-b.center[i])/dt);assert(distance(before,after)<.05,`release speed jumps ${JSON.stringify({before,after})}`);
- const d=sampleBracedWindow(BRACED_LANDING-dt),e=sampleBracedWindow(BRACED_LANDING),f=sampleBracedWindow(BRACED_LANDING+dt),incoming=(e.center[0]-d.center[0])/dt,outgoing=(f.center[0]-e.center[0])/dt;assert(incoming>1&&outgoing>incoming*.35,`motion stops at landing ${incoming} -> ${outgoing}`);
+ const d=sampleBracedWindow(BRACED_LANDING-dt),e=sampleBracedWindow(BRACED_LANDING),f=sampleBracedWindow(BRACED_LANDING+dt),incoming=(e.center[0]-d.center[0])/dt,outgoing=(f.center[0]-e.center[0])/dt;assert(incoming>.1&&outgoing>incoming*.35,`motion stops at landing ${incoming} -> ${outgoing}`);
 });
 
 test('phase boundaries and random scrubbing preserve continuous deterministic poses',()=>{
@@ -66,7 +72,7 @@ test('phase boundaries and random scrubbing preserve continuous deterministic po
 
 test('floor contacts are genuine, never load the head or neck, and finish in a stationary supported kneel',()=>{
  for(let i=0;i<=1000;i++){const state=sampleBracedWindow(BRACED_DURATION*i/1000);for(const c of state.contacts.filter(c=>c.surface==='ground')){const s=state.segments.find(s=>s.name===c.segment);assert(Math.abs(state.points[c.id][1]-s.radius)<.00401);assert(!/head|neck/.test(c.segment),`${c.segment} loads floor at ${state.time}`);}}
- const end=sampleBracedWindow(BRACED_DURATION);assert.equal(end.mode,'static kneel');assert(end.balanced);assert(end.contacts.some(c=>c.id==='knee-1'));for(const t of [BRACED_DURATION-.3,BRACED_DURATION-.1]){const s=sampleBracedWindow(t);for(const [id,p]of Object.entries(end.points))assert(distance(p,s.points[id])<1e-9);}
+ const end=sampleBracedWindow(BRACED_DURATION);assert.equal(end.mode,'static kneel');assert(end.balanced);assert(insideSupport(end.center,end.contacts),'terminal COM lies outside exact convex contact polygon');assert(end.contacts.some(c=>c.id==='knee-1'));for(const t of [BRACED_DURATION-.3,BRACED_DURATION-.1]){const s=sampleBracedWindow(t);for(const [id,p]of Object.entries(end.points))assert(distance(p,s.points[id])<1e-9);}
 });
 
 test('the right hand reaches the glass when the break event fires',()=>{
@@ -87,4 +93,24 @@ test('weight travels toward the sill during the lift and keeps moving into the c
  const before=sampleBracedWindow(phase.end-dt),after=sampleBracedWindow(phase.end+dt),incoming=(end.center[0]-before.center[0])/dt,outgoing=(after.center[0]-end.center[0])/dt;
  assert(incoming>.5&&outgoing>.5,`forward weight transfer pauses at tuck/crossing boundary: ${incoming} -> ${outgoing}`);
  assert(Math.abs(incoming-outgoing)<.05,'crossing begins with a horizontal speed jump');
+});
+
+test('the complete final kneel fits the first tile beyond a real window edge',()=>{
+ // Canonical tile centers are integers, but walls occupy half-integer edges.
+ // Translate that edge to study X=0, rather than treating the wall as a tile.
+ const world=buildWorld({terrain:[['yard','yard']],edges:{'e:0:0:0':'window-concrete'},props:[]}),window=world.boxes.find(b=>b.id==='edge:e:0:0:0:sill'),tile=world.boxes.find(b=>b.id==='floor:1,0,0'),minX=tile.min[0]-window.center[0],maxX=tile.max[0]-window.center[0];
+ assert.equal(minX,0);assert.equal(maxX,1);
+ for(const t of [BRACED_DURATION-.3,BRACED_DURATION-.1,BRACED_DURATION]){const state=sampleBracedWindow(t);for(const segment of state.segments){for(const id of [segment.a,segment.b]){const p=state.points[id];assert(p[0]-segment.radius>=minX-1e-7&&p[0]+segment.radius<=maxX+1e-7,`${segment.name}/${id} finishes outside adjacent tile at x=${p[0]} r=${segment.radius}`);assert(p[2]-segment.radius>=tile.min[2]-1e-7&&p[2]+segment.radius<=tile.max[2]+1e-7,`${segment.name} crosses side of adjacent tile`);}}}
+});
+
+test('flat feet remain fixed while supporting the gather into kneeling',()=>{
+ const phase=BRACED_PHASES.find(p=>p.label==='Gather into kneel');let previous=sampleBracedWindow(phase.start),checked=0;
+ for(let t=phase.start+.005;t<=phase.end;t+=.005){const state=sampleBracedWindow(t);for(const side of [-1,1]){const ids=['ankle'+side,'toe'+side],flat=s=>ids.every(id=>Math.abs(s.points[id][1]-s.segments.find(b=>b.name==='foot '+side).radius)<1e-8);if(flat(previous)&&flat(state)){for(const id of ids)assert(distance(state.points[id],previous.points[id])<1e-6,`${id} skates during supported gather at ${t}`);checked++;}}previous=state;}
+ assert(checked>10,'no sustained grounded foot support during gather');
+});
+
+test('the rising pelvis has a stationary floor support during the compact get-up',()=>{
+ const phase=BRACED_PHASES.find(p=>p.label==='Gather into kneel');let previous=sampleBracedWindow(phase.start),rising=0;
+ for(let t=phase.start+.005;t<=phase.end;t+=.005){const state=sampleBracedWindow(t);if(state.points.hip[1]-previous.points.hip[1]>1e-5){const anchored=state.contacts.filter(c=>c.surface==='ground').some(c=>previous.contacts.some(p=>p.surface==='ground'&&p.id===c.id)&&distance(state.points[c.id],previous.points[c.id])<1e-6);assert(anchored,`hips rise without a stationary floor support at ${t}`);rising++;}previous=state;}
+ assert(rising>20,'no substantial supported get-up sampled');
 });
