@@ -51,18 +51,49 @@ or the tutorial town and enough money. It deducts once, occupies the entire
 assigned group, and prevents moving or splitting that group. Cancelling releases
 the group without a refund. A second click cannot buy an overlapping assignment.
 
-The best leadership in the assigned group determines duration: 24 hours at 50,
-16 hours at 75, 12 hours at 100; leadership below 10 uses the 10-point floor for
-a maximum five-day assignment. These duration/batch sizes are initial tuning
-values. Completion records four militia in that sector. Other groups and enemy
-logistics continue while the trainer is occupied.
+Training uses the highest leadership among all mercenaries physically in the
+training sector, across groups. Mercs partway through travel are excluded.
+Duration is fixed when the batch starts: 4 days at leadership 1, 3 days at 50,
+and 2 days at 100. Intermediate values interpolate linearly between those
+anchors, rounded to the nearest game minute. The selected group stays assigned;
+the initial leadership snapshot is saved, so another group's later departure
+does not change an ongoing timer.
+
+Each settlement (shared settlement ID, or a standalone sector) has at most eight
+militia and six completed training batches. Each $500 batch first fills vacancies
+with basic recruits, then uses any remaining places to upgrade existing militia,
+basic before medium. Nobody receives two upgrades in one batch; new recruits
+are not upgraded in that same batch. Cancelling does not consume a completed
+batch. Casualties do not reset the six-batch limit.
+
+| Completed batches from empty | Basic | Medium | High |
+| --- | --- | --- | --- |
+| 1 | 4 | 0 | 0 |
+| 2 | 8 | 0 | 0 |
+| 3 | 4 | 4 | 0 |
+| 4 | 0 | 8 | 0 |
+| 5 | 0 | 4 | 4 |
+| 6 | 0 | 0 | 8 |
+
+With six medium militia, the next batch yields two basic, four medium and two
+high. Basic equipment alternates pistol/rifle; medium alternates SMG/assault
+rifle; high alternates sniper rifle/machine gun. The encounter handoff includes
+these tier and weapon records; spawning/equipping actual tactical units and
+applying battle losses are still awaiting combat integration.
+
+Only one training assignment may run per settlement. Other groups and enemy
+logistics continue while the assigned group is occupied.
 
 ## Persistence and validation
 
 Logistics lives in the saved overmap group session: fort ownership, stocks,
 recruitment/dispatch timestamps, convoys, Red Hat routes, fractional movement,
-pending contact, funds, captured weapons, training assignments and militia counts.
-Old travel saves acquire logistics defaults. Map edits reset the test as before.
+pending contact, funds, captured weapons, training assignments, leadership snapshots, militia tiers and completed batches.
+Old travel saves acquire logistics defaults. Old militia counts up to eight migrate
+to basic troops, with completed batches inferred from count. Older tester saves
+with more than eight militia, or multiple rosters for one settlement, report an
+incompatibility rather than silently discarding troops. Existing in-progress
+legacy assignments retain their saved completion time. Map edits reset the test as before.
 Strategic time advances in bounded one-minute steps; long and short advances
 produce the same results and cannot skip contact.
 
