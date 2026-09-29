@@ -270,6 +270,30 @@ All 107 focused hen/roster tests and packaging pass. The scoped hostile review
 rated this timing fix 9/10 after checking actual pane/shard visibility and rewind
 in both outfits (10 browser cases, no errors).
 
+# Director inchworm effort — 2026-09-29
+
+The director gathers and drives twice while his belly crosses the sill. His
+pelvis curls 25 degrees against the spine while the braced shoulder stays fixed;
+the hips gather forward about 0.036 tile and upward 0.116 tile. He then uncurls
+and advances, rather than translating an unchanged horizontal pose. The body
+waits outside until it straightens enough to clear the opening. Native bone
+lengths, mesh dimensions and the final adjacent-tile kneel are preserved.
+
+Two gather peaks occur at 2.18 and 2.70 seconds. Phase buttons expose the bracing,
+gathering and pushing poses. The trailing legs keep kicking on the real clock
+while the body pauses; the kicks remain non-supporting. The existing handoffs
+and actual sill/floor plants follow the retimed pose, and the full clip remains
+eight seconds. This is an authored visual effort, not calibrated species physics.
+
+Both outfits clear 1,601 indexed-triangle samples at 5 ms spacing without frame
+or floor intersections. Tests measure actual hip-to-shoulder shortening and
+extension, stationary shoulders during gathering, visible pelvis arching,
+boundary continuity, fixed native dimensions and existing contact residuals.
+All 114 focused fitting/roster/compatibility tests and the production build pass.
+Independent hostile visual review: 9/10 for the requested inchworm effort, with
+both outfits reviewed from side and three-quarter views. Existing force and
+physical-support holds are unchanged.
+
 # Director belly-over-sill swimming legs (local)
 
 Both legs extend backward outside during the belly-over-sill effort, with an

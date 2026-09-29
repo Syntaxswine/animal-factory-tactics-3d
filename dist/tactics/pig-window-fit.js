@@ -2,8 +2,12 @@ import * as T from './vendor/three.module.js';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z),Q=()=>new T.Quaternion();
 const smooth=x=>{x=T.MathUtils.clamp(x,0,1);return x*x*x*(10+x*(-15+6*x));};
 const phases=Object.freeze([
- {label:'Prepare native crossing',start:0,end:2},
- {label:'Native body crossing',start:2,end:6},
+ {label:'Brace at sill',start:0,end:2},
+ {label:'Bunch behind belly',start:2,end:2.18},
+ {label:'First push',start:2.18,end:2.52},
+ {label:'Gather again',start:2.52,end:2.7},
+ {label:'Push belly through',start:2.7,end:3.2},
+ {label:'Draw legs inside',start:3.2,end:6},
  {label:'Settle inside',start:6,end:8}
 ]);
 
@@ -33,10 +37,21 @@ export function createPigWindowFit(worker,{hipPitch=-100,spinePitch=-15,headPitc
  function keyed(t,keys){for(let i=1;i<keys.length;i++)if(t<=keys[i][0]){const a=keys[i-1],b=keys[i],u=smooth((t-a[0])/(b[0]-a[0]));return a.slice(1).map((v,j)=>T.MathUtils.lerp(v,b[j+1],u));}return keys.at(-1).slice(1);}
  function apply(time){
   if(!Number.isFinite(time))throw Error('Invalid pig fit time');
-  const t=T.MathUtils.clamp(time,0,8);
+  const clock=T.MathUtils.clamp(time,0,8);
+  // Two braced efforts: gather first, then drive the belly forward. Remapping
+  // the whole pose keeps the handoffs and leg draw-through on the same path.
+  const t=clock<2||clock>3.2?clock:keyed(clock,[[2,2],[2.27,2],[2.52,2.35],[2.82,2.35],[3.2,3.2]])[0];
+  const bunch=keyed(clock,[[0,0],[2,0],[2.18,1],[2.4,0],[2.52,0],[2.7,1],[2.87,0],[8,0]])[0];
   bones.forEach((b,i)=>{b.position.copy(neutral[i].p);b.quaternion.copy(neutral[i].q);});root.quaternion.identity();
   const [x,height,fold]=keyed(t,[[0,-.8,-.025,.5],[1,-.8,-.03,.6],[1.6,-.8,.35,.95],[2,-.45,.458,1],[3,-.1,.458,1],[3.5,.15,.458,1],[4,.45,.458,1],[4.5,.55,.132,1.7],[5,.62,.088,1.72],[6,.62,.088,1.6],[6.5,.6,-.04,1.25],[7,.5,-.265,.9],[8,.45,-.32,.2]]);
-  root.position.set(x,height,0);n.hips.rotation.z=hipPitch*radians*fold;n.spine.rotation.z=keyed(t,[[0,-5],[2,-15],[4,-15],[4.5,0],[5,2],[6,-10],[7,0],[8,-5]])[0]*radians;root.updateMatrixWorld(true);
+  root.position.set(x,height,0);n.hips.rotation.z=hipPitch*fold*radians;n.spine.rotation.z=keyed(t,[[0,-5],[2,-15],[4,-15],[4.5,0],[5,2],[6,-10],[7,0],[8,-5]])[0]*radians;root.updateMatrixWorld(true);
+  // Gather the pelvis toward the braced shoulders, rather than translating
+  // an unchanged horizontal body. Keep the shoulder anchor while curling.
+  const shoulder=n['upperArm1'].getWorldPosition(V());
+  n.hips.rotation.z-=25*bunch*radians;n.spine.rotation.z+=25*bunch*radians;
+  root.updateMatrixWorld(true);
+  root.position.add(shoulder.sub(n['upperArm1'].getWorldPosition(V())));
+  root.updateMatrixWorld(true);
   for(const side of [-1,1]){
    const upper=n['upperArm'+side],fore=n['forearm'+side],hand=n['hand'+side];
    const a=fore.getWorldPosition(V()).sub(upper.getWorldPosition(V())),b=hand.getWorldPosition(V()).sub(fore.getWorldPosition(V()));
@@ -68,7 +83,7 @@ export function createPigWindowFit(worker,{hipPitch=-100,spinePitch=-15,headPitc
     // an alternating swimming kick, not feet searching for an invisible step.
     const trail=smooth((t-1.2)/.6)*(1-smooth((t-2.6)/.6));
     const flutter=smooth((t-1.7)/.35)*(1-smooth((t-2.5)/.4));
-    const kick=side*Math.sin((t-1.7)*Math.PI*2*2.2)*flutter;
+    const kick=side*Math.sin((clock-1.7)*Math.PI*2*2.2)*flutter;
     const hip=n['thigh'+side].getWorldPosition(V());
     target.lerp(V(hip.x-.74,hip.y-.10,side*.23),trail);
     target.y+=.065*kick;
@@ -78,7 +93,7 @@ export function createPigWindowFit(worker,{hipPitch=-100,spinePitch=-15,headPitc
    return {name:m.name,error:actual.distanceTo(target),target:target.toArray(),actual:actual.toArray(),support,constraint:support?'authored support':'free'};
   });
   root.updateMatrixWorld(true);worker.skeleton.update();
-  return {errors,phase:t<2?phases[0].label:t<6?phases[1].label:phases[2].label,supported:false};
+  return {errors,phase:phases.find(p=>clock<p.end)?.label??phases.at(-1).label,supported:false};
  }
  const restore=()=>{if(tail)tail.bindMatrix.copy(tailBind);};
  return {apply,phases,restore,dispose:restore};

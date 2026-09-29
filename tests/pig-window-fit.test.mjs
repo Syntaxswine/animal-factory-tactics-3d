@@ -62,3 +62,20 @@ test('feet trail outside and swim during belly-over-sill, then stop for the plan
   for(const t of[3.2,3.5,4,7,7.5,8]){const feet=f.motion.sample(t).errors.filter(e=>e.name.startsWith('foot'));assert(feet.every(e=>e.support));assert(Math.abs(feet[0].actual[1]-feet[1].actual[1])<1e-8,'flutter continued into landing');}
  }finally{f.dispose();}
 });
+
+test('inchworm gathers shorten hip-to-shoulder span against a braced shoulder before extending',()=>{
+ const f=fixture(),w=f.worker,hips=w.bones.find(b=>b.name==='hips'),shoulder=w.bones.find(b=>b.name==='upperArm1');
+ function pose(t){f.motion.sample(t);const h=hips.getWorldPosition(new T.Vector3()),s=shoulder.getWorldPosition(new T.Vector3());return{hip:h,shoulder:s,span:s.x-h.x};}
+ try{
+  for(const[start,gather,drive]of[[2,2.18,2.52],[2.52,2.7,3.2]]){
+   const a=pose(start),g=pose(gather),p=pose(drive);
+   assert(a.span-g.span>.03,'gather is only a whole-body translation');
+   assert(p.span-g.span>.03,'torso does not lengthen into the push');
+   assert(g.shoulder.distanceTo(a.shoulder)<.001,'braced shoulder slides during gathering');
+   assert(g.hip.x>a.hip.x+.03&&g.hip.y>a.hip.y+.08,'pelvis does not gather forward and arch');
+   assert(p.shoulder.x>g.shoulder.x+.07,'shoulders do not lead the drive');
+  }
+  assert.deepEqual(w.root.scale.toArray(),[1,1,1]);
+  for(const t of[2,2.18,2.27,2.4,2.52,2.7,2.82,2.87,3.2]){f.motion.sample(t-1e-5);const before=w.bones.map(b=>b.getWorldPosition(new T.Vector3()));f.motion.sample(t+1e-5);w.bones.forEach((b,i)=>assert(b.getWorldPosition(new T.Vector3()).distanceTo(before[i])<.001,'effort boundary pops'));}
+ }finally{f.dispose();}
+});
