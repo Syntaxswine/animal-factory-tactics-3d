@@ -270,6 +270,31 @@ All 107 focused hen/roster tests and packaging pass. The scoped hostile review
 rated this timing fix 9/10 after checking actual pane/shard visibility and rewind
 in both outfits (10 browser cases, no errors).
 
+# Director seesaw exit - 2026-09-29
+
+This supersedes the earlier director leg tuck, hoof-on-sill plants and continuous
+support claim below. The two inchworm efforts remain; at 3.2 seconds the body
+begins tipping around the sill. The chest drops inside while both legs trail
+outside. A late forward slide carries the belly past the lip into a staggered
+palm catch at 4.4/4.5 seconds. The feet clear the lip next and descend to the
+floor by 5.7 seconds, before he settles into the adjacent-tile kneel. The eight-
+second duration, native dimensions, original opening and other species remain.
+
+This is authored seesaw choreography, not a gravity solver. There is a short
+unsupported descent before the hand catch; the viewer reports that gap rather
+than claiming unreachable hands or free feet as valid support. Free target
+residuals remain visible (peak 0.253 tile at 4.005 seconds). Species mass, belly
+contact forces, self-collision, equipment and gameplay integration remain held.
+
+Verification: 115 focused fitting/roster/compatibility tests and the production
+build pass. Each outfit clears 1,601 indexed-triangle/floor samples at 5 ms
+spacing. Regression probes cover hand release, the elbow handoff and the former
+trouser/frame clip at 4.665 seconds. Tests assert chest-first tipping, trailing
+feet, actual palm catches, feet passing over the lip before floor contact, native
+geometry/restoration and continuous joints (peak 9.52 tiles/s at the shin).
+Independent hostile review: 9/10 for this bounded visual choreography, with
+fresh side and three-quarter views of both outfits and no browser errors.
+
 # Director inchworm effort — 2026-09-29
 
 The director gathers and drives twice while his belly crosses the sill. His

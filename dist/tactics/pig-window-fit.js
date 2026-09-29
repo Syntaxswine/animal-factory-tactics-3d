@@ -7,7 +7,10 @@ const phases=Object.freeze([
  {label:'First push',start:2.18,end:2.52},
  {label:'Gather again',start:2.52,end:2.7},
  {label:'Push belly through',start:2.7,end:3.2},
- {label:'Draw legs inside',start:3.2,end:6},
+ {label:'Tip over sill',start:3.2,end:4.1},
+ {label:'Fall into hand catch',start:4.1,end:4.4},
+ {label:'Catch on hands',start:4.4,end:4.9},
+ {label:'Let legs follow',start:4.9,end:6},
  {label:'Settle inside',start:6,end:8}
 ]);
 
@@ -43,7 +46,17 @@ export function createPigWindowFit(worker,{hipPitch=-100,spinePitch=-15,headPitc
   const t=clock<2||clock>3.2?clock:keyed(clock,[[2,2],[2.27,2],[2.52,2.35],[2.82,2.35],[3.2,3.2]])[0];
   const bunch=keyed(clock,[[0,0],[2,0],[2.18,1],[2.4,0],[2.52,0],[2.7,1],[2.87,0],[8,0]])[0];
   bones.forEach((b,i)=>{b.position.copy(neutral[i].p);b.quaternion.copy(neutral[i].q);});root.quaternion.identity();
-  const [x,height,fold]=keyed(t,[[0,-.8,-.025,.5],[1,-.8,-.03,.6],[1.6,-.8,.35,.95],[2,-.45,.458,1],[3,-.1,.458,1],[3.5,.15,.458,1],[4,.45,.458,1],[4.5,.55,.132,1.7],[5,.62,.088,1.72],[6,.62,.088,1.6],[6.5,.6,-.04,1.25],[7,.5,-.265,.9],[8,.45,-.32,.2]]);
+  let [x,height,fold]=keyed(t,[[0,-.8,-.025,.5],[1,-.8,-.03,.6],[1.6,-.8,.35,.95],[2,-.45,.458,1],[3,-.1,.458,1],[3.5,.15,.458,1],[4,.45,.458,1],[4.5,.55,.132,1.7],[5,.62,.02,1.5],[5.7,.62,-.18,1.1],[6.5,.6,-.24,.95],[7,.5,-.265,.9],[8,.45,-.32,.2]]);
+  if(t>=3.2&&t<=4.5){
+   // The sill is the fulcrum: hips travel around it as the front tips down.
+   // Only late in the tip does the body slide off toward the catching hands.
+   const u=smooth((t-3.2)/1.3),angle=-70*radians*u;
+   const pivot=V(.09,.875,0),offset=V(-.02064-.09,1.258-.875,0);
+   const hip=pivot.clone().add(offset.applyAxisAngle(V(0,0,1),angle));
+   const end=pivot.clone().add(V(-.02064-.09,1.258-.875,0).applyAxisAngle(V(0,0,1),-70*radians));
+   hip.add(V(.55,.932,0).sub(end).multiplyScalar(smooth((t-3.8)/.7)));
+   x=hip.x;height=hip.y-.8;fold=1+.7*u;
+  }
   root.position.set(x,height,0);n.hips.rotation.z=hipPitch*fold*radians;n.spine.rotation.z=keyed(t,[[0,-5],[2,-15],[4,-15],[4.5,0],[5,2],[6,-10],[7,0],[8,-5]])[0]*radians;root.updateMatrixWorld(true);
   // Gather the pelvis toward the braced shoulders, rather than translating
   // an unchanged horizontal body. Keep the shoulder anchor while curling.
@@ -73,27 +86,27 @@ export function createPigWindowFit(worker,{hipPitch=-100,spinePitch=-15,headPitc
    const side=m.name.endsWith('-1')?-1:1,hand=m.name.startsWith('hand');
    let target,support=false;
    if(hand){
-    const [tx,ty]=keyed(t,[[0,-.11,.8985041],[side<0?2:2.6,-.11,.8985041],[side<0?2.6:3.2,.11,.8985041],[side<0?3.3:3.8,.11,.8985041],[side<0?3.55:4,.5,1.05],[side<0?4.4:4.5,.8,.0235041],[7,.8,.0235041],[8,.72,.51]]);
+    const [tx,ty]=keyed(t,[[0,-.11,.8985041],[side<0?2:2.6,-.11,.8985041],[side<0?2.6:3.2,.11,.8985041],[side<0?3.3:3.8,.11,.8985041],[side<0?3.35:3.85,.27,.93],[side<0?3.55:4,.75,.65],[side<0?4.15:4.3,.8,.0235041],[7,.8,.0235041],[8,.72,.51]]);
     target=V(tx,ty,side*.27);support=(t<=(side<0?2:2.6)||t>=(side<0?2.6:3.2)&&t<=(side<0?3.3:3.8))||t>=(side<0?4.4:4.5)&&t<=7;
-    solve(m,target,Q().setFromAxisAngle(V(0,0,1),keyed(t,[[0,0],[1,-90],[7,-90],[8,0]])[0]*radians),V(-1,0,side*.3));
+    solve(m,target,Q().setFromAxisAngle(V(0,0,1),keyed(t,[[0,0],[1,-90],[7,-90],[8,0]])[0]*radians),V(-1,0,side*.3).lerp(V(0,0,side),(side<0?0:smooth((t-3.85)/.05))*(1-smooth((t-4.3)/.2))));
    }else{
-    const [tx,ty]=keyed(t,[[0,-.8,0],[1,-.8,0],[2,-.8,.95],[3.2,-.01,.875],[4.5,-.01,.875],[4.7,.25,.9],[6,.25,.48],[7,.25,0],[8,.25,0]]);
-    target=V(tx,ty,side*.23);support=t<=1||t>=3.2&&t<=4.5||t>=7;
+    const [tx,ty]=keyed(t,[[0,-.8,0],[1,-.8,0],[2,-.8,.95],[3.2,-.01,.875],[4.5,-.01,.875],[4.7,.25,.94],[5.7,.25,0],[7,.25,0],[8,.25,0]]);
+    target=V(tx,ty,side*.23);support=t<=1||t>=5.7;
     // Trail both legs outside while the belly crosses the sill. The effort is
     // an alternating swimming kick, not feet searching for an invisible step.
-    const trail=smooth((t-1.2)/.6)*(1-smooth((t-2.6)/.6));
+    const trail=smooth((t-1.2)/.6)*(1-smooth((t-4.5)/.4));
     const flutter=smooth((t-1.7)/.35)*(1-smooth((t-2.5)/.4));
     const kick=side*Math.sin((clock-1.7)*Math.PI*2*2.2)*flutter;
     const hip=n['thigh'+side].getWorldPosition(V());
-    target.lerp(V(hip.x-.74,hip.y-.10,side*.23),trail);
+    target.lerp(V(hip.x-.74,Math.max(hip.y-.10+.16*smooth((t-3.2)/.8),.92),side*.23),trail);
     target.y+=.065*kick;
-    solve(m,target,Q().setFromAxisAngle(V(0,0,1),(-65*trail+18*kick)*radians),V(T.MathUtils.lerp(-1,1,smooth((t-4.7)/.3)),0,side*.3));
+    solve(m,target,Q().setFromAxisAngle(V(0,0,1),(-65*trail*(1-smooth((t-3.8)/.4))+18*kick)*radians),V(T.MathUtils.lerp(-1,1,smooth((t-4.7)/.3)),0,side*.3));
    }
    const actual=m.bone.localToWorld(m.offset.clone());target??=actual.clone();
    return {name:m.name,error:actual.distanceTo(target),target:target.toArray(),actual:actual.toArray(),support,constraint:support?'authored support':'free'};
   });
   root.updateMatrixWorld(true);worker.skeleton.update();
-  return {errors,phase:phases.find(p=>clock<p.end)?.label??phases.at(-1).label,supported:false};
+  return {errors,phase:phases.find(p=>clock<p.end)?.label??phases.at(-1).label,supported:false,supportNote:'Authored belly-pivot tip followed by a short unsupported descent into the hand catch; species mass, forces and belly contact are not dynamically certified.'};
  }
  const restore=()=>{if(tail)tail.bindMatrix.copy(tailBind);};
  return {apply,phases,restore,dispose:restore};

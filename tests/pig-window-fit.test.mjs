@@ -23,27 +23,27 @@ function geometryOracle(worker){
  });return {hits,minY,bounds};
 }
 for(const cap of [false,true])test(`native director ${cap?'Red Hat':'Original'} clears all indexed triangles and lands inside the adjacent tile`,()=>{
- const f=fixture(cap);try{for(let i=0;i<=400;i++){const t=i/50;f.motion.sample(t);const o=geometryOracle(f.worker);assert.equal(o.hits,0,'frame intersection at '+t);assert(o.minY>=-.001,'floor penetration at '+t);if(i===400){assert(o.bounds.min.x>.09);assert(o.bounds.max.x<1);}}}finally{f.dispose();}
+ const f=fixture(cap);try{for(let i=0;i<=400;i++){const t=i/50;f.motion.sample(t);const o=geometryOracle(f.worker);assert.equal(o.hits,0,'frame intersection at '+t);assert(o.minY>=-.001,'floor penetration at '+t);if(i===400){assert(o.bounds.min.x>.09);assert(o.bounds.max.x<1);}}for(const t of[3.32,3.85,4.005,4.665]){f.motion.sample(t);const o=geometryOracle(f.worker);assert.equal(o.hits,0,'handoff regression at '+t);assert(o.minY>=-.001);}}finally{f.dispose();}
 });
 test('independent triangle oracle rejects the original penetrating retarget',()=>{
  const f=fixture(true,false);try{f.motion.sample(3.5);assert(geometryOracle(f.worker).hits>20,'negative control did not intersect the frame');}finally{f.dispose();}
 });
-test('native markers expose real residuals, maintain a support route and move continuously',()=>{
+test('native markers expose real residuals, report the tip-to-catch gap honestly and move continuously',()=>{
  const f=fixture(),w=f.worker,bones=Object.fromEntries(w.bones.map(b=>[b.name,b])),offsets=w.bones.map(b=>b.position.clone());let previous,maxSpeed=0;
- try{for(let i=0;i<=1600;i++){const d=f.motion.sample(i*.005);assert.equal(d.errors.length,4);assert(d.errors.some(e=>e.support&&e.error<.015),'no reachable authored support at '+d.time);
+ try{for(let i=0;i<=1600;i++){const d=f.motion.sample(i*.005);assert.equal(d.errors.length,4);if(!d.errors.some(e=>e.support&&e.error<.015)){assert(d.time>=3.8&&d.time<=4.4,'unexpected support gap at '+d.time);assert(d.held&&d.authoredSupport===false,'unsupported tip was certified');}
    for(const e of d.errors){const foot=e.name.startsWith('foot'),b=bones[foot?e.name.replace('foot','hoof'):e.name],actual=b.localToWorld(foot?new T.Vector3(0,-.12,0):new T.Vector3(.052,-.010,0));assert(actual.distanceTo(new T.Vector3(...e.actual))<1e-10);assert(Math.abs(actual.distanceTo(new T.Vector3(...e.target))-e.error)<1e-10);assert.equal(typeof e.support,'boolean');}
    const points=w.bones.map((b,j)=>{assert(b.position.equals(offsets[j]));assert.deepEqual(b.scale.toArray(),[1,1,1]);return b.getWorldPosition(new T.Vector3());});
    if(previous)points.forEach((p,j)=>{maxSpeed=Math.max(maxSpeed,p.distanceTo(previous[j])/.005);});previous=points;
   }assert(maxSpeed<12,'joint discontinuity: '+maxSpeed);
-  const failed=f.motion.sample(3.795).errors.filter(e=>e.support&&e.error>.05);assert(failed.length,'authored unreachable support must remain visible');for(const e of failed)assert(e.error===Math.hypot(...e.actual.map((v,i)=>v-e.target[i]))||Math.abs(e.error-Math.hypot(...e.actual.map((v,i)=>v-e.target[i])))<1e-12);
+  const failed=f.motion.sample(4.3).errors.filter(e=>e.error>.03);assert(failed.length,'unreachable trailing-foot target residual must remain visible');for(const e of failed)assert(e.error===Math.hypot(...e.actual.map((v,i)=>v-e.target[i]))||Math.abs(e.error-Math.hypot(...e.actual.map((v,i)=>v-e.target[i])))<1e-12);
  }finally{f.dispose();}
 });
 test('source buffers and tail binding restore exactly, including reuse after restore',()=>{
  const f=fixture(true),w=f.worker,tail=w.parts.find(p=>p.name==='pig curly tail'),bind=tail.bindMatrix.clone(),attrs=w.parts.map(p=>Object.fromEntries(Object.entries(p.geometry.attributes).map(([k,a])=>[k,{a,values:a.array.slice()}])));
  try{const first=f.motion.sample(3.4);assert(!tail.bindMatrix.equals(bind));f.motion.sample(7.3);assert.deepEqual(f.motion.sample(3.4),first);f.motion.restore();assert(tail.bindMatrix.equals(bind));assert.deepEqual(f.motion.sample(3.4),first);f.motion.dispose();assert(tail.bindMatrix.equals(bind));w.parts.forEach((p,i)=>{for(const[k,{a,values}]of Object.entries(attrs[i])){assert.equal(p.geometry.attributes[k],a);assert.deepEqual(a.array,values);}});}finally{f.dispose();}
 });
-test('support meshes touch the sill and floor rather than hovering at marker height',()=>{
- const f=fixture();try{for(const[t,pattern,height]of[[3.5,/dress boot/,.875],[5,/forearm and hand/,0]]){f.motion.sample(t);for(const mesh of f.worker.parts.filter(p=>pattern.test(p.name))){let minY=Infinity;for(let i=0;i<mesh.geometry.attributes.position.count;i++)minY=Math.min(minY,mesh.getVertexPosition(i,new T.Vector3()).applyMatrix4(mesh.matrixWorld).y);assert(Math.abs(minY-height)<1e-6,mesh.name+' surface gap '+(minY-height));}}}finally{f.dispose();}
+test('landing palms and soles touch the floor rather than hovering at marker height',()=>{
+ const f=fixture();try{for(const[t,pattern,height]of[[5.7,/dress boot/,0],[4.5,/forearm and hand/,0]]){f.motion.sample(t);for(const mesh of f.worker.parts.filter(p=>pattern.test(p.name))){let minY=Infinity;for(let i=0;i<mesh.geometry.attributes.position.count;i++)minY=Math.min(minY,mesh.getVertexPosition(i,new T.Vector3()).applyMatrix4(mesh.matrixWorld).y);assert(Math.abs(minY-height)<1e-6,mesh.name+' surface gap '+(minY-height));}}}finally{f.dispose();}
 });
 
 test('feet trail outside and swim during belly-over-sill, then stop for the plants',()=>{
@@ -59,7 +59,7 @@ test('feet trail outside and swim during belly-over-sill, then stop for the plan
   }
   assert(swaps>=3,'feet do not visibly alternate');
   assert(maxSeparation>.04&&maxSeparation<.15,'kick should be readable but compact');
-  for(const t of[3.2,3.5,4,7,7.5,8]){const feet=f.motion.sample(t).errors.filter(e=>e.name.startsWith('foot'));assert(feet.every(e=>e.support));assert(Math.abs(feet[0].actual[1]-feet[1].actual[1])<1e-8,'flutter continued into landing');}
+  for(const t of[5.7,7,7.5,8]){const feet=f.motion.sample(t).errors.filter(e=>e.name.startsWith('foot'));assert(feet.every(e=>e.support));assert(Math.abs(feet[0].actual[1]-feet[1].actual[1])<1e-8,'flutter continued into landing');}
  }finally{f.dispose();}
 });
 
@@ -77,5 +77,19 @@ test('inchworm gathers shorten hip-to-shoulder span against a braced shoulder be
   }
   assert.deepEqual(w.root.scale.toArray(),[1,1,1]);
   for(const t of[2,2.18,2.27,2.4,2.52,2.7,2.82,2.87,3.2]){f.motion.sample(t-1e-5);const before=w.bones.map(b=>b.getWorldPosition(new T.Vector3()));f.motion.sample(t+1e-5);w.bones.forEach((b,i)=>assert(b.getWorldPosition(new T.Vector3()).distanceTo(before[i])<.001,'effort boundary pops'));}
+ }finally{f.dispose();}
+});
+
+test('seesaw tips the chest before drawing the trailing feet through and gathering on the floor',()=>{
+ const f=fixture(),w=f.worker;
+ function pose(t){const d=f.motion.sample(t),point=name=>w.bones.find(b=>b.name===name).getWorldPosition(new T.Vector3());return{d,hip:point('hips'),shoulder:point('upperArm1'),foot:d.errors.find(e=>e.name==='foot1').actual};}
+ try{
+  const start=pose(3.2),tipped=pose(3.8);
+  assert(tipped.shoulder.y<start.shoulder.y-.10,'chest does not fall around the sill');
+  assert(tipped.hip.y>start.hip.y,'rear mass does not rise as front tips');
+  for(const t of[3.2,3.5,3.8,4,4.3]){const p=pose(t);assert(p.foot[0]<p.hip.x-.5,'feet tuck under a sill-bound belly');assert(p.foot[0]<0,'feet cross before tip');assert(!p.d.errors.find(e=>e.name==='foot1').support,'invented foot plant');}
+  const catchPose=pose(4.5);assert(catchPose.d.errors.filter(e=>e.name.startsWith('hand')).every(e=>e.support&&e.error<.001),'palms do not catch');
+  const follow=pose(4.8);assert(follow.foot[0]>.09,'feet have not cleared the inner lip');assert(follow.foot[1]>.875,'feet lower through the sill');
+  const landed=pose(5.7);assert(landed.foot[1]<.001);assert(landed.hip.y<catchPose.hip.y,'hips stay suspended after feet drop');
  }finally{f.dispose();}
 });
