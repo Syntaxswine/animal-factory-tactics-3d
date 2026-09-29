@@ -2,7 +2,7 @@
   "id": "tutorial-step-5",
   "kind": "sector-placeholder",
   "version": 1,
-  "status": "placeholder",
+  "status": "in-progress",
   "role": "town",
   "facilities": [],
   "difficulties": [
@@ -35,9 +35,11 @@
     }
   ],
   "variants": [
+    "rough-plateau.json",
     "placeholder.json"
   ],
   "notes": [
     "Layout reservation only. Author plateau perimeter, elevations and the town connection as one five-sector group."
-  ]
+  ],
+  "preview": "rough-plateau.svg"
 }
