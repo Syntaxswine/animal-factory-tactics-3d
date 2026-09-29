@@ -47,3 +47,5 @@ export const propTall=(m,x,y,z=0)=>!!PROPS[propAt(m,x,y,z)?.kind]?.tall;
 for(const kind of ['door-steel-closed','door-wood-closed','jail-door-closed'])EDGES[kind].opensTo='doorway-concrete-open';
 
 EDGES['wall-wood-trellis']={solid:true,opaque:false,cover:25,art:'wall-wood-trellis'};
+
+EDGES['wall-wood-trellis-arch']={solid:false,opaque:false,cover:0,art:'wall-wood-trellis-arch'};

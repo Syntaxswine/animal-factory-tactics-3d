@@ -1,4 +1,4 @@
-import {trellisParts,trellisSegment,TRELLIS_KIND} from './bridge-trellis.js';
+import {trellisParts,trellisSegment,TRELLIS_KIND,TRELLIS_ARCH_KIND} from './bridge-trellis.js';
 import {canopyPresentation} from './editor-canopies.js';
 import {roofVisualKind,parapetEdges} from './climbable-roofs.js';
 import {isRampBank} from './ramp-banks.js';
@@ -48,7 +48,7 @@ export function buildWorld(map){map=canopyPresentation(map);
   const part=(suffix,a,b,bottom,top,material=kind,thickness=D.wallThickness)=>box(`edge:${key}:${suffix}`,'wall',material,
    axis==='e'?[x+.5,z*DIMENSIONS.floorSpacing+(bottom+top)/2,y-.5+(a+b)/2]:[x-.5+(a+b)/2,z*DIMENSIONS.floorSpacing+(bottom+top)/2,y+.5],
    axis==='e'?[thickness,top-bottom,b-a]:[b-a,top-bottom,thickness],{edge:key});
-  if(kind===TRELLIS_KIND){for(const p of trellisParts(axis,x,y,z)){box('edge:'+key+':trellis:'+p.id,'wall','wood',p.center,p.size,{edge:key},{rotation:p.rotation,trellisPart:p});const b=boxes.at(-1),radius=Math.hypot(...p.size)/2;b.min=p.center.map(v=>v-radius);b.max=p.center.map(v=>v+radius);}continue;}
+  if(kind===TRELLIS_KIND||kind===TRELLIS_ARCH_KIND){for(const p of trellisParts(axis,x,y,z,D.floorSpacing,kind)){box('edge:'+key+':trellis:'+p.id,'wall','wood',p.center,p.size,{edge:key},{rotation:p.rotation,trellisPart:p});const b=boxes.at(-1),radius=Math.hypot(...p.size)/2;b.min=p.center.map(v=>v-radius);b.max=p.center.map(v=>v+radius);}continue;}
   if(kind==='fence-cut'){box(`edge:${key}:cut`,'fence',kind,axis==='e'?[x+.5,z*D.floorSpacing+.06,y]:[x,z*D.floorSpacing+.06,y+.5],axis==='e'?[.06,.12,1]:[1,.12,.06],{edge:key},{blocksShot:false,blocksSight:false});continue;}
   if(kind==='door'||kind==='doorway-concrete-open'||kind==='door-steel-closed'||kind==='door-wood-closed'){
    part('lintel',0,1,D.doorTop,D.wall);if(kind.endsWith('-closed'))part('door',0,1,0,D.doorTop,kind,D.doorThickness);continue;

@@ -51,3 +51,4 @@ for(const kind of ['door-steel-closed','door-wood-closed','jail-door-closed'])ED
 Object.assign(PROPS,LIGHT_PROPS,CLIFF_PROPS);
 
 EDGES['wall-wood-trellis']={solid:true,opaque:false,cover:25,art:'wall-wood-trellis'};
+EDGES['wall-wood-trellis-arch']={solid:false,opaque:false,cover:0,art:'wall-wood-trellis-arch'};
