@@ -10,7 +10,8 @@
     "check:tactics-balance": "node tools/tactics-balance.mjs",
     "check": "node --check dist/tactics/visibility.js && node --check dist/tactics/blocks.js && node --check dist/tactics/design-store.js && node --check dist/tactics/environment.js && node --check dist/tactics/environment-renderer.js && node --check dist/tactics/sector-rules.js && node --check dist/tactics/view.js && node --check dist/tactics/map-validation-worker.js && node --check dist/tactics/maps.js && node --check dist/tactics/world.js && node --check dist/tactics/editor-model.js && node --check dist/tactics/editor.js && node --check dist/tactics/app.js && node --check dist/tactics/engine.js && node --check dist/app.js && node --check dist/engine.js && node --check dist/renderer.js && node --check dist/people.js && node --check dist/isometric.js && node --test tests/*.test.mjs && node tools/check-assets.mjs",
     "build:tactics-pages": "node tools/build-tactics-pages.mjs",
-    "build:tactics-3d": "node tools/build-tactics-3d.mjs"
+    "build:tactics-3d": "node tools/build-tactics-3d.mjs",
+    "serve:workspace": "node tools/serve-workspace.mjs"
   },
   "engines": {
     "node": ">=22"
