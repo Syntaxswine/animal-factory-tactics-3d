@@ -5,7 +5,7 @@ export function rampStroke(map,start,end=start,surface='grass'){
  const z=start.z||0,cliffs=new Map((map.props||[]).filter(p=>(p.z||0)===z&&p.kind.startsWith('cliff-')).map(p=>[p.x+','+p.y,p])),full=(x,y)=>{const p=cliffs.get(x+','+y);return p?.kind==='cliff-ledge'&&(p.cliffMask??15)===15;};
  if(z>=2)throw Error('A ramp needs a playable upper level.');
  if(!full(start.x,start.y))throw Error('Start on a full, straight cliff ledge and drag along its wall.');
- if(!['grass','sand','road','concrete','wood','woodsupport'].includes(surface))throw Error('Choose a ramp surface.');
+ if(!['grass','sand','road','concrete','wood','woodsupport','woodgold'].includes(surface))throw Error('Choose a ramp surface.');
  const edge=(start.edge||'').split(':'),axis=edge[0],ex=Number(edge[1]),ey=Number(edge[2]),preferred=axis==='e'?(ex<start.x?'east':'west'):axis==='s'?(ey<start.y?'south':'north'):null;
  const exposed=Object.entries(RAMP_DIRECTIONS).filter(([, [dx,dy]])=>!cliffs.has((start.x-dx)+','+(start.y-dy)));
  let entry=exposed.find(([d])=>d===preferred);

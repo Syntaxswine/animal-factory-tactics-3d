@@ -4,7 +4,7 @@ import {blankMap,validateMap,neighbors} from '../dist/tactics/core/maps.js';
 import {createGame,move,stepMovement,refresh,pathTo} from '../dist/tactics/core/engine.js';
 import {EditingDocument} from '../dist/tactics/editor-3d-controller.js';
 import {buildWorld,traceWorld} from '../dist/tactics/hybrid-world.js';
-for(const surface of ['wood','woodsupport'])for(const direction of ['north','east','south','west'])test(surface+' '+direction+' wooden ramp walks three tiles to a raised timber landing and back',()=>{
+for(const surface of ['wood','woodsupport','woodgold'])for(const direction of ['north','east','south','west'])test(surface+' '+direction+' wooden ramp walks three tiles to a raised timber landing and back',()=>{
  const m=blankMap('Wooden ramp'),p={kind:'ramp-'+surface+'-'+direction,x:16,y:16,z:0},r=rampInfo(p);m.props=[p];m.upper[0][r.exit.x+','+r.exit.y]='ground-wood-planks';m.starts[0]=r.entry;
  assert.equal(RAMP_PROPS[p.kind].w*RAMP_PROPS[p.kind].h,3);assert.deepEqual(validateMap(m,{connectivity:false}),[]);
  const d=new EditingDocument().open(JSON.stringify(m));assert.equal(new EditingDocument().open(d.export()).map.props[0].kind,p.kind);

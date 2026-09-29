@@ -18,7 +18,7 @@ export function environmentVisuals(world,map){map=canopyPresentation(map);
   if(isCliff(p))continue;
   const bank=bankInfo(p);if(bank){const id='prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind;add(id,{prop:id,x:p.x,y:p.y,z:p.z||0},'ramp-bank',bank.surface==='grass'?'ground-grass':'sand',[p.x,(p.z||0)*D.floorSpacing,p.y],[1,1,1],'rampbank-'+bank.side+'-'+bank.step);result.at(-1).yaw=BANK_YAW[bank.direction];continue;}
   if(isRamp(p)){const r=rampInfo(p),yaw={east:0,south:-Math.PI/2,west:Math.PI,north:Math.PI/2}[r.direction],center=[(r.low.x+r.high.x)/2,r.z*D.floorSpacing+1,(r.low.y+r.high.y)/2],source={x:p.x,y:p.y,z:p.z||0,prop:'prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind};
-   if(r.surface.startsWith('wood')){for(const [i,part] of woodenRampParts(p,D.floorSpacing).entries())add(source.prop+':timber:'+i,source,'ramp','wood',part.center,part.size,'box',part.rotation);continue;}
+   if(r.surface.startsWith('wood')){for(const [i,part] of woodenRampParts(p,D.floorSpacing).entries())add(source.prop+':timber:'+i,source,'ramp',r.surface==='woodgold'?'ground-wood-planks':'wood',part.center,part.size,'box',part.rotation);continue;}
    add('ramp:'+p.x+','+p.y+':rock',source,'ramp','sand',center,[4,2,1],'ramp');result.at(-1).yaw=yaw;
    add('ramp:'+p.x+','+p.y+':surface',source,'ramp',r.surface==='road'?'ground-asphalt':r.surface==='concrete'?'ground-concrete':r.surface==='grass'?'ground-grass':'sand',[center[0],center[1]+.01,center[2]],[Math.sqrt(20),.02,1],'box',[0,0,Math.atan(.5)]);result.at(-1).yaw=yaw;continue;
   }

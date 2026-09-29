@@ -2,7 +2,7 @@ import {trellisSegment} from './bridge-trellis.js';
 // Four-cell ramps join ground to a full ledge's authored upper floor.
 export const RAMP_RUN=4,RAMP_RISE=2;
 export const RAMP_DIRECTIONS={north:[0,-1],east:[1,0],south:[0,1],west:[-1,0]};
-export const RAMP_PROPS=Object.fromEntries(['grass','sand','road','concrete','wood','woodsupport'].flatMap(surface=>Object.entries(RAMP_DIRECTIONS).map(([direction,[dx]])=>['ramp-'+surface+'-'+direction,{w:dx?(surface.startsWith('wood')?3:4):1,h:dx?1:(surface.startsWith('wood')?3:4),solid:false,cover:0,ramp:true}])));
+export const RAMP_PROPS=Object.fromEntries(['grass','sand','road','concrete','wood','woodsupport','woodgold'].flatMap(surface=>Object.entries(RAMP_DIRECTIONS).map(([direction,[dx]])=>['ramp-'+surface+'-'+direction,{w:dx?(surface.startsWith('wood')?3:4):1,h:dx?1:(surface.startsWith('wood')?3:4),solid:false,cover:0,ramp:true}])));
 export const isRamp=p=>!!RAMP_PROPS[p?.kind];
 export function rampInfo(p){if(!isRamp(p))return null;const [_,surface,direction]=p.kind.split('-'),[dx,dy]=RAMP_DIRECTIONS[direction],z=p.z||0,run=surface.startsWith('wood')?3:4,low={x:p.x+(dx<0?run-1:0),y:p.y+(dy<0?run-1:0),z};return {p,surface,direction,dx,dy,z,run,low,high:{x:low.x+dx*(run-1),y:low.y+dy*(run-1),z},entry:{x:low.x-dx,y:low.y-dy,z},exit:{x:low.x+dx*run,y:low.y+dy*run,z:z+1}};}
 export function rampAt(map,q){return (map.props||[]).find(p=>isRamp(p)&&(p.z||0)===(q.z||0)&&q.x>=p.x-.5&&q.y>=p.y-.5&&q.x<p.x+RAMP_PROPS[p.kind].w-.5&&q.y<p.y+RAMP_PROPS[p.kind].h-.5);}
@@ -22,7 +22,7 @@ export function woodenRampParts(p,spacing=2.12){
  const beam=(u1,h1,u2,h2,v,width=.08)=>{let a=point(u1,h1,v),b=point(u2,h2,v);if(sign<0)[a,b]=[b,a];parts.push({center:a.map((n,i)=>(n+b[i])/2),size:[Math.hypot(u2-u1,h2-h1),width,.10],rotation:[0,alongX?0:-Math.PI/2,Math.atan2(b[1]-a[1],alongX?b[0]-a[0]:b[2]-a[2])]});};
  const slope=2/3;
  for(let i=0;i<18;i++){const u=(i+.5)/6;parts.push({center:point(u,u*slope-.035,0),size:[Math.sqrt(1+slope*slope)/6-.008,.07,1],rotation:[0,alongX?0:-Math.PI/2,Math.atan(slope)*sign]});}
- if(r.surface==='woodsupport'){
+ if(r.surface==='woodsupport'||r.surface==='woodgold'){
   for(const side of [-.46,.46]){
    beam(.3,.3*slope-.12,3,2-.12,side,.10);
    beam(.3,.08,3,.08,side,.10);
