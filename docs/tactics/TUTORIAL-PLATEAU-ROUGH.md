@@ -2,7 +2,7 @@
 
 The first four tutorial sectors share a two-tier plateau centered on their common corner. Canonical arrangement: northwest step 4, northeast step 3, southwest step 2, southeast starting step 1. Step 5 (town) remains separate.
 
-Each map is 240 × 240. The main outer cliff meets shared edges 24 tiles from the outside boundaries (one-tenth), or 216 tiles from the central junction. Between the seams the outline varies into broad lobes. The upper tier follows this outline with a 0–2-tile lower shelf rather than a large concentric terrace. Width is measured on the tile grid; some sections have stacked cliff faces without an exposed shelf.
+Each map is 240 × 240. The main outer cliff meets shared edges 24 tiles from the outside boundaries (one-tenth), or 216 tiles from the central junction. Between the seams the outline varies into broad lobes. Sector 4 has an additional western shoulder, widening by up to 24 tiles and tapering out before the northern attachment and southern seam. This adds 2,363 summit tiles without reducing the existing playing area. The upper tier follows this outline with a 0–2-tile lower shelf rather than a large concentric terrace. Width is measured on the tile grid; some sections have stacked cliff faces without an exposed shelf.
 
 In northwest step 4, an 80-tile-wide plateau extension reaches the north boundary between x=80 and x=160 (one-third and two-thirds). Its summit travel marker is at x=120, y=0. This reserves the future descent to town: actual descent geometry, the town map, and campaign transitions remain to be authored. Other cliff faces stay closed. No ramps, stairs, or cliff climb links are present.
 

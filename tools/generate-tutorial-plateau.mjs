@@ -5,9 +5,11 @@ export const SIZE=240,CENTER=240,OUTER=216,INNER=214;
 export const QUADRANTS=[{step:4,x:0,y:0,label:'Northwest'},{step:3,x:1,y:0,label:'Northeast'},{step:2,x:0,y:1,label:'Southwest'},{step:1,x:1,y:1,label:'Southeast · start'}];
 // One global field keeps all sector crops joined; the north spur belongs to step 4.
 export const outerInside=(x,y)=>{
- const dx=x+.5-CENTER,dy=y+.5-CENTER,angle=Math.atan2(dy,dx);
+ // Widen only the northwest western shoulder; fade out before either shared edge.
+ const westExpansion=x<180&&y>20&&y<220?24*Math.sin(Math.PI*(y-20)/200)**2:0;
+ const dx=x+.5+westExpansion-CENTER,dy=y+.5-CENTER,angle=Math.atan2(dy,dx);
  const radius=OUTER+18*Math.sin(2*angle)**2*Math.cos(6*angle);
- const northSpur=x+.5>=80&&x+.5<160&&y<150;
+ const northSpur=x+.5>=80-westExpansion&&x+.5<160&&y<150;
  return Math.hypot(dx,dy)<radius||northSpur;
 };
 export const shelfWidth=(x,y)=>Math.round(1+Math.sin((Math.abs(x+.5-CENTER)+Math.abs(y+.5-CENTER))/17)*Math.cos((Math.abs(x+.5-CENTER)-Math.abs(y+.5-CENTER))/23));
