@@ -21,7 +21,9 @@ export function woodenRampParts(p,spacing=2.12){
  const point=(u,h,v)=>[r.low.x+r.dx*(u-.5)-r.dy*v,r.z*spacing+h,r.low.y+r.dy*(u-.5)+r.dx*v];
  const beam=(u1,h1,u2,h2,v,width=.08)=>{let a=point(u1,h1,v),b=point(u2,h2,v);if(sign<0)[a,b]=[b,a];parts.push({center:a.map((n,i)=>(n+b[i])/2),size:[Math.hypot(u2-u1,h2-h1),width,.10],rotation:[0,alongX?0:-Math.PI/2,Math.atan2(b[1]-a[1],alongX?b[0]-a[0]:b[2]-a[2])]});};
  const slope=2/3;
- for(let i=0;i<18;i++){const u=(i+.5)/6;parts.push({center:point(u,u*slope-.035,0),size:[Math.sqrt(1+slope*slope)/6-.008,.07,1],rotation:[0,alongX?0:-Math.PI/2,Math.atan(slope)*sign]});}
+ // The golden deck is one smooth slab; all board detail comes from its skin.
+ if(r.surface==='woodgold')parts.push({center:point(1.5,1-.035,0),size:[Math.sqrt(13),.07,1],rotation:[0,alongX?0:-Math.PI/2,Math.atan(slope)*sign]});
+ else for(let i=0;i<18;i++){const u=(i+.5)/6;parts.push({center:point(u,u*slope-.035,0),size:[Math.sqrt(1+slope*slope)/6-.008,.07,1],rotation:[0,alongX?0:-Math.PI/2,Math.atan(slope)*sign]});}
  if(r.surface==='woodsupport'||r.surface==='woodgold'){
   for(const side of [-.46,.46]){
    beam(.3,.3*slope-.12,3,2-.12,side,.10);
