@@ -13,3 +13,9 @@ Files: sector-library/tutorial-step-1 through tutorial-step-5/rough-plateau.json
 Open sector-library/tutorial-plateau.html for the combined plan and editor links. Select altitude 3 and Overview to see both tiers. These maps are terrain foundations without encounters or dialogue.
 
 Generation: node tools/generate-tutorial-plateau.mjs regenerates rough variants and previews; preserve hand-edited versions under another filename first. Tests cover save parsing, closed traversal, elevation seams, 24-tile margin, shelf widths, and the northern approach.
+
+## Town sketch and road placement
+
+The user’s green annotation lines describe newly drawn cliff tiers; they do not invert the original filled preview colours. Ground remains level 0 (dark green fill), the lower cliff tier level 1 (tan), and the original summit level 2 (light green fill). Sector 5 adds an isolated lower-tier outcrop northwest of the junction and a larger lower-tier shoulder south of the west road. An upper-tier curve continues from sector 4 into that shoulder. The usual narrow shelf still applies away from these expressly drawn wider shapes. All cliff faces remain closed.
+
+Town roads are asphalt at ground level, six cells wide. The east–west band occupies y=117…122 across the sector. The north branch occupies x=117…122 and joins it at the midpoint. There is no southern branch. The shape does not yet supply ramps between tiers or town buildings.
