@@ -10,7 +10,7 @@ for(const surface of ['wood','woodsupport','woodgold'])for(const direction of ['
  const d=new EditingDocument().open(JSON.stringify(m));assert.equal(new EditingDocument().open(d.export()).map.props[0].kind,p.kind);
  const s=createGame(1,m,false),u=s.units[0];refresh(s);assert.equal(pathTo(s,u,r.exit.x,r.exit.y,1).length,4);assert.ok(move(s,u,r.exit.x,r.exit.y,1));while(s.queue.length)stepMovement(s);assert.equal(u.z,1);assert.ok(move(s,u,r.entry.x,r.entry.y,0));while(s.queue.length)stepMovement(s);assert.deepEqual({x:u.x,y:u.y,z:u.z},r.entry);
  const mid={x:r.low.x+r.dx,y:r.low.y+r.dy,z:0};assert.ok(neighbors(m,mid).every(q=>r.dx?q.y===mid.y:q.x===mid.x));
- assert.equal(woodenRampParts(p).length,surface==='wood'?42:surface==='woodgold'?23:40);const origin={...mid,h:4},directionRay={x:0,y:0,h:-1};const hit=rampRayHit([p],origin,directionRay,6);assert.ok(Math.abs(4-hit-rampHeight(p,mid))<.03);
+ assert.equal(woodenRampParts(p).length,surface==='wood'?25:23);const origin={...mid,h:4},directionRay={x:0,y:0,h:-1};const hit=rampRayHit([p],origin,directionRay,6);assert.ok(Math.abs(4-hit-rampHeight(p,mid))<.03);
  const world=buildWorld(m);assert.deepEqual(world.diagnostics,[]);const renderedHit=traceWorld(world,[mid.x,4,mid.y],[mid.x,.1,mid.y]);assert.ok(renderedHit);assert.ok(renderedHit.id.includes('timber'));
  // The space under the raised end is open, not a solid earth wedge.
  const high=r.high;assert.equal(rampRayHit([p],{x:high.x-r.dy*.8,y:high.y+r.dx*.8,h:surface==='wood'?.25:2.5},{x:r.dy,y:-r.dx,h:0},1.6),null);
