@@ -45,3 +45,5 @@ export const propTall=(m,x,y,z=0)=>!!PROPS[propAt(m,x,y,z)?.kind]?.tall;
 
 // Unlocked doors stay solid to shots until a character opens them while crossing.
 for(const kind of ['door-steel-closed','door-wood-closed','jail-door-closed'])EDGES[kind].opensTo='doorway-concrete-open';
+
+EDGES['wall-wood-trellis']={solid:true,opaque:false,cover:25,art:'wall-wood-trellis'};

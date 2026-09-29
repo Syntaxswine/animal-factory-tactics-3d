@@ -1,3 +1,4 @@
+import {trellisParts,trellisSegment,TRELLIS_KIND} from './bridge-trellis.js';
 import {canopyPresentation} from './editor-canopies.js';
 import {roofVisualKind,parapetEdges} from './climbable-roofs.js';
 import {isRampBank} from './ramp-banks.js';
@@ -47,6 +48,7 @@ export function buildWorld(map){map=canopyPresentation(map);
   const part=(suffix,a,b,bottom,top,material=kind,thickness=D.wallThickness)=>box(`edge:${key}:${suffix}`,'wall',material,
    axis==='e'?[x+.5,z*DIMENSIONS.floorSpacing+(bottom+top)/2,y-.5+(a+b)/2]:[x-.5+(a+b)/2,z*DIMENSIONS.floorSpacing+(bottom+top)/2,y+.5],
    axis==='e'?[thickness,top-bottom,b-a]:[b-a,top-bottom,thickness],{edge:key});
+  if(kind===TRELLIS_KIND){for(const p of trellisParts(axis,x,y,z)){box('edge:'+key+':trellis:'+p.id,'wall','wood',p.center,p.size,{edge:key},{rotation:p.rotation,trellisPart:p});const b=boxes.at(-1),radius=Math.hypot(...p.size)/2;b.min=p.center.map(v=>v-radius);b.max=p.center.map(v=>v+radius);}continue;}
   if(kind==='fence-cut'){box(`edge:${key}:cut`,'fence',kind,axis==='e'?[x+.5,z*D.floorSpacing+.06,y]:[x,z*D.floorSpacing+.06,y+.5],axis==='e'?[.06,.12,1]:[1,.12,.06],{edge:key},{blocksShot:false,blocksSight:false});continue;}
   if(kind==='door'||kind==='doorway-concrete-open'||kind==='door-steel-closed'||kind==='door-wood-closed'){
    part('lintel',0,1,D.doorTop,D.wall);if(kind.endsWith('-closed'))part('door',0,1,0,D.doorTop,kind,D.doorThickness);continue;
@@ -111,7 +113,7 @@ export function traceWorld(world,start,end,{filter=b=>b.blocksShot!==false}={}){
   for(const b of world.index.get(`${Math.floor(x/chunk)},${Math.floor(z/chunk)}`)||[])if(b.max[1]>=lowY&&b.min[1]<=highY)candidates.add(b);
  }
  let hit=null;const length=Math.hypot(...end.map((v,i)=>v-start[i]));
- for(const b of candidates){if(!filter(b))continue;const t=segmentBox(start,end,b);if(t===null||hit&&(t>hit.t||t===hit.t&&b.id>=hit.id))continue;
+ for(const b of candidates){if(!filter(b))continue;const t=b.trellisPart?trellisSegment(start,end,b.trellisPart):segmentBox(start,end,b);if(t===null||hit&&(t>hit.t||t===hit.t&&b.id>=hit.id))continue;
   const point=start.map((v,i)=>v+(end[i]-v)*t),normal=[0,0,0];
   for(let axis=0;axis<3;axis++){if(Math.abs(point[axis]-b.min[axis])<1e-7){normal[axis]=-1;break;}if(Math.abs(point[axis]-b.max[axis])<1e-7){normal[axis]=1;break;}}
   hit={id:b.id,kind:b.kind,material:b.material,source:b.source,t,distance:t*length,point,normal};
