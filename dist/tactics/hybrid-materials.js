@@ -11,7 +11,18 @@ export function surfacePixels(kind,size=128){
  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
   const u=x/size,v=y/size,noise=((x*73+y*97+(x*y)%31)%17)-8;
   let color;
-  if(kind==='brick'){
+  if(kind==='wood-planks'){
+   const row=Math.floor(v*4),across=v*4-row,end=(u+(row%2)*.5)%1;
+   const wave=Math.sin(u*Math.PI*2)*.016+Math.sin(u*Math.PI*6+row)*.006;
+   const grain=Math.sin((across+wave)*Math.PI*34)*3+Math.sin((across+wave)*Math.PI*12)*4;
+   const broad=Math.sin(u*Math.PI*2+row)*5+Math.cos(across*Math.PI)*3;
+   const knotX=[.28,.71,.54,.16][row],dx=Math.min(Math.abs(u-knotX),1-Math.abs(u-knotX)),dy=across-.55;
+   const knot=Math.exp(-((dx/.075)**2+(dy/.24)**2)),rings=Math.sin(Math.hypot(dx*18,dy*5)*12)*knot*7;
+   let shade=grain+broad+rings-knot*15+row%3*6;
+   if(across<.035||end<.014)shade-=45;else if(across<.07||end<.026)shade+=20;else if(across>.95)shade-=12;
+   color=[145+shade,107+shade*.85,65+shade*.65];
+  }else if(kind==='brick'){
+
    const course=Math.floor(v/MATERIAL_DENSITY.brickCourse),a=(u+(course%2)*.25)%.5,b=v%.2;
    color=a<.018||b<.015?[111,107,88]:[151+course%3*7,101+course%2*5,73];
   }else if(kind==='metal'){const rib=(Math.floor(u*16)%4===0)?-25:0;color=[111+rib,125+rib,117+rib];}
@@ -36,6 +47,7 @@ export function surfacePixels(kind,size=128){
  return {data,width:size,height:size};
 }
 export function materialKind(box){
+ if(box.material==='ground-wood-planks')return 'wood-planks';
  if(diagonalRoad(box.material))return box.material;
  if(box.material==='bark'||box.material==='grass-blade')return box.material;
  if(['steel','leaf-light','pine','foliage','water','linen','screen','dark-metal','rust','red','olive','metal','wood','sand'].includes(box.material))return box.material;

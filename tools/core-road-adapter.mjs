@@ -1,2 +1,2 @@
-export const roadOverrides={'environment.js':'Register fully traversable diagonal road-edge terrain.'};
-export function adaptCoreRoads(name,data){if(name!=='environment.js')return data;let s=data.toString();const a="'ground-tiles'];";if(s.split(a).length!==2)throw Error('Road terrain anchor changed');return Buffer.from("import {DIAGONAL_ROADS} from '../diagonal-roads.js';\n"+s.replace(a,"'ground-tiles',...DIAGONAL_ROADS];"));}
+export const roadOverrides={'environment.js':'Register traversable diagonal roads and wooden plank flooring.'};
+export function adaptCoreRoads(name,data){if(name!=='environment.js')return data;let s=data.toString();const a="'ground-tiles'];";if(s.split(a).length!==2)throw Error('Road terrain anchor changed');return Buffer.from("import {DIAGONAL_ROADS} from '../diagonal-roads.js';\n"+s.replace(a,"'ground-tiles','ground-wood-planks',...DIAGONAL_ROADS];"));}

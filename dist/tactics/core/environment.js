@@ -5,7 +5,7 @@ import {DIAGONAL_ROADS} from '../diagonal-roads.js';
 import {CLIFF_PROPS} from '../cliff-map.js';
 import {LIGHT_PROPS} from '../light-sources.js';
 // Explicit game rules for the supplied environment art. Manifest prose is not executable.
-export const GROUNDS=['ground-dirt','ground-gravel','ground-grass','ground-concrete','ground-asphalt','ground-tiles',...DIAGONAL_ROADS];
+export const GROUNDS=['ground-dirt','ground-gravel','ground-grass','ground-concrete','ground-asphalt','ground-tiles','ground-wood-planks',...DIAGONAL_ROADS];
 export const PROPS={
  'crate-wood':{w:1,h:1,cover:25,solid:true},'crate-steel':{w:1,h:1,cover:25,solid:true},'crate-stack':{w:1,h:1,cover:25,solid:true,tall:true},
  'table-wood':{w:2,h:1,cover:25,solid:true},'table-steel':{w:2,h:1,cover:25,solid:true},'workbench-vise':{w:2,h:1,cover:25,solid:true},'workbench-metal':{w:2,h:1,cover:25,solid:true},
