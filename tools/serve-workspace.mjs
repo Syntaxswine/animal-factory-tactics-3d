@@ -1,10 +1,10 @@
 import {createServer} from 'node:http';import fs from 'node:fs/promises';import path from 'node:path';import {fileURLToPath} from 'node:url';import {pathToFileURL} from 'node:url';import {randomUUID} from 'node:crypto';import {exportSectors,saveVariant} from './sector-authoring.mjs';
-export function createWorkspaceServer({root=fileURLToPath(new URL('../dist/',import.meta.url)),source=fileURLToPath(new URL('../../sectors/',import.meta.url)),runtime=path.join(root,'tactics/sector-library')}={}){const token=randomUUID();exportSectors(source,runtime);
+export function createWorkspaceServer({root=fileURLToPath(new URL('../dist/',import.meta.url)),source=process.env.AFT_MAP_LIBRARY||fileURLToPath(new URL('../../sectors/',import.meta.url)),runtime=path.join(root,'tactics/sector-library')}={}){const token=randomUUID();exportSectors(source,runtime);
  const server=createServer(async(req,res)=>{const send=(code,data)=>{res.writeHead(code,{'Content-Type':'application/json','Cache-Control':'no-store'}).end(JSON.stringify(data));};try{
  const port=server.address().port,origin='http://127.0.0.1:'+port;
  if(req.headers.host!=='127.0.0.1:'+port&&req.headers.host!=='localhost:'+port)return send(403,{error:'Local host required.'});
  const url=new URL(req.url,origin);if(url.pathname.startsWith('/api/sector-authoring')){
-  if(req.method==='GET'&&url.pathname==='/api/sector-authoring')return send(200,{token,source:'AnimalFactory3D/sectors'});
+  if(req.method==='GET'&&url.pathname==='/api/sector-authoring')return send(200,{token,source:path.basename(source)});
   const validOrigins=[origin,'http://localhost:'+port];if(req.method!=='POST'||url.pathname!=='/api/sector-authoring/variants'||!validOrigins.includes(req.headers.origin)||req.headers['x-sector-token']!==token||!req.headers['content-type']?.startsWith('application/json'))return send(403,{error:'Use the local editor to save variants.'});
   const parts=[];let bytes=0;for await(const part of req){bytes+=part.length;if(bytes>5*1024*1024)return send(413,{error:'Map exceeds 5 MB.'});parts.push(part);}const saved=saveVariant(source,runtime,JSON.parse(Buffer.concat(parts).toString('utf8')));return send(201,saved);
  }

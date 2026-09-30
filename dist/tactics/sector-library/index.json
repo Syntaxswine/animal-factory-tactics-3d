@@ -6,6 +6,7 @@
     {
       "id": "city--land-road-e",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -19,6 +20,7 @@
     {
       "id": "city--land-road-en",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -32,6 +34,7 @@
     {
       "id": "city--land-road-ens",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -45,6 +48,7 @@
     {
       "id": "city--land-road-ensw",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -58,6 +62,7 @@
     {
       "id": "city--land-road-ew",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -71,6 +76,7 @@
     {
       "id": "city--river-e1-w1-road-ns",
       "role": "city",
+      "collectionRole": "city",
       "feature": "river",
       "facilities": [],
       "difficulties": [
@@ -84,6 +90,7 @@
     {
       "id": "city--river-e1-w2-road-ns",
       "role": "city",
+      "collectionRole": "city",
       "feature": "river",
       "facilities": [],
       "difficulties": [
@@ -97,6 +104,7 @@
     {
       "id": "city-factory--land-road-e",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "factory"
@@ -112,6 +120,7 @@
     {
       "id": "city-factory--land-road-en",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "factory"
@@ -127,6 +136,7 @@
     {
       "id": "city-factory--land-road-ens",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "factory"
@@ -142,6 +152,7 @@
     {
       "id": "city-factory--land-road-ensw",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "factory"
@@ -157,6 +168,7 @@
     {
       "id": "city-factory--land-road-ew",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "factory"
@@ -172,6 +184,7 @@
     {
       "id": "city-factory--river-e1-w1-road-ns",
       "role": "city",
+      "collectionRole": "city",
       "feature": "river",
       "facilities": [
         "factory"
@@ -187,6 +200,7 @@
     {
       "id": "city-factory--river-e1-w2-road-ns",
       "role": "city",
+      "collectionRole": "city",
       "feature": "river",
       "facilities": [
         "factory"
@@ -202,6 +216,7 @@
     {
       "id": "city-factory-workshop--land-road-e",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "factory",
@@ -218,6 +233,7 @@
     {
       "id": "city-factory-workshop--land-road-en",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "factory",
@@ -234,6 +250,7 @@
     {
       "id": "city-factory-workshop--land-road-ens",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "factory",
@@ -250,6 +267,7 @@
     {
       "id": "city-factory-workshop--land-road-ensw",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "factory",
@@ -266,6 +284,7 @@
     {
       "id": "city-factory-workshop--land-road-ew",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "factory",
@@ -282,6 +301,7 @@
     {
       "id": "city-factory-workshop--river-e1-w1-road-ns",
       "role": "city",
+      "collectionRole": "city",
       "feature": "river",
       "facilities": [
         "factory",
@@ -298,6 +318,7 @@
     {
       "id": "city-factory-workshop--river-e1-w2-road-ns",
       "role": "city",
+      "collectionRole": "city",
       "feature": "river",
       "facilities": [
         "factory",
@@ -314,6 +335,7 @@
     {
       "id": "city-workshop--land-road-e",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "workshop"
@@ -329,6 +351,7 @@
     {
       "id": "city-workshop--land-road-en",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "workshop"
@@ -344,6 +367,7 @@
     {
       "id": "city-workshop--land-road-ens",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "workshop"
@@ -359,6 +383,7 @@
     {
       "id": "city-workshop--land-road-ensw",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "workshop"
@@ -374,6 +399,7 @@
     {
       "id": "city-workshop--land-road-ew",
       "role": "city",
+      "collectionRole": "city",
       "feature": "land",
       "facilities": [
         "workshop"
@@ -389,6 +415,7 @@
     {
       "id": "city-workshop--river-e1-w1-road-ns",
       "role": "city",
+      "collectionRole": "city",
       "feature": "river",
       "facilities": [
         "workshop"
@@ -404,6 +431,7 @@
     {
       "id": "city-workshop--river-e1-w2-road-ns",
       "role": "city",
+      "collectionRole": "city",
       "feature": "river",
       "facilities": [
         "workshop"
@@ -419,6 +447,7 @@
     {
       "id": "countryside--cliff-e1-n1-road-none",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "cliff",
       "facilities": [],
       "difficulties": [
@@ -432,6 +461,7 @@
     {
       "id": "countryside--cliff-e1-n2-road-none",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "cliff",
       "facilities": [],
       "difficulties": [
@@ -445,6 +475,7 @@
     {
       "id": "countryside--cliff-e1-s1-road-none",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "cliff",
       "facilities": [],
       "difficulties": [
@@ -458,6 +489,7 @@
     {
       "id": "countryside--cliff-e1-w1-road-none",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "cliff",
       "facilities": [],
       "difficulties": [
@@ -471,6 +503,7 @@
     {
       "id": "countryside--cliff-e1-w1-road-ns",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "cliff",
       "facilities": [],
       "difficulties": [
@@ -484,6 +517,7 @@
     {
       "id": "countryside--cliff-e1-w2-road-none",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "cliff",
       "facilities": [],
       "difficulties": [
@@ -497,6 +531,7 @@
     {
       "id": "countryside--cliff-e1-w2-road-ns",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "cliff",
       "facilities": [],
       "difficulties": [
@@ -510,6 +545,7 @@
     {
       "id": "countryside--land-road-en",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -523,6 +559,7 @@
     {
       "id": "countryside--land-road-ens",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -536,6 +573,7 @@
     {
       "id": "countryside--land-road-ensw",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -549,6 +587,7 @@
     {
       "id": "countryside--land-road-ew",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -562,6 +601,7 @@
     {
       "id": "countryside--land-road-none",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -575,6 +615,7 @@
     {
       "id": "countryside--river-e1-n1-road-none",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "river",
       "facilities": [],
       "difficulties": [
@@ -588,6 +629,7 @@
     {
       "id": "countryside--river-e1-n2-road-none",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "river",
       "facilities": [],
       "difficulties": [
@@ -601,6 +643,7 @@
     {
       "id": "countryside--river-e1-s1-road-none",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "river",
       "facilities": [],
       "difficulties": [
@@ -614,6 +657,7 @@
     {
       "id": "countryside--river-e1-w1-road-none",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "river",
       "facilities": [],
       "difficulties": [
@@ -627,6 +671,7 @@
     {
       "id": "countryside--river-e1-w1-road-ns",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "river",
       "facilities": [],
       "difficulties": [
@@ -640,6 +685,7 @@
     {
       "id": "countryside--river-e1-w2-road-none",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "river",
       "facilities": [],
       "difficulties": [
@@ -653,6 +699,7 @@
     {
       "id": "countryside--river-e1-w2-road-ns",
       "role": "countryside",
+      "collectionRole": "countryside",
       "feature": "river",
       "facilities": [],
       "difficulties": [
@@ -666,6 +713,7 @@
     {
       "id": "fortress--land-road-e",
       "role": "fortress",
+      "collectionRole": "fortress",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -679,6 +727,7 @@
     {
       "id": "fortress--land-road-en",
       "role": "fortress",
+      "collectionRole": "fortress",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -692,6 +741,7 @@
     {
       "id": "fortress--land-road-ens",
       "role": "fortress",
+      "collectionRole": "fortress",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -705,6 +755,7 @@
     {
       "id": "fortress--land-road-ensw",
       "role": "fortress",
+      "collectionRole": "fortress",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -718,6 +769,7 @@
     {
       "id": "fortress--land-road-ew",
       "role": "fortress",
+      "collectionRole": "fortress",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -731,6 +783,7 @@
     {
       "id": "town--land-road-e",
       "role": "town",
+      "collectionRole": "town",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -744,6 +797,7 @@
     {
       "id": "town--land-road-en",
       "role": "town",
+      "collectionRole": "town",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -757,6 +811,7 @@
     {
       "id": "town--land-road-ens",
       "role": "town",
+      "collectionRole": "town",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -770,6 +825,7 @@
     {
       "id": "town--land-road-ensw",
       "role": "town",
+      "collectionRole": "town",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -783,6 +839,7 @@
     {
       "id": "town--land-road-ew",
       "role": "town",
+      "collectionRole": "town",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -796,6 +853,7 @@
     {
       "id": "town--river-e1-w1-road-ns",
       "role": "town",
+      "collectionRole": "town",
       "feature": "river",
       "facilities": [],
       "difficulties": [
@@ -809,6 +867,7 @@
     {
       "id": "town--river-e1-w2-road-ns",
       "role": "town",
+      "collectionRole": "town",
       "feature": "river",
       "facilities": [],
       "difficulties": [
@@ -822,6 +881,7 @@
     {
       "id": "town-workshop--land-road-e",
       "role": "town",
+      "collectionRole": "town",
       "feature": "land",
       "facilities": [
         "workshop"
@@ -837,6 +897,7 @@
     {
       "id": "town-workshop--land-road-en",
       "role": "town",
+      "collectionRole": "town",
       "feature": "land",
       "facilities": [
         "workshop"
@@ -852,6 +913,7 @@
     {
       "id": "town-workshop--land-road-ens",
       "role": "town",
+      "collectionRole": "town",
       "feature": "land",
       "facilities": [
         "workshop"
@@ -867,6 +929,7 @@
     {
       "id": "town-workshop--land-road-ensw",
       "role": "town",
+      "collectionRole": "town",
       "feature": "land",
       "facilities": [
         "workshop"
@@ -882,6 +945,7 @@
     {
       "id": "town-workshop--land-road-ew",
       "role": "town",
+      "collectionRole": "town",
       "feature": "land",
       "facilities": [
         "workshop"
@@ -897,6 +961,7 @@
     {
       "id": "town-workshop--river-e1-w1-road-ns",
       "role": "town",
+      "collectionRole": "town",
       "feature": "river",
       "facilities": [
         "workshop"
@@ -912,6 +977,7 @@
     {
       "id": "town-workshop--river-e1-w2-road-ns",
       "role": "town",
+      "collectionRole": "town",
       "feature": "river",
       "facilities": [
         "workshop"
@@ -927,6 +993,7 @@
     {
       "id": "tutorial-step-1",
       "role": "tutorial",
+      "collectionRole": "tutorial",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -938,6 +1005,7 @@
     {
       "id": "tutorial-step-2",
       "role": "tutorial",
+      "collectionRole": "tutorial",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -949,6 +1017,7 @@
     {
       "id": "tutorial-step-3",
       "role": "tutorial",
+      "collectionRole": "tutorial",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -960,6 +1029,7 @@
     {
       "id": "tutorial-step-4",
       "role": "tutorial",
+      "collectionRole": "tutorial",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -971,6 +1041,7 @@
     {
       "id": "tutorial-step-5",
       "role": "town",
+      "collectionRole": "tutorial",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -982,6 +1053,7 @@
     {
       "id": "village--land-road-e",
       "role": "village",
+      "collectionRole": "village",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -994,6 +1066,7 @@
     {
       "id": "village--land-road-en",
       "role": "village",
+      "collectionRole": "village",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -1006,6 +1079,7 @@
     {
       "id": "village--land-road-ens",
       "role": "village",
+      "collectionRole": "village",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -1018,6 +1092,7 @@
     {
       "id": "village--land-road-ensw",
       "role": "village",
+      "collectionRole": "village",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -1030,6 +1105,7 @@
     {
       "id": "village--land-road-ew",
       "role": "village",
+      "collectionRole": "village",
       "feature": "land",
       "facilities": [],
       "difficulties": [
@@ -1042,6 +1118,7 @@
     {
       "id": "village--river-e1-w1-road-ns",
       "role": "village",
+      "collectionRole": "village",
       "feature": "river",
       "facilities": [],
       "difficulties": [
@@ -1054,6 +1131,7 @@
     {
       "id": "village--river-e1-w2-road-ns",
       "role": "village",
+      "collectionRole": "village",
       "feature": "river",
       "facilities": [],
       "difficulties": [

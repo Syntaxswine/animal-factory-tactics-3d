@@ -9,3 +9,13 @@ The authoritative map collection is now ../sectors/<role>/<configuration>/<varia
 In the editor, open a library configuration at 0 degrees, then choose Save as new sector variant. Use a unique lowercase filename. Save creates a map, SVG preview and progress metadata; it never overwrites an existing variant. Ready for review checks normal map validation but does not certify campaign interchangeability. Published static pages retain JSON export; direct disk saving requires the local workspace server. Existing browser saves remain available through the ordinary Save controls.
 
 The original editor directory and its preview remain available for rollback. Avoid continuing edits in both workspaces. Other study snapshots have not been cut over. No canonical branch or GitHub Pages deployment was changed by this migration. Browser saves are origin-specific: saves on the old port do not automatically appear on 4363. Export maps or saves from the old preview before importing them in this one.
+
+## Portable map folders
+
+Use Choose map library folder on the library page or in the editor save dialog. Select the root containing animal-factory-map-library.json, not a role or configuration subfolder. The root name is normally AnimalFactoryMaps, but location and name are arbitrary; the identity file and version define the library. The existing sibling sectors collection has this marker too.
+
+Create library in empty folder copies the bundled configurations, existing variants, and previews into role/configuration folders and writes the identity marker after completion. This refuses nonempty folders. Copy the entire library when moving between computers, then select it again on the destination. A remembered browser handle is only a convenience for that browser/origin; it does not travel with the project.
+
+Direct reads and writes use the user-selected directory, including when running the published HTTPS editor, without a development server or a hardcoded drive path. Current browsers such as Chrome and Edge provide the writable directory picker. Unsupported browsers retain JSON export or can run the local workspace server. AFT_MAP_LIBRARY sets that server and build export source to any chosen folder. Permission denial/revocation requires choosing the folder again.
+
+Saved variants are published in the folder catalog only after their JSON and SVG finish writing. Interrupted writes may leave unregistered files for recovery; existing names are not reused. Avoid editing the same configuration simultaneously from different browsers or machines. These are local folders, not a cloud sync service.
