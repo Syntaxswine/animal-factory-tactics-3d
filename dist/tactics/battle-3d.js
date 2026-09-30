@@ -1,3 +1,6 @@
+import {renderShotPlanner} from './shot-planner.js';
+import {legImpaired} from './combat-state.js';
+let shotZone='torso',shotBurst=false;
 import {heldWeaponJammed} from './loot-policy.js';
 import {edgeCells} from './core/maps.js';
 import {nearbyCliffClimbs} from './cliff-actions.js';
@@ -65,17 +68,20 @@ function sync(){
  if(cliffViewState!==state){cliffViewState=state;cliffViewId=0;}const traversal=state.cliffTraversals?.at(-1);if(traversal&&traversal.id>cliffViewId){cliffViewId=traversal.id;if(traversal.unitId===state.selected){level=selected().z||0;$('floor').value=level;}}
  selectedIds=pruneSelection(state,selectedIds);
  if(selectedIds.size&&!selectedIds.has(state.selected))state.selected=[...selectedIds][0];
- const u=selected(),t=target(),preview=t?previewAttack(state,u,t,false,'torso',null,$('aim-level').value):null;
- const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,level,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,Math.floor(v.stamina),v.medkits,heldWeaponJammed(v),v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,renderer.traversal.preparing,userPaused]);
+ const u=selected(),t=target();if(!supportsAim(WEAPONS[u.weapon]))shotZone='torso';if(!(WEAPONS[u.weapon].burstRounds>1))shotBurst=false;const preview=t?previewAttack(state,u,t,shotBurst,shotZone,null,$('aim-level').value):null;
+ const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,level,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,Math.floor(v.stamina),v.medkits,v.pinned,v.legWound,heldWeaponJammed(v),v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,renderer.traversal.preparing,userPaused]);
  if(signature===lastUI)return;lastUI=signature;
  fieldPanel.replaceChildren();for(const entry of nearbyInteractions(state,u)){const b=document.createElement('button'),p=entry.preview;b.textContent=entry.label+' · '+(p.cost?p.cost+' AP':'1 min')+(p.chance!==undefined?' · '+p.chance+'%':'')+(p.amount>0?' · +'+Math.floor(p.amount):'');b.disabled=paused()||renderer.busy||!p.ok;b.title=p.reason||('Stamina cost: '+p.stamina);b.onclick=()=>action(()=>performInteraction(state,selected(),entry.kind,entry.target));fieldPanel.append(b);}
- for(const entry of nearbyCliffClimbs(state,u)){const b=document.createElement('button');b.textContent=entry.label+' · 8 AP';b.disabled=paused()||renderer.busy||!entry.ok;b.title=entry.reason||'Traverse this ledge';b.onclick=()=>action(()=>move(state,selected(),entry.to.x,entry.to.y,entry.to.z));fieldPanel.append(b);}
+ for(const entry of nearbyCliffClimbs(state,u)){const b=document.createElement('button');b.textContent=entry.label+' · '+entry.cost+' AP';b.disabled=paused()||renderer.busy||!entry.ok;b.title=entry.reason||'Traverse this ledge';b.onclick=()=>action(()=>move(state,selected(),entry.to.x,entry.to.y,entry.to.z));fieldPanel.append(b);}
  $('phase').textContent=(renderer.traversal.preparing?'Preparing ladder motion… · ':'')+`${state.phase==='explore'?'Exploration':state.phase==='player'?'Your turn':state.phase==='enemy'?'Guard turn':state.phase==='won'?'Encounter cleared':'Encounter ended'} · Round ${state.round}`;
  $('squad').replaceChildren(...state.units.filter(v=>v.team==='squad').map(v=>{const button=document.createElement('button');button.textContent=`${v.id===state.selected?"★ ":""}${v.name} · ${mercStatus(v)}`;button.setAttribute('aria-pressed',String(selectedIds.has(v.id)));button.disabled=!selectable(v);button.onclick=e=>{selectMerc(v.id,e.shiftKey);center();sync();};return button;}));
  $('light-exposure').textContent='Light on '+u.name+': '+Math.round(illuminationAt(state,u)*100)+'% · Perception '+(u.perception??50);
  $('selection').textContent=`${selectedIds.size} selected · Primary: ${u.name} · ${WEAPONS[u.weapon].name} · ${u.ammo[u.weapon]||0} loaded`;
- $('target').textContent=t?`${t.name} · ${preview.ok?`${preview.chance??preview.odds??'—'}% · ${preview.cost} AP`:preview.reason}`:'Select a visible opponent to inspect a shot.';
- for(const [key,aim] of Object.entries(AIM_LEVELS))$('aim-level').querySelector('[value='+key+']').textContent=aim.label+' · '+shotAim(WEAPONS[u.weapon],key).cost+' AP';
+ $('selection').textContent+=(u.pinned?' · PINNED':'')+(legImpaired(u)?' · Leg wound: movement ×2, −3 AP':'');
+ $('burst-fire').disabled=!(WEAPONS[u.weapon].burstRounds>1);if($('burst-fire').disabled){shotBurst=false;$('burst-fire').checked=false;}
+ renderShotPlanner($('shot-planner'),state,u,t,{zone:shotZone,aim:$('aim-level').value,burst:shotBurst,onSelect:(zone,aim)=>{shotZone=zone;$('aim-level').value=aim;lastUI='';sync();}});
+ $('target').textContent=t?`${t.name} · ${preview.ok?`${shotZone} · ${preview.cost} AP`:preview.reason}`:'Select a visible opponent to inspect a shot.';
+ for(const [key,aim] of Object.entries(AIM_LEVELS))$('aim-level').querySelector('[value='+key+']').textContent=aim.label+' · '+shotAim(WEAPONS[u.weapon],key,shotBurst).cost+' AP';
  $('aim-level').disabled=!supportsAim(WEAPONS[u.weapon]);
  $('fire').disabled=paused()||renderer.busy||!preview?.ok||!canControl(state,u)||!!state.queue.length;
  const climb=climbPreview(state,u,level);climbButton.textContent=climb.label+(combatCosts(state)?' · '+(climb.cost??3)+' AP':climb.kind==='tower'?' · 30 sec':'');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||(climb.kind==='roof'?'Climb this roof edge.':climb.kind==='tower'?'Use the stairs or ladder at the gold entrance ring.':'Use this ladder or stair connection.');
@@ -136,8 +142,9 @@ function action(fn){if(paused()||renderer.busy)return;const ok=fn();renderer.cap
  $('restart').onclick=async()=>{try{await saveGame('auto');restart();}catch(e){message('Restart cancelled: could not preserve the autosave. '+e.message);}};$('center').onclick=center;$('overview').onclick=overview;
  $('reload').onclick=()=>action(()=>reload(state,selected()));$('end').onclick=()=>action(()=>endTurn(state));
  climbButton.onclick=()=>action(()=>{const preview=climbPreview(state,selected(),level),ok=performClimb(state,selected(),level);if(ok&&preview.kind!=='tower'){level=preview.destination.z;$('floor').value=level;}return ok;});
+ $('burst-fire').onchange=()=>{shotBurst=$('burst-fire').checked;lastUI='';sync();};
  $('aim-level').onchange=()=>{lastUI='';sync();};
- $('fire').onclick=()=>action(()=>{const t=target();return t&&attack(state,selected(),t,false,false,'torso',false,$('aim-level').value);});
+ $('fire').onclick=()=>action(()=>{const t=target();return t&&attack(state,selected(),t,shotBurst,false,shotZone,false,$('aim-level').value);});
  $('stop').onclick=()=>{if(paused())return;state.queue=[];sync();};$('floor').onchange=()=>{level=+$('floor').value;sync();};
 $('pause').onclick=()=>{userPaused=!userPaused;frameClock.reset();sync();};
 document.addEventListener('visibilitychange',()=>{renderer.wallXray.setPointer(null,null);frameClock.reset();sync();if(document.hidden&&!storageBusy&&!autoDisabled&&(performance.now()-lastAuto>=30000||state.round!==autoRound))autosave();});

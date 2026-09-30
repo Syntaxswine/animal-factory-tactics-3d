@@ -1,3 +1,4 @@
+import {injuryMovement,turnAP,woundLeg,accuracyPenalty,roundChance,incomingFire,recoverAim} from '../combat-state.js';
 import {automaticRoofClimbs} from '../climbable-roofs.js';
 import {recordRoofTraversal} from '../roof-traversal.js';
 import {rampSupportAt} from '../cliff-ramps.js';
@@ -55,10 +56,10 @@ export const STANCES={standing:{label:'Standing',moveCost:2},kneeling:{label:'Kn
 export const stanceOf=u=>Object.hasOwn(STANCES,u?.stance)?u.stance:'standing';
 export const MOVEMENT_MODES={walk:{label:'Walk',apMultiplier:1,speed:1},run:{label:'Run',apMultiplier:.5,speed:2},sneak:{label:'Sneak',apMultiplier:1.5,speed:.5}};
 export const movementModeOf=u=>u?.sneaking?'sneak':u?.running?'run':'walk';
-export const movementMultiplier=u=>MOVEMENT_MODES[movementModeOf(u)].apMultiplier;
+export const movementMultiplier=u=>MOVEMENT_MODES[movementModeOf(u)].apMultiplier*injuryMovement(u);
 export const movementCost=u=>STANCES[stanceOf(u)].moveCost*movementMultiplier(u);
 export const effectiveStealth=u=>Math.min(100,Math.max(0,(u.stealth||0)+(u.sneaking?20:0)));
-export function movementNeighbors(s,u,p=u,stairs){if(towerForUnit(s,u))return [];return neighbors(s,p,stairs).filter(q=>(q.kind==='ramp'||levelOf(q)===levelOf(p)||stanceOf(u)==='standing')&&!(levelOf(q)===levelOf(p)&&q.x!==p.x&&q.y!==p.y&&[occupant(s,q.x,p.y,levelOf(p)),occupant(s,p.x,q.y,levelOf(p))].some(v=>v&&v!==u))).map(q=>({...q,cost:q.kind==='cliff'?8:(q.kind==='ramp'||levelOf(q)===levelOf(p)?STANCES[stanceOf(u)].moveCost*q.cost:q.cost)*movementMultiplier(u)}));}
+export function movementNeighbors(s,u,p=u,stairs){if(towerForUnit(s,u))return [];return neighbors(s,p,stairs).filter(q=>(q.kind==='ramp'||levelOf(q)===levelOf(p)||stanceOf(u)==='standing')&&!(levelOf(q)===levelOf(p)&&q.x!==p.x&&q.y!==p.y&&[occupant(s,q.x,p.y,levelOf(p)),occupant(s,p.x,q.y,levelOf(p))].some(v=>v&&v!==u))).map(q=>({...q,cost:q.kind==='cliff'?8*injuryMovement(u):(q.kind==='ramp'||levelOf(q)===levelOf(p)?STANCES[stanceOf(u)].moveCost*q.cost:q.cost)*movementMultiplier(u)}));}
 export const key=tileKey;
 export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,unitBaseHeight(a)-unitBaseHeight(b));
 export const alive=u=>u.hp>0&&!u.away&&u.casualty!=='quit'; // A unit that crossed the map edge is off this map: not a target, not an occupant, not controllable here; a merc that quit (G5) has left the squad.
@@ -204,7 +205,7 @@ log(s,converted.length===0&&s.units.some(u=>u.team==='squad'&&u.casualty==='quit
  if(['explore','won'].includes(s.phase)&&contact){s.phase='player';s.round++;s.queue=[];if(s.rules?.social&&!s.fight)s.fight={casualty:false}; // G5: a clean win lifts the squad
   // AP is live across the engagement: a fight that resumes while guards were already alert continues with the AP the squad has; a fresh fight gets a full turn. Guards always start theirs full.
   // freshFight is set by entering a map and by Area clear, so a fight on a new map is fresh even when its guards kept an alert from before.
-  const resumed=wasAlert.size>0&&!s.freshFight;s.freshFight=false;for(const u of s.units)if(u.burningTurns)u.ap=0;else if(u.team==='guard'||!resumed)u.ap=u.maxAp;
+  const resumed=wasAlert.size>0&&!s.freshFight;s.freshFight=false;for(const u of s.units)if(u.burningTurns)u.ap=0;else if(u.team==='guard'||!resumed)u.ap=turnAP(u);
   log(s,'CONTACT / Squad turn. Movement costs 2 / 4 / 8 AP per tile: standing / kneeling / prone.');
 }
  else if((s.phase==='player'||s.phase==='enemy')&&!contact){
@@ -228,7 +229,7 @@ export function canControl(s,u){return u&&alive(u)&&!u.burningTurns&&u.team==='s
 // Downed comrades left on a map when the last standing squad member crosses its edge meet the defeat rule: stabilized are captured, bleeding die.
 // G5: the end of a contact (the map won, or the last alerted guard stood down) lifts every merc's happiness when nobody went down, and lets a merc
 // whose meter has been at zero for a day walk: quitting never happens mid-contact.
-function contactEnds(s){for(const u of squad(s))if(u.contract?.expired)quitMerc(s,u,'contract'); // a contract that ran out mid-fight ends with the contact (world.js settleContracts)
+function contactEnds(s){for(const u of s.units){delete u.pinned;delete u.suppression;}for(const u of squad(s))if(u.contract?.expired)quitMerc(s,u,'contract'); // a contract that ran out mid-fight ends with the contact (world.js settleContracts)
  for(const u of squad(s))if(u.quitPending){if(u.social.happiness===0)quitMerc(s,u);else u.quitPending=false;} // a meter that rose again before the end is no longer quitting
  if(s.fight){if(!s.fight.casualty&&cleanWin(squad(s)))log(s,'A clean fight: the squad\'s spirits lift.');s.fight=null;}}
 // Quitting is a roster state beside captured and dead: the merc keeps its skills and history in the record, takes what it holds, and is off the map.
@@ -270,16 +271,16 @@ export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel
  const w=WEAPONS[a.weapon],rounds=burst?(w.burstRounds||1):1,cost=aiming.cost,melee=w.mag===0,range=melee?(levelOf(a)===levelOf(b)?Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y)):Infinity):Math.hypot(a.x-b.x,a.y-b.y);
  const visible=token!==retaliationToken&&a.team==='squad'?squad(s).some(p=>canSee(s,p,b)):canSee(s,a,b);
  const cover=!melee&&coverAgainst(s,a,b),heightCover=!melee&&levelOf(b)>levelOf(a)&&(a.x!==b.x||a.y!==b.y),coverPenalty=cover?25:heightCover?15:0,rangePenalty=melee?0:Math.max(0,levelOf(b)-levelOf(a)),effectiveRange=Math.max(0,w.range-rangePenalty);
- const chance=Math.max(10,Math.min(95,weaponAccuracy(a)+(melee?10:0)+(w.accuracy||0)+aim.accuracy+aiming.accuracy-(melee?0:Math.max(0,range+rangePenalty-3)/Math.max(1,w.range-3)*(w.rangeLoss??25))-coverPenalty-(rounds>1?10:0)));
+ const chance=Math.max(10,Math.min(95,weaponAccuracy(a)+(melee?10:0)+(w.accuracy||0)+aim.accuracy+aiming.accuracy-(melee?0:Math.max(0,range+rangePenalty-3)/Math.max(1,w.range-3)*(w.rangeLoss??25))-coverPenalty-(melee?0:accuracyPenalty(a))));
  let reason='';
- if(heldWeaponJammed(a))reason='Weapon jammed: clear jam with Reload';else if(a.burningTurns>0)reason='On fire: running in panic';else if(melee&&zone!=='torso')reason='Aimed shots require a firearm';else if(!visible)reason='Target not visible';else if(!inCone(a,b))reason='Outside personal sight cone';else if(range>effectiveRange)reason='Out of range';else if(!lineOfSight(s,a,b))reason='Line of fire blocked';else if(!canSee(s,a,b))reason='Not identified: face the target';else if(!melee&&!zoneVisible(s,a,b,zone))reason=AIM_ZONES[zone].label+' hidden by cover';else if(w.mag&&a.ammo[a.weapon]<rounds)reason='Reload required';else if(combatCosts(s)&&a.ap<cost)reason='Not enough AP';
+ if(a.pinned&&aiming.level!=='hip')reason='Pinned: only hip fire available';else if(heldWeaponJammed(a))reason='Weapon jammed: clear jam with Reload';else if(a.burningTurns>0)reason='On fire: running in panic';else if(melee&&zone!=='torso')reason='Aimed shots require a firearm';else if(!visible)reason='Target not visible';else if(!inCone(a,b))reason='Outside personal sight cone';else if(range>effectiveRange)reason='Out of range';else if(!lineOfSight(s,a,b))reason='Line of fire blocked';else if(!canSee(s,a,b))reason='Not identified: face the target';else if(!melee&&!zoneVisible(s,a,b,zone))reason=AIM_ZONES[zone].label+' hidden by cover';else if(w.mag&&a.ammo[a.weapon]<rounds)reason='Reload required';else if(combatCosts(s)&&a.ap<cost)reason='Not enough AP';
  let obstruction=null;
  if(!reason&&!melee&&!w.incendiary){const path=bulletTrajectory(s,a,b,{accurate:true,zone,reach:w.range*1.5},()=>0);if(path.unitId!==b.id){const unit=s.units.find(u=>u.id===path.unitId);obstruction=unit?{kind:'unit',id:unit.id,name:unit.name,friendly:unit.team===a.team}:{kind:path.kind};}}
- return {ok:!reason,reason,cost,rounds,aimLevel:aiming.level,chance:Math.round(chance),cover,heightCover,coverPenalty,rangePenalty,damage:damageAfterResistance(b,Math.round(weaponDamage(w,range)*aim.damage)),rawDamage:Math.round(weaponDamage(w,range)*aim.damage),pellets:w.pellets||1,zone,range:effectiveRange,tankChance:melee?0:tankExplosionChance(b,zone),obstruction};
+ return {ok:!reason,reason,cost,rounds,aimLevel:aiming.level,chance:Math.round(chance),shotChances:Array.from({length:rounds},(_,i)=>roundChance(chance,i)),cover,heightCover,coverPenalty,rangePenalty,damage:damageAfterResistance(b,Math.round(weaponDamage(w,range)*aim.damage)),rawDamage:Math.round(weaponDamage(w,range)*aim.damage),pellets:w.pellets||1,zone,range:effectiveRange,tankChance:melee?0:tankExplosionChance(b,zone),obstruction};
 }
 function random(s){s.seed=(Math.imul(s.seed,1664525)+1013904223)>>>0;return s.seed/4294967296;}
 function combatDamage(s,u,damage,fatal=false,source=null){provokeCharacter(s,u,source);
- const living=alive(u),before=u.hp;u.hp=Math.max(0,u.hp-damage);injuryStrain(u,before-u.hp);if(u.team==="guard"&&combatBehavior(u)!=="fight"&&before>u.hp){u.npcFrightened=true;u.npcFearTicks=ALERT_ROUNDS*REALTIME_ROUND_TICKS;u.civilianFlee=true;if(source)u.threat={x:source.x,y:source.y,z:levelOf(source)};}
+ const living=alive(u),before=u.hp;if(u.hp>=u.maxHp)delete u.legWound;u.hp=Math.max(0,u.hp-damage);injuryStrain(u,before-u.hp);if(u.team==="guard"&&combatBehavior(u)!=="fight"&&before>u.hp){u.npcFrightened=true;u.npcFearTicks=ALERT_ROUNDS*REALTIME_ROUND_TICKS;u.civilianFlee=true;if(source)u.threat={x:source.x,y:source.y,z:levelOf(source)};}
  if(u.team==='guard'&&living&&u.hp>0)struck(s,u,source);
  if(u.hp>0)return;
  if(living)killRelief(source,u);
@@ -342,12 +343,19 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   if(weaponJams(s,shooter,f.weapon,w)){shooter.overwatch=null;log(s,shooter.name+': '+w.short+' jammed. Clear jam before firing.');frames.pop();continue;}
   f.left--;shooter.overwatch=null;shooter.heading=headingTo(shooter,f.aim);shooter.facing=(f.aim.x-shooter.x)-(f.aim.y-shooter.y)>=0?1:-1;
   emitNoise(s,shooter,w.mag?30:2);if(w.mag)alarm(s,shooter,w.range*2);if(w.mag)shooter.ammo[f.weapon]--;
-  const accurate=w.blast?false:random(s)*100<f.p.chance,ballistic=w.mag&&!w.incendiary;
-  const pellets=w.pellets?shotgunTrajectories(s,shooter,f.aim,{accurate,zone:f.zone,chance:f.p.chance,reach:w.range*1.5,pellets:w.pellets},()=>random(s)):null;
-  const shot=pellets?pellets[0]:w.blast?explosiveTrajectory(s,shooter,f.aim,w,f.p,()=>random(s)):ballistic?bulletTrajectory(s,shooter,f.aim,{accurate,zone:f.zone,chance:f.p.chance,burst:f.p.rounds>1,reach:w.range*1.5},()=>random(s)):null;
+  const shotChance=roundChance(f.p.chance,f.p.rounds-f.left-1);
+  const accurate=w.blast?false:random(s)*100<shotChance,ballistic=w.mag&&!w.incendiary;
+  const pellets=w.pellets?shotgunTrajectories(s,shooter,f.aim,{accurate,zone:f.zone,chance:shotChance,reach:w.range*1.5,pellets:w.pellets},()=>random(s)):null;
+  const shot=pellets?pellets[0]:w.blast?explosiveTrajectory(s,shooter,f.aim,w,f.p,()=>random(s)):ballistic?bulletTrajectory(s,shooter,f.aim,{accurate,zone:f.zone,chance:shotChance,burst:f.p.rounds>1,reach:w.range*1.5},()=>random(s)):null;
+  if(ballistic&&alive(target)){
+   // A clear aimed ray threatens the target even if this round misses. A solid
+   // obstacle intercepting that ray prevents distant fire from pinning them.
+   const threat=bulletTrajectory(s,shooter,f.aim,{accurate:true,zone:f.zone,reach:w.range*1.5},()=>0);
+   if(incomingFire(s,target,shooter,threat.unitId===target.id||shot?.unitId===target.id,()=>random(s)))log(s,target.name+' is pinned by incoming fire.');
+  }
   if(shot)trajectories.push(...(pellets||[shot]));
   const victim=ballistic?s.units.find(u=>u.id===shot.unitId):accurate&&alive(target)?target:null;
-  const event={shooter:shooter.id,target:target.id,ax:shooter.x,ay:shooter.y,bx:f.aim.x,by:f.aim.y,az:levelOf(shooter),bz:levelOf(f.aim),hit:!!victim,incendiary:!!w.incendiary,trajectories:pellets||(shot?[shot]:[]),explosions:[],downed:[],reply:f.reply};sequence.push(event);
+  const event={shooter:shooter.id,target:target.id,ax:shooter.x,ay:shooter.y,bx:f.aim.x,by:f.aim.y,az:levelOf(shooter),bz:levelOf(f.aim),hit:!!victim,incendiary:!!w.incendiary,trajectories:pellets||(shot?[shot]:[]),explosions:[],downed:[],reply:f.reply,shotChance};sequence.push(event);
   const blastResult=w.blast?detonate(s,shot,w):null;
   if(blastResult){event.explosions.push(blastResult.blast);explosions.push(blastResult.blast);event.hit=blastResult.hits.length>0;log(s,`${shooter.name}: ${w.short} detonated / ${blastResult.blast.destroyed} structures destroyed.`);}
   if(!victim&&!blastResult&&!pellets){log(s,`${shooter.name} → ${target.name}: miss${f.reply?' / retaliation':''}.`);continue;}
@@ -360,7 +368,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   if(victim.team==='guard')targeted(s,victim,shooter);
   const tankChance=w.mag?tankExplosionChance(victim,hitZone):0,standing=s.units.filter(alive);
   if(tankChance>0&&random(s)<tankChance){const blast=explodeTanks(s,victim,shooter);explosions.push(blast);event.explosions.push(blast);}
-  else {combatDamage(s,victim,amount,!!w.incendiary||incapacitated(victim),shooter);if(w.incendiary)ignite(s,victim);}
+  else {combatDamage(s,victim,amount,!!w.incendiary||incapacitated(victim),shooter);if(!w.blast&&hitZone==='legs'&&amount>0)woundLeg(victim);if(w.incendiary)ignite(s,victim);}
   // Units this impact put down (a tank blast can take neighbours too), so the renderer can time their fall.
   for(const u of standing)if(!alive(u)&&!event.downed.includes(u.id))event.downed.push(u.id);
   const friendly=victim.team===shooter.team;
@@ -408,9 +416,9 @@ export function searchBody(s,u,pile){const p=searchPreview(s,u,pile);if(!p.ok)re
 export function inventoryTransfer(s,u,index,mode,target=null){if(!canControl(s,u)||s.queue.length)return false;const near=p=>adjacentTo(s,u,p);if(mode==='take'){if(!s.loot.includes(target)||!near(target)||!pileOpen(target))return false;const item=target.items[index];if(!item||!accepts(u,item))return false;target.items.splice(index,1);receive(u,item);}else{syncWeapons(u);const item=u.pack[index];if(!item)return false;if(mode==='give'){if(!s.units.includes(target)||target===u||!alive(target)||target.team!=='squad'||!near(target)||!accepts(target,item))return false;receive(target,item);}else if(mode==='drop'){let pile=s.loot.find(p=>p.body===undefined&&p.x===u.x&&p.y===u.y&&levelOf(p)===levelOf(u));/* never into a closed body: a dropped item stays in the open */if(!pile){pile={x:u.x,y:u.y,z:levelOf(u),items:[]};s.loot.push(pile);}pile.items.push(item);}else return false;u.pack.splice(index,1);if(item.type==='weapon'){u.slots=u.slots.map(k=>k===item.kind?null:k);if(u.weapon===item.kind)u.weapon='hands';u.overwatch=null;}}log(s,'Inventory updated.');return true;}
 export function endTurn(s){if(s.phase!=='player'||s.queue.length)return false;s.engaged=false;for(const u of s.units)if(u.casualty==='bleeding'&&--u.bleedTurns<=0){u.casualty='dead';log(s,u.name+' died from blood loss.');if(s.fight)s.fight.casualty=true;if(s.rules?.social)for(const line of partnerLost(s.units,u,'dead'))log(s,line);}
  // Only a turn that began after the stabilization counts; the third such end runs the counter out, and the comrade stands when the next squad turn begins (stepEnemy), never for the guards' volley first.
- for(const u of s.units)if(recovering(u)&&s.round>u.recoveryFrom)u.recoveryTurns--;for(const u of s.units)panicRun(s,u);s.phase='enemy';s.enemyIndex=0;for(const g of guards(s))g.ap=g.burningTurns?0:g.maxAp;log(s,'Guard turn.');return true;}
+ for(const u of s.units)if(recovering(u)&&s.round>u.recoveryFrom)u.recoveryTurns--;for(const u of s.units)panicRun(s,u);s.phase='enemy';s.enemyIndex=0;for(const g of guards(s)){recoverAim(g,()=>random(s));g.ap=g.burningTurns?0:turnAP(g);}log(s,'Guard turn.');return true;}
 // The bookkeeping of a new squad turn: fires burn down, recovered comrades stand, AP refills (the waiting crosser's too), stress settles.
-function newRound(s){recoverStamina(s,1,{combat:true});finishFireRound(s);settleRound(s);s.round++;for(const u of s.units)if(u.casualty==='stable'&&u.recoveryTurns<=0){u.casualty=null;u.hp=RECOVERY_HP;log(s,u.name+' is back on their feet / '+RECOVERY_HP+' HP, exhausted.');}for(const p of squad(s)){p.ap=p.burningTurns?0:p.maxAp;p.overwatch=null;settleStress(p,2);}for(const p of s.units)if(p.team==='squad'&&p.away&&p.hp>0){p.ap=p.maxAp;p.away.ap=p.maxAp;}/* a comrade waiting beyond the edge gets the new turn too */}
+function newRound(s){recoverStamina(s,1,{combat:true});finishFireRound(s);settleRound(s);s.round++;for(const u of s.units)if(u.casualty==='stable'&&u.recoveryTurns<=0){u.casualty=null;u.hp=RECOVERY_HP;log(s,u.name+' is back on their feet / '+RECOVERY_HP+' HP, exhausted.');}for(const p of squad(s)){recoverAim(p,()=>random(s));p.ap=p.burningTurns?0:turnAP(p);p.overwatch=null;settleStress(p,2);}for(const p of s.units)if(p.team==='squad'&&p.away&&p.hp>0){recoverAim(p,()=>random(s));p.ap=turnAP(p);p.away.ap=p.ap;}/* a comrade waiting beyond the edge gets the new turn too */}
 export function stepEnemy(s){
  if(s.phase!=='enemy')return false;
  const g=s.units[s.enemyIndex];
@@ -615,7 +623,7 @@ export function boundedRoute(s,g,goals,budget){if(towerForUnit(s,g))return null;
   if(goals.has(p.k))return trace(p.k);
   const hp=p.f-p.g;if(hp<bestH){bestH=hp;best=p;}
   // Lean expansion: the same legality as movementNeighbors (level changes need standing, no cutting a corner past a body) checked against the precomputed occupied set.
-  for(const n of neighbors(s,p,stairs)){const same=n.kind==='ramp'||n.z===p.z;if(!same&&stanceOf(g)!=='standing')continue;if(same&&n.x!==p.x&&n.y!==p.y&&(occupied.has(key(n.x,p.y,p.z))||occupied.has(key(p.x,n.y,p.z))))continue;const k=key(n.x,n.y,n.z),c=p.g+(n.kind==='cliff'?8:same?unit*n.cost:n.cost*movementMultiplier(g));if(occupied.has(k)||c>=(scores.get(k)??Infinity))continue;scores.set(k,c);const q={x:n.x,y:n.y,z:n.z,kind:n.kind,cost:n.kind==='cliff'?8:same?unit*n.cost:n.cost*movementMultiplier(g)};parents.set(k,{parent:p.k,point:q});push({...q,k,g:c,f:c+h(q)});}}
+  for(const n of neighbors(s,p,stairs)){const same=n.kind==='ramp'||n.z===p.z;if(!same&&stanceOf(g)!=='standing')continue;if(same&&n.x!==p.x&&n.y!==p.y&&(occupied.has(key(n.x,p.y,p.z))||occupied.has(key(p.x,n.y,p.z))))continue;const k=key(n.x,n.y,n.z),c=p.g+(n.kind==='cliff'?8*injuryMovement(g):same?unit*n.cost:n.cost*movementMultiplier(g));if(occupied.has(k)||c>=(scores.get(k)??Infinity))continue;scores.set(k,c);const q={x:n.x,y:n.y,z:n.z,kind:n.kind,cost:n.kind==='cliff'?8*injuryMovement(g):same?unit*n.cost:n.cost*movementMultiplier(g)};parents.set(k,{parent:p.k,point:q});push({...q,k,g:c,f:c+h(q)});}}
  // Out of budget: head for the closest tile explored (partial route), or give up when nothing is closer than where the guard stands.
  return best===first||!Number.isFinite(bestH)?null:trace(best.k);
 }

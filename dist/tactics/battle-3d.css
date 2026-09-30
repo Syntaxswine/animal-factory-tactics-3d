@@ -5,3 +5,5 @@
 #game-clock{display:block;font-variant-numeric:tabular-nums;color:#f6d9a1;white-space:nowrap}#pause[aria-pressed="true"]{background:#793a31;color:#fff}
 
 #hint{right:14px;width:fit-content;max-width:calc(100% - 28px)}
+
+#shot-planner table{width:100%;border-collapse:collapse;font-size:11px}#shot-planner th,#shot-planner td{padding:3px;text-align:left}#shot-planner button{width:100%;font-size:11px;padding:6px 3px}#shot-planner button[aria-pressed="true"]{outline:2px solid #b43b2d;background:#ead5a5;color:#201a16}#shot-planner caption{text-align:left;font-weight:bold;margin:8px 0}#shot-planner small{display:block;line-height:1.4}

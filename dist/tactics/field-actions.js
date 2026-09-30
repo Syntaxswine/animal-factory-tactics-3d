@@ -41,7 +41,7 @@ export function performInteraction(s,u,kind,target){
  if(kind==='stabilize'){if(!stabilize(s,u,target))return false;}else u.ap-=p.cost;spendStamina(u,p.stamina);u.overwatch=null;let result='';
  if(kind==='stabilize'){result='stabilized '+target.name+'.';}
  else if(kind==='rest'){u.stamina=Math.min(u.maxStamina,u.stamina+p.amount);result='rested: +'+Math.round(p.amount)+' stamina.';}
- else if(kind==='heal'){u.medkits--;target.hp+=p.amount;result='treated '+target.name+': +'+p.amount+' HP.';}
+ else if(kind==='heal'){u.medkits--;target.hp+=p.amount;if(target.hp>=target.maxHp)delete target.legWound;result='treated '+target.name+': +'+p.amount+' HP.';}
  else if(kind==='repair'){consumeTool(u,'repairKit');target.condition=(target.condition??100)+p.amount;result='repaired '+target.kind+': '+target.condition+'%'+(target.condition===100?' / working.':' / still offline.');}
  else {s.interactionSeed=(Math.imul((s.interactionSeed??s.seed)>>>0,1664525)+1013904223)>>>0;const success=s.interactionSeed/4294967296*100<p.chance;if(success){delete s.edgeLocks[target];s.edges[target]=EDGES[s.edges[target]].opensTo;}if(kind==='force')emitNoise(s,u,20);result=(success?'opened the locked door.':'failed to open the lock.');}
  if(!combatCosts(s)&&s.clock){advanceEncounterTime(s,p.minutes,false);recoverStamina({...s,units:s.units.filter(v=>v!==u)},p.minutes);s.awarenessSeconds=(s.awarenessSeconds||0)+60*p.minutes;}

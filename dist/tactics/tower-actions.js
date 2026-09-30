@@ -1,3 +1,4 @@
+import {injuryMovement} from './combat-state.js';
 import {canSpendStamina,spendStamina,movementStamina} from './stamina.js';
 import {TOWERS,towerEntry,towerSlots,towerForUnit,towerPost} from './tower-geometry.js';
 import {canControl,combatCosts,refresh,emitNoise} from './core/engine.js';
@@ -8,10 +9,10 @@ const vacant=(s,p)=>!s.units.some(u=>u.x===p.x&&u.y===p.y&&(u.z||0)===(p.z||0)&&
 export function towerClimbPreview(s,u){
  const occupied=towerForUnit(s,u),tower=occupied||(s.props||[]).find(p=>TOWERS[p.kind]&&(()=>{const e=towerEntry(p);return e.x===u?.x&&e.y===u?.y&&e.z===(u?.z||0);})());
  if(!tower)return {ok:false,reason:'Stand at a tower entrance.',tower:null};
- const stamina=movementStamina(u,{x:u.x,y:u.y,z:(u.z||0)+1});
+ const cost=TOWER_CLIMB_AP*injuryMovement(u),stamina=movementStamina(u,{x:u.x,y:u.y,z:(u.z||0)+1});
  const destination=occupied?towerEntry(tower):towerSlots(tower).find(p=>vacant(s,p));
- let reason='';if(!canControl(s,u)||s.queue.length)reason='Cannot climb now.';else if(!canSpendStamina(u,stamina))reason='Climbing needs '+Math.ceil(stamina)+' stamina.';else if(u.stance!=='standing')reason='Stand up to climb.';else if(combatCosts(s)&&u.ap<TOWER_CLIMB_AP)reason='Climbing needs 6 AP.';else if(!destination||!vacant(s,destination))reason=occupied?'Tower exit is occupied.':'All tower posts are occupied.';else if(occupied&&!passable(s,destination))reason='Tower exit is blocked.';
- return {ok:!reason,reason,tower,destination,descending:!!occupied,cost:TOWER_CLIMB_AP,stamina};
+ let reason='';if(!canControl(s,u)||s.queue.length)reason='Cannot climb now.';else if(!canSpendStamina(u,stamina))reason='Climbing needs '+Math.ceil(stamina)+' stamina.';else if(u.stance!=='standing')reason='Stand up to climb.';else if(combatCosts(s)&&u.ap<cost)reason='Climbing needs '+cost+' AP.';else if(!destination||!vacant(s,destination))reason=occupied?'Tower exit is occupied.':'All tower posts are occupied.';else if(occupied&&!passable(s,destination))reason='Tower exit is blocked.';
+ return {ok:!reason,reason,tower,destination,descending:!!occupied,cost,stamina};
 }
 export function climbTower(s,u){const r=towerClimbPreview(s,u);if(!r.ok)return false;
  const pose=()=>({x:u.x,y:u.y,z:u.z||0,...(u.towerPost?{towerPost:{...u.towerPost}}:{})}),from=pose(),combat=combatCosts(s);
