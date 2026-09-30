@@ -13,7 +13,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city--land-road-en",
@@ -25,7 +26,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city--land-road-ens",
@@ -37,7 +39,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city--land-road-ensw",
@@ -49,7 +52,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 1
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city--land-road-ew",
@@ -61,7 +65,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 2
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city--river-e1-w1-road-ns",
@@ -73,7 +78,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city--river-e1-w2-road-ns",
@@ -85,7 +91,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory--land-road-e",
@@ -99,7 +106,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory--land-road-en",
@@ -113,7 +121,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory--land-road-ens",
@@ -127,7 +136,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory--land-road-ensw",
@@ -141,7 +151,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 1
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory--land-road-ew",
@@ -155,7 +166,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 2
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory--river-e1-w1-road-ns",
@@ -169,7 +181,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory--river-e1-w2-road-ns",
@@ -183,7 +196,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory-workshop--land-road-e",
@@ -198,7 +212,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory-workshop--land-road-en",
@@ -213,7 +228,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory-workshop--land-road-ens",
@@ -228,7 +244,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory-workshop--land-road-ensw",
@@ -243,7 +260,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 1
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory-workshop--land-road-ew",
@@ -258,7 +276,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 2
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory-workshop--river-e1-w1-road-ns",
@@ -273,7 +292,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-factory-workshop--river-e1-w2-road-ns",
@@ -288,7 +308,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-workshop--land-road-e",
@@ -302,7 +323,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-workshop--land-road-en",
@@ -316,7 +338,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-workshop--land-road-ens",
@@ -330,7 +353,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-workshop--land-road-ensw",
@@ -344,7 +368,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 1
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-workshop--land-road-ew",
@@ -358,7 +383,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 2
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-workshop--river-e1-w1-road-ns",
@@ -372,7 +398,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "city-workshop--river-e1-w2-road-ns",
@@ -386,7 +413,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--cliff-e1-n1-road-none",
@@ -398,7 +426,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 8
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--cliff-e1-n2-road-none",
@@ -410,7 +439,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--cliff-e1-s1-road-none",
@@ -422,7 +452,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--cliff-e1-w1-road-none",
@@ -434,7 +465,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--cliff-e1-w1-road-ns",
@@ -446,7 +478,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--cliff-e1-w2-road-none",
@@ -458,7 +491,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--cliff-e1-w2-road-ns",
@@ -470,7 +504,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--land-road-en",
@@ -482,7 +517,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--land-road-ens",
@@ -494,7 +530,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--land-road-ensw",
@@ -506,7 +543,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 1
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--land-road-ew",
@@ -518,7 +556,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 2
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--land-road-none",
@@ -530,7 +569,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 1
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--river-e1-n1-road-none",
@@ -542,7 +582,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 8
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--river-e1-n2-road-none",
@@ -554,7 +595,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--river-e1-s1-road-none",
@@ -566,7 +608,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--river-e1-w1-road-none",
@@ -578,7 +621,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--river-e1-w1-road-ns",
@@ -590,7 +634,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--river-e1-w2-road-none",
@@ -602,7 +647,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "countryside--river-e1-w2-road-ns",
@@ -614,7 +660,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "fortress--land-road-e",
@@ -626,7 +673,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "fortress--land-road-en",
@@ -638,7 +686,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "fortress--land-road-ens",
@@ -650,7 +699,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "fortress--land-road-ensw",
@@ -662,7 +712,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 1
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "fortress--land-road-ew",
@@ -674,7 +725,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 2
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town--land-road-e",
@@ -686,7 +738,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town--land-road-en",
@@ -698,7 +751,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town--land-road-ens",
@@ -710,7 +764,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town--land-road-ensw",
@@ -722,7 +777,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 1
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town--land-road-ew",
@@ -734,7 +790,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 2
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town--river-e1-w1-road-ns",
@@ -746,7 +803,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town--river-e1-w2-road-ns",
@@ -758,7 +816,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town-workshop--land-road-e",
@@ -772,7 +831,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town-workshop--land-road-en",
@@ -786,7 +846,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town-workshop--land-road-ens",
@@ -800,7 +861,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town-workshop--land-road-ensw",
@@ -814,7 +876,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 1
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town-workshop--land-road-ew",
@@ -828,7 +891,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 2
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town-workshop--river-e1-w1-road-ns",
@@ -842,7 +906,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "town-workshop--river-e1-w2-road-ns",
@@ -856,7 +921,8 @@
         "medium",
         "hard"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "tutorial-step-1",
@@ -866,7 +932,8 @@
       "difficulties": [
         "easy"
       ],
-      "orientations": 4
+      "orientations": 4,
+      "authoredVariants": 1
     },
     {
       "id": "tutorial-step-2",
@@ -876,7 +943,8 @@
       "difficulties": [
         "easy"
       ],
-      "orientations": 4
+      "orientations": 4,
+      "authoredVariants": 1
     },
     {
       "id": "tutorial-step-3",
@@ -886,7 +954,8 @@
       "difficulties": [
         "easy"
       ],
-      "orientations": 4
+      "orientations": 4,
+      "authoredVariants": 1
     },
     {
       "id": "tutorial-step-4",
@@ -896,7 +965,8 @@
       "difficulties": [
         "easy"
       ],
-      "orientations": 4
+      "orientations": 4,
+      "authoredVariants": 1
     },
     {
       "id": "tutorial-step-5",
@@ -906,7 +976,8 @@
       "difficulties": [
         "easy"
       ],
-      "orientations": 4
+      "orientations": 4,
+      "authoredVariants": 1
     },
     {
       "id": "village--land-road-e",
@@ -917,7 +988,8 @@
         "easy",
         "medium"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "village--land-road-en",
@@ -928,7 +1000,8 @@
         "easy",
         "medium"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "village--land-road-ens",
@@ -939,7 +1012,8 @@
         "easy",
         "medium"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "village--land-road-ensw",
@@ -950,7 +1024,8 @@
         "easy",
         "medium"
       ],
-      "orientations": 1
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "village--land-road-ew",
@@ -961,7 +1036,8 @@
         "easy",
         "medium"
       ],
-      "orientations": 2
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "village--river-e1-w1-road-ns",
@@ -972,7 +1048,8 @@
         "easy",
         "medium"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     },
     {
       "id": "village--river-e1-w2-road-ns",
@@ -983,7 +1060,8 @@
         "easy",
         "medium"
       ],
-      "orientations": 4
+      "orientations": 8,
+      "authoredVariants": 0
     }
   ]
 }

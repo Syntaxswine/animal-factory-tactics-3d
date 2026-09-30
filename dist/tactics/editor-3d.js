@@ -1,3 +1,4 @@
+import {installSectorSave} from './editor-sector-save.js';
 import {expandPlaceholder} from './sector-placeholder.js';
 import {blockCanvas,extractBlock} from './core/blocks.js';
 import {blankMap} from './core/maps.js';
@@ -57,6 +58,7 @@ new ResizeObserver(()=>dirty=true).observe(canvas);window.addEventListener('page
 async function changed(){loading=true;try{const prior=selection,identity=selection?.data?.character?.id;await scene.update(documentModel);select(identity?documentModel.characterSelection(identity):prior?documentModel.inspect(prior.x,prior.y,prior.z,{mode:prior.type==='prop'?'prop':'auto'}):null);$('name').textContent=documentModel.map.name;$('counts').textContent=`${documentModel.size} × ${documentModel.size} · ${documentModel.map.guards.length} placed characters · ${documentModel.map.props.length} objects · ${documentModel.map.canopies?.length||0} decorative roofs`;dirty=true;}finally{loading=false;}}
 async function switchWorkspace(mode){if(loading)return;const next=workspaces[mode]||new EditingDocument().open(JSON.stringify(mode==='block'?extractBlock(blockCanvas('New block')):blankMap('New design')));await open(next);}
 const tools=installEditing({canvas,scene,getDocument:()=>documentModel,getSelection:()=>selection,open,changed,status,isLoading:()=>loading,switchWorkspace,hasUnsaved:()=>Object.values(workspaces).some(d=>d.changed)});
+installSectorSave({getDocument:()=>documentModel,status});
 window.editor3d={open,select,changed,apply:command=>tools.apply(command),validate:()=>documentModel.validate(),export:()=>documentModel.export(),inspect:(x,y,z,options)=>documentModel.inspect(x,y,z,options),get document(){return documentModel;},get scene(){return scene;},get loading(){return loading;},get selection(){return selection;},view};
 async function initialMap(){
  const params=new URLSearchParams(location.search),id=params.get('sectorTemplate');if(!id){await open(JSON.stringify(blankMap('New design')));return;}

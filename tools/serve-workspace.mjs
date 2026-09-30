@@ -1,3 +1,14 @@
-// Dedicated preview for the independent AnimalFactory3D workspace.
-process.env.PORT ||= '4363';
-await import('./serve.mjs');
+import {createServer} from 'node:http';import fs from 'node:fs/promises';import path from 'node:path';import {fileURLToPath} from 'node:url';import {pathToFileURL} from 'node:url';import {randomUUID} from 'node:crypto';import {exportSectors,saveVariant} from './sector-authoring.mjs';
+export function createWorkspaceServer({root=fileURLToPath(new URL('../dist/',import.meta.url)),source=fileURLToPath(new URL('../../sectors/',import.meta.url)),runtime=path.join(root,'tactics/sector-library')}={}){const token=randomUUID();exportSectors(source,runtime);
+ const server=createServer(async(req,res)=>{const send=(code,data)=>{res.writeHead(code,{'Content-Type':'application/json','Cache-Control':'no-store'}).end(JSON.stringify(data));};try{
+ const port=server.address().port,origin='http://127.0.0.1:'+port;
+ if(req.headers.host!=='127.0.0.1:'+port&&req.headers.host!=='localhost:'+port)return send(403,{error:'Local host required.'});
+ const url=new URL(req.url,origin);if(url.pathname.startsWith('/api/sector-authoring')){
+  if(req.method==='GET'&&url.pathname==='/api/sector-authoring')return send(200,{token,source:'AnimalFactory3D/sectors'});
+  const validOrigins=[origin,'http://localhost:'+port];if(req.method!=='POST'||url.pathname!=='/api/sector-authoring/variants'||!validOrigins.includes(req.headers.origin)||req.headers['x-sector-token']!==token||!req.headers['content-type']?.startsWith('application/json'))return send(403,{error:'Use the local editor to save variants.'});
+  const parts=[];let bytes=0;for await(const part of req){bytes+=part.length;if(bytes>5*1024*1024)return send(413,{error:'Map exceeds 5 MB.'});parts.push(part);}const saved=saveVariant(source,runtime,JSON.parse(Buffer.concat(parts).toString('utf8')));return send(201,saved);
+ }
+ if(!['GET','HEAD'].includes(req.method))return send(405,{error:'Method not allowed.'});const sector=url.pathname.startsWith('/tactics/sector-library/'),base=sector?runtime:root,relative=sector?url.pathname.slice('/tactics/sector-library'.length):(url.pathname==='/'?'/tactics-3d.html':url.pathname),file=path.resolve(base,'.'+decodeURIComponent(relative));if(!file.startsWith(path.resolve(base)+path.sep))return send(403,{error:'Invalid path.'});const data=await fs.readFile(file);res.writeHead(200,{'Content-Type':({'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.json':'application/json'})[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store'});res.end(req.method==='HEAD'?undefined:data);
+ }catch(e){send(req.url.startsWith('/api/')?400:404,{error:e.message});}
+});return server;}
+if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){const port=Number(process.env.PORT||4363);createWorkspaceServer().listen(port,'127.0.0.1',()=>console.log('Workspace editor: http://127.0.0.1:'+port+'/tactics/sector-library.html'));}
