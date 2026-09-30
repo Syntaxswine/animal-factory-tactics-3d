@@ -27,25 +27,29 @@ export function shotForecast(s,a,b,p,{samples=96}={}){
 }
 
 export function renderShotPlanner(node,s,a,b,{zone,aim,burst,onSelect}){
- node.replaceChildren();if(!b||!supportsAim(WEAPONS[a.weapon]))return;
- const table=document.createElement('table'),caption=document.createElement('caption');
- caption.textContent=`Plan shot · ${(Math.hypot(a.x-b.x,a.y-b.y)*METRES_PER_TILE).toFixed(1)} m`;
- table.append(caption);
- const heading=document.createElement('tr');for(const title of ['Target','Hip','Aimed','Full']){const th=document.createElement('th');th.textContent=title;heading.append(th);}table.append(heading);
- for(const part of ['head','torso','legs','weapon']){
-  const row=document.createElement('tr'),label=document.createElement('th');label.textContent=part[0].toUpperCase()+part.slice(1);row.append(label);
-  for(const key of Object.keys(AIM_LEVELS)){
-   const cell=document.createElement('td'),button=document.createElement('button'),p=previewAttack(s,a,b,burst,part,null,key),forecast=shotForecast(s,a,b,p);
-   button.setAttribute('aria-pressed',String(zone===part&&aim===key));
-   button.textContent=forecast?`${forecast.map(r=>r.selected+'%').join(' / ')} · ${p.cost} AP`:`— · ${p.cost??'—'} AP`;
-   button.title=forecast?`${AIM_LEVELS[key].label} at ${part}. Hit selected part: ${forecast.map(r=>r.selected+'%').join(', ')}. Hit anywhere: ${forecast.map(r=>r.any+'%').join(', ')}. Approximate per-round chances; shotgun: at least one pellet. Expected damage per hit: ${p.damage}.`:p.reason;
-   button.disabled=!p.ok;button.onclick=()=>onSelect(part,key);cell.append(button);row.append(cell);
-  }
-  table.append(row);
+ const focused=node.contains(document.activeElement)?document.activeElement.dataset.choice:null;
+ node.replaceChildren();if(!b)return;
+ const heading=document.createElement('h2');heading.id='shot-title';heading.textContent=b.name;
+ const subtitle=document.createElement('p');subtitle.className='shot-distance';subtitle.textContent=WEAPONS[a.weapon].name+' · '+(Math.hypot(a.x-b.x,a.y-b.y)*METRES_PER_TILE).toFixed(1)+' m';node.append(heading,subtitle);
+ if(!supportsAim(WEAPONS[a.weapon])){const note=document.createElement('p');note.textContent='Use Fire to attack with your held weapon.';node.append(note);return;}
+ const body=document.createElement('div');body.className='shot-body';
+ body.innerHTML='<svg viewBox="0 0 320 300" aria-hidden="true"><defs><pattern id="shot-lines" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M 12 0 L 0 0 0 12" fill="none" stroke="currentColor" stroke-opacity=".12"/></pattern></defs><rect width="320" height="300" fill="url(#shot-lines)"/><path class="body-outline" data-zone="head" d="M140 60 L133 41 144 29 156 38 165 29 179 41 173 60 Q174 78 158 82 Q140 79 140 60 Z"/><path class="body-outline" data-zone="torso" d="M139 88 Q158 82 179 88 L193 155 177 164 174 137 174 173 137 173 137 133 128 166 113 158 Z"/><path class="body-outline" data-zone="legs" d="M137 173 H174 L177 266 H159 L155 194 150 266 H132 Z"/><path data-zone="weapon" class="body-weapon" d="M129 125 L194 148 192 160 157 148 150 164 141 160 146 144 125 139 Z"/><path class="shot-leaders" d="M145 64 H96 M141 109 H219 M142 223 H94 M175 148 H220"/></svg>';
+ body.querySelector('svg').addEventListener('click',event=>{const part=event.target.dataset.zone;if(part)onSelect(part,aim);});
+ const names={head:'Head',torso:'Torso',legs:'Legs',weapon:'Weapon'};
+ for(const part of Object.keys(names)){
+  const p=previewAttack(s,a,b,burst,part,null,aim),forecast=shotForecast(s,a,b,p),button=document.createElement('button');
+  button.className='body-target target-'+part;button.dataset.choice=part;button.setAttribute('aria-pressed',String(zone===part));
+  button.textContent=names[part]+' · '+(forecast?'≈ '+forecast[0].selected+'%':'—');button.title=p.reason||'Select '+part;button.onclick=()=>onSelect(part,aim);body.append(button);
  }
- node.append(table);
- const detail=document.createElement('p'),p=previewAttack(s,a,b,burst,zone,null,aim),forecast=shotForecast(s,a,b,p);
- detail.textContent=forecast?`${AIM_LEVELS[aim].label} → ${zone}: selected part ≈ ${forecast.map(r=>r.selected+'%').join(' / ')}; anywhere on target ≈ ${forecast.map(r=>r.any+'%').join(' / ')}. ${p.cost} AP total.${burst?' Values follow burst order.':''}`:p.reason;
- const note=document.createElement('small');note.textContent='Estimates use current collision shapes and miss rules. Full aim removes the aim penalty; wounds, fatigue, range and cover still matter. Chances assume each round fires.';
- node.append(detail,note);
+ node.append(body);
+ const modes=document.createElement('div');modes.className='shot-aims';modes.setAttribute('aria-label','Aim level');
+ for(const [key,value] of Object.entries(AIM_LEVELS)){
+  const p=previewAttack(s,a,b,burst,zone,null,key),forecast=shotForecast(s,a,b,p),button=document.createElement('button');button.dataset.choice=key;button.dataset.aim=key;button.setAttribute('aria-pressed',String(aim===key));
+  const icon=document.createElement('span');icon.className='aim-icon aim-'+key;icon.setAttribute('aria-hidden','true');icon.textContent=key==='hip'?'•':key==='aimed'?'⊕':'◎';
+  const label=document.createElement('strong');label.textContent=value.label;const cost=document.createElement('span');cost.textContent=p.cost+' AP · '+(forecast?'≈ '+forecast[0].selected+'%':'—');button.append(icon,label,cost);button.title=p.reason||value.label;button.disabled=!!a.pinned&&key!=='hip';button.onclick=()=>onSelect(zone,key);modes.append(button);
+ }
+ node.append(modes);
+ const detail=document.createElement('p'),p=previewAttack(s,a,b,burst,zone,null,aim),forecast=shotForecast(s,a,b,p);detail.className='shot-detail';detail.setAttribute('aria-live','polite');
+ detail.textContent=forecast?AIM_LEVELS[aim].label+' → '+zone+': selected part ≈ '+forecast.map(r=>r.selected+'%').join(' / ')+'; anywhere ≈ '+forecast.map(r=>r.any+'%').join(' / ')+'. '+p.cost+' AP total.'+(burst?' Values follow burst order.':''):p.reason;
+ node.append(detail);if(focused)node.querySelector('[data-choice="'+focused+'"]')?.focus({preventScroll:true});
 }

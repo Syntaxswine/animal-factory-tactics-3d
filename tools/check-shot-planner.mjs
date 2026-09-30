@@ -18,19 +18,22 @@ try{
  // Find an actual pickable point on the target rather than guessing screen scale.
  const pick=await page.evaluate(()=>{const canvas=document.getElementById('battle'),r=canvas.getBoundingClientRect(),p=battle3d.project(battle3d.state.units[4]);for(let y=p.y-65;y<p.y+15;y+=3)for(let x=p.x-25;x<p.x+25;x+=3)if(battle3d.renderer.pick(x,y,r.width,r.height)===4)return {x:r.x+x,y:r.y+y};return null;});
  assert.ok(pick,'Target should be pickable');await page.mouse.click(pick.x,pick.y);
- await page.waitForSelector('#shot-planner table');assert.equal(await page.locator('#shot-planner table button').count(),12);
- const fullLeg=page.locator('#shot-planner tr').nth(3).locator('button').nth(2);assert.equal(await fullLeg.isEnabled(),true);await fullLeg.click();
- assert.equal(await page.locator('#aim-level').inputValue(),'full');assert.match(await page.locator('#shot-planner p').textContent(),/Full aim → legs/);
- await page.check('#burst-fire');assert.match(await page.locator('#shot-planner p').textContent(),/burst order/);
+ await page.waitForSelector('#shot-popup[open]');assert.equal(await page.locator('.body-target').count(),4);assert.equal(await page.locator('.shot-aims button').count(),3);
+ await page.locator('svg [data-zone=legs]').click({position:{x:8,y:45}});await page.click('[data-aim="full"]');
+ assert.equal(await page.locator('#aim-level').inputValue(),'full');assert.match(await page.locator('.shot-detail').textContent(),/Full aim → legs/);
+ await page.check('#burst-fire');assert.match(await page.locator('.shot-detail').textContent(),/burst order/);
  await page.evaluate(()=>{battle3d.state.units[0].pinned=true;battle3d.state.revision++;});await page.locator('#aim-level').dispatchEvent('change');
- assert.equal(await page.locator('#shot-planner tr').nth(2).locator('button').nth(2).isDisabled(),true);assert.equal(await page.locator('#shot-planner tr').nth(2).locator('button').nth(0).isEnabled(),true);
+ assert.equal(await page.locator('[data-aim=full]').isDisabled(),true);assert.equal(await page.locator('[data-aim=hip]').isEnabled(),true);
  await page.evaluate(()=>{battle3d.state.units[0].pinned=false;battle3d.state.revision++;});await page.locator('#aim-level').dispatchEvent('change');
- await page.uncheck('#burst-fire');await page.locator('#shot-planner tr').nth(2).locator('button').nth(1).click();
- fs.mkdirSync(new URL('../artifacts/',import.meta.url),{recursive:true});await page.locator('#shot-planner').screenshot({path:fileURLToPath(new URL('../artifacts/shot-planner.png',import.meta.url))});
+ await page.uncheck('#burst-fire');await page.click('[data-choice=torso]');await page.click('[data-aim=aimed]');
+ fs.mkdirSync(new URL('../artifacts/',import.meta.url),{recursive:true});await page.locator('#shot-popup').screenshot({path:fileURLToPath(new URL('../artifacts/shot-planner.png',import.meta.url))});
  const before=await page.evaluate(()=>({ap:battle3d.state.units[0].ap,ammo:battle3d.state.units[0].ammo.assault}));
- await page.click('#pause');await page.click('#fire');
+ await page.keyboard.press('Escape');assert.equal(await page.locator('#shot-popup').isVisible(),false);
+ assert.equal(await page.evaluate(()=>battle3d.state.units[0].ap),before.ap);
+ await page.click('#pause');await page.mouse.click(pick.x,pick.y);assert.equal(await page.evaluate(()=>battle3d.paused),true);
+ await page.locator('#shot-popup').screenshot({path:fileURLToPath(new URL('../artifacts/shot-planner.png',import.meta.url))});
+ await page.click('#fire');assert.equal(await page.locator('#shot-popup').isVisible(),false);
  const after=await page.evaluate(()=>({ap:battle3d.state.units[0].ap,ammo:battle3d.state.units[0].ammo.assault}));
  assert.equal(after.ap,before.ap-6);assert.equal(after.ammo,before.ammo-1);assert.deepEqual(errors,[]);
- console.log('Live planner: 12 choices, body-part selection, burst values, pin restrictions and aimed firing AP/ammo pass.');
+ console.log('Graphical popup: target click, body selection, aim controls, burst values, pin restrictions, Escape cancellation, planning pause and firing AP/ammo pass.');
 }finally{await browser.close();}
-

@@ -1,7 +1,9 @@
 # Shot planning and combat pressure
 
-The 3D encounter now has a selectable body-part/aim matrix and a burst toggle.
-Selecting a cell plans the shot; Fire commits it. The existing Weapon target
+Clicking a visible opponent opens a graphical shot-planning popup. Click a
+body region or its labeled button, then choose one of three aim controls. A
+burst toggle shows per-round estimates. Planning pauses simulation; Fire
+commits the shot. Escape or × cancels without spending AP. The existing Weapon target
 remains available alongside Head, Torso and Legs.
 
 ## Agreed rules and initial tuning
