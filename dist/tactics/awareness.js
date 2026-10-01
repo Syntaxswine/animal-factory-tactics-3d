@@ -1,5 +1,6 @@
 import {towerForUnit,unitBaseHeight} from './tower-geometry.js';
-import {inCone} from './core/perception.js';
+import {inCone,sightOf} from './core/perception.js';
+import {CHARACTER_RANGE} from './core/visibility.js';
 import {lightSources,lightBrightness,lightConeFactor,towerBlocksLight} from './light-sources.js';
 import {woodlandDepth} from './core/woodland.js';
 import {daylightAt} from './daylight.js';
@@ -38,6 +39,12 @@ export function illuminationAt(s,u,zone='torso'){
  }
  return Math.min(1,brightness);
 }
+// Ordinary lit targets need no recognition roll, including at the cone edges.
+// Keep the overall species range, body-ray occlusion and a daylight-shade floor.
+export function ordinaryReveals(s,observer,target,zones){
+ if(target.sneaking||!inCone(observer,target)||Math.hypot(observer.x-target.x,observer.y-target.y)>CHARACTER_RANGE*sightOf(observer).range)return false;
+ return zones(s,observer,target).some(zone=>['head','torso','legs'].includes(zone)&&illuminationAt(s,target,zone)>=.25);
+}
 export function awarenessRate({distance,exposure,light,contrast=0,perception=50,stealth=20,sneaking=false,running=false,moving=false,stance='standing',alert=false,concealment=0}){
  const skill=clamp(1+(perception-stealth)/100,.35,1.8),motion=moving?(running?1.65:1.2):.65;
  const posture=stance==='prone'?.45:stance==='kneeling'?.75:1;
@@ -64,7 +71,7 @@ export function updateAwareness(s,{geometry,zones}){
     }
    }
    record.observerAP=observer.ap;record.targetAP=target.ap;record.combat=combat;record.round=s.round;record.signature=signature;
-   const spotlit=spotlightReveals(s,observer,target,zones),candidate=spotlit?2:geometry(s,observer,target),distance=Math.hypot(observer.x-target.x,observer.y-target.y,((observer.z||0)-(target.z||0))*3);
+   const spotlit=spotlightReveals(s,observer,target,zones),ordinary=ordinaryReveals(s,observer,target,zones),candidate=spotlit||ordinary?2:geometry(s,observer,target),distance=Math.hypot(observer.x-target.x,observer.y-target.y,((observer.z||0)-(target.z||0))*3);
    if(candidate){
     const exposed=zones(s,observer,target).filter(z=>['head','torso','legs'].includes(z)),exposure=exposed.reduce((n,z)=>n+(z==='torso'?.5:.25),0);
     const brightness=exposed.length?exposed.reduce((n,z)=>n+light(target,z),0)/exposed.length:0;
@@ -76,7 +83,7 @@ export function updateAwareness(s,{geometry,zones}){
     record.score=clamp(record.score+rate*elapsed,0,candidate===2?100:99);
     // Close, clearly exposed targets are unmistakable in daylight, including
     // ambient daylight shade. Geometry still enforces facing and solid cover.
-    if(spotlit||candidate===2&&(distance<=1.5&&exposure>=.5||distance<=3&&brightness>=.25&&exposure>=.25))record.score=100;
+    if(spotlit||ordinary||candidate===2&&(distance<=1.5&&exposure>=.5||distance<=3&&brightness>=.25&&exposure>=.25))record.score=100;
     record.light=brightness;record.exposure=exposure;record.rate=rate;
     if(candidate===2&&recognized(record))record.lastKnown={x:target.x,y:target.y,z:target.z||0};
    }else record.score=Math.max(0,record.score-AWARENESS.decay*elapsed);
@@ -88,7 +95,7 @@ export function updateAwareness(s,{geometry,zones}){
 }
 export function awarenessPerception(s,a,b,candidate,zones){
  if(!s.rules?.awareness)return candidate;
- if(spotlightReveals(s,a,b,zones))return 2;
+ if(spotlightReveals(s,a,b,zones)||ordinaryReveals(s,a,b,zones))return 2;
  const record=a.awareness?.[b.id],score=record?.score||0;
  return candidate===2&&recognized(record)?2:candidate&&score>=25?1:0;
 }

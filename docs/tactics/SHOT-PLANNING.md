@@ -84,3 +84,11 @@ of 89 despite clear current geometry. Current identification geometry is still
 required; walls, leaving the sight field, or evidence below 25 prevent targeting.
 Regression coverage uses the reported factory positions: Yakov (10,16), Boris
 (16,18), 08:15, Round 1, score 89.4919 with an existing last-known identity.
+
+Ordinary visibility: non-sneaking characters with a visible head, torso or leg
+region at illumination >= 0.25 are immediately identified anywhere within the
+observer cone and overall species sight range (60 tiles before species scaling).
+This includes daylight shade and ordinary lamps, bypassing peripheral acuity,
+woodland recognition penalties and accumulated awareness. Solid body-ray
+occlusion still applies. Sneaking or darker targets retain awareness checks,
+close-contact recognition and the recognition retention threshold described above.

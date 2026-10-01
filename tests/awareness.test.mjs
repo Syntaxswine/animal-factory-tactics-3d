@@ -5,7 +5,7 @@ import {awarenessRate,illuminationAt,updateAwareness} from '../dist/tactics/awar
 import {createGame,refresh,canSee,previewAttack,geometricPerceive,visibleZones,emitNoise} from '../dist/tactics/core/engine.js';
 import {blankMap,parseMap} from '../dist/tactics/core/maps.js';
 import {startEncounterClock,tickEncounterClock} from '../dist/tactics/encounter-clock.js';
-function fixture(minutes=720){const map=blankMap('Awareness');map.time={startMinutes:minutes};map.guards=[{x:30,y:4,z:0,species:'pig-foreman',weapon:'hands',heading:180,perception:70}];const s=createGame(1,map,false,'easy',{awareness:true});s.units.forEach(u=>u.heading=u.team==='squad'?0:180);startEncounterClock(s);refresh(s);return s;}
+function fixture(minutes=720,sneaking=true){const map=blankMap('Awareness');map.time={startMinutes:minutes};map.guards=[{x:18,y:4,z:0,species:'pig-foreman',weapon:'hands',heading:180,perception:70}];const s=createGame(1,map,false,'easy',{awareness:true});s.units.forEach(u=>{u.heading=u.team==='squad'?0:180;u.sneaking=sneaking;u.awareness={};});startEncounterClock(s);refresh(s);return s;}
 test('exposure, light, distance, movement, stance, skills and vigilance affect awareness',()=>{
  const base={distance:12,exposure:1,light:1,moving:true},rate=awarenessRate(base);
  for(const change of [{distance:40},{exposure:.25},{light:.12},{sneaking:true},{stance:'prone'},{stealth:90},{perception:10},{concealment:3},{moving:false}])assert.ok(awarenessRate({...base,...change})<rate,JSON.stringify(change));
@@ -21,7 +21,7 @@ test('recognition requires elapsed exposure, while refresh and queries are free'
  const s=fixture(),a=s.units[0],b=s.units[4];assert.equal(b.perception,70);assert.equal(geometricPerceive(s,a,b),2);assert.equal(canSee(s,a,b),false);
  for(let i=0;i<20;i++){refresh(s);canSee(s,a,b);}assert.equal(a.awareness[b.id].score,0);
  tickEncounterClock(s,1000);assert.ok(a.awareness[b.id].score>=25);assert.equal(canSee(s,a,b),false);
- tickEncounterClock(s,3000);assert.equal(canSee(s,a,b),true);assert.deepEqual(a.awareness[b.id].lastKnown,{x:30,y:4,z:0});
+ tickEncounterClock(s,3000);assert.equal(canSee(s,a,b),true);assert.deepEqual(a.awareness[b.id].lastKnown,{x:18,y:4,z:0});
  const before=a.awareness[b.id].score;tickEncounterClock(s,60000,{paused:true});assert.equal(a.awareness[b.id].score,before);
 });
 test('night delays recognition and fixed exposure ticks are frame-size independent',()=>{
@@ -103,7 +103,24 @@ test('an alerted reachable guard cannot start turn mode without visual contact',
 test('saved factory encounter: Yakov recognizes Boris again at 89 after prior identification',()=>{
  const map=parseMap(fs.readFileSync(new URL('../dist/tactics/default-factory.json',import.meta.url),'utf8')),s=createGame(1947,map,false,'easy',{awareness:true}),a=s.units[0],b=s.units[4];startEncounterClock(s);s.clock.minutes=495;s.phase='player';s.round=1;Object.assign(a,{x:10,y:16,z:0,heading:0,ap:12});Object.assign(b,{x:16,y:18,z:0,heading:-135});a.awareness={[b.id]:{score:89.49189187025337,lastKnown:{x:18,y:20,z:0}}};
  assert.equal(geometricPerceive(s,a,b),2);assert.equal(visibleZones(s,a,b).length,4);assert.equal(canSee(s,a,b),true);assert.equal(previewAttack(s,a,b).ok,true);assert.equal(a.awareness[b.id].score,89.49189187025337,'queries do not award exposure');
- a.awareness[b.id].lastKnown=null;assert.equal(canSee(s,a,b),false,'a new unidentified target still needs recognition');
+ b.sneaking=true;a.awareness[b.id].lastKnown=null;assert.equal(canSee(s,a,b),false,'a new unidentified target still needs recognition');
  a.awareness[b.id].lastKnown={x:18,y:20,z:0};a.awareness[b.id].score=24;assert.equal(canSee(s,a,b),false,'insufficient evidence still loses contact');
  a.awareness[b.id].score=89;for(let y=0;y<40;y++)s.edges['e:12:'+y]='wall';assert.equal(canSee(s,a,b),false,'identity never bypasses a wall');
 });
+
+ test('ordinary daylight targets identify instantly across the cone, without exposure time',()=>{
+  const s=fixture(720,false),a=s.units[0],b=s.units[4];Object.assign(a,{x:35,y:35,heading:0,perception:1});Object.assign(b,{x:35,y:75,stealth:100});a.awareness={};
+  assert.equal(geometricPerceive(s,a,b),0,'peripheral acuity previously prevented identification');
+  assert.equal(canSee(s,a,b),true);assert.deepEqual(a.awareness,{},'queries do not mutate recognition');
+  refresh(s);assert.equal(a.awareness[b.id].score,100);
+  s.upper[0][b.x+','+b.y]='floor';assert.equal(illuminationAt(s,b),.25);assert.equal(canSee(s,a,b),true,'daylight shade');
+  b.x=34;b.y=35;assert.equal(canSee(s,a,b),false,'behind the cone');
+  b.x=100;b.y=35;assert.equal(canSee(s,a,b),false,'outside overall sight range');
+ });
+ test('ordinary reveal preserves stealth, darkness and solid occlusion',()=>{
+  const s=fixture(720,false),a=s.units[0],b=s.units[4];a.awareness={};assert.equal(canSee(s,a,b),true);
+  b.sneaking=true;assert.equal(canSee(s,a,b),false);b.sneaking=false;
+  s.clock.minutes=1260;assert.equal(canSee(s,a,b),false);
+  s.props=[{kind:'floor-lamp',x:b.x,y:b.y+1,z:0,lightMode:'on'}];assert.equal(canSee(s,a,b),true,'ordinary artificial light reveals non-sneaking targets');
+  s.edges['e:10:4']='wall';assert.equal(canSee(s,a,b),false);
+ });
