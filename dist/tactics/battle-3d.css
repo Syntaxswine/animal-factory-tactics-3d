@@ -23,3 +23,5 @@
 @media(max-width:420px){#shot-popup{padding:15px}.shot-body{height:270px}#shot-popup .body-target{min-width:90px;padding:8px 5px;font-size:12px}}
 
 #shot-popup button[aria-pressed=true]:hover:enabled{background:#a33225;color:#fff4d8}.shot-body [data-zone]{cursor:crosshair}.shot-body [data-zone]:hover{fill:#b6563e}
+
+.shot-blockers{border-left:4px solid #a33225;padding:9px 12px;background:#dcc8ac;font-weight:600;line-height:1.5}

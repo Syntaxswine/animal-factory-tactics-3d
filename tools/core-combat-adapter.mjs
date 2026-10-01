@@ -7,6 +7,7 @@ export function adaptCoreCombat(name,data){
  replace('MOVEMENT_MODES[movementModeOf(u)].apMultiplier;','MOVEMENT_MODES[movementModeOf(u)].apMultiplier*injuryMovement(u);');
  replace("q.kind==='cliff'?8:","q.kind==='cliff'?8*injuryMovement(u):");
  s=s.replaceAll("n.kind==='cliff'?8:","n.kind==='cliff'?8*injuryMovement(g):");
+ replace("Not identified: face the target","Selected merc has not identified this target");
  replace('-coverPenalty-(rounds>1?10:0)', '-coverPenalty-(melee?0:accuracyPenalty(a))');
  replace("if(heldWeaponJammed(a))reason=", "if(a.pinned&&aiming.level!=='hip')reason='Pinned: only hip fire available';else if(heldWeaponJammed(a))reason=");
  replace('chance:Math.round(chance),cover,','chance:Math.round(chance),shotChances:Array.from({length:rounds},(_,i)=>roundChance(chance,i)),cover,');

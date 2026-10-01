@@ -6,7 +6,7 @@ import {nearbyCliffClimbs} from '../dist/tactics/cliff-actions.js';
 import {towerClimbPreview,climbTower} from '../dist/tactics/tower-actions.js';
 import {towerEntry} from '../dist/tactics/tower-geometry.js';
 import {shotAim} from '../dist/tactics/aim-levels.js';
-import {shotForecast} from '../dist/tactics/shot-planner.js';
+import {shotForecast,shotBlockers} from '../dist/tactics/shot-planner.js';
 import {incomingFire,woundLeg,turnAP,recoverAim,legImpaired} from '../dist/tactics/combat-state.js';
 import {captureEncounter,restoreEncounter} from '../dist/tactics/encounter-save.js';
 import {startEncounterClock} from '../dist/tactics/encounter-clock.js';
@@ -23,7 +23,7 @@ test('forecast is deterministic and cannot mutate encounter RNG or state',()=>{
  assert.deepEqual(shotForecast(s,a,b,p),forecast);assert.deepEqual(s,before);assert.equal(forecast.length,p.rounds);for(const r of forecast){assert.ok(r.any>=r.selected);assert.ok(r.any<=100&&r.selected>=0);}
 });
 test('solid cover prevents the forecast reporting a hit through a wall',()=>{
- const {s,a,b}=fixture(),p=previewAttack(s,a,b,false,'torso',null,'full');s.map[10][12]='wall';const result=shotForecast(s,a,b,p);assert.equal(result[0].any,0);assert.equal(previewAttack(s,a,b).ok,false);
+ const {s,a,b}=fixture(),p=previewAttack(s,a,b,false,'torso',null,'full');s.map[10][12]='wall';const result=shotForecast(s,a,b,p);assert.equal(result,null);assert.equal(previewAttack(s,a,b).ok,false);
 });
 test('injury and fatigue still reduce fully aimed accuracy',()=>{
  const {s,a,b}=fixture();const rested=previewAttack(s,a,b,false,'torso',null,'full').chance;a.hp=Math.floor(a.maxHp/2);a.stamina=0;assert.ok(previewAttack(s,a,b,false,'torso',null,'full').chance<rested);
@@ -67,3 +67,10 @@ test('save loading validates and preserves optional combat fields; older saves l
  for(const change of [u=>u.pinned=1,u=>u.legWound='yes',u=>u.suppression.attackers.push(999),u=>u.suppression.attackers.push(b.id),u=>u.suppression.round=-1]){const bad=structuredClone(record);change(bad.state.units[0]);assert.throws(()=>restoreEncounter(bad));}
 });
 
+
+test('unaffordable shots retain estimates without allowing execution or changing resources',()=>{
+ const {s,a,b}=fixture();a.ap=0;const before=structuredClone(s),p=previewAttack(s,a,b,false,'torso',null,'full');assert.equal(p.reason,'Not enough AP');assert.ok(shotForecast(s,a,b,p)[0].any>0);assert.match(shotBlockers(s,a,b,p).join(' '),/0 AP.*needs 8 AP/);assert.equal(attack(s,a,b,false,false,'torso',false,'full'),false);assert.deepEqual(s,before);
+});
+test('personal identification and AP blockers are both explained without bypassing sight',()=>{
+ const {s,a,b}=fixture(),friend=s.units[1];s.rules.awareness=true;a.ap=0;a.awareness={[b.id]:{score:0}};Object.assign(friend,{x:10,y:11,heading:0,awareness:{[b.id]:{score:100}}});const p=previewAttack(s,a,b,false,'torso',null,'hip');assert.equal(p.reason,'Selected merc has not identified this target');assert.equal(shotForecast(s,a,b,p),null);const reasons=shotBlockers(s,a,b,p).join(' ');assert.match(reasons,/0 AP/);assert.match(reasons,/not personally identified/);assert.doesNotMatch(reasons,/face the target/);
+});

@@ -22,6 +22,9 @@ try{
  await page.locator('svg [data-zone=legs]').click({position:{x:8,y:45}});await page.click('[data-aim="full"]');
  assert.equal(await page.locator('#aim-level').inputValue(),'full');assert.match(await page.locator('.shot-detail').textContent(),/Full aim → legs/);
  await page.check('#burst-fire');assert.match(await page.locator('.shot-detail').textContent(),/burst order/);
+ await page.evaluate(()=>{battle3d.state.units[0].ap=0;battle3d.state.revision++;});await page.locator('#aim-level').dispatchEvent('change');
+ assert.match(await page.locator('.shot-blockers').textContent(),/0 AP/);assert.match(await page.locator('.target-head').textContent(),/%/);assert.equal(await page.locator('#fire').isDisabled(),true);
+ await page.evaluate(()=>{battle3d.state.units[0].ap=30;battle3d.state.revision++;});await page.locator('#aim-level').dispatchEvent('change');
  await page.evaluate(()=>{battle3d.state.units[0].pinned=true;battle3d.state.revision++;});await page.locator('#aim-level').dispatchEvent('change');
  assert.equal(await page.locator('[data-aim=full]').isDisabled(),true);assert.equal(await page.locator('[data-aim=hip]').isEnabled(),true);
  await page.evaluate(()=>{battle3d.state.units[0].pinned=false;battle3d.state.revision++;});await page.locator('#aim-level').dispatchEvent('change');
