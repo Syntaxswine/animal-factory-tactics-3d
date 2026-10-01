@@ -7,6 +7,8 @@ import {traceProjectile,targetHeight} from './core/projectiles.js';
 import {mapStartMinutes} from './game-clock.js';
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
 export const AWARENESS={suspicious:25,identified:100,decay:2,referencePerception:50};
+// Recognition has hysteresis: a known face does not become unknown at 99%.
+const recognized=record=>!!record&&(record.score>=AWARENESS.identified||!!record.lastKnown&&record.score>=AWARENESS.suspicious);
 const active=u=>u.hp>0&&!u.away&&!['quit','captured'].includes(u.casualty);
 function clearRay(s,origin,direction,reach){const hit=traceProjectile({...s,units:[]},null,origin,direction,reach);return hit.kind==='range'||hit.distance>=reach-1e-6;}
 function lampStrength(s,lamp,origin){
@@ -76,7 +78,7 @@ export function updateAwareness(s,{geometry,zones}){
     // ambient daylight shade. Geometry still enforces facing and solid cover.
     if(spotlit||candidate===2&&(distance<=1.5&&exposure>=.5||distance<=3&&brightness>=.25&&exposure>=.25))record.score=100;
     record.light=brightness;record.exposure=exposure;record.rate=rate;
-    if(candidate===2&&record.score>=100)record.lastKnown={x:target.x,y:target.y,z:target.z||0};
+    if(candidate===2&&recognized(record))record.lastKnown={x:target.x,y:target.y,z:target.z||0};
    }else record.score=Math.max(0,record.score-AWARENESS.decay*elapsed);
    record.spotlit=spotlit;record.position=[target.x,target.y,target.z||0].join(',');record.candidate=candidate;
    observer.awareness[key]=record;
@@ -87,6 +89,6 @@ export function updateAwareness(s,{geometry,zones}){
 export function awarenessPerception(s,a,b,candidate,zones){
  if(!s.rules?.awareness)return candidate;
  if(spotlightReveals(s,a,b,zones))return 2;
- const score=a.awareness?.[b.id]?.score||0;
- return candidate===2&&score>=100?2:candidate&&score>=25?1:0;
+ const record=a.awareness?.[b.id],score=record?.score||0;
+ return candidate===2&&recognized(record)?2:candidate&&score>=25?1:0;
 }

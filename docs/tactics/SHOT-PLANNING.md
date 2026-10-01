@@ -77,3 +77,10 @@ field still apply. Awareness-enabled encounters cannot enter turn mode merely
 because an alerted guard can reach the squad: that threatening guard must have
 visual contact with a merc in either direction, or an attack must occur. Ongoing
 combat, fires and casualty handling retain their existing turn progression.
+
+Recognized targets use a lower retention threshold (25 rather than the initial
+100). This prevents an already identified guard becoming unknown at a score
+of 89 despite clear current geometry. Current identification geometry is still
+required; walls, leaving the sight field, or evidence below 25 prevent targeting.
+Regression coverage uses the reported factory positions: Yakov (10,16), Boris
+(16,18), 08:15, Round 1, score 89.4919 with an existing last-known identity.

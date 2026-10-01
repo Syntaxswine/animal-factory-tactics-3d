@@ -1,8 +1,9 @@
+import fs from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {awarenessRate,illuminationAt,updateAwareness} from '../dist/tactics/awareness.js';
-import {createGame,refresh,canSee,geometricPerceive,visibleZones,emitNoise} from '../dist/tactics/core/engine.js';
-import {blankMap} from '../dist/tactics/core/maps.js';
+import {createGame,refresh,canSee,previewAttack,geometricPerceive,visibleZones,emitNoise} from '../dist/tactics/core/engine.js';
+import {blankMap,parseMap} from '../dist/tactics/core/maps.js';
 import {startEncounterClock,tickEncounterClock} from '../dist/tactics/encounter-clock.js';
 function fixture(minutes=720){const map=blankMap('Awareness');map.time={startMinutes:minutes};map.guards=[{x:30,y:4,z:0,species:'pig-foreman',weapon:'hands',heading:180,perception:70}];const s=createGame(1,map,false,'easy',{awareness:true});s.units.forEach(u=>u.heading=u.team==='squad'?0:180);startEncounterClock(s);refresh(s);return s;}
 test('exposure, light, distance, movement, stance, skills and vigilance affect awareness',()=>{
@@ -97,4 +98,12 @@ test('close identification does not see through solid walls or grant daylight de
 });
 test('an alerted reachable guard cannot start turn mode without visual contact',()=>{
  const s=fixture(),a=s.units[0],b=s.units[4];b.x=a.x+10;b.y=a.y;b.weapon='pistol';b.alert=true;b.state='alert';b.lastKnown={x:a.x,y:a.y,z:0};refresh(s);assert.equal(canSee(s,a,b),false);assert.equal(canSee(s,b,a),false);assert.equal(s.phase,'explore');s.engaged=true;refresh(s);assert.equal(s.phase,'player','actual attack still starts combat');
+});
+
+test('saved factory encounter: Yakov recognizes Boris again at 89 after prior identification',()=>{
+ const map=parseMap(fs.readFileSync(new URL('../dist/tactics/default-factory.json',import.meta.url),'utf8')),s=createGame(1947,map,false,'easy',{awareness:true}),a=s.units[0],b=s.units[4];startEncounterClock(s);s.clock.minutes=495;s.phase='player';s.round=1;Object.assign(a,{x:10,y:16,z:0,heading:0,ap:12});Object.assign(b,{x:16,y:18,z:0,heading:-135});a.awareness={[b.id]:{score:89.49189187025337,lastKnown:{x:18,y:20,z:0}}};
+ assert.equal(geometricPerceive(s,a,b),2);assert.equal(visibleZones(s,a,b).length,4);assert.equal(canSee(s,a,b),true);assert.equal(previewAttack(s,a,b).ok,true);assert.equal(a.awareness[b.id].score,89.49189187025337,'queries do not award exposure');
+ a.awareness[b.id].lastKnown=null;assert.equal(canSee(s,a,b),false,'a new unidentified target still needs recognition');
+ a.awareness[b.id].lastKnown={x:18,y:20,z:0};a.awareness[b.id].score=24;assert.equal(canSee(s,a,b),false,'insufficient evidence still loses contact');
+ a.awareness[b.id].score=89;for(let y=0;y<40;y++)s.edges['e:12:'+y]='wall';assert.equal(canSee(s,a,b),false,'identity never bypasses a wall');
 });
