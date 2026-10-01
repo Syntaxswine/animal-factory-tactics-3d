@@ -1,3 +1,4 @@
+import {guardCone,visibleConeGuards,drawGuardCones} from './guard-cones.js';
 import {walkingRoutes,drawWalkingRoutes} from './walking-preview.js';
 import {renderShotPlanner} from './shot-planner.js';
 import {legImpaired} from './combat-state.js';
@@ -132,6 +133,15 @@ function updateTargetCursor(now){
  else delete canvas.dataset.targetCursor;
 }
 let walkingCacheKey='',walkingCache=[];
+let showGuardCones=true,coneCache=new Map(),coneWorld='',coneCheck=0;
+$('guard-cones').onclick=()=>{showGuardCones=!showGuardCones;$('guard-cones').textContent='Guard cones: '+(showGuardCones?'On':'Off');$('guard-cones').setAttribute('aria-pressed',String(showGuardCones));};
+function showGuardSight(now){
+ if(!showGuardCones||overviewMode)return;
+ if(now-coneCheck>250){const signature=JSON.stringify([state.map,state.upper,state.edges,state.props]);if(signature!==coneWorld){coneCache.clear();coneWorld=signature;}coneCheck=now;}
+ const guards=visibleConeGuards(state,level),cones=[];
+ for(const u of guards){const key=JSON.stringify([u.x,u.y,u.z,u.heading,u.cone,u.species,u.stance,u.towerPost,u.towerElevation]);let entry=coneCache.get(u.id);if(!entry||entry.key!==key){entry={key,points:guardCone(state,u)};coneCache.set(u.id,entry);}cones.push(entry.points);}
+ drawGuardCones(ctx,cones,project);
+}
 function showWalkingRoute(){
  if(overviewMode||shotDialog.open||drag?.moved){walkingCacheKey='';walkingCache=[];return;}
  let goal=null;
@@ -179,7 +189,7 @@ function frame(now){
  try{
   const elapsed=frameClock.sample(now,{paused:paused(),mode:turnBased(state)});presentationTime+=elapsed;renderer.presentationNow=presentationTime;tickEncounterClock(state,elapsed,{paused:paused()||renderer.traversal.busy});syncClock();
   if(!paused()&&!renderer.busy&&presentationTime-lastStep>stepDelay){lastStep=presentationTime;stepDelay=queuedMovementDuration(state);if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);renderer.captureCombat(state);sync();}
-  ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);updateTargetCursor(now);showWalkingRoute();
+  ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);updateTargetCursor(now);showGuardSight(now);showWalkingRoute();
   if(lastLadderPreparing!==renderer.traversal.preparing||lastUIBusy!==renderer.busy||lastUIDiagnostics!==renderer.diagnostics.join('\n')){lastLadderPreparing=renderer.traversal.preparing;lastUIBusy=renderer.busy;sync();}
   for(const u of state.units.filter(v=>v.team==='squad'&&alive(v)&&(v.z||0)===level)){
    const p=project(renderer.displayUnit(u));ctx.strokeStyle=selectedIds.has(u.id)?'#ffe3a0':'#a4d4c2';ctx.lineWidth=u.id===state.selected?2:1;ctx.beginPath();ctx.ellipse(p.x,p.y,17*view.zoom,8*view.zoom,0,0,Math.PI*2);ctx.stroke();
