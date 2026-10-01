@@ -17,6 +17,10 @@ try{
  await page.waitForFunction(()=>battle3d.renderer.models.has(4),{},{timeout:90000});
  // Find an actual pickable point on the target rather than guessing screen scale.
  const pick=await page.evaluate(()=>{const canvas=document.getElementById('battle'),r=canvas.getBoundingClientRect(),p=battle3d.project(battle3d.state.units[4]);for(let y=p.y-65;y<p.y+15;y+=3)for(let x=p.x-25;x<p.x+25;x+=3)if(battle3d.renderer.pick(x,y,r.width,r.height)===4)return {x:r.x+x,y:r.y+y};return null;});
+ const ground=await page.evaluate(()=>{const r=document.getElementById('battle').getBoundingClientRect(),p=battle3d.project({x:12,y:12,z:0});return {x:r.x+p.x,y:r.y+p.y};});
+ await page.mouse.move(ground.x,ground.y);await page.waitForFunction(()=>battle3d.walkingPreview[0]?.path.at(-1)?.x===12&&battle3d.walkingPreview[0]?.path.at(-1)?.y===12);
+ assert.ok(await page.evaluate(()=>battle3d.walkingPreview[0].cost>0));
+ fs.mkdirSync(new URL('../artifacts/',import.meta.url),{recursive:true});await page.locator('#battle').screenshot({path:fileURLToPath(new URL('../artifacts/walking-preview.png',import.meta.url))});
  assert.ok(pick,'Target should be pickable');await page.mouse.move(pick.x,pick.y);
  await page.waitForFunction(()=>document.getElementById('battle').dataset.targetCursor==='red');
  assert.match(await page.locator('#battle').evaluate(e=>getComputedStyle(e).cursor),/data:image/);

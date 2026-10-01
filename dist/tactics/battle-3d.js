@@ -1,3 +1,4 @@
+import {walkingRoutes,drawWalkingRoutes} from './walking-preview.js';
 import {renderShotPlanner} from './shot-planner.js';
 import {legImpaired} from './combat-state.js';
 let shotZone='torso',shotBurst=false;
@@ -130,6 +131,15 @@ function updateTargetCursor(now){
  if(guard?.team==='guard'&&guard.hp>0&&!guard.away&&state.detected.has(guard.id))canvas.dataset.targetCursor=canSee(state,selected(),guard)?'red':'grey';
  else delete canvas.dataset.targetCursor;
 }
+let walkingCacheKey='',walkingCache=[];
+function showWalkingRoute(){
+ if(overviewMode||shotDialog.open||drag?.moved){walkingCacheKey='';walkingCache=[];return;}
+ let goal=null;
+ if(hoverPointer&&!canvas.dataset.targetCursor){const bounds=canvas.getBoundingClientRect(),x=hoverPointer.x-bounds.left,y=hoverPointer.y-bounds.top,px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom);goal={x:Math.round((px+py)/2),y:Math.round((py-px)/2),z:level};}
+ const key=JSON.stringify([state.revision,state.phase,state.selected,level,[...selectedIds],goal,state.queue,state.units.filter(u=>selectedIds.has(u.id)).map(u=>[u.x,u.y,u.z,u.ap,u.stance,u.running,u.sneaking,u.legWound])]);
+ if(key!==walkingCacheKey){walkingCacheKey=key;walkingCache=walkingRoutes(state,[...selectedIds],selected(),goal);}
+ drawWalkingRoutes(ctx,walkingCache,project,level,view.zoom,turnBased(state));
+}
 canvas.addEventListener('pointerdown',e=>{if(e.button!==0||drag)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,select:e.shiftKey};canvas.setPointerCapture(e.pointerId);});
 canvas.addEventListener('pointermove',e=>{hoverPointer={x:e.clientX,y:e.clientY};lastHoverCheck=0;const bounds=canvas.getBoundingClientRect();renderer.wallXray.setPointer(e.clientX-bounds.left,e.clientY-bounds.top);if(!drag||drag.id!==e.pointerId)return;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)drag.moved=true;if(drag.moved&&!drag.select){view.x+=e.clientX-drag.lastX;view.y+=e.clientY-drag.lastY;}drag.lastX=e.clientX;drag.lastY=e.clientY;});
 canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const d=drag;drag=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);const r=canvas.getBoundingClientRect();if(d.select&&d.moved){const ids=rectangleMembers(state.units,level,{x:d.x-r.left,y:d.y-r.top},{x:e.clientX-r.left,y:e.clientY-r.top},u=>project(renderer.displayUnit(u)));if(ids.length){selectedIds=new Set(ids);if(!selectedIds.has(state.selected))state.selected=ids[0];targetId=null;state.queue=[];message(ids.length+' mercs selected. Ground clicks move the group; stance buttons affect the group; Fire and Reload use the primary merc.');sync();}else message('No mercs in that rectangle.');}else if(!d.moved)click(e.clientX-r.left,e.clientY-r.top,d.select);});
@@ -169,7 +179,7 @@ function frame(now){
  try{
   const elapsed=frameClock.sample(now,{paused:paused(),mode:turnBased(state)});presentationTime+=elapsed;renderer.presentationNow=presentationTime;tickEncounterClock(state,elapsed,{paused:paused()||renderer.traversal.busy});syncClock();
   if(!paused()&&!renderer.busy&&presentationTime-lastStep>stepDelay){lastStep=presentationTime;stepDelay=queuedMovementDuration(state);if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);renderer.captureCombat(state);sync();}
-  ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);updateTargetCursor(now);
+  ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);updateTargetCursor(now);showWalkingRoute();
   if(lastLadderPreparing!==renderer.traversal.preparing||lastUIBusy!==renderer.busy||lastUIDiagnostics!==renderer.diagnostics.join('\n')){lastLadderPreparing=renderer.traversal.preparing;lastUIBusy=renderer.busy;sync();}
   for(const u of state.units.filter(v=>v.team==='squad'&&alive(v)&&(v.z||0)===level)){
    const p=project(renderer.displayUnit(u));ctx.strokeStyle=selectedIds.has(u.id)?'#ffe3a0':'#a4d4c2';ctx.lineWidth=u.id===state.selected?2:1;ctx.beginPath();ctx.ellipse(p.x,p.y,17*view.zoom,8*view.zoom,0,0,Math.PI*2);ctx.stroke();
@@ -183,5 +193,5 @@ function frame(now){
  }catch(error){message('Encounter stopped: '+error.message);console.error(error);}
 }
 // Read-only inspection hooks for browser regression checks.
-window.battle3d={get state(){return state;},get renderer(){return renderer;},get clock(){return state.clock;},get paused(){return paused();},get picks(){return picks;},get selectedIds(){return [...selectedIds];},project,view};
+window.battle3d={get state(){return state;},get renderer(){return renderer;},get clock(){return state.clock;},get paused(){return paused();},get picks(){return picks;},get walkingPreview(){return walkingCache;},get selectedIds(){return [...selectedIds];},project,view};
 requestAnimationFrame(frame);
