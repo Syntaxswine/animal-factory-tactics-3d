@@ -88,3 +88,13 @@ test('each mounted tower searchlight immediately reveals targets in its beam',()
   s.props[0].lightMode='off';assert.equal(canSee(s,observer,target),false,kind);
  }
 });
+
+test('two-tile daylight encounters identify both characters immediately, including daylight shade',()=>{
+ for(const minutes of [486,720])for(const shade of [false,true]){const s=fixture(minutes),a=s.units[0],b=s.units[4];b.x=a.x+2;b.y=a.y;b.weapon='pistol';if(shade){s.upper[0][a.x+','+a.y]='floor';s.upper[0][b.x+','+b.y]='floor';}refresh(s);assert.equal(canSee(s,a,b),true);assert.equal(canSee(s,b,a),true);assert.equal(s.phase,'player');assert.equal(a.awareness[b.id].score,100);assert.equal(b.awareness[a.id].score,100);}
+});
+test('close identification does not see through solid walls or grant daylight detection in darkness',()=>{
+ for(const dark of [false,true]){const s=fixture(dark?1260:720),a=s.units[0],b=s.units[4];b.x=a.x+2;b.y=a.y;if(!dark)s.edges['e:'+a.x+':'+a.y]='wall';refresh(s);assert.equal(canSee(s,a,b),false);assert.equal(canSee(s,b,a),false);}
+});
+test('an alerted reachable guard cannot start turn mode without visual contact',()=>{
+ const s=fixture(),a=s.units[0],b=s.units[4];b.x=a.x+10;b.y=a.y;b.weapon='pistol';b.alert=true;b.state='alert';b.lastKnown={x:a.x,y:a.y,z:0};refresh(s);assert.equal(canSee(s,a,b),false);assert.equal(canSee(s,b,a),false);assert.equal(s.phase,'explore');s.engaged=true;refresh(s);assert.equal(s.phase,'player','actual attack still starts combat');
+});

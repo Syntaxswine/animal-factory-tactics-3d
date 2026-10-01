@@ -72,8 +72,9 @@ export function updateAwareness(s,{geometry,zones}){
     const moving=!!target.moved||!!old&&old.position!==[target.x,target.y,target.z||0].join(',');
     const rate=awarenessRate({distance,exposure,light:brightness,contrast,concealment:woodlandDepth(s,observer,target),perception:clamp((observer.perception??50)+(observer.skills?.perception||0)*3,0,100),stealth:target.stealth??20,sneaking:target.sneaking,running:target.running,moving,stance:target.stance,alert:observer.alert||observer.wary||['suspicious','searching'].includes(observer.state)});
     record.score=clamp(record.score+rate*elapsed,0,candidate===2?100:99);
-    // At arm's reach, an exposed body is unmistakable even without daylight.
-    if(spotlit||candidate===2&&distance<=1.5&&exposure>=.5)record.score=100;
+    // Close, clearly exposed targets are unmistakable in daylight, including
+    // ambient daylight shade. Geometry still enforces facing and solid cover.
+    if(spotlit||candidate===2&&(distance<=1.5&&exposure>=.5||distance<=3&&brightness>=.25&&exposure>=.25))record.score=100;
     record.light=brightness;record.exposure=exposure;record.rate=rate;
     if(candidate===2&&record.score>=100)record.lastKnown={x:target.x,y:target.y,z:target.z||0};
    }else record.score=Math.max(0,record.score-AWARENESS.decay*elapsed);

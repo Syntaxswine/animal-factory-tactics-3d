@@ -69,3 +69,11 @@ Renderer and tactical vertical scales remain distinct existing systems.
 
 The combat adapter records the changes to generated core code. Regenerate
 using `tools/sync-tactics-core.mjs`; never edit `core/engine.js` directly.
+
+Close daylight contact: within three tiles, a geometrically identifiable target
+with at least one visible body region and illumination >= 0.25 is identified
+immediately, including normal daylight shade. Solid occlusion and the sight
+field still apply. Awareness-enabled encounters cannot enter turn mode merely
+because an alerted guard can reach the squad: that threatening guard must have
+visual contact with a merc in either direction, or an attack must occur. Ongoing
+combat, fires and casualty handling retain their existing turn progression.

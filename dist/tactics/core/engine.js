@@ -201,7 +201,7 @@ log(s,converted.length===0&&s.units.some(u=>u.team==='squad'&&u.casualty==='quit
  // or the squad itself opening fire (engaged, until it ends that turn) holds turn mode.
  const wasAlert=s.alerted||new Set(),nowAlert=new Set(guards(s).filter(g=>playerThreat(s,g)&&active(g)).map(g=>g.id));s.alerted=nowAlert;
  const fresh=guards(s).filter(g=>nowAlert.has(g.id)&&!wasAlert.has(g.id)),heard=()=>fresh.some(g=>squad(s).some(p=>canSee(s,g,p)))?'You have been seen, but they are too far to reach you yet.':'You are pretty sure someone heard that.';
- const threat=guards(s).some(g=>playerThreat(s,g)&&g.alert&&threatens(s,g)),contact=pending||!!s.engaged||threat;let warned=false;
+ const threat=guards(s).some(g=>playerThreat(s,g)&&g.alert&&threatens(s,g)&&(!s.rules?.awareness||['player','enemy'].includes(s.phase)||squad(s).some(p=>canSee(s,p,g)||canSee(s,g,p)))),contact=pending||!!s.engaged||threat;let warned=false;
  if(['explore','won'].includes(s.phase)&&contact){s.phase='player';s.round++;s.queue=[];if(s.rules?.social&&!s.fight)s.fight={casualty:false}; // G5: a clean win lifts the squad
   // AP is live across the engagement: a fight that resumes while guards were already alert continues with the AP the squad has; a fresh fight gets a full turn. Guards always start theirs full.
   // freshFight is set by entering a map and by Area clear, so a fight on a new map is fresh even when its guards kept an alert from before.
