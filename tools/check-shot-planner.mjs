@@ -17,7 +17,17 @@ try{
  await page.waitForFunction(()=>battle3d.renderer.models.has(4),{},{timeout:90000});
  // Find an actual pickable point on the target rather than guessing screen scale.
  const pick=await page.evaluate(()=>{const canvas=document.getElementById('battle'),r=canvas.getBoundingClientRect(),p=battle3d.project(battle3d.state.units[4]);for(let y=p.y-65;y<p.y+15;y+=3)for(let x=p.x-25;x<p.x+25;x+=3)if(battle3d.renderer.pick(x,y,r.width,r.height)===4)return {x:r.x+x,y:r.y+y};return null;});
- assert.ok(pick,'Target should be pickable');await page.mouse.click(pick.x,pick.y);
+ assert.ok(pick,'Target should be pickable');await page.mouse.move(pick.x,pick.y);
+ await page.waitForFunction(()=>document.getElementById('battle').dataset.targetCursor==='red');
+ assert.match(await page.locator('#battle').evaluate(e=>getComputedStyle(e).cursor),/data:image/);
+ await page.evaluate(()=>{const s=battle3d.state;s.rules.awareness=true;s.units[0].awareness={};});
+ await page.waitForFunction(()=>document.getElementById('battle').dataset.targetCursor==='grey');
+ await page.evaluate(()=>battle3d.state.detected.delete(4));
+ await page.waitForFunction(()=>!document.getElementById('battle').dataset.targetCursor);
+ await page.evaluate(()=>{battle3d.state.rules.awareness=false;battle3d.state.detected.add(4);});
+ await page.waitForFunction(()=>document.getElementById('battle').dataset.targetCursor==='red');
+ await page.mouse.move(10,10);await page.waitForFunction(()=>!document.getElementById('battle').dataset.targetCursor);
+ await page.mouse.click(pick.x,pick.y);
  await page.waitForSelector('#shot-popup[open]');assert.equal(await page.locator('.body-target').count(),4);assert.equal(await page.locator('.shot-aims button').count(),3);
  await page.locator('svg [data-zone=legs]').click({position:{x:8,y:45}});await page.click('[data-aim="full"]');
  assert.equal(await page.locator('#aim-level').inputValue(),'full');assert.match(await page.locator('.shot-detail').textContent(),/Full aim → legs/);
@@ -38,5 +48,5 @@ try{
  await page.click('#fire');assert.equal(await page.locator('#shot-popup').isVisible(),false);
  const after=await page.evaluate(()=>({ap:battle3d.state.units[0].ap,ammo:battle3d.state.units[0].ammo.assault}));
  assert.equal(after.ap,before.ap-6);assert.equal(after.ammo,before.ammo-1);assert.deepEqual(errors,[]);
- console.log('Graphical popup: target click, body selection, aim controls, burst values, pin restrictions, Escape cancellation, planning pause and firing AP/ammo pass.');
+ console.log('Guard cursors: red, grey, hidden and pointer exit pass. Graphical popup: target click, body selection, aim controls, burst values, pin restrictions, Escape cancellation, planning pause and firing AP/ammo pass.');
 }finally{await browser.close();}
