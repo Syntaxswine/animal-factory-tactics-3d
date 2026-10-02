@@ -9,12 +9,15 @@ export function helicoidShot({origin,aim,accuracy=50,precision=80,adjustment=.08
  const depth=1+clamp(adjustment,0,.2)*(1-2*clamp((distance-2)/58,0,1));
  // Provisional angular spread, not an empirically calibrated hit percentage.
  const sigma=Math.hypot(.001+(1-clamp(accuracy,1,100)/100)*.025,.0005+(1-clamp(precision,1,100)/100)*.008);
- const radius=distance*sigma*Math.sqrt(-2*Math.log(1-clamp(roll,0,1-1e-12)));
+ // Aim-placement error does not shrink to zero at point-blank range.
+ const placement=.085+(1-clamp(accuracy,1,100)/100)*.20;
+ const spread=Math.hypot(placement,distance*sigma);
+ const radius=spread*Math.sqrt(-2*Math.log(1-clamp(roll,0,1-1e-12)));
  const angle=rotation*2*Math.PI+twist*2*Math.PI*(depth-1);
  const point=add(add(add(origin,axis,distance*depth),right,radius*Math.cos(angle)),up,radius*Math.sin(angle));
  const direction=norm(add(point,origin,-1));
  const t=distance/dot(direction,axis),targetPlane=add(origin,direction,t);
- return {origin,aim,point,direction,targetPlane,axis,right,up,distance,depth,radius,angle,sigma};
+ return {origin,aim,point,direction,targetPlane,axis,right,up,distance,depth,radius,angle,sigma,spread};
 }
 // Study proxies only: body-part ellipsoids. Nearest intersection wins.
 export const studyBody=[{zone:'head',center:[0,20,1.65],radii:[.16,.16,.2]},{zone:'torso',center:[0,20,1.12],radii:[.29,.18,.36]},{zone:'legs',center:[-.14,20,.43],radii:[.105,.13,.42]},{zone:'legs',center:[.14,20,.43],radii:[.105,.13,.42]}];
