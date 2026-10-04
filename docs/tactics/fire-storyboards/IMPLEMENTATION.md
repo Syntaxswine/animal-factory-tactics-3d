@@ -2,6 +2,8 @@
 
 October 4, 2026. Open `tactics/painted-fire-study.html` in a served build, or follow **Painted fire** in the 3D gallery. This is a horse-first presentation study, separate from the combat agent's area-effect implementation.
 
+[Download the looping GIF](evidence/painted-fire-study.gif): 960 × 540, 6.4 seconds, approximately 3.9 MB. It records the approved whole-scene animation at 20 samples per second, with short holds at the start and on the final ash pile. The GIF export changes no motion or gameplay behavior.
+
 ## What is implemented
 
 - Approved horse dimensions and existing flamethrower, tanks, hose and grips. Carry → brace → spray → trailing cutoff → recover, with fixed supporting hooves and continuous hand contact.
