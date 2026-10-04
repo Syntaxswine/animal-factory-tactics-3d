@@ -10,7 +10,10 @@ export function guardCone(s,u){
  for(let i=0;i<=steps;i++){
   const angle=((u.heading??0)-width/2+width*i/steps)*Math.PI/180,dx=Math.cos(angle),dy=Math.sin(angle);
   const edge=Math.min(range,dx>1e-8?(W-1-u.x)/dx:dx< -1e-8?-u.x/dx:Infinity,dy>1e-8?(H-1-u.y)/dy:dy< -1e-8?-u.y/dy:Infinity);
-  const hit=traceProjectile(world,null,origin,{x:dx,y:dy,h:0},Math.max(0,edge));
+  // An outward ray from a boundary tile has no length to trace. Close that
+  // side of the cone at the guard instead of passing an invalid zero ray.
+  if(edge<=1e-7){points.push({...points[0]});continue;}
+  const hit=traceProjectile(world,null,origin,{x:dx,y:dy,h:0},edge);
   points.push({x:hit.x,y:hit.y,z:u.z||0});
  }
  return points;
