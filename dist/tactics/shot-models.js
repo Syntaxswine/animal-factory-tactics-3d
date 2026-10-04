@@ -1,0 +1,83 @@
+import {angularHelicoidShot,seededShots,studyBody,traceStudy} from './helicoid-shot.js';
+import {AIM_LEVELS,shotAim} from './aim-levels.js';
+
+export const SHOT_MODELS=[
+ {id:'angular',name:'Angular scatter',tag:'Geometry reference',color:'#466978',description:'Skill and weapon precision tighten angular spread. No critical events.'},
+ {id:'critical',name:'Angular + D20',tag:'Suggested starting point',color:'#ac3a28',description:'The same spread, with a perfect aim on 20 and a wild shot on 1.'},
+ {id:'margin',name:'D20 roll + skill',tag:'Stronger dice influence',color:'#867031',description:'Roll plus a skill modifier sets the spread band. Natural 1 and 20 still apply.'}
+];
+export const DISTANCES=[1,5,10,20,40,60,100];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const bodyZones=new Set(['head','torso','legs']);
+const studyWeapon={cost:4,mag:30};
+export const DEFAULT_SHOT_SETUP={accuracy:65,precision:80,distance:20,aimLevel:'hip',penalty:0,zone:'torso',cover:'none',smoke:false,smokeBypass:false,seed:42};
+
+export function angularSize(size,distance){
+ if(!Number.isFinite(size)||size<0||!Number.isFinite(distance)||distance<=0)throw Error('Invalid angular size');
+ return 2*Math.atan(size/(2*distance));
+}
+
+export function shotInputs(seed,count=1000){
+ if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!Number.isInteger(count)||count<1||count>10000)throw Error('Invalid sample seed or count');
+ const random=seededShots(seed);
+ // All models consume the same independent inputs, including unused dice.
+ return Array.from({length:count},()=>({die:1+Math.floor(random()*20),roll:random(),rotation:random(),damage:random(),graze:random()}));
+}
+
+export function prepareShotSetup(settings={}){
+ const c={...DEFAULT_SHOT_SETUP,...settings};
+ if(!['accuracy','precision','distance','penalty'].every(k=>Number.isFinite(c[k]))||c.distance<1||c.distance>100||!Object.hasOwn(AIM_LEVELS,c.aimLevel)||!bodyZones.has(c.zone)||!['none','waist','head'].includes(c.cover))throw Error('Invalid shot setup');
+ const aiming=shotAim(studyWeapon,c.aimLevel),effective=clamp(c.accuracy+aiming.accuracy-c.penalty,1,100);
+ const bodies=studyBody.map(b=>({...b,center:[b.center[0],c.distance,b.center[2]]}));
+ // Aim at a leg, not at the empty gap between the legs.
+ const target=bodies.find(b=>b.zone===c.zone),aim=[...target.center],origin=[0,0,1.3];
+ const cover=c.cover==='none'?false:{y:Math.max(c.distance*.5,c.distance-.3),halfWidth:.8,height:c.cover==='head'?1.48:1.25};
+ return {...c,bodies,aim,origin,coverPlane:cover,effective,ap:aiming.cost,modifier:Math.floor((effective-50)/10),angularWidth:angularSize(2*target.radii[0],Math.hypot(...aim.map((v,i)=>v-origin[i])))};
+}
+
+export function modelShot(model,setup,input){
+ if(!SHOT_MODELS.some(m=>m.id===model))throw Error('Unknown shot model');
+ if(!Number.isInteger(input.die)||input.die<1||input.die>20||!['roll','rotation','damage','graze'].every(k=>Number.isFinite(input[k])&&input[k]>=0&&input[k]<1))throw Error('Invalid shot roll');
+ const {die,roll,rotation}=input,critical=model==='angular'?'ordinary':die===20?'success':die===1?'failure':'ordinary';
+ const weapon=.0005+(1-clamp(setup.precision,1,100)/100)*.008;
+ const margin=die+setup.modifier-11;
+ const shooter=model==='margin'?.0105*clamp(1.2-margin*.12,.2,2.4):.001+(1-setup.effective/100)*.025;
+ const sigma=Math.hypot(shooter,weapon);
+ let error=Math.min(Math.PI/3,sigma*Math.sqrt(-2*Math.log(1-roll)));
+ if(critical==='success')error=0;
+ // A fixed large ANGLE keeps a natural 1 exceptional at close range. Never
+ // manufacture a miss outcome: the resulting ray can still strike a body.
+ if(critical==='failure')error=(28+roll*20)*Math.PI/180;
+ const shot=angularHelicoidShot({origin:setup.origin,aim:setup.aim,error,rotation});
+ const collision=traceStudy(shot,setup.bodies,setup.coverPlane),hit=bodyZones.has(collision.zone);
+ // A smoke curtain occupies the line in front of the target. Damage bypass
+ // does not confer visibility or alter the ray; those hooks remain separate.
+ const t=(setup.distance*.5-shot.origin[1])/shot.direction[1];
+ const x=shot.origin[0]+shot.direction[0]*t,z=shot.origin[2]+shot.direction[2]*t;
+ const throughSmoke=!!setup.smoke&&t>=0&&t<collision.distance&&Math.abs(x)<=.8&&z>=0&&z<=2.2;
+ const graze=hit&&throughSmoke&&!setup.smokeBypass;
+ const damage=hit?(graze?6+Math.floor(input.graze*3):Math.round((45+Math.floor(input.damage*11))*(collision.zone==='head'?1.5:collision.zone==='legs'?.85:1))):0;
+ return {...shot,model,die,critical,margin,sigma,collision,hit,throughSmoke,graze,damage};
+}
+
+export function summarizeShots(shots,zone){
+ const counts={selected:0,any:0,other:0,miss:0,cover:0,ground:0,grazes:0,successes:0,failures:0,damage:0};
+ for(const s of shots){
+  if(s.hit){counts.any++;if(s.collision.zone===zone)counts.selected++;else counts.other++;}
+  else counts[s.collision.zone]++;
+  if(s.graze)counts.grazes++;
+  if(s.critical==='success')counts.successes++;
+  if(s.critical==='failure')counts.failures++;
+  counts.damage+=s.damage;
+ }
+ return {...counts,count:shots.length,averageDamage:counts.damage/shots.length};
+}
+
+export function compareShots(settings,inputs=shotInputs(settings.seed??42)){
+ const setup=prepareShotSetup(settings);
+ return {setup,models:SHOT_MODELS.map(model=>{const shots=inputs.map(input=>modelShot(model.id,setup,input));return {...model,shots,summary:summarizeShots(shots,setup.zone)};})};
+}
+
+export function distanceComparison(settings,inputs){
+ return DISTANCES.map(distance=>{const {models,setup}=compareShots({...settings,distance},inputs);return {distance,ap:setup.ap,models:models.map(m=>({id:m.id,summary:m.summary}))};});
+}

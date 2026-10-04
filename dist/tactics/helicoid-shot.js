@@ -2,6 +2,20 @@
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const add=(a,b,k=1)=>a.map((v,i)=>v+b[i]*k),dot=(a,b)=>a.reduce((v,x,i)=>v+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const n=Math.hypot(...a);return a.map(v=>v/n);};
 export function seededShots(seed){let n=seed>>>0;return ()=>{n=(Math.imul(1664525,n)+1013904223)>>>0;return n/4294967296;};}
+// Project an angular error onto a fixed helicoid section. Distance affects the
+// target-plane offset exactly once: distance * tan(error). The section is one
+// metre ahead of the muzzle; it is a construction point, not the bullet path.
+export function angularHelicoidShot({origin,aim,error,rotation,twist=1}){
+ if(!Array.isArray(origin)||origin.length!==3||!Array.isArray(aim)||aim.length!==3||![...origin,...aim,error,rotation,twist].every(Number.isFinite))throw Error('Invalid angular shot');
+ if(error<0||error>=Math.PI/2)throw Error('Angular error must be between zero and 90 degrees');
+ const delta=add(aim,origin,-1),distance=Math.hypot(...delta);if(distance<1e-6)throw Error('Aim point must differ from muzzle');
+ const axis=norm(delta),right=norm(cross(axis,Math.abs(axis[2])>.99?[0,1,0]:[0,0,1])),up=cross(right,axis);
+ const angle=(rotation+twist)*2*Math.PI,radius=Math.tan(error);
+ const radial=add(right.map(v=>v*Math.cos(angle)),up,Math.sin(angle));
+ const point=add(add(origin,axis),radial,radius),direction=norm(add(point,origin,-1));
+ const targetPlane=add(aim,radial,distance*radius);
+ return {origin,aim,point,direction,targetPlane,axis,right,up,distance,depth:1,radius,angle,error};
+}
 export function helicoidShot({origin,aim,accuracy=50,precision=80,adjustment=.08,twist=1,roll,rotation}){
  if(![...origin,...aim,accuracy,precision,adjustment,twist,roll,rotation].every(Number.isFinite))throw Error('Shot inputs must be finite');
  const delta=add(aim,origin,-1),distance=Math.hypot(...delta);if(distance<1e-6)throw Error('Aim point must differ from muzzle');
@@ -24,7 +38,8 @@ export const studyBody=[{zone:'head',center:[0,20,1.65],radii:[.16,.16,.2]},{zon
 export function traceStudy(shot,bodies,cover=false){
  let best={zone:'miss',distance:Infinity};
  for(const body of bodies){const o=shot.origin.map((v,i)=>(v-body.center[i])/body.radii[i]),d=shot.direction.map((v,i)=>v/body.radii[i]),a=dot(d,d),b=2*dot(o,d),c=dot(o,o)-1,disc=b*b-4*a*c;if(disc<0)continue;const near=(-b-Math.sqrt(disc))/(2*a),far=(-b+Math.sqrt(disc))/(2*a),t=near>=0?near:far;if(t>=0&&t<best.distance)best={zone:body.zone,distance:t};}
- if(cover&&shot.direction[1]>0){const t=(bodies[0].center[1]-1-shot.origin[1])/shot.direction[1],p=add(shot.origin,shot.direction,t);if(t>=0&&t<best.distance&&Math.abs(p[0])<.8&&p[2]>=0&&p[2]<=1.25)best={zone:'cover',distance:t};}
+ if(cover&&shot.direction[1]>0){const plane=cover===true?{y:bodies[0].center[1]-1,halfWidth:.8,height:1.25}:cover;
+  const t=(plane.y-shot.origin[1])/shot.direction[1],p=add(shot.origin,shot.direction,t);if(t>=0&&t<best.distance&&Math.abs(p[0])<plane.halfWidth&&p[2]>=0&&p[2]<=plane.height)best={zone:'cover',distance:t};}
  // Flat ground can intercept downward shots before the target.
  if(shot.direction[2]<0){const t=-shot.origin[2]/shot.direction[2];if(t>=0&&t<best.distance)best={zone:'ground',distance:t};}
  return best;

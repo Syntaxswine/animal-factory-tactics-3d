@@ -1,13 +1,44 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Helicoid shot laboratory</title><style>
-*{box-sizing:border-box}body{margin:0;background:#e9e1c8;color:#24372e;font:16px system-ui}header{background:#24372e;color:#fff0cb;padding:22px 4vw;border-bottom:7px solid #a93425}h1{margin:0;font-size:29px}main{padding:24px 4vw}section{display:grid;grid-template-columns:280px 1fr;gap:24px}aside{background:#d8cfb3;padding:18px}label{display:block;margin:0 0 17px}input[type=range]{width:100%;accent-color:#a93425}select,button,input[type=number]{font:inherit;padding:7px;background:#fff8df;border:1px solid #8b8c70}button{cursor:pointer}button.primary{background:#a93425;color:white}canvas{display:block;width:100%;background:#f7efd8;border:1px solid #9b9c7b}#results{font-weight:bold;font-size:19px;margin:15px 0}.note{font-size:14px;max-width:900px}a{color:inherit}output{float:right}#geometry{margin-top:16px}@media(max-width:750px){section{grid-template-columns:1fr}aside{display:grid;grid-template-columns:1fr 1fr;gap:12px}}</style>
-<header><h1>HELICOID / SHOT LABORATORY</h1><div>Trajectory first. Collision decides the hit.</div></header><main><section><aside>
-<label>Aim point <select id="zone"><option>torso</option><option>head</option><option>legs</option></select></label>
-<label>Modified accuracy <output id="accuracy-value"></output><input id="accuracy" type="range" min="1" max="100" value="65"></label>
-<label>Weapon precision <output id="precision-value"></output><input id="precision" type="range" min="1" max="100" value="80"></label>
-<label>Distance · metres <output id="distance-value"></output><input id="distance" type="range" min="1" max="100" value="20"></label>
-<label>Depth adjustment · % <output id="adjustment-value"></output><input id="adjustment" type="range" min="0" max="20" value="8"></label>
-<label>Helicoid turns <output id="twist-value"></output><input id="twist" type="range" min="0" max="4" step=".1" value="1"></label>
-<label><input id="cover" type="checkbox"> Waist-high cover</label><label>Seed <input id="seed" type="number" min="0" max="4294967295" value="42"></label><button id="reroll" class="primary">New seed</button><p>1,000 shots per batch</p>
-<label>Inspect shot <output id="shot-value"></output><input id="shot" type="range" min="0" max="999" value="0"></label>
-</aside><div><canvas id="pattern" width="1000" height="580" aria-label="Target silhouette with shot impact distribution"></canvas><div id="results" aria-live="polite"></div><canvas id="geometry" width="1000" height="320" aria-label="Helicoid and selected projectile ray"></canvas><p id="detail"></p></div></section>
-<p class="note">Green: selected part · amber: another body part · red: cover/ground · grey: miss. Crosses show target-plane projections of blocked shots, not impacts behind cover. The lower diagram exaggerates sideways offsets and compresses distance to make the construction visible.</p><p class="note">Study only—live combat is unchanged. Accuracy is a spread control, not a promised hit percentage. Aim-placement error remains at close range, so even one-metre shots can miss. Body parts use simple ellipsoid proxies; no species meshes or held weapons yet. Uniform random rotation makes changing the helicoid twist rearrange individual shots without systematically changing overall accuracy. The same seed reuses the same random inputs for comparisons.</p><a href="battle-3d.html">Back to battle</a></main><script type="module" src="helicoid-shot-study.js"></script></html>
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Helicoid · Shot model comparison</title><link rel="stylesheet" href="helicoid-shot-study.css"></head>
+<body>
+<header><div><span class="eyebrow">ANIMAL FACTORY / BALLISTICS LAB</span><h1>Geometry meets the dice.</h1><p>Three shot models. One target. The same 1,000 rolls.</p></div><span class="study-badge">TUNING STUDY</span></header>
+<main>
+<nav class="scenarios" aria-label="Test scenarios"><span>TRY A SCENARIO</span><button type="button" data-scenario="close">Point blank</button><button type="button" data-scenario="cover">Exposed head</button><button type="button" data-scenario="range">Long shot</button><button type="button" data-scenario="smoke">Through smoke</button><button type="button" id="reset">Reset</button></nav>
+<div class="workbench">
+<aside>
+<form id="controls">
+<h2>Shared conditions</h2>
+<label for="zone">Aim point</label><select id="zone"><option value="torso">Torso</option><option value="head">Head</option><option value="legs">Left leg</option></select>
+<label for="aim-level">Aim level</label><select id="aim-level"><option value="hip">Hip shot · 4 AP</option><option value="aimed">Aimed shot · 6 AP</option><option value="full">Full aim · 8 AP</option></select>
+<label for="accuracy">Shooter skill <output id="accuracy-value" for="accuracy"></output></label><input id="accuracy" type="range" min="1" max="100" value="65">
+<label for="precision">Weapon precision <output id="precision-value" for="precision"></output></label><input id="precision" type="range" min="1" max="100" value="80">
+<label for="penalty">Injury / fatigue penalty <output id="penalty-value" for="penalty"></output></label><input id="penalty" type="range" min="0" max="40" value="0">
+<label for="distance">Distance <output id="distance-value" for="distance"></output></label><input id="distance" type="range" min="1" max="100" value="20">
+<p class="readout" id="geometry-readout"></p>
+<label for="cover">Solid cover</label><select id="cover"><option value="none">None</option><option value="waist">Waist-high barrier</option><option value="head">Head exposed only</option></select>
+<label class="check"><input id="smoke" type="checkbox"> Smoke between shooter and target</label><label class="check"><input id="smoke-bypass" type="checkbox"> Skill / tool bypasses smoke damage cap</label>
+<p class="small">Smoke hits graze for 6–8 damage. Bypass restores normal damage; it does not grant sight through smoke.</p>
+<label for="seed">Seed</label><div class="seed-row"><input id="seed" type="number" min="0" max="4294967295" step="1" value="42"><button type="button" id="reroll">New rolls</button></div>
+<p id="input-error" role="alert"></p>
+</form>
+</aside>
+<div class="workspace">
+<div class="section-label"><h2>Compare the pattern</h2><span id="batch-info" role="status"></span></div>
+<div id="comparison" class="comparison"></div>
+<div class="legend"><span class="selected">● Selected part</span><span class="other">● Other body part</span><span class="graze">● Smoke graze</span><span class="blocked">× Cover / ground</span><span>· Miss</span></div>
+<p class="small">All panels use the same scale. Extreme shots are counted outside the view. Marks are projections onto the target plane; a blocked shot does not travel through cover. Click a model to inspect it below.</p>
+<section class="range-panel"><div class="section-label"><h2>What changes with distance?</h2><span>Any body hit · same rolls at every distance</span></div><canvas id="distance-chart" width="1080" height="280" aria-label="Body hit percentage versus distance for each shot model"></canvas><details><summary>Numerical comparison & damage per AP</summary><div class="table-wrap"><table id="range-table"></table></div></details></section>
+<section class="inspector"><div class="section-label"><h2>Follow one shot</h2><span id="inspector-model"></span></div><div class="shot-controls"><label for="shot">Shot <output id="shot-value"></output></label><input id="shot" type="range" min="0" max="999" value="0"><button id="next-shot" type="button">Next</button><button id="find-failure" type="button">Find natural 1</button><button id="find-success" type="button">Find natural 20</button></div><div id="shot-outcomes" class="shot-outcomes"></div><canvas id="geometry" width="1080" height="250" aria-label="Selected shot's straight ray through the helicoid construction point"></canvas><p id="detail" class="small"></p></section>
+</div>
+</div>
+<details class="notes"><summary>How these candidates work</summary><div>
+<p><strong>Angular scatter:</strong> Skill, aim and weapon precision set an error angle. A random rotation places that error around the muzzle-to-aim axis. Offset at the target is distance × tan(error). Apparent target width is 2 × atan(width ÷ (2 × distance)). No extra distance penalty or close-range placement floor.</p>
+<p><strong>Angular + D20:</strong> Natural 20 (5%) aims exactly at the chosen point. Natural 1 (5%) produces a 28–48° error in a random direction. Rolls 2–19 use ordinary angular scatter. Collision always wins: perfect aim can hit cover; a wild shot can accidentally hit a body.</p>
+<p><strong>D20 roll + skill:</strong> The same critical events. Other rolls add floor((effective skill − 50) ÷ 10), then compare with a tuning target of 11. The margin sets angular spread; it never directly awards a hit. Aim adds 0 / 10 / 20 skill at 4 / 6 / 8 AP for this sample weapon.</p>
+<p>Smoke caps damage only when a body hit passes through the smoke curtain. The optional bypass lifts that cap. Sample full damage is 45–55, with head ×1.5 and legs ×0.85; armor and resistance are omitted. Critical success means precise aim, not bonus damage. Damage per AP includes misses and blocked shots.</p>
+<p><strong>Prototype limits:</strong> Ellipsoid body proxies, static target, no animal meshes, held weapons, travel animation, visibility restrictions or live combat integration. These are uncalibrated game-balance candidates. Percentages are seeded sample estimates, not guaranteed chances. The angular reference intentionally has no D20 exceptions. Uniform random rotation means the helicoid twist does not change aggregate spread.</p>
+</div></details>
+<footer><a href="battle-3d.html">Back to battle</a><span>Helicoid laboratory · Live combat remains unchanged</span></footer>
+</main><script type="module" src="helicoid-shot-study.js"></script>
+</body></html>
