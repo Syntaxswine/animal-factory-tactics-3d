@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {angularHelicoidShot} from '../dist/tactics/helicoid-shot.js';
 import {SHOT_MODELS,DEFAULT_SHOT_SETUP,angularSize,prepareShotSetup,shotInputs,modelShot,compareShots,distanceComparison} from '../dist/tactics/shot-models.js';
 
-const fixed={die:10,roll:.5,rotation:.25,damage:.5,graze:.5};
+const fixed={die:10,roll:.5,rotation:.25,damage:.5,graze:.5,accuracyRoll:.99};
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-10,`${a} != ${b}`);
 
 test('angular projection counts distance once, with no near-range floor or hidden range penalty',()=>{
@@ -92,4 +92,26 @@ test('shared random inputs and summary accounting stay reproducible across model
  assert.equal(first.models[1].summary.successes,first.models[2].summary.successes);
  assert.throws(()=>shotInputs(-1));assert.throws(()=>modelShot('missing',first.setup,fixed));
  assert.throws(()=>modelShot('angular',first.setup,{...fixed,die:0}));
+});
+
+test('successful accuracy checks favor the aim point while failed checks keep the original miss scatter',()=>{
+ const setup=prepareShotSetup({distance:40,precision:50});
+ // Recorded ordinary scatter from ef6bb7b, before the frequency adjustment.
+ const previousErrors={angular:.016663319837225382,critical:.016663319837225382,margin:.02076165560365482};
+ for(const model of SHOT_MODELS){
+  const input={...fixed,roll:.7,rotation:0},failed=modelShot(model.id,setup,input),passed=modelShot(model.id,setup,{...input,accuracyRoll:.1});
+  close(failed.error,previousErrors[model.id]);assert.equal(failed.controlled,false);assert.equal(failed.hit,false);
+  assert.equal(passed.controlled,true);assert.equal(passed.collision.zone,'torso');assert.ok(passed.error>0,'ordinary success still has geometric error');
+  const blocked=modelShot(model.id,prepareShotSetup({distance:40,precision:50,cover:'head'}),{...input,accuracyRoll:.1});assert.equal(blocked.collision.zone,'cover');assert.equal(blocked.damage,0);
+ }
+ const hardShot=modelShot('angular',prepareShotSetup({distance:100,zone:'head',precision:1,accuracy:1}),{...fixed,roll:.7,accuracyRoll:0});assert.equal(hardShot.controlled,true);assert.equal(hardShot.hit,false,'a passed check cannot force a geometric hit');
+});
+
+test('accuracy checks improve ordinary-equipment hit frequency without replacing D20 events',()=>{
+ const inputs=shotInputs(42,2000),batch=compareShots({precision:50},inputs);
+ const critical=batch.models.find(m=>m.id==='critical');assert.ok(critical.summary.any/inputs.length>.83);assert.ok(critical.summary.any/inputs.length<.94);
+ const withoutChecks=compareShots({precision:50},inputs.map(i=>({...i,accuracyRoll:.9999})));
+ for(const m of batch.models){const before=withoutChecks.models.find(v=>v.id===m.id);assert.ok(m.summary.any>before.summary.any);assert.equal(m.summary.successes,before.summary.successes);assert.equal(m.summary.failures,before.summary.failures);
+  for(let i=0;i<inputs.length;i++)if(m.shots[i].critical!=='ordinary')assert.deepEqual(m.shots[i].direction,before.shots[i].direction);
+ }
 });

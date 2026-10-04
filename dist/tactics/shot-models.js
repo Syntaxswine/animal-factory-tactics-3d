@@ -2,7 +2,7 @@ import {angularHelicoidShot,seededShots,studyBody,traceStudy} from './helicoid-s
 import {AIM_LEVELS,shotAim} from './aim-levels.js';
 
 export const SHOT_MODELS=[
- {id:'angular',name:'Angular scatter',tag:'Geometry reference',color:'#466978',description:'Skill and weapon precision tighten angular spread. No critical events.'},
+ {id:'angular',name:'Angular scatter',tag:'Geometry reference',color:'#466978',description:'Accuracy checks favor the center. Failed checks keep full scatter. No critical events.'},
  {id:'critical',name:'Angular + D20',tag:'Suggested starting point',color:'#ac3a28',description:'The same spread, with a perfect aim on 20 and a wild shot on 1.'},
  {id:'margin',name:'D20 roll + skill',tag:'Stronger dice influence',color:'#867031',description:'Roll plus a skill modifier sets the spread band. Natural 1 and 20 still apply.'}
 ];
@@ -19,9 +19,10 @@ export function angularSize(size,distance){
 
 export function shotInputs(seed,count=1000){
  if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!Number.isInteger(count)||count<1||count>10000)throw Error('Invalid sample seed or count');
- const random=seededShots(seed);
+ const random=seededShots(seed),accuracyRandom=seededShots((seed^0x9e3779b9)>>>0);
  // All models consume the same independent inputs, including unused dice.
- return Array.from({length:count},()=>({die:1+Math.floor(random()*20),roll:random(),rotation:random(),damage:random(),graze:random()}));
+ // A separate stream leaves every existing scatter/critical roll unchanged.
+ return Array.from({length:count},()=>({die:1+Math.floor(random()*20),roll:random(),rotation:random(),damage:random(),graze:random(),accuracyRoll:accuracyRandom()}));
 }
 
 export function prepareShotSetup(settings={}){
@@ -37,13 +38,17 @@ export function prepareShotSetup(settings={}){
 
 export function modelShot(model,setup,input){
  if(!SHOT_MODELS.some(m=>m.id===model))throw Error('Unknown shot model');
- if(!Number.isInteger(input.die)||input.die<1||input.die>20||!['roll','rotation','damage','graze'].every(k=>Number.isFinite(input[k])&&input[k]>=0&&input[k]<1))throw Error('Invalid shot roll');
+ if(!Number.isInteger(input.die)||input.die<1||input.die>20||!['roll','rotation','damage','graze','accuracyRoll'].every(k=>Number.isFinite(input[k])&&input[k]>=0&&input[k]<1))throw Error('Invalid shot roll');
  const {die,roll,rotation}=input,critical=model==='angular'?'ordinary':die===20?'success':die===1?'failure':'ordinary';
  const weapon=.0005+(1-clamp(setup.precision,1,100)/100)*.008;
  const margin=die+setup.modifier-11;
  const shooter=model==='margin'?.0105*clamp(1.2-margin*.12,.2,2.4):.001+(1-setup.effective/100)*.025;
  const sigma=Math.hypot(shooter,weapon);
  let error=Math.min(Math.PI/3,sigma*Math.sqrt(-2*Math.log(1-roll)));
+ // Reweight ordinary shots toward a central cluster, without changing the
+ // original scatter of a failed check. A passed check is not a forced hit.
+ const controlled=critical==='ordinary'&&input.accuracyRoll<setup.effective/100;
+ if(controlled)error*=.25;
  if(critical==='success')error=0;
  // A fixed large ANGLE keeps a natural 1 exceptional at close range. Never
  // manufacture a miss outcome: the resulting ray can still strike a body.
@@ -57,7 +62,7 @@ export function modelShot(model,setup,input){
  const throughSmoke=!!setup.smoke&&t>=0&&t<collision.distance&&Math.abs(x)<=.8&&z>=0&&z<=2.2;
  const graze=hit&&throughSmoke&&!setup.smokeBypass;
  const damage=hit?(graze?6+Math.floor(input.graze*3):Math.round((45+Math.floor(input.damage*11))*(collision.zone==='head'?1.5:collision.zone==='legs'?.85:1))):0;
- return {...shot,model,die,critical,margin,sigma,collision,hit,throughSmoke,graze,damage};
+ return {...shot,model,die,critical,controlled,margin,sigma,collision,hit,throughSmoke,graze,damage};
 }
 
 export function summarizeShots(shots,zone){

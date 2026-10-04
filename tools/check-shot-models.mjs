@@ -28,7 +28,7 @@ try{
  await page.check('#smoke-bypass');
  await page.waitForFunction(()=>document.querySelector('#model-critical [data-stat="grazes"]').textContent==='0.0%');
  assert.equal(await any('critical'),smoked);assert.ok(parseFloat(await page.locator('#model-critical [data-stat="damage"]').textContent())>parseFloat(damage));
- await page.click('#reset');await page.waitForFunction(()=>document.querySelector('#distance').value==='20'&&document.querySelector('#model-critical [data-stat="any"]').textContent==='74.5%');assert.equal(await any('critical'),first);
+ await page.click('#reset');await page.waitForFunction(first=>document.querySelector('#distance').value==='20'&&document.querySelector('#model-critical [data-stat="any"]').textContent===first,first);assert.equal(await any('critical'),first);
  await page.selectOption('#aim-level','full');await page.waitForFunction(()=>document.querySelector('#geometry-readout').textContent.includes('8 AP'));assert.ok(parseFloat(await any('critical'))>parseFloat(first));
  await page.click('[data-model="margin"]');assert.equal(await page.locator('[data-model="margin"]').getAttribute('aria-pressed'),'true');
  await page.fill('#seed','-1');await page.waitForFunction(()=>document.querySelector('#input-error').textContent.length>0);

@@ -33,6 +33,7 @@
 </div>
 </div>
 <details class="notes"><summary>How these candidates work</summary><div>
+<p><strong>Hit frequency:</strong> Ordinary shots make an accuracy check against effective skill. Passing puts the shot in a central cluster, using one quarter of the sampled angular error. Failing preserves the original scatter. This makes hits more frequent without narrowing failed shots. A passed check can still miss or hit cover; critical events override the check.</p>
 <p><strong>Angular scatter:</strong> Skill, aim and weapon precision set an error angle. A random rotation places that error around the muzzle-to-aim axis. Offset at the target is distance × tan(error). Apparent target width is 2 × atan(width ÷ (2 × distance)). No extra distance penalty or close-range placement floor.</p>
 <p><strong>Angular + D20:</strong> Natural 20 (5%) aims exactly at the chosen point. Natural 1 (5%) produces a 28–48° error in a random direction. Rolls 2–19 use ordinary angular scatter. Collision always wins: perfect aim can hit cover; a wild shot can accidentally hit a body.</p>
 <p><strong>D20 roll + skill:</strong> The same critical events. Other rolls add floor((effective skill − 50) ÷ 10), then compare with a tuning target of 11. The margin sets angular spread; it never directly awards a hit. Aim adds 0 / 10 / 20 skill at 4 / 6 / 8 AP for this sample weapon.</p>

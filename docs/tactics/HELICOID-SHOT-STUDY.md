@@ -43,6 +43,17 @@ All spread constants below are game-balance proposals, not empirical calibration
    Weapon spread and radial sampling then work as above. Skill affects the
    margin, rather than also applying the first model's continuous skill spread.
 
+All three models also make an ordinary accuracy check with a probability equal
+to effective skill / 100. Passing selects a central cluster with one quarter of
+the sampled angular error; failing leaves the sampled error unchanged. This is
+a change to the frequency of well-placed shots, not a reduction in the spread
+of failed checks. Natural 1 and 20 take precedence. A passed check is still a
+ray subject to collision and can miss a small or distant target.
+
+The original shooter and weapon spread coefficients above are preserved. For
+skill 65, precision 50, hip aim, a clear torso and seed 42, a 10,000-shot sample
+of Angular + D20 rises from 69.68% to 86.80% any-body hits at 20 metres.
+
 Aim uses the shared `aim-levels.js` settings: 0 / 10 / 20 accuracy bonus and
 1 / 1.5 / 2 AP multipliers. The illustrative gun costs 4 AP at hip aim, so the
 three costs are 4 / 6 / 8. The penalty control represents the net injury/fatigue
@@ -66,8 +77,10 @@ blocked shots; these values are for comparison and have not been adopted in comb
 
 ## Reproducibility and display
 
-Every batch uses 1,000 seeded samples. Each sample reserves five independent
-inputs: D20, radial roll, rotation, full-damage roll and graze-damage roll.
+Every batch uses 1,000 seeded samples. Each sample reserves D20, radial roll,
+rotation, full-damage roll and graze-damage roll, plus an accuracy-check roll
+from a separate seeded stream. That stream leaves all five earlier values
+unchanged for existing seeds, including the D20 events and failed-shot rays.
 All models and all distance-chart points reuse those inputs. Changing smoke,
 aim, cover or selected model never rerolls them. New rolls changes only the seed;
 Reset restores the reproducible default setup. Actual sampled critical counts
