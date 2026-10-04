@@ -13,13 +13,23 @@ try{
  await page.goto((process.env.EDITOR_ORIGIN||'http://127.0.0.1:4364')+'/tactics/helicoid-shot-study.html');
  await page.waitForFunction(()=>document.querySelector('#model-critical [data-stat="any"]')?.textContent.includes('%'));
  const any=id=>page.locator('#model-'+id+' [data-stat="any"]').textContent();
+ const stat=(id,name)=>page.locator('#model-'+id+' [data-stat="'+name+'"]').textContent();
  const first=await any('critical');assert.equal(await page.locator('.model').count(),3);
+ const rolled=await stat('critical','rolled');
+ assert.match(await page.locator('#geometry-readout').textContent(),/Final hit chance 65%/);
+ for(const id of ['angular','critical','margin']){assert.equal(await stat(id,'rolled'),rolled);assert.equal(await stat(id,'selected'),rolled);}
  await page.screenshot({path:out+'desktop.png',fullPage:true});
  await page.click('[data-scenario="close"]');
- await page.waitForFunction(()=>document.querySelector('#distance-value').textContent==='1 m'&&document.querySelector('#model-angular [data-stat="any"]').textContent==='100.0%');
- assert.equal(await any('angular'),'100.0%');assert.ok(parseFloat(await any('critical'))<100);
- await page.click('#find-failure');assert.match(await page.locator('#shot-outcomes').textContent(),/Natural 1 · critical failure/);
- await page.click('#find-success');assert.match(await page.locator('#shot-outcomes').textContent(),/Natural 20 · critical success/);
+ await page.waitForFunction(()=>document.querySelector('#distance-value').textContent==='1 m');
+ for(const id of ['angular','critical','margin']){assert.equal(await stat(id,'selected'),rolled);assert.ok(parseFloat(await any(id))<100);}
+ // UI changes to distance and precision must not secretly change the hit roll.
+ await page.locator('#precision').evaluate(el=>{el.value='1';el.dispatchEvent(new Event('input',{bubbles:true}));});
+ await page.waitForFunction(()=>document.querySelector('#precision-value').textContent==='1%');
+ await page.locator('#distance').evaluate(el=>{el.value='100';el.dispatchEvent(new Event('input',{bubbles:true}));});
+ await page.waitForFunction(()=>document.querySelector('#distance-value').textContent==='100 m');
+ for(const id of ['angular','critical','margin']){assert.equal(await stat(id,'rolled'),rolled);assert.equal(await stat(id,'selected'),rolled);}
+ await page.click('#find-failure');assert.match(await page.locator('#shot-outcomes').textContent(),/Natural 1 · critical failure/);assert.equal(await page.locator('.shot-result strong').allTextContents().then(a=>a.every(v=>v==='Hit roll: MISS')),true);
+ await page.click('#find-success');assert.match(await page.locator('#shot-outcomes').textContent(),/Natural 20 · critical success/);assert.match(await page.locator('#detail').textContent(),/helicoid is not used/);
  await page.selectOption('#cover','waist');
  await page.waitForFunction(()=>document.querySelector('#shot-outcomes').textContent.includes('cover'));
  await page.click('[data-scenario="smoke"]');
@@ -39,5 +49,5 @@ try{
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'no narrow-screen horizontal overflow');
  await page.screenshot({path:out+'mobile.png',fullPage:true});
  assert.deepEqual(errors,[]);
- console.log('Browser passed: three panels, reproducible reset, point-blank exceptions, critical inspection, cover, smoke bypass, aim/AP, model selection, seed validation, desktop and mobile.');
+ console.log('Browser passed: shared hit probability, distance/precision independence, reproducible reset, point-blank misses, critical inspection, cover, smoke bypass, aim/AP, pattern selection, seed validation, desktop and mobile.');
 }finally{await browser.close();}

@@ -1,106 +1,128 @@
-# Helicoid shot model comparison
+# Probability first, helicoid misses
 
-The existing `tactics/helicoid-shot-study.html` is now a three-model comparison.
-This is a tuning study; no live projectile, combat RNG, save format, or damage
-rules were changed. The body shapes are ellipsoid proxies, not animal meshes.
+`tactics/helicoid-shot-study.html` compares three ways to place **misses**.
+A shared probability roll decides whether the selected body part is hit.
+The helicoid no longer determines whether a successful roll is accurate enough.
+This replaces the earlier central-cluster experiment.
 
-## Shared geometry
+This is a tester change. Live combat, combat RNG and save formats are unchanged.
+The target uses ellipsoid body proxies, not animal meshes.
 
-The intended aim point and muzzle define an orthonormal frame. Random rotation
-chooses a direction around that axis. Angular error `e` chooses radial offset
-`tan(e)` on a helicoid section one metre along the axis. The straight ray from
-the muzzle through that point gives a target-plane offset of `distance * tan(e)`.
-There is no extra range multiplier, shrinking/expanding section, or close-range
-placement floor in these new models. The earlier `helicoidShot` export remains
-for the legacy study's regression tests but is not used by the comparison.
+## Hit probability
 
-The radial/angular construction was inspired by Vugg's
-`js/99j-helix-overlay.ts`; there is no runtime dependency on Vugg. Uniform
-random rotation makes the extra twist irrelevant to the aggregate distribution.
-It is a way to construct rays, not a curved bullet trajectory.
+The tester accepts a base hit chance. Aim adds 0 / 10 / 20 percentage points;
+the injury/fatigue control subtracts points. The result is limited to 5–95%,
+preserving the requested D20 critical success/failure rules:
 
-The selected body part's apparent width is `2 * atan(width / (2 * distance))`.
-It is displayed for explanation, not used as another distance penalty. Leg aim
-uses the left leg's center, rather than the empty space between both legs.
+- Natural 20 succeeds; natural 1 fails the intended-part roll.
+- For rolls 2–19, the probability is `(finalChance / 100 - 0.05) / 0.90`.
+  Thus the configured chance already includes both critical exceptions. A
+  displayed 65% remains 65%, rather than applying a second D20 penalty.
+- A success sends the ray directly from the muzzle to the selected aim point,
+  with zero scatter. The actual nearest collision still wins, so cover can
+  intercept even a natural 20. Criticals do not add bonus damage.
+- A failed roll is passed to the selected miss pattern. It cannot become a
+  hit on the intended part, but may strike a different body part.
 
-## Candidate rules
+All patterns reuse exactly the same hit-roll outcomes. The tester holds the
+supplied chance fixed when distance, weapon precision or target part changes.
+Those controls cannot silently reduce successful rolls through a second
+geometry test. When integrated, the game's chance calculation should account
+for range, shooter stats, target part, exposure and other modifiers **before**
+resolving the hit roll. That calculation is outside this study.
 
-All spread constants below are game-balance proposals, not empirical calibration.
+Aim uses shared `aim-levels.js` settings: AP multipliers 1 / 1.5 / 2. The sample
+gun's hip shot costs 4 AP, so the three costs are 4 / 6 / 8 AP.
 
-1. **Angular scatter:** A geometry reference with no critical exceptions.
-   Effective skill is `clamp(skill + aim bonus - penalty, 1, 100)`. Shooter
-   spread is `0.001 + (1 - effectiveSkill / 100) * 0.025` radians. Weapon spread
-   is `0.0005 + (1 - precision / 100) * 0.008` radians. Their quadrature sum is
-   multiplied by `sqrt(-2 * log(1 - radialRoll))` to sample an angular error.
-   The error is capped at 60 degrees, safely short of a singular 90-degree ray.
-2. **Angular + D20:** The same ordinary scatter. Natural 20 sets the error to
-   zero; natural 1 sets a 28–48-degree error. Each has a 5% probability before
-   collision. Neither awards a hit or a miss directly. A perfect shot can hit
-   cover; a failed roll can still accidentally hit a body part.
-3. **D20 roll + skill:** The same natural extremes. For rolls 2–19, the modifier
-   is `floor((effectiveSkill - 50) / 10)`, margin is `die + modifier - 11`, and
-   shooter spread is `0.0105 * clamp(1.2 - margin * 0.12, 0.2, 2.4)` radians.
-   Weapon spread and radial sampling then work as above. Skill affects the
-   margin, rather than also applying the first model's continuous skill spread.
+## Mapping misses
 
-All three models also make an ordinary accuracy check with a probability equal
-to effective skill / 100. Passing selects a central cluster with one quarter of
-the sampled angular error; failing leaves the sampled error unchanged. This is
-a change to the frequency of well-placed shots, not a reduction in the spread
-of failed checks. Natural 1 and 20 take precedence. A passed check is still a
-ray subject to collision and can miss a small or distant target.
+The muzzle and aim point define an orthonormal frame. Random rotation chooses
+a bearing around that axis. An angular error `e` gives radius `tan(e)` on a
+helicoid section one metre along the axis. The straight ray through that point
+has a target-plane offset of `distance * tan(e)`. There is no additional range
+penalty in the geometry.
 
-The original shooter and weapon spread coefficients above are preserved. For
-skill 65, precision 50, hip aim, a clear torso and seed 42, a 10,000-shot sample
-of Angular + D20 rises from 69.68% to 86.80% any-body hits at 20 metres.
+If a sampled miss ray would first strike the selected part, a bounded 16-step
+search moves it just beyond that part's silhouette along the same bearing.
+The search consumes no further randomness. Other body parts remain collision
+candidates, including both legs when aiming for the torso. When aiming for
+legs, both leg proxies count as the intended region. Rays that already miss
+the selected region keep their original error and rotation. This preserves
+the existing spread while ensuring a failed roll really misses its aim region.
+Cover and ground are still traced for the final result.
 
-Aim uses the shared `aim-levels.js` settings: 0 / 10 / 20 accuracy bonus and
-1 / 1.5 / 2 AP multipliers. The illustrative gun costs 4 AP at hip aim, so the
-three costs are 4 / 6 / 8. The penalty control represents the net injury/fatigue
-modifier; it does not simulate a merc's individual stats.
+The three candidates differ only in miss placement:
+
+1. **Angular misses:** Regular angular scatter for every failed roll, including
+   a natural 1. Shooter spread is `0.001 + (1 - effective / 100) * 0.025`
+   radians, where `effective = clamp(baseChance + aimBonus - penalty, 1, 100)`.
+   Weapon spread is `0.0005 + (1 - precision / 100) * 0.008`. The quadrature
+   sum is multiplied by `sqrt(-2 * log(1 - radialRoll))`, capped at 60 degrees.
+2. **Helicoid misses:** The same regular scatter, with the existing 28–48-degree
+   error for a natural 1. This is the default pattern.
+3. **Roll-margin misses:** The same wide natural 1. On ordinary failed rolls,
+   `modifier = floor((effective - 50) / 10)` and `margin = die + modifier - 11`.
+   Shooter spread is `0.0105 * clamp(1.2 - margin * 0.12, 0.2, 2.4)`. Weapon
+   spread and radial sampling work as above. This margin affects only where
+   an already-failed roll goes, never the hit probability.
+
+These spread coefficients are unchanged game-balance candidates, not empirical
+calibration. Precision affects misses, not the supplied hit chance.
+
+The helicoid construction was inspired by Vugg's `js/99j-helix-overlay.ts`;
+there is no runtime dependency on Vugg. With uniform random rotation, twist
+does not change the aggregate distribution. It constructs a straight ray,
+not a curved projectile. The earlier `helicoidShot` export remains for legacy
+regression tests and is not used by the comparison.
 
 ## Collision and damage
 
-The nearest ellipsoid, cover plane or ground intersection determines the result.
-Waist-high cover and the head-exposed barrier remain in front of the target at
-one metre, rather than overlapping the muzzle.
+The nearest ellipsoid, cover plane or ground intersection determines impact.
+The waist-high and head-exposed barriers stay in front of the body even at
+one metre. Leg aim uses a leg's center, not the gap between both legs.
 
-Smoke is represented by a finite curtain halfway to the target. A body hit
-whose ray crosses that curtain before impact deals 6–8 damage, including a
-natural 20. The bypass checkbox represents a future skill or tool: it restores
-ordinary damage but does not change the ray, turn a miss into a hit, or grant
-visibility. The study permits aiming through smoke to exercise this hook.
+Smoke is a finite curtain halfway to the target. A body hit crossing it deals
+6–8 damage, even on a natural 20. The bypass checkbox represents a future
+skill/tool: it restores normal damage without changing trajectory, hit
+probability or visibility. The study permits smoke targeting to test that hook.
 
-Sample normal damage is 45–55, with head ×1.5 and legs ×0.85. There is no critical
-damage multiplier, armor or resistance. Mean damage per AP includes misses and
-blocked shots; these values are for comparison and have not been adopted in combat.
+Sample normal damage is 45–55, with head ×1.5 and legs ×0.85. Armor and
+resistance are omitted. Mean damage per AP includes misses and blocked shots.
+These sample damage values have not been adopted in live combat.
 
-## Reproducibility and display
+## Display and reproducibility
 
-Every batch uses 1,000 seeded samples. Each sample reserves D20, radial roll,
-rotation, full-damage roll and graze-damage roll, plus an accuracy-check roll
-from a separate seeded stream. That stream leaves all five earlier values
-unchanged for existing seeds, including the D20 events and failed-shot rays.
-All models and all distance-chart points reuse those inputs. Changing smoke,
-aim, cover or selected model never rerolls them. New rolls changes only the seed;
-Reset restores the reproducible default setup. Actual sampled critical counts
-are displayed; they need not be exactly 50 each.
+Each batch has 1,000 seeded samples. Each sample reserves D20, radial, rotation,
+normal-damage and graze rolls, plus a probability roll from a separate seeded
+stream. Existing seeds retain their original D20 and scatter inputs. Every
+pattern and every distance-chart point shares these rolls; editing conditions
+never rerolls them. New rolls changes the seed; Reset restores defaults.
 
-Every target panel uses the same scale. Large errors are counted outside the
-view so a few critical failures cannot shrink the useful target area. Plotted
-marks are target-plane projections, not claims that a bullet passed through
-cover. The inspector reports the actual first collision separately. Its lower
-diagram is explicitly schematic and does not depict physical flight time.
+The cards distinguish successful hit rolls, selected-part impacts, accidental
+body hits from misses, and cover/ground impacts. Sample percentages can differ
+from the configured chance. The distance chart's dashed line is the shared
+successful-roll rate. Colored lines include accidental body hits and exclude
+intercepted shots, while keeping the configured chance fixed.
 
-## Checks
+All target panels share a scale. Successful rays coincide at the aim point;
+large misses are counted outside the view. Marks are target-plane projections,
+not claims that bullets passed through cover. The inspector shows the roll
+separately from its impact, and explains when a miss was moved beyond the
+selected part. Its diagram is schematic, with exaggerated offsets and no
+physical flight-time simulation. A successful roll bypasses that construction.
+
+## Validation and remaining integration
 
 - `node --test tests/shot-models.test.mjs tests/helicoid-shot.test.mjs tests/aim-levels.test.mjs`
-- `node tools/check-shot-models.mjs` with `PLAYWRIGHT_PATH` and, optionally,
-  `EDITOR_ORIGIN`. The test closes its temporary browser even after failures.
-- `npm run build:tactics-3d`, including the study's module closure.
+- `node tools/check-shot-models.mjs` with `PLAYWRIGHT_PATH` and optionally
+  `EDITOR_ORIGIN`. It closes its temporary browser on success or failure.
+- `npm run build:tactics-3d`, including the study's module closure check.
 
-The browser check covers model selection, seeded reset, critical-roll inspection,
-point-blank misses, cover, smoke bypass, aim/AP, invalid seeds and narrow screens.
-The next decision is which distribution to tune; live combat integration still
-needs real muzzle transforms, character collisions and the same sampler in the
-shot-menu forecasts.
+Tests cover exact probability accounting including criticals; consistency
+across distance, precision, body part and miss pattern; incidental head/leg
+hits; preservation of original miss spread; cover; smoke; reproducibility;
+aim/AP; and desktop/mobile UI behavior.
+
+Live integration still needs the final chance calculation and matching shot-menu
+forecasts, real muzzle transforms and character/scene collisions. Visibility,
+held weapons, moving targets and projectile animation remain outside this study.

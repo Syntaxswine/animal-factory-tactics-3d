@@ -1,4 +1,4 @@
-// Metres, arbitrary world-space muzzle/aim axis. No hit/miss pre-roll.
+// Pure ray geometry in metres; callers own the hit-probability decision.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const add=(a,b,k=1)=>a.map((v,i)=>v+b[i]*k),dot=(a,b)=>a.reduce((v,x,i)=>v+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const n=Math.hypot(...a);return a.map(v=>v/n);};
 export function seededShots(seed){let n=seed>>>0;return ()=>{n=(Math.imul(1664525,n)+1013904223)>>>0;return n/4294967296;};}
