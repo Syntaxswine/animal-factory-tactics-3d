@@ -2,17 +2,17 @@
 
 October 4, 2026. Open `tactics/painted-fire-study.html` in a served build, or follow **Painted fire** in the 3D gallery. This is a horse-first presentation study, separate from the combat agent's area-effect implementation.
 
-[Download the looping GIF](evidence/painted-fire-study.gif): 960 × 540, 6.4 seconds, approximately 3.9 MB. It records the approved whole-scene animation at 20 samples per second, with short holds at the start and on the final ash pile. The GIF export changes no motion or gameplay behavior.
+[Download the looping GIF](evidence/painted-fire-study.gif): 960 × 540, 6.4 seconds, approximately 5.3 MB. It records the whole-scene animation with the requested thick black smoke at 20 samples per second, with short holds at the start and on the final ash pile. The GIF export changes no motion or gameplay behavior.
 
 ## What is implemented
 
 - Approved horse dimensions and existing flamethrower, tanks, hose and grips. Carry → brace → spray → trailing cutoff → recover, with fixed supporting hooves and continuous hand contact.
 - A full-body flame envelope, an urgent journey through three supplied adjacent tiles, a supported collapse, a visual rifle drop, and a grounded ash heap. One-step and blocked routes demonstrate shorter endpoints.
-- Three generated paintings: a four-frame flame atlas, a four-frame smoke atlas and an ash decal. The burst uses moving, irregular painted billows over a faint clipped core. The character envelope follows thirteen body regions. Smoke detaches in world space, rises and fades; the settled body breaks up beneath the fire before the ash remains.
+- Three generated paintings: a four-frame flame atlas, a four-frame smoke atlas and an ash decal. The burst uses moving, irregular painted billows over a faint clipped core. The character envelope follows thirteen body regions. Eighteen overlapping smoke billows use charcoal-black shading while preserving the painted highlights. Their source lowers with the collapse; emitted smoke stays in world space, rises and fades over two seconds. The settled body breaks up beneath the fire before the ash remains.
 - A scrubbable clock, four camera views, drag orbit, close/gameplay scales, shooter/target/whole-scene focus, and an effects toggle for inspecting support. Reduced-motion preferences start the study paused.
 - Open ground, a full wall and an open doorway, using **captured results from the incoming gameplay `flameShape`**, including its original clipped rays. Protected targets stay unaffected in the wall demonstration.
 
-The effect uses 2,116 triangles at its maximum open-ground allocation, including the simple ash mound; nearly all visible detail comes from paint. The two characters and their existing equipment are additional. Three texture PNGs total about 4.6 MB. No character subdivision or sculpt rebuilding was needed.
+The effect uses 2,128 triangles at its maximum open-ground allocation, including the simple ash mound; nearly all visible detail comes from paint. The two characters and their existing equipment are additional. Three texture PNGs total about 4.6 MB. No character subdivision or sculpt rebuilding was needed.
 
 ## Integration contract and limits
 

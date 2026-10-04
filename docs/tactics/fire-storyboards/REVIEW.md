@@ -59,3 +59,17 @@ The reviewer inspected rendered still sequences, code and reports, **not continu
 - [Browser results and playback timestamps](evidence/browser-review.json)
 
 Minor remaining art polish: the billows retain some repeated puff rhythm. Remaining integration gates: authoritative terminal/casualty/loot ownership, real scene transforms and visibility, turning or elevated routes, arbitrary aim, other animals/outfits/stances and actual combat interruptions. No gameplay approval or deployment is claimed by this study score.
+
+## Thick black smoke refinement: 9/10
+
+October 4, 2026. The independent reviewer approved this smoke-only refinement at **9/10**, with no code or visual blocker. Dense charcoal-black billows retain their painted lobes; flames, travel direction, collapse and the final ash/rifle remain readable. The existing atlas is shaded at runtime, with eighteen overlapping cards instead of twelve and slower painted-frame transitions. Character motion and gameplay behavior are unchanged.
+
+The reviewer inspected the code diff, whole-scene frames at 1.2, 2.3, 3.6, 4.5 and 5.4 seconds, close views and the fresh browser report. Absolute-time births, retained world positions and complete material disposal preserve deterministic seeking and cleanup. The last full-route smoke expires at 5.36 seconds; the 5.4-second end frame is clear. This was a still-sequence review, not continuous GIF or video playback. The requested documentation correction to **2,128 effect triangles** is included.
+
+All 15 focused tests, the build and asset check passed. The new browser run passed 72 configurations without errors; geometry and texture counts stayed at 74 and 15. The refreshed GIF decodes successfully at 960 × 540 with a 6.4-second infinite loop. Both temporary capture browsers closed and their recorded processes were verified exited; the existing user-review preview keeps its original expiry.
+
+- [Black smoke trail](evidence/black-smoke-trail.png) and [close view](evidence/black-smoke-close.png)
+- [Updated GIF](evidence/painted-fire-study.gif)
+- [Fresh browser report](evidence/black-smoke-browser-review.json)
+
+The earlier evidence images above remain the pre-refinement captures. This score approves the smoke change within the same horse-study scope; gameplay integration remains separate.

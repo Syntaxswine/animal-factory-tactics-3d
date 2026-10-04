@@ -28,8 +28,8 @@ function shader(texture,{smoke=false,fan=false,plume=false,seed=0}={}){
    ${plume?'uniform vec2 rays[37];uniform float wedges[36],angle,spread,nozzle;':''}
    vec4 frame(float n,vec2 p){n=mod(n,4.0);vec2 cell=vec2(mod(n,2.0),1.0-floor(n/2.0));return texture2D(map,(cell+clamp(p,.012,.988))*.5);}
    void main(){${plume?`vec2 at=vWorld.xz;float bearing=atan(at.y,at.x)-angle;bearing=atan(sin(bearing),cos(bearing));if(abs(bearing)>spread||dot(at,vec2(cos(angle),sin(angle)))<nozzle)discard;int i=int(clamp(floor((bearing+spread)/spread*.5*36.0),0.0,35.0));vec2 a0=rays[i],b0=rays[i+1];if(wedges[i]<.5||(b0.x-a0.x)*(at.y-a0.y)-(b0.y-a0.y)*(at.x-a0.x)<0.0)discard;`:''}
-   float phase=clock*5.0+seed;vec2 p=vUv;p.x+=.018*sin(p.y*7.0+clock*6.0+seed);${plume?'if(sin(seed)>.0)p.x=1.0-p.x;':''}vec4 a=frame(floor(phase),p),b=frame(floor(phase)+1.0,p);vec4 c=mix(a,b,smoothstep(.0,1.0,fract(phase)));
-   ${smoke?'float l=dot(c.rgb,vec3(.299,.587,.114));c.rgb=vec3(l*.91,l*.85,l*.75);':''}
+   float phase=clock*${smoke?'2.1':'5.0'}+seed;vec2 p=vUv;p.x+=.018*sin(p.y*7.0+clock*${smoke?'1.4':'6.0'}+seed);${plume?'if(sin(seed)>.0)p.x=1.0-p.x;':''}vec4 a=frame(floor(phase),p),b=frame(floor(phase)+1.0,p);vec4 c=mix(a,b,smoothstep(.0,1.0,fract(phase)));
+   ${smoke?'float l=dot(c.rgb,vec3(.299,.587,.114));c.rgb=vec3(.004+.058*pow(l,.78));c.a=1.0-pow(1.0-c.a,1.45);':''}
    c.a*=opacity;${fan?'c.a*=mix(1.0,.20,smoothstep(.3,1.5,vDistance))*smoothstep(vDistance-.24,vDistance+.12,head)*(1.0-smoothstep(vDistance-.12,vDistance+.22,tail));':''}
    if(c.a<.015)discard;gl_FragColor=c;
    #include <colorspace_fragment>
@@ -47,7 +47,7 @@ export async function createPaintedFireEffects(scene,loader,worker){
  const bones=Object.fromEntries(worker.bones.map(b=>[b.name,b]));
  const zones=[['head',.54,.69,0,.17],['spine',.68,.83,0,0],['hips',.65,.70,0,0],...[-1,1].flatMap(s=>[['upperArm'+s,.40,.54,0,0],['forearm'+s,.32,.56,0,-.05],['thigh'+s,.37,.64,0,-.14],['shin'+s,.32,.57,0,-.11],['hoof'+s,.31,.39,0,.05]])];
  const wraps=zones.flatMap(([name,w,h,x,y],i)=>[-1,1].map((side,j)=>{const m=new T.Mesh(plane,material(textures[0],{seed:i*.67+j*1.7}));m.scale.set(w,h,1);m.userData={bone:bones[name],offset:V(x,y,0),side,width:w,height:h};group.add(m);return m;}));
- const smokes=Array.from({length:12},(_,i)=>{const m=new T.Mesh(plane,material(textures[1],{smoke:true,seed:i*.39}));group.add(m);return m;});
+ const smokes=Array.from({length:18},(_,i)=>{const m=new T.Mesh(plane,material(textures[1],{smoke:true,seed:i*.39}));group.add(m);return m;});
  const ashMaterial=new T.MeshBasicMaterial({map:textures[2],transparent:true,depthWrite:false,side:T.DoubleSide,toneMapped:false});materials.push(ashMaterial);
  const ashGeometry=new T.PlaneGeometry(1.25,1.05,12,10);geometries.push(ashGeometry);ashGeometry.rotateX(-Math.PI/2);
  for(let i=0;i<ashGeometry.attributes.position.count;i++){const a=ashGeometry.attributes.position,x=a.getX(i),z=a.getZ(i);a.setY(i,.007+.09*Math.max(0,1-(x/.55)**2-(z/.45)**2));}ashGeometry.computeVertexNormals();
@@ -76,7 +76,15 @@ export async function createPaintedFireEffects(scene,loader,worker){
    }
    const toward=camera.position.clone().sub(worker.root.position);toward.y=0;toward.normalize();
    for(const m of wraps){m.visible=body&&s.active&&s.engulf>.001;m.position.copy(m.userData.bone.getWorldPosition(V())).add(m.userData.offset).addScaledVector(toward,m.userData.side*m.userData.width*.35);m.position.y=s.point.y+(m.position.y-s.point.y)*(1-.65*s.fireTail);m.quaternion.copy(camera.quaternion);m.material.uniforms.clock.value=time;m.material.uniforms.opacity.value=.72*s.engulf;}
-   for(let i=0;i<smokes.length;i++){const m=smokes[i],birth=FIRE_TIME.hit+i*.23,age=time-birth,bs=burnState(birth,route);m.visible=body&&age>=0&&age<1.65&&bs.dissolve<1;m.position.set(bs.point.x-.12*age,bs.point.y+1.2+age*.65,bs.point.z+.13*Math.sin(i)*age);m.quaternion.copy(camera.quaternion);m.scale.setScalar(.55+age*.48);m.material.uniforms.opacity.value=.32*smooth(age/.18)*(1-smooth((age-.7)/.95));m.material.uniforms.clock.value=time;}
+   // Overlapping painted billows retain their birth position as the victim moves.
+   // Lower new emissions with the collapse, then let the existing trail rise away.
+   for(let i=0;i<smokes.length;i++){
+    const m=smokes[i],birth=FIRE_TIME.hit+i*.16,age=time-birth,bs=burnState(birth,route);
+    m.visible=body&&age>=0&&age<2&&bs.dissolve<1;if(!m.visible)continue;
+    m.position.set(bs.point.x-.18*age,bs.point.y+1.45-1.05*bs.collapse+age*.75,bs.point.z+.10*Math.sin(i*1.7)*age);
+    m.quaternion.copy(camera.quaternion);m.scale.set(.82+age*.52,1.1+age*.74,1);
+    m.material.uniforms.opacity.value=.88*smooth(age/.12)*(1-smooth((age-1.1)/.9));m.material.uniforms.clock.value=time;
+   }
    const dest=route.points.at(-1);ash.visible=body&&s.ash>0;ash.position.set(dest.x,dest.y,dest.z);ashMaterial.opacity=s.ash;
    return {triangles:triangles+(wraps.length+plumes.length+smokes.length)*2+240,activeCards:wraps.filter(m=>m.visible).length,activePlumes:plumes.filter(m=>m.visible).length,ashOpacity:s.ash};
   },
