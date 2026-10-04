@@ -4,7 +4,7 @@ import {AIM_LEVELS,shotAim} from './aim-levels.js';
 export const SHOT_MODELS=[
  {id:'angular',name:'Angular misses',tag:'Regular scatter',color:'#466978',description:'Every failed roll uses the original angular scatter outside the intended body part.'},
  {id:'critical',name:'Helicoid misses',tag:'Original miss spread',color:'#ac3a28',description:'The original helicoid spread places failed rolls. Successful rolls go directly to the aim point.'},
- {id:'margin',name:'Roll-margin misses',tag:'Dice influence miss placement',color:'#867031',description:'The D20 margin changes where a failed roll goes. It does not decide the hit chance.'}
+ {id:'margin',name:'Roll-margin misses',tag:'Preferred pattern',color:'#867031',description:'The D20 margin changes where a failed roll goes. It does not decide the hit chance.'}
 ];
 export const DISTANCES=[1,5,10,20,40,60,100];
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));

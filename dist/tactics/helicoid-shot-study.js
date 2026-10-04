@@ -2,7 +2,7 @@ import {SHOT_MODELS,DEFAULT_SHOT_SETUP,shotInputs,compareShots,distanceCompariso
 
 const $=id=>document.getElementById(id);
 const controls=['accuracy','precision','penalty','distance','aim-level','zone','cover','smoke','smoke-bypass','seed'];
-let selectedModel='critical',batch,inputs,curveKey='',curves=[],pending=false;
+let selectedModel='margin',batch,inputs,curveKey='',curves=[],pending=false;
 const percent=(n,total)=>(100*n/total).toFixed(1)+'%';
 const sign=n=>(n>=0?'+':'')+n;
 const settings=()=>({accuracy:+$('accuracy').value,precision:+$('precision').value,penalty:+$('penalty').value,distance:+$('distance').value,aimLevel:$('aim-level').value,zone:$('zone').value,cover:$('cover').value,smoke:$('smoke').checked,smokeBypass:$('smoke-bypass').checked,seed:+$('seed').value});

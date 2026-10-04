@@ -8,6 +8,11 @@ This replaces the earlier central-cluster experiment.
 This is a tester change. Live combat, combat RNG and save formats are unchanged.
 The target uses ellipsoid body proxies, not animal meshes.
 
+Following user review, **Roll-margin misses** is the preferred pattern for
+gameplay integration and the tester's initial selection. The other patterns
+remain available for comparison. This selection does not change hit probability
+or retune the miss spread.
+
 ## Hit probability
 
 The tester accepts a base hit chance. Aim adds 0 / 10 / 20 percentage points;
@@ -59,7 +64,7 @@ The three candidates differ only in miss placement:
    Weapon spread is `0.0005 + (1 - precision / 100) * 0.008`. The quadrature
    sum is multiplied by `sqrt(-2 * log(1 - radialRoll))`, capped at 60 degrees.
 2. **Helicoid misses:** The same regular scatter, with the existing 28–48-degree
-   error for a natural 1. This is the default pattern.
+   error for a natural 1.
 3. **Roll-margin misses:** The same wide natural 1. On ordinary failed rolls,
    `modifier = floor((effective - 50) / 10)` and `margin = die + modifier - 11`.
    Shooter spread is `0.0105 * clamp(1.2 - margin * 0.12, 0.2, 2.4)`. Weapon
