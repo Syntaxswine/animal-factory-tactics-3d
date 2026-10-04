@@ -5,11 +5,12 @@ A shared probability roll decides whether the selected body part is hit.
 The helicoid no longer determines whether a successful roll is accurate enough.
 This replaces the earlier central-cluster experiment.
 
-This is a tester change. Live combat, combat RNG and save formats are unchanged.
-The target uses ellipsoid body proxies, not animal meshes.
+Live 3D firearms now use the same roll-margin calculation. The tester remains
+a comparison using ellipsoid body proxies; gameplay uses its existing tactical
+actor and obstacle collision volumes. Save formats are unchanged.
 
 Following user review, **Roll-margin misses** is the preferred pattern for
-gameplay integration and the tester's initial selection. The other patterns
+gameplay and the tester's initial selection. The other patterns
 remain available for comparison. This selection does not change hit probability
 or retune the miss spread.
 
@@ -32,9 +33,9 @@ preserving the requested D20 critical success/failure rules:
 All patterns reuse exactly the same hit-roll outcomes. The tester holds the
 supplied chance fixed when distance, weapon precision or target part changes.
 Those controls cannot silently reduce successful rolls through a second
-geometry test. When integrated, the game's chance calculation should account
-for range, shooter stats, target part, exposure and other modifiers **before**
-resolving the hit roll. That calculation is outside this study.
+geometry test. Live gameplay's existing chance calculation accounts for range,
+shooter stats, target part, cover, aim, injury and fatigue **before** resolving
+the hit roll. That calculation remains outside this study's manual controls.
 
 Aim uses shared `aim-levels.js` settings: AP multipliers 1 / 1.5 / 2. The sample
 gun's hip shot costs 4 AP, so the three costs are 4 / 6 / 8 AP.
@@ -128,6 +129,46 @@ across distance, precision, body part and miss pattern; incidental head/leg
 hits; preservation of original miss spread; cover; smoke; reproducibility;
 aim/AP; and desktop/mobile UI behavior.
 
-Live integration still needs the final chance calculation and matching shot-menu
-forecasts, real muzzle transforms and character/scene collisions. Visibility,
-held weapons, moving targets and projectile animation remain outside this study.
+## Live integration
+
+`ballistic-shot.js` connects this math to the pinned 3D core through
+`tools/core-ballistics-adapter.mjs`. Regenerate with `tools/sync-tactics-core.mjs`;
+do not edit the generated core files directly. The original sprite branch is
+unchanged. Every fired round uses a shared probability result and sends only
+failed rolls through roll-margin scatter. Natural 1 and 20 are included in the
+5–95% final chance. Bursts use their existing per-round recoil penalties, AP
+charge and ammunition accounting. Guard fire, overwatch and retaliation follow
+the same path; melee, flames and explosives keep their prior resolution.
+
+The shot planner weights successes directly and samples misses using the
+conditional D20 distribution. At 95% hit chance, all failed rolls are natural
+1s; they must not be sampled as ordinary misses. Forecasts use a private seeded
+stream and never consume encounter RNG. Live shots retain their probability
+roll, angular error, direction and actual first collision in the event.
+
+Shotguns roll once per shell. A centered pellet follows that result and the
+remaining pellets spread around it. A failed shell's pellets can hit other
+parts or other people, but cannot become hits on the selected body region.
+All pellets retain their actual collision-based damage regions. The centered
+successful pellet preserves the existing selected-region aiming behavior.
+
+Physical tracing still handles floors, walls, windows, trellises, props, cliffs,
+ramps, towers, casualties and bystanders. Tactical actors remain stance-scaled
+cylinders with height-based regions, including the existing synthetic weapon
+target on an accurate shot. This does not replace those volumes with animal
+mesh colliders. Tactical launch points remain stance-based and include tower
+and cliff support heights. Rendering uses the model's muzzle when available
+and the resolved endpoints; it never changes damage based on animation or
+model loading. Tracers now cover other firearms and shotgun pellet paths,
+with existing visibility clipping and reduced-motion behavior.
+
+Weapon precision defaults to the reviewed study value of 80 and can be supplied
+per weapon; this pass does not introduce new per-weapon balance coefficients.
+Smoke curtains and their graze/bypass controls remain study-only because there
+is no tactical smoke-volume system yet. They are not inferred from decorative
+flamethrower smoke. Visible mesh-based body exposure, animated launch transforms
+as simulation inputs, and travel-time simulation remain separate work.
+
+Integration checks additionally cover `tests/ballistic-shot.test.mjs`, the combat,
+jam, loot, tower and save suites, `tools/check-shot-planner.mjs`, core generation
+verification and the deployment build's missing-module checks.

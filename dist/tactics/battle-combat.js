@@ -4,7 +4,7 @@ const clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>{x=clamp(x);return x*x*(3-2*x);
 export function shotPhase(elapsed,rifle=true,reduced=false){
  const discharge=reduced||!rifle?0:RIFLE_SHOT_MS,duration=reduced?180:rifle?RIFLE_DURATION_MS:260,t=elapsed-discharge;
  return {duration,discharged:t>=0,aim:reduced?1:rifle?ease(elapsed/320)*(1-ease((elapsed-800)/300)):0,
-  recoil:reduced||t<0||t>.45e3?0:t<30?ease(t/30):1-ease((t-30)/420),flash:!reduced&&rifle&&t>=0&&t<65,trace:!reduced&&rifle&&t>=0&&t<180,impact:t>=0&&t<180};
+  recoil:reduced||t<0||t>.45e3?0:t<30?ease(t/30):1-ease((t-30)/420),flash:!reduced&&t>=0&&t<65,trace:!reduced&&t>=0&&t<180,impact:t>=0&&t<180};
 }
 export class BattleCombat {
  constructor(){this.lastEffect=null;this.previous=new Map();this.queue=[];this.held=new Map();this.active=null;}

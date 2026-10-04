@@ -2,6 +2,38 @@
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const add=(a,b,k=1)=>a.map((v,i)=>v+b[i]*k),dot=(a,b)=>a.reduce((v,x,i)=>v+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const n=Math.hypot(...a);return a.map(v=>v/n);};
 export function seededShots(seed){let n=seed>>>0;return ()=>{n=(Math.imul(1664525,n)+1013904223)>>>0;return n/4294967296;};}
+// Shared by the tuning study, live firearms and their forecast. The final
+// probability includes the 5% natural success/failure bands, exactly once.
+export const firearmHitChance=chance=>clamp(chance,5,95);
+export function resolveShotRoll(chance,{die,accuracyRoll}){
+ const critical=die===20?'success':die===1?'failure':'ordinary',ordinaryChance=(firearmHitChance(chance)-5)/90;
+ return {die,critical,ordinaryChance,rolledHit:critical==='success'||critical==='ordinary'&&accuracyRoll<ordinaryChance};
+}
+export function rollFirearmShot(chance,random){return resolveShotRoll(chance,{die:1+Math.floor(random()*20),accuracyRoll:random()});}
+// Conditional distribution of the D20 given a failed hit roll. In particular,
+// every miss at 95% chance is a natural 1. Forecasts must use this distribution.
+export function failedShotRoll(chance,random){
+ const criticalShare=5/(100-firearmHitChance(chance)),roll=random();
+ const die=roll<criticalShare?1:Math.min(19,2+Math.floor((roll-criticalShare)/(1-criticalShare)*18));
+ return {die,critical:die===1?'failure':'ordinary',rolledHit:false};
+}
+export function rollMarginScatter({chance,precision=80,die,roll}){
+ const modifier=Math.floor((clamp(chance,1,100)-50)/10),margin=die+modifier-11;
+ const weapon=.0005+(1-clamp(precision,1,100)/100)*.008,shooter=.0105*clamp(1.2-margin*.12,.2,2.4),sigma=Math.hypot(shooter,weapon);
+ const error=die===1?(28+roll*20)*Math.PI/180:Math.min(Math.PI/3,sigma*Math.sqrt(-2*Math.log(1-roll)));
+ return {error,sigma,margin};
+}
+// Keep the sampled bearing and original spread where it already misses. A
+// failed roll that lands on the selected region moves just beyond its outline.
+// Callers supply only that region's collision query, without scenery/allies.
+export function placeHelicoidMiss({origin,aim,error,rotation},strikesIntended){
+ const make=error=>angularHelicoidShot({origin,aim,error,rotation}),shot=make(error);
+ if(!strikesIntended(shot))return {...shot,missAdjusted:false};
+ let low=error,high=Math.PI*.49,clear=make(high);
+ if(strikesIntended(clear))throw Error('Cannot place miss outside target silhouette');
+ for(let i=0;i<16;i++){const mid=(low+high)/2,candidate=make(mid);if(strikesIntended(candidate))low=mid;else{high=mid;clear=candidate;}}
+ return {...clear,missAdjusted:true};
+}
 // Project an angular error onto a fixed helicoid section. Distance affects the
 // target-plane offset exactly once: distance * tan(error). The section is one
 // metre ahead of the muzzle; it is a construction point, not the bullet path.

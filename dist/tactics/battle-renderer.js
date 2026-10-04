@@ -104,7 +104,11 @@ export class BattleRenderer extends HybridRenderer {
    model.placement=placement;root.updateMatrixWorld(true);worker.skeleton.update();
    for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}
   }
-  if(shot)this.shotEffects.update(shot,this.state,shot.rifle&&!shot.presentationUnsupported&&model.firing?model.firing.muzzle():null);
+  if(shot){
+   const gun=model.equipment,anchor=gun?.anchors?.muzzle;
+   const muzzle=shot.rifle?(!shot.presentationUnsupported&&model.firing?model.firing.muzzle():null):anchor&&gun.root.visible?{origin:anchor.getWorldPosition(new T.Vector3()),direction:new T.Vector3(1,0,0).transformDirection((gun.barrel||gun.root).matrixWorld)}:null;
+   this.shotEffects.update(shot,this.state,muzzle);
+  }
   return root;
  }
  firingDiagnostic(model,result,unit){

@@ -16,7 +16,7 @@
       "upstreamSha256": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262"
     },
     "engine.js": {
-      "reason": "Shared aimed-shot, burst recoil, leg injury and suppression rules. Retain decorative roof layer for rendering. Expose discovered roof connections and emit committed roof traversal events. Use walking costs and live ramp support at combat query positions. Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events. Apply character identity, allegiance, hostility and noncombatant reactions during playtesting.",
+      "reason": "Roll firearm probability once with D20 extremes; use shared roll-margin misses for bullets and shells. Shared aimed-shot, burst recoil, leg injury and suppression rules. Retain decorative roof layer for rendering. Expose discovered roof connections and emit committed roof traversal events. Use walking costs and live ramp support at combat query positions. Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events. Apply character identity, allegiance, hostility and noncombatant reactions during playtesting.",
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
     "environment.js": {
@@ -40,7 +40,7 @@
       "upstreamSha256": "8cf9aed74b163167aa7e432ad0c744ab9d3f55a30d5a3f3eaf218c163bde4e23"
     },
     "projectiles.js": {
-      "reason": "Intersect the continuous ramp solid. Trace open tower windows, elevated occupants and welded cliff surfaces. Use physical cliff caps instead of phantom upper slabs.",
+      "reason": "Share actor intersections with helicoid miss placement while retaining tactical obstacle tracing. Intersect the continuous ramp solid. Trace open tower windows, elevated occupants and welded cliff surfaces. Use physical cliff caps instead of phantom upper slabs.",
       "upstreamSha256": "f8b2afc98c686cd892189d17f4fe7cb7ae7c16b8d8f2f8609ca78cf8b3192674"
     },
     "world.js": {
@@ -53,7 +53,7 @@
     "blocks.js": "92d72689e79fa06e45bf73aeb715406a8937007c7569fe7a89af41eab781118a",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
     "editor-model.js": "10dda96c0af9e22e2eb9449daff706924267c15c9e6f490fcf2baa3b6cefb0a2",
-    "engine.js": "fc1afa972a9f8ea30cef3fac107597458d47d15e0bfe2ced81595f376a191ebb",
+    "engine.js": "4c38a86495b4d0ad110b37d3691b6b3172d47b4eaf14d72fab80cb5033f9c200",
     "environment.js": "a415382e5ef43f16c45d673275467107406c12b74547b2dc662552a2c4d08bb9",
     "explosives.js": "d28c8600c983f8a018a32e84a137836b81165d80924587f0195f23a540a64fa4",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
@@ -63,7 +63,7 @@
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",
-    "projectiles.js": "b34462e675efc7b729e559ff66e696c46cd1a6e0ceea86aa81cd2d63c3e10837",
+    "projectiles.js": "08856c548744db387c51bb2cafc2f42fbea278248b8aba953604a5228e6d7913",
     "recruits.js": "5e4495962cdad3d0b57f0d1784bddbf54fa785e6e00a9ae932cfb7dbbbeeb81b",
     "sector-rules.js": "d20ee872471a503a60ac706655b19f9ba9857c41882dd6cc6a08d61e3572132a",
     "visibility.js": "17d3de4a6aca835dc176ac3fcc9f460fb12aae83bf5d2c0154b29a789ed5dc48",

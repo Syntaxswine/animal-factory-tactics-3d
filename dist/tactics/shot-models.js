@@ -1,4 +1,4 @@
-import {angularHelicoidShot,seededShots,studyBody,traceStudy} from './helicoid-shot.js';
+import {angularHelicoidShot,seededShots,studyBody,traceStudy,resolveShotRoll,rollMarginScatter,placeHelicoidMiss} from './helicoid-shot.js';
 import {AIM_LEVELS,shotAim} from './aim-levels.js';
 
 export const SHOT_MODELS=[
@@ -37,24 +37,11 @@ export function prepareShotSetup(settings={}){
 }
 
 export function resolveHitRoll(setup,input){
- const critical=input.die===20?'success':input.die===1?'failure':'ordinary';
- // The supplied chance INCLUDES natural 1/20. Do not count their 5% twice.
- const ordinaryChance=clamp((setup.hitChance-5)/90,0,1);
- return {critical,ordinaryChance,rolledHit:critical==='success'||critical==='ordinary'&&input.accuracyRoll<ordinaryChance};
+ return resolveShotRoll(setup.hitChance,input);
 }
 
 function placeMiss(setup,error,rotation){
- const make=error=>angularHelicoidShot({origin:setup.origin,aim:setup.aim,error,rotation});
- const strikesIntended=shot=>traceStudy(shot,setup.bodies).zone===setup.zone;
- let shot=make(error);
- if(!strikesIntended(shot))return {...shot,missAdjusted:false};
- // A miss of the selected part must actually pass outside that part. Find
- // its silhouette boundary along the sampled bearing, without another roll.
- // Other body parts remain collision candidates, and cover is traced later.
- let low=error,high=Math.PI*.49,clear=make(high);
- if(strikesIntended(clear))throw Error('Cannot place miss outside target silhouette');
- for(let i=0;i<16;i++){const mid=(low+high)/2,candidate=make(mid);if(strikesIntended(candidate))low=mid;else{high=mid;clear=candidate;}}
- return {...clear,missAdjusted:true};
+ return placeHelicoidMiss({origin:setup.origin,aim:setup.aim,error,rotation},shot=>traceStudy(shot,setup.bodies).zone===setup.zone);
 }
 
 export function modelShot(model,setup,input){
@@ -69,6 +56,7 @@ export function modelShot(model,setup,input){
  // A fixed large ANGLE keeps a natural 1 exceptional at close range. Never
  // exclude other body parts: the resulting ray can still strike one of them.
  if(model!=='angular'&&critical==='failure')error=(28+roll*20)*Math.PI/180;
+ if(model==='margin')error=rollMarginScatter({chance:setup.effective,precision:setup.precision,die,roll}).error;
  const shot=rolledHit?{...angularHelicoidShot({origin:setup.origin,aim:setup.aim,error:0,rotation}),missAdjusted:false}:placeMiss(setup,error,rotation);
  const collision=traceStudy(shot,setup.bodies,setup.coverPlane),hit=bodyZones.has(collision.zone);
  // A smoke curtain occupies the line in front of the target. Damage bypass
