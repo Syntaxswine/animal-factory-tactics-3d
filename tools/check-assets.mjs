@@ -6,7 +6,8 @@ import {ROOF_KINDS,GAP_ROOF_KINDS,climbableRoofKind} from '../dist/tactics/climb
 import {environmentGeometries} from '../dist/tactics/environment-geometry.js';
 import {environmentVisuals} from '../dist/tactics/environment-visuals.js';
 import {buildWorld} from '../dist/tactics/hybrid-world.js';
-import {surfacePixels} from '../dist/tactics/hybrid-materials.js';
+import {surfacePixels,materialKind} from '../dist/tactics/hybrid-materials.js';
+import {TRELLIS_KIND,TRELLIS_ARCH_KIND} from '../dist/tactics/bridge-trellis.js';
 import {CARGO_ATLAS} from '../dist/tactics/painted-cargo.js';
 import {PAINTED_ATLAS} from '../dist/tactics/painted-environment-scene.js';
 import {FOLIAGE_ATLAS,FOLIAGE_MATERIALS} from '../dist/tactics/foliage-materials.js';
@@ -58,7 +59,7 @@ for(const file of ['index.html','sprites.html','app.js','engine.js','people.js',
 const environment=JSON.parse(await readFile(new URL('assets/environment/manifest.json',root)));
 const artIds=[...Object.keys(PROPS),...new Set(Object.values(EDGES).map(r=>r.art).filter(Boolean)),...GROUNDS];
 // Procedural assets and roof aliases have real render paths, not independent PNGs.
-const proceduralProps=[...Object.keys(RAMP_PROPS),...Object.keys(BANK_PROPS)],roofAliases=ROOF_KINDS.map(climbableRoofKind),nonRaster=new Set([...proceduralProps,...roofAliases,...GAP_ROOF_KINDS,...DIAGONAL_ROADS]);
+const proceduralProps=[...Object.keys(RAMP_PROPS),...Object.keys(BANK_PROPS)],proceduralEdges=[TRELLIS_KIND,TRELLIS_ARCH_KIND],proceduralGround=['ground-wood-planks'],roofAliases=ROOF_KINDS.map(climbableRoofKind),nonRaster=new Set([...proceduralProps,...proceduralEdges,...proceduralGround,...roofAliases,...GAP_ROOF_KINDS,...DIAGONAL_ROADS]);
 assert.deepEqual(environment.assets.map(a=>a.id).sort(),artIds.filter(id=>!nonRaster.has(id)).sort());
 const geometries=environmentGeometries();
 try{for(const kind of [...proceduralProps,...roofAliases]){
@@ -66,6 +67,13 @@ try{for(const kind of [...proceduralProps,...roofAliases]){
  const parts=environmentVisuals(buildWorld(map),map).filter(p=>p.source.prop?.endsWith(':'+kind));assert(parts.length,kind);
  for(const p of parts){const g=geometries[p.shape||'box'];assert(g?.attributes.position.count,kind);assert([...g.attributes.position.array].every(Number.isFinite),kind);assert(p.size.every(n=>Number.isFinite(n)&&n>0),kind);}
 }}finally{Object.values(geometries).forEach(g=>g.dispose());}
+for(const kind of proceduralEdges){
+ assert(EDGES[kind],kind);const world=buildWorld({terrain:[['yard']],props:[],edges:{'e:0:0':kind}}),parts=world.boxes.filter(p=>p.source.edge==='e:0:0');
+ assert(parts.length,kind);assert(parts.every(p=>p.trellisPart&&p.center.every(Number.isFinite)&&p.size.every(n=>Number.isFinite(n)&&n>0)),kind);
+}
+for(const kind of proceduralGround){
+ assert(GROUNDS.includes(kind),kind);const material=materialKind({kind:'floor',material:kind});assert.equal(material,'wood-planks');const {data:pixels}=surfacePixels(material,16);assert.equal(pixels.length,16*16*4);assert(pixels.some(v=>v!==0),kind);
+}
 for(const kind of ROOF_KINDS)assert(environment.assets.some(a=>a.id===kind),kind);
 for(const kind of DIAGONAL_ROADS){assert(GROUNDS.includes(kind),kind);assert(FOLIAGE_MATERIALS.has(kind),kind);const {data:pixels}=surfacePixels(kind,16);assert.equal(pixels.length,16*16*4,kind);assert(pixels.some(v=>v!==0),kind);}
 for(const a of environment.assets)await checkPNG('assets/environment/'+a.file,1254,1254,a.kind==='terrain'?2:6);
