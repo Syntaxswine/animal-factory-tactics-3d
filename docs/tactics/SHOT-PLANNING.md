@@ -101,3 +101,47 @@ This includes daylight shade and ordinary lamps, bypassing peripheral acuity,
 woodland recognition penalties and accumulated awareness. Solid body-ray
 occlusion still applies. Sneaking or darker targets retain awareness checks,
 close-contact recognition and the recognition retention threshold described above.
+
+## Flamethrower area targeting
+
+The 3D flamethrower now uses an ice-cream-cone template anchored at the shooter,
+10 tiles long and 6 tiles across at its widest. Its outline joins the nozzle
+to a circular mouth with a rounded cap. Select **Aim flame cone**,
+move the pointer to orient it, click to place, then **Fire spray**. Reposition
+and Escape/Cancel spend nothing. Clicking an identified opponent with the
+flamethrower equipped places the fan toward that person instead of opening the
+body-part shot planner. Ground clicks still move normally outside aiming mode.
+
+Planning pauses encounter time and movement while leaving camera controls
+available. Selecting another merc, changing the held weapon or viewed floor,
+restarting, and loading an encounter cancel the transient plan. A placed cone
+must still pass the normal action checks when fired. The preview shows AP/fuel
+costs, known affected people, and friendly-fire warnings, without exposing
+undetected characters. It clips at discovered scenery and cannot be placed in
+undiscovered terrain; aiming farther away only changes direction, never range.
+
+Each spray costs the existing 6 AP in combat and 1 fuel, once for the whole
+area. Every exposed body in the fan is hit, including allies and incapacitated
+characters; there is no firearm probability, helicoid miss, body-part choice,
+or aim-level bonus. Existing distance damage (180 within 3 tiles, tapering to
+45 at 10), endurance resistance, fatal burns, tank reactions, and survivor
+ignition/panic remain in the normal damage pipeline. No new persistent ground
+fire or scenery destruction is added by the spray.
+
+The shared tactical tracer blocks walls, closed doors, floors, cliffs and
+props. Bodies do not shield other bodies. Standing people may be exposed over
+low cover while prone people are protected; head, torso and leg exposure rays
+decide inclusion, with the same result in the preview and damage pass. Sprays
+stay along the shooter's surface (base elevations within one tactical height
+unit); there is no free vertical aiming at another floor. Guards, retaliation
+and overwatch use the same area calculation.
+
+The ground template is a horizontal projection clipped at nozzle height;
+highlighted people also account for stance and body exposure. The visible
+plume starts at the equipped model muzzle and follows the recorded fan, clipped
+to current visibility. It does not perform a second damage pass. Reduced motion
+omits the animated plume. The original 2D fork and saved encounter format are
+unchanged; `tools/core-flame-adapter.mjs` regenerates the pinned core override.
+
+Checks: `tests/flame-cone.test.mjs` and `tools/check-flame-cone.mjs`, alongside
+the firearm, shot-planner, reaction, casualty and save regression suites.

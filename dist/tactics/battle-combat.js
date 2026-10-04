@@ -1,4 +1,5 @@
 import {personVisible} from './battle-visibility.js';
+import {flamePhase} from './battle-flame-effects.js';
 export const RIFLE_SHOT_MS=380,RIFLE_DURATION_MS=1100;
 const clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>{x=clamp(x);return x*x*(3-2*x);};
 export function shotPhase(elapsed,rifle=true,reduced=false){
@@ -15,9 +16,9 @@ export class BattleCombat {
     const unit=state.units.find(u=>u.id===event.shooter),before=this.previous.get(event.shooter);
     if(!unit||!personVisible(state,unit))continue;
     const shooter=before||unit;
-    // No invented trajectories for melee, flames or blast weapons.
-    if(!event.trajectories?.length||event.incendiary||event.explosions?.length)continue;
-    const shot={event:structuredClone(event),shooter:{...shooter,x:event.ax,y:event.ay,z:event.az||0},rifle:shooter.weapon==='rifle',reduced,knownUnitIds:[...this.previous.keys(),...state.detected]};
+    // Flames carry their actual area; other attacks need resolved trajectories.
+    if(!event.flame&&(!event.trajectories?.length||event.incendiary||event.explosions?.length))continue;
+    const shot={event:structuredClone(event),shooter:{...shooter,x:event.ax,y:event.ay,z:event.az||0},rifle:!event.flame&&shooter.weapon==='rifle',reduced,knownUnitIds:[...this.previous.keys(),...state.detected]};
     this.queue.push(shot);
     for(const id of event.downed||[]){const prior=this.previous.get(id);if(prior)this.held.set(id,prior);}
    }
@@ -26,9 +27,10 @@ export class BattleCombat {
   this.previous=new Map(state.units.filter(u=>personVisible(state,u)).map(u=>[u.id,{...u}]));
  }
  advance(now){
-  if(this.active&&now-this.active.start>=shotPhase(0,this.active.rifle,this.active.reduced).duration)this.active=null;
+  const phase=(shot,elapsed)=>shot.event.flame?flamePhase(elapsed,shot.reduced):shotPhase(elapsed,shot.rifle,shot.reduced);
+  if(this.active&&now-this.active.start>=phase(this.active,0).duration)this.active=null;
   if(!this.active&&this.queue.length)this.active={...this.queue.shift(),start:now};
-  if(this.active){this.active.phase=shotPhase(now-this.active.start,this.active.rifle,this.active.reduced);if(this.active.phase.discharged)for(const id of this.active.event.downed||[])this.held.delete(id);}
+  if(this.active){this.active.phase=phase(this.active,now-this.active.start);if(this.active.phase.discharged)for(const id of this.active.event.downed||[])this.held.delete(id);}
   if(!this.active&&!this.queue.length)this.held.clear();
  }
  get busy(){return !!this.active||this.queue.length>0;}

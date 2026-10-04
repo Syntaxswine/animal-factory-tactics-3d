@@ -21,6 +21,7 @@ import {createWorkerLocomotion} from './worker-locomotion.js';
 import {BattleCombat} from './battle-combat.js';
 import {createRifleFiring} from './rifle-firing.js';
 import {BattleShotEffects,shotPoint} from './battle-shot-effects.js';
+import {BattleFlameEffects} from './battle-flame-effects.js';
 import {motionPreference} from './settings-3d.js';
 
 // Reuse only the environment/camera presentation. No hybrid combat mode.
@@ -30,6 +31,7 @@ export class BattleRenderer extends HybridRenderer {
   this.cliffs=new CliffMapScene(this.scene);this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
   this.loot=new BattleLoot(this.scene);this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
+  this.flameEffects=new BattleFlameEffects(this.scene);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
  }
  rebuild(world,seen,level,map){
@@ -107,7 +109,7 @@ export class BattleRenderer extends HybridRenderer {
   if(shot){
    const gun=model.equipment,anchor=gun?.anchors?.muzzle;
    const muzzle=shot.rifle?(!shot.presentationUnsupported&&model.firing?model.firing.muzzle():null):anchor&&gun.root.visible?{origin:anchor.getWorldPosition(new T.Vector3()),direction:new T.Vector3(1,0,0).transformDirection((gun.barrel||gun.root).matrixWorld)}:null;
-   this.shotEffects.update(shot,this.state,muzzle);
+   if(shot.event.flame)this.flameEffects.update(shot,this.state,muzzle);else this.shotEffects.update(shot,this.state,muzzle);
   }
   return root;
  }
@@ -129,7 +131,7 @@ export class BattleRenderer extends HybridRenderer {
  pickLoot(x,y,width,height){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return this.loot.pick(ray);}
  draw(ctx,state,...args){
   this.loot.sync(state,args[3]);
-  this.state=state;this.captureCombat(state);this.shotEffects.hide();
+  this.state=state;this.captureCombat(state);this.shotEffects.hide();this.flameEffects.hide();
   const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.traversal.active?.event.unitId===u.id?{...u,presentationLevel:args[3]}:this.combat.display(u));
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
   return super.draw(ctx,{...state,terrain:state.map,units},...args);
@@ -151,7 +153,7 @@ export class BattleRenderer extends HybridRenderer {
   this.generation++;this.wallXray.dispose();
   this.loot.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();this.paintedEnvironment.dispose();
   this.motion.clear();
-  this.traversal.clear();this.combat.clear();this.shotEffects.dispose();
+  this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();
   for(const {worker,paint,root,equipment,locomotion,cap,draw}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();
  }

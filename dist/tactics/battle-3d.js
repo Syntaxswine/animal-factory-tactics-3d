@@ -1,6 +1,7 @@
 import {guardCone,visibleConeGuards,drawGuardCones} from './guard-cones.js';
 import {walkingRoutes,drawWalkingRoutes} from './walking-preview.js';
 import {renderShotPlanner} from './shot-planner.js';
+import {FlamePlanner} from './flame-planner.js';
 import {legImpaired} from './combat-state.js';
 let shotZone='torso',shotBurst=false;
 import {heldWeaponJammed} from './loot-policy.js';
@@ -14,11 +15,11 @@ import {nearbyInteractions,performInteraction} from './field-actions.js';
 import {createCharacterScreen} from './character-screen.js';
 import {AIM_LEVELS,shotAim,supportsAim} from './aim-levels.js';
 import {climbPreview,performClimb} from './ladder-actions.js';
-import {TOWER_HEIGHT} from './tower-geometry.js';
+import {TOWER_HEIGHT,unitBaseHeight} from './tower-geometry.js';
 import {illuminationAt} from './awareness.js';
 import {FrameClock,formatClock,timeOfDay,turnBased} from './game-clock.js';
 import {startEncounterClock,tickEncounterClock,settleEncounterRounds} from './encounter-clock.js';
-import {createGame,move,stepMovement,previewAttack,attack,equip,reload,endTurn,stepEnemy,stepInvestigation,canControl,canSee,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts,MOVEMENT_MODES,movementModeOf,movementCost,effectiveStealth} from './core/engine.js';
+import {createGame,move,stepMovement,previewAttack,attack,attackGround,equip,reload,endTurn,stepEnemy,stepInvestigation,canControl,canSee,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts,MOVEMENT_MODES,movementModeOf,movementCost,effectiveStealth} from './core/engine.js';
 import {loadBattleMap} from './battle-map.js';
 import {BattleRenderer} from './battle-renderer.js';
 import {FLOOR_PIXELS} from './hybrid-renderer.js';
@@ -42,12 +43,17 @@ const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastCl
 const characterScreen=createCharacterScreen({getState:()=>state,onInventoryChange:()=>{renderer.captureCombat(state);lastUI='';sync();},getEquipmentState:id=>renderer?.equipmentState(id)||'carried',canEquip:()=>!renderer.busy,onEquip:(id,weapon)=>{if(renderer.busy)return false;const ok=equip(state,state.units.find(u=>u.id===id),weapon);if(ok){renderer.captureCombat(state);lastUI='';}return ok;},onOpen:()=>{frameClock.reset();sync();},onClose:()=>{frameClock.reset();sync();}});
 const savePanel=createSavePanel({onSave:saveGame,onLoad:loadGame,onOpen:()=>{frameClock.reset();lastUI='';sync();},onClose:()=>{frameClock.reset();lastUI='';sync();}});
 const shotDialog=$('shot-popup');
-const paused=(ignorePlanner=false)=>(!ignorePlanner&&shotDialog.open)||userPaused||storageBusy||document.hidden||characterScreen.open||savePanel.open;
+const paused=(ignorePlanner=false)=>(!ignorePlanner&&(shotDialog.open||flamePlanner.open))||userPaused||storageBusy||document.hidden||characterScreen.open||savePanel.open;
 function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
 const view={x:0,y:0,zoom:1.15};
 const climbButton=document.createElement('button');climbButton.id='climb-tower';climbButton.textContent='Climb tower';$('reload').parentNode.insertBefore(climbButton,$('reload'));
 const fieldPanel=document.createElement('section');fieldPanel.id='field-actions';$('reload').parentNode.after(fieldPanel);
 const selected=()=>state.units.find(u=>u.id===state.selected);
+const flamePanel=document.createElement('section');flamePanel.id='flame-plan';flamePanel.hidden=true;flamePanel.setAttribute('aria-label','Flamethrower area targeting');$('viewport').append(flamePanel);
+const flamePlanner=new FlamePlanner(flamePanel,{onChange:()=>{frameClock.reset();lastUI='';sync();},onFire:point=>{flamePlanner.cancel();action(()=>attackGround(state,selected(),point));}});
+const flameButton=document.createElement('button');flameButton.id='aim-flame';flameButton.hidden=true;flameButton.textContent='Aim flame cone';$('reload').before(flameButton);
+const canPlanFlame=()=>!storageBusy&&!document.hidden&&!characterScreen.open&&!savePanel.open&&!renderer.busy&&!state.queue.length&&canControl(state,selected());
+flameButton.onclick=()=>{if(!canPlanFlame())return;targetId=null;flamePlanner.start(state,selected());};
 const target=()=>state.units.find(u=>u.id===targetId&&u.hp>0&&state.detected.has(u.id));
 const mercStatus=u=>u.away?'Away':u.casualty==='captured'?'Captured':u.casualty==='quit'?'Left squad':u.hp>0?`${stanceOf(u)} · ${movementModeOf(u)} · ${u.hp} HP · ${u.ap} AP · ${Math.floor(u.stamina)} stamina`:u.casualty==='bleeding'?`Bleeding · ${u.bleedTurns} turns`:u.casualty==='stable'?'Stabilized':'Dead';
 const message=text=>{$('message').textContent=text;};
@@ -56,12 +62,12 @@ function focus(x,y){overviewMode=false;view.zoom=1.15;view.x=width/2-(x-y)*28*vi
 function center(){const u=selected();level=u.z||0;$('floor').value=level;focus(u.x,u.y);}
 function overview(){const w=definition.width,h=definition.height;overviewMode=true;view.zoom=Math.min((width-50)/((w+h)*28),(height-60)/((w+h)*14));view.x=width/2-(w-h)*14*view.zoom;view.y=30;$('hint').textContent='Click the map to inspect an area · WASD / arrows or drag to pan · Scroll to zoom · Center returns to your squad';}
 function resize(){const box=canvas.getBoundingClientRect();width=box.width;height=box.height;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(state){if(overviewMode)overview();else center();}}
-function restart(){renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;lastAuto=performance.now();autoRound=state.round;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Scenery revealed. People still need line of sight.':'Explore to reveal the map.');sync();}
+function restart(){flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;lastAuto=performance.now();autoRound=state.round;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Scenery revealed. People still need line of sight.':'Explore to reveal the map.');sync();}
 async function saveGame(id){
  if(storageBusy)throw Error('A save or load is already in progress.');settleEncounterRounds(state);const record=captureEncounter(state);storageBusy=true;frameClock.reset();
  try{await putSave(id,record);lastAuto=performance.now();autoRound=state.round;autoDisabled=false;return record;}finally{storageBusy=false;frameClock.reset();lastUI='';}
 }
-function installState(restored){renderer?.dispose();renderer=new BattleRenderer(()=>{});state=restored;definition=state.definition;$('difficulty').value=state.difficulty;selectedIds=new Set([state.selected]);targetId=null;drag=null;userPaused=true;presentationTime=0;renderer.presentationNow=0;lastStep=0;stepDelay=MOVEMENT_MS;lastClockCombat=undefined;lastUI='';lastAuto=performance.now();autoRound=state.round;frameClock.reset();center();sync();message('Encounter loaded and paused. Press Resume to continue.');}
+function installState(restored){flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=restored;definition=state.definition;$('difficulty').value=state.difficulty;selectedIds=new Set([state.selected]);targetId=null;drag=null;userPaused=true;presentationTime=0;renderer.presentationNow=0;lastStep=0;stepDelay=MOVEMENT_MS;lastClockCombat=undefined;lastUI='';lastAuto=performance.now();autoRound=state.round;frameClock.reset();center();sync();message('Encounter loaded and paused. Press Resume to continue.');}
 async function loadGame(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);installState(restored);}finally{storageBusy=false;frameClock.reset();lastUI='';}}
 async function quickSave(){try{await saveGame('quick');message('Quicksave saved.');}catch(e){message('Could not save: '+e.message);}}
 async function quickLoad(){try{await loadGame('quick');}catch(e){message('Could not load: '+e.message);}}
@@ -72,6 +78,7 @@ function sync(){
  selectedIds=pruneSelection(state,selectedIds);
  if(selectedIds.size&&!selectedIds.has(state.selected))state.selected=[...selectedIds][0];
  const u=selected(),t=target();if(!supportsAim(WEAPONS[u.weapon]))shotZone='torso';if(!(WEAPONS[u.weapon].burstRounds>1))shotBurst=false;const preview=t?previewAttack(state,u,t,shotBurst,shotZone,null,$('aim-level').value):null;
+ flamePlanner.refresh(state,u,{blocked:paused(true)||renderer.busy,level});
  const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,level,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,Math.floor(v.stamina),v.medkits,v.pinned,v.legWound,heldWeaponJammed(v),v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,renderer.traversal.preparing,userPaused]);
  if(signature===lastUI)return;lastUI=signature;
  fieldPanel.replaceChildren();for(const entry of nearbyInteractions(state,u)){const b=document.createElement('button'),p=entry.preview;b.textContent=entry.label+' · '+(p.cost?p.cost+' AP':'1 min')+(p.chance!==undefined?' · '+p.chance+'%':'')+(p.amount>0?' · +'+Math.floor(p.amount):'');b.disabled=paused()||renderer.busy||!p.ok;b.title=p.reason||('Stamina cost: '+p.stamina);b.onclick=()=>action(()=>performInteraction(state,selected(),entry.kind,entry.target));fieldPanel.append(b);}
@@ -81,10 +88,11 @@ function sync(){
  $('light-exposure').textContent='Light on '+u.name+': '+Math.round(illuminationAt(state,u)*100)+'% · Perception '+(u.perception??50);
  $('selection').textContent=`${selectedIds.size} selected · Primary: ${u.name} · ${WEAPONS[u.weapon].name} · ${u.ammo[u.weapon]||0} loaded`;
  $('selection').textContent+=(u.pinned?' · PINNED':'')+(legImpaired(u)?' · Leg wound: movement ×2, −3 AP':'');
+ flameButton.hidden=!WEAPONS[u.weapon].incendiary;flameButton.disabled=!canPlanFlame();flameButton.textContent='Aim flame cone · '+WEAPONS[u.weapon].cost+' AP';
  $('burst-fire').disabled=!(WEAPONS[u.weapon].burstRounds>1);if($('burst-fire').disabled){shotBurst=false;$('burst-fire').checked=false;}
  if(!t&&shotDialog.open)shotDialog.close();
  if(shotDialog.open)renderShotPlanner($('shot-planner'),state,u,t,{zone:shotZone,aim:$('aim-level').value,burst:shotBurst,onSelect:(zone,aim)=>{shotZone=zone;$('aim-level').value=aim;lastUI='';sync();}});
- $('target').textContent=t?`${t.name} · ${preview.ok?`${shotZone} · ${preview.cost} AP`:preview.reason}`:'Select a visible opponent to inspect a shot.';
+ $('target').textContent=WEAPONS[u.weapon].incendiary?'Aim flame cone, place the template, then confirm. Allies in the spray are also hit.':t?`${t.name} · ${preview.ok?`${shotZone} · ${preview.cost} AP`:preview.reason}`:'Select a visible opponent to inspect a shot.';
  for(const [key,aim] of Object.entries(AIM_LEVELS))$('aim-level').querySelector('[value='+key+']').textContent=aim.label+' · '+shotAim(WEAPONS[u.weapon],key,shotBurst).cost+' AP';
  $('aim-level').disabled=!supportsAim(WEAPONS[u.weapon]);
  $('fire').disabled=paused(true)||renderer.busy||!preview?.ok||!canControl(state,u)||!!state.queue.length;
@@ -106,11 +114,14 @@ function sync(){
 function selectMerc(id,toggle=false){
  const u=state.units.find(u=>u.id===id);if(!u||!selectable(u))return;
  selectedIds=toggle?toggleSelection(selectedIds,id):new Set([id]);state.selected=selectedIds.has(id)?id:[...selectedIds][0];targetId=null;state.queue=[];
+ flamePlanner.cancel();
 }
+function flamePoint(x,y){const lift=unitBaseHeight(selected())-(selected().z||0)*3,px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom)+(lift/2.12)*FLOOR_PIXELS/14;return {x:(px+py)/2,y:(py-px)/2,z:level};}
 function click(x,y,shift=false){
  if(overviewMode){const px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom);focus((px+py)/2,(py-px)/2);return;}
+ if(flamePlanner.open){if(!shift&&canPlanFlame())flamePlanner.aim(flamePoint(x,y),true);return;}
  const hit=renderer.pick(x,y,width,height);
- if(hit!==null){const u=state.units.find(u=>u.id===hit);if(selectable(u)){selectMerc(u.id,shift);}else if(u.hp<=0&&nearbyLoot(state,selected()).some(p=>p.body===u.id)){characterScreen.show(state.selected);}else if(state.detected.has(u.id)&&u.hp>0){targetId=u.id;shotDialog.showModal();frameClock.reset();lastUI='';}sync();return;}
+ if(hit!==null){const u=state.units.find(u=>u.id===hit);if(selectable(u)){selectMerc(u.id,shift);}else if(u.hp<=0&&nearbyLoot(state,selected()).some(p=>p.body===u.id)){characterScreen.show(state.selected);}else if(state.detected.has(u.id)&&u.hp>0){if(WEAPONS[selected().weapon].incendiary){if(canPlanFlame())flamePlanner.start(state,selected(),{x:u.x,y:u.y,z:u.z||0});}else{targetId=u.id;shotDialog.showModal();frameClock.reset();lastUI='';}}sync();return;}
  const pile=renderer.pickLoot(x,y,width,height);if(pile){if(nearbyLoot(state,selected()).includes(pile))characterScreen.show(state.selected);else message('Move beside the supplies to pick them up.');return;}
  if(paused()||renderer.busy||shift)return;
  const door=renderer.pickDoor(x,y,width,height,level);
@@ -125,6 +136,7 @@ function click(x,y,shift=false){
 let hoverPointer=null,lastHoverCheck=0;
 function clearHover(){hoverPointer=null;delete canvas.dataset.targetCursor;}
 function updateTargetCursor(now){
+ if(flamePlanner.open){canvas.dataset.targetCursor='flame';return;}
  if(!hoverPointer||shotDialog.open||overviewMode||drag?.moved){delete canvas.dataset.targetCursor;return;}
  if(now-lastHoverCheck<80)return;lastHoverCheck=now;
  const bounds=canvas.getBoundingClientRect(),x=hoverPointer.x-bounds.left,y=hoverPointer.y-bounds.top;
@@ -143,7 +155,7 @@ function showGuardSight(now){
  drawGuardCones(ctx,cones,project);
 }
 function showWalkingRoute(){
- if(overviewMode||shotDialog.open||drag?.moved){walkingCacheKey='';walkingCache=[];return;}
+ if(overviewMode||shotDialog.open||flamePlanner.open||drag?.moved){walkingCacheKey='';walkingCache=[];return;}
  let goal=null;
  if(hoverPointer&&!canvas.dataset.targetCursor){const bounds=canvas.getBoundingClientRect(),x=hoverPointer.x-bounds.left,y=hoverPointer.y-bounds.top,px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom);goal={x:Math.round((px+py)/2),y:Math.round((py-px)/2),z:level};}
  const key=JSON.stringify([state.revision,state.phase,state.selected,level,[...selectedIds],goal,state.queue,state.units.filter(u=>selectedIds.has(u.id)).map(u=>[u.x,u.y,u.z,u.ap,u.stance,u.running,u.sneaking,u.legWound])]);
@@ -151,14 +163,14 @@ function showWalkingRoute(){
  drawWalkingRoutes(ctx,walkingCache,project,level,view.zoom,turnBased(state));
 }
 canvas.addEventListener('pointerdown',e=>{if(e.button!==0||drag)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,select:e.shiftKey};canvas.setPointerCapture(e.pointerId);});
-canvas.addEventListener('pointermove',e=>{hoverPointer={x:e.clientX,y:e.clientY};lastHoverCheck=0;const bounds=canvas.getBoundingClientRect();renderer.wallXray.setPointer(e.clientX-bounds.left,e.clientY-bounds.top);if(!drag||drag.id!==e.pointerId)return;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)drag.moved=true;if(drag.moved&&!drag.select){view.x+=e.clientX-drag.lastX;view.y+=e.clientY-drag.lastY;}drag.lastX=e.clientX;drag.lastY=e.clientY;});
+canvas.addEventListener('pointermove',e=>{hoverPointer={x:e.clientX,y:e.clientY};lastHoverCheck=0;const bounds=canvas.getBoundingClientRect();renderer.wallXray.setPointer(e.clientX-bounds.left,e.clientY-bounds.top);if(flamePlanner.open&&!drag)flamePlanner.aim(flamePoint(e.clientX-bounds.left,e.clientY-bounds.top));if(!drag||drag.id!==e.pointerId)return;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)drag.moved=true;if(drag.moved&&!drag.select){view.x+=e.clientX-drag.lastX;view.y+=e.clientY-drag.lastY;}drag.lastX=e.clientX;drag.lastY=e.clientY;});
 canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const d=drag;drag=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);const r=canvas.getBoundingClientRect();if(d.select&&d.moved){const ids=rectangleMembers(state.units,level,{x:d.x-r.left,y:d.y-r.top},{x:e.clientX-r.left,y:e.clientY-r.top},u=>project(renderer.displayUnit(u)));if(ids.length){selectedIds=new Set(ids);if(!selectedIds.has(state.selected))state.selected=ids[0];targetId=null;state.queue=[];message(ids.length+' mercs selected. Ground clicks move the group; stance buttons affect the group; Fire and Reload use the primary merc.');sync();}else message('No mercs in that rectangle.');}else if(!d.moved)click(e.clientX-r.left,e.clientY-r.top,d.select);});
 canvas.addEventListener('pointerleave',()=>{clearHover();renderer.wallXray.setPointer(null,null);});
 canvas.addEventListener('pointercancel',()=>{clearHover();drag=null;renderer.wallXray.setPointer(null,null);});
 canvas.addEventListener('lostpointercapture',()=>{drag=null;});
 window.addEventListener('blur',()=>{clearHover();drag=null;renderer.wallXray.setPointer(null,null);});
 canvas.addEventListener('wheel',e=>{e.preventDefault();const box=canvas.getBoundingClientRect(),x=e.clientX-box.left,y=e.clientY-box.top,old=view.zoom;view.zoom=Math.max(.08,Math.min(3,old*Math.exp(-e.deltaY*.001)));view.x=x-(x-view.x)*view.zoom/old;view.y=y-(y-view.y)*view.zoom/old;},{passive:false});
-document.addEventListener('keydown',e=>{if(characterScreen.open)return;if(e.key==='Escape'&&!paused()){drag=null;state.queue=[];targetId=null;sync();}});
+document.addEventListener('keydown',e=>{if(characterScreen.open||savePanel.open)return;if(e.key==='Escape'&&flamePlanner.open){e.preventDefault();flamePlanner.cancel();return;}if(e.key==='Escape'&&!paused()){drag=null;state.queue=[];targetId=null;sync();}});
 document.addEventListener('keydown',e=>{
  if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||characterScreen.open||savePanel.open||document.hidden||e.target.isContentEditable||e.target.closest?.('input,select,textarea,[role="textbox"]')||document.querySelector('dialog[open]'))return;
  const delta={w:[0,40],ArrowUp:[0,40],s:[0,-40],ArrowDown:[0,-40],a:[40,0],ArrowLeft:[40,0],d:[-40,0],ArrowRight:[-40,0]}[e.key.length===1?e.key.toLowerCase():e.key];
@@ -189,7 +201,7 @@ function frame(now){
  try{
   const elapsed=frameClock.sample(now,{paused:paused(),mode:turnBased(state)});presentationTime+=elapsed;renderer.presentationNow=presentationTime;tickEncounterClock(state,elapsed,{paused:paused()||renderer.traversal.busy});syncClock();
   if(!paused()&&!renderer.busy&&presentationTime-lastStep>stepDelay){lastStep=presentationTime;stepDelay=queuedMovementDuration(state);if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);renderer.captureCombat(state);sync();}
-  ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);updateTargetCursor(now);showGuardSight(now);showWalkingRoute();
+  ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);updateTargetCursor(now);showGuardSight(now);showWalkingRoute();if(!overviewMode)flamePlanner.draw(ctx,state,project,view.zoom);
   if(lastLadderPreparing!==renderer.traversal.preparing||lastUIBusy!==renderer.busy||lastUIDiagnostics!==renderer.diagnostics.join('\n')){lastLadderPreparing=renderer.traversal.preparing;lastUIBusy=renderer.busy;sync();}
   for(const u of state.units.filter(v=>v.team==='squad'&&alive(v)&&(v.z||0)===level)){
    const p=project(renderer.displayUnit(u));ctx.strokeStyle=selectedIds.has(u.id)?'#ffe3a0':'#a4d4c2';ctx.lineWidth=u.id===state.selected?2:1;ctx.beginPath();ctx.ellipse(p.x,p.y,17*view.zoom,8*view.zoom,0,0,Math.PI*2);ctx.stroke();
@@ -203,5 +215,5 @@ function frame(now){
  }catch(error){message('Encounter stopped: '+error.message);console.error(error);}
 }
 // Read-only inspection hooks for browser regression checks.
-window.battle3d={get state(){return state;},get renderer(){return renderer;},get clock(){return state.clock;},get paused(){return paused();},get picks(){return picks;},get walkingPreview(){return walkingCache;},get selectedIds(){return [...selectedIds];},project,view};
+window.battle3d={get state(){return state;},get renderer(){return renderer;},get clock(){return state.clock;},get paused(){return paused();},get picks(){return picks;},get walkingPreview(){return walkingCache;},get flamePreview(){return flamePlanner.preview;},get selectedIds(){return [...selectedIds];},project,view};
 requestAnimationFrame(frame);
