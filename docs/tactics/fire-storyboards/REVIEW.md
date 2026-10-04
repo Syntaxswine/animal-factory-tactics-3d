@@ -1,4 +1,4 @@
-# Independent hostile storyboard review
+# Independent hostile fire reviews
 
 October 4, 2026. Reviewer: independent `fire_storyboard_hostile` agent.
 
@@ -32,3 +32,30 @@ The documentation accurately separates that proposed terminal three-tile journey
 ## October 4 clarification: area effect and painted textures
 
 The same independent reviewer inspected the subsequent README-only change against the user's new direction. **9/10 for that bounded handoff-note delta, with no blocking issues.** It correctly defers the affected area and damage coverage to gameplay data, calls for painterly animated textures over simple supporting geometry, and preserves the established poses and ash outcome. It explicitly limits the earlier image review and makes no claim that an area-effect renderer, texture set or runtime animation has been delivered. No runtime tests were run for this documentation review.
+
+## Implemented horse study: 9/10
+
+October 4, 2026. The same independent hostile agent reviewed the actual implementation, tests and rendered evidence. **Final score: 9/10; no blocking issue within the declared standing, normal-outfit horse study with straight open, shortened or blocked routes.** This supersedes the initial implementation score of 8/10, not the separate gameplay-integration gate.
+
+Corrections made during review:
+
+- Fixed shooter root yaw so both planted hooves stay fixed while bracing.
+- Kept the projector at its emission transform until the last emitted flame departs at 1.58 seconds; recovery finishes at 2.10 seconds.
+- Lowered the collapsing body into actual left-hand surface support before breakup, with continuous rifle release and a gravity-driven, floor-clamped fall.
+- Reused the established upper-pastern weighting to remove exposed ankle caps without deforming the rigid soles.
+- Replaced the opaque, stretched ribbon appearance with shorter, moving painted billows, keeping the target readable and the incoming ray clipping intact.
+- Kept fire covering the complete body breakup, then decayed it separately toward the ash; remaining fragments turn soot-coloured.
+- Restored visibility on reverse seeks and explicitly refused unsupported cornered routes.
+
+The reviewer independently reran **all 15 focused tests: passed**. The final browser run completed **72 configurations**, forward/reverse sample playback and reduced-motion startup without page or console errors. Geometry and texture counts remained stable at 74 and 15 across 200 extra seeks. The 3D build, module closure and asset validation passed.
+
+The reviewer inspected rendered still sequences, code and reports, **not continuous WebM playback**. Normal-speed recordings and timestamped samples were generated separately. Selected evidence is retained below; the complete local recording and helper receipts remain under `artifacts/painted-fire/`. The browser checker is reproducible with `tools/check-painted-fire.mjs` against a served study.
+
+- [Whole-scene spray](evidence/spray-three.png) and [side spray](evidence/spray-side.png)
+- [Full-body fire](evidence/head-to-hoof.png)
+- [Visible supporting hand](evidence/support-front.png)
+- [Covered late dissolution](evidence/dissolve-front-3.85.png) and [final ash](evidence/ash-final.png)
+- [Wall occlusion](evidence/wall-clipped.png) and [doorway occlusion](evidence/door-clipped.png)
+- [Browser results and playback timestamps](evidence/browser-review.json)
+
+Minor remaining art polish: the billows retain some repeated puff rhythm. Remaining integration gates: authoritative terminal/casualty/loot ownership, real scene transforms and visibility, turning or elevated routes, arbitrary aim, other animals/outfits/stances and actual combat interruptions. No gameplay approval or deployment is claimed by this study score.

@@ -1,6 +1,6 @@
 # Flamethrower and on-fire motion storyboards
 
-October 4, 2026. Visual development for the 3D presentation, using the approved horse and existing flamethrower as the first fitting subject. These sheets propose poses and effect behavior; they do not implement or approve game integration.
+October 4, 2026. Visual development for the 3D presentation, using the approved horse and existing flamethrower as the first fitting subject. These sheets propose poses and effect behavior. The subsequent horse-first 3D study is documented in [IMPLEMENTATION.md](IMPLEMENTATION.md); game integration remains separate.
 
 ## Direction
 
@@ -42,7 +42,7 @@ Start with a small set of overlapping textured planes and simple tapered meshes.
 - **Style:** retain cream hot centres, yellow/ochre bodies, orange/red edges and warm grey smoke. Keep readable painted shapes and strokes; restrained emission should preserve those colours instead of washing everything into white bloom.
 - **Depth and readability:** inspect side, rear and gameplay views for disappearing planes, obvious intersections, transparency sorting, tiled textures and concealed terrain boundaries. Layer only as much as needed to read as a volume; respect walls, floors and visibility. Appearance must not imply that protected units or tiles are being hit.
 
-This is the implementation direction for the upcoming 3D study. No new texture atlas, mesh or area-effect gameplay code is delivered by this note.
+The subsequent 3D study now implements this direction with three painted textures and light geometry; see [IMPLEMENTATION.md](IMPLEMENTATION.md). Area-effect gameplay remains owned by the incoming combat implementation.
 
 ## Engulfment, three tiles, then ash
 
@@ -78,10 +78,10 @@ Inspected in the isolated worktree at `3d4a3a4`:
 
 ## Implementation checklist after visual review
 
-- [ ] Agree on the firing and full-body fire silhouettes from the sheets.
-- [ ] Read the incoming area-effect contract and drive the flame footprint from its affected area, obstruction and visibility data.
-- [ ] Author a small painted flame/smoke texture set; use simple supporting geometry and verify it from multiple angles before adding mesh detail.
-- [ ] Build a scrub-able horse study with exact hand grips, visible supporting hooves and the existing model dimensions.
+- [x] Agree on the firing and full-body fire silhouettes from the sheets; user greenlit creation.
+- [x] Read the incoming area-effect contract and drive the study footprint from its recorded area and obstruction data. Live visibility remains integration work.
+- [x] Author a small painted flame/smoke texture set; use simple supporting geometry and verify it from multiple angles before adding mesh detail.
+- [x] Build a scrub-able horse study with exact hand grips, visible supporting hooves and the existing model dimensions.
 - [ ] Keep emitter and body motion on one deterministic clock; inspect reverse scrubbing, cutoff and interruption.
 - [ ] Define the terminal burn event, its eligibility, blocked-route behavior and equipment/loot outcome. Distinguish the proposed three-tile terminal branch from the existing three-turn burning state.
 - [ ] Retain each actual panic path step for playback instead of interpolating a direct shortcut through walls from its final coordinate. Keep the final unit/ash/loot position consistent.
@@ -91,7 +91,7 @@ Inspected in the isolated worktree at `3d4a3a4`:
 - [ ] Add meaningful checks for nozzle origin, emission cutoff, area-effect coverage and occlusion, supporting contacts, exactly three legal steps when available, shortened routes, final ash grounding, item conservation and state interruptions.
 - [ ] Independent hostile review at least 9/10 on the actual animation before gameplay delivery.
 
-Generated with the built-in `image_gen` tool. Exact reference roles and prompts are recorded in [PROMPTS.md](PROMPTS.md). Selected source PNGs are saved beside this document; no generated art is used by the runtime yet.
+Generated with the built-in `image_gen` tool. Exact reference roles and prompts are recorded in [PROMPTS.md](PROMPTS.md). Selected concept PNGs are saved beside this document. The study now uses separate generated production textures; see [TEXTURE-PROMPTS.md](TEXTURE-PROMPTS.md).
 
 ## Review and validation
 
@@ -99,4 +99,4 @@ Both selected sheets received **9/10 for concept art** from the independent host
 
 That original image review predates the area-effect and painterly-port clarification. It validates the supplied pose sheets; it does not establish approval of an area-effect footprint or an implemented 3D effect.
 
-Both PNGs were decoded for visual inspection and checked as valid 1536×1024 files. Local documentation links and text encoding were checked. This delivery changes only images and documentation, so no gameplay test pass is claimed and no preview server was needed.
+At storyboard delivery, both PNGs were decoded for visual inspection and checked as valid 1536×1024 files. Local documentation links and text encoding were checked. This delivery changes only images and documentation, so no gameplay test pass is claimed and no preview server was needed.
