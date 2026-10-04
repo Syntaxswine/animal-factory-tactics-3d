@@ -28,3 +28,7 @@ The documentation accurately separates that proposed terminal three-tile journey
 - Prove continuous hoof contact, weight transfer, hand grips, hose clearance, nozzle alignment, and the collapse in a deterministic scrub-able study. The static keys do not establish those transitions.
 - Inspect close and gameplay views, both profiles and rear, reduced motion, low/high aim, other firing stances, and each supported species/outfit/weapon combination before claiming coverage.
 - Obtain a separate independent hostile review of at least 9/10 on the actual animation and integration.
+
+## October 4 clarification: area effect and painted textures
+
+The same independent reviewer inspected the subsequent README-only change against the user's new direction. **9/10 for that bounded handoff-note delta, with no blocking issues.** It correctly defers the affected area and damage coverage to gameplay data, calls for painterly animated textures over simple supporting geometry, and preserves the established poses and ash outcome. It explicitly limits the earlier image review and makes no claim that an area-effect renderer, texture set or runtime animation has been delivered. No runtime tests were run for this documentation review.
