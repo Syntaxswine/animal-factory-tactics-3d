@@ -1,6 +1,7 @@
 import * as T from './vendor/three.module.js';
 import {smooth,clamp} from './painted-fire-state.js';
 import {paintedFireMaterial,FIRE_ASSETS} from './painted-fire-effects.js';
+import {createGroundScorch} from './ground-scorch.js';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 export const TANK_BURST_ATLAS='../assets/effects/painted-fire/tank-burst-atlas-v1.png';
 export function localFireCells(contract){
@@ -16,10 +17,10 @@ function burstMaterial(texture){return new T.ShaderMaterial({transparent:true,de
  }`});}
 
 export async function createTankBlastEffects(scene,loader,origin){
- const textures=[];let group;
- try{for(const url of [TANK_BURST_ATLAS,FIRE_ASSETS.flame,FIRE_ASSETS.smoke]){const t=await loader.loadAsync(url);t.colorSpace=T.SRGBColorSpace;textures.push(t);}}
+ const textures=[];let group,scorch;
+ try{for(const url of [TANK_BURST_ATLAS,FIRE_ASSETS.flame,FIRE_ASSETS.smoke]){const t=await loader.loadAsync(url);t.colorSpace=T.SRGBColorSpace;textures.push(t);}scorch=await createGroundScorch(scene,loader);}
  catch(e){textures.forEach(t=>t.dispose());throw e;}
- group=new T.Group();group.name='Worn fuel pack rupture';scene.add(group);const plane=new T.PlaneGeometry(1,1),materials=[],geometries=[plane];
+ group=new T.Group();group.name='Worn fuel pack rupture';scene.add(group);group.add(scorch.group);const plane=new T.PlaneGeometry(1,1),materials=[],geometries=[plane];
  function card(material,name){materials.push(material);const m=new T.Mesh(plane,material);m.name=name;group.add(m);return m;}
  const core=card(burstMaterial(textures[0]),'Pack-centred burst');
  const lobes=Array.from({length:14},(_,i)=>card(burstMaterial(textures[0]),'Outward painted lobe '+i));
@@ -37,9 +38,9 @@ export async function createTankBlastEffects(scene,loader,origin){
  }
  const light=new T.PointLight(0xffaa3c,0,7,2);light.position.copy(origin);group.add(light);
  let cells=[],ground=[],lastContract,mask;
- function setContract(contract){if(lastContract===contract)return;lastContract=contract;cells=localFireCells(contract);
+ function setContract(contract){if(lastContract===contract)return;lastContract=contract;cells=localFireCells(contract);scorch.setCells(cells);
   for(const m of ground){m.removeFromParent();const i=materials.indexOf(m.material);if(i>=0)materials.splice(i,1);m.material.dispose();}
-  mask?.dispose();const minX=Math.min(...cells.map(p=>p.x)),minZ=Math.min(...cells.map(p=>p.z)),width=Math.max(...cells.map(p=>p.x))-minX+1,height=Math.max(...cells.map(p=>p.z))-minZ+1,data=new Uint8Array(width*height*4);
+  mask?.dispose();if(!cells.length){ground=[];mask=null;return;}const minX=Math.min(...cells.map(p=>p.x)),minZ=Math.min(...cells.map(p=>p.z)),width=Math.max(...cells.map(p=>p.x))-minX+1,height=Math.max(...cells.map(p=>p.z))-minZ+1,data=new Uint8Array(width*height*4);
   for(const p of cells){const n=((p.z-minZ)*width+p.x-minX)*4;data[n]=data[n+1]=data[n+2]=data[n+3]=255;}
   mask=new T.DataTexture(data,width,height);mask.needsUpdate=true;mask.magFilter=mask.minFilter=T.NearestFilter;
   ground=cells.map((p,i)=>{const material=paintedFireMaterial(textures[1],{seed:i*1.618});material.uniforms.groundMask={value:mask};material.uniforms.groundBounds={value:new T.Vector4(minX-.5,minZ-.5,width,height)};
@@ -52,9 +53,9 @@ export async function createTankBlastEffects(scene,loader,origin){
    material.fragmentShader=material.fragmentShader.replace('c.a*=opacity;','c.a*=opacity*boundaryFade;');
    const m=card(material,'Gameplay fire cell '+i);m.userData.cell=p;return m;});
  }
- return {group,core,lobes,fragments,smoke,get ground(){return ground;},get groundMask(){return mask;},
+ return {group,core,lobes,fragments,smoke,scorch,get ground(){return ground;},get groundMask(){return mask;},
   update(age,{camera,contract,visible=true,groundOpacity=1}){
-   setContract(contract);group.visible=visible;const live=age>=0;
+   setContract(contract);group.visible=visible;const live=age>=0;const scorchAmount=smooth((age-1.6)/1.5);scorch.setAmount(scorchAmount);
    core.visible=live&&age<1.05;core.position.copy(origin).add(V(0,.30*smooth(age/.6),0));core.quaternion.copy(camera.quaternion);
    const size=.28+3.05*(1-Math.exp(-Math.max(age,0)*8));core.scale.set(size,size,1);core.material.uniforms.phase.value=clamp(age/.80)*3;core.material.uniforms.opacity.value=(1-smooth((age-.30)/.75));
    for(let i=0;i<lobes.length;i++){
@@ -78,8 +79,8 @@ export async function createTankBlastEffects(scene,loader,origin){
     m.visible=live&&fade>.001;m.position.set(p.x+.23*Math.sin(i*2.13),h*.36,p.z+.23*Math.sin(i*1.19+.7));m.rotation.set(0,yaw,0);m.scale.set(1.3+.65*Math.sin(i*.73)**2,h,1);m.material.uniforms.clock.value=Math.max(0,age)+i*.13;m.material.uniforms.opacity.value=.72*fade;
    }
    light.intensity=visible&&live?8*(1-smooth(age/.19)):0;
-   return {fireCells:cells.length,visibleFireCells:ground.filter(m=>m.visible).length,transientFragments:fragments.filter(m=>m.visible).length,burstOrigin:origin.toArray()};
+   return {fireCells:cells.length,visibleFireCells:ground.filter(m=>m.visible).length,transientFragments:fragments.filter(m=>m.visible).length,burstOrigin:origin.toArray(),scorchedCells:scorchAmount>0?scorch.count:0,scorchAmount};
   },
-  dispose(){group.removeFromParent();mask?.dispose();materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());textures.forEach(t=>t.dispose());}
+  dispose(){group.removeFromParent();scorch.dispose();mask?.dispose();materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());textures.forEach(t=>t.dispose());}
  };
 }

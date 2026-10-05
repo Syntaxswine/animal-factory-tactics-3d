@@ -7,8 +7,10 @@
 <label>View <select id="view"><option value="three">Three-quarter</option><option value="rear">Rear / tanks</option><option value="side">Side</option><option value="front">Front</option></select></label>
 <label>Scale <select id="scale"><option value="full">Fit</option><option value="game">Gameplay</option><option value="close">Close</option></select></label>
 <label>Ground <select id="scene"><option value="open">Open ground</option><option value="water">Water beside wearer</option></select></label>
+<label>Surface <select id="terrain"><option value="plain">Study floor</option><option value="grass">Meadow grass</option><option value="sand">Sand</option><option value="concrete">Concrete</option></select></label>
+<label><input id="scorch" type="checkbox" checked> Burn marks</label>
 <label><input id="effects" type="checkbox" checked> Painted effects</label></section>
 <section id="viewport" aria-label="Tank explosion animation"><div id="loading">Loading wearer and painted blast…</div></section>
-<nav class="beats" aria-label="Key poses"><button data-time="0">Worn pack</button><button data-time=".60">Rupture</button><button data-time=".90">Outward blast</button><button data-time="1.45">Collapse</button><button data-time="2.20">Burning ground</button><button data-time="4.90">Aftermath</button></nav>
+<nav class="beats" aria-label="Key poses"><button data-time="0">Worn pack</button><button data-time=".60">Rupture</button><button data-time=".90">Outward blast</button><button data-time="1.45">Collapse</button><button data-time="2.20">Burning ground</button><button data-time="5.40">Scorched ground</button></nav>
 <p id="status" role="status"></p><p id="error" role="alert"></p><footer>11 tank-wearing animals · both outfits. Drag to orbit; scrub in either direction. Standalone fatal-event study. Surrounding fire cells come from a recorded game event; this viewer does not apply damage. Ground-fire lifetime is compressed for this preview. <a href="painted-fire-study.html">Flamethrower study ↗</a></footer></main>
 <script type="module" src="tank-blast-study.js"></script></body></html>

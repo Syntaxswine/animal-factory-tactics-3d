@@ -1,0 +1,619 @@
+{
+  "cases": [
+    {
+      "terrain": "plain",
+      "scene": "open",
+      "view": "three",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "open",
+      "view": "three",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "open",
+      "view": "front",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "open",
+      "view": "front",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "open",
+      "view": "side",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "open",
+      "view": "side",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "water",
+      "view": "three",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "water",
+      "view": "three",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "water",
+      "view": "front",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "water",
+      "view": "front",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "water",
+      "view": "side",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "plain",
+      "scene": "water",
+      "view": "side",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "open",
+      "view": "three",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "open",
+      "view": "three",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "open",
+      "view": "front",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "open",
+      "view": "front",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "open",
+      "view": "side",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "open",
+      "view": "side",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "water",
+      "view": "three",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "water",
+      "view": "three",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "water",
+      "view": "front",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "water",
+      "view": "front",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "water",
+      "view": "side",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "grass",
+      "scene": "water",
+      "view": "side",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "open",
+      "view": "three",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "open",
+      "view": "three",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "open",
+      "view": "front",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "open",
+      "view": "front",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "open",
+      "view": "side",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "open",
+      "view": "side",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "water",
+      "view": "three",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "water",
+      "view": "three",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "water",
+      "view": "front",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "water",
+      "view": "front",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "water",
+      "view": "side",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "sand",
+      "scene": "water",
+      "view": "side",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "open",
+      "view": "three",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "open",
+      "view": "three",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "open",
+      "view": "front",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "open",
+      "view": "front",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "open",
+      "view": "side",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "open",
+      "view": "side",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "water",
+      "view": "three",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "water",
+      "view": "three",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "water",
+      "view": "front",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "water",
+      "view": "front",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "water",
+      "view": "side",
+      "scale": "full",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    },
+    {
+      "terrain": "concrete",
+      "scene": "water",
+      "view": "side",
+      "scale": "game",
+      "focus": "blast",
+      "scorch": true,
+      "effects": true
+    }
+  ],
+  "captures": [
+    "plain-open",
+    "plain-water",
+    "grass-open",
+    "grass-water",
+    "sand-open",
+    "sand-water",
+    "concrete-open",
+    "concrete-water"
+  ],
+  "checks": {
+    "rasterMask": {
+      "changedPixels": 264097,
+      "outsideBurnedCells": 0
+    },
+    "memories": [
+      {
+        "geometries": 77,
+        "textures": 16
+      },
+      {
+        "geometries": 77,
+        "textures": 16
+      },
+      {
+        "geometries": 77,
+        "textures": 16
+      },
+      {
+        "geometries": 77,
+        "textures": 16
+      },
+      {
+        "geometries": 77,
+        "textures": 16
+      }
+    ]
+  },
+  "errors": []
+}

@@ -34,8 +34,9 @@ try{
    const fx=blastFx.update(age,{camera,contract:tankContract.open,groundOpacity:1-smooth((age-2.5)/1)});
    // Translate the recorded ground mask along with its cards, without changing its cells.
    for(const m of blastFx.ground){m.position.x+=targetX;const bounds=m.material.uniforms.groundBounds.value;if(!groundBounds.has(m))groundBounds.set(m,bounds.clone());bounds.copy(groundBounds.get(m));bounds.x+=targetX;}
+   blastFx.scorch.setCells(blastFx.ground.map(m=>({...m.userData.cell,x:m.userData.cell.x+targetX})));
    renderer.render(scene,camera);
-   return {time:t,phase:d.blast.phase,operator:shooter.selection.animal,target:target.selection.animal,outfit:target.selection.outfit,targetX,burstAt,origin:origin.toArray(),wornOrigin:d.blast.active?null:tankCentre(target.worker).toArray(),destroyed:d.body.equipmentDestroyed,gear:[target.worker.weapon.root,target.worker.weapon.mount,target.worker.weapon.hose].map(o=>o.visible),shooterGripError:shot.gripError,fireCells:fx.fireCells,groundMinX:Math.min(...blastFx.ground.map(m=>m.userData.cell.x+targetX))};
+   return {time:t,phase:d.blast.phase,operator:shooter.selection.animal,target:target.selection.animal,outfit:target.selection.outfit,targetX,burstAt,origin:origin.toArray(),wornOrigin:d.blast.active?null:tankCentre(target.worker).toArray(),destroyed:d.body.equipmentDestroyed,gear:[target.worker.weapon.root,target.worker.weapon.mount,target.worker.weapon.hose].map(o=>o.visible),shooterGripError:shot.gripError,fireCells:fx.fireCells,groundMinX:Math.min(...blastFx.ground.map(m=>m.userData.cell.x+targetX)),scorchMinX:Math.min(...blastFx.scorch.batches.flatMap(b=>b.tiles.map(p=>p.x)))};
   }
   window.fireEncounter={draw,renderer,dispose(){bodyFx.dispose();blastFx.dispose();sun.shadow.dispose();study.dispose();}};
  });
@@ -44,7 +45,7 @@ try{
   const result=await page.evaluate(t=>{const d=window.fireEncounter.draw(t);return {...d,png:window.fireEncounter.renderer.domElement.toDataURL('image/png').split(',')[1]};},i/20);
   const png=Buffer.from(result.png,'base64');fs.writeFileSync(new URL('frames/'+String(i).padStart(3,'0')+'.png',directory),png);if(snapshots[i/20])fs.writeFileSync(new URL(snapshots[i/20]+'.png',directory),png);delete result.png;samples.push(result);
  }
- for(const s of samples){if(s.operator!=='skunk'||s.target!=='pig-foreman'||s.outfit!=='red-hats')errors.push('Wrong characters');if(s.destroyed!==(s.time>=s.burstAt)||s.gear.some(v=>v===(s.time>=s.burstAt)))errors.push('Incorrect destruction timing at '+s.time);if(s.shooterGripError>1e-6)errors.push('Operator hand detached');if(s.groundMinX<1.5)errors.push('Ground fire reached shooter');if(s.wornOrigin&&s.origin.some((v,i)=>Math.abs(v-s.wornOrigin[i])>1e-6))errors.push('Explosion origin detached from worn tanks');}
+ for(const s of samples){if(s.operator!=='skunk'||s.target!=='pig-foreman'||s.outfit!=='red-hats')errors.push('Wrong characters');if(s.destroyed!==(s.time>=s.burstAt)||s.gear.some(v=>v===(s.time>=s.burstAt)))errors.push('Incorrect destruction timing at '+s.time);if(s.shooterGripError>1e-6)errors.push('Operator hand detached');if(s.groundMinX<1.5||s.scorchMinX<1.5)errors.push('Ground fire or scorch reached shooter');if(s.wornOrigin&&s.origin.some((v,i)=>Math.abs(v-s.wornOrigin[i])>1e-6))errors.push('Explosion origin detached from worn tanks');}
  const replay=await page.evaluate(()=>{const a=window.fireEncounter.draw(.95);window.fireEncounter.draw(6);return JSON.stringify(a)===JSON.stringify(window.fireEncounter.draw(.95));});if(!replay)errors.push('Replay differs');
  await page.evaluate(()=>window.fireEncounter.dispose());
  fs.writeFileSync(new URL('capture.json',directory),JSON.stringify({width:960,height:540,fps:20,frames:samples.length,sourceRevision:'82fef82',burstAt:1.10,errors,replay,samples},null,2));

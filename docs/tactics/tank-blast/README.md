@@ -29,6 +29,8 @@ The pack origin is measured while equipped and then frozen in world space. Eight
 
 The shared fire actor now applies the same bind-space breakup in its sunlight shadow depth material. Hats and body meshes share that behavior, equipment remains separate, and depth materials are restored/disposed with the actor.
 
+The study also leaves [painted scorch decals](../ground-scorch/README.md) on burned ground after the flames and smoke disappear. Four transparent variants overlap within the exact supplied footprint, including water exclusions. Surface controls compare the marks over meadow grass, sand and concrete. Earlier GIFs and review images retain their original documented appearance.
+
 ## Game contract and integration limits
 
 `dist/tactics/fixtures/tank-blast-contract.json` captures real `attack()` results from the incoming gameplay core, including the source SHA-256. Regenerate with `node tools/capture-tank-contract.mjs INCOMING_CHECKOUT`; the tool reads that checkout without editing it. It records **81 open-ground fire cells** and **66 cells with the water fixture**, together with the fatal wearer result and flamethrower removal.
