@@ -21,7 +21,7 @@ export function flameSheetData(shape,muzzle,layer=0){
  }
  return {position:p,uv,distance,index};
 }
-function shader(texture,{smoke=false,fan=false,plume=false,seed=0}={}){
+export function paintedFireMaterial(texture,{smoke=false,fan=false,plume=false,seed=0}={}){
  return new T.ShaderMaterial({transparent:true,depthWrite:false,depthTest:true,side:T.DoubleSide,toneMapped:false,
   uniforms:{map:{value:texture},clock:{value:0},opacity:{value:1},seed:{value:seed},head:{value:100},tail:{value:-10},rays:{value:Array.from({length:37},()=>new T.Vector2())},wedges:{value:new Float32Array(36)},angle:{value:0},spread:{value:1},nozzle:{value:0}},
   vertexShader:`varying vec2 vUv;varying float vDistance;varying vec3 vWorld;${fan?'attribute float travelDistance;':''}void main(){vUv=uv;vDistance=${fan?'travelDistance':'0.0'};vWorld=(modelMatrix*vec4(position,1.0)).xyz;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
@@ -38,11 +38,11 @@ function shader(texture,{smoke=false,fan=false,plume=false,seed=0}={}){
  });
 }
 export async function createPaintedFireEffects(scene,loader,worker){
- const textures=await Promise.all(Object.values(FIRE_ASSETS).map(url=>loader.loadAsync(url)));
+ const textures=[];try{for(const url of Object.values(FIRE_ASSETS))textures.push(await loader.loadAsync(url));}catch(e){textures.forEach(t=>t.dispose());throw e;}
  for(const t of textures)t.colorSpace=T.SRGBColorSpace;
  const group=new T.Group();group.name='Painted fire effects';scene.add(group);
  const plane=new T.PlaneGeometry(1,1),materials=[],geometries=[];
- function material(map,options){const m=shader(map,options);materials.push(m);return m;}
+ function material(map,options){const m=paintedFireMaterial(map,options);materials.push(m);return m;}
  const sheets=[-.45,0,.45].map((layer,i)=>{const g=new T.BufferGeometry();geometries.push(g);const m=new T.Mesh(g,material(textures[0],{fan:true,seed:i*1.3}));m.frustumCulled=false;group.add(m);m.userData.layer=layer;return m;});
  // Staggered, overlapping strokes break up the former three repeating rows.
  // Variation stays inside the supplied ray mask, including doorway shadows.
@@ -64,7 +64,7 @@ export async function createPaintedFireEffects(scene,loader,worker){
   }
  }
  return {group,ash,
-  update(time,{shape,muzzle,camera,route,body=true,flame=true,visible=true,groundPoint}){
+  update(time,{shape,muzzle,camera,route,body=true,flame=true,visible=true,groundPoint,suppressSmoke=false}){
    const f=fireState(time),s=burnState(time,route);group.visible=visible;updateSheets(shape,muzzle);
    for(const sheet of sheets){sheet.visible=flame&&time>=FIRE_TIME.ignite&&time<FIRE_TIME.cutoff+FIRE_TIME.travel;Object.assign(sheet.material.uniforms.clock,{value:time});sheet.material.uniforms.opacity.value=.17;sheet.material.uniforms.head.value=f.head*shape.range;sheet.material.uniforms.tail.value=time<FIRE_TIME.cutoff?-10:f.tail*shape.range;}
    for(let i=0;i<plumes.length;i++){const m=plumes[i],age=time-m.userData.birth,d=age/FIRE_TIME.travel*shape.range,bearing=shape.heading+m.userData.lane*shape.halfAngle;
@@ -82,7 +82,7 @@ export async function createPaintedFireEffects(scene,loader,worker){
    // Lower new emissions with the collapse, then let the existing trail rise away.
    for(let i=0;i<smokes.length;i++){
     const m=smokes[i],birth=FIRE_TIME.hit+i*.16,age=time-birth,bs=burnState(birth,route);
-    m.visible=body&&age>=0&&age<2&&bs.dissolve<1;if(!m.visible)continue;
+    m.visible=body&&!suppressSmoke&&age>=0&&age<2&&bs.dissolve<1;if(!m.visible)continue;
     const origin=groundPoint?groundPoint(birth,route):bs.point;
     m.position.set(origin.x-.18*age,origin.y+1.45-1.05*bs.collapse+age*.75,origin.z+.10*Math.sin(i*1.7)*age);
     m.quaternion.copy(camera.quaternion);m.scale.set(.82+age*.52,1.1+age*.74,1);

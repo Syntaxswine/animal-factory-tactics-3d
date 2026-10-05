@@ -48,7 +48,7 @@ The fixture `dist/tactics/fixtures/painted-fire-contract.json` records incoming 
 
 The fan and billow mask use a shooter-relative ground-level frame: subtract the fixture origin's map X/Y to obtain Three X/Z. The operator is at the study's local origin. A game adapter must map actual level height, muzzle, visibility and fog into one consistent frame. Discontinuous ray boundaries remain unbridged; decorative cards cannot fill in a doorway's wall shadow. Wall-protected targets do not react in the demonstration.
 
-The terminal proposal differs from the existing turn-based burning rule. Gameplay must define eligibility, interruptions, shortened routes and final unit/casualty/loot ownership before enabling it. Tank explosions are not implemented by this animation study.
+The terminal proposal differs from the existing turn-based burning rule. Gameplay must define eligibility, interruptions, shortened routes and final unit/casualty/loot ownership before enabling it. Worn tank rupture now has a separate [22-variant explosion study](../tank-blast/README.md), using the actual tank event's equipment destruction and fire cells. Its ash endpoint and live integration remain separate decisions.
 
 ## Validation
 
@@ -68,7 +68,8 @@ Complete local captures, tests and helper receipts live under `artifacts/painted
 - [x] Refine spray overlap and retain incoming wall/door clipping.
 - [x] Replace the hen's crouch with a grounded sideways collapse; align shadow, smoke and ash.
 - [x] Independent roster review **9/10**, with no blocking findings; see REVIEW.md.
-- [ ] Agree on terminal events, interruptions, tank explosions and inventory/loot behavior.
+- [x] Build and independently review a separate worn-tank explosion study with surrounding fire.
+- [ ] Agree on terminal events, interruptions, tank-explosion ash outcomes and inventory/loot behavior.
 - [ ] Adapt actual game transforms, visibility, aim, stances and corner/elevation routes.
 - [ ] Exercise the final event in gameplay and review integration separately.
 
