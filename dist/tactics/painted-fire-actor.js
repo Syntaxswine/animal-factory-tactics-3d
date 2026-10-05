@@ -18,7 +18,7 @@ async function meshData(file){if(!meshes.has(file))meshes.set(file,fetch('./'+fi
 
 // Caps, guide hats and corrective grip meshes must break up with the body.
 // Equipment is deliberately excluded and remains a separately grounded prop.
-function dissolveBody(worker,uniform){
+export function dissolveBody(worker,uniform){
  const equipment=[worker.weapon?.root,worker.weapon?.mount,worker.weapon?.hose].filter(Boolean),materials=new Set(),saved=[];
  worker.root.traverse(o=>{if(!o.isMesh)return;for(let a=o;a;a=a.parent)if(equipment.includes(a))return;for(const m of [o.material].flat())materials.add(m);});
  for(const material of materials){const compile=material.onBeforeCompile,key=material.customProgramCacheKey;saved.push({material,compile,key});

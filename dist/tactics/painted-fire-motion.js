@@ -88,13 +88,13 @@ export function createPaintedFireMotion(worker,profile={id:'horse'}){
    equipment.sync();finish(position,heading-Math.atan2(axis.z,axis.x));
    return this.diagnostics();
   },
-  burn(time,route){
+  burn(time,route,{terminal=true}={}){
    // Turning footholds need their own fitting pass; do not silently rotate a
    // planted hoof at a route corner. This first proof accepts straight paths.
    for(let i=2;i<route.points.length;i++){const a=route.points[i-2],b=route.points[i-1],c=route.points[i];if(Math.abs(Math.atan2(c.z-b.z,c.x-b.x)-Math.atan2(b.z-a.z,b.x-a.x))>1e-6)throw Error('Horse fire study requires a straight legal route');}
-   state=burnState(time,route);reset(equipment.id==='hmg');const f=panicFeet(state,route,{restX:ankle.x,restZ:Math.abs(ankle.z)}),c=state.collapse;
+   state=burnState(time,route,{terminal});reset(equipment.id==='hmg');const f=panicFeet(state,route,{restX:ankle.x,restZ:Math.abs(ankle.z)}),c=state.collapse;
    const releaseTime=FIRE_TIME.hit+state.runEnd+.31,release=burnState(releaseTime,route);let released;
-   if(equipment.held&&time>=releaseTime){if(releaseCache?.time!==releaseTime){burnTrunk(release);burnGun(release);grip(1,'grip');const snapshot=equipment.capture(),g=gripPose('grip');snapshot.palm=g.palm.clone();snapshot.pole=(g.pole||V(-.12,-1,.55)).clone();snapshot.hand=bones.spine.worldToLocal(bones.hand1.localToWorld(g.palm.clone()));snapshot.handQ=bones.spine.getWorldQuaternion(Q()).invert().multiply(bones.hand1.getWorldQuaternion(Q()));releaseCache={time:releaseTime,snapshot};contacts=[];}released=releaseCache.snapshot;}
+   if(terminal&&equipment.held&&time>=releaseTime){if(releaseCache?.time!==releaseTime){burnTrunk(release);burnGun(release);grip(1,'grip');const snapshot=equipment.capture(),g=gripPose('grip');snapshot.palm=g.palm.clone();snapshot.pole=(g.pole||V(-.12,-1,.55)).clone();snapshot.hand=bones.spine.worldToLocal(bones.hand1.localToWorld(g.palm.clone()));snapshot.handQ=bones.spine.getWorldQuaternion(Q()).invert().multiply(bones.hand1.getWorldQuaternion(Q()));releaseCache={time:releaseTime,snapshot};contacts=[];}released=releaseCache.snapshot;}
    burnTrunk(state);
    // The final footholds already sit at the destination; collapse keeps them.
    legs(f);

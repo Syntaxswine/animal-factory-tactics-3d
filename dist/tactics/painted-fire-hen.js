@@ -7,7 +7,7 @@ const fallPivot=V(0,0,.157);
 const fallRotation=tip=>new T.Quaternion().setFromEuler(new T.Euler(1.40*tip,0,-.14*tip));
 function channels(state,route){
  const gait=route.length?smooth(state.run/.08)*(1-smooth((state.run-.88)/.12)):0,fallTime=state.local-state.runEnd;
- return {gait,buckle:smooth(fallTime/.25),tip:smooth((fallTime-.15)/.43),panic:smooth(state.local/.14)*(1-state.collapse),bob:.012*Math.sin(state.local*18)**2*gait,transfer:Math.sin(state.local*16)*gait};
+ return {gait,buckle:state.terminal?smooth(fallTime/.25):0,tip:state.terminal?smooth((fallTime-.15)/.43):0,panic:smooth(state.local/.14)*(1-state.collapse),bob:.012*Math.sin(state.local*18)**2*gait,transfer:Math.sin(state.local*16)*gait};
 }
 
 // The hen keeps her own feathered wings and four-toed feet. No firearm grips
@@ -23,17 +23,17 @@ export function createHenFireMotion(worker,profile){return guardHenConstruction(
  // Sample the ground projection without changing the live pose. Smoke needs
  // its historical birth point; ash needs the stable settled point, even when
  // scrubbing backwards. The logical route endpoint remains untouched.
- function groundPoint(time,route){
-  const s=burnState(time,route),c=channels(s,route),p=pelvisRest.clone();p.y-=.09*c.gait+.29*c.buckle+c.bob*.5;p.z+=.02*c.transfer;
+ function groundPoint(time,route,options){
+  const s=burnState(time,route,options),c=channels(s,route),p=pelvisRest.clone();p.y-=.09*c.gait+.29*c.buckle+c.bob*.5;p.z+=.02*c.transfer;
   if(c.tip>0)p.sub(fallPivot).applyQuaternion(fallRotation(c.tip)).add(fallPivot);else p.applyQuaternion(rigRest.q).add(rigRest.p);
   p.applyAxisAngle(V(0,1,0),-s.point.heading);return {x:s.point.x+p.x,y:s.point.y,z:s.point.z+p.z};
  }
  return {worker,bones,
   groundPoint,
   fire(){throw Error('The hen has no authored flamethrower grips');},
-  burn(time,route){
+  burn(time,route,options){
    for(let i=2;i<route.points.length;i++){const a=route.points[i-2],b=route.points[i-1],c=route.points[i];if(Math.abs(Math.atan2(c.z-b.z,c.x-b.x)-Math.atan2(b.z-a.z,b.x-a.x))>1e-6)throw Error('Hen fire study requires a straight legal route');}
-   resetRig();support=null;state=burnState(time,route);feet=panicFeet(state,route,{restX:0,restZ:.157,stepLength:.22});const {gait,buckle,tip,panic,bob,transfer}=channels(state,route);
+   resetRig();support=null;state=burnState(time,route,options);feet=panicFeet(state,route,{restX:0,restZ:.157,stepLength:.22});const {gait,buckle,tip,panic,bob,transfer}=channels(state,route);
    const input={time:state.time,distance:state.distance,feet:Object.fromEntries([-1,1].map(side=>[side,{x:feet[side].worldDistance-.035,lift:feet[side].y*.65,planted:feet[side].planted}])),gait,kneel:buckle,bob,transfer};
    motion.apply(time,{heading:state.point.heading*180/Math.PI-35,state:input,crouchDrop:.29,kneelStep:0,crouchPole:true});
    bones.breast.rotation.z=-.22*panic-.32*buckle;bones.head.rotation.z=.23*panic-.24*tip;bones.head.rotation.y=.13*Math.sin(state.local*11)*panic-.22*tip;

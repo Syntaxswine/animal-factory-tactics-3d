@@ -24,6 +24,7 @@ export function validateSavedState(s){
  for(const u of s.units){if(!validCombatState(u,new Set(s.units.map(v=>v.id))))fail();if(!Number.isInteger(u.id)||!['squad','guard'].includes(u.team)||typeof u.name!=='string'||typeof u.species!=='string'||!WEAPONS[u.weapon]||![u.x,u.y,u.z??0].every(Number.isFinite)||![u.hp,u.maxHp,u.ap,u.maxAp].every(finite)||!Array.isArray(u.pack)||!Array.isArray(u.slots)||!u.ammo)fail();if(u.stats&&(!finite(u.stamina)||!finite(u.maxStamina)||STAT_DEFINITIONS.some(([key])=>!Number.isInteger(u.stats[key])||u.stats[key]<1||u.stats[key]>100)))fail();}
  const itemValid=i=>i&&validMedicalChest(i)&&(i.jammed===undefined||typeof i.jammed==='boolean')&&(i.type!=='weapon'||i.condition===undefined||Number.isInteger(i.condition)&&i.condition>=0&&i.condition<=100)&&((i.type==='weapon'&&WEAPONS[i.kind]&&finite(i.rounds))||(i.type==='ammo'&&WEAPONS[i.kind]||i.type==='tool'&&TOOLS[i.kind]||i.type==='utility'&&['medkits','wireCutters'].includes(i.kind))&&Number.isInteger(i.count)&&i.count>0);
  for(const u of s.units)if(u.pack.some(i=>!itemValid(i))||Object.values(u.ammo).some(n=>!finite(n)))fail();
+ for(const u of s.units)if(u.burnedRemains!==undefined&&(typeof u.burnedRemains!=='boolean'||u.burnedRemains&&u.hp>0))fail();
  for(const p of s.loot)if(!p||!Array.isArray(p.items)||p.items.some(i=>!itemValid(i))||![p.x,p.y,p.z??0].every(Number.isFinite))fail();
  for(const key of ['seed','perceptionSeed','interactionSeed','lootSeed','jamSeed'])if(s[key]!==undefined&&!Number.isFinite(s[key]))fail();
  return s;
@@ -32,13 +33,13 @@ export function captureEncounter(state,now=Date.now()){
  const s=structuredClone(state);
  // Actions commit before their animations. Keep the result, not the presentation
  // event or unexecuted movement orders, so loading cannot replay a shot/climb.
- s.effect=null;s.queue=[];delete s.towerTraversal;delete s.cliffTraversals;delete s.cliffTraversalSequence;delete s.roofTraversals;delete s.roofTraversalSequence;delete s.shouting;delete s.sealed;
+ s.effect=null;s.queue=[];delete s.fireAnimations;delete s.fireAnimationSequence;delete s.towerTraversal;delete s.cliffTraversals;delete s.cliffTraversalSequence;delete s.roofTraversals;delete s.roofTraversalSequence;delete s.shouting;delete s.sealed;
  validateSavedState(s);
  return {format:'animal-factory-tactics-3d',version:SAVE_VERSION,savedAt:now,mapName:s.definition.name,phase:s.phase,round:s.round,minutes:s.clock.minutes,state:s};
 }
 export function restoreEncounter(record){
  if(record?.format!=='animal-factory-tactics-3d'||record.version!==SAVE_VERSION)throw Error('This save uses an unsupported format or version.');
- const s=structuredClone(record.state);validateSavedState(s);s.effect=null;s.queue=[];delete s.towerTraversal;delete s.cliffTraversals;delete s.cliffTraversalSequence;delete s.roofTraversals;delete s.roofTraversalSequence;delete s.shouting;delete s.sealed;
+ const s=structuredClone(record.state);validateSavedState(s);s.effect=null;s.queue=[];delete s.fireAnimations;delete s.fireAnimationSequence;delete s.towerTraversal;delete s.cliffTraversals;delete s.cliffTraversalSequence;delete s.roofTraversals;delete s.roofTraversalSequence;delete s.shouting;delete s.sealed;
  // Prime the observer without advancing time, refilling resources or recomputing awareness.
  observeRoundTime(s.clock,s);return s;
 }

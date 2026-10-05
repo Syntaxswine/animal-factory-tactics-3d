@@ -16,7 +16,7 @@
       "upstreamSha256": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262"
     },
     "engine.js": {
-      "reason": "Roll firearm probability once with D20 extremes; use shared roll-margin misses for bullets and shells. Shared aimed-shot, burst recoil, leg injury and suppression rules. Retain decorative roof layer for rendering. Expose discovered roof connections and emit committed roof traversal events. Use walking costs and live ramp support at combat query positions. Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events. Apply character identity, allegiance, hostility and noncombatant reactions during playtesting.",
+      "reason": "Flamethrowers use a placeable, scenery-clipped lethal area cone for players, guards and reactions; exposed victims die regardless of HP or endurance. Roll firearm probability once with D20 extremes; use shared roll-margin misses for bullets and shells. Shared aimed-shot, burst recoil, leg injury and suppression rules. Retain decorative roof layer for rendering. Expose discovered roof connections and emit committed roof traversal events. Use walking costs and live ramp support at combat query positions. Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events. Apply character identity, allegiance, hostility and noncombatant reactions during playtesting.",
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
     "environment.js": {
@@ -53,7 +53,7 @@
     "blocks.js": "92d72689e79fa06e45bf73aeb715406a8937007c7569fe7a89af41eab781118a",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
     "editor-model.js": "10dda96c0af9e22e2eb9449daff706924267c15c9e6f490fcf2baa3b6cefb0a2",
-    "engine.js": "4c38a86495b4d0ad110b37d3691b6b3172d47b4eaf14d72fab80cb5033f9c200",
+    "engine.js": "25451a332a08169254fd8287b4ca40c7e05261177fde434a1966dfc800f0e481",
     "environment.js": "a415382e5ef43f16c45d673275467107406c12b74547b2dc662552a2c4d08bb9",
     "explosives.js": "d28c8600c983f8a018a32e84a137836b81165d80924587f0195f23a540a64fa4",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",

@@ -1,5 +1,9 @@
 // Presentation clocks and recorded paths only. No damage or target selection.
 export const FIRE_TIME=Object.freeze({ignite:.32,cutoff:1.02,travel:.56,recover:2.1,hit:.64,duration:5.4});
+const FIRE_SPECIES=new Set(['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog','hen']);
+export const paintedBurnSupported=u=>FIRE_SPECIES.has(u?.species)&&(u.stance||'standing')==='standing';
+export const paintedOperatorSupported=u=>paintedBurnSupported(u)&&u.species!=='hen'&&u.outfit!=='blue-hawaiian'&&u.weapon==='flamethrower';
+export const paintedFlamePhase=(elapsed,reduced=false)=>({duration:reduced?180:2100,discharged:reduced||elapsed>=FIRE_TIME.hit*1000,aim:0,recoil:0,elapsed,flame:!reduced&&elapsed>=320&&elapsed<1580});
 export const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 export const smooth=x=>{x=clamp(x);return x*x*(3-2*x);};
 export function fireState(seconds){
@@ -18,15 +22,15 @@ export function makeBurnRoute(points){
 }
 export function routePoint(route,distance){
  const d=clamp(distance,0,route.length);let i=1;while(i<route.points.length-1&&d>route.lengths[i])i++;
- if(route.points.length===1)return {...route.points[0],heading:0};
+ if(route.points.length===1)return {...route.points[0],heading:route.heading||0};
  const a=route.points[i-1],b=route.points[i],u=clamp((d-route.lengths[i-1])/(route.lengths[i]-route.lengths[i-1]));
  return {x:a.x+(b.x-a.x)*u,y:a.y,z:a.z+(b.z-a.z)*u,heading:Math.atan2(b.z-a.z,b.x-a.x)};
 }
-export function burnState(seconds,route){
+export function burnState(seconds,route,{terminal=true}={}){
  const t=Math.max(0,Number.isFinite(seconds)?seconds:0),local=t-FIRE_TIME.hit,runStart=.30,runDuration=Math.max(.28,route.length*.54),runEnd=runStart+runDuration;
- const run=clamp((local-runStart)/runDuration),distance=route.length*smooth(run),collapse=smooth((local-runEnd)/.62),dissolve=smooth((local-runEnd-.68)/.50),ash=smooth((local-runEnd-.75)/.45);
- const fireTail=smooth((local-runEnd-1.18)/.40);
- return {time:t,local,run,distance,runStart,runEnd,runDuration,point:routePoint(route,distance),collapse,dissolve,ash,fireTail,bodyVisible:dissolve<1,active:local>=0,engulf:smooth(local/.18)*(1-fireTail),phase:local<0?'Waiting':local<runStart?'Engulfed':local<runEnd?'Panic run':dissolve<1?'Collapse':'Ash'};
+ const run=clamp((local-runStart)/runDuration),distance=route.length*smooth(run),collapse=terminal?smooth((local-runEnd)/.62):0,dissolve=terminal?smooth((local-runEnd-.68)/.50):0,ash=terminal?smooth((local-runEnd-.75)/.45):0;
+ const fireTail=terminal?smooth((local-runEnd-1.18)/.40):0;
+ return {time:t,terminal,local,run,distance,runStart,runEnd,runDuration,point:routePoint(route,distance),collapse,dissolve,ash,fireTail,bodyVisible:dissolve<1,active:local>=0,engulf:smooth(local/.18)*(1-fireTail),phase:local<0?'Waiting':local<runStart?'Engulfed':local<runEnd?'Panic run':!terminal?'Burning':dissolve<1?'Collapse':'Ash'};
 }
 // A planned footfall is fixed in world distance while planted. Each swing
 // explicitly releases, lifts, advances and lands; root motion cannot drag it.
