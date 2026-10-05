@@ -1,4 +1,4 @@
-// Initial gameplay tuning, separate from the later miss/dispersion system.
+// Shared hit-chance modifiers; roll-margin ballistics only place failed shots.
 export const METRES_PER_TILE=1.2;
 export const LEG_AP_PENALTY=3;
 export const BURST_RECOIL=8;
@@ -11,7 +11,7 @@ export function accuracyPenalty(u){
  const injury=Math.max(0,1-u.hp/Math.max(1,u.maxHp));
  return Math.round(exhaustion*10+injury*10);
 }
-export const roundChance=(chance,index)=>Math.max(1,Math.min(95,Math.round(chance-index*BURST_RECOIL)));
+export const roundChance=(chance,index)=>Math.max(5,Math.min(95,Math.round(chance-index*BURST_RECOIL)));
 const leadership=u=>Math.max(1,Math.min(100,u.stats?.leadership??u.leadership??20));
 export function incomingFire(s,u,shooter,threatens,random){
  if(!threatens||u.hp<=0||u.team===shooter.team)return false;

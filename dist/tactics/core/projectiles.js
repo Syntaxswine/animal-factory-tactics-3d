@@ -1,3 +1,4 @@
+import {bodyIntersection,firearmTrajectory,pelletTrajectories} from '../ballistic-shot.js';
 import {bankRayHit} from '../ramp-banks.js';
 import {rampRayHit} from '../cliff-ramps.js';
 import {cliffSupportAt} from '../cliff-support.js';
@@ -22,13 +23,8 @@ export function traceProjectile(state,shooter,origin,direction,reach){
  let nearest=null,limit=reach;
  for(const unit of state.units){
   if(unit===shooter||unit.away||unit.casualty==='quit'||!(unit.hp>0||['bleeding','stable'].includes(unit.casualty)))continue; // a unit that crossed the map edge (away) or quit the squad (G5) has no body here
-  const ox=origin.x-unit.x,oy=origin.y-unit.y,a=d.x*d.x+d.y*d.y,b=2*(ox*d.x+oy*d.y),c=ox*ox+oy*oy-.34*.34;
-  let horizontal;
-  if(a<EPS){if(c>0)continue;horizontal=[0,reach];}
-  else {const discriminant=b*b-4*a*c;if(discriminant<0)continue;const root=Math.sqrt(discriminant);horizontal=[(-b-root)/(2*a),(-b+root)/(2*a)];}
-  const vertical=slab(origin.h,d.h,unitBaseHeight(unit)+.05,unitBaseHeight(unit)+bodyHeight(unit));if(!vertical)continue;
-  const t=Math.max(EPS,horizontal[0],vertical[0]),end=Math.min(reach,horizontal[1],vertical[1]);
-  if(t<=end&&t<limit){limit=t;nearest=unit;}
+  const hit=bodyIntersection(unit,origin,d,reach,bodyHeight(unit));
+  if(hit&&hit.distance<limit){limit=hit.distance;nearest=unit;}
  }
  const impact=(kind,t,extra={})=>{const p=point(origin,d,t);return {kind,...p,z:Math.max(0,Math.min(LEVELS-1,Math.floor((p.h+EPS)/3))),distance:t,...extra};};
  const hits=[bankRayHit(state.props,origin,d,limit),rampRayHit(state.props,origin,d,limit),towerRayHit(state.props,origin,d,limit),cliffRayHit(state.props,origin,d,limit)].filter(t=>t!==null),terrainHit=hits.length?Math.min(...hits):null;if(terrainHit!==null&&terrainHit<limit){limit=terrainHit;nearest=null;}
@@ -71,30 +67,10 @@ export function traceProjectile(state,shooter,origin,direction,reach){
  return impact('range',reach);
 }
 
-export function bulletTrajectory(state,shooter,target,{accurate,zone='torso',chance=50,burst=false,reach},random){
- const origin={x:shooter.x,y:shooter.y,h:unitBaseHeight(shooter)+muzzleHeight(shooter)};
- const aimHeight=targetHeight(target,zone);
- let dx=target.x-origin.x,dy=target.y-origin.y,dh=unitBaseHeight(target)+aimHeight-origin.h;
- if(!accurate){
-  const distance=Math.max(.5,Math.hypot(dx,dy)),angle=Math.atan2(dy,dx);
-  const minimum=Math.asin(Math.min(.9,.42/distance)),maximum=Math.max(minimum,.08+(1-chance/100)*.65+(burst?.12:0));
-  const lateral=random()*2-1,spread=Math.sign(lateral||1)*(minimum+Math.abs(lateral)*(maximum-minimum));
-  dx=Math.cos(angle+spread)*distance;dy=Math.sin(angle+spread)*distance;
-  dh+=(random()*2-1)*distance*maximum*.45;
- }
- const result=traceProjectile(state,shooter,origin,{x:dx,y:dy,h:dh},reach);
- if(accurate&&result.unitId===target.id)result.zone=zone;
- return {...result,origin,accurate};
+export function bulletTrajectory(state,shooter,target,options,random){
+ return firearmTrajectory(state,shooter,target,options,random,{trace:traceProjectile,bodyHeight,muzzleHeight,targetHeight});
 }
 
-// One shell emits all pellets together. Angular spread naturally thins the pattern with distance.
-export function shotgunTrajectories(state,shooter,target,{accurate,zone='torso',chance=50,reach,pellets=6},random){
- const origin={x:shooter.x,y:shooter.y,h:unitBaseHeight(shooter)+muzzleHeight(shooter)},range=Math.max(.1,Math.hypot(target.x-origin.x,target.y-origin.y));
- const angle=Math.atan2(target.y-origin.y,target.x-origin.x)+(accurate?0:(random()<.5?-1:1)*(.10+(1-chance/100)*.2));
- const slope=(unitBaseHeight(target)+targetHeight(target,zone)-origin.h)/range;
- return Array.from({length:pellets},()=>{const phase=random()*Math.PI*2,radius=Math.sqrt(random())*.11,yaw=angle+Math.cos(phase)*radius;
-  const hit=traceProjectile(state,shooter,origin,{x:Math.cos(yaw),y:Math.sin(yaw),h:slope+Math.sin(phase)*radius},reach);
-  if(accurate&&zone==='weapon'&&hit.unitId===target.id&&Math.abs(hit.h-unitBaseHeight(target)-targetHeight(target,'weapon'))<.15)hit.zone='weapon';
-  return {...hit,origin,accurate,pellet:true};
- });
+export function shotgunTrajectories(state,shooter,target,options,random){
+ return pelletTrajectories(state,shooter,target,options,random,{trace:traceProjectile,bodyHeight,muzzleHeight,targetHeight});
 }

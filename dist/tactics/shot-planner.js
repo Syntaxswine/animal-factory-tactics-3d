@@ -4,7 +4,8 @@ import {AIM_LEVELS,supportsAim} from './aim-levels.js';
 import {METRES_PER_TILE,roundChance} from './combat-state.js';
 
 // Forecast the current projectile rules without touching encounter randomness.
-// The accurate branch is weighted exactly; the existing miss branch is sampled.
+// The accurate branch is weighted exactly. Failed shots sample the conditional
+// D20 distribution used by live roll-margin ballistics, including natural 1s.
 export function shotForecast(s,a,b,p,{samples=96}={}){
  if(!Number.isFinite(p.chance)||!supportsAim(WEAPONS[a.weapon])||!canSee(s,a,b))return null;
  const w=WEAPONS[a.weapon];let seed=0x9e3779b9;
@@ -15,7 +16,7 @@ export function shotForecast(s,a,b,p,{samples=96}={}){
   for(const accurate of [true,false]){
    const count=w.pellets||!accurate?samples:1,weight=(accurate?chance:100-chance)/count;
    for(let i=0;i<count;i++){
-    const options={accurate,zone:p.zone,chance,burst:p.rounds>1,reach:w.range*1.5,pellets:w.pellets};
+    const options={accurate,zone:p.zone,chance,precision:w.precision??80,burst:p.rounds>1,reach:w.range*1.5,pellets:w.pellets};
     const paths=w.pellets?shotgunTrajectories(s,a,b,options,random):[bulletTrajectory(s,a,b,options,random)];
     if(paths.some(path=>path.unitId===b.id))hit.any+=weight;
     if(paths.some(path=>path.unitId===b.id&&path.zone===p.zone))hit.selected+=weight;

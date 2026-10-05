@@ -6,11 +6,29 @@ import {ANIMAL_MOTION_CATALOG} from '../dist/tactics/animal-motion-catalog.js';
 import {createWeaponModel} from '../dist/tactics/weapon-models.js';
 import {createRifleFiring} from '../dist/tactics/rifle-firing.js';
 import {BattleCombat,shotPhase} from '../dist/tactics/battle-combat.js';
-import {visibleShotPath} from '../dist/tactics/battle-shot-effects.js';
+import {visibleShotPath,BattleShotEffects,shotPoint} from '../dist/tactics/battle-shot-effects.js';
 
 test('rifle playback raises before discharge, recoils, lowers and respects reduced motion',()=>{
  assert.equal(shotPhase(200).flash,false);assert.equal(shotPhase(380).aim,1);assert.equal(shotPhase(395).flash,true);assert.ok(shotPhase(410).recoil>.9);assert.equal(shotPhase(1000).trace,false);assert.equal(shotPhase(1100).aim,0);
  assert.equal(shotPhase(0,true,true).flash,false);assert.equal(shotPhase(0,true,true).recoil,0);
+});
+
+test('other firearms display resolved pellet paths from their model muzzle without changing outcomes',()=>{
+ const scene=new T.Scene(),effects=new BattleShotEffects(scene),muzzle={origin:new T.Vector3(.7,1.2,0),direction:new T.Vector3(1,0,0)};
+ const state={units:[{id:0,team:'squad'}],visible:new Set(['0,0','1,0','2,0'])};
+ const event={shooter:0,trajectories:[{kind:'range',x:2,y:0,h:1.3,origin:{x:0,y:0,h:1.3}},{kind:'range',x:2,y:.3,h:1.3,origin:{x:0,y:0,h:1.3}}]},before=structuredClone(event);
+ const active={event,phase:shotPhase(10,false),knownUnitIds:[0]};
+ try{
+  effects.update(active,state,muzzle);assert.equal(effects.flash.visible,true);assert.equal(effects.trace.visible,true);assert.equal(effects.trace.isLineSegments,true);
+  const p=effects.trace.geometry.attributes.position;
+  assert.ok(Math.abs(p.getX(0)-muzzle.origin.x)<1e-6);assert.ok(Math.abs(p.getZ(p.count-1)-.3)<1e-6);assert.deepEqual(event,before);
+  effects.hide();active.phase=shotPhase(10,false,true);effects.update(active,state,muzzle);assert.equal(effects.flash.visible,false);assert.equal(effects.trace.visible,false);
+ }finally{effects.dispose();}assert.equal(scene.children.length,0);
+});
+
+test('shot effects retain a grounded launch point for a merc supported by a cliff ramp',()=>{
+ const unit={id:0,z:0,cliffSupport:{level:0,height:1.4}},p=shotPoint({x:3,y:4,h:2.7,unitId:0},{units:[unit]});
+ assert.ok(Math.abs(p.y-(1.4+1.3*1.65/1.8))<1e-9);
 });
 test('sequence consumption is ordered, deduplicated, visibility-gated and does not mutate outcomes',()=>{
  const a={id:0,team:'squad',weapon:'rifle',hp:100,x:0,y:0},b={id:1,team:'guard',weapon:'rifle',hp:45,x:2,y:0};

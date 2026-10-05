@@ -24,11 +24,13 @@ try{
  assert.ok(pick,'Target should be pickable');await page.mouse.move(pick.x,pick.y);
  await page.waitForFunction(()=>document.getElementById('battle').dataset.targetCursor==='red');
  assert.match(await page.locator('#battle').evaluate(e=>getComputedStyle(e).cursor),/data:image/);
- await page.evaluate(()=>{const s=battle3d.state;s.rules.awareness=true;s.units[0].awareness={};});
+ // Ordinary daylight targets identify immediately under the current visibility
+ // rules. Use a sneaking target for this deliberately unidentified cursor case.
+ await page.evaluate(()=>{const s=battle3d.state;s.rules.awareness=true;s.units[0].awareness={};s.units[4].sneaking=true;});
  await page.waitForFunction(()=>document.getElementById('battle').dataset.targetCursor==='grey');
  await page.evaluate(()=>battle3d.state.detected.delete(4));
  await page.waitForFunction(()=>!document.getElementById('battle').dataset.targetCursor);
- await page.evaluate(()=>{battle3d.state.rules.awareness=false;battle3d.state.detected.add(4);});
+ await page.evaluate(()=>{battle3d.state.rules.awareness=false;battle3d.state.units[4].sneaking=false;battle3d.state.detected.add(4);});
  await page.waitForFunction(()=>document.getElementById('battle').dataset.targetCursor==='red');
  await page.mouse.move(10,10);await page.waitForFunction(()=>!document.getElementById('battle').dataset.targetCursor);
  await page.mouse.click(pick.x,pick.y);
@@ -52,5 +54,11 @@ try{
  await page.click('#fire');assert.equal(await page.locator('#shot-popup').isVisible(),false);
  const after=await page.evaluate(()=>({ap:battle3d.state.units[0].ap,ammo:battle3d.state.units[0].ammo.assault}));
  assert.equal(after.ap,before.ap-6);assert.equal(after.ammo,before.ammo-1);assert.deepEqual(errors,[]);
+ const shot=await page.evaluate(()=>battle3d.state.effect.sequence[0]);assert.ok(shot.shotRoll.die>=1&&shot.shotRoll.die<=20);assert.equal(shot.trajectories[0].trajectoryModel,'roll-margin');assert.equal(shot.trajectories[0].accurate,shot.shotRoll.rolledHit);
+ // Hold playback at discharge to inspect the actual AK-47 muzzle and tracer.
+ await page.evaluate(()=>{const r=battle3d.renderer,s=battle3d.state;r.captureCombat(s);if(r.combat.active){r.combat.active.start=r.presentationNow-20;r.combat.advance(r.presentationNow);}});
+ await page.waitForFunction(()=>battle3d.renderer.shotEffects.trace.visible,{},{timeout:10000});
+ await page.locator('#battle').screenshot({path:fileURLToPath(new URL('../artifacts/roll-margin-live-shot.png',import.meta.url))});
  console.log('Guard cursors: red, grey, hidden and pointer exit pass. Graphical popup: target click, body selection, aim controls, burst values, pin restrictions, Escape cancellation, planning pause and firing AP/ammo pass.');
+ console.log('Live roll-margin shot result and non-rifle muzzle/tracer playback pass.');
 }finally{await browser.close();}

@@ -13,10 +13,10 @@ remains available alongside Head, Torso and Legs.
   base before multiplication, and the total is charged once.
 - Full uses the current calm accuracy baseline (weapon skill/weapon/range
   calculation plus 20). Aimed is 10 percentage points below it; hip is 20
-  below it, before the existing 10–95% first-round clamp. These are game
+  below it, before the 5–95% firearm clamp. These are game
   tuning values, not a fitted empirical shooting dataset.
 - Fatigue and lost health each deduct up to 10 percentage points at all aim
-  levels. Subsequent burst rounds lose 8 points each, down to 1%. Aiming
+  levels. Subsequent burst rounds lose 8 points each, down to 5%. Aiming
   therefore benefits every round. Preview and execution share this sequence.
 - Existing damage multipliers remain: head ×1.5, torso ×1, legs ×0.85,
   weapon ×0.75, followed by existing resistance rules.
@@ -42,16 +42,25 @@ round order. Shotgun values mean at least one pellet. These are conditional on
 the round firing and the scene remaining unchanged; jams or casualties can
 stop later rounds.
 
-The forecast weights the existing accurate-shot branch and deterministically
-samples 96 outcomes from its existing miss branch, using a separate local RNG.
-It traces actual tactical obstacles and actor collision shapes. It neither
-consumes encounter RNG nor replaces the miss distribution. Probabilities are
-approximate, not the old accuracy-roll percentage relabeled as a physical hit
-chance. Direct aim still uses the existing zone-center aiming and synthetic
-weapon hit classification. Actor colliders are the existing stance-scaled
-cylinders, not animal-specific meshes or measured exposed surface areas.
-Sampling partially exposed body surfaces and the custom miss system are
-future work; do not describe this tranche as exact silhouette-based accuracy.
+Live firearms roll the final hit probability once. Natural 20 succeeds and
+natural 1 fails; ordinary checks are normalized so the total remains the stated
+chance. A success aims directly at the selected region, subject to interception.
+Only failures use the approved roll-margin helicoid scatter. Failed selected-part
+rolls may hit another body part or another person, including allies. Existing
+critical exceptions are included in the probability, never applied a second time.
+
+The forecast weights successes and deterministically samples 96 failures using
+the same scatter and conditional D20 distribution as execution, on a separate
+local RNG. At 95% chance all failures are natural 1s. Actor and obstacle tracing
+is shared; displaying the menu consumes no encounter randomness. Selected-part
+and anywhere-on-target percentages still differ because misses can cause
+incidental hits and obstacles can intercept successes. Shotguns roll once per
+shell, preserve a centered pellet on success, and spread their other pellets.
+
+Direct aim retains zone-center aiming and synthetic weapon hit classification.
+Actor colliders remain stance-scaled cylinders, not animal-specific meshes or
+measured exposed surface areas. Partial-surface aiming and mesh colliders remain
+future work. See `HELICOID-SHOT-STUDY.md` for the integration and current limits.
 
 Distance display uses **1.2 metres per tile**. The approved grey horse's skull
 top (centerline vertices excluding ears) is 1.5693 renderer units above its
@@ -67,7 +76,7 @@ Renderer and tactical vertical scales remain distinct existing systems.
 - `node tools/check-shot-planner.mjs` with Playwright and the existing preview.
 - `npm run build:tactics-3d`, including deployment module-closure validation.
 
-The combat adapter records the changes to generated core code. Regenerate
+The combat and ballistics adapters record changes to generated core code. Regenerate
 using `tools/sync-tactics-core.mjs`; never edit `core/engine.js` directly.
 
 Close daylight contact: within three tiles, a geometrically identifiable target
