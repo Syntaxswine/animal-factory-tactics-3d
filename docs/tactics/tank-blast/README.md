@@ -4,6 +4,8 @@ October 4, 2026. A separate fatal-event presentation for a flamethrower fuel pac
 
 Open `tactics/tank-blast-study.html` from the study server or packaged gallery. Select any of the **11 armed mammals in either outfit: 22 combinations**. The hen and donkey guide retain their established unarmed roles and are not tank wearers. Character and weapon dimensions are unchanged.
 
+The [looping horse GIF](evidence/tank-blast-study.gif) records the surrounding-blast view of `c2c78e9` at 960 × 540 and 20 sampled frames per second. Its 6.4-second loop includes short introductory and aftermath holds; the animation itself retains the study timing. The GIF is approximately 6.6 MB and was fully decoded and visually spot-checked after export.
+
 ## Sequence
 
 | Study time | Presentation |
