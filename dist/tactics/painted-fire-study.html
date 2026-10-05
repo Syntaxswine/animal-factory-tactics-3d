@@ -1,6 +1,12 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Painted fire study · Animal Factory</title><link rel="icon" href="data:,"><link rel="stylesheet" href="painted-fire-study.css"></head><body>
 <header><div><h1>Painted fire</h1><p>Brace · engulf · three tiles · ash</p></div><a href="../tactics-3d-gallery.html">Studies ↗</a></header>
-<main><section class="controls" aria-label="Animation controls">
+<main><section class="controls roster" aria-label="Character and equipment controls">
+<label>Burning character <select id="animal"></select></label>
+<label>Outfit <select id="outfit"><option value="normal">Original</option><option value="red-hats">Red Hats</option><option value="blue-hawaiian">Donkey guide</option></select></label>
+<label>Equipment <select id="weapon"></select></label>
+<label>Flamethrower operator <select id="operator"></select></label>
+<label>Operator outfit <select id="operatorOutfit"><option value="normal">Original</option><option value="red-hats">Red Hats</option></select></label>
+</section><section class="controls" aria-label="Animation controls">
 <button id="play">Pause</button><button id="restart">Restart</button><label class="scrub">Time <input id="time" type="range" min="0" max="5.4" value="0" step="0.01"><output id="clock">0.00 s</output></label>
 <label>Focus <select id="focus"><option value="both">Whole sequence</option><option value="shooter">Shooter</option><option value="target">Engulfed character</option></select></label>
 <label>View <select id="view"><option value="three">Three-quarter</option><option value="side">Side</option><option value="front">Front</option><option value="rear">Rear</option></select></label>
@@ -8,8 +14,8 @@
 <label>Scene <select id="scene"><option value="open">Open ground</option><option value="wall">Wall stops flame</option><option value="doorway">Open doorway</option></select></label>
 <label>Escape <select id="steps"><option value="3">Three tiles</option><option value="1">One legal tile</option><option value="0">Blocked</option></select></label>
 <label><input id="effects" type="checkbox" checked> Painted effects</label></section>
-<section id="viewport" aria-label="3D fire animation"><div id="loading">Loading the painted horse…</div></section>
+<section id="viewport" aria-label="3D fire animation"><div id="loading">Loading painted characters…</div></section>
 <nav class="beats" aria-label="Key poses"><button data-time="0.00">Carry</button><button data-time="0.70">Spray / engulf</button><button data-time="1.45">Run</button><button data-time="2.95">Collapse</button><button data-time="4.30">Ash</button></nav>
 <p id="status" role="status"></p><p id="error" role="alert"></p>
-<footer>Horse animation study. Drag to orbit; scrub in either direction. Live gameplay uses the painted spray and accepted panic routes; only fatal flame hits end in ash. This study demonstrates the complete terminal sequence.</footer></main>
+<footer>12 animals · both outfits · donkey guide. Hen and guide remain unarmed. Drag to orbit; scrub in either direction. The terminal three-tile burn, dropped equipment and ash remain animation studies awaiting gameplay integration. The flame respects the supplied area and wall boundaries.</footer></main>
 <script type="module" src="painted-fire-study.js"></script></body></html>

@@ -3,7 +3,7 @@ import * as T from '../dist/tactics/vendor/three.module.js';
 import {createLightHorse} from '../dist/tactics/horse-light-model.js';
 import {createWeaponModel} from '../dist/tactics/weapon-models.js';
 import {createPaintedFireMotion} from '../dist/tactics/painted-fire-motion.js';
-import {createEquipmentStow,STOW_MODES} from '../dist/tactics/equipment-stow.js';
+import {STOW_MODES} from '../dist/tactics/equipment-stow.js';
 import {makeBurnRoute,burnState,FIRE_TIME} from '../dist/tactics/painted-fire-state.js';
 import {flameSheetData} from '../dist/tactics/painted-fire-effects.js';
 import {BattleFire,fireSegments,firePlayback,visibleFlameShape} from '../dist/tactics/battle-fire.js';
@@ -39,14 +39,13 @@ test('fatal fire persists ash but saves discard playback, and reject living ash'
  const save=captureEncounter(s),restored=restoreEncounter(save);assert.equal(restored.units[4].burnedRemains,true);assert.equal(restored.fireAnimations,undefined);assert.equal(restored.fireAnimationSequence,undefined);assert.deepEqual(restored.loot,loot);
  save.state.units[4].hp=1;assert.throws(()=>restoreEncounter(save),/damaged/);delete save.state.units[4].burnedRemains;assert.doesNotThrow(()=>restoreEncounter(save));
 });
-test('all supported loadouts can panic with shared stowing, no survivor collapse or rifle substitution',()=>{
+test('all supported loadouts retain their fitted equipment with no survivor collapse or rifle substitution',()=>{
  const route=makeBurnRoute([0,1,2,3].map(x=>({x,y:0,z:0})));
  for(const id of Object.keys(STOW_MODES)){
-  const m=model(id),motion=createPaintedFireMotion(m.worker),stow=id==='rifle'?null:createEquipmentStow(m.worker,m.profile);
-  try{for(let t=.64;t<4.7;t+=.07){stow?.restore();const d=motion.burn(t,route,{terminal:false,unarmed:id!=='rifle'});stow?.apply();assert.equal(m.worker.weapon.id,id);assert.equal(d.state.collapse,0);assert.equal(d.state.dissolve,0);assert.equal(d.drop,null);assert.ok(d.feet['1'].planted||d.feet['-1'].planted);assert.ok(m.worker.parts.every(p=>p.visible));}
-   if(stow){stow.restore();assert.equal(stow.state,'carried');}
-   for(let t=.64;t<3.2;t+=.08){stow?.restore();motion.burn(t,makeBurnRoute([{x:0,y:0,z:0}]),{terminal:true,unarmed:id!=='rifle'});stow?.apply();}
-  }finally{stow?.dispose();motion.dispose();m.dispose();}
+  const m=model(id),motion=createPaintedFireMotion(m.worker);
+  try{for(let t=.64;t<4.7;t+=.07){const d=motion.burn(t,route,{terminal:false});assert.equal(m.worker.weapon.id,id);assert.equal(d.state.collapse,0);assert.equal(d.state.dissolve,0);assert.equal(d.drop,null);assert.ok(d.feet['1'].planted||d.feet['-1'].planted);assert.ok(m.worker.parts.every(p=>p.visible));}
+   for(let t=.64;t<3.2;t+=.08)motion.burn(t,makeBurnRoute([{x:0,y:0,z:0}]),{terminal:true});
+  }finally{motion.dispose();m.dispose();}
  }
 });
 test('corner paths stop at the turn and never cross the diagonal shortcut',()=>{

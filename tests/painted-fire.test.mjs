@@ -64,7 +64,7 @@ test('released rifle accelerates downwards and comes to rest above the floor',()
  }finally{a.dispose();}
 });
 test('seeking after ash restores visibility and gives the same pose as a fresh evaluation',()=>{
- const a=setup(),b=setup();try{a.motion.burn(5.4,route());const x=a.motion.burn(1.4,route()),y=b.motion.burn(1.4,route());assert.deepEqual(x,y);a.motion.burn(5.4,route());a.motion.fire(.4);assert.ok(a.worker.parts.every(p=>p.visible));a.motion.restore();assert.ok(a.worker.parts.every(p=>p.visible));}finally{a.dispose();b.dispose();}
+ const a=setup(),b=setup(),flamer=setup('flamethrower');try{a.motion.burn(5.4,route());const x=a.motion.burn(1.4,route()),y=b.motion.burn(1.4,route());assert.deepEqual(x,y);a.motion.burn(5.4,route());assert.throws(()=>a.motion.fire(.4),/flamethrower/);a.motion.restore();assert.ok(a.worker.parts.every(p=>p.visible));flamer.motion.burn(5.4,route());flamer.motion.fire(.4);assert.ok(flamer.worker.parts.every(p=>p.visible));}finally{a.dispose();b.dispose();flamer.dispose();}
 });
 test('fan begins at the actual muzzle and obeys the recorded full wall stop',()=>{
  for(const shape of [fixture.open,fixture.wall,fixture.doorway])for(const layer of [-1.6,0,1.6]){const muzzle=V(.55,.98,0),d=flameSheetData(shape,muzzle,layer);assert.ok(d.position.every(Number.isFinite));assert.deepEqual(d.position.slice(0,3),muzzle.toArray());assert.ok(d.index.every(i=>i<d.position.length/3));if(shape===fixture.wall)for(let i=0;i<d.position.length;i+=3)assert.ok(d.position[i]<=2.50001);}

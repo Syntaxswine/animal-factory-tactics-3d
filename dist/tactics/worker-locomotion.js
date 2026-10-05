@@ -1,5 +1,6 @@
 import * as T from './vendor/three.module.js';
 import {createHenMotion} from './hen-motion.js';
+import {poseRoofMantleCarry} from './roof-mantle-equipment.js';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 const smooth=t=>t*t*(3-2*t);
 
@@ -28,7 +29,7 @@ export function createWorkerLocomotion(worker,profile){
  function rotation(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(q));worker.root.updateMatrixWorld(true);}
  return {
   apply(sample){
-   worker.root.position.set(0,0,0);worker.root.rotation.set(0,0,0);worker.pose('carry',0);
+   worker.root.position.set(0,0,0);worker.root.rotation.set(0,0,0);poseRoofMantleCarry(worker,profile);
    const state=gaitState(sample.distance,sample.blend,stride),drop=-.065*sample.blend-state.bob;
    if(!sample.blend){worker.root.rotation.y=-sample.heading*Math.PI/180;worker.root.updateMatrixWorld(true);worker.skeleton.update();return state;}
    for(const {side,a,b,c}of legs){
