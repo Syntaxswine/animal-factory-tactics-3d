@@ -1,5 +1,7 @@
 # Roster fire integration — October 4, 2026
 
+October 5 review: the pending worn-tank and barrel commits share `work/editor-3d`. See the [integration review and release hold](EXPLOSIVE-BARRELS.md#integration-review--october-5-2026) for the asset-audit failure, seven merge conflicts with canonical, missing live barrel breakup, and checks needed before publication. The gameplay tests pass; this note does not mark the pending integration as released.
+
 The fire animations on `work/fire-animation-storyboards` are connected to the 3D battle renderer: the initial horse study `fdcac12`, roster fitting `7b94117`, and the adopted sideways hen collapse `d1f20f4`. Runtime modules, the updated study, resource cleanup and focused checks were imported selectively. Unrelated roof-grounding changes were not merged.
 
 ## Live behavior
