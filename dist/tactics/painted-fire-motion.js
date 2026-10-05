@@ -40,13 +40,25 @@ export function createPaintedFireMotion(worker){
   for(const c of contacts){const a=worker.weapon.anchors[c.anchor].getWorldPosition(V()),b=bones['hand'+c.side].localToWorld(palm.clone());gripError=Math.max(gripError,a.distanceTo(b));}
  }
  function burnTrunk(s){
-  const enter=smooth(s.local/.25),c=s.collapse,stride=smooth(s.run/.09)*(1-smooth((s.run-.91)/.09));
-  const compression=.07*enter+.06*stride+.50*c;
+  const enter=smooth(s.local/.14),c=s.collapse,stride=smooth(s.run/.08)*(1-smooth((s.run-.88)/.12)),panic=enter*(1-c),beat=s.local*18;
+  const startle=smooth(s.local/.07)*(1-smooth((s.local-.10)/.18));
+  const compression=.07*enter+(.065+.025*Math.sin(beat)**2)*stride+.50*c;
   bones.hips.position.copy(rest.get(bones.hips));bones.hips.position.y-=compression;bones.hips.position.x+=.055*c;
-  bones.spine.rotation.z=-.12*enter-1.33*c;bones.spine.rotation.x=.035*Math.sin(s.distance*9)*enter*(1-c);bones.head.rotation.z=.08*enter;
-  root.updateMatrixWorld(true);return compression;
+  bones.hips.position.z=.028*Math.sin(beat)*stride;
+  bones.spine.rotation.set(.13*Math.sin(beat*.53)*panic,.14*Math.sin(beat*.61)*stride,.20*startle-.12*enter-.18*stride-1.33*c);
+  bones.head.rotation.set(.055*Math.sin(beat*.71)*panic,.17*Math.sin(beat*.47)*panic,(.24+.075*Math.sin(beat*.79))*panic+.08*c);
+  root.updateMatrixWorld(true);
  }
- function burnGun(s){const u=smooth(s.local/.25);gunAt(V(.17,.99,.075).lerp(V(.17,.94,.29),u),V(.766,-.17,-.643).lerp(V(.94,-.33,-.03),u));}
+ function burnGun(s){const u=smooth(s.local/.25),panic=u*(1-s.collapse),jolt=Math.sin(s.local*13.5)*panic;gunAt(V(.17,.99,.075).lerp(V(.17,.94+.025*jolt,.29+.025*panic),u),V(.766,-.17,-.643).lerp(V(.94,-.33-.14*panic+.10*jolt,-.03+.065*Math.sin(s.local*10)*panic),u));}
+ // Protect the face, sweep across the collar, then fling down and away. Unequal
+ // pauses and a falling final reach read as distress, not a repeated fist pump.
+ const handKeys=[
+  [0,.19,.02,-.22,.5],[.09,.18,.05,-.23,.8],[.24,.13,.29,-.22,1.7],
+  [.45,.28,-.07,.01,.35],[.66,.28,-.16,-.26,-.35],[.90,.12,.27,-.20,1.6],
+  [1.08,.26,-.10,.02,.3],[1.30,.27,-.17,-.25,-.4],[1.48,.15,.25,-.16,1.5],
+  [1.67,.28,-.05,-.09,.35],[1.88,.23,-.20,-.25,-.3]
+ ];
+ function panicHand(local){let i=1;while(i<handKeys.length-1&&local>handKeys[i][0])i++;const a=handKeys[i-1],b=handKeys[i],u=smooth((local-a[0])/(b[0]-a[0]));return {offset:V(...a.slice(1,4)).lerp(V(...b.slice(1,4)),u),roll:a[4]+(b[4]-a[4])*u};}
  return {
   worker,bones,
   fire(time,{position=V(),heading=0}={}){
@@ -65,14 +77,22 @@ export function createPaintedFireMotion(worker){
    reset();state=burnState(time,route);const f=panicFeet(state,route,{restX:ankle.x,restZ:Math.abs(ankle.z)}),c=state.collapse;
    const releaseTime=FIRE_TIME.hit+state.runEnd+.31,release=burnState(releaseTime,route);let released;
    if(time>=releaseTime){burnTrunk(release);burnGun(release);released={p:worker.weapon.root.position.clone(),q:worker.weapon.root.quaternion.clone()};}
-   const compression=burnTrunk(state);
+   burnTrunk(state);
    // The final footholds already sit at the destination; collapse keeps them.
    legs(f);
    burnGun(state);grip(1,'grip');
-   const enter=smooth(state.local/.25),idle=worker.weapon.anchors.support.getWorldPosition(V()),sh=bones['upperArm-1'].getWorldPosition(V()),target=idle.lerp(V(.27,1.15-compression,-.28).lerp(V(.25,.109,-.25),c),enter),palmQ=Q().setFromUnitVectors(V(0,-1,0),V(1,0,0).applyQuaternion(worker.weapon.root.quaternion)).slerp(Q().setFromAxisAngle(V(0,0,1),Math.PI/2*c),enter);
+   const enter=smooth(state.local/.18),idle=worker.weapon.anchors.support.getWorldPosition(V()),sh=bones['upperArm-1'].getWorldPosition(V());
+   const gesture=panicHand(state.local),openPalm=Q().setFromEuler(new T.Euler(.12,.75,gesture.roll));
+   const flail=sh.clone().add(gesture.offset),freeOffset=palm.clone().applyQuaternion(openPalm),freeDelta=flail.clone().sub(freeOffset).sub(sh),length=freeDelta.length();
+   // A soft reach envelope leaves the elbow bent; never snap into full
+   // extension. Apply it before the separately fitted ground-support blend.
+   if(length>.36)flail.copy(sh).add(freeDelta.multiplyScalar((.36+.10*(1-Math.exp(-(length-.36)/.10)))/length)).add(freeOffset);
+   const target=idle.lerp(flail.lerp(V(.25,.109,-.25),c),enter);
+   openPalm.slerp(Q().setFromAxisAngle(V(0,0,1),Math.PI/2),c);
+   const palmQ=Q().setFromUnitVectors(V(0,-1,0),V(1,0,0).applyQuaternion(worker.weapon.root.quaternion)).slerp(openPalm,enter);
    const palmOffset=palm.clone().applyQuaternion(palmQ),delta=target.clone().sub(palmOffset).sub(sh),reach=.5039;
    if(enter>0&&delta.length()>reach)target.copy(sh).add(delta.setLength(reach)).add(palmOffset);
-   hand(-1,target,palmQ);bones['fingers-1'].rotation.z=-.18;
+   hand(-1,target,palmQ);bones['fingers-1'].rotation.z=.22*(1-c)-.18*c;
    if(enter===0)contacts.push({side:-1,anchor:'support'});
    if(released){const gun=worker.weapon,age=time-releaseTime,q=Q().setFromAxisAngle(V(0,1,0),-.22),floor=rifleFloor(q),flight=Math.sqrt(Math.max(0,2*(released.p.y-floor)/9.81)),elapsed=Math.min(age,flight);
     const handFrom=bones.hand1.localToWorld(palm.clone()),handRotation=bones.hand1.getWorldQuaternion(Q());

@@ -23,7 +23,7 @@ export function routePoint(route,distance){
  return {x:a.x+(b.x-a.x)*u,y:a.y,z:a.z+(b.z-a.z)*u,heading:Math.atan2(b.z-a.z,b.x-a.x)};
 }
 export function burnState(seconds,route){
- const t=Math.max(0,Number.isFinite(seconds)?seconds:0),local=t-FIRE_TIME.hit,runStart=.30,runDuration=Math.max(.28,route.length*.60),runEnd=runStart+runDuration;
+ const t=Math.max(0,Number.isFinite(seconds)?seconds:0),local=t-FIRE_TIME.hit,runStart=.30,runDuration=Math.max(.28,route.length*.54),runEnd=runStart+runDuration;
  const run=clamp((local-runStart)/runDuration),distance=route.length*smooth(run),collapse=smooth((local-runEnd)/.62),dissolve=smooth((local-runEnd-.68)/.50),ash=smooth((local-runEnd-.75)/.45);
  const fireTail=smooth((local-runEnd-1.18)/.40);
  return {time:t,local,run,distance,runStart,runEnd,runDuration,point:routePoint(route,distance),collapse,dissolve,ash,fireTail,bodyVisible:dissolve<1,active:local>=0,engulf:smooth(local/.18)*(1-fireTail),phase:local<0?'Waiting':local<runStart?'Engulfed':local<runEnd?'Panic run':dissolve<1?'Collapse':'Ash'};
@@ -32,15 +32,20 @@ export function burnState(seconds,route){
 // explicitly releases, lifts, advances and lands; root motion cannot drag it.
 export function panicFeet(state,route,{restX=-.035,restZ=.232}={}){
  if(route.length===0)return Object.fromEntries([-1,1].map(side=>[side,{x:restX,y:0,z:side*restZ,planted:true,worldDistance:restX}]));
- const count=Math.max(2,Math.ceil(route.length/.30)),feet={};
+ const count=Math.max(2,Math.ceil(route.length/.30)),feet={},beats=[0];
+ // Short, uneven catching steps rather than a parade cadence. Landing targets
+ // are still planned in world space; speeding up the body cannot drag a sole.
+ const rhythm=[.82,1.10,.91,1.16,.86,1.05];
+ for(let i=0;i<count;i++)beats.push(beats.at(-1)+rhythm[i%rhythm.length]);
+ const duration=beats.at(-1);for(let i=0;i<beats.length;i++)beats[i]/=duration;
  for(const side of [-1,1]){
   let x=restX,lift=0,planted=true;
   for(let i=0;i<count;i++){
    if((i%2===0?1:-1)!==side)continue;
-   const start=i/count,end=(i+1)/count;
+   const start=beats[i],end=beats[i+1];
    const endDistance=route.length*smooth(end),next=i>=count-2?route.length+restX:endDistance+.09;
    if(state.run>=end){x=next;continue;}
-   if(state.run>start){const u=clamp((state.run-start)/(end-start));x+=(next-x)*smooth(u);lift=.13*Math.sin(Math.PI*u)**2;planted=false;}
+   if(state.run>start){const u=clamp((state.run-start)/(end-start));x+=(next-x)*smooth(u);lift=(.20+.035*Math.sin(i*1.7))*Math.sin(Math.PI*u)**2;planted=false;}
    break;
   }
   feet[side]={x:x-state.distance,y:lift,z:side*restZ,planted,worldDistance:x};

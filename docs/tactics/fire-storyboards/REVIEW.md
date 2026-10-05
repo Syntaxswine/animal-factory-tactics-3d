@@ -73,3 +73,20 @@ All 15 focused tests, the build and asset check passed. The new browser run pass
 - [Fresh browser report](evidence/black-smoke-browser-review.json)
 
 The earlier evidence images above remain the pre-refinement captures. This score approves the smoke change within the same horse-study scope; gameplay integration remains separate.
+
+## More panicked burning run: 9/10
+
+October 4, 2026. Independent hostile review approves the revised panic motion at **9/10** within the standing-horse, straight-route study scope. The three-tile run is 10% shorter in time (1.62 seconds), with uneven high steps, a startle, head/shoulder reactions and asymmetric face-protection, collar-swat and outward/downward-fling gestures. The rifle remains in the other hand until the existing supported collapse and drop.
+
+The first pass received 8/10: its repeated high fist read like cheering, and its free arm snapped toward full extension during the startle. Authored protective/swatting gestures replaced that loop. A soft reach envelope preserves elbow bend before blending into the fitted ground-support pose. Independent measurements put the peak startle forearm angular speed at 23.1 rad/s, down from 87.1 rad/s in the rejected pass.
+
+All **17 focused tests passed independently**. Additional 1 ms numerical sweeps covered blocked, one-, two- and three-step paths, plus diagonal straight routes; they found no unreachable joints, missing support, meaningful planted-foot drift or grip drift. The browser run passed 72 configurations with no errors and unchanged resource counts (74 geometries, 15 textures). Build and asset validation passed. The browser checker now preserves existing query parameters and derives support/dissolution captures from the current motion clock.
+
+Evidence inspected: code, numerical sampling, the browser report, and rendered still sequences with effects on/off at close and gameplay sizes. Continuous WebM playback was generated but not independently watched by the reviewer. The refreshed 960 × 540 GIF decodes to a 6.4-second infinite loop, approximately 5.5 MB. Disposable capture browsers were closed and their recorded processes verified exited; the retained preview keeps its original expiry.
+
+- [Protective reach](evidence/panic-protect.png) and [outward/downward swat](evidence/panic-fling.png)
+- [Side-view support](evidence/panic-side.png)
+- [Painted close view](evidence/panic-painted-full.png) and [gameplay size](evidence/panic-painted-game.png)
+- [Fresh browser report](evidence/panic-browser-review.json) and [updated GIF](evidence/painted-fire-study.gif)
+
+This is a refinement of the horse study. Other animals and gameplay integration are still separate work.

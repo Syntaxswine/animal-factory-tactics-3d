@@ -35,6 +35,21 @@ test('complete burn playback has reachable joints, grounded plant surfaces and u
   }
  }finally{a.dispose();}
 });
+test('startle keeps elbow bend and avoids the former full-extension snap',()=>{
+ const a=setup();try{const r=route(),b=a.motion.bones,reach=b['forearm-1'].position.length()+b['hand-1'].position.length();let previous;
+  for(let i=0;i<=60;i++){a.motion.burn(FIRE_TIME.hit+.08+i*.005,r);const shoulder=b['upperArm-1'].getWorldPosition(V()),wrist=b['hand-1'].getWorldPosition(V()),rotation=b['forearm-1'].getWorldQuaternion(new T.Quaternion());
+   assert.ok(shoulder.distanceTo(wrist)<reach-.02,'free arm lost its elbow bend margin');
+   if(previous)assert.ok(previous.angleTo(rotation)<.20,'forearm snapped between adjacent 5 ms samples');previous=rotation;
+  }
+ }finally{a.dispose();}
+});
+test('uneven panic steps keep contact on short and diagonal routes in either playback direction',()=>{
+ const a=setup();try{for(const steps of [0,1,2,3])for(const heading of [0,Math.PI/4]){const r=route(steps,0,heading),samples=Array.from({length:109},(_,i)=>i*.05);let previous;
+  for(const time of [...samples,...samples.reverse()]){const d=a.motion.burn(time,r);assert.ok(d.gripError<1e-8);assert.ok([-1,1].some(s=>d.feet[s].planted),'no supporting hoof');
+   for(const side of [-1,1]){const f=d.feet[side];if(f.planted){assert.ok(Math.abs(surface(a.worker,p=>p.name==='exposed hoof '+side))<1e-6);if(previous?.feet[side].planted&&Math.abs(f.worldDistance-previous.feet[side].worldDistance)<1e-10)assert.ok(V(...f.ankle).distanceTo(V(...previous.feet[side].ankle))<1e-7);}}previous=d;
+  }
+ }}finally{a.dispose();}
+});
 test('turning paths are explicitly refused until world-space corner footholds are fitted',()=>{const a=setup();try{assert.throws(()=>a.motion.burn(1.5,makeBurnRoute([{x:0,z:0},{x:1,z:0},{x:1,z:1}])),/straight/);}finally{a.dispose();}});
 test('collapse reaches the actual left-hand surface before dissolution',()=>{
  const a=setup();try{const r=route(),d=a.motion.burn(FIRE_TIME.hit+burnState(0,r).runEnd+.62,r),names=['hand-1','fingers-1'].map(n=>a.worker.bones.findIndex(b=>b.name===n));
