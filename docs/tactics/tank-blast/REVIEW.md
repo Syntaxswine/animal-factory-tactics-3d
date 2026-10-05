@@ -24,3 +24,9 @@ Close rear, side and three-quarter samples immediately before/after rupture conf
 All 22 supported wearers were loaded and sampled. Still sequences and numerical tests do not establish every intermediate visual from every camera. Hen/guide tank use, other stances, terrain changes, live damage, visibility and interruptions are outside this study. The ash endpoint and preview-compressed ground-fire lifetime remain explicit integration decisions.
 
 Capture browsers close in `finally`; helper identity/closure receipts and complete local captures are retained under `artifacts/tank-blast/`. The existing preview server is reused under its original registered expiry rather than creating another service.
+
+## Skunk versus Red Hat pig GIF
+
+The independent hostile reviewer approved the requested [combined GIF](evidence/skunk-vs-red-hat-pig.gif) at **9/10** as a staged illustration. Flame visibly reaches the Red Hat pig foreman before his tanks rupture, the burst stays at the worn pack, no intact equipment remains, and the worker skunk stays outside the surrounding ground fire. No meaningful framing issue was found.
+
+The reviewer independently decoded all **112 GIF frames**, confirming 960 × 540, seven seconds and infinite looping. Source keyframes, palette-converted samples and deterministic capture diagnostics were inspected; continuous playback viewing was not claimed. The capture's 121 time samples also verify grip contact, worn origin, equipment-removal timing and reverse replay without browser errors. The capture browser exited and its exact process identity was verified absent. These checks do not convert the illustration into an authoritative gameplay replay.

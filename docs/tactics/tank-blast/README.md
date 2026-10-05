@@ -6,6 +6,8 @@ Open `tactics/tank-blast-study.html` from the study server or packaged gallery. 
 
 The [looping horse GIF](evidence/tank-blast-study.gif) records the surrounding-blast view of `c2c78e9` at 960 × 540 and 20 sampled frames per second. Its 6.4-second loop includes short introductory and aftermath holds; the animation itself retains the study timing. The GIF is approximately 6.6 MB and was fully decoded and visually spot-checked after export.
 
+The [skunk versus Red Hat pig GIF](evidence/skunk-vs-red-hat-pig.gif) stages the requested combined sequence: an original-outfit worker skunk fires at a Red Hat pig foreman carrying his own flamethrower, then the pig's worn tanks explode. The pig stands seven tiles away, with the skunk outside the recorded ground-fire footprint. The 1.10-second rupture follows visible flame contact. Both approved motions and their actual equipment are reused; this is an illustrative composition, not a captured game outcome or a new damage rule. The 960 × 540, seven-second loop is approximately 13.6 MB. Reproduce with `tools/capture-skunk-pig-fire.mjs STUDY_TACTICS_BASE_URL` (Playwright through `PLAYWRIGHT_PATH`), then `tools/encode-skunk-pig-gif.py` (Pillow).
+
 ## Sequence
 
 | Study time | Presentation |
