@@ -8,6 +8,7 @@ export const CARGO_SKINS={
  oliveWood:{name:'Olive paint',family:'crate',atlas:'cargo',cell:[2/3,.5,1/3,.5],tint:0xd8d2b9},
  blue:{name:'Worn blue',family:'barrel',atlas:'original',cell:[0,0,.5,.5],tint:0xc2d7da},
  oxide:{name:'Oxide red',family:'barrel',atlas:'cargo',cell:[0,0,1/3,.5],tint:0xd3b6a8},
+ explosiveRed:{name:'Flammable red',family:'barrel',atlas:'cargo',cell:[0,0,1/3,.5],tint:0xffffff},
  ochre:{name:'Ochre steel',family:'barrel',atlas:'cargo',cell:[1/3,0,1/3,.5],tint:0xd2bf96},
  creamSteel:{name:'Cream steel',family:'barrel',atlas:'cargo',cell:[2/3,0,1/3,.5],tint:0xe0d4bb}
 };
@@ -26,14 +27,14 @@ export const CARGO_FORMS=[
  {id:'barrel-block',name:'Eighteen-drum block',family:'barrel',tiles:[2,2]}
 ];
 export const DRUM_RADIUS=.328,DRUM_HEIGHT=.8;
-export const CARGO_LABELS={none:'No labels',shipping:'Freight ticket',fragile:'Fragile glass',hazard:'Hazard diamond',stores:'Factory stores'};
+export const CARGO_LABELS={none:'No labels',shipping:'Freight ticket',fragile:'Fragile glass',hazard:'Hazard diamond',flammable:'Flammable fuel',stores:'Factory stores'};
 // Small, deliberately distressed print artwork. Canvas keeps the icons and type
 // editable and independent of the underlying painted material atlas.
 function labelTexture(style){
  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=384;
  const c=canvas.getContext('2d'),ink=style==='fragile'?'#813b29':'#353c36';
  let seed=47;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
- c.fillStyle=style==='hazard'?'#c7a14e':'#cdbd94';
+ c.fillStyle=style==='flammable'?'#efe4bd':style==='hazard'?'#c7a14e':'#cdbd94';
  c.beginPath();c.moveTo(17,13);c.lineTo(493,19);c.lineTo(500,363);c.lineTo(28,374);c.lineTo(12,218);c.closePath();c.fill();
  for(let i=0;i<160;i++){c.fillStyle=random()>.5?'rgba(255,237,183,.11)':'rgba(85,62,34,.08)';c.fillRect(random()*512,random()*384,18+random()*85,2+random()*8);}
  c.strokeStyle=ink;c.fillStyle=ink;c.lineWidth=7;c.strokeRect(38,37,434,308);
@@ -49,6 +50,11 @@ function labelTexture(style){
   c.beginPath();c.moveTo(256,196);c.lineTo(256,251);c.moveTo(224,254);c.lineTo(288,254);c.stroke();
   for(const x of [112,400]){c.beginPath();c.moveTo(x,237);c.lineTo(x,143);c.moveTo(x-19,165);c.lineTo(x,143);c.lineTo(x+19,165);c.stroke();}
   c.font='bold 38px Georgia';c.fillText('FRAGILE',256,315);
+ }else if(style==='flammable'){
+  c.save();c.translate(256,173);c.rotate(Math.PI/4);c.strokeStyle='#a72c1f';c.lineWidth=14;c.strokeRect(-78,-78,156,156);c.restore();
+  c.beginPath();c.moveTo(250,91);c.bezierCurveTo(276,137,315,146,298,195);c.bezierCurveTo(307,214,278,236,252,236);c.bezierCurveTo(203,236,194,205,212,177);c.quadraticCurveTo(216,192,226,193);c.bezierCurveTo(216,155,255,152,250,91);c.fill();
+  c.fillStyle='#efe4bd';c.beginPath();c.moveTo(255,172);c.bezierCurveTo(266,191,283,202,267,218);c.quadraticCurveTo(240,231,239,207);c.quadraticCurveTo(244,193,255,172);c.fill();
+  c.fillStyle=ink;c.font='bold 40px sans-serif';c.fillText('FLAMMABLE',256,317);
  }else if(style==='hazard'){
   c.save();c.translate(256,172);c.rotate(Math.PI/4);c.lineWidth=12;c.strokeRect(-77,-77,154,154);c.restore();
   c.font='bold 125px Georgia';c.fillText('!',256,213);c.font='bold 32px Georgia';c.fillText('CAUTION',256,315);
@@ -74,6 +80,7 @@ export function createCargoLibrary(originalAtlas,cargoAtlas){
   const sw=wood?w*.5:w*.94,sh=h*(wood?.72:.94);t.offset.set(u+w*.025+rand(index+9)*(w*.95-sw),v+h*.025+rand(index+17)*(h*.95-sh));t.repeat.set(sw,sh);t.needsUpdate=true;textures.push(t);
   const m=new THREE.MeshStandardMaterial({map:t,color:def.tint,roughness:wood?.98:.85});
   if(wood){const quiet=id==='timber'?[.22,.13,.055]:id==='weathered'?[.21,.18,.14]:id==='creamWood'?[.46,.40,.30]:[.105,.115,.065];m.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb=mix(vec3('+quiet.join(',')+'),diffuseColor.rgb,.72);');};m.customProgramCacheKey=()=> 'cargo-wood-'+id;}
+  if(id==='explosiveRed'){m.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n float wear=clamp(dot(diffuseColor.rgb,vec3(.3,.59,.11))*2.6,0.0,1.0); diffuseColor.rgb=mix(vec3(.20,.008,.004),vec3(.85,.085,.04),wear);');};m.customProgramCacheKey=()=> 'cargo-flammable-red';}
   materials.set(key,m);return m;
  }
  const iron=solid('iron',0x45413b),inside=solid('inside',0x3b2d24),rub=solid('rub',0xa58c64);
@@ -128,8 +135,9 @@ export function createCargoLibrary(originalAtlas,cargoAtlas){
   function placeDrum(x,y,z,horizontal=false){const pivot=new THREE.Group(),g=drum(skin,items.length);
    if(label!=='none'){
     // Follow the slightly dented shell, rather than a flat card floating off it.
-    const curved=geo('label-drum',()=>{const shape=new THREE.CylinderGeometry(.3165,.3165,.235,24,1,true,-.48,.96),p=shape.attributes.position;for(let i=0;i<p.count;i++){const a=Math.atan2(p.getX(i),p.getZ(i)),y=p.getY(i)+.415,r=.316-(y-.35)*(.002/.27)-.014*Math.exp(-Math.pow((a-.9)/.3,2)-Math.pow((y-.47)/.14,2))+.0008;p.setX(i,Math.sin(a)*r);p.setZ(i,Math.cos(a)*r);}shape.computeVertexNormals();return shape;});
+    const large=label==='flammable',curved=geo('label-drum'+(large?'-large':''),()=>{const shape=new THREE.CylinderGeometry(.3165,.3165,large?.36:.235,24,8,true,large?-.7:-.48,large?1.4:.96),p=shape.attributes.position;for(let i=0;i<p.count;i++){const a=Math.atan2(p.getX(i),p.getZ(i)),y=p.getY(i)+.415,r=.316-(y-.35)*(.002/.27)-.014*Math.exp(-Math.pow((a-.9)/.3,2)-Math.pow((y-.47)/.14,2))+.0008;p.setX(i,Math.sin(a)*r);p.setZ(i,Math.cos(a)*r);}shape.computeVertexNormals();return shape;});
     sticker(g,label,curved,[0,.415,0]);
+    if(large)sticker(g,label,curved,[0,.415,0],[0,Math.PI/2,0]);
     if(horizontal)sticker(g,label,geo('label-cap',()=>new THREE.PlaneGeometry(.26,.195)),[-.045,.794,-.04],[-Math.PI/2,0,0]);
    }
    g.position.y=-DRUM_HEIGHT/2;g.rotation.y=items.length*2.399963;pivot.add(g);pivot.position.set(x,y,z);if(horizontal)pivot.rotation.x=Math.PI/2;root.add(pivot);items.push({kind:'drum',center:[x,y,z],horizontal,radius:DRUM_RADIUS,height:DRUM_HEIGHT});}

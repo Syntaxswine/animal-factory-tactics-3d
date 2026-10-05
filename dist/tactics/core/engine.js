@@ -1,5 +1,8 @@
+import {presentBarrel,isExplosiveBarrel} from '../explosive-barrels.js';
+import {previewBarrelAttack} from '../barrel-targeting.js';
+import {applyFuelBlast,detonateBarrels,fuelBlastReaches} from '../fuel-blast.js';
 import {firePoint,recordBurn} from '../fire-events.js';
-import {flamePreview,flameShape,flameVictims} from '../flame-cone.js';
+import {flamePreview,flameShape,flameVictims,flameBarrels} from '../flame-cone.js';
 import {rollFirearmShot} from '../helicoid-shot.js';
 import {injuryMovement,turnAP,woundLeg,accuracyPenalty,roundChance,incomingFire,recoverAim} from '../combat-state.js';
 import {automaticRoofClimbs} from '../climbable-roofs.js';
@@ -267,6 +270,12 @@ export function coverAgainst(s,a,b){
 const retaliationToken=Symbol('retaliation');
 export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel='hip'){if(a?.team==='guard'&&!playerThreat(s,a))return {ok:false,reason:'Character does not fight the player'};
  if(!a||!b||!alive(a)||!alive(b)||a.team===b.team&&token!==retaliationToken)return {ok:false,reason:'Choose a living opponent'};
+ if(b.barrel){
+  if(!presentBarrel(s,b))return {ok:false,reason:'Barrel already destroyed'};
+  if(WEAPONS[a.weapon].incendiary)return flamePreview(s,a,{...b,ground:true},WEAPONS[a.weapon],combatCosts(s));
+  if(WEAPONS[a.weapon].blast)return explosivePreview(s,a,b,WEAPONS[a.weapon]);
+  return previewBarrelAttack(s,a,b,WEAPONS[a.weapon],combatCosts(s),burst,aimLevel);
+ }
  if(WEAPONS[a.weapon].incendiary){
   const p=flamePreview(s,a,b,WEAPONS[a.weapon],combatCosts(s));
   if(!b.ground&&!canSee(s,a,b))return {...p,ok:false,reason:'Target not visible'};
@@ -319,26 +328,28 @@ function finishFireRound(s){
  for(const u of s.units)if(u.burningTurns>0&&u.fireActedRound===s.round){u.burningTurns--;if(!u.burningTurns)log(s,u.name+' is no longer on fire.');}
  s.fires=(s.fires||[]).map(p=>({...p,turns:p.turns-1})).filter(p=>p.turns>0);
 }
+const fuelHooks={damage:combatDamage,ignite,burn:recordBurn};
 function explodeTanks(s,wearer,source=null){
- const wornWeapon=wearer.weapon,newFires=[];wearer.tanksExploded=true;wearer.ammo.flamethrower=0;
+ const wornWeapon=wearer.weapon;wearer.tanksExploded=true;wearer.ammo.flamethrower=0;
  wearer.pack=wearer.pack.filter(i=>i.kind!=='flamethrower');wearer.slots=wearer.slots.map(id=>id==='flamethrower'?null:id);
  if(wearer.weapon==='flamethrower')wearer.weapon='hands';wearer.overwatch=null;
- const z=levelOf(wearer);s.fires||=[];
- for(let y=wearer.y-5;y<=wearer.y+5;y++)for(let x=wearer.x-5;x<=wearer.x+5;x++)if(!wearer.towerPost&&inBounds(x,y,z)&&Math.hypot(x-wearer.x,y-wearer.y)<=5&&!['void','water'].includes(tile(s,x,y,z))){const old=s.fires.find(p=>p.x===x&&p.y===y&&p.z===z);if(old)old.turns=3;else {const cell={x,y,z,turns:3};s.fires.push(cell);newFires.push({...cell});}}
- const victims=s.units.filter(u=>(alive(u)||incapacitated(u))&&levelOf(u)===z&&Math.abs(unitBaseHeight(u)-unitBaseHeight(wearer))<=1&&Math.max(Math.abs(u.x-wearer.x),Math.abs(u.y-wearer.y))<=1);
- for(const u of victims){combatDamage(s,u,Math.max(u.hp,1),true,source);if(u!==wearer)recordBurn(s,u,'ash');}
- const receipt=recordBurn(s,wearer,'tank');receipt.weapon=wornWeapon;receipt.fires=newFires;
- for(const u of s.units)if(levelOf(u)===z&&Math.hypot(u.x-wearer.x,u.y-wearer.y,unitBaseHeight(u)-unitBaseHeight(wearer))<=5)ignite(s,u);
- log(s,`${wearer.name}'s fuel tanks exploded / ${victims.length} caught in blast.`);
- return {x:wearer.x,y:wearer.y,z:levelOf(wearer),h:unitBaseHeight(wearer)+.8,kind:'tank',unitId:wearer.id,fireSequence:receipt.sequence,burns:s.units.filter(u=>victims.includes(u)||u.burningTurns&&levelOf(u)===z&&Math.hypot(u.x-wearer.x,u.y-wearer.y,unitBaseHeight(u)-unitBaseHeight(wearer))<=5).map(u=>u.id)};
+ const result=applyFuelBlast(s,wearer,fuelHooks,source,wearer),receipt=recordBurn(s,wearer,'tank');receipt.weapon=wornWeapon;receipt.fires=result.fires;
+ log(s,wearer.name+"'s fuel tanks exploded / "+result.victims.length+' caught in blast.');
+ return {x:wearer.x,y:wearer.y,z:levelOf(wearer),h:unitBaseHeight(wearer)+.8,kind:'tank',unitId:wearer.id,fireSequence:receipt.sequence,burns:result.burns};
 }
+function appendBarrelBlasts(s,event,explosions,targets,source){
+ const standing=s.units.filter(alive),blasts=detonateBarrels(s,targets,fuelHooks,source);
+ for(const blast of blasts){event.hit=true;event.explosions.push(blast);explosions.push(blast);(event.burns??=[]).push(...blast.burns);log(s,'Explosive barrel detonated.');}
+ for(const u of standing)if(!alive(u)&&!event.downed.includes(u.id))event.downed.push(u.id);
+}
+
 export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,aimLevel='hip'){
  if(s.queue.length)return false;
  if(reaction?!(s.phase==='enemy'&&a?.team==='squad'&&alive(a)&&!a.burningTurns&&a.overwatch?.weapon===a.weapon&&a.overwatch.heading===a.heading&&!burst&&zone==='torso'&&withinOverwatch(a,b)&&canSee(s,a,b)):byAI?!(s.phase==='enemy'&&a?.team==='guard'&&alive(a)&&!a.burningTurns):!canControl(s,a))return false;
  if(byAI&&!playerThreat(s,a))return false;const p=previewAttack(s,reaction?{...a,ap:WEAPONS[a.weapon].cost}:a,b,burst,zone,null,reaction?'hip':aimLevel);if(!p.ok)return false;a.overwatch=null;
  a.fired=true;
  // Orienting reflex: an attack from outside the victim's field spins it toward the attacker (turning is free).
- if(!b.ground&&!inCone(b,a)){b.heading=headingTo(b,a);b.facing=Math.cos(b.heading*Math.PI/180)-Math.sin(b.heading*Math.PI/180)>=0?1:-1;log(s,b.name+' spins toward the attack.');}
+ if(!b.ground&&!b.barrel&&!inCone(b,a)){b.heading=headingTo(b,a);b.facing=Math.cos(b.heading*Math.PI/180)-Math.sin(b.heading*Math.PI/180)>=0?1:-1;log(s,b.name+' spins toward the attack.');}
  if(b.team==='guard')targeted(s,b,a);
  // A squad attack from real time opens a turn (engaged holds it until the squad ends that turn); the shot is re-checked against the AP the turn actually has.
  if(['explore','won'].includes(s.phase)){s.engaged=true;refresh(s);if(s.phase==='player'&&a.team==='squad'&&a.ap<p.cost){log(s,a.name+': not enough AP to fire.');return false;}}
@@ -357,7 +368,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   const accurate=w.incendiary?false:shotRoll?shotRoll.rolledHit:w.blast?false:random(s)*100<shotChance;
   const pellets=w.pellets?shotgunTrajectories(s,shooter,f.aim,{accurate,zone:f.zone,chance:shotChance,shotRoll,precision:w.precision??80,reach:w.range*1.5,pellets:w.pellets},()=>random(s)):null;
   const shot=pellets?pellets[0]:w.blast?explosiveTrajectory(s,shooter,f.aim,w,f.p,()=>random(s)):ballistic?bulletTrajectory(s,shooter,f.aim,{accurate,zone:f.zone,chance:shotChance,shotRoll,precision:w.precision??80,burst:f.p.rounds>1,reach:w.range*1.5},()=>random(s)):null;
-  if(ballistic&&alive(target)){
+  if(ballistic&&!target.barrel&&alive(target)){
    // A clear aimed ray threatens the target even if this round misses. A solid
    // obstacle intercepting that ray prevents distant fire from pinning them.
    const threat=bulletTrajectory(s,shooter,f.aim,{accurate:true,zone:f.zone,reach:w.range*1.5},()=>0);
@@ -371,16 +382,18 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   if(flame){event.flame=flame;event.hit=flameHits.length>0;log(s,shooter.name+' sprays a cone of flame.');}
   const blastResult=w.blast?detonate(s,shot,w):null;
   if(blastResult){event.explosions.push(blastResult.blast);explosions.push(blastResult.blast);event.hit=blastResult.hits.length>0;log(s,`${shooter.name}: ${w.short} detonated / ${blastResult.blast.destroyed} structures destroyed.`);}
-  if(!victim&&!blastResult&&!pellets&&!flame){log(s,`${shooter.name} → ${target.name}: miss${f.reply?' / retaliation':''}.`);continue;}
+  const barrelHits=[...(pellets||(shot?[shot]:[])).filter(p=>p.propId).map(p=>p.propId),...(blastResult?.barrels||[]),...(flame?flameBarrels(s,flame):[])];
+  appendBarrelBlasts(s,event,explosions,barrelHits,shooter);
+  if(!victim&&!blastResult&&!pellets&&!flame){if(!event.hit)log(s,`${shooter.name} → ${target.name}: miss${f.reply?' / retaliation':''}.`);continue;}
   const pelletHits=pellets?.map(p=>({unit:s.units.find(u=>u.id===p.unitId),zone:p.zone,damage:Math.round(w.damage*AIM_ZONES[p.zone||f.zone].damage*(shooter.team==='guard'?.65:1))})).filter(p=>p.unit);
-  if(pellets){event.hit=pelletHits.length>0;if(!event.hit)log(s,`${shooter.name} → ${target.name}: pellets missed.`);}
+  if(pellets){event.hit=event.hit||pelletHits.length>0;if(!event.hit)log(s,`${shooter.name} → ${target.name}: pellets missed.`);}
   const impacts=flameHits||(blastResult?blastResult.hits:pelletHits)||[{unit:victim,damage:Math.round(Math.round(weaponDamage(w,Math.hypot(shooter.x-victim.x,shooter.y-victim.y))*AIM_ZONES[shot?.zone||f.zone].damage)*(shooter.team==='guard'&&!w.incendiary?.65:1))}];
   const reacted=new Set();
-  for(const {unit:victim,damage:rawAmount,zone:pelletZone}of impacts){if(flame&&!alive(victim)&&!incapacitated(victim))continue;const amount=flame?rawAmount:damageAfterResistance(victim,rawAmount);
+  for(const {unit:victim,damage:rawAmount,zone:pelletZone}of impacts){if(!alive(victim)&&!incapacitated(victim))continue;const amount=flame?rawAmount:damageAfterResistance(victim,rawAmount);
   const hitZone=w.blast?'torso':pelletZone||shot?.zone||f.zone;damageHeldWeapon(s,victim,hitZone,rawAmount);
   if(victim.team==='guard')targeted(s,victim,shooter);
   const tankChance=w.mag?tankExplosionChance(victim,hitZone):0,standing=s.units.filter(alive);
-  if(tankChance>0&&random(s)<tankChance){const blast=explodeTanks(s,victim,shooter);explosions.push(blast);event.explosions.push(blast);(event.burns??=[]).push(...blast.burns);}
+  if(tankChance>0&&random(s)<tankChance){const blast=explodeTanks(s,victim,shooter);explosions.push(blast);event.explosions.push(blast);(event.burns??=[]).push(...blast.burns);appendBarrelBlasts(s,event,explosions,s.props.filter(p=>isExplosiveBarrel(p)&&fuelBlastReaches(victim,p)),shooter);}
   else {combatDamage(s,victim,amount,!!w.incendiary||incapacitated(victim),shooter);if(!w.blast&&hitZone==='legs'&&amount>0)woundLeg(victim);if(w.incendiary){if(victim.hp<=0)recordBurn(s,victim,'ash');ignite(s,victim);(event.burns??=[]).push(victim.id);}}
   // Units this impact put down (a tank blast can take neighbours too), so the renderer can time their fall.
   for(const u of standing)if(!alive(u)&&!event.downed.includes(u.id))event.downed.push(u.id);
@@ -399,7 +412,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
  refresh(s);if(byAI)resolveOverwatch(s,a);return true;
 }
 
-export function groundTarget(point){return {...point,id:'ground',name:'Terrain',team:'terrain',hp:1,ground:true,weapon:'hands'};}
+export function groundTarget(point){return {...point,barrel:false,id:'ground',name:'Terrain',team:'terrain',hp:1,ground:true,weapon:'hands'};}
 export function attackGround(s,u,point){if(!WEAPONS[u?.weapon]?.blast&&!WEAPONS[u?.weapon]?.incendiary)return false;return attack(s,u,groundTarget(point));}
 export function equip(s,u,id,slot=1){if(!canControl(s,u)||s.queue.length||!WEAPONS[id]||u.weapon===id||!(id==='hands'||u.pack.some(i=>i.type==='weapon'&&i.kind===id)))return false;const stored=id!=='hands'&&!u.slots.includes(id),cost=stored?3:0;if(combatCosts(s)&&u.ap<cost)return false;const slots=[...u.slots];if(stored)slots[slot===0?0:1]=id;const layout=gridLayout({...u,slots});if(!layout.ok)return false;if(combatCosts(s))u.ap-=cost;u.slots=slots;storeLayout(u,layout);u.weapon=id;if(u.stats)u.accuracy=weaponAccuracy(u);if(id==='flamethrower')delete u.tanksExploded;u.overwatch=null;log(s,u.name+' equipped '+WEAPONS[id].name+'.');return true;}
 export function equipCutters(s,u,slot){

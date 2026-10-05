@@ -1,6 +1,8 @@
 import {guardCone,visibleConeGuards,drawGuardCones} from './guard-cones.js';
 import {walkingRoutes,drawWalkingRoutes} from './walking-preview.js';
 import {renderShotPlanner} from './shot-planner.js';
+import {barrelId,barrelTarget,isExplosiveBarrel} from './explosive-barrels.js';
+import {barrelSight} from './barrel-targeting.js';
 import {FlamePlanner} from './flame-planner.js';
 import {legImpaired} from './combat-state.js';
 let shotZone='torso',shotBurst=false;
@@ -54,7 +56,7 @@ const flamePlanner=new FlamePlanner(flamePanel,{onChange:()=>{frameClock.reset()
 const flameButton=document.createElement('button');flameButton.id='aim-flame';flameButton.hidden=true;flameButton.textContent='Aim flame cone';$('reload').before(flameButton);
 const canPlanFlame=()=>!storageBusy&&!document.hidden&&!characterScreen.open&&!savePanel.open&&!renderer.busy&&!state.queue.length&&canControl(state,selected());
 flameButton.onclick=()=>{if(!canPlanFlame())return;targetId=null;flamePlanner.start(state,selected());};
-const target=()=>state.units.find(u=>u.id===targetId&&u.hp>0&&state.detected.has(u.id));
+const target=()=>{const p=state.props.find(p=>isExplosiveBarrel(p)&&barrelId(p)===targetId);return p?barrelTarget(p):state.units.find(u=>u.id===targetId&&u.hp>0&&state.detected.has(u.id));};
 const mercStatus=u=>u.away?'Away':u.casualty==='captured'?'Captured':u.casualty==='quit'?'Left squad':u.hp>0?`${stanceOf(u)} · ${movementModeOf(u)} · ${u.hp} HP · ${u.ap} AP · ${Math.floor(u.stamina)} stamina`:u.casualty==='bleeding'?`Bleeding · ${u.bleedTurns} turns`:u.casualty==='stable'?'Stabilized':'Dead';
 const message=text=>{$('message').textContent=text;};
 const project=u=>({x:view.x+(u.x-u.y)*28*view.zoom,y:view.y+(u.x+u.y)*14*view.zoom-((u.z||0)-level+((u.towerPost?TOWER_HEIGHT:u.towerElevation||0)/2.12))*FLOOR_PIXELS*view.zoom});
@@ -77,7 +79,7 @@ function sync(){
  if(cliffViewState!==state){cliffViewState=state;cliffViewId=0;}const traversal=state.cliffTraversals?.at(-1);if(traversal&&traversal.id>cliffViewId){cliffViewId=traversal.id;if(traversal.unitId===state.selected){level=selected().z||0;$('floor').value=level;}}
  selectedIds=pruneSelection(state,selectedIds);
  if(selectedIds.size&&!selectedIds.has(state.selected))state.selected=[...selectedIds][0];
- const u=selected(),t=target();if(!supportsAim(WEAPONS[u.weapon]))shotZone='torso';if(!(WEAPONS[u.weapon].burstRounds>1))shotBurst=false;const preview=t?previewAttack(state,u,t,shotBurst,shotZone,null,$('aim-level').value):null;
+ const u=selected(),t=target();if(t?.barrel||!supportsAim(WEAPONS[u.weapon]))shotZone='torso';if(!(WEAPONS[u.weapon].burstRounds>1))shotBurst=false;const preview=t?previewAttack(state,u,t,shotBurst,shotZone,null,$('aim-level').value):null;
  flamePlanner.refresh(state,u,{blocked:paused(true)||renderer.busy,level});
  const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,level,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,Math.floor(v.stamina),v.medkits,v.pinned,v.legWound,heldWeaponJammed(v),v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,renderer.traversal.preparing,userPaused]);
  if(signature===lastUI)return;lastUI=signature;
@@ -123,6 +125,8 @@ function click(x,y,shift=false){
  const hit=renderer.pick(x,y,width,height);
  if(hit!==null){const u=state.units.find(u=>u.id===hit);if(selectable(u)){selectMerc(u.id,shift);}else if(u.hp<=0&&nearbyLoot(state,selected()).some(p=>p.body===u.id)){characterScreen.show(state.selected);}else if(state.detected.has(u.id)&&u.hp>0){if(WEAPONS[selected().weapon].incendiary){if(canPlanFlame())flamePlanner.start(state,selected(),{x:u.x,y:u.y,z:u.z||0});}else{targetId=u.id;shotDialog.showModal();frameClock.reset();lastUI='';}}sync();return;}
  const pile=renderer.pickLoot(x,y,width,height);if(pile){if(nearbyLoot(state,selected()).includes(pile))characterScreen.show(state.selected);else message('Move beside the supplies to pick them up.');return;}
+ const barrel=renderer.pickBarrel(x,y,width,height,level);
+ if(barrel){if(WEAPONS[selected().weapon].incendiary){if(canPlanFlame())flamePlanner.start(state,selected(),barrel);}else{targetId=barrel.id;shotZone='torso';shotDialog.showModal();frameClock.reset();lastUI='';}sync();return;}
  if(paused()||renderer.busy||shift)return;
  const door=renderer.pickDoor(x,y,width,height,level);
  if(door){const u=selected(),cells=edgeCells(door),beside=cells.some(p=>p.x===u.x&&p.y===u.y&&p.z===(u.z||0));
@@ -142,7 +146,7 @@ function updateTargetCursor(now){
  const bounds=canvas.getBoundingClientRect(),x=hoverPointer.x-bounds.left,y=hoverPointer.y-bounds.top;
  const id=renderer.pick(x,y,width,height),guard=state.units.find(u=>u.id===id);
  if(guard?.team==='guard'&&guard.hp>0&&!guard.away&&state.detected.has(guard.id))canvas.dataset.targetCursor=canSee(state,selected(),guard)?'red':'grey';
- else delete canvas.dataset.targetCursor;
+ else{const barrel=id===null?renderer.pickBarrel(x,y,width,height,level):null;if(barrel)canvas.dataset.targetCursor=barrelSight(state,selected(),barrel)?'red':'grey';else delete canvas.dataset.targetCursor;}
 }
 let walkingCacheKey='',walkingCache=[];
 let showGuardCones=true,coneCache=new Map(),coneWorld='',coneCheck=0;
@@ -208,7 +212,7 @@ function frame(now){
   }
   for(const u of state.units.filter(v=>v.team==='squad'&&v.hp<=0&&!v.away&&!['captured','quit'].includes(v.casualty)&&(v.z||0)===level)){const p=project(u);ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.fillStyle=u.casualty==='bleeding'?'#ffc0a0':u.casualty==='stable'?'#bce1cc':'#d1cbc2';ctx.strokeStyle='#172520';ctx.lineWidth=3;const label=mercStatus(u);ctx.strokeText(label,p.x,p.y+22);ctx.fillText(label,p.x,p.y+22);}
   for(const [id,point] of Object.entries({...state.contacts,...state.glimpses}))if(!state.detected.has(+id)&&(point.z||0)===level){const p=project(point);ctx.font='bold 18px system-ui';ctx.textAlign='center';ctx.fillStyle=state.glimpses[id]?'#f5d480':'#aaa58c';ctx.strokeStyle='#172520';ctx.lineWidth=3;ctx.strokeText('?',p.x,p.y-12);ctx.fillText('?',p.x,p.y-12);}
-  if(target()){const p=project(renderer.displayUnit(target()));ctx.strokeStyle='#ff9b80';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,18*view.zoom,9*view.zoom,0,0,Math.PI*2);ctx.stroke();}
+  if(target()){const t=target(),p=project(t.barrel?t:renderer.displayUnit(t));ctx.strokeStyle='#ff9b80';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,18*view.zoom,9*view.zoom,0,0,Math.PI*2);ctx.stroke();}
   if(drag?.select&&drag.moved){const r=canvas.getBoundingClientRect();ctx.fillStyle='#f2cc8325';ctx.strokeStyle='#f2cc83';ctx.lineWidth=1.5;ctx.fillRect(drag.x-r.left,drag.y-r.top,drag.lastX-drag.x,drag.lastY-drag.y);ctx.strokeRect(drag.x-r.left,drag.y-r.top,drag.lastX-drag.x,drag.lastY-drag.y);}
   if(!paused()&&!autoDisabled&&!storageBusy&&(performance.now()-lastAuto>=30000||state.round!==autoRound))autosave();
   requestAnimationFrame(frame);

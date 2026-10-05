@@ -25,6 +25,7 @@ import {BattleFlameEffects} from './battle-flame-effects.js';
 import {BattleFire} from './battle-fire.js';
 import {BattleTankEffects} from './battle-tank-effects.js';
 import {motionPreference} from './settings-3d.js';
+import {barrelTarget,presentBarrel} from './explosive-barrels.js';
 
 // Reuse only the environment/camera presentation. No hybrid combat mode.
 export class BattleRenderer extends HybridRenderer {
@@ -126,21 +127,24 @@ export class BattleRenderer extends HybridRenderer {
  prune(){this.tankEffects.draw(this.camera);} // Runs after posing, before rendering.
  pick(x,y,width,height){
   const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
+  const barrel=this.paintedEnvironment.barrelHit(ray,this.presentationLevel??this.level);
   const roots=[...this.actors.entries()].filter(([,root])=>root.visible);
   for(const hit of ray.intersectObjects(roots.map(([,root])=>root),true)){
+   if(barrel&&hit.distance>=barrel.distance)break;
    let object=hit.object,visible=true;
    while(object){if(!object.visible)visible=false;const entry=roots.find(([,root])=>root===object);if(entry&&visible)return entry[0];object=object.parent;}
   }
-  return this.fire.pick(ray);
+  return barrel?null:this.fire.pick(ray);
  }
  pickDoor(x,y,width,height,level){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return pickWallDoor(ray,this.chunks||new Map(),level);}
+ pickBarrel(x,y,width,height,level){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);const p=this.paintedEnvironment.pickBarrel(ray,level);return p&&presentBarrel(this.state,barrelTarget(p))?barrelTarget(p):null;}
  pickLoot(x,y,width,height){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return this.loot.pick(ray);}
  draw(ctx,state,...args){
   this.loot.sync(state,args[3]);
   this.state=state;this.presentationLevel=args[3];this.captureCombat(state);this.shotEffects.hide();this.flameEffects.hide();
   const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.traversal.active?.event.unitId===u.id?{...u,presentationLevel:args[3]}:this.fire.display(this.combat.display(u)));
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
-  return super.draw(ctx,{...state,terrain:state.map,units},...args);
+  return super.draw(ctx,{...state,terrain:state.map,units,props:[...state.props,...this.tankEffects.pendingProps()]},...args);
  }
  captureCombat(state){
   const now=this.presentationNow??performance.now(),reduced=!!this.reducedMotion?.matches;

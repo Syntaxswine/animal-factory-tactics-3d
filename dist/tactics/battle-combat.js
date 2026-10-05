@@ -6,7 +6,7 @@ export const dischargeDelay=shot=>shot.reduced?0:shot.paintedFire?640:shot.event
 // Burns and ruptures wait for the exact attack that committed them, including
 // queued replies. An unseen shooter needs no invented firing presentation.
 export function burnStart(event,combat,now){
- const shot=[combat.active,...combat.queue].find(s=>event.kind==='tank'?s?.event.explosions?.some(e=>e.fireSequence===event.sequence):s?.event.burns?.includes(event.unitId));
+ const shot=[combat.active,...combat.queue].find(s=>['tank','barrel'].includes(event.kind)?s?.event.explosions?.some(e=>e.fireSequence===event.sequence):s?.event.burns?.includes(event.unitId));
  return shot&&shot!==combat.active?null:shot?shot.start+dischargeDelay(shot):now;
 }
 const clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>{x=clamp(x);return x*x*(3-2*x);};
@@ -26,7 +26,7 @@ export class BattleCombat {
     if(!unit||!personVisible(state,unit))continue;
     const shooter=before||unit;
     // Flames carry their actual area; other attacks need resolved trajectories.
-    if(!event.flame&&(!event.trajectories?.length||event.incendiary||event.explosions?.some(e=>e.kind!=='tank')))continue;
+    if(!event.flame&&(!event.trajectories?.length||event.incendiary||event.explosions?.some(e=>!['tank','barrel'].includes(e.kind))))continue;
     const shot={event:structuredClone(event),shooter:{...shooter,x:event.ax,y:event.ay,z:event.az||0},rifle:!event.flame&&shooter.weapon==='rifle',reduced,knownUnitIds:[...this.previous.keys(),...state.detected]};
     shot.paintedFire=!!event.flame&&paintedOperatorSupported(shooter);
     this.queue.push(shot);

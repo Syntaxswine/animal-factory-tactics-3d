@@ -1,3 +1,4 @@
+import {barrelRayHit,barrelId} from '../explosive-barrels.js';
 import {bodyIntersection,firearmTrajectory,pelletTrajectories} from '../ballistic-shot.js';
 import {bankRayHit} from '../ramp-banks.js';
 import {rampRayHit} from '../cliff-ramps.js';
@@ -11,7 +12,7 @@ const EPS=1e-7;
 export const bodyHeight=u=>u.hp<=0?.3:u.stance==='prone'?.55:u.stance==='kneeling'?1.2:1.8;
 export const muzzleHeight=u=>u.stance==='prone'?.35:u.stance==='kneeling'?.9:1.3;
 export const eyeHeight=muzzleHeight;
-export const targetHeight=(u,zone='torso')=>zone==='weapon'?muzzleHeight(u):bodyHeight(u)*(zone==='head'?.92:zone==='legs'?.28:.72);
+export const targetHeight=(u,zone='torso')=>u.barrel?.4:zone==='weapon'?muzzleHeight(u):bodyHeight(u)*(zone==='head'?.92:zone==='legs'?.28:.72);
 const point=(origin,direction,t)=>({x:origin.x+direction.x*t,y:origin.y+direction.y*t,h:origin.h+direction.h*t});
 const slab=(origin,velocity,low,high)=>Math.abs(velocity)<EPS?(origin>=low&&origin<=high?[-Infinity,Infinity]:null):[Math.min((low-origin)/velocity,(high-origin)/velocity),Math.max((low-origin)/velocity,(high-origin)/velocity)];
 
@@ -26,8 +27,10 @@ export function traceProjectile(state,shooter,origin,direction,reach){
   const hit=bodyIntersection(unit,origin,d,reach,bodyHeight(unit));
   if(hit&&hit.distance<limit){limit=hit.distance;nearest=unit;}
  }
+ const barrelHit=barrelRayHit(state.props,origin,d,limit);let nearestProp=barrelHit?.prop;
+ if(barrelHit){limit=barrelHit.distance;nearest=null;}
  const impact=(kind,t,extra={})=>{const p=point(origin,d,t);return {kind,...p,z:Math.max(0,Math.min(LEVELS-1,Math.floor((p.h+EPS)/3))),distance:t,...extra};};
- const hits=[bankRayHit(state.props,origin,d,limit),rampRayHit(state.props,origin,d,limit),towerRayHit(state.props,origin,d,limit),cliffRayHit(state.props,origin,d,limit)].filter(t=>t!==null),terrainHit=hits.length?Math.min(...hits):null;if(terrainHit!==null&&terrainHit<limit){limit=terrainHit;nearest=null;}
+ const hits=[bankRayHit(state.props,origin,d,limit),rampRayHit(state.props,origin,d,limit),towerRayHit(state.props,origin,d,limit),cliffRayHit(state.props,origin,d,limit)].filter(t=>t!==null),terrainHit=hits.length?Math.min(...hits):null;if(terrainHit!==null&&terrainHit<limit){limit=terrainHit;nearest=null;nearestProp=null;}
  // Exact grid/level crossings keep thin walls, corner joins and floor slabs solid.
  const crossings=[0,limit];
  for(const axis of ['x','y'])if(Math.abs(d[axis])>EPS){
@@ -49,7 +52,7 @@ export function traceProjectile(state,shooter,origin,direction,reach){
    }
    const z=Math.floor(p.h/3),height=p.h-z*3;
    if(z>=0&&z<LEVELS&&height<=2.7){
-    if(ax!==bx&&ay!==by)for(const [x,y]of [[ax,by],[bx,ay]]){const terrain=terrainAt(state,x,y,z),prop=PROPS[propAt(state,x,y,z)?.kind],top=terrain==='wall'||prop?.tall?2.7:terrain==='crate'||prop?.solid&&prop.cover>0?.8:0;if(top&&height<=top)return impact('cover',t);}
+    if(ax!==bx&&ay!==by)for(const [x,y]of [[ax,by],[bx,ay]]){const terrain=terrainAt(state,x,y,z),prop=PROPS[propAt(state,x,y,z)?.kind],top=terrain==='wall'||prop?.tall?2.7:terrain==='crate'||prop?.solid&&!prop.explosive&&prop.cover>0?.8:0;if(top&&height<=top)return impact('cover',t);}
     if(ax!==bx)for(const y of new Set([ay,by]))if(sightEdge(state,{x:ax,y,z},{x:bx,y,z},{height,offset:p.y-y+.5}))return impact('wall',t);
     if(ay!==by)for(const x of new Set([ax,bx]))if(sightEdge(state,{x,y:ay,z},{x,y:by,z},{height,offset:p.x-x+.5}))return impact('wall',t);
    }
@@ -59,10 +62,11 @@ export function traceProjectile(state,shooter,origin,direction,reach){
   if(z<0)return impact('floor',t);
   if(z>=LEVELS)continue;
   const terrain=terrainAt(state,x,y,z),prop=PROPS[propAt(state,x,y,z)?.kind];
-  const height=terrain==='wall'||prop?.tall?2.7:(terrain==='crate'||prop?.solid&&prop.cover>0)?.8:0;
+  const height=terrain==='wall'||prop?.tall?2.7:(terrain==='crate'||prop?.solid&&!prop.explosive&&prop.cover>0)?.8:0;
   if(height){const vertical=slab(origin.h,d.h,z*3,z*3+height);if(vertical){const hit=Math.max(t,vertical[0]);if(hit<=Math.min(end,vertical[1]))return impact('cover',hit);}}
  }
  if(terrainHit!==null&&limit===terrainHit)return impact('cover',limit);
+ if(nearestProp)return impact('prop',limit,{propId:barrelId(nearestProp),propKind:nearestProp.kind});
  if(nearest){const result=impact('unit',limit,{unitId:nearest.id}),relative=(result.h-unitBaseHeight(nearest))/bodyHeight(nearest);result.zone=relative>.85?'head':relative<.38?'legs':'torso';return result;}
  return impact('range',reach);
 }

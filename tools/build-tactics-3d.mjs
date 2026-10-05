@@ -2,6 +2,7 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
+for(const file of ['explosive-barrels.js','barrel-targeting.js','fuel-blast.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.copyFileSync(new URL('dist/tactics-3d.html',root),new URL('.pages-output/index.html',root));
 for(const file of ['tactics-3d.html','tactics-3d-gallery.html'])fs.copyFileSync(new URL('dist/'+file,root),new URL('.pages-output/'+file,root));
 for(const file of ['title-3d.css','title-3d.js','title-3d-scene.js','settings-3d.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));

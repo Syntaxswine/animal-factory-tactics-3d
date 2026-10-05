@@ -7,6 +7,7 @@ import {rampSupportAt} from './cliff-ramps.js';
 import {towerForUnit,TOWERS} from './tower-geometry.js';
 import {paintedOperatorSupported} from './painted-fire-state.js';
 import {createTankBlastEffects,loadTankBlastTextures} from './tank-blast-effects.js';
+import {barrelKey} from './explosive-barrels.js';
 
 const EMPTY={origin:{x:0,y:0},fires:[]},V=(...a)=>new T.Vector3(...a);
 const key=p=>p.z?`${p.x},${p.y},${p.z}`:`${p.x},${p.y}`;
@@ -34,17 +35,19 @@ export class BattleTankEffects {
  observe(state,combat,now,reduced,level=0){
   if(this.state!==state){this.clear();this.state=state;}this.now=now;this.reduced=reduced;this.level=level;
   for(const e of state.fireAnimations||[]){
-   if(e.sequence<=this.sequence)continue;this.sequence=e.sequence;if(e.kind!=='tank')continue;
-   const u=state.units.find(u=>u.id===e.unitId);if(reduced||!u||!personVisible(state,u)||(u.z||0)!==level)continue;
-   const p=e.route[0],origin=V(...toWorld(p));origin.y+=.8;
-   this.bursts.set(e.sequence,{event:e,origin,point:p,waiting:true,start:now,worn:paintedOperatorSupported({...u,weapon:e.weapon})});
+   if(e.sequence<=this.sequence)continue;this.sequence=e.sequence;if(!['tank','barrel'].includes(e.kind))continue;
+   const barrel=e.kind==='barrel',u=barrel?e.prop:state.units.find(u=>u.id===e.unitId);
+   if(reduced||!u||(barrel?!state.visible.has(barrelKey(u)):!personVisible(state,u))||(u.z||0)!==level)continue;
+   const p=e.route[0],origin=V(...toWorld(p));origin.y+=barrel?.4:.8;
+   this.bursts.set(e.sequence,{event:e,origin,point:p,waiting:true,start:now,worn:!barrel&&paintedOperatorSupported({...u,weapon:e.weapon})});
   }
   for(const [id,b]of this.bursts){
-   const u=state.units.find(u=>u.id===b.event.unitId);
-   if(reduced||!u||!personVisible(state,u)||(u.z||0)!==level||now-b.start>5400&&!b.waiting){this.remove(id);continue;}
+   const barrel=b.event.kind==='barrel',u=barrel?b.event.prop:state.units.find(u=>u.id===b.event.unitId);
+   if(reduced||!u||(barrel?!state.visible.has(barrelKey(u)):!personVisible(state,u))||(u.z||0)!==level||now-b.start>5400&&!b.waiting){this.remove(id);continue;}
    if(b.waiting){const start=burnStart(b.event,combat,now);if(start!==null){b.start=start;b.waiting=false;}}
   }
  }
+ pendingProps(){return [...this.bursts.values()].filter(b=>b.event.kind==='barrel'&&(b.waiting||this.now<b.start)).map(b=>b.event.prop);}
  setOrigin(sequence,origin){const b=this.bursts.get(sequence);if(b&&!b.originFixed){b.origin.copy(origin);b.originFixed=true;}}
  make(entry,options){
   if(entry.effects||entry.loading||!this.textures)return;entry.loading=true;

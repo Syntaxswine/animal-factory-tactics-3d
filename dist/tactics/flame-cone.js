@@ -1,6 +1,7 @@
 import {traceProjectile,muzzleHeight,targetHeight} from './core/projectiles.js';
 import {inBounds,levelOf,tileKey} from './core/maps.js';
 import {unitBaseHeight} from './tower-geometry.js';
+import {isExplosiveBarrel,barrelId} from './explosive-barrels.js';
 
 // The hull of the nozzle and a circular mouth: an ice-cream-cone template,
 // ten tiles long and six tiles wide with the current weapon definition.
@@ -49,4 +50,12 @@ export function flamePreview(s,a,point,w,charges){
  else if(charges&&a.ap<w.cost)reason='Not enough AP';
  const shape=finite&&distance>EPS?flameShape(s,a,point,w):null;
  return {ok:!reason,reason,cost:w.cost,rounds:1,chance:100,zone:'torso',range:w.range,flame:shape,affected:shape?flameVictims(s,a,shape).map(u=>u.id):[]};
+}
+export function flameBarrels(s,shape){
+ const world={...s,units:[]};
+ return s.props.filter(isExplosiveBarrel).filter(p=>{
+  if(Math.abs(unitBaseHeight(p)-shape.base)>1||!insideFlame(shape,p))return false;
+  const d={x:p.x-shape.origin.x,y:p.y-shape.origin.y,h:unitBaseHeight(p)+.4-shape.origin.h},range=Math.hypot(d.x,d.y,d.h);
+  return traceProjectile(world,null,shape.origin,d,range+.01).propId===barrelId(p);
+ });
 }

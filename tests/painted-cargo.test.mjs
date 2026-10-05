@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../dist/tactics/vendor/three.module.js';
 import {CARGO_FORMS,CARGO_SKINS,createCargoLibrary,DRUM_RADIUS} from '../dist/tactics/painted-cargo.js';
 const atlas=new THREE.Texture();
-test('all 48 cargo combinations fit their declared tile footprint and stay grounded',()=>{
+test('all cargo combinations fit their declared tile footprint and stay grounded',()=>{
  const library=createCargoLibrary(atlas,atlas);let count=0;
  for(const form of CARGO_FORMS)for(const [skin,def]of Object.entries(CARGO_SKINS))if(def.family===form.family){
   const model=library.build(form.id,skin),b=model.bounds,[w,d]=form.tiles;count++;
@@ -11,7 +11,7 @@ test('all 48 cargo combinations fit their declared tile footprint and stay groun
   assert(b.min.y>=-.005&&b.min.y<=.003,`${form.id} ground contact ${b.min.y}`);
   model.root.traverse(o=>{if(o.isMesh)assert([...o.geometry.attributes.position.array,...o.geometry.attributes.normal.array].every(Number.isFinite));});
  }
- assert.equal(count,48);library.dispose();
+ assert.equal(count,54);library.dispose();
 });
 test('horizontal drum piles have two aligned supporting drums; vertical stacks have full supporting lids',()=>{
  const library=createCargoLibrary(atlas,atlas);

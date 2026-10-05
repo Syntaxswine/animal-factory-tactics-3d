@@ -1,5 +1,6 @@
 import {angularHelicoidShot,placeHelicoidMiss,rollMarginScatter,failedShotRoll} from './helicoid-shot.js';
 import {unitBaseHeight} from './tower-geometry.js';
+import {barrelIntersection} from './explosive-barrels.js';
 
 const EPS=1e-7;
 const vector=p=>[p.x,p.y,p.h],point=v=>({x:v[0],y:v[1],h:v[2]});
@@ -27,6 +28,7 @@ function shotFrame(shooter,target,zone,geometry){
  return {origin,aim};
 }
 function strikesSelected(target,zone,origin,geometry){
+ if(target.barrel)return ray=>!!barrelIntersection(target,origin,point(ray.direction));
  return ray=>bodyIntersection(target,origin,point(ray.direction),Infinity,geometry.bodyHeight(target))?.zone===zone;
 }
 function traceRay(state,shooter,ray,options,geometry){
