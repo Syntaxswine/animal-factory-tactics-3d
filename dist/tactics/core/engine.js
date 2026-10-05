@@ -1,3 +1,4 @@
+import {firePoint,recordBurn} from '../fire-events.js';
 import {flamePreview,flameShape,flameVictims} from '../flame-cone.js';
 import {rollFirearmShot} from '../helicoid-shot.js';
 import {injuryMovement,turnAP,woundLeg,accuracyPenalty,roundChance,incomingFire,recoverAim} from '../combat-state.js';
@@ -299,19 +300,19 @@ function ignite(s,u){
  if(!alive(u)||u.burningTurns>0)return;
  u.burningTurns=3;u.ap=0;u.overwatch=null;u.stance='standing';u.sneaking=false;u.running=false;
  if(u.team==='guard'&&stateOf(u)!=='broken')setState(s,u,'alert');
- s.queue=[];log(s,u.name+' is on fire / panic for 3 turns.');
+ recordBurn(s,u,'ignite');s.queue=[];log(s,u.name+' is on fire / panic for 3 turns.');
 }
 export function enterFire(s,u){if(s.fires?.some(p=>p.x===u.x&&p.y===u.y&&p.z===levelOf(u)))ignite(s,u);}
 function panicRun(s,u){
  if(!alive(u)||!u.burningTurns)return;
- const heading=Math.floor(random(s)*8)*45;
+ const fireRoute=[firePoint(u)],heading=Math.floor(random(s)*8)*45;
  for(let step=0;step<3;step++){
   const choices=movementNeighbors(s,u).filter(p=>levelOf(p)===levelOf(u)&&!occupant(s,p.x,p.y,p.z));
   if(!choices.length)break;
   choices.sort((a,b)=>Math.cos((headingTo(u,b)-heading)*Math.PI/180)-Math.cos((headingTo(u,a)-heading)*Math.PI/180));
-  const p=choices[0];openDoorBetween(s,u,p);u.heading=headingTo(u,p);u.facing=(p.x-u.x)-(p.y-u.y)>=0?1:-1;u.x=p.x;u.y=p.y;u.steps++;emitNoise(s,u,15);
+  const p=choices[0];openDoorBetween(s,u,p);u.heading=headingTo(u,p);u.facing=(p.x-u.x)-(p.y-u.y)>=0?1:-1;u.x=p.x;u.y=p.y;u.steps++;fireRoute.push(firePoint(u));emitNoise(s,u,15);
  }
- u.ap=0;u.fireActedRound=s.round;
+ recordBurn(s,u,'panic',fireRoute);u.ap=0;u.fireActedRound=s.round;
  log(s,u.name+' runs in panic / '+u.burningTurns+' turns of fire.');
 }
 function finishFireRound(s){
@@ -379,7 +380,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   if(victim.team==='guard')targeted(s,victim,shooter);
   const tankChance=w.mag?tankExplosionChance(victim,hitZone):0,standing=s.units.filter(alive);
   if(tankChance>0&&random(s)<tankChance){const blast=explodeTanks(s,victim,shooter);explosions.push(blast);event.explosions.push(blast);}
-  else {combatDamage(s,victim,amount,!!w.incendiary||incapacitated(victim),shooter);if(!w.blast&&hitZone==='legs'&&amount>0)woundLeg(victim);if(w.incendiary)ignite(s,victim);}
+  else {combatDamage(s,victim,amount,!!w.incendiary||incapacitated(victim),shooter);if(!w.blast&&hitZone==='legs'&&amount>0)woundLeg(victim);if(w.incendiary){if(victim.hp<=0)recordBurn(s,victim,'ash');ignite(s,victim);(event.burns??=[]).push(victim.id);}}
   // Units this impact put down (a tank blast can take neighbours too), so the renderer can time their fall.
   for(const u of standing)if(!alive(u)&&!event.downed.includes(u.id))event.downed.push(u.id);
   const friendly=victim.team===shooter.team;

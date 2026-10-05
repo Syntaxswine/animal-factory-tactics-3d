@@ -49,8 +49,8 @@ try{
  const after=await resources();assert.equal(after.ap,before.ap-6);assert.equal(after.ammo,before.ammo-1);assert.equal(await page.locator('#flame-plan').isVisible(),false);
  assert.ok(await page.evaluate(()=>!!battle3d.state.effect.flame));const hit=await page.evaluate(()=>battle3d.state.units.map(u=>u.hp));
  for(const id of [1,4,5,7])assert.ok(hit[id]<health[id],id+' should be hit');assert.equal(hit[6],health[6],'Wall shields the last guard');
- await page.evaluate(()=>{const r=battle3d.renderer;r.combat.active.start=r.presentationNow-400;r.combat.advance(r.presentationNow);});
- await page.waitForFunction(()=>battle3d.renderer.flameEffects.mesh.visible);
+ await page.evaluate(()=>{const r=battle3d.renderer;r.combat.active.start=r.presentationNow-700;r.combat.advance(r.presentationNow);});
+ await page.waitForFunction(()=>battle3d.renderer.flameEffects.mesh.visible||[...battle3d.renderer.fire.sessions.values()].some(s=>s.effects?.group.visible&&s.effects.group.children.some(m=>m.visible)));
  await page.locator('#viewport').screenshot({path:fileURLToPath(new URL('spray.png',out))});
  assert.deepEqual(errors,[]);
  await page.setViewportSize({width:430,height:900});await page.locator('#battle').screenshot({path:fileURLToPath(new URL('mobile-spray.png',out))});

@@ -22,6 +22,7 @@ import {BattleCombat} from './battle-combat.js';
 import {createRifleFiring} from './rifle-firing.js';
 import {BattleShotEffects,shotPoint} from './battle-shot-effects.js';
 import {BattleFlameEffects} from './battle-flame-effects.js';
+import {BattleFire} from './battle-fire.js';
 import {motionPreference} from './settings-3d.js';
 
 // Reuse only the environment/camera presentation. No hybrid combat mode.
@@ -32,6 +33,7 @@ export class BattleRenderer extends HybridRenderer {
   this.loot=new BattleLoot(this.scene);this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.flameEffects=new BattleFlameEffects(this.scene);
+  this.fire=new BattleFire(this);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
  }
  rebuild(world,seen,level,map){
@@ -62,6 +64,7 @@ export class BattleRenderer extends HybridRenderer {
   const model=this.models.get(unit.id);
   if(!model){if(!this.pending.has(unit.id))this.loadModel(unit);return null;}
   if(this.traversal?.active?.event.unitId===unit.id){
+   this.fire.remove(unit.id);
    model.draw?.dispose();model.draw=null;model.drawRequested=false;
    if(!model.profile.unarmed&&model.weapon!==unit.weapon){const old=model.equipment;model.equipment=createWeaponModel(unit.weapon);model.worker.equipWeapon(model.equipment);old?.dispose();model.weapon=unit.weapon;}
    try{if(this.traversal.pose(model,unit,this.presentationNow??performance.now()))return model.root;}catch(error){this.diagnostics.push('Traversal animation: '+error.message);this.traversal.finish();}
@@ -69,6 +72,7 @@ export class BattleRenderer extends HybridRenderer {
   const {worker,root,profile}=model,shot=this.combat.active?.event.shooter===unit.id?this.combat.active:null;
   const sample=this.traversal?.preparing&&this.traversal.active?.event.unitId===unit.id?{...this.motion.sample(unit),...this.traversal.display(unit),blend:0,pose:{}}:shot?{...this.motion.sample(unit),x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0,blend:0}:this.motion.sample(unit);
   const now=this.presentationNow??performance.now();
+  if(this.fire.pose(model,unit,shot,now,this.state,this.camera))return model.root;
   if(unit.hp<=0||this.reducedMotion?.matches)model.drawRequested=false;
   if(model.draw&&(unit.hp<=0||model.weapon!==unit.weapon||this.reducedMotion?.matches)){model.draw.dispose();model.draw=null;model.drawRequested=false;}
   const signature=`${model.drawRequested||model.draw?now:''}:${JSON.stringify(sample.pose)}:${unit.casualty}:${unit.weapon}:${sample.heading}:${unit.hp>0}:${sample.blend}:${sample.blend?sample.distance:0}:${shot?.start}:${shot?.phase.aim}:${shot?.phase.recoil}`;
@@ -125,20 +129,21 @@ export class BattleRenderer extends HybridRenderer {
    let object=hit.object,visible=true;
    while(object){if(!object.visible)visible=false;const entry=roots.find(([,root])=>root===object);if(entry&&visible)return entry[0];object=object.parent;}
   }
-  return null;
+  return this.fire.pick(ray);
  }
  pickDoor(x,y,width,height,level){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return pickWallDoor(ray,this.chunks||new Map(),level);}
  pickLoot(x,y,width,height){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return this.loot.pick(ray);}
  draw(ctx,state,...args){
   this.loot.sync(state,args[3]);
-  this.state=state;this.captureCombat(state);this.shotEffects.hide();this.flameEffects.hide();
-  const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.traversal.active?.event.unitId===u.id?{...u,presentationLevel:args[3]}:this.combat.display(u));
+  this.state=state;this.presentationLevel=args[3];this.captureCombat(state);this.shotEffects.hide();this.flameEffects.hide();
+  const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.traversal.active?.event.unitId===u.id?{...u,presentationLevel:args[3]}:this.fire.display(this.combat.display(u)));
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
   return super.draw(ctx,{...state,terrain:state.map,units},...args);
  }
  captureCombat(state){
   const now=this.presentationNow??performance.now(),reduced=!!this.reducedMotion?.matches;
   this.combat.observe(state,now,reduced);this.traversal.observe(state,now,reduced);
+  this.fire.observe(state,this.combat,now,reduced,this.presentationLevel??this.level);
   for(const u of state.units){const m=this.models.get(u.id);if(!m)continue;
    const visible=personVisible(state,u)&&(this.level===undefined||(u.z||0)===this.level),available=u.hp>0&&visible&&!reduced;
    if(m.draw&&(!available||now-m.drawStart>=DRAW_DURATION_MS)){m.draw.dispose();m.draw=null;m.drawRequested=false;m.signature=null;}
@@ -146,14 +151,14 @@ export class BattleRenderer extends HybridRenderer {
    if(m.weapon&&m.weapon!==u.weapon&&available&&!m.profile.unarmed&&u.weapon!=='hands'&&this.traversal.active?.event.unitId!==u.id)m.drawRequested=true;
   }
  }
- get busy(){return this.combat.busy||this.traversal.busy||[...this.models.values()].some(m=>m.draw||m.drawRequested);}
- equipmentState(id){return this.traversal.active?.event.unitId===id?(this.traversal.active.motion?.climb.equipmentState||'carried'):this.models.get(id)?.draw||this.models.get(id)?.drawRequested?'drawing':'carried';}
- displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
+ get busy(){return this.combat.busy||this.traversal.busy||this.fire.busy||[...this.models.values()].some(m=>m.draw||m.drawRequested);}
+ equipmentState(id){return this.fire.sessions.get(id)?.stow?.state==='stowed'?'stowed':this.traversal.active?.event.unitId===id?(this.traversal.active.motion?.climb.equipmentState||'carried'):this.models.get(id)?.draw||this.models.get(id)?.drawRequested?'drawing':'carried';}
+ displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);if(this.fire.entries.has(unit.id))return this.fire.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){
   this.generation++;this.wallXray.dispose();
   this.loot.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();this.paintedEnvironment.dispose();
   this.motion.clear();
-  this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();
+  this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();this.fire.dispose();
   for(const {worker,paint,root,equipment,locomotion,cap,draw}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();
  }
