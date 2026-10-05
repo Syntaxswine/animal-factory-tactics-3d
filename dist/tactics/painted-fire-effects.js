@@ -1,5 +1,6 @@
 import * as T from './vendor/three.module.js';
 import {fireState,burnState,FIRE_TIME,clamp,smooth} from './painted-fire-state.js';
+import {fireBodyZones,fireZoneCenter} from './painted-fire-zones.js';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 export const FIRE_ASSETS={flame:'../assets/effects/painted-fire/flame-atlas-v1.png',smoke:'../assets/effects/painted-fire/smoke-atlas-v1.png',ash:'../assets/effects/painted-fire/ash-paint-v1.png'};
 
@@ -43,10 +44,10 @@ export async function createPaintedFireEffects(scene,loader,worker){
  const plane=new T.PlaneGeometry(1,1),materials=[],geometries=[];
  function material(map,options){const m=shader(map,options);materials.push(m);return m;}
  const sheets=[-.45,0,.45].map((layer,i)=>{const g=new T.BufferGeometry();geometries.push(g);const m=new T.Mesh(g,material(textures[0],{fan:true,seed:i*1.3}));m.frustumCulled=false;group.add(m);m.userData.layer=layer;return m;});
- const plumes=Array.from({length:36},(_,i)=>{const m=new T.Mesh(plane,material(textures[0],{plume:true,seed:i*.73}));m.userData={birth:FIRE_TIME.ignite+Math.floor(i/3)*.061+(i%3)*.012,lane:((i%3)-1)*(.62+.12*Math.sin(i*1.73))+.10*Math.sin(i*2.13)};group.add(m);return m;});
- const bones=Object.fromEntries(worker.bones.map(b=>[b.name,b]));
- const zones=[['head',.54,.69,0,.17],['spine',.68,.83,0,0],['hips',.65,.70,0,0],...[-1,1].flatMap(s=>[['upperArm'+s,.40,.54,0,0],['forearm'+s,.32,.56,0,-.05],['thigh'+s,.37,.64,0,-.14],['shin'+s,.32,.57,0,-.11],['hoof'+s,.31,.39,0,.05]])];
- const wraps=zones.flatMap(([name,w,h,x,y],i)=>[-1,1].map((side,j)=>{const m=new T.Mesh(plane,material(textures[0],{seed:i*.67+j*1.7}));m.scale.set(w,h,1);m.userData={bone:bones[name],offset:V(x,y,0),side,width:w,height:h};group.add(m);return m;}));
+ // Staggered, overlapping strokes break up the former three repeating rows.
+ // Variation stays inside the supplied ray mask, including doorway shadows.
+ const plumes=Array.from({length:48},(_,i)=>{const m=new T.Mesh(plane,material(textures[0],{plume:true,seed:i*1.618}));m.userData={birth:FIRE_TIME.ignite+Math.floor(i/3)*.043+(i%3)*.010+.008*Math.sin(i*2.13),lane:((i%3)-1)*.56+.21*Math.sin(i*2.399),width:.72+.40*Math.sin(i*1.73)**2,length:.78+.47*Math.sin(i*2.17+.6)**2,tilt:.22*Math.sin(i*1.33)};group.add(m);return m;});
+ const zones=fireBodyZones(worker),wraps=zones.flatMap((zone,i)=>[-1,1].map((side,j)=>{const m=new T.Mesh(plane,material(textures[0],{seed:i*.67+j*1.7}));m.scale.set(zone.width,zone.height,1);m.userData={zone,side,width:zone.width,height:zone.height};group.add(m);return m;}));
  const smokes=Array.from({length:18},(_,i)=>{const m=new T.Mesh(plane,material(textures[1],{smoke:true,seed:i*.39}));group.add(m);return m;});
  const ashMaterial=new T.MeshBasicMaterial({map:textures[2],transparent:true,depthWrite:false,side:T.DoubleSide,toneMapped:false});materials.push(ashMaterial);
  const ashGeometry=new T.PlaneGeometry(1.25,1.05,12,10);geometries.push(ashGeometry);ashGeometry.rotateX(-Math.PI/2);
@@ -70,12 +71,13 @@ export async function createPaintedFireEffects(scene,loader,worker){
     m.visible=flame&&age>=0&&age<FIRE_TIME.travel;if(!m.visible)continue;
     const forward=V(Math.cos(bearing),.10,Math.sin(bearing));m.position.copy(muzzle).addScaledVector(forward,d);m.position.y+=.04*Math.sin(i*1.7+time*5);
     const normal=camera.position.clone().sub(m.position).normalize(),up=forward.clone().addScaledVector(normal,-forward.dot(normal));if(up.lengthSq()<.02)up.set(0,1,0);up.normalize();const right=up.clone().cross(normal).normalize();up.copy(normal).cross(right).normalize();m.quaternion.setFromRotationMatrix(new T.Matrix4().makeBasis(right,up,normal));
-    const variation=.85+.20*Math.sin(i*2.17);m.scale.set((.28+.84*clamp(d/6))*variation,(.55+.84*clamp(d/4))*variation,1);
-    const u=m.material.uniforms;u.clock.value=time;u.opacity.value=.48*smooth(age/.025)*(1-smooth((age-.38)/.18));u.angle.value=shape.heading;u.spread.value=shape.halfAngle;u.nozzle.value=muzzle.x*Math.cos(shape.heading)+muzzle.z*Math.sin(shape.heading);
+    m.rotateZ(m.userData.tilt);m.scale.set((.32+.98*clamp(d/6))*m.userData.width,(.72+1.02*clamp(d/4))*m.userData.length,1);
+    const u=m.material.uniforms;u.clock.value=time;u.opacity.value=.52*smooth(age/.025)*(1-smooth((age-.38)/.18));u.angle.value=shape.heading;u.spread.value=shape.halfAngle;u.nozzle.value=muzzle.x*Math.cos(shape.heading)+muzzle.z*Math.sin(shape.heading);
     shape.rays.forEach((r,k)=>u.rays.value[k].set(r.x-shape.origin.x,r.y-shape.origin.y));for(let k=0;k<36;k++)u.wedges.value[k]=shape.rays[k].kind===shape.rays[k+1].kind&&Math.abs(shape.rays[k].distance-shape.rays[k+1].distance)<=1.05?1:0;
    }
    const toward=camera.position.clone().sub(worker.root.position);toward.y=0;toward.normalize();
-   for(const m of wraps){m.visible=body&&s.active&&s.engulf>.001;m.position.copy(m.userData.bone.getWorldPosition(V())).add(m.userData.offset).addScaledVector(toward,m.userData.side*m.userData.width*.35);m.position.y=s.point.y+(m.position.y-s.point.y)*(1-.65*s.fireTail);m.quaternion.copy(camera.quaternion);m.material.uniforms.clock.value=time;m.material.uniforms.opacity.value=.72*s.engulf;}
+   const centers=new Map(zones.map(z=>[z,fireZoneCenter(z)]));
+   for(const m of wraps){m.visible=body&&s.active&&s.engulf>.001;m.position.copy(centers.get(m.userData.zone)).addScaledVector(toward,m.userData.side*m.userData.width*.35);m.position.y=s.point.y+(m.position.y-s.point.y)*(1-.65*s.fireTail);m.quaternion.copy(camera.quaternion);m.material.uniforms.clock.value=time;m.material.uniforms.opacity.value=.72*s.engulf;}
    // Overlapping painted billows retain their birth position as the victim moves.
    // Lower new emissions with the collapse, then let the existing trail rise away.
    for(let i=0;i<smokes.length;i++){

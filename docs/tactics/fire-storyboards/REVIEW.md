@@ -90,3 +90,41 @@ Evidence inspected: code, numerical sampling, the browser report, and rendered s
 - [Fresh browser report](evidence/panic-browser-review.json) and [updated GIF](evidence/painted-fire-study.gif)
 
 This is a refinement of the horse study. Other animals and gameplay integration are still separate work.
+
+## Full roster and equipment study: 9/10
+
+October 5, 2026. Independent hostile review approves the standalone roster extension at **9/10**, with no blocking findings. Scope: standing, straight, same-height routes; 25 character/outfit variants, 289 supported target loadouts and 22 flamethrower operators. The hen and donkey guide remain unarmed. This does not approve gameplay integration, other firing stances or turning/elevated paths.
+
+Corrections during fitting and review:
+
+- Shortened the hen's catching steps to stay within her leg reach; retained her wing/toe rig and low collapse.
+- Fit the pigs' torso lean and real supporting palm surfaces instead of accepting an arm clamped above the ground.
+- Preserved the HMG's fitted closed glove through release, updated its cuff after the final arm pose and carried the authored contact offset/elbow pole continuously into the collapse.
+- Preserved and blended the pig rifle's release elbow pole, eliminating a discontinuity that anchor-proximity tests missed.
+- Let the flamethrower pack and lance fall and rest independently, keeping the hose attached. The pack now settles on both parallel cylinders.
+- Included long tails, hats, ears, horns and wings in the painted envelope and complete body breakup; restored them on reverse seeks.
+- Varied spray stroke timing, spacing, aspect and rotation, with more overlap and the same incoming occlusion boundaries.
+- Fixed failed outfit loads leaking already-created paint targets/layers, including textures that finish after a sibling request fails.
+
+The reviewer independently reran **75 motion/equipment tests** and separately injected horse/hen texture failures and late completion. All passed. Those failure cases are now committed as three additional regression tests: the builder's final focused run passed **78 tests**, plus **40 related motion/paint/outfit tests**. Asset validation and the 3D build/module-closure check passed.
+
+The final browser matrix passed **289 target loadouts and 22 operators**, with **121 captures**, no console/page errors, and stable counts across six repeated variant switches (95 geometries / 21 textures for the final isolated skunk setup). The earlier roster browser run also passed the existing 72 view/scale/obstruction/route configurations and reduced-motion startup. Resource counts vary by species, equipment and which actors are visible; the meaningful check is stability for the same setup.
+
+Evidence reviewed: code, dense numerical support and continuity probes, reports, and rendered still sequences. The reviewer did **not** independently watch continuous playback. The skunk's upper tail curl can briefly peek through the flame from the side; this was judged optional art polish, not a blocking coverage defect. The approved horse GIF remains the prior horse revision rather than a recording of this extension.
+
+- [Revised overlapping spray](evidence/roster/spray-three.png)
+- [Pig HMG supported collapse](evidence/roster/pig-director-hmg-three-3.18.png) and [pig operator](evidence/roster/operator-pig-director-three.png)
+- [Hen reaction without effects](evidence/roster/hen-red-hats.png), [hen engulfment](evidence/roster/engulf-hen-side.png) and [rabbit engulfment](evidence/roster/engulf-rabbit-side.png)
+- [Skunk fire coverage](evidence/roster/engulf-skunk-side.png), [pack fit behind the plume](evidence/roster/operator-skunk-rear.png) and [settled pack/lance](evidence/roster/skunk-flamethrower-side-5.4.png)
+- [Full browser matrix](evidence/roster/browser-review.json)
+
+No files or processes were changed by the reviewer. Disposable builder capture browsers closed through their owning API. The previously retained preview keeps its original automatic expiry; no new unbounded server was started. No changes were made to the other agent's gameplay checkout.
+## Canonical integration review — 2026-10-05 UTC
+
+Approved `7b94117` as a standalone full-roster fire animation study. This approval does not enable the separate live-battle integration branch.
+
+The revised overlapping spray reads more coherently than the previous repeating rows. Browser inspection covered the hen's Red Hats outfit, pig director with an HMG, skunk firing and dropped flamethrower assembly, unarmed donkey guide, and rabbit on a blocked route. Key poses were scrubbed with effects on and off, including reverse seeking; wall and doorway clipping were checked at gameplay scale. No browser warnings or errors appeared in these checks.
+
+The main remaining visual request is a clearer hen collapse. At the settled collapse pose she remains mostly upright in a crouch before dissolving. A more visible loss of balance and lower chest/head would help sell the terminal reaction without rebuilding the rig. This is a polish follow-up for the study, not a reason to hold the rest of the roster.
+
+Validation: 78 fire/roster/paint-lifecycle tests and 40 related motion/paint/outfit tests passed. The 3D Pages build and asset validation passed. The build-script merge preserves the canonical ballistic module and missing-module checks while copying all new roster modules. Live-battle survivor reactions and terminal death handling need separate integration validation; the study always demonstrates the terminal sequence.

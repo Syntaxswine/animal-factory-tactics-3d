@@ -30,9 +30,9 @@ export function burnState(seconds,route){
 }
 // A planned footfall is fixed in world distance while planted. Each swing
 // explicitly releases, lifts, advances and lands; root motion cannot drag it.
-export function panicFeet(state,route,{restX=-.035,restZ=.232}={}){
+export function panicFeet(state,route,{restX=-.035,restZ=.232,stepLength=.30}={}){
  if(route.length===0)return Object.fromEntries([-1,1].map(side=>[side,{x:restX,y:0,z:side*restZ,planted:true,worldDistance:restX}]));
- const count=Math.max(2,Math.ceil(route.length/.30)),feet={},beats=[0];
+ const count=Math.max(2,Math.ceil(route.length/stepLength)),feet={},beats=[0];
  // Short, uneven catching steps rather than a parade cadence. Landing targets
  // are still planned in world space; speeding up the body cannot drag a sole.
  const rhythm=[.82,1.10,.91,1.16,.86,1.05];
