@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../dist/tactics/vendor/three.module.js';
 import {blankMap,edgeKey,tileKey,setTerrain} from '../dist/tactics/core/maps.js';
-import {createGame,previewAttack,groundTarget,attack,attackGround,WEAPONS,weaponDamage,resolveOverwatch} from '../dist/tactics/core/engine.js';
+import {createGame,previewAttack,groundTarget,attack,attackGround,WEAPONS,resolveOverwatch} from '../dist/tactics/core/engine.js';
 import {insideFlame,flameShape,flameVictims} from '../dist/tactics/flame-cone.js';
 import {BattleCombat} from '../dist/tactics/battle-combat.js';
 import {BattleFlameEffects,flamePhase} from '../dist/tactics/battle-flame-effects.js';
@@ -25,13 +25,27 @@ test('rounded fan has a fixed range, rotates freely, and broadens away from its 
  const west=flameShape(s,a,{x:0,y:10},WEAPONS.flamethrower);assert.equal(insideFlame(west,{x:5,y:10}),true);assert.equal(insideFlame(west,point),false);
 });
 
-test('one area spray hits multiple enemies and allies with no accuracy roll or per-victim fuel charge',()=>{
+test('one area spray kills exposed enemies and allies with no accuracy roll or per-victim fuel charge',()=>{
  const {s,a,point}=setup(),before=s.seed,ap=a.ap,preview=previewAttack(s,a,groundTarget(point));
  assert.deepEqual(preview.affected.sort(),[1,4,5]);assert.equal(preview.cost,6);
  assert.equal(attackGround(s,a,point),true);assert.equal(a.ap,ap-6);assert.equal(a.ammo.flamethrower,3);assert.equal(s.seed,before);
- for(const id of [1,4,5]){const u=s.units[id];assert.equal(u.hp,1000-weaponDamage(WEAPONS.flamethrower,Math.hypot(a.x-u.x,a.y-u.y)));assert.equal(u.burningTurns,3);}
+ for(const id of [1,4,5]){const u=s.units[id];assert.equal(u.hp,0);assert.ok(!u.burningTurns);assert.equal(u.burnedRemains,true);assert.ok(s.effect.downed.includes(id));}
+ assert.equal(s.units[1].casualty,'dead','Easy must not stabilize a direct flame victim');
  for(const id of [0,2,3,6])assert.equal(s.units[id].hp,1000);
  assert.equal(s.effect.sequence.length,1);assert.ok(s.effect.flame);assert.equal(s.effect.trajectories.length,0);
+});
+
+test('direct flame kills through maximum endurance at both ends of its range on every difficulty',()=>{
+ for(const difficulty of ['easy','standard','hard'])for(const distance of [1,10]){
+  const {s,a,point}=setup(),b=s.units[4];s.difficulty=difficulty;b.x=a.x+distance;b.y=a.y;b.hp=b.maxHp=5000;b.stats={...a.stats,endurance:100};
+  assert.equal(attackGround(s,a,point),true);assert.equal(b.hp,0);assert.equal(b.burnedRemains,true);assert.equal(s.fireAnimations.find(e=>e.unitId===b.id).kind,'ash');
+ }
+});
+
+test('direct flame finishes a stabilized merc and preserves corpse and loot results when saved',()=>{
+ const {s,a,point}=setup(),b=s.units[1];b.hp=0;b.casualty='stable';b.recoveryTurns=1;startEncounterClock(s);
+ assert.ok(previewAttack(s,a,groundTarget(point)).affected.includes(b.id));attackGround(s,a,point);assert.equal(b.hp,0);assert.equal(b.casualty,'dead');assert.equal(b.recoveryTurns,0);assert.equal(b.burnedRemains,true);
+ const loaded=restoreEncounter(captureEncounter(s));assert.equal(loaded.units[1].casualty,'dead');assert.equal(loaded.units[1].burnedRemains,true);assert.deepEqual(loaded.loot,s.loot);
 });
 
 test('full walls, closed doors and tall props stop flames while an opened doorway transmits them',()=>{
@@ -42,6 +56,7 @@ test('full walls, closed doors and tall props stop flames while an opened doorwa
   if(blocker==='door')s.edges[edgeKey('e',12,10)]='door-steel-closed';
   let p=previewAttack(s,a,groundTarget(point));assert.ok(!p.affected.includes(4),blocker);
   if(blocker==='door'){s.edges[edgeKey('e',12,10)]='doorway-concrete-open';p=previewAttack(s,a,groundTarget(point));assert.ok(p.affected.includes(4));assert.ok(p.flame.rays.some(r=>r.kind==='wall'));}
+  attackGround(s,a,point);assert.equal(s.units[4].hp,blocker==='door'?0:1000,blocker);
  }
 });
 
@@ -74,8 +89,8 @@ test('living, downed and hidden bystanders can be caught, but away, dead and qui
 
 test('guards and reserved overwatch sprays use the area rules, and cannot target beyond range',()=>{
  const {s,a}=setup(),g=s.units[4];g.weapon='flamethrower';g.heading=180;g.ap=30;s.phase='enemy';
- assert.equal(attack(s,g,a,false,true),true);assert.ok(s.effect.flame);assert.equal(g.ammo.flamethrower,3);assert.ok(a.hp<1000);
- const second=setup();second.s.phase='enemy';second.a.overwatch={weapon:'flamethrower',heading:0,range:10};const ap=second.a.ap;resolveOverwatch(second.s,second.s.units[4]);assert.ok(second.s.effect.flame);assert.equal(second.a.ap,ap);assert.equal(second.a.ammo.flamethrower,3);
+ assert.equal(attack(s,g,a,false,true),true);assert.ok(s.effect.flame);assert.equal(g.ammo.flamethrower,3);assert.equal(a.hp,0);assert.equal(a.casualty,'dead');
+ const second=setup();second.s.phase='enemy';second.a.overwatch={weapon:'flamethrower',heading:0,range:10};const ap=second.a.ap;resolveOverwatch(second.s,second.s.units[4]);assert.ok(second.s.effect.flame);assert.equal(second.a.ap,ap);assert.equal(second.a.ammo.flamethrower,3);assert.equal(second.s.units[4].hp,0);
  const far=setup();far.s.units[4].x=22;assert.equal(previewAttack(far.s,far.a,far.s.units[4]).ok,false);
 });
 

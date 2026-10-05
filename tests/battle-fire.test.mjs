@@ -11,7 +11,7 @@ import {BattleCombat} from '../dist/tactics/battle-combat.js';
 import {BattleMotion} from '../dist/tactics/battle-motion.js';
 import {firePoint,recordBurn} from '../dist/tactics/fire-events.js';
 import {blankMap,edgeKey} from '../dist/tactics/core/maps.js';
-import {createGame,attackGround,endTurn,movementNeighbors,WEAPONS} from '../dist/tactics/core/engine.js';
+import {createGame,attackGround,enterFire,endTurn,movementNeighbors,WEAPONS} from '../dist/tactics/core/engine.js';
 import {flameShape} from '../dist/tactics/flame-cone.js';
 import {captureEncounter,restoreEncounter} from '../dist/tactics/encounter-save.js';
 import {startEncounterClock} from '../dist/tactics/encounter-clock.js';
@@ -25,8 +25,8 @@ function model(weapon='rifle'){
  const worker=createLightHorse(data),equipment=createWeaponModel(weapon),root=new T.Group();worker.equipWeapon(equipment);root.add(worker.root);
  return {worker,equipment,weapon,root,profile:{id:'horse'},paint:{material:new T.MeshStandardMaterial(),setGripForearm(){}},dispose(){equipment.dispose();worker.dispose();this.paint.material.dispose();}};
 }
-test('core records ignition and accepted panic neighbors without another resource charge',()=>{
- const {s,a,b}=fixture();assert.ok(attackGround(s,a,{x:20,y:10,z:0}));assert.equal(a.ap,24);assert.equal(a.ammo.flamethrower,3);assert.equal(s.fireAnimations[0].kind,'ignite');assert.equal(b.burnedRemains,undefined);assert.deepEqual(s.effect.burns,[b.id]);
+test('ground fire still records ignition and accepted panic neighbors without another resource charge',()=>{
+ const {s,a,b}=fixture();s.fires=[{x:b.x,y:b.y,z:0,turns:3}];enterFire(s,b);assert.equal(a.ap,30);assert.equal(a.ammo.flamethrower,4);assert.equal(s.fireAnimations[0].kind,'ignite');assert.equal(b.burnedRemains,undefined);
  // Box one side, forcing the rule to pick a legal route instead of a visual shortcut.
  for(let y=8;y<=12;y++)s.edges[edgeKey('e',b.x,y)]='wall-brick';
  const before=structuredClone(s),ap=a.ap,ammo=a.ammo.flamethrower;endTurn(s);
@@ -57,13 +57,13 @@ test('elevated paths use rendered heights and refuse a changing surface instead 
  const p={x:10,y:12,z:1,towerPost:{}};assert.equal(fireSegments({route:[p]})[0].points[0].y,8.48);
  assert.throws(()=>fireSegments({route:[{x:1,y:1,z:0},{x:2,y:1,z:1}]}),/same-height/);
 });
-test('controller consumes events once, waits for flame impact, restores equipment and leaves rules untouched',async()=>{
+test('controller consumes lethal events once, waits for flame impact, then shows ash without changing rules',async()=>{
  const {s,a,b}=fixture(),r=renderer(),f=new BattleFire(r),c=new BattleCombat(),m=model();await f.ready;
  try{c.observe(s,0);f.observe(s,c,0,false,0);attackGround(s,a,{x:20,y:10,z:0});c.observe(s,10);f.observe(s,c,10,false,0);const before=structuredClone(s),camera=new T.PerspectiveCamera();camera.position.set(20,20,20);
   assert.equal(f.pose(m,b,null,200,s,camera),false);assert.equal(f.entries.get(b.id).start,650);
   for(const now of [700,1000,1400,2200]){c.advance(now);f.observe(s,c,now,false,0);assert.ok(f.pose(m,b,null,now,s,camera));}
-  assert.equal(f.busy,false);assert.deepEqual(s,before);assert.equal(f.sessions.size,1);
-  b.burningTurns=0;f.observe(s,c,2300,false,0);assert.equal(f.entries.size,0);assert.equal(f.sessions.size,0);assert.ok(m.worker.parts.every(p=>p.visible));assert.equal(m.worker.weapon.id,'rifle');assert.equal(r.diagnostics.length,0);
+  await Promise.resolve();f.observe(s,c,6500,false,0);assert.ok(f.pose(m,b,null,6500,s,camera));assert.equal(f.busy,false);assert.deepEqual(s,before);assert.equal(f.sessions.size,1);assert.equal(b.hp,0);assert.ok(f.sessions.get(b.id).effects.ash.visible);
+  f.clear();assert.equal(f.entries.size,0);assert.equal(f.sessions.size,0);assert.ok(m.worker.parts.every(p=>p.visible));assert.equal(m.worker.weapon.id,'rifle');assert.equal(r.diagnostics.length,0);
  }finally{f.dispose();m.dispose();}
 });
 test('hidden units, casualty interruption, weapon swaps, floor changes and reduced motion clean up',async()=>{

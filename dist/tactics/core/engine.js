@@ -366,7 +366,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   const victim=ballistic?s.units.find(u=>u.id===shot.unitId):accurate&&alive(target)?target:null;
   const event={shooter:shooter.id,target:target.id,ax:shooter.x,ay:shooter.y,bx:f.aim.x,by:f.aim.y,az:levelOf(shooter),bz:levelOf(f.aim),hit:!!victim,incendiary:!!w.incendiary,trajectories:pellets||(shot?[shot]:[]),explosions:[],downed:[],reply:f.reply,shotChance,shotRoll};sequence.push(event);
   const flame=w.incendiary?flameShape(s,shooter,f.aim,w):null;
-  const flameHits=flame?flameVictims(s,shooter,flame).map(unit=>({unit,zone:'torso',damage:weaponDamage(w,Math.hypot(unit.x-shooter.x,unit.y-shooter.y))})):null;
+  const flameHits=flame?flameVictims(s,shooter,flame).map(unit=>({unit,zone:'torso',damage:Math.max(1,unit.hp)})):null;
   if(flame){event.flame=flame;event.hit=flameHits.length>0;log(s,shooter.name+' sprays a cone of flame.');}
   const blastResult=w.blast?detonate(s,shot,w):null;
   if(blastResult){event.explosions.push(blastResult.blast);explosions.push(blastResult.blast);event.hit=blastResult.hits.length>0;log(s,`${shooter.name}: ${w.short} detonated / ${blastResult.blast.destroyed} structures destroyed.`);}
@@ -375,7 +375,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   if(pellets){event.hit=pelletHits.length>0;if(!event.hit)log(s,`${shooter.name} → ${target.name}: pellets missed.`);}
   const impacts=flameHits||(blastResult?blastResult.hits:pelletHits)||[{unit:victim,damage:Math.round(Math.round(weaponDamage(w,Math.hypot(shooter.x-victim.x,shooter.y-victim.y))*AIM_ZONES[shot?.zone||f.zone].damage)*(shooter.team==='guard'&&!w.incendiary?.65:1))}];
   const reacted=new Set();
-  for(const {unit:victim,damage:rawAmount,zone:pelletZone}of impacts){if(flame&&!alive(victim)&&!incapacitated(victim))continue;const amount=damageAfterResistance(victim,rawAmount);
+  for(const {unit:victim,damage:rawAmount,zone:pelletZone}of impacts){if(flame&&!alive(victim)&&!incapacitated(victim))continue;const amount=flame?rawAmount:damageAfterResistance(victim,rawAmount);
   const hitZone=w.blast?'torso':pelletZone||shot?.zone||f.zone;damageHeldWeapon(s,victim,hitZone,rawAmount);
   if(victim.team==='guard')targeted(s,victim,shooter);
   const tankChance=w.mag?tankExplosionChance(victim,hitZone):0,standing=s.units.filter(alive);

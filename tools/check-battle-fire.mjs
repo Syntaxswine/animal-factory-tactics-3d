@@ -22,27 +22,19 @@ try{
  await page.click('#aim-flame');await page.mouse.click(aim.x,aim.y);await page.click('#flame-fire');await page.click('#pause');
  await page.mouse.move(aim.x,aim.y);await page.mouse.wheel(0,-600);await page.mouse.move(10,10);
  const paid=await page.evaluate(()=>{const s=battle3d.state;return {ap:s.units[0].ap,fuel:s.units[0].ammo.flamethrower,health:s.units.map(u=>u.hp),loot:JSON.stringify(s.loot)};});
- assert.equal(paid.ap,24);assert.equal(paid.fuel,3);assert.equal(paid.health[6],0);assert.equal(paid.health[7],1000);
+ assert.equal(paid.ap,24);assert.equal(paid.fuel,3);for(const id of [4,5,6])assert.equal(paid.health[id],0);assert.equal(paid.health[7],1000);
  async function seek(seconds){await page.evaluate(t=>{const r=battle3d.renderer,n=r.presentationNow;if(r.combat.active)r.combat.active.start=n-t*1000;for(const e of r.fire.entries.values()){e.start=n-(t-.64)*1000;e.waiting=false;}},seconds);await page.waitForTimeout(100);}
  await seek(.85);await page.waitForFunction(()=>battle3d.renderer.fire.sessions.get(0)?.effects&&battle3d.renderer.fire.sessions.get(4)?.effects,{},{timeout:15000});
  await page.locator('#viewport').screenshot({path:fileURLToPath(new URL('spray-and-engulf.png',out))});
  const positions=await page.evaluate(()=>{const r=battle3d.renderer;return [0,4,5,6].map(id=>{const m=r.models.get(id),p=m.worker.root.getWorldPosition(m.root.position.clone());return {id,p:p.toArray(),shown:m.worker.parts.some(p=>p.visible)};});});
  assert.ok(positions[0].p[0]>9&&positions[0].p[0]<11);assert.ok(positions[1].p[0]>13&&positions[1].p[0]<15);
- await seek(2.5);await page.locator('#viewport').screenshot({path:fileURLToPath(new URL('fatal-ash-survivors.png',out))});
- const ash=await page.evaluate(()=>{const f=battle3d.renderer.fire,s=f.sessions.get(6);return {visible:s.effects.ash.visible,body:s.model.worker.parts.some(p=>p.visible),survivor:f.sessions.get(4).model.worker.parts.every(p=>p.visible),position:s.effects.ash.position.toArray(),diagnostics:battle3d.renderer.diagnostics};});
- assert.equal(ash.visible,true);assert.equal(ash.body,false);assert.equal(ash.survivor,true);assert.deepEqual(ash.position,[16,0,9]);assert.deepEqual(ash.diagnostics,[]);
- // Test real accepted movement; the UI cannot issue another action until the
- // bounded presentation completes. The game commits once, presentation follows.
- await page.evaluate(async()=>{const {endTurn}=await import('./core/engine.js'),s=battle3d.state;endTurn(s);battle3d.renderer.captureCombat(s);});
- const path=await page.evaluate(()=>{const r=battle3d.renderer,e=r.fire.entries.get(4);return e.event.route;});assert.ok(path.length>1);
- await page.evaluate(()=>{const r=battle3d.renderer;for(const e of r.fire.entries.values())if(e.event.kind==='panic')e.start=r.presentationNow-500;});await page.waitForTimeout(100);
- await page.locator('#viewport').screenshot({path:fileURLToPath(new URL('panic-route.png',out))});
- assert.deepEqual(await page.evaluate(()=>battle3d.renderer.diagnostics),[]);
- // Save while the route is in flight, then confirm final coordinates and no
- // replayable animation receipts. Inventory and fire damage remain unchanged.
+ await seek(2.5);await page.locator('#viewport').screenshot({path:fileURLToPath(new URL('fatal-ash.png',out))});
+ const ash=await page.evaluate(()=>{const f=battle3d.renderer.fire,s=f.sessions.get(6);return {visible:[4,5,6].every(id=>f.sessions.get(id).effects.ash.visible),body:[4,5,6].some(id=>f.sessions.get(id).model.worker.parts.some(p=>p.visible)),position:s.effects.ash.position.toArray(),diagnostics:battle3d.renderer.diagnostics};});
+ assert.equal(ash.visible,true);assert.equal(ash.body,false);assert.deepEqual(ash.position,[16,0,9]);assert.deepEqual(ash.diagnostics,[]);
+ // Saving retains the committed deaths and loot, without replayable receipts.
  const save=await page.evaluate(async()=>{const {captureEncounter,restoreEncounter}=await import('./encounter-save.js'),s=battle3d.state,b=restoreEncounter(captureEncounter(s));return {live:s.units.map(u=>[u.x,u.y,u.hp]),loaded:b.units.map(u=>[u.x,u.y,u.hp]),events:b.fireAnimations,loot:JSON.stringify(b.loot),ap:s.units[0].ap,fuel:s.units[0].ammo.flamethrower};});
  assert.deepEqual(save.live,save.loaded);assert.equal(save.events,undefined);assert.equal(save.loot,paid.loot);assert.equal(save.ap,paid.ap);assert.equal(save.fuel,paid.fuel);
  await page.evaluate(()=>{const r=battle3d.renderer;r.reducedMotion={matches:true};});await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>battle3d.renderer.fire.busy),false);
  await page.evaluate(()=>window.previousFireRenderer=battle3d.renderer);await page.click('#restart');await page.waitForFunction(()=>battle3d.renderer!==previousFireRenderer&&battle3d.renderer.models.has(0)&&!battle3d.renderer.busy,{},{timeout:90000});assert.equal(await page.evaluate(()=>battle3d.renderer.fire.entries.size),0);
- assert.deepEqual(errors,[]);console.log('Live horse fire: spray, multi-target engulfment, surviving panic paths, fatal ash, wall protection, save during playback, reduced motion and restart pass.');
+ assert.deepEqual(errors,[]);console.log('Live horse fire: lethal spray, multi-target engulfment, fatal ash, wall protection, saved deaths, reduced motion and restart pass.');
 }finally{await browser.close();fs.writeFileSync(new URL('browser-closed.json',out),JSON.stringify({identity,closedAt:new Date().toISOString()}));}

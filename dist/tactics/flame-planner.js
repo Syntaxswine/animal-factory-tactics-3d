@@ -27,7 +27,7 @@ export class FlamePlanner {
   this.preview=previewAttack(s,u,groundTarget(this.plan.point));
   const p=this.preview,known=p.affected.map(id=>s.units.find(v=>v.id===id)).filter(v=>v&&(v.team==='squad'||s.detected.has(v.id)));
   const friendlies=known.filter(v=>v.team===u.team);
-  this.panel.querySelector('.flame-summary').textContent=p.cost+' AP · 1 fuel · '+p.range+' tiles long · '+(p.flame?.radius*2||6)+' wide';
+  this.panel.querySelector('.flame-summary').textContent=p.cost+' AP · 1 fuel · '+p.range+' tiles long · '+(p.flame?.radius*2||6)+' wide · Lethal on contact';
   this.panel.querySelector('.flame-targets').textContent=known.length?'In the spray: '+known.map(v=>v.name).join(', ')+(friendlies.length?' — friendly fire!':''):'No visible characters in the spray.';
   this.panel.classList.toggle('friendly-risk',friendlies.length>0);
   this.panel.querySelector('.flame-instruction').textContent=!p.ok?p.reason:this.blocked?'Resume when ready to fire.':this.plan.locked?'Template placed. Confirm the spray or reposition it.':'Move over the battlefield; click to place the template.';

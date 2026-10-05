@@ -16,7 +16,7 @@ try{
  await page.route('**/live-fire-roster-check.html',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html><body style="margin:0;background:#66704e"><div id="view"></div></body></html>'}));
  await page.goto((process.env.EDITOR_ORIGIN||'http://127.0.0.1:4364')+'/tactics/live-fire-roster-check.html');
  await page.evaluate(async()=>{
-  const [{BattleRenderer},{blankMap},{createGame,attackGround,endTurn},{captureEncounter,restoreEncounter},{startEncounterClock},T]=await Promise.all([import('./battle-renderer.js'),import('./core/maps.js'),import('./core/engine.js'),import('./encounter-save.js'),import('./encounter-clock.js'),import('./vendor/three.module.js')]);
+  const [{BattleRenderer},{blankMap},{createGame,attackGround},{captureEncounter,restoreEncounter},{startEncounterClock},T]=await Promise.all([import('./battle-renderer.js'),import('./core/maps.js'),import('./core/engine.js'),import('./encounter-save.js'),import('./encounter-clock.js'),import('./vendor/three.module.js')]);
   window.review={async start({animal,outfit,weapon,operator='horse',operatorOutfit='normal'}){
    this.renderer?.dispose();this.ground?.geometry.dispose();this.ground?.material.dispose();
    // The legacy map schema lists nine species; exercise the full twelve-model
@@ -33,27 +33,22 @@ try{
    return {models:r.models.size,painted:r.combat.active.paintedFire,...this.paid};
   },frame(now){const r=this.renderer,s=this.state;r.presentationNow=now;r.captureCombat(s);const units=[this.a,this.b].map(u=>r.fire.display(r.combat.display(u)));r.motion.update(units,now,false);for(const u of units)r.actor(u);r.renderer.render(r.scene,r.camera);},
   result(){const r=this.renderer,b=this.b,session=r.fire.sessions.get(b.id);return {diagnostics:r.diagnostics,alive:b.hp>0,visible:r.models.get(b.id).worker.parts.every(p=>p.visible),collapse:session?.motion.diagnostics().state.collapse,drop:session?.motion.diagnostics().drop,ash:session?.effects?.ash.visible,ap:this.a.ap,fuel:this.a.ammo.flamethrower};},
-  panic(){endTurn(this.state);this.frame(3000);return this.renderer.fire.entries.get(this.b.id)?.event.route;},
   save(){const s=this.state,restored=restoreEncounter(captureEncounter(s));return {same:JSON.stringify(s.units.map(u=>[u.x,u.y,u.hp]))===JSON.stringify(restored.units.map(u=>[u.x,u.y,u.hp])),events:restored.fireAnimations};},
-  extinguish(){this.b.burningTurns=0;this.frame(9000);return {sessions:this.renderer.fire.sessions.size,walking:!!this.renderer.models.get(this.b.id).locomotion};},
-  fatal(){const s=this.state;this.b.hp=1;this.a.ap=30;this.a.x=this.b.x-4;this.a.y=this.b.y;s.phase='player';s.detected.add(this.b.id);this.renderer.combat.clear();this.frame(9100);if(!attackGround(s,this.a,{x:this.b.x+5,y:this.b.y,z:0}))throw Error('Fatal flame rejected');this.frame(9200);},
   dispose(){this.renderer?.dispose();this.ground?.geometry.dispose();this.ground?.material.dispose();this.renderer=null;}
   };
  });
  for(const p of profiles)for(const outfit of ['normal','red-hats',...(p.id==='donkey'?['blue-hawaiian']:[])]){
   const weapon=p.unarmed||outfit==='blue-hawaiian'?'hands':p.id.startsWith('pig')?'rpg':p.id==='skunk'?'flamethrower':'rifle';
   const options={animal:p.id,outfit,weapon,operator:p.unarmed?'horse':p.id,operatorOutfit:outfit==='red-hats'?'red-hats':'normal'};
-  const start=await page.evaluate(o=>review.start(o),options);assert.equal(start.models,2);assert.equal(start.painted,true);assert.equal(start.ap,24);assert.equal(start.fuel,3);
+  const start=await page.evaluate(o=>review.start(o),options);assert.equal(start.models,2);assert.equal(start.painted,true);assert.equal(start.ap,24);assert.equal(start.fuel,3);assert.equal(start.hp,0,'Direct spray must kill even a 1000 HP victim');
   await page.evaluate(()=>review.frame(860));await page.waitForFunction(()=>review.renderer.fire.sessions.get(review.b.id)?.effects);
-  await page.evaluate(()=>review.frame(900));const alive=await page.evaluate(()=>review.result());assert.deepEqual(alive.diagnostics,[]);assert.equal(alive.alive,true);assert.equal(alive.visible,true);assert.equal(alive.collapse,0);assert.equal(alive.drop,null);
+  await page.evaluate(()=>review.frame(900));const hit=await page.evaluate(()=>review.result());assert.deepEqual(hit.diagnostics,[]);assert.equal(hit.alive,false);assert.equal(hit.visible,true,'Death commits once; body remains visible during the fatal performance');assert.equal(hit.collapse,0);assert.equal(hit.drop,null);
   if(outfit==='red-hats')await page.screenshot({path:fileURLToPath(new URL(p.id+'-live-spray.png',out))});
-  const route=await page.evaluate(()=>review.panic());assert.ok(route?.length>1);await page.evaluate(()=>review.frame(3550));assert.deepEqual((await page.evaluate(()=>review.result())).diagnostics,[]);
   const save=await page.evaluate(()=>review.save());assert.equal(save.same,true);assert.equal(save.events,undefined);
-  const end=await page.evaluate(()=>review.extinguish());assert.equal(end.sessions,0);assert.equal(end.walking,true);
-  await page.evaluate(()=>review.fatal());await page.evaluate(()=>review.frame(10850));await page.waitForFunction(()=>review.renderer.fire.sessions.get(review.b.id)?.effects);await page.evaluate(()=>review.frame(10850));
+  await page.evaluate(()=>review.frame(1660));
   if(p.id==='hen')await page.screenshot({path:fileURLToPath(new URL(p.id+'-'+outfit+'-live-fall.png',out))});
-  await page.evaluate(()=>review.frame(15000));const ash=await page.evaluate(()=>review.result());assert.deepEqual(ash.diagnostics,[]);assert.equal(ash.ash,true);assert.equal(ash.visible,false);assert.equal(ash.alive,false);
-  cases.push({options,start,alive,route,save,ash});console.log(p.id+' '+outfit+' live pass');
+  await page.evaluate(()=>review.frame(6000));const ash=await page.evaluate(()=>review.result());assert.deepEqual(ash.diagnostics,[]);assert.equal(ash.ash,true);assert.equal(ash.visible,false);assert.equal(ash.alive,false);
+  cases.push({options,start,hit,save,ash});console.log(p.id+' '+outfit+' lethal spray pass');
  }
- await page.evaluate(()=>review.dispose());assert.deepEqual(errors,[]);fs.writeFileSync(new URL('review.json',out),JSON.stringify({cases,errors},null,2));console.log('Live roster: '+cases.length+' appearances; authored operators, actual cone damage, survivor panic, weapon restoration, save, fatal collapse and ash pass.');
+ await page.evaluate(()=>review.dispose());assert.deepEqual(errors,[]);fs.writeFileSync(new URL('review.json',out),JSON.stringify({cases,errors},null,2));console.log('Live roster: '+cases.length+' appearances; authored operators, guaranteed lethal cone, one AP/fuel charge, save, fatal collapse and ash pass.');
 }finally{await browser.close();fs.writeFileSync(new URL('browser-closed.json',out),JSON.stringify({identity,closedAt:new Date().toISOString()}));}
