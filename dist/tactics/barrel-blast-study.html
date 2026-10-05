@@ -1,0 +1,16 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Exploding barrel · Animal Factory</title><link rel="icon" href="data:,"><link rel="stylesheet" href="painted-fire-study.css"></head><body>
+<header><div><h1>Exploding barrel</h1><p>Painted rupture · flying lid · torn shell · burning ground</p></div><a href="../tactics-3d-gallery.html">Studies ↗</a></header>
+<main><section class="controls" aria-label="Barrel explosion controls">
+<label>Finish <select id="skin"><option value="oxide">Oxide red</option><option value="blue">Worn blue</option><option value="ochre">Ochre steel</option><option value="creamSteel">Cream steel</option></select></label>
+<label>Placement <select id="orientation"><option value="upright">Upright</option><option value="sideways">On its side</option></select></label>
+<button id="play">Pause</button><button id="restart">Restart</button><label class="scrub">Time <input id="time" type="range" min="0" max="5.4" value="0" step=".01"><output id="clock">0.00 s</output></label>
+<label>Focus <select id="focus"><option value="blast">Surrounding blast</option><option value="barrel">Barrel and debris</option></select></label>
+<label>View <select id="view"><option value="three">Three-quarter</option><option value="side">Side</option><option value="front">Front</option><option value="top">Above</option></select></label>
+<label>Scale <select id="scale"><option value="full">Fit</option><option value="game">Gameplay</option><option value="close">Close</option></select></label>
+<label>Ground <select id="scene"><option value="open">Open ground</option><option value="water">Water beside barrel</option></select></label>
+<label><input id="effects" type="checkbox" checked> Painted effects</label>
+</section><div id="viewport" aria-label="Barrel explosion animation"><div id="loading">Loading painted barrel…</div></div>
+<nav class="beats" aria-label="Key poses"><button data-time="0">Intact drum</button><button data-time=".6">Rupture</button><button data-time=".9">Outward blast</button><button data-time="1.25">Flying debris</button><button data-time="2.2">Burning ground</button><button data-time="4.9">Aftermath</button></nav>
+<p id="status" role="status"></p><p id="error" role="alert"></p>
+<footer>Same blast and ground-fire footprint as the flamethrower tanks. Four painted finishes, upright or sideways. Drag to orbit and scrub either way; turn effects off to inspect the lid and shell. Animation study: gameplay wiring is a separate step. The fire fades sooner here for the preview loop. <a href="tank-blast-study.html">Tank explosion study ↗</a></footer></main>
+<script type="module" src="barrel-blast-study.js"></script></body></html>
