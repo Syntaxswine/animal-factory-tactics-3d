@@ -119,6 +119,7 @@ Evidence reviewed: code, dense numerical support and continuity probes, reports,
 - [Full browser matrix](evidence/roster/browser-review.json)
 
 No files or processes were changed by the reviewer. Disposable builder capture browsers closed through their owning API. The previously retained preview keeps its original automatic expiry; no new unbounded server was started. No changes were made to the other agent's gameplay checkout.
+
 ## Canonical integration review — 2026-10-05 UTC
 
 Approved `7b94117` as a standalone full-roster fire animation study. This approval does not enable the separate live-battle integration branch.
@@ -128,3 +129,29 @@ The revised overlapping spray reads more coherently than the previous repeating 
 The main remaining visual request is a clearer hen collapse. At the settled collapse pose she remains mostly upright in a crouch before dissolving. A more visible loss of balance and lower chest/head would help sell the terminal reaction without rebuilding the rig. This is a polish follow-up for the study, not a reason to hold the rest of the roster.
 
 Validation: 78 fire/roster/paint-lifecycle tests and 40 related motion/paint/outfit tests passed. The 3D Pages build and asset validation passed. The build-script merge preserves the canonical ballistic module and missing-module checks while copying all new roster modules. Live-battle survivor reactions and terminal death handling need separate integration validation; the study always demonstrates the terminal sequence.
+
+## Hen collapse refinement: 9/10
+
+October 4, 2026 (America/New_York; October 5 UTC). Independent hostile review approves this focused study correction at **9/10**, with no blocking findings. Both original and Red Hat hens now buckle, tip sideways over a toe edge and settle onto a folded wing before the body dissolves. The grounded silhouette replaces the previous crouch. Character dimensions, the panic route and the approved spray remain unchanged.
+
+The first pass scored **8/10** because only the rigid apron hem touched the floor; calling that flank support hid a real gap. The corrected lower wing opens to catch the fall, then folds beneath the body. Actual wing skin reaches the floor and the apron remains clear. Feet explicitly release their planted contract during the roll. The support test now checks the identified surface, rather than assuming every fallen character must keep a foot planted.
+
+The sideways fall also exposed a detached blob shadow and an ash pile growing at the old foot position. The shadow now follows the pelvis ground projection. A pure historical sampler supplies smoke birth positions and the settled ash anchor without altering the live pose or logical route endpoint. This is a presentation offset for the lying body, not another movement step.
+
+Validation:
+
+- **85 fire/lifecycle tests passed**, including seven new hen regressions for real surface support on blocked/short/full routes, rotated headings and uniform raised floors; a side-resting pose before disappearance; continuous joints; reverse playback; complete rig restoration; and smoke/ash history. **40 related motion, paint and outfit tests passed**.
+- The reviewer independently reran **82 fire/motion tests**, all passing. The builder's 85 also include the three existing paint-load lifecycle tests.
+- **48 browser configurations passed** across two outfits, three route lengths, four views and two scales, with no page or console errors. Thirty-six effects-off keyframes plus additional painted breakup, ash and gameplay-size captures were generated.
+- Asset validation and the packaged 3D build passed. The capture browser closed via its owning API, and its exact process lifetime was confirmed exited. The retained preview preserves its original October 5, 1:17 a.m. Eastern automatic expiry.
+
+Evidence:
+
+- [Before buckling](evidence/hen-collapse/normal-three-2.56.png), [tipping](evidence/hen-collapse/normal-three-2.9.png), [wing catch](evidence/hen-collapse/normal-three-3.02.png), [settled side pose](evidence/hen-collapse/normal-three-3.18.png)
+- [Front contact and shadow](evidence/hen-collapse/normal-front-3.18.png), [Red Hat contact](evidence/hen-collapse/red-hats-front-3.18.png)
+- [Painted breakup](evidence/hen-collapse/normal-painted-front-3.6.png), [ash beneath the fallen body](evidence/hen-collapse/normal-painted-three-5.4.png), [Red Hat at gameplay size](evidence/hen-collapse/red-hats-painted-game-3.18.png)
+- [Browser report](evidence/hen-collapse/review.json)
+
+The reviewer inspected code, skin measurements, tests and still sequences; they did not independently watch continuous WebM playback. A normal-speed local capture is retained at `artifacts/painted-fire/hen-collapse/hen-motion.webm`. This approval remains for the animation study, not gameplay integration. No gameplay checkout or deployment branch was modified.
+
+Canonical follow-up review: `d1f20f4` resolves the upright-crouch concern recorded above. Independent browser inspection confirmed the buckle, sideways fall, folded-wing contact, lower head, ash alignment and restoration after reverse seeking, with original and Red Hats outfits checked. The 85 fire/lifecycle tests and 40 related motion/paint/outfit tests passed again, as did the 3D build and asset validation. Approved for the standalone study; live-battle integration remains a separate review.

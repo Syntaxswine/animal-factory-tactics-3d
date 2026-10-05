@@ -1,6 +1,6 @@
 # Painted fire: roster animation study
 
-October 5, 2026. Open `tactics/painted-fire-study.html` in a served build, or follow **Painted fire** in the 3D gallery. The architect approved the horse foundation and reported publishing it as `0473dde`. This extension fits the roster and equipment; it does not wire the terminal burn into combat.
+Updated October 4, 2026 (America/New_York). Open `tactics/painted-fire-study.html` in a served build, or follow **Painted fire** in the 3D gallery. The architect approved the horse foundation and reported publishing it as `0473dde`. This extension fits the roster and equipment; it does not wire the terminal burn into combat.
 
 ## Coverage
 
@@ -18,11 +18,11 @@ The viewer has separate target and operator selectors. Focus isolates the chosen
 
 Operators retain carry → brace → spray → trailing cutoff → recover. Feet stay planted and both hands remain on the projector anchors. The emission transform holds until the last flame departs at 1.58 seconds; recovery ends at 2.10 seconds. Pig poses account for their different reach. Pack placement accounts for body depth and the skunk's plume.
 
-Targets startle, travel through up to three supplied legal tiles, settle into support, dissolve under fire and leave grounded ash. The full three-tile run takes 1.62 seconds. Mammals use uneven catching steps, head/shoulder reactions, and protective, swatting and outward/downward gestures. Heavy equipment keeps two-hand support during travel; one-handed equipment leaves the other hand free. Unarmed mammals react with both hands. The hen uses her avian skeleton, shorter steps, wing reactions and a low folded-leg collapse.
+Targets startle, travel through up to three supplied legal tiles, settle into support, dissolve under fire and leave grounded ash. The full three-tile run takes 1.62 seconds. Mammals use uneven catching steps, head/shoulder reactions, and protective, swatting and outward/downward gestures. Heavy equipment keeps two-hand support during travel; one-handed equipment leaves the other hand free. Unarmed mammals react with both hands. The hen uses her avian skeleton, shorter steps and wing reactions. Her legs buckle, the body tips over the lower toe edge, and a wing catches the fall before folding beneath her resting flank. Feet release as the body rolls; the apron does not carry her weight. On a three-tile route she is settled on her side by 3.18 seconds, before breakup begins at 3.24 seconds.
 
 Pigs lean farther over a supporting hand instead of reaching through a clamped arm. Actual palm surfaces finish within 0.00036 tile of the floor. Other mammal palm clearances are approximately 0.0003–0.0013 tile. The HMG keeps its fitted closed glove after release and bears on that glove at a 0.001-tile clearance. Its cuff updates after the final arm transform. Authored contact offsets and elbow bend directions remain continuous across release, including the pigs' rifle grips.
 
-Long tails bend around their roots during collapse. Foot soles remain rigid while the upper pastern/cuff follows the shin. The hen's temporary rig restores original skeleton, parenting and skin weights on disposal.
+Long tails bend around their roots during collapse. Foot soles remain rigid while the upper pastern/cuff follows the shin. The hen fits her actual posed skin to the floor, including cap attachments. Her temporary rig restores its fall transform, original skeleton, parenting and skin weights on disposal.
 
 Equipment releases during collapse and falls at 9.81 world units/s² with a geometry-based floor limit. The flamethrower lance and fuel pack settle independently; the flexible hose follows their real sockets and rests on the floor. Each rigid prop's lowest vertex finishes 0.006 tile above ground. These are deterministic visual falls, not a general rigid-body simulation or newly created loot.
 
@@ -31,6 +31,8 @@ Equipment releases during collapse and falls at 9.81 world units/s² with a geom
 The same generated flame atlas, smoke atlas and ash decal supply the art. No character subdivisions or sculpt work were added. The spray now uses 48 overlapping strokes with varied birth times, lateral positions, aspect ratios, rotations and atlas phases over a faint clipped core. This addresses the architect's request to reduce repeated flame rows.
 
 The engulfing envelope derives regions from each mesh and follows its bones. Tail regions follow posed tail geometry. Head regions include caps, horns, long ears and the guide's brim. Eighteen charcoal-black billows retain their world-space birth positions and rise away from the moving body.
+
+For the hen's sideways fall, the shadow follows her pelvis ground projection. The optional `motion.groundPoint(time, route)` sampler supplies smoke's historical birth positions and the final ash position without changing the live skeleton. Ash stays beneath the resting body instead of appearing at the old foot position. This visual offset does not alter the supplied route or logical destination; a fallen silhouette may extend outside its tile.
 
 Bind-space soot and breakup cover the body, hats and fitted glove materials. Equipment is excluded. Fire outlasts complete body breakup, then decays toward ash. Reverse seeking restores the complete outfit. Character switching disposes owned meshes, skeletons, paints, caps, effect cards and textures. Partial outfit-load failures also dispose already-created projection targets and layers.
 
@@ -50,7 +52,8 @@ The terminal proposal differs from the existing turn-based burning rule. Gamepla
 
 ## Validation
 
-- `node --test tests/painted-fire.test.mjs tests/painted-fire-roster.test.mjs tests/animal-motion-paint-lifecycle.test.mjs`: **78 passed**, including dense loadout playback on blocked, one- and three-tile paths; actual sole and hand/glove support; fixed bone lengths; reverse seeks; independent tank/lance support and hose sockets; wrist/elbow continuity sampled one microsecond either side of release; and failed/late texture cleanup. Another **40 related motion, paint and outfit tests passed**.
+- `node --test tests/painted-fire.test.mjs tests/painted-fire-roster.test.mjs tests/animal-motion-paint-lifecycle.test.mjs tests/painted-fire-hen.test.mjs`: **85 passed**, including dense loadout playback on blocked, one- and three-tile paths; actual sole and hand/glove support; fixed bone lengths; reverse seeks; independent tank/lance support and hose sockets; wrist/elbow continuity sampled one microsecond either side of release; and failed/late texture cleanup. Seven hen regressions cover actual toe-to-wing support, side rest before disappearance, continuous/reversible poses, rig restoration and historical smoke/ash placement. Another **40 related motion, paint and outfit tests passed**.
+- Hen correction: **48 browser configurations** across both outfits, blocked/one-/three-tile paths, four views and two scales. Additional effects-off contact renders and effects-on breakup/ash renders accompany the [hen report](evidence/hen-collapse/review.json). No browser errors.
 - `node tools/check-painted-fire-roster.mjs STUDY_URL`: 289 target loadouts and 22 operators, selected effects-on/off renders, repeated variant switching and GPU resource stability. Set `PLAYWRIGHT_PATH` to an installed Playwright package. `--quick` runs only targeted visual and resource checks.
 - `node tools/check-painted-fire.mjs STUDY_URL`: 72 view/scale/obstruction/route configurations, reduced-motion startup and timestamped normal-speed playback captures.
 - `node tools/check-assets.mjs` and `node tools/build-tactics-3d.mjs`: asset validation and packaged module closure.
@@ -63,6 +66,7 @@ Complete local captures, tests and helper receipts live under `artifacts/painted
 - [x] Fit all 25 character/outfit variants and supported equipment.
 - [x] Fit standing flamethrower operation for the 22 armed variants.
 - [x] Refine spray overlap and retain incoming wall/door clipping.
+- [x] Replace the hen's crouch with a grounded sideways collapse; align shadow, smoke and ash.
 - [x] Independent roster review **9/10**, with no blocking findings; see REVIEW.md.
 - [ ] Agree on terminal events, interruptions, tank explosions and inventory/loot behavior.
 - [ ] Adapt actual game transforms, visibility, aim, stances and corner/elevation routes.

@@ -24,7 +24,13 @@ for(const p of profiles){
   for(const id of p.unarmed?['hands']:Object.keys(WEAPON_MODELS)){const a=setup(p,id);try{
    const lengths=a.worker.bones.map(b=>b.position.length());
    for(const n of [0,1,3]){const r=route(n),times=Array.from({length:109},(_,i)=>i*.05);let previous;
-    for(const t of times){const d=a.motion.burn(t,r);assert.ok(d.gripError<1e-7,p.id+' '+id+' grips at '+t);assert.ok([-1,1].some(s=>d.feet[s].planted));
+    for(const t of times){const d=a.motion.burn(t,r);assert.ok(d.gripError<1e-7,p.id+' '+id+' grips at '+t);
+     if(![-1,1].some(s=>d.feet[s].planted)){
+      assert.equal(p.id,'hen','only the hen transfers away from foot support');
+      assert.ok(['toe edge','wing','flank'].includes(d.support?.kind),'missing physical support');
+      const part=a.worker.parts.find(o=>o.name===d.support.part);assert.ok(part,'support must identify actual skin');
+      assert.ok(Math.abs(minY([part])-d.state.point.y)<.003,'claimed support is above the floor');
+     }
      for(const side of [-1,1]){const f=d.feet[side];if(previous?.feet[side].planted&&f.planted&&f.worldDistance===previous.feet[side].worldDistance)assert.ok(V().fromArray(f.ankle).distanceTo(V().fromArray(previous.feet[side].ankle))<1e-7,'planted foot slid');}previous=d;
      a.worker.bones.forEach((b,i)=>{if(!['hips','pelvis'].includes(b.name))assert.ok(Math.abs(b.position.length()-lengths[i])<1e-7,'bone length changed '+b.name);});
     }

@@ -64,7 +64,7 @@ export async function createPaintedFireEffects(scene,loader,worker){
   }
  }
  return {group,ash,
-  update(time,{shape,muzzle,camera,route,body=true,flame=true,visible=true}){
+  update(time,{shape,muzzle,camera,route,body=true,flame=true,visible=true,groundPoint}){
    const f=fireState(time),s=burnState(time,route);group.visible=visible;updateSheets(shape,muzzle);
    for(const sheet of sheets){sheet.visible=flame&&time>=FIRE_TIME.ignite&&time<FIRE_TIME.cutoff+FIRE_TIME.travel;Object.assign(sheet.material.uniforms.clock,{value:time});sheet.material.uniforms.opacity.value=.17;sheet.material.uniforms.head.value=f.head*shape.range;sheet.material.uniforms.tail.value=time<FIRE_TIME.cutoff?-10:f.tail*shape.range;}
    for(let i=0;i<plumes.length;i++){const m=plumes[i],age=time-m.userData.birth,d=age/FIRE_TIME.travel*shape.range,bearing=shape.heading+m.userData.lane*shape.halfAngle;
@@ -83,11 +83,12 @@ export async function createPaintedFireEffects(scene,loader,worker){
    for(let i=0;i<smokes.length;i++){
     const m=smokes[i],birth=FIRE_TIME.hit+i*.16,age=time-birth,bs=burnState(birth,route);
     m.visible=body&&age>=0&&age<2&&bs.dissolve<1;if(!m.visible)continue;
-    m.position.set(bs.point.x-.18*age,bs.point.y+1.45-1.05*bs.collapse+age*.75,bs.point.z+.10*Math.sin(i*1.7)*age);
+    const origin=groundPoint?groundPoint(birth,route):bs.point;
+    m.position.set(origin.x-.18*age,origin.y+1.45-1.05*bs.collapse+age*.75,origin.z+.10*Math.sin(i*1.7)*age);
     m.quaternion.copy(camera.quaternion);m.scale.set(.82+age*.52,1.1+age*.74,1);
     m.material.uniforms.opacity.value=.88*smooth(age/.12)*(1-smooth((age-1.1)/.9));m.material.uniforms.clock.value=time;
    }
-   const dest=route.points.at(-1);ash.visible=body&&s.ash>0;ash.position.set(dest.x,dest.y,dest.z);ashMaterial.opacity=s.ash;
+   const dest=groundPoint?groundPoint(FIRE_TIME.duration,route):route.points.at(-1);ash.visible=body&&s.ash>0;ash.position.set(dest.x,dest.y,dest.z);ashMaterial.opacity=s.ash;
    return {triangles:triangles+(wraps.length+plumes.length+smokes.length)*2+240,activeCards:wraps.filter(m=>m.visible).length,activePlumes:plumes.filter(m=>m.visible).length,ashOpacity:s.ash};
   },
   dispose(){group.removeFromParent();plane.dispose();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());}

@@ -50,10 +50,10 @@ try{
   const direction={three:V(5,5,8),side:V(0,2.2,10),front:V(10,2.2,0),rear:V(-10,2.2,0)}[$('view').value];direction.applyAxisAngle(V(0,1,0),orbit);direction.y+=elevation;camera.position.copy(centre).add(direction);camera.lookAt(centre);
   const scale=$('scale').value,ppu=scale==='game'?58:scale==='close'?Math.min(260,h/2.6):Math.min(h/(focus==='both'?6:2.7),w/(focus==='both'?13:4));camera.left=-w/ppu/2;camera.right=w/ppu/2;camera.top=h/ppu/2;camera.bottom=-h/ppu/2;camera.updateProjectionMatrix();
   shooter.worker.root.visible=focus!=='target';target.worker.root.visible=focus!=='shooter';shadows[0].visible=focus!=='target';shadows[1].visible=focus!=='shooter';
-  const effectState=effects.update(time,{shape,muzzle:V(...a.muzzle),camera,route,body:!blocked&&focus!=='shooter',flame:focus!=='target',visible:$('effects').checked});
+  const effectState=effects.update(time,{shape,muzzle:V(...a.muzzle),camera,route,body:!blocked&&focus!=='shooter',flame:focus!=='target',visible:$('effects').checked,groundPoint:target.motion.groundPoint});
   // Bind-space breakup remains stable while the body moves. The settled pose
   // dissolves beneath the flame envelope, without a flat slice or bone scaling.
-  target.dissolve.value=blocked?0:b.state.dissolve;shadows[0].position.x=0;shadows[1].position.x=b.state.point.x;shadows[1].material.opacity=.3*(1-b.state.dissolve);
+  const ground=b.groundPoint||b.state.point;target.dissolve.value=blocked?0:b.state.dissolve;shadows[0].position.x=0;shadows[1].position.set(ground.x,ground.y+.002,ground.z);shadows[1].material.opacity=.3*(1-b.state.dissolve);
   $('time').value=time;$('clock').textContent=time.toFixed(2)+' s';$('play').textContent=playing?'Pause':'Play';
   $('status').textContent=`${a.state.phase} · ${blocked?'Protected by wall':b.state.phase} · ${blocked?'No hit':b.state.distance.toFixed(2)+' / '+route.length+' tiles'} · ${Math.round(ppu)} px/tile`;
   renderer.render(scene,camera);window.fireStudyState={time,playing,shooter:a,target:b,effects:effectState,selection:{operator:shooter.selection.animal,operatorOutfit:shooter.selection.outfit,animal:target.selection.animal,outfit:target.selection.outfit,weapon:target.selection.weapon},route,scene:$('scene').value,geometryCount:renderer.info.memory.geometries,textureCount:renderer.info.memory.textures};
