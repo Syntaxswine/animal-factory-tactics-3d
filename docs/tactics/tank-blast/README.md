@@ -1,5 +1,15 @@
 # Worn tank explosion study
 
+## Integration coordination — October 5, 2026
+
+The pending live tank (`9c3ab71`) and barrel (`2d39081`) integrations are on the coding branch, `work/editor-3d`. The [detailed coding handoff](https://github.com/Syntaxswine/animal-factory-tactics-3d/blob/6914d3ca430e5b797bd523822d47e1c284475f67/docs/tactics/EXPLOSIVE-BARRELS.md#integration-review--october-5-2026) records 156 passing focused tests and a successful Quick Fight barrel detonation. It also records the release hold: the explosive barrel needs a validated procedural entry in the asset audit, seven conflicts with canonical need reconciliation, and live barrels still emit the small tank fragments.
+
+The [approved barrel study on canonical](https://github.com/Syntaxswine/animal-factory-tactics-3d/blob/6b60606ccdc6070a1c2408b2f6d2a52025b62cd1/docs/tactics/barrel-blast/README.md) supplies the flying lid, base and torn drum panels. Keep that breakup as the visual baseline, reuse the shared painted tank blast and simulation-supplied fire cells, and preserve the actual explosive-red drum/flammable label when connecting it to gameplay. The coding branch owns discharge timing, world/support heights, visibility, cleanup and release reconciliation. Its live presenter must replace the small tank fragments with the barrel's authored debris while retaining the authoritative damage and fire duration.
+
+These documentation notes are present on both branches. The live integration commits remain unpublished to `main` at the time of this handoff; a study's visual approval does not mean its gameplay hookup has shipped.
+
+## Study record
+
 October 4, 2026. A separate fatal-event presentation for a flamethrower fuel pack rupturing while still worn. The wearer reacts and collapses on the source tile while a painted blast spreads into surrounding ground fire and black smoke.
 
 Open `tactics/tank-blast-study.html` from the study server or packaged gallery. Select any of the **11 armed mammals in either outfit: 22 combinations**. The hen and donkey guide retain their established unarmed roles and are not tank wearers. Character and weapon dimensions are unchanged.
