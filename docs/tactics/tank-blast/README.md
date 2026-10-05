@@ -22,3 +22,15 @@ The [painted burst atlas prompt](PROMPT.md) records the art direction. Existing 
 The fixture at `dist/tactics/fixtures/tank-blast-contract.json` captures real `attack()` results and their source-engine hash. Regenerate it with `node tools/capture-tank-contract.mjs CHECKOUT`; the tool reads the named checkout without editing it. Open-ground and water fixtures contain 81 and 66 fire cells respectively. Live playback uses the actual encounter's cells, not these canned fixtures.
 
 The original study was limited to a standing character on flat ground at the origin. The live adapter supplies world transforms, elevated support, event timing, visibility, save persistence, nearby casualty outcomes and interruption cleanup. The detailed body motion remains standing-only; unsupported postures retain the normal casualty presentation.
+
+## Approved study evidence
+
+- **16 tank tests**: all 11 mammals, worn origin, equipment destruction, fixed feet, grounded collapse, no duplicate loot, reversible playback, grip continuity, exact fire mask, fragment contact and partial-load cleanup.
+- **85 existing fire/lifecycle tests** and **40 related motion/paint/outfit tests** passed: **141 total**.
+- **352 browser configurations** across 22 wearers, two ground fixtures, four views and two scales. Twelve forward/reverse timestamps per configuration; no errors. Five identical reload cycles had stable GPU resource counts.
+- Targeted final polish checks: close rupture and late breakup renders, exact GPU comparison of a fully dissolved actor against a hidden actor, reduced-motion startup and unavailable-contract reporting. See [review evidence](REVIEW.md).
+- Asset validation and the 3D packaging build passed. The package includes the viewer, modules, fixture and atlas.
+
+The independent hostile review passed **9/10** for this bounded study. Its scope and evidence are in [REVIEW.md](REVIEW.md).
+
+The [looping horse GIF](evidence/tank-blast-study.gif) preserves the original study preview. The shared `painted-blast-effects.js` now serves that study, the barrel study and live gameplay; tank callers retain their compatibility entry point and world/floor/visibility/texture options.

@@ -15,4 +15,4 @@ function capture(water=false){
  throw Error('No tank event captured');
 }
 const engine=fs.readFileSync(path.join(source,'dist/tactics/core/engine.js'));
-fs.writeFileSync(new URL('../dist/tactics/fixtures/tank-blast-contract.json',import.meta.url),JSON.stringify({provenance:{source:'Incoming gameplay core/engine.js tank explosion',sha256:createHash('sha256').update(engine).digest('hex'),captured:'2026-10-04 America/New_York',note:'Actual event, fire cells, equipment removal and casualties from attack(); no art-defined damage radius.'},open:capture(),water:capture(true)},null,2)+'\n');
+fs.writeFileSync(new URL('../dist/tactics/fixtures/tank-blast-contract.json',import.meta.url),JSON.stringify({provenance:{source:'Incoming gameplay core/engine.js tank explosion',sha256:createHash('sha256').update(engine).digest('hex'),captured:new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())+' America/New_York',note:'Actual event, fire cells, equipment removal and casualties from attack(); no art-defined damage radius.'},open:capture(),water:capture(true)},null,2)+'\n');

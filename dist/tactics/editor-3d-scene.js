@@ -11,6 +11,7 @@ import {environmentVisuals} from './environment-visuals.js';
 import {environmentGeometries} from './environment-geometry.js';
 import {surfacePixels,materialKind} from './hybrid-materials.js';
 import {BattleEnvironment,PAINTED_PROP_FORMS,cargoPlacements,cargoFinish} from './battle-environment.js';
+import {toWorld} from './hybrid-world.js';
 import {ANIMAL_MOTION_CATALOG} from './animal-motion-catalog.js';
 import {createRedHatCap} from './red-hat-model.js';
 import {createAnimalPaint} from './animal-motion-paint.js';
@@ -90,7 +91,7 @@ export class InspectionScene {
   if(this.cargo.library)for(const p of cargoPlacements(source)){
    const z=p.z||0;if(z>level)continue;const {skin,label,id:key}=cargoFinish(p);
    if(!this.cargo.prototypes.has(key))this.cargo.prototypes.set(key,this.cargo.library.build(p.form,skin,label));
-   matrix.compose(position.set(p.x,z*D.floorSpacing,p.y),q.setFromAxisAngle(new T.Vector3(0,1,0),p.rotated?-Math.PI/2:0),scale.set(1,1,1));
+   matrix.compose(position.fromArray(toWorld(p)),q.setFromAxisAngle(new T.Vector3(0,1,0),p.rotated?-Math.PI/2:0),scale.set(1,1,1));
    this.cargo.prototypes.get(key).root.traverse(part=>{if(part.isMesh)add(part.geometry,part.material,new T.Matrix4().multiplyMatrices(matrix,part.matrixWorld),z,p.x,p.y);});
   }
   const prior=new Map(this.scenery.children.map(m=>[m.userData.chunk,m]));

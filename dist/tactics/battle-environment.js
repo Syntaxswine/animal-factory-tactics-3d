@@ -1,7 +1,9 @@
 import * as T from './vendor/three.module.js';
 import {createCargoLibrary,CARGO_ATLAS} from './painted-cargo.js';
 import {PAINTED_ATLAS} from './painted-environment-scene.js';
-import {DIMENSIONS} from './hybrid-world.js';
+import {toWorld} from './hybrid-world.js';
+import {cliffSupportAt} from './cliff-support.js';
+import {rampSupportAt} from './cliff-ramps.js';
 import {terrainKnown} from './battle-visibility.js';
 import {EXPLOSIVE_BARREL,isExplosiveBarrel} from './explosive-barrels.js';
 
@@ -14,7 +16,7 @@ export function cargoFinish(p){
  return {skin,label:'none',id:p.form+':'+skin};
 }
 export function cargoPlacements(map){
- const entries=map.props.filter(p=>PAINTED_PROP_FORMS[p.kind]).map(p=>({...p,form:PAINTED_PROP_FORMS[p.kind]}));
+ const entries=map.props.filter(p=>PAINTED_PROP_FORMS[p.kind]).map(p=>({...p,form:PAINTED_PROP_FORMS[p.kind],...(isExplosiveBarrel(p)?{cliffSupport:rampSupportAt(map,p)||cliffSupportAt(map,p)}:{})}));
  const occupied=new Set(entries.map(p=>`${p.x},${p.y},${p.z||0}`));
  const add=(x,y,z,t)=>{if(t==='crate'&&!occupied.has(`${x},${y},${z}`))entries.push({x,y,z,form:'crate-square'});};
  (map.map||map.terrain).forEach((row,y)=>row.forEach((t,x)=>add(x,y,0,t)));
@@ -41,7 +43,7 @@ export class BattleEnvironment {
    if(z>level||!terrainKnown(map,key))continue;
    const {skin,label,id}=cargoFinish(p);
    if(!this.prototypes.has(id))this.prototypes.set(id,this.library.build(p.form,skin,label));
-   const prototype=this.prototypes.get(id);rotation.setFromAxisAngle(new T.Vector3(0,1,0),p.rotated?-Math.PI/2:0);translation.set(p.x,z*DIMENSIONS.floorSpacing,p.y);matrix.compose(translation,rotation,scale);
+   const prototype=this.prototypes.get(id);rotation.setFromAxisAngle(new T.Vector3(0,1,0),p.rotated?-Math.PI/2:0);translation.fromArray(toWorld(p));matrix.compose(translation,rotation,scale);
    prototype.root.traverse(part=>{
     if(!part.isMesh)return;
     const key=`${Math.floor(p.x/16)},${Math.floor(p.y/16)}:${part.geometry.uuid}:${part.material.uuid}`;

@@ -1,8 +1,8 @@
 {
   "provenance": {
     "source": "Incoming gameplay core/engine.js tank explosion",
-    "sha256": "e27bf69c473d7a691ea7f1cce00287968ede710ee805511f593a1d14322bfb1a",
-    "captured": "2026-10-04 America/New_York",
+    "sha256": "0a74727ee6323de282b6436efe0cc1ebf49c4e96a450130de99a915e77bb6740",
+    "captured": "2026-10-05 America/New_York",
     "note": "Actual event, fire cells, equipment removal and casualties from attack(); no art-defined damage radius."
   },
   "open": {
@@ -18,7 +18,7 @@
       "h": 0.8,
       "kind": "tank",
       "unitId": 4,
-      "fireSequence": 2,
+      "fireSequence": 3,
       "burns": [
         1,
         2,
@@ -546,7 +546,7 @@
       "h": 0.8,
       "kind": "tank",
       "unitId": 4,
-      "fireSequence": 2,
+      "fireSequence": 3,
       "burns": [
         1,
         2,

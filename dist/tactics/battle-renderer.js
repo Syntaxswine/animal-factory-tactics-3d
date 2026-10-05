@@ -144,7 +144,9 @@ export class BattleRenderer extends HybridRenderer {
   this.state=state;this.presentationLevel=args[3];this.captureCombat(state);this.shotEffects.hide();this.flameEffects.hide();
   const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.traversal.active?.event.unitId===u.id?{...u,presentationLevel:args[3]}:this.fire.display(this.combat.display(u)));
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
-  return super.draw(ctx,{...state,terrain:state.map,units,props:[...state.props,...this.tankEffects.pendingProps()]},...args);
+  // Visibility was resolved from committed units before animation changed HP
+  // or position. Do not hide a visible casualty during its pre-impact pose.
+  return super.draw(ctx,{...state,terrain:state.map,units,props:[...state.props,...this.tankEffects.pendingProps()]},...args.slice(0,4),{...args[4],visibilityFiltered:true});
  }
  captureCombat(state){
   const now=this.presentationNow??performance.now(),reduced=!!this.reducedMotion?.matches;
@@ -163,9 +165,10 @@ export class BattleRenderer extends HybridRenderer {
  displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);if(this.fire.entries.has(unit.id))return this.fire.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){
   this.generation++;this.wallXray.dispose();
-  this.loot.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();this.paintedEnvironment.dispose();
+  this.loot.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();
   this.motion.clear();
   this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();this.fire.dispose();this.tankEffects.dispose();
+  this.paintedEnvironment.dispose();
   for(const {worker,paint,root,equipment,locomotion,cap,draw}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();
  }

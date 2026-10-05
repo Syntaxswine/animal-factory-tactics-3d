@@ -1,7 +1,7 @@
 import fs from 'node:fs';import {createRequire} from 'node:module';import {fileURLToPath} from 'node:url';import {execFileSync} from 'node:child_process';
 import {ANIMAL_MOTION_CATALOG as profiles} from '../dist/tactics/animal-motion-catalog.js';import {WEAPON_MODELS} from '../dist/tactics/weapon-models.js';
 const {chromium}=createRequire(import.meta.url)(process.env.PLAYWRIGHT_PATH||'playwright'),dir=new URL('../artifacts/painted-fire/roster/',import.meta.url);fs.mkdirSync(dir,{recursive:true});
-const quick=process.argv.includes('--quick'),url=process.argv.find(a=>a.startsWith('http'))||'http://127.0.0.1:4364/tactics/painted-fire-study.html';
+const quick=process.argv.includes('--quick'),url=process.argv.find(a=>a.startsWith('http'))||'http://127.0.0.1:4473/study/tactics/painted-fire-study.html';
 const browser=await chromium.launch({channel:'msedge',headless:true}),errors=[],cases=[],captures=[];let identity;
 try{
  const cdp=await browser.newBrowserCDPSession(),info=await cdp.send('SystemInfo.getProcessInfo'),pid=info.processInfo.find(p=>p.type==='browser').id;

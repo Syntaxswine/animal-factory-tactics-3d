@@ -1,5 +1,17 @@
 # Explosive barrels — 3D integration
 
+## Builder reconciliation — October 5, 2026
+
+The builder incorporates canonical `6b60606` and addresses the three review items below. Canonical publication remains the architect's decision.
+
+- The asset audit retains the manifest comparison and canonical wood/trellis checks, and validates the explosive barrel's cargo form, red shader finish, two painted flammable labels and atlas dependencies. The authored `Factory-test.json` and packaged Quick Fight map both include the same explosive drum.
+- Tank and barrel callers share `painted-blast-effects.js`. The tank compatibility exports retain world coordinates, support heights, fog masks and borrowed texture ownership. The merge also preserves pre-impact casualty visibility, live tank route arguments, the regenerated rules fixture and deployment module-closure checks.
+- Accepted barrel receipts drive `createBarrelBlastMotion()` at the actual discharge, position, rotation and support height. Its lid, base and six torn panels retain the red finish and flammable labels. Barrels emit no duplicate small tank fragments. Debris and its shadows follow visibility and resource cleanup; the cargo library remains owned by the environment. The simulation's detonation, damage, fire cells and AP/ammunition are unchanged.
+
+`tools/check-explosive-barrels.mjs` exercises firing through the real UI, labelled breakup, quicksave/quickload, restart and the editor. `tools/check-barrel-blast.mjs` covers 16 study configurations, reverse seeking, stable resources and live roof/cliff placement and fog retirement. `tools/check-battle-tanks.mjs` retains the 26 live wearer/terrain configurations. Browser helpers close in `finally`; local captures and cleanup receipts are under `artifacts/`, outside the commit.
+
+Verification completed: `npm run check` passes all **1,798 tests** and the asset audit; pinned-core synchronization and the Pages build/module closure pass. The live barrel UI/save/editor check, all 16 barrel-study configurations, the roof/cliff/fog checks and all 26 tank-browser configurations pass with no browser errors. Review browsers have closed and their recorded process lifetimes are verified exited. The retained preview keeps its existing automatic shutdown deadline.
+
 ## Integration review — October 5, 2026
 
 Reviewed `2d39081` (barrels) and its parent `9c3ab71` (worn tanks) against canonical `main` at `6b60606`. Both gameplay commits are on `work/editor-3d`; neither is on canonical or GitHub Pages at this review. Release remains held for the items below. These notes record findings and do not change that approval status.
@@ -41,7 +53,7 @@ Hovering its actual mesh gives a red crosshair when the selected merc has a clea
 
 Tanks and barrels now share `fuel-blast.js`: the existing lethal 3×3 centre, five-tile ignition radius, three-round dry-ground fire and elevation rules. This preserves the tank's current area rules, including its lack of wall clipping within the blast itself. Bullets, shotgun pellets, exposed grenade/RPG blast damage and scenery-clipped flamethrower spray can trigger barrels. Fuel blasts trigger other explosive barrels within their radius. Each barrel is removed before the chain expands, so overlapping hits cannot detonate it twice. Normal casualty, panic, loot and AP/ammunition handling remain authoritative in the engine.
 
-The tank effect renders barrel bursts and debris at the drum centre. The drum and newly created fire wait for the triggering rifle/flame discharge; presentation never deals damage. Saves retain removed props, casualties and fire, while discarding transient animation receipts. Loading cannot replay an explosion. Fog, floor switches, reduced motion and disposal retire transient effects.
+The shared blast effect renders the burst at the drum centre; the approved barrel motion supplies its own lid, base and torn shell. The drum and newly created fire wait for the triggering rifle/flame discharge; presentation never deals damage. Saves retain removed props, casualties and fire, while discarding transient animation receipts. Loading cannot replay an explosion. Fog, floor switches, reduced motion and disposal retire transient effects.
 
 Editor placement uses the existing undo/redo, map export/import, block and playtest paths. No additional per-barrel identity or save schema is required. Projectile cylinders match the drum radius and height instead of filling its entire tile. `tools/core-barrel-adapter.mjs` applies these changes after the existing flame adapter; `core/` remains generated from the pinned upstream revision.
 

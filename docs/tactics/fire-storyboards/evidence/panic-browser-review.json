@@ -1,0 +1,626 @@
+{
+  "configurations": 72,
+  "errors": [],
+  "observations": [
+    {
+      "clip": "motion",
+      "time": 0.1832999999999993,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "motion",
+      "time": 0.44999999999999996,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "motion",
+      "time": 0.6166999999999998,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "motion",
+      "time": 0.8832999999999995,
+      "distance": 0,
+      "phase": "Engulfed"
+    },
+    {
+      "clip": "motion",
+      "time": 1.0500000000000005,
+      "distance": 0.03961681541318826,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "motion",
+      "time": 1.3166000000000002,
+      "distance": 0.41099865042027284,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "motion",
+      "time": 1.4832999999999998,
+      "distance": 0.7859383237692421,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "motion",
+      "time": 1.7499000000000005,
+      "distance": 1.4997222222236346,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "motion",
+      "time": 1.9166000000000005,
+      "distance": 1.956252016268976,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "motion",
+      "time": 2.1832999999999996,
+      "distance": 2.5888030787467455,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "motion",
+      "time": 2.3498999999999994,
+      "distance": 2.861709698726198,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "motion",
+      "time": 2.616699999999999,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "motion",
+      "time": 2.766599999999998,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "motion",
+      "time": 3.049999999999998,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "motion",
+      "time": 3.2166999999999972,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "motion",
+      "time": 3.483399999999997,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "motion",
+      "time": 3.649999999999997,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "motion",
+      "time": 3.9165999999999968,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "motion",
+      "time": 4.083299999999996,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "motion",
+      "time": 4.349899999999999,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "motion",
+      "time": 4.516699999999999,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "motion",
+      "time": 4.783300000000002,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "motion",
+      "time": 4.9500000000000055,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "motion",
+      "time": 5.216700000000008,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "motion",
+      "time": 5.383300000000011,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "motion",
+      "time": 0.25,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "motion",
+      "time": 0.40000000000000013,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "motion",
+      "time": 0.6832999999999997,
+      "distance": 0,
+      "phase": "Engulfed"
+    },
+    {
+      "clip": "motion",
+      "time": 0.8500000000000004,
+      "distance": 0,
+      "phase": "Engulfed"
+    },
+    {
+      "clip": "motion",
+      "time": 1.1166999999999994,
+      "distance": 0.09928835661484459,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "motion",
+      "time": 1.2832999999999999,
+      "distance": 0.3470674058310328,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "motion",
+      "time": 1.550000000000001,
+      "distance": 0.9557345029834003,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "motion",
+      "time": 1.7167,
+      "distance": 1.4075521121399166,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "motion",
+      "time": 1.9833000000000005,
+      "distance": 2.1301350431604837,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 0.16670000000000074,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "painted",
+      "time": 0.4333999999999998,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "painted",
+      "time": 0.6000000000000003,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "painted",
+      "time": 0.8834000000000002,
+      "distance": 0,
+      "phase": "Engulfed"
+    },
+    {
+      "clip": "painted",
+      "time": 1.0501000000000011,
+      "distance": 0.03968716800030563,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 1.3334000000000006,
+      "distance": 0.4448162631825556,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 1.500000000000001,
+      "distance": 0.8276064511394521,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 1.783400000000001,
+      "distance": 1.5927251947478673,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 1.9500000000000015,
+      "distance": 2.0442654970166054,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 2.2334000000000005,
+      "distance": 2.6833638931170163,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 2.4000000000000004,
+      "distance": 2.917989014773042,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 2.683399999999999,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "painted",
+      "time": 2.850099999999999,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "painted",
+      "time": 3.1333999999999973,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "painted",
+      "time": 3.3000999999999974,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "painted",
+      "time": 3.5833999999999957,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "painted",
+      "time": 3.7499999999999956,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "painted",
+      "time": 4.033399999999995,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "painted",
+      "time": 4.200099999999997,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "painted",
+      "time": 4.466699999999998,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "painted",
+      "time": 4.6334,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "painted",
+      "time": 4.900100000000004,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "painted",
+      "time": 5.050100000000006,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "painted",
+      "time": 5.333400000000009,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "painted",
+      "time": 0.10009999999999855,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "painted",
+      "time": 0.3666999999999971,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "painted",
+      "time": 0.5333999999999978,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "painted",
+      "time": 0.8166999999999967,
+      "distance": 0,
+      "phase": "Engulfed"
+    },
+    {
+      "clip": "painted",
+      "time": 0.9833999999999972,
+      "distance": 0.0063440310815303345,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 1.2666999999999973,
+      "distance": 0.31681497222221733,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 1.4333999999999987,
+      "distance": 0.6653412113894079,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 1.700000000000001,
+      "distance": 1.3612875182757846,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 1.8666999999999987,
+      "distance": 1.8219237208885806,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "painted",
+      "time": 2.1500000000000017,
+      "distance": 2.5207906427994855,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "gameplay",
+      "time": 0.1666999999999971,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "gameplay",
+      "time": 0.43329999999999924,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "gameplay",
+      "time": 0.6000999999999984,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "gameplay",
+      "time": 0.8666999999999966,
+      "distance": 0,
+      "phase": "Engulfed"
+    },
+    {
+      "clip": "gameplay",
+      "time": 1.0333999999999972,
+      "distance": 0.02876632160860585,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "gameplay",
+      "time": 1.3166999999999973,
+      "distance": 0.4111969212532476,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "gameplay",
+      "time": 1.4833999999999985,
+      "distance": 0.7861859984871286,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "gameplay",
+      "time": 1.7500000000000018,
+      "distance": 1.5000000000000044,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "gameplay",
+      "time": 1.916699999999999,
+      "distance": 1.9565180359207295,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "gameplay",
+      "time": 2.1834000000000002,
+      "distance": 2.5890013495797275,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "gameplay",
+      "time": 2.3500000000000023,
+      "distance": 2.861835086114924,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "gameplay",
+      "time": 2.616699999999999,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "gameplay",
+      "time": 2.783399999999999,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "gameplay",
+      "time": 3.0666999999999978,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "gameplay",
+      "time": 3.233399999999998,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "gameplay",
+      "time": 3.5167999999999986,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "gameplay",
+      "time": 3.6833999999999967,
+      "distance": 3,
+      "phase": "Collapse"
+    },
+    {
+      "clip": "gameplay",
+      "time": 3.9500999999999964,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "gameplay",
+      "time": 4.116799999999997,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "gameplay",
+      "time": 4.4,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "gameplay",
+      "time": 4.5667,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "gameplay",
+      "time": 4.833400000000003,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "gameplay",
+      "time": 5.000100000000006,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "gameplay",
+      "time": 5.266700000000007,
+      "distance": 3,
+      "phase": "Ash"
+    },
+    {
+      "clip": "gameplay",
+      "time": 0.033299999999999275,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "gameplay",
+      "time": 0.3,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "gameplay",
+      "time": 0.46670000000000067,
+      "distance": 0,
+      "phase": "Waiting"
+    },
+    {
+      "clip": "gameplay",
+      "time": 0.733299999999999,
+      "distance": 0,
+      "phase": "Engulfed"
+    },
+    {
+      "clip": "gameplay",
+      "time": 0.916599999999998,
+      "distance": 0,
+      "phase": "Engulfed"
+    },
+    {
+      "clip": "gameplay",
+      "time": 1.1999000000000015,
+      "distance": 0.206870475510454,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "gameplay",
+      "time": 1.366599999999999,
+      "distance": 0.5145357777777754,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "gameplay",
+      "time": 1.6333000000000004,
+      "distance": 1.178076279111417,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "gameplay",
+      "time": 1.816700000000002,
+      "distance": 1.684858999922386,
+      "phase": "Panic run"
+    },
+    {
+      "clip": "gameplay",
+      "time": 2.0832000000000024,
+      "distance": 2.373349463485133,
+      "phase": "Panic run"
+    }
+  ],
+  "initial": {
+    "geometry": 74,
+    "texture": 15
+  },
+  "final": {
+    "geometry": 74,
+    "texture": 15
+  }
+}

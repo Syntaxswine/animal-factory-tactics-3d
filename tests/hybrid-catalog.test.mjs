@@ -8,7 +8,25 @@ import {buildWorld,traceWorld,DIMENSIONS} from '../dist/tactics/hybrid-world.js'
 import {createWorld,currentMap,travel} from '../dist/tactics/world.js';
 import {squad,guards,refresh} from '../dist/tactics/engine.js';
 test('catalog silhouettes are finite, distinguish open containers and retain structure openings',()=>{
- for(const [kind,rule]of Object.entries(PROPS)){if(rule.groundLayer)continue;let parts;if(kind.startsWith('ramp-')||kind.startsWith('rampbank-')){const map={terrain:[['yard']],props:[{kind,x:0,y:0,z:0}],edges:{}},world=buildWorld(map);parts=environmentVisuals(world,map).filter(p=>p.kind==='ramp'||p.kind==='ramp-bank');assert.equal(parts.length,kind.startsWith('ramp-')?2:1,kind);const geometries=environmentGeometries();try{for(const p of parts)assert(geometries[p.shape],kind);}finally{Object.values(geometries).forEach(g=>g.dispose());}assert(world.boxes.filter(b=>b.source.prop).every(b=>!b.blocksShot&&!b.blocksSight));}else parts=propParts(kind,rule.w,rule.h,rule.tall?2:.8);assert.ok(parts.length,kind);for(const p of parts){assert.ok(p.center.every(Number.isFinite),kind);assert.ok(p.size.every(n=>Number.isFinite(n)&&n>0),kind);}}
+ for(const [kind,rule]of Object.entries(PROPS)){
+  if(rule.groundLayer)continue;let parts;
+  if(kind.startsWith('ramp-')||kind.startsWith('rampbank-')){
+   const map={terrain:[['yard']],props:[{kind,x:0,y:0,z:0}],edges:{}},world=buildWorld(map);
+   parts=environmentVisuals(world,map).filter(p=>p.kind==='ramp'||p.kind==='ramp-bank');
+   const colliders=world.boxes.filter(b=>b.source.prop);
+   if(kind.startsWith('ramp-wood')){
+    // Timber ramps have an open deck-and-brace structure shared with their
+    // projectile geometry; the old two-piece earth-wedge count does not apply.
+    assert.ok(parts.length>2,kind);assert.ok(parts.every(p=>p.shape==='box'),kind);
+    assert.equal(colliders.length,parts.length,kind);assert.ok(colliders.every(b=>b.trellisPart),kind);
+   }else{
+    assert.equal(parts.length,kind.startsWith('ramp-')?2:1,kind);
+    assert.ok(colliders.every(b=>!b.blocksShot&&!b.blocksSight),kind);
+   }
+   const geometries=environmentGeometries();try{for(const p of parts)assert(geometries[p.shape],kind);}finally{Object.values(geometries).forEach(g=>g.dispose());}
+  }else parts=propParts(kind,rule.w,rule.h,rule.tall?2:.8);
+  assert.ok(parts.length,kind);for(const p of parts){assert.ok(p.center.every(Number.isFinite),kind);assert.ok(p.size.every(n=>Number.isFinite(n)&&n>0),kind);}
+ }
  assert.ok(propParts('wooden-crate-open',1,1,.8).some(p=>p.name==='lid'));
  assert.equal(propParts('wooden-crate-closed',1,1,.8).some(p=>p.name==='lid'),false);
  const m=blankMap();m.props=[{x:8,y:8,z:0,kind:'table-steel'}];const w=buildWorld(m);

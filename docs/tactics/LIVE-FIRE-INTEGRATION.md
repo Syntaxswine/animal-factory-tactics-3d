@@ -37,7 +37,17 @@ The tank tranche passes **209 focused tests**, **26 live renderer configurations
 
 Run `node tools/check-battle-tanks.mjs`, `node tools/check-battle-tank-page.mjs` and `node tools/check-tank-blast.mjs http://127.0.0.1:4364/tactics/tank-blast-study.html --quick` against a local preview. `PLAYWRIGHT_PATH` locates an external Playwright installation; live checks accept `EDITOR_ORIGIN`. Screenshots, browser identities and closed receipts are written under `artifacts/tank-blast-integration/` and `artifacts/tank-blast/`.
 
+## Canonical integration review
+
+The review combines gameplay branch `813f6a0` with tank study `c2c78e9`. Shared fire modules retain survivor playback, world placement, visibility clipping and shared texture ownership while gaining tank rupture and matching shadow breakup. That review covered the standalone tank study; the subsequent live integration above connects its events, visibility and persistence.
+
+The combined battle initially hid victims between the committed death and the visual discharge: the shared renderer reapplied live-unit detection to a pre-impact pose with temporarily restored HP. Battle rendering now resolves visibility from authoritative units before applying animation poses, and avoids applying that second detection gate. Regression tests exercise the actual battle/shared draw path for rifles and flamethrowers, including hidden living guards, unseen corpses and unchanged simulation state. The existing aiming test fixture now supplies the new fire controller without changing its assertions.
+
+An independent UI check on a small valid map placed a horse, hen and pig director in the cone and a fourth guard behind a wall. One spray killed the three exposed guards and charged 6 AP and one fuel. The corrected pre-impact poses stayed visible. Quicksave/quickload retained the casualties and resources without replaying the shot, and clicking the ashes beside the squad opened the body-loot interface. The combined explosion viewer was checked at rupture, collapse, ground fire and aftermath, including the water exclusion. Both pages reported no browser errors. Review images and the reproducible map are retained locally under `artifacts/oct04-fire-integration/`; the disposable server and review tabs were closed afterward.
+
 ## Checks
+
+The October 5 builder reconciliation retains this visibility correction and merges canonical's shared blast and barrel study into the live controller. Barrel-specific lid/base/panel debris is now connected with discharge timing, painted labels, support heights, fog and cleanup. See [explosive-barrel reconciliation](EXPLOSIVE-BARRELS.md#builder-reconciliation--october-5-2026).
 
 The roster integration passed 196 focused tests and all 289 target and 22 operator study configurations. The lethal-spray correction passes 101 relevant rules, presentation and save tests, including the unchanged original 2D flamethrower regressions, plus the live targeting UI, live horse battle and full 25-appearance live renderer checks. Pinned-core verification and the Pages build pass. The roster study captures 121 review images and repeated variant switches retain 95 geometries and 21 textures. Disposable review browsers close in `finally`; lifecycle receipts are written beside their artifacts.
 
@@ -47,4 +57,4 @@ The roster integration passed 196 focused tests and all 289 target and 22 operat
 
 Run the existing flame-cone, combat, movement, equipment, traversal and encounter-save regressions, the pinned-core check and Pages build alongside those tests. Deployment includes all new runtime modules, the study fixture and all three atlases. `work/editor-3d` is the integration branch; only `main` triggers Pages deployment.
 
-The broad `tools/check-assets.mjs` audit currently fails on the pre-existing environment manifest mismatch for `ground-wood-planks`, `wall-wood-trellis` and `wall-wood-trellis-arch`. The same failure reproduces using the script from the unchanged `7c211ef` baseline. Fire atlas dimensions and alpha channels have a separate passing regression; no manifest checks were weakened for this integration.
+The canonical integration passes the broad `tools/check-assets.mjs` audit, pinned-core verification and Pages packaging. The earlier environment manifest mismatch was already corrected on canonical; no manifest checks were weakened for this integration. The combined tank/fire/lifecycle run passes 130 tests, with the existing 12 flame-cone and 54 combat/movement/save/equipment regressions also passing. Two new draw-path visibility regressions cover the pre-impact correction.

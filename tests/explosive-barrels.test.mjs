@@ -15,6 +15,12 @@ import {EditingDocument} from '../dist/tactics/editor-3d-controller.js';
 import {blockCanvas,extractBlock,placeBlock,validateBlock} from '../dist/tactics/core/blocks.js';
 import {BattleCombat} from '../dist/tactics/battle-combat.js';
 import {BattleTankEffects} from '../dist/tactics/battle-tank-effects.js';
+import {createCargoLibrary} from '../dist/tactics/painted-cargo.js';
+import {withCargoCanvas,auditExplosiveBarrel} from '../tools/cargo-asset-audit.mjs';
+import {cargoPlacements} from '../dist/tactics/battle-environment.js';
+import {toWorld} from '../dist/tactics/hybrid-world.js';
+
+test('asset audit exercises the actual explosive drum, painted finish and flammable label',auditExplosiveBarrel);
 
 function fixture({water=false,z=0,weapon='rifle',extra=[]}={}){
  const map=blankMap('Explosive barrels');map.starts=[{x:14,y:20},{x:21,y:20},{x:25,y:20},{x:26,y:20}];map.guards=[{x:20,y:24,species:'hen',weapon:'hands'},{x:40,y:40,species:'pig-foreman',weapon:'pistol'}];
@@ -95,16 +101,44 @@ test('editor placement, undo/redo, portable maps and blocks preserve the new obj
 });
 test('presentation keeps the barrel until rifle discharge; blast/fire end without replaying damage',async()=>{
  const {s,a,b}=fixture(),r={scene:new T.Scene(),loader:{loadAsync:async()=>new T.Texture()},diagnostics:[]},c=new BattleCombat(),fx=new BattleTankEffects(r),camera=new T.PerspectiveCamera();camera.position.set(24,15,28);
- await fx.ready;const frame=now=>{c.observe(s,now);fx.observe(s,c,now,false,0);fx.draw(camera);};
+ const atlas=new T.Texture(),library=createCargoLibrary(atlas,atlas);r.paintedEnvironment={library};
+ await fx.ready;const frame=now=>withCargoCanvas(()=>{c.observe(s,now);fx.observe(s,c,now,false,0);fx.draw(camera);});
  try{frame(0);assert.ok(attack(s,a,b));frame(10);const saved=structuredClone(s);
   assert.equal(c.active.rifle,true);assert.equal(fx.pendingProps().length,1);assert.equal(fx.ground.size,0);frame(390);assert.equal(fx.pendingProps().length,0);
   await Promise.resolve();frame(500);assert.equal([...fx.bursts.values()][0].effects.core.visible,true);assert.equal(fx.ground.get(0).effects.ground.length,81);
+  const burst=[...fx.bursts.values()][0],motion=burst.motion;assert.ok(motion);assert.equal(burst.effects.fragments.length,0,'barrel must not also emit small tank fragments');
+  assert.equal(motion.intact.visible,false);assert.equal(motion.fragments.filter(f=>f.root.visible).length,8);assert.equal(motion.skin,'explosiveRed');assert.equal(motion.label,'flammable');assert.deepEqual(motion.root.position.toArray(),[20,0,20]);
+  assert.ok(motion.fragments.some(f=>f.root.name==='Released drum lid'));assert.ok(motion.fragments.some(f=>f.root.name==='Released drum base'));
+  const paint=motion.fragments.flatMap(f=>f.root.children).find(m=>m.material.customProgramCacheKey().includes('cargo-flammable-red'));
+  const shader={uniforms:{},vertexShader:'void main() {}',fragmentShader:'void main() {\n#include <map_fragment>\n}'};paint.material.onBeforeCompile(shader);
+  assert.match(shader.fragmentShader,/tankVisibility/);assert.match(shader.fragmentShader,/vec3\(\.85,\.085,\.04\)/);assert.ok(shader.uniforms.tankVisibility.value);
+  const labels=motion.fragments.flatMap(f=>f.root.children).filter(m=>m.userData.cargoLabel==='flammable');assert.ok(labels.length);assert.ok(labels.every(m=>m.material.map.isCanvasTexture));
+  const resources=motion.fragments.flatMap(f=>f.root.children.flatMap(m=>[m.geometry,m.material,m.customDepthMaterial]));let freed=0;resources.forEach(r=>r.addEventListener('dispose',()=>freed++));
   frame(6000);assert.equal(fx.bursts.size,0);assert.equal(fx.busy,false);assert.deepEqual(s,saved);assert.deepEqual(r.diagnostics,[]);
+  assert.equal(freed,resources.length);assert.equal(motion.root.parent,null);assert.doesNotThrow(()=>withCargoCanvas(()=>library.build('barrel-single','explosiveRed','flammable')),'shared environment remains usable');
   s.fires=[];frame(6100);assert.equal(fx.ground.size,0);
- }finally{fx.dispose();}
+ }finally{fx.dispose();library.dispose();atlas.dispose();}
 });
 test('fog, floor changes and reduced motion retire barrel effects and held props',async()=>{
  for(const mode of ['fog','floor','reduced']){const {s,a,b}=fixture(),r={scene:new T.Scene(),loader:{loadAsync:async()=>new T.Texture()},diagnostics:[]},c=new BattleCombat(),fx=new BattleTankEffects(r);await fx.ready;
   try{c.observe(s,0);assert.ok(attack(s,a,b));c.observe(s,10);fx.observe(s,c,10,false,0);assert.equal(fx.pendingProps().length,1);if(mode==='fog')s.visible.clear();fx.observe(s,c,100,mode==='reduced',mode==='floor'?1:0);assert.equal(fx.pendingProps().length,0);assert.equal(fx.bursts.size,0);assert.equal(fx.busy,false);assert.equal(s.props.length,0);}finally{fx.dispose();}
+ }
+});
+
+test('live barrel fragments use roof/cliff support and retire on fog, floor change, reduced motion or restart',async()=>{
+ for(const stop of ['fog','floor','reduced','restart']){
+  const cliff=stop==='fog'||stop==='reduced',extra=cliff?Array.from({length:25},(_,i)=>({x:18+i%5,y:18+Math.floor(i/5),z:0,kind:'cliff-ledge',cliffMask:15})):[],{s,a,b}=fixture({z:1});s.props[0].rotated=true;
+  s.units.slice(0,4).forEach(u=>u.z=1);s.props.push(...extra);
+  const expected=cliff?2:2.12;assert.equal(toWorld(cargoPlacements(s)[0])[1],expected,'intact drum and breakup must share support');
+  const atlas=new T.Texture(),library=createCargoLibrary(atlas,atlas),r={scene:new T.Scene(),loader:{loadAsync:async()=>new T.Texture()},diagnostics:[],paintedEnvironment:{library}},c=new BattleCombat(),fx=new BattleTankEffects(r),camera=new T.PerspectiveCamera();
+  const frame=(state,now,reduced=false,level=1)=>withCargoCanvas(()=>{c.observe(state,now);fx.observe(state,c,now,reduced,level);fx.draw(camera);});
+  try{
+   await fx.ready;frame(s,0);assert.ok(attack(s,a,b));frame(s,10);frame(s,500);await Promise.resolve();frame(s,501);
+   const motion=[...fx.bursts.values()][0].motion;assert.ok(motion);assert.equal(motion.root.position.y,expected);assert.equal(motion.root.rotation.y,-Math.PI/2);
+   motion.root.updateMatrixWorld(true);for(const f of motion.fragments)for(const mesh of f.root.children){const positions=mesh.geometry.attributes.position;for(let i=0;i<positions.count;i++)assert.ok(new T.Vector3().fromBufferAttribute(positions,i).applyMatrix4(mesh.matrixWorld).y>=expected-1e-5);}
+   const committed=JSON.stringify([s.units,s.props,s.fires]);if(stop==='fog')s.visible.clear();
+   frame(stop==='restart'?fixture().s:s,600,stop==='reduced',stop==='floor'?0:1);await Promise.resolve();
+   assert.equal(fx.bursts.size,0);assert.equal(motion.root.parent,null);assert.equal(motion.root.children.length,0);assert.equal(JSON.stringify([s.units,s.props,s.fires]),committed);
+  }finally{fx.dispose();library.dispose();atlas.dispose();}
  }
 });

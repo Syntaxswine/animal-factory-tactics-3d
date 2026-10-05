@@ -1,7 +1,7 @@
 import fs from 'node:fs';import {createRequire} from 'node:module';import {fileURLToPath} from 'node:url';import {execFileSync} from 'node:child_process';
 import {FIRE_TIME,burnState,makeBurnRoute} from '../dist/tactics/painted-fire-state.js';
 const {chromium}=createRequire(import.meta.url)(process.env.PLAYWRIGHT_PATH||'playwright');
-const dir=new URL('../artifacts/painted-fire/',import.meta.url);fs.mkdirSync(dir,{recursive:true});const studyURL=process.argv[2]||(process.env.EDITOR_ORIGIN||'http://127.0.0.1:4364')+'/tactics/painted-fire-study.html';const browser=await chromium.launch({channel:'msedge',headless:true}),errors=[];let identity;
+const dir=new URL('../artifacts/painted-fire/',import.meta.url);fs.mkdirSync(dir,{recursive:true});const studyURL=process.argv[2]||'http://127.0.0.1:4473/study/tactics/painted-fire-study.html';const browser=await chromium.launch({channel:'msedge',headless:true}),errors=[];let identity;
 try{
  const cdp=await browser.newBrowserCDPSession(),info=await cdp.send('SystemInfo.getProcessInfo'),pid=info.processInfo.find(p=>p.type==='browser').id;
  identity=JSON.parse(execFileSync('powershell.exe',['-NoProfile','-Command',`Get-Process -Id ${Number(pid)} | Select-Object Id,Path,@{n='CreationFileTime';e={$_.StartTime.ToUniversalTime().ToFileTimeUtc().ToString()}} | ConvertTo-Json`],{encoding:'utf8',windowsHide:true}));fs.writeFileSync(new URL('review-browser-helper.json',dir),JSON.stringify({identity,owner:process.env.CODEX_THREAD_ID||'check-painted-fire caller; disposable browser',purpose:'Video and configurations',end:'review completion',stop:'browser.close in finally'},null,2));
