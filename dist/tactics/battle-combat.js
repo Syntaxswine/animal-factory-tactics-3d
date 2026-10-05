@@ -2,6 +2,13 @@ import {personVisible} from './battle-visibility.js';
 import {flamePhase} from './battle-flame-effects.js';
 import {paintedOperatorSupported,paintedFlamePhase} from './painted-fire-state.js';
 export const RIFLE_SHOT_MS=380,RIFLE_DURATION_MS=1100;
+export const dischargeDelay=shot=>shot.reduced?0:shot.paintedFire?640:shot.event.flame?150:shot.rifle?RIFLE_SHOT_MS:0;
+// Burns and ruptures wait for the exact attack that committed them, including
+// queued replies. An unseen shooter needs no invented firing presentation.
+export function burnStart(event,combat,now){
+ const shot=[combat.active,...combat.queue].find(s=>event.kind==='tank'?s?.event.explosions?.some(e=>e.fireSequence===event.sequence):s?.event.burns?.includes(event.unitId));
+ return shot&&shot!==combat.active?null:shot?shot.start+dischargeDelay(shot):now;
+}
 const clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>{x=clamp(x);return x*x*(3-2*x);};
 export function shotPhase(elapsed,rifle=true,reduced=false){
  const discharge=reduced||!rifle?0:RIFLE_SHOT_MS,duration=reduced?180:rifle?RIFLE_DURATION_MS:260,t=elapsed-discharge;
@@ -19,7 +26,7 @@ export class BattleCombat {
     if(!unit||!personVisible(state,unit))continue;
     const shooter=before||unit;
     // Flames carry their actual area; other attacks need resolved trajectories.
-    if(!event.flame&&(!event.trajectories?.length||event.incendiary||event.explosions?.length))continue;
+    if(!event.flame&&(!event.trajectories?.length||event.incendiary||event.explosions?.some(e=>e.kind!=='tank')))continue;
     const shot={event:structuredClone(event),shooter:{...shooter,x:event.ax,y:event.ay,z:event.az||0},rifle:!event.flame&&shooter.weapon==='rifle',reduced,knownUnitIds:[...this.previous.keys(),...state.detected]};
     shot.paintedFire=!!event.flame&&paintedOperatorSupported(shooter);
     this.queue.push(shot);

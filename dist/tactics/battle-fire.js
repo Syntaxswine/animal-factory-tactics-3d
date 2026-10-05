@@ -8,6 +8,9 @@ import {createPaintedFireMotion} from './painted-fire-motion.js';
 import {createPaintedFireEffects,loadPaintedFireTextures} from './painted-fire-effects.js';
 import {dissolveBody} from './painted-fire-actor.js';
 import {createWorkerLocomotion} from './worker-locomotion.js';
+import {createWeaponModel} from './weapon-models.js';
+import {createTankBlastMotion,TANK_TIME} from './tank-blast-motion.js';
+import {burnStart} from './battle-combat.js';
 
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 const renderPoint=p=>{const [x,y,z]=toWorld(p);return {x,y,z};};
@@ -26,7 +29,7 @@ export function fireSegments(event){
 }
 export function firePlayback(entry,now){
  let elapsed=Math.max(0,(now-entry.start)/1000),route=entry.segments.at(-1),time=0;
- const terminal=entry.event.kind==='ash';
+ const terminal=['ash','tank'].includes(entry.event.kind);
  if(terminal)return {route,time:FIRE_TIME.hit+elapsed,terminal,done:elapsed>=2.4};
  for(const segment of entry.segments){
   const duration=.30+Math.max(.28,segment.length*.54)+.04;
@@ -57,17 +60,16 @@ export class BattleFire {
   for(const event of state.fireAnimations||[]){
    if(event.sequence<=this.sequence)continue;this.sequence=event.sequence;
    const u=state.units.find(u=>u.id===event.unitId);
-   if(reduced||!shown(u)||!paintedBurnSupported(u)||u.weapon!==event.weapon)continue;
+   if(reduced||!shown(u)||!paintedBurnSupported(u)||event.kind!=='tank'&&u.weapon!==event.weapon)continue;
    if(u.team!=='squad'&&event.route.some(p=>!state.visible.has((p.z||0)?`${p.x},${p.y},${p.z}`:`${p.x},${p.y}`)))continue;
    try{this.entries.set(u.id,{event,segments:fireSegments(event),start:now,waiting:event.kind!=='panic'});}catch{/* Elevation-changing routes keep the existing presentation. */}
   }
   for(const [id,entry]of this.entries){
-   const u=state.units.find(u=>u.id===id),terminal=entry.event.kind==='ash';
-   if(!shown(u)||!paintedBurnSupported(u)||u.weapon!==entry.event.weapon||u.hp<=0&&!u.burnedRemains||!terminal&&!u.burningTurns&&(entry.event.kind!=='panic'||firePlayback(entry,now).done)||this.renderer.traversal.active?.event.unitId===id){this.remove(id);continue;}
+   const u=state.units.find(u=>u.id===id),terminal=['ash','tank'].includes(entry.event.kind),tank=entry.event.kind==='tank';
+   if(!shown(u)||!paintedBurnSupported(u)||!tank&&u.weapon!==entry.event.weapon||tank&&(!u.tanksExploded||u.hp>0)||u.hp<=0&&!u.burnedRemains||!terminal&&!u.burningTurns&&(entry.event.kind!=='panic'||firePlayback(entry,now).done)||this.renderer.traversal.active?.event.unitId===id){this.remove(id);continue;}
    if(entry.waiting){
-    const shot=[combat.active,...combat.queue].find(s=>s?.event.burns?.includes(id));
-    if(shot&&shot!==combat.active)continue;
-    entry.start=shot?shot.start+(shot.paintedFire?640:150):now;entry.waiting=false;
+    const start=burnStart(entry.event,combat,now);if(start===null)continue;
+    entry.start=start;entry.waiting=false;
    }
    if(reduced){if(terminal)entry.start=now-5400;else this.remove(id);}
   }
@@ -101,21 +103,31 @@ export class BattleFire {
  }
  pose(model,unit,shot,now,state,camera){
   const entry=this.entries.get(unit.id),burn=entry&&!entry.waiting&&now>=entry.start;
+  const tank=entry?.event.kind==='tank'&&entry.event.weapon==='flamethrower'&&!model.profile.unarmed&&unit.outfit!=='blue-hawaiian';
   const firing=shot?.paintedFire&&!this.reduced&&unit.hp>0&&!unit.burningTurns;
-  if(!paintedBurnSupported(unit)||!model.profile.unarmed&&model.weapon!==unit.weapon||this.failures.has(unit.id)||!burn&&!firing){this.release(unit.id);return false;}
+  if(!paintedBurnSupported(unit)||!tank&&!model.profile.unarmed&&model.weapon!==unit.weapon||this.failures.has(unit.id)||!burn&&!firing&&!tank){this.release(unit.id);return false;}
   try{
+   // A committed death has already removed the real inventory. Retain only the
+   // presentation equipment until rupture; late model loads use the receipt.
+   if(tank&&model.weapon!=='flamethrower'){
+    this.release(unit.id);const old=model.equipment;model.equipment=createWeaponModel('flamethrower');model.worker.equipWeapon(model.equipment);old?.dispose();model.weapon='flamethrower';
+   }
    const settled=this.sessions.get(unit.id);if(burn&&settled?.settledEvent===entry.event){settled.effects.group.visible=true;return true;}
    const s=this.session(model,unit.id),{worker,root}=model;root.position.set(0,0,0);root.updateMatrixWorld(true);
    const fx=this.effects(s);let playback,result;
-   if(burn){
+   if(burn||tank){
     playback=firePlayback(entry,now);
     // Keep a visible, lootable body if the ash texture is still loading or failed.
     const poseTime=playback.terminal&&!fx?Math.min(playback.time,1.84):playback.time;
-    result=s.motion.burn(poseTime,playback.route,{terminal:playback.terminal});
+    if(tank){
+     if(s.tankEvent!==entry.event){s.blast=createTankBlastMotion({worker,motion:s.motion,dissolve:s.skin.value},playback.route);s.tankEvent=entry.event;this.renderer.tankEffects?.setOrigin(entry.event.sequence,s.blast.origin);}
+     const time=entry.waiting||now<entry.start?0:TANK_TIME.burst+poseTime-FIRE_TIME.hit;
+     result=s.blast.apply(time).body;
+    }else result=s.motion.burn(poseTime,playback.route,{terminal:playback.terminal});
     s.skin.value.value=result.state.dissolve;
     if(!result.state.bodyVisible)for(const [o]of s.extraVisibility)o.visible=false;
     model.paint.setGripForearm?.(result.state.bodyVisible&&!!worker.weapon?.carry?.handPoses?.support?.gripMesh);
-    if(fx)fx.update(playback.time,{camera,route:playback.route,flame:false,terminal:playback.terminal,groundPoint:s.motion.groundPoint});
+    if(fx)fx.update(tank&&(!burn)?0:playback.time,{camera,route:playback.route,flame:false,terminal:playback.terminal,groundPoint:s.motion.groundPoint,suppressSmoke:tank&&playback.time<FIRE_TIME.hit+.45});
     if(fx&&playback.terminal&&playback.time>=FIRE_TIME.duration)s.settledEvent=entry.event;
     s.playback=playback;
    }else{

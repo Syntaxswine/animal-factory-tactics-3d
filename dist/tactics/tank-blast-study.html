@@ -1,0 +1,14 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Worn tank explosion · Animal Factory</title><link rel="icon" href="data:,"><link rel="stylesheet" href="painted-fire-study.css"></head><body>
+<header><div><h1>Worn tank explosion</h1><p>Rupture · outward blast · collapse · burning ground</p></div><a href="../tactics-3d-gallery.html">Studies ↗</a></header>
+<main><section class="controls" aria-label="Tank explosion controls">
+<label>Wearer <select id="animal"></select></label><label>Outfit <select id="outfit"><option value="normal">Original</option><option value="red-hats">Red Hats</option></select></label>
+<button id="play">Pause</button><button id="restart">Restart</button><label class="scrub">Time <input id="time" type="range" min="0" max="5.4" value="0" step=".01"><output id="clock">0.00 s</output></label>
+<label>Focus <select id="focus"><option value="blast">Surrounding blast</option><option value="wearer">Wearer</option></select></label>
+<label>View <select id="view"><option value="three">Three-quarter</option><option value="rear">Rear / tanks</option><option value="side">Side</option><option value="front">Front</option></select></label>
+<label>Scale <select id="scale"><option value="full">Fit</option><option value="game">Gameplay</option><option value="close">Close</option></select></label>
+<label>Ground <select id="scene"><option value="open">Open ground</option><option value="water">Water beside wearer</option></select></label>
+<label><input id="effects" type="checkbox" checked> Painted effects</label></section>
+<section id="viewport" aria-label="Tank explosion animation"><div id="loading">Loading wearer and painted blast…</div></section>
+<nav class="beats" aria-label="Key poses"><button data-time="0">Worn pack</button><button data-time=".60">Rupture</button><button data-time=".90">Outward blast</button><button data-time="1.45">Collapse</button><button data-time="2.20">Burning ground</button><button data-time="4.90">Aftermath</button></nav>
+<p id="status" role="status"></p><p id="error" role="alert"></p><footer>11 tank-wearing animals · both outfits. Drag to orbit; scrub in either direction. Standalone fatal-event study. Surrounding fire cells come from a recorded game event; this viewer does not apply damage. Ground-fire lifetime is compressed for this preview. <a href="painted-fire-study.html">Flamethrower study ↗</a></footer></main>
+<script type="module" src="tank-blast-study.js"></script></body></html>

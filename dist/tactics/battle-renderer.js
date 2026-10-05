@@ -23,6 +23,7 @@ import {createRifleFiring} from './rifle-firing.js';
 import {BattleShotEffects,shotPoint} from './battle-shot-effects.js';
 import {BattleFlameEffects} from './battle-flame-effects.js';
 import {BattleFire} from './battle-fire.js';
+import {BattleTankEffects} from './battle-tank-effects.js';
 import {motionPreference} from './settings-3d.js';
 
 // Reuse only the environment/camera presentation. No hybrid combat mode.
@@ -34,6 +35,7 @@ export class BattleRenderer extends HybridRenderer {
   this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.flameEffects=new BattleFlameEffects(this.scene);
   this.fire=new BattleFire(this);
+  this.tankEffects=new BattleTankEffects(this);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
  }
  rebuild(world,seen,level,map){
@@ -121,7 +123,7 @@ export class BattleRenderer extends HybridRenderer {
   if(model.aimWarning){const i=this.diagnostics.indexOf(model.aimWarning);if(i>=0)this.diagnostics.splice(i,1);model.aimWarning=null;}
   if(result&&!result.supported){model.aimWarning=`${unit.name||unit.species}: firing animation unavailable (${result.reason}); shot outcome unchanged.`;this.diagnostics.push(model.aimWarning);}
  }
- prune(){} // Reuse each actor's model across visibility changes.
+ prune(){this.tankEffects.draw(this.camera);} // Runs after posing, before rendering.
  pick(x,y,width,height){
   const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
   const roots=[...this.actors.entries()].filter(([,root])=>root.visible);
@@ -143,6 +145,7 @@ export class BattleRenderer extends HybridRenderer {
  captureCombat(state){
   const now=this.presentationNow??performance.now(),reduced=!!this.reducedMotion?.matches;
   this.combat.observe(state,now,reduced);this.traversal.observe(state,now,reduced);
+  this.tankEffects.observe(state,this.combat,now,reduced,this.presentationLevel??this.level);
   this.fire.observe(state,this.combat,now,reduced,this.presentationLevel??this.level);
   for(const u of state.units){const m=this.models.get(u.id);if(!m)continue;
    const visible=personVisible(state,u)&&(this.level===undefined||(u.z||0)===this.level),available=u.hp>0&&visible&&!reduced;
@@ -151,14 +154,14 @@ export class BattleRenderer extends HybridRenderer {
    if(m.weapon&&m.weapon!==u.weapon&&available&&!m.profile.unarmed&&u.weapon!=='hands'&&this.traversal.active?.event.unitId!==u.id)m.drawRequested=true;
   }
  }
- get busy(){return this.combat.busy||this.traversal.busy||this.fire.busy||[...this.models.values()].some(m=>m.draw||m.drawRequested);}
+ get busy(){return this.combat.busy||this.traversal.busy||this.fire.busy||this.tankEffects.busy||[...this.models.values()].some(m=>m.draw||m.drawRequested);}
  equipmentState(id){return this.fire.sessions.get(id)?.stow?.state==='stowed'?'stowed':this.traversal.active?.event.unitId===id?(this.traversal.active.motion?.climb.equipmentState||'carried'):this.models.get(id)?.draw||this.models.get(id)?.drawRequested?'drawing':'carried';}
  displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);if(this.fire.entries.has(unit.id))return this.fire.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){
   this.generation++;this.wallXray.dispose();
   this.loot.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();this.paintedEnvironment.dispose();
   this.motion.clear();
-  this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();this.fire.dispose();
+  this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();this.fire.dispose();this.tankEffects.dispose();
   for(const {worker,paint,root,equipment,locomotion,cap,draw}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();
  }

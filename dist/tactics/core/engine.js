@@ -320,16 +320,17 @@ function finishFireRound(s){
  s.fires=(s.fires||[]).map(p=>({...p,turns:p.turns-1})).filter(p=>p.turns>0);
 }
 function explodeTanks(s,wearer,source=null){
- wearer.tanksExploded=true;wearer.ammo.flamethrower=0;
+ const wornWeapon=wearer.weapon,newFires=[];wearer.tanksExploded=true;wearer.ammo.flamethrower=0;
  wearer.pack=wearer.pack.filter(i=>i.kind!=='flamethrower');wearer.slots=wearer.slots.map(id=>id==='flamethrower'?null:id);
  if(wearer.weapon==='flamethrower')wearer.weapon='hands';wearer.overwatch=null;
  const z=levelOf(wearer);s.fires||=[];
- for(let y=wearer.y-5;y<=wearer.y+5;y++)for(let x=wearer.x-5;x<=wearer.x+5;x++)if(!wearer.towerPost&&inBounds(x,y,z)&&Math.hypot(x-wearer.x,y-wearer.y)<=5&&!['void','water'].includes(tile(s,x,y,z))){const old=s.fires.find(p=>p.x===x&&p.y===y&&p.z===z);if(old)old.turns=3;else s.fires.push({x,y,z,turns:3});}
+ for(let y=wearer.y-5;y<=wearer.y+5;y++)for(let x=wearer.x-5;x<=wearer.x+5;x++)if(!wearer.towerPost&&inBounds(x,y,z)&&Math.hypot(x-wearer.x,y-wearer.y)<=5&&!['void','water'].includes(tile(s,x,y,z))){const old=s.fires.find(p=>p.x===x&&p.y===y&&p.z===z);if(old)old.turns=3;else {const cell={x,y,z,turns:3};s.fires.push(cell);newFires.push({...cell});}}
  const victims=s.units.filter(u=>(alive(u)||incapacitated(u))&&levelOf(u)===z&&Math.abs(unitBaseHeight(u)-unitBaseHeight(wearer))<=1&&Math.max(Math.abs(u.x-wearer.x),Math.abs(u.y-wearer.y))<=1);
- for(const u of victims)combatDamage(s,u,Math.max(u.hp,1),true,source);
+ for(const u of victims){combatDamage(s,u,Math.max(u.hp,1),true,source);if(u!==wearer)recordBurn(s,u,'ash');}
+ const receipt=recordBurn(s,wearer,'tank');receipt.weapon=wornWeapon;receipt.fires=newFires;
  for(const u of s.units)if(levelOf(u)===z&&Math.hypot(u.x-wearer.x,u.y-wearer.y,unitBaseHeight(u)-unitBaseHeight(wearer))<=5)ignite(s,u);
  log(s,`${wearer.name}'s fuel tanks exploded / ${victims.length} caught in blast.`);
- return {x:wearer.x,y:wearer.y,z:levelOf(wearer),h:unitBaseHeight(wearer)+.8};
+ return {x:wearer.x,y:wearer.y,z:levelOf(wearer),h:unitBaseHeight(wearer)+.8,kind:'tank',unitId:wearer.id,fireSequence:receipt.sequence,burns:s.units.filter(u=>victims.includes(u)||u.burningTurns&&levelOf(u)===z&&Math.hypot(u.x-wearer.x,u.y-wearer.y,unitBaseHeight(u)-unitBaseHeight(wearer))<=5).map(u=>u.id)};
 }
 export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,aimLevel='hip'){
  if(s.queue.length)return false;
@@ -379,7 +380,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   const hitZone=w.blast?'torso':pelletZone||shot?.zone||f.zone;damageHeldWeapon(s,victim,hitZone,rawAmount);
   if(victim.team==='guard')targeted(s,victim,shooter);
   const tankChance=w.mag?tankExplosionChance(victim,hitZone):0,standing=s.units.filter(alive);
-  if(tankChance>0&&random(s)<tankChance){const blast=explodeTanks(s,victim,shooter);explosions.push(blast);event.explosions.push(blast);}
+  if(tankChance>0&&random(s)<tankChance){const blast=explodeTanks(s,victim,shooter);explosions.push(blast);event.explosions.push(blast);(event.burns??=[]).push(...blast.burns);}
   else {combatDamage(s,victim,amount,!!w.incendiary||incapacitated(victim),shooter);if(!w.blast&&hitZone==='legs'&&amount>0)woundLeg(victim);if(w.incendiary){if(victim.hp<=0)recordBurn(s,victim,'ash');ignite(s,victim);(event.burns??=[]).push(victim.id);}}
   // Units this impact put down (a tank blast can take neighbours too), so the renderer can time their fall.
   for(const u of standing)if(!alive(u)&&!event.downed.includes(u.id))event.downed.push(u.id);

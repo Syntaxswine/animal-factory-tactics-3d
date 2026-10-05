@@ -1,5 +1,5 @@
 // Keep the pinned sprite fork intact; area flames belong to the 3D rules.
-export const flameOverrides={'engine.js':'Flamethrowers use a placeable, scenery-clipped lethal area cone for players, guards and reactions; exposed victims die regardless of HP or endurance.'};
+export const flameOverrides={'engine.js':'Flamethrowers use a scenery-clipped lethal area cone; tank blasts retain casualty rules and record worn-pack rupture, burned remains and fire-cell presentation receipts.'};
 export function adaptCoreFlames(name,data){
  if(name!=='engine.js')return data;
  let s=data.toString();
@@ -9,6 +9,13 @@ export function adaptCoreFlames(name,data){
  once('const heading=Math.floor(random(s)*8)*45;', 'const fireRoute=[firePoint(u)],heading=Math.floor(random(s)*8)*45;');
  once('u.x=p.x;u.y=p.y;u.steps++;emitNoise(s,u,15);', 'u.x=p.x;u.y=p.y;u.steps++;fireRoute.push(firePoint(u));emitNoise(s,u,15);');
  once('u.ap=0;u.fireActedRound=s.round;', "recordBurn(s,u,'panic',fireRoute);u.ap=0;u.fireActedRound=s.round;");
+ once('wearer.tanksExploded=true;', 'const wornWeapon=wearer.weapon,newFires=[];wearer.tanksExploded=true;');
+ once('else s.fires.push({x,y,z,turns:3});', 'else {const cell={x,y,z,turns:3};s.fires.push(cell);newFires.push({...cell});}');
+ once('for(const u of victims)combatDamage(s,u,Math.max(u.hp,1),true,source);', `for(const u of victims){combatDamage(s,u,Math.max(u.hp,1),true,source);if(u!==wearer)recordBurn(s,u,'ash');}
+ const receipt=recordBurn(s,wearer,'tank');receipt.weapon=wornWeapon;receipt.fires=newFires;`);
+ once('return {x:wearer.x,y:wearer.y,z:levelOf(wearer),h:unitBaseHeight(wearer)+.8};',
+  "return {x:wearer.x,y:wearer.y,z:levelOf(wearer),h:unitBaseHeight(wearer)+.8,kind:'tank',unitId:wearer.id,fireSequence:receipt.sequence,burns:s.units.filter(u=>victims.includes(u)||u.burningTurns&&levelOf(u)===z&&Math.hypot(u.x-wearer.x,u.y-wearer.y,unitBaseHeight(u)-unitBaseHeight(wearer))<=5).map(u=>u.id)};");
+ once('explosions.push(blast);event.explosions.push(blast);', 'explosions.push(blast);event.explosions.push(blast);(event.burns??=[]).push(...blast.burns);');
  once('if(w.incendiary)ignite(s,victim);', "if(w.incendiary){if(victim.hp<=0)recordBurn(s,victim,'ash');ignite(s,victim);(event.burns??=[]).push(victim.id);}");
  once('if(WEAPONS[a.weapon].blast)return explosivePreview',`if(WEAPONS[a.weapon].incendiary){
   const p=flamePreview(s,a,b,WEAPONS[a.weapon],combatCosts(s));

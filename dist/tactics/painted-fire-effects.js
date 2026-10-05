@@ -21,7 +21,7 @@ export function flameSheetData(shape,muzzle,layer=0,world=false){
  }
  return {position:p,uv,distance,index};
 }
-function shader(texture,{smoke=false,fan=false,plume=false,seed=0}={}){
+export function paintedFireMaterial(texture,{smoke=false,fan=false,plume=false,seed=0}={}){
  return new T.ShaderMaterial({transparent:true,depthWrite:false,depthTest:true,side:T.DoubleSide,toneMapped:false,
   uniforms:{map:{value:texture},clock:{value:0},opacity:{value:1},seed:{value:seed},head:{value:100},tail:{value:-10},rays:{value:Array.from({length:37},()=>new T.Vector2())},wedges:{value:new Float32Array(36)},angle:{value:0},spread:{value:1},nozzle:{value:0},source:{value:new T.Vector2()}},
   vertexShader:`varying vec2 vUv;varying float vDistance;varying vec3 vWorld;${fan?'attribute float travelDistance;':''}void main(){vUv=uv;vDistance=${fan?'travelDistance':'0.0'};vWorld=(modelMatrix*vec4(position,1.0)).xyz;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
@@ -47,7 +47,7 @@ export async function createPaintedFireEffects(scene,loader,worker,{textures:sha
  for(const t of textures)t.colorSpace=T.SRGBColorSpace;
  const group=new T.Group();group.name='Painted fire effects';scene.add(group);
  const plane=new T.PlaneGeometry(1,1),materials=[],geometries=[];
- function material(map,options){const m=shader(map,options);materials.push(m);return m;}
+ function material(map,options){const m=paintedFireMaterial(map,options);materials.push(m);return m;}
  const sheets=[-.45,0,.45].map((layer,i)=>{const g=new T.BufferGeometry();geometries.push(g);const m=new T.Mesh(g,material(textures[0],{fan:true,seed:i*1.3}));m.frustumCulled=false;group.add(m);m.userData.layer=layer;return m;});
  const plumes=Array.from({length:48},(_,i)=>{const m=new T.Mesh(plane,material(textures[0],{plume:true,seed:i*1.618}));m.userData={birth:FIRE_TIME.ignite+Math.floor(i/3)*.043+(i%3)*.010+.008*Math.sin(i*2.13),lane:((i%3)-1)*.56+.21*Math.sin(i*2.399),width:.72+.40*Math.sin(i*1.73)**2,length:.78+.47*Math.sin(i*2.17+.6)**2,tilt:.22*Math.sin(i*1.33)};group.add(m);return m;});
  const zones=fireBodyZones(worker),wraps=zones.flatMap((zone,i)=>[-1,1].map((side,j)=>{const m=new T.Mesh(plane,material(textures[0],{seed:i*.67+j*1.7}));m.scale.set(zone.width,zone.height,1);m.userData={zone,side,width:zone.width,height:zone.height};group.add(m);return m;}));
@@ -67,7 +67,7 @@ export async function createPaintedFireEffects(scene,loader,worker,{textures:sha
   }
  }
  return {group,ash,
-  update(time,{shape,muzzle,camera,route,body=true,flame=true,visible=true,terminal=true,groundPoint}){
+  update(time,{shape,muzzle,camera,route,body=true,flame=true,visible=true,terminal=true,groundPoint,suppressSmoke=false}){
    const f=fireState(time),s=burnState(time,route,{terminal});group.visible=visible;if(flame)updateSheets(shape,muzzle);
    for(const sheet of sheets){sheet.visible=flame&&time>=FIRE_TIME.ignite&&time<FIRE_TIME.cutoff+FIRE_TIME.travel;if(!sheet.visible)continue;Object.assign(sheet.material.uniforms.clock,{value:time});sheet.material.uniforms.opacity.value=.17;sheet.material.uniforms.head.value=f.head*shape.range;sheet.material.uniforms.tail.value=time<FIRE_TIME.cutoff?-10:f.tail*shape.range;}
    for(let i=0;i<plumes.length;i++){const m=plumes[i],age=time-m.userData.birth;
@@ -85,7 +85,7 @@ export async function createPaintedFireEffects(scene,loader,worker,{textures:sha
    // Lower new emissions with the collapse, then let the existing trail rise away.
    for(let i=0;i<smokes.length;i++){
     const m=smokes[i],first=FIRE_TIME.hit+i*.16,birth=terminal?first:first+Math.max(0,Math.floor((time-first)/2.88))*2.88,age=time-birth,bs=burnState(birth,route,{terminal});
-    m.visible=body&&age>=0&&age<2&&bs.dissolve<1;if(!m.visible)continue;
+    m.visible=body&&!suppressSmoke&&age>=0&&age<2&&bs.dissolve<1;if(!m.visible)continue;
     const origin=groundPoint?groundPoint(birth,route,{terminal}):bs.point;
     m.position.set(origin.x-.18*age,origin.y+1.45-1.05*bs.collapse+age*.75,origin.z+.10*Math.sin(i*1.7)*age);
     m.quaternion.copy(camera.quaternion);m.scale.set(.82+age*.52,1.1+age*.74,1);
