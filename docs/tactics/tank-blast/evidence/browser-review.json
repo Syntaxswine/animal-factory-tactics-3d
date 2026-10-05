@@ -1,0 +1,2574 @@
+{
+  "quick": false,
+  "cases": [
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "open",
+      "view": "side",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "three",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "rear",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "front",
+      "scale": "game"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "full"
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "scene": "water",
+      "view": "side",
+      "scale": "game"
+    }
+  ],
+  "captures": [
+    "horse-normal-worn",
+    "horse-normal-collapse",
+    "horse-red-hats-worn",
+    "horse-red-hats-collapse",
+    "goat-normal-worn",
+    "goat-normal-collapse",
+    "goat-red-hats-worn",
+    "goat-red-hats-collapse",
+    "bull-normal-worn",
+    "bull-normal-collapse",
+    "bull-red-hats-worn",
+    "bull-red-hats-collapse",
+    "cow-normal-worn",
+    "cow-normal-collapse",
+    "cow-red-hats-worn",
+    "cow-red-hats-collapse",
+    "donkey-normal-worn",
+    "donkey-normal-collapse",
+    "donkey-red-hats-worn",
+    "donkey-red-hats-collapse",
+    "sheep-normal-worn",
+    "sheep-normal-collapse",
+    "sheep-red-hats-worn",
+    "sheep-red-hats-collapse",
+    "skunk-normal-worn",
+    "skunk-normal-collapse",
+    "skunk-red-hats-worn",
+    "skunk-red-hats-collapse",
+    "pig-foreman-normal-worn",
+    "pig-foreman-normal-collapse",
+    "pig-foreman-red-hats-worn",
+    "pig-foreman-red-hats-collapse",
+    "pig-director-normal-worn",
+    "pig-director-normal-collapse",
+    "pig-director-red-hats-worn",
+    "pig-director-red-hats-collapse",
+    "rabbit-normal-worn",
+    "rabbit-normal-collapse",
+    "rabbit-red-hats-worn",
+    "rabbit-red-hats-collapse",
+    "dog-normal-worn",
+    "dog-normal-collapse",
+    "dog-red-hats-worn",
+    "dog-red-hats-collapse",
+    "horse-blast-three-0",
+    "horse-blast-three-0.56",
+    "horse-blast-three-0.65",
+    "horse-blast-three-0.9",
+    "horse-blast-three-1.2",
+    "horse-blast-three-1.6",
+    "horse-blast-three-2.2",
+    "horse-blast-three-3.4",
+    "horse-blast-three-4.9",
+    "horse-blast-rear-0",
+    "horse-blast-rear-0.56",
+    "horse-blast-rear-0.65",
+    "horse-blast-rear-0.9",
+    "horse-blast-rear-1.2",
+    "horse-blast-rear-1.6",
+    "horse-blast-rear-2.2",
+    "horse-blast-rear-3.4",
+    "horse-blast-rear-4.9",
+    "horse-body-front-0",
+    "horse-body-front-0.8",
+    "horse-body-front-1.35",
+    "horse-body-front-1.75",
+    "horse-body-side-0",
+    "horse-body-side-0.8",
+    "horse-body-side-1.35",
+    "horse-body-side-1.75",
+    "pig-director-painted-0.56",
+    "pig-director-painted-0.9",
+    "pig-director-painted-1.75",
+    "skunk-painted-0.56",
+    "skunk-painted-0.9",
+    "skunk-painted-1.75",
+    "rabbit-painted-0.56",
+    "rabbit-painted-0.9",
+    "rabbit-painted-1.75",
+    "water-fire"
+  ],
+  "memories": [
+    {
+      "geometries": 58,
+      "textures": 17
+    },
+    {
+      "geometries": 58,
+      "textures": 17
+    },
+    {
+      "geometries": 58,
+      "textures": 17
+    },
+    {
+      "geometries": 58,
+      "textures": 17
+    },
+    {
+      "geometries": 58,
+      "textures": 17
+    }
+  ],
+  "errors": []
+}

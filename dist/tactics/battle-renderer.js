@@ -138,7 +138,9 @@ export class BattleRenderer extends HybridRenderer {
   this.state=state;this.presentationLevel=args[3];this.captureCombat(state);this.shotEffects.hide();this.flameEffects.hide();
   const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.traversal.active?.event.unitId===u.id?{...u,presentationLevel:args[3]}:this.fire.display(this.combat.display(u)));
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
-  return super.draw(ctx,{...state,terrain:state.map,units},...args);
+  // Visibility was resolved from committed units before animation changed HP
+  // or position. Do not hide a visible casualty during its pre-impact pose.
+  return super.draw(ctx,{...state,terrain:state.map,units},...args.slice(0,4),{...args[4],visibilityFiltered:true});
  }
  captureCombat(state){
   const now=this.presentationNow??performance.now(),reduced=!!this.reducedMotion?.matches;

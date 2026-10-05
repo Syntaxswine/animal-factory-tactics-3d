@@ -1,3 +1,4 @@
+import * as T from './vendor/three.module.js';
 import {ANIMAL_MOTION_CATALOG} from './animal-motion-catalog.js';
 import {createAnimalPaint} from './animal-motion-paint.js';
 import {createRedHatCap} from './red-hat-model.js';
@@ -19,13 +20,18 @@ async function meshData(file){if(!meshes.has(file))meshes.set(file,fetch('./'+fi
 // Caps, guide hats and corrective grip meshes must break up with the body.
 // Equipment is deliberately excluded and remains a separately grounded prop.
 export function dissolveBody(worker,uniform){
- const equipment=[worker.weapon?.root,worker.weapon?.mount,worker.weapon?.hose].filter(Boolean),materials=new Set(),saved=[];
- worker.root.traverse(o=>{if(!o.isMesh)return;for(let a=o;a;a=a.parent)if(equipment.includes(a))return;for(const m of [o.material].flat())materials.add(m);});
+ const equipment=[worker.weapon?.root,worker.weapon?.mount,worker.weapon?.hose].filter(Boolean),materials=new Set(),saved=[],depthAssignments=[];
+ const breakup='float breakup=fract(sin(dot(floor(fireBind*29.0),vec3(12.9898,78.233,31.41)))*43758.5453);if(breakup<fireDissolve)discard;';
+ function inject(shader){shader.uniforms.fireDissolve=uniform;shader.vertexShader='varying vec3 fireBind;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nfireBind=position;');shader.fragmentShader='uniform float fireDissolve;varying vec3 fireBind;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\n'+breakup);}
+ // The same bind-space discard must affect sunlight shadows, including caps.
+ // Reuse one depth material for this actor and restore existing assignments.
+ const depth=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking});depth.onBeforeCompile=inject;depth.customProgramCacheKey=()=> 'roster-fire-depth-dissolve-v1';
+ worker.root.traverse(o=>{if(!o.isMesh)return;for(let a=o;a;a=a.parent)if(equipment.includes(a))return;for(const m of [o.material].flat())materials.add(m);depthAssignments.push([o,o.customDepthMaterial]);o.customDepthMaterial=depth;});
  for(const material of materials){const compile=material.onBeforeCompile,key=material.customProgramCacheKey;saved.push({material,compile,key});
-  material.onBeforeCompile=function(shader){compile.call(this,shader);shader.uniforms.fireDissolve=uniform;shader.vertexShader='varying vec3 fireBind;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nfireBind=position;');shader.fragmentShader='uniform float fireDissolve;varying vec3 fireBind;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\nfloat breakup=fract(sin(dot(floor(fireBind*29.0),vec3(12.9898,78.233,31.41)))*43758.5453);if(breakup<fireDissolve)discard;');shader.fragmentShader=shader.fragmentShader.replace('#include <tonemapping_fragment>','gl_FragColor.rgb=mix(gl_FragColor.rgb,vec3(.07,.059,.046),smoothstep(.0,.35,fireDissolve));\n#include <tonemapping_fragment>');};
+  material.onBeforeCompile=function(shader){compile.call(this,shader);inject(shader);shader.fragmentShader=shader.fragmentShader.replace('#include <tonemapping_fragment>','gl_FragColor.rgb=mix(gl_FragColor.rgb,vec3(.07,.059,.046),smoothstep(.0,.35,fireDissolve));\n#include <tonemapping_fragment>');};
   material.customProgramCacheKey=()=>key.call(material)+'-roster-fire-dissolve-v1';material.needsUpdate=true;
  }
- return ()=>{for(const {material,compile,key}of saved){material.onBeforeCompile=compile;material.customProgramCacheKey=key;material.needsUpdate=true;}};
+ return ()=>{for(const {material,compile,key}of saved){material.onBeforeCompile=compile;material.customProgramCacheKey=key;material.needsUpdate=true;}for(const [mesh,old]of depthAssignments)mesh.customDepthMaterial=old;depth.dispose();};
 }
 
 export async function createFireActor(renderer,loader,atlas,selection){
