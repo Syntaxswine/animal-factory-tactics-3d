@@ -35,14 +35,16 @@ async function start(){
  const cellGeometry=new THREE.PlaneGeometry(.94,.94);cellGeometry.rotateX(-Math.PI/2);
  const cellMaterial=new THREE.MeshBasicMaterial({transparent:true,opacity:.31,depthWrite:false,toneMapped:false});
  const cellsMesh=new THREE.InstancedMesh(cellGeometry,cellMaterial,128);cellsMesh.name='standing-clearance-cells';cellsMesh.frustumCulled=false;fitting.add(cellsMesh);
- function lineLayer(color,opacity){
-  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(3072),3));geometry.setDrawRange(0,0);
+ function lineLayer(color,opacity,capacity=1024){
+  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(capacity*3),3));geometry.setDrawRange(0,0);
   const material=new THREE.LineBasicMaterial({color,transparent:true,opacity,depthWrite:false,toneMapped:false});
   const line=new THREE.LineSegments(geometry,material);line.frustumCulled=false;fitting.add(line);return line;
  }
  const paths=lineLayer(0xc0edc2,.9),bases=lineLayer(0xffda82,.95),rulers=lineLayer(0xffe4a0,.95);
+ const bodyOutline=lineLayer(0xfff1bd,.65,2048),contacts=lineLayer(0xff7755,1);bodyOutline.name='body-clearance-probe';contacts.name='body-clearance-contacts';
+ bodyOutline.material.depthTest=contacts.material.depthTest=false;bodyOutline.renderOrder=2;contacts.renderOrder=3;
  function setLines(line,points){const p=line.geometry.attributes.position;if(points.length>p.count)throw Error('Overlay capacity exceeded');points.forEach((v,i)=>p.setXYZ(i,...v));p.needsUpdate=true;line.geometry.setDrawRange(0,points.length);}
- let azimuth=.66,elevation=.50,zoom=1,selection=[],tags=[],disposed=false,ppu=58,clearanceMaps=[],placementCell=[1,7];
+ let azimuth=.66,elevation=.50,zoom=1,selection=[],tags=[],disposed=false,ppu=58,clearanceMaps=[],placementCell=[1,7],inspectedCell=null;
  const focus=new THREE.Vector3(),bounds=new THREE.Box3();
  const idForCell=c=>c.join(','),reachable=(map,c)=>map.cells.some(t=>t.x===c[0]&&t.z===c[1]&&t.reachable);
  function addTag(text,point,kind=''){
@@ -102,13 +104,36 @@ async function start(){
   setLines(paths,lines);setLines(bases,fixed);setLines(rulers,measures);placeWorkers();
   $('placement').textContent=(relocated?'Previous tile unavailable; moved to a clear position. ':'')+placementDescription();
   $('clearance').textContent=clearanceMaps.map((m,i)=>(selection[i].state==='intact'?'Intact':'Destroyed')+': '+m.cells.filter(c=>c.reachable).length+'/64 tiles clear').join(' · ')+' · '+SITE_CLEARANCE_PROFILES[$('profile').value].label+' clearance';
+  inspectCell(inspectedCell);
+ }
+ function inspectCell(cell){
+  inspectedCell=cell?cell.slice():null;const outline=[],hits=[],reports=[];
+  if(cell)selection.forEach((asset,i)=>{
+   const map=clearanceMaps[i],tile=map.cells.find(c=>c.x===cell[0]&&c.z===cell[1]),x=asset.root.position.x+cell[0]-3.5,z=cell[1]-3.5,y=map.surfaceHeight;
+   if(!tile)return;
+   for(const b of map.profile.bands){
+    for(const height of [b.minY,b.maxY])for(let n=0;n<16;n++)for(const angle of [n/16*Math.PI*2,(n+1)/16*Math.PI*2])outline.push([x+Math.cos(angle)*b.radius,y+height,z+Math.sin(angle)*b.radius]);
+    for(const angle of [0,Math.PI/2,Math.PI,Math.PI*1.5])outline.push([x+Math.cos(angle)*b.radius,y+b.minY,z+Math.sin(angle)*b.radius],[x+Math.cos(angle)*b.radius,y+b.maxY,z+Math.sin(angle)*b.radius]);
+   }
+   if(tile.contact){
+    const p=tile.contact.point.slice();p[0]+=asset.root.position.x;hits.push([x,p[1],z],p);
+    for(let axis=0;axis<3;axis++){const a=p.slice(),b=p.slice();a[axis]-=.08;b[axis]+=.08;hits.push(a,b);}
+    const names={'launcher-foundation':'launcher base / outrigger','tower-foundations':'tower footing','fixed-detail':'cable or structural fitting','scattered-fragments':'rubble'};
+    const part=names[tile.reason]||tile.reason.replaceAll('-',' '),height=p[1]-y;
+    reports.push(asset.state+': '+part+' at '+height.toFixed(2)+' tiles above the slab');
+   }else reports.push(asset.state+': '+(tile.reachable?'clear':'clear pocket without an approach'));
+  });
+  setLines(bodyOutline,outline);setLines(contacts,hits);
+  $('inspection').textContent=cell?'Column '+(cell[0]+1)+', row '+(cell[1]+1)+' · '+reports.join(' · ')+' · Outline includes room to turn.':'';
  }
  function placementDescription(){return placementCell?'Horse on column '+(placementCell[0]+1)+', row '+(placementCell[1]+1)+' · original 1.65-tile height.':'Horse beside the site · original 1.65-tile height.';}
  function placeWorkers(){
   selection.forEach((asset,i)=>workers[i].root.position.set(asset.root.position.x+(placementCell?placementCell[0]-3.5:4.65),placementCell?asset.root.userData.slabHeight:0,placementCell?placementCell[1]-3.5:2.7));horses.updateMatrixWorld(true);
  }
  function placeHorse(cell){
-  if(cell&&!clearanceMaps.every(m=>reachable(m,cell))){$('placement').textContent='That tile is blocked or disconnected in one of the displayed states.';return false;}
+  if(cell&&(!Array.isArray(cell)||cell.length!==2||!cell.every(n=>Number.isInteger(n)&&n>=0&&n<8)))throw RangeError('Invalid site tile');
+  inspectCell(cell);
+  if(cell&&!clearanceMaps.every(m=>reachable(m,cell))){$('placement').textContent='Horse stays on its previous clear tile; see the contact marker.';render();return false;}
   placementCell=cell?cell.slice():null;$('tile').value=cell?idForCell(cell):'outside';placeWorkers();
   $('placement').textContent=placementDescription();render();return true;
  }
@@ -127,6 +152,7 @@ async function start(){
   ppu*=zoom;camera.left=-w/ppu/2;camera.right=w/ppu/2;camera.top=h/ppu/2;camera.bottom=-h/ppu/2;camera.near=.1;camera.far=90;camera.updateProjectionMatrix();
   grids.visible=$('grid').checked||$('passage').checked;horses.visible=$('horse').checked;
   cellsMesh.visible=paths.visible=$('passage').checked;bases.visible=$('foundations').checked;rulers.visible=$('ruler').checked&&elevation<1.2&&ppu>=30;$('legend').hidden=!$('passage').checked;
+  bodyOutline.visible=contacts.visible=Boolean(inspectedCell)&&$('passage').checked&&$('probe').checked;
   models.traverse(o=>{if(o.isMesh)o.material.wireframe=$('wire').checked;});
   greyMaterial.wireframe=$('wire').checked;scene.overrideMaterial=$('grey').checked?greyMaterial:null;
   // Keep the colored fitting overlays readable in grey sculpt mode.
@@ -140,7 +166,7 @@ async function start(){
  const params=new URLSearchParams(location.search);
  for(const id of ['site','mode','view','frame','scale','profile'])if([...$(id).options].some(o=>o.value===params.get(id)))$(id).value=params.get(id);
  for(const id of ['passage','foundations','ruler'])if(params.has(id))$(id).checked=params.get(id)==='1';
- $('site').onchange=()=>{zoom=1;placementCell=[1,7];rebuild();};
+ $('site').onchange=()=>{zoom=1;placementCell=[1,7];inspectedCell=null;rebuild();};
  $('mode').onchange=rebuild;
  $('frame').onchange=rebuild;
  $('damage').onclick=()=>{$('mode').value=$('mode').value==='intact'?'destroyed':'intact';rebuild();};
@@ -148,7 +174,7 @@ async function start(){
  $('tile').onchange=()=>placeHorse($('tile').value==='outside'?null:$('tile').value.split(',').map(Number));
  $('view').onchange=()=>{orientation();syncUrl();};
  $('scale').onchange=()=>{zoom=1;render();syncUrl();};
- for(const id of ['grid','horse','grey','wire'])$(id).onchange=render;
+ for(const id of ['grid','horse','grey','wire','probe'])$(id).onchange=render;
  for(const id of ['passage','foundations','ruler'])$(id).onchange=()=>{syncUrl();render();};
  $('reset').onclick=()=>{orientation();};
  let pointer=null;const canvas=renderer.domElement;
@@ -164,13 +190,13 @@ async function start(){
  canvas.onpointercancel=()=>pointer=null;
  canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=THREE.MathUtils.clamp(zoom*Math.exp(-e.deltaY*.001),.45,2.8);render();},{passive:false});
  rebuild();orientation();const resize=new ResizeObserver(render);resize.observe(stage);
- function diagnostics(){return {site:$('site').value,mode:$('mode').value,ppu,focus:focus.toArray(),zoom,azimuth,elevation,placementCell,clearance:clearanceMaps,resources:library.stats(),gpu:{...renderer.info.memory},workers:workers.slice(0,selection.length).map(w=>({root:w.root.position.toArray(),scale:w.root.scale.toArray(),...w.diagnostics()})),assets:selection.map(a=>({id:a.site.id,state:a.state,tiles:a.site.tiles,foundations:a.root.userData.foundations,bounds:new THREE.Box3().setFromObject(a.root,true),triangles:(()=>{let n=0;a.root.traverse(o=>{if(o.isMesh)n+=o.geometry.attributes.position.count/3;});return n;})()})),disposed};}
+ function diagnostics(){return {site:$('site').value,mode:$('mode').value,ppu,focus:focus.toArray(),zoom,azimuth,elevation,placementCell,inspectedCell,clearance:clearanceMaps,resources:library.stats(),gpu:{...renderer.info.memory},workers:workers.slice(0,selection.length).map(w=>({root:w.root.position.toArray(),scale:w.root.scale.toArray(),...w.diagnostics()})),assets:selection.map(a=>({id:a.site.id,state:a.state,tiles:a.site.tiles,foundations:a.root.userData.foundations,bounds:new THREE.Box3().setFromObject(a.root,true),triangles:(()=>{let n=0;a.root.traverse(o=>{if(o.isMesh)n+=o.geometry.attributes.position.count/3;});return n;})()})),disposed};}
  function dispose(){
   if(disposed)return;disposed=true;resize.disconnect();library.dispose();paint.dispose();
   for(const worker of workers){worker.dispose();worker.skeleton.dispose();}
-  for(const t of [atlas,horseAtlas])t.dispose();floor.geometry.dispose();floor.material.dispose();gridGeometry.dispose();gridMaterial.dispose();greyMaterial.dispose();cellsMesh.dispose();cellGeometry.dispose();cellMaterial.dispose();for(const layer of [paths,bases,rulers]){layer.geometry.dispose();layer.material.dispose();}renderer.dispose();
+  for(const t of [atlas,horseAtlas])t.dispose();floor.geometry.dispose();floor.material.dispose();gridGeometry.dispose();gridMaterial.dispose();greyMaterial.dispose();cellsMesh.dispose();cellGeometry.dispose();cellMaterial.dispose();for(const layer of [paths,bases,rulers,bodyOutline,contacts]){layer.geometry.dispose();layer.material.dispose();}renderer.dispose();
  }
- window.sitesStudy={ready:true,scene,camera,renderer,models,library,selection:()=>selection,diagnostics,dispose,placeHorse,select(id,mode='pair'){if(!STRATEGIC_SITES.some(s=>s.id===id)||!['pair','intact','destroyed'].includes(mode))throw RangeError('Invalid study selection');if(id!==$('site').value){zoom=1;placementCell=[1,7];}$('site').value=id;$('mode').value=mode;rebuild();},view(name){if(![...$('view').options].some(o=>o.value===name))throw RangeError('Invalid view');$('view').value=name;orientation();syncUrl();}};
+ window.sitesStudy={ready:true,scene,camera,renderer,models,library,selection:()=>selection,diagnostics,dispose,placeHorse,select(id,mode='pair'){if(!STRATEGIC_SITES.some(s=>s.id===id)||!['pair','intact','destroyed'].includes(mode))throw RangeError('Invalid study selection');if(id!==$('site').value){zoom=1;placementCell=[1,7];inspectedCell=null;}$('site').value=id;$('mode').value=mode;rebuild();},view(name){if(![...$('view').options].some(o=>o.value===name))throw RangeError('Invalid view');$('view').value=name;orientation();syncUrl();}};
  window.addEventListener('pagehide',dispose,{once:true});
 }
 start().catch(error=>{$('error').textContent='Could not load strategic sites: '+error.message;console.error(error);});

@@ -16,12 +16,12 @@ try{
   assets.push({id:site.id+'-'+state,siteId:site.id,name:site.name,state,tiles:site.tiles,triangles,drawCalls:meshes,height:+asset.bounds.max.y.toFixed(3),reference:'reference-'+site.id+'.png',foundations:asset.root.userData.foundations,clearance});
  }
  const manifest={
-  version:2,status:'presentation-assets',units:'1 world unit = 1 game tile; standard wall height = 2; horse model height = 1.65',
+  version:3,status:'presentation-assets',units:'1 world unit = 1 game tile; standard wall height = 2; horse model height = 1.65',
   footprint:{width:8,depth:8,anchor:'center at [0,0,0], local Y up',boundsXZ:[-4,4],slabHeight:.24},
   library:'../../../tactics/strategic-sites.js',atlas:'material-atlas.png',
   ownership:'Build results borrow cached geometry/materials/textures. Remove roots before disposing their library; input atlas remains caller-owned.',
   integration:'Not registered in the gameplay/editor prop catalog. Clearance is an authored standing-fit proposal, not gameplay navigation. Collision, cover, surface entry, damage events and strategic effects still require integration.',
-  clearance:{status:'proposed-standing-clearance',profiles:SITE_CLEARANCE_PROFILES,stepClearance:SITE_STEP_CLEARANCE,cellOrigin:[-3.5,-3.5],placementOriginOffset:[3.5,3.5],legend:{'.':'clear and reachable','#':'blocked','o':'isolated clear pocket'},links:'[fromColumn,fromRow,toColumn,toRow], zero-based cardinal connections with swept body clearance; diagonals not defined',rows:'Row zero is local Z=-3.5; column zero is local X=-3.5. Surface is slabHeight. Keep the site placement footprint separate from its passage mask.',scope:'Neutral standing bodies only; held weapons, combat poses, cover/visibility and gameplay step heights require separate fitting.'},
+  clearance:{status:'proposed-standing-clearance',shape:'circular-height-bands',profiles:SITE_CLEARANCE_PROFILES,stepClearance:SITE_STEP_CLEARANCE,cellOrigin:[-3.5,-3.5],placementOriginOffset:[3.5,3.5],legend:{'.':'clear and reachable','#':'blocked','o':'isolated clear pocket'},links:'[fromColumn,fromRow,toColumn,toRow], zero-based cardinal connections with continuous circular-band capsule sweeps; diagonals not defined',rows:'Row zero is local Z=-3.5; column zero is local X=-3.5. Surface is slabHeight. Keep the site placement footprint separate from its passage mask.',scope:'Neutral standing and turning clearance measured from body triangle cross-sections, plus .02 radius margin rounded up to .01. Held weapons, combat poses, cover/visibility and gameplay step heights require separate fitting.'},
   assets,
  };
  // Keep each numeric coordinate/link tuple on one line for reviewable diffs.

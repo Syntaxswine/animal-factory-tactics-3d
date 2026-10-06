@@ -29,6 +29,10 @@ events. The two states are static models; there is no destruction animation.
 - [x] Follow-up: lock the camera when comparing damage states in place.
 - [x] Follow-up: verify every permanent concrete vertex is identical in both states.
 - [x] Independent hostile review of the scale/passage follow-up: **9/10**.
+- [x] Replace full-height square probes with measured circular height bands.
+- [x] Reopen false-positive concrete cells without shrinking the characters.
+- [x] Show the selected turning envelope and real geometry contact on inspection.
+- [x] Independent hostile review of the rounded-clearance correction: **9/10**.
 
 ## Assets and visual intent
 
@@ -78,7 +82,12 @@ views or below 30 px/tile, where its labels would overlap.
 
 **Passage map** displays individual 1 × 1 cells: green for reachable clear space,
 red for blocked space, amber for a clear but disconnected pocket. The connecting
-lines represent tested cardinal sweeps. Click a clear cell, or use **Horse tile**,
+lines represent tested cardinal sweeps. Click any cell to inspect its body outline
+and, if blocked, the actual point of contact with the site. The outline represents
+room to turn at every heading: the whole-roster option also accommodates broader
+bodies and the skunk's tail. **Body outline** hides these inspection lines.
+
+Click a clear cell, or use **Horse tile**,
 to place the horse on the slab without resizing it. In the paired view the chosen
 tile must be clear in both states. Changing state/profile moves an invalid old
 placement to a clear tile and reports the change.
@@ -125,10 +134,14 @@ clearance data. The manifest contains the same masks, connections and entries
 for all six forms. `root.userData.foundations` records unchanged local bounds
 and convex X/Z outlines for each permanent concrete foundation.
 
-- A **horse** probe is 0.92 units wide and 1.70 high. A **wide** probe is 1.40 wide
-  and 1.85 high. Tests measure the actual neutral meshes of all twelve animals
-  at native scale, including their radial extent through rotation, against these
-  envelopes. These probes do not change gameplay character dimensions.
+- Version 3 uses **circular height bands**, measured from actual neutral triangle
+  cross-sections of all twelve native meshes. Add 0.02 radial clearance and round
+  upward to 0.01. The horse is 1.70 high including margin; the roster envelope is
+  1.85 high. Neither character dimensions nor site geometry are changed.
+- The earlier square probe incorrectly used maximum tail/shoulder width all the
+  way down to the ground. It blocked visibly empty diagonal corners and concrete
+  beside low footings. The new foot radii are 0.35 for the horse and 0.38 for the
+  roster, with wider radii only where the actual bodies require them.
 - The standing probe starts at slab height + 0.08, allowing low cable covers and
   tiny fragments below that height. Foundations, equipment, braces and larger
   rubble intersecting the body/head envelope block the cell. Elevated parts
@@ -138,24 +151,42 @@ and convex X/Z outlines for each permanent concrete foundation.
   translation/rotation, to obtain world cell centers. If the editor anchors at
   the first cell instead, use the recorded `[3.5, 3.5]` placement-origin offset.
 - `.` is reachable clear space, `#` is blocked, and `o` is an isolated clear
-  pocket. Connections test the entire swept standing envelope between adjacent
-  centers. Boundary entries also test the sweep to the neighboring outside cell.
+  pocket. Connections test **continuous capsule sweeps** for every circular height
+  band between adjacent centers. Site triangles are clipped to each band's height;
+  the projected polygons are checked against the swept circle, not its bounding
+  rectangle. Boundary entries also test the sweep to the neighboring outside cell.
   Clear centers alone do not establish a path. Diagonals are not defined.
 - Slab support height is **0.24**. The art-level outside-entry test assumes this
   height throughout its sweep; the game must resolve the transition from local
   terrain onto the slab using its own step/ramp rules.
-- These are **neutral standing fit proposals**, not game navigation, projectile
+- These are **neutral standing and turning fit proposals**, not game navigation, projectile
   collision or cover data. Held weapons, animation extremes, adjacent props,
   climbing, line of sight and roof access require separate integration checks.
 
-| Site/state | Horse reachable tiles | Wide reachable tiles |
+| Height above slab | Horse radius | Whole-roster radius |
 | --- | ---: | ---: |
-| Radio intact | 39 | 35 |
-| Radio destroyed | 26 | 23 |
-| Radar intact | 42 | 37 |
-| Radar destroyed | 34 | 28 |
-| SAM intact | 32 | 21 |
-| SAM destroyed | 28 | 17 |
+| 0–0.25 | 0.35 | 0.38 |
+| 0.25–0.50 | 0.34 | 0.43 |
+| 0.50–0.75 | 0.44 | 0.55 |
+| 0.75–1.00 | 0.46 | 0.67 |
+| 1.00–1.25 | 0.46 | 0.70 |
+| 1.25–1.50 | 0.30 | 0.72 |
+| 1.50–profile height | 0.19 | 0.71 |
+
+| Site/state | Horse reachable tiles | Whole-roster reachable tiles |
+| --- | ---: | ---: |
+| Radio intact | 43 | 40 |
+| Radio destroyed | 31 | 27 |
+| Radar intact | 45 | 40 |
+| Radar destroyed | 38 | 34 |
+| SAM intact | 40 | 36 |
+| SAM destroyed | 35 | 33 |
+
+For the whole roster, the SAM correction restores 15 intact and 16 destroyed
+tiles that the square probe incorrectly blocked. Raised equipment and genuinely
+intersecting wreckage still block their cells. Contact markers are reconstructed
+on the actual source triangles, including sloping wreckage, rather than placed
+at an approximate height-band midpoint.
 
 Open concrete therefore stays usable; destruction updates its routes to account
 for the fallen equipment. A placement system must reserve the full site footprint
@@ -172,16 +203,20 @@ $env:PLAYWRIGHT_PATH = 'PATH/TO/node_modules/playwright'
 node tools/check-strategic-sites.mjs
 ```
 
-The eighteen focused tests cover all six forms and all four quarter turns,
+The twenty-three focused tests cover all six forms and all four quarter turns,
 per-assembly ground contact, retained foundations, finite geometry and bounded
 UVs, clone independence, repeat construction, single disposal, radar platform
 clearance and the manifest. Additional checks compare exact permanent concrete
 vertices, all twelve native character envelopes, door approaches, overhead
 clearance, thin barriers between clear cells, isolated pockets, placed/rotated
-masks and exported navigation proposals.
+masks and exported navigation proposals. Rounded-clearance regressions check
+triangle cross-sections through band boundaries, low versus shoulder-height
+obstacles, diagonal corners, capsule sweeps past endpoints, the formerly blocked
+SAM perimeter, genuine central obstructions and on-surface contact markers.
 The browser check covers 24 model/view combinations, 18 in-place damage swaps
 across scale/framing controls after orbiting and zooming, six passage/profile
-comparisons, on-slab native player placement, rendered mask parity, controls,
+comparisons, on-slab native player placement, rendered mask parity, the body/contact
+inspector, controls,
 repeated selection, a narrow viewport and disposal.
 Screenshots and helper close receipts go to ignored `artifacts/strategic-sites/`.
 
@@ -203,7 +238,38 @@ showed that the current 3D editor and game must agree on their shared prop types
 
 ## Hostile review result — 2026-10-06
 
+### Rounded-clearance correction
+
+Independent reviewer: **9/10 — pass**, with no blocking findings. All **23**
+focused tests pass. The reviewer placed the native horse on eight newly open
+SAM samples, inspected close rear views and all three overhead passage pairs,
+and checked genuine rail/wreck obstructions and the mobile inspector.
+
+The whole-roster SAM proposal now has **36 intact / 33 destroyed reachable
+tiles**, restoring 15 / 16 false positives. A remaining intact rail exclusion
+was verified against an actual native skunk-tail vertex at a turning heading;
+the horse correctly fits that same tile under its own profile. Character and
+site geometry are unchanged.
+
+The builder's browser matrix passes, including the new body/contact inspection.
+The reviewer also confirmed pointer inspection and stable GPU resources across
+64 successive inspections. Build/module closure and the release asset audit
+pass; all **10** packaged files match their sources. Temporary browsers closed
+successfully and exact recorded process identities are absent.
+
+This approves the revised viewer and **neutral standing/turning passage
+proposal**. Gameplay navigation, animated/armed clearance and slab entry remain
+integration work, as listed above.
+
+![Radio rounded passage proposal](strategic-sites-review/radio-passage-rounded.png)
+![Radar rounded passage proposal](strategic-sites-review/radar-passage-rounded.png)
+![SAM rounded passage proposal](strategic-sites-review/sam-passage-rounded.png)
+![Body outline and actual obstruction contact](strategic-sites-review/sam-obstruction-inspector.png)
+
 ### Scale, passage and fixed-foundation revision
+
+Historical review of the preceding square-probe version; its passage counts and
+envelopes are superseded by the rounded-clearance correction above.
 
 Independent reviewer: **9/10 — pass**, with no remaining blocking findings.
 All 18 focused tests pass. Independent polygon clipping agrees with all **768**
