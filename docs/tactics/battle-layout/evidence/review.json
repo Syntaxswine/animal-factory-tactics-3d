@@ -1,0 +1,29 @@
+{
+  "screens": [
+    "desktop.png",
+    "drawer.png",
+    "stances.png",
+    "laptop.png",
+    "short.png",
+    "tablet.png",
+    "mobile.png",
+    "mobile-stances.png",
+    "mobile-save.png"
+  ],
+  "checks": [
+    "drawer retains camera; Escape closes and restores focus",
+    "portrait shift-selection and group stance controls",
+    "quick swap charges exactly 2 AP and updates held row",
+    "Inventory free to inspect; pause and focus restore",
+    "pause gating and level selection",
+    "laptop no document overflow",
+    "short no document overflow",
+    "tablet no document overflow",
+    "mobile no document overflow",
+    "small-screen stance placement and save access",
+    "Escape closes topmost save modal and restores visible drawer trigger"
+  ],
+  "errors": [],
+  "badResponses": [],
+  "passed": true
+}

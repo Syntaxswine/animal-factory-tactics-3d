@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import assert from 'node:assert/strict';import fs from 'node:fs';import {fileURLToPath} from 'node:url';import {createRequire} from 'node:module';import {execFileSync} from 'node:child_process';
 import {blankMap} from '../dist/tactics/core/maps.js';
 const {chromium}=createRequire(import.meta.url)(process.env.PLAYWRIGHT_PATH||'playwright'),out=new URL('../artifacts/explosive-barrels/',import.meta.url);fs.mkdirSync(out,{recursive:true});
@@ -13,7 +14,7 @@ try{
   const {createGame}=await import('./core/engine.js'),{startEncounterClock}=await import('./encounter-clock.js'),fresh=createGame(0,battle3d.state.definition,true,'easy'),a=fresh.units[0];
   a.weapon='rifle';a.accuracy=1000;a.ap=30;a.heading=0;fresh.phase='player';fresh.rules.awareness=false;fresh.detected.add(4);startEncounterClock(fresh);
   for(let y=0;y<45;y++)for(let x=0;x<45;x++){fresh.visible.add(`${x},${y}`);fresh.seen.add(`${x},${y}`);}Object.assign(battle3d.state,fresh);battle3d.state.revision++;battle3d.renderer.reducedMotion={matches:true};
- });await page.click('#center');await page.waitForFunction(()=>battle3d.renderer.models.has(0)&&battle3d.renderer.models.get(0).weapon==='rifle'&&battle3d.renderer.paintedEnvironment.count===1&&!battle3d.renderer.busy,{},{timeout:60000});
+ });await clickBattleControl(page,'#center');await page.waitForFunction(()=>battle3d.renderer.models.has(0)&&battle3d.renderer.models.get(0).weapon==='rifle'&&battle3d.renderer.paintedEnvironment.count===1&&!battle3d.renderer.busy,{},{timeout:60000});
  const point=await page.evaluate(async()=>{const T=await import('./vendor/three.module.js'),p=new T.Vector3(20,.4,20).project(battle3d.renderer.camera),r=document.querySelector('#battle').getBoundingClientRect();return {x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2};});
  await page.mouse.move(point.x,point.y);await page.waitForFunction(()=>document.querySelector('#battle').dataset.targetCursor==='red');
  await page.evaluate(()=>battle3d.state.units[0].heading=180);await page.waitForFunction(()=>document.querySelector('#battle').dataset.targetCursor==='grey');await page.evaluate(()=>battle3d.state.units[0].heading=0);await page.waitForFunction(()=>document.querySelector('#battle').dataset.targetCursor==='red');
@@ -35,11 +36,11 @@ try{
  await page.evaluate(()=>{const fx=battle3d.renderer.tankEffects;fx.reviewDraw=fx.draw;fx.draw=function(camera){this.reviewDraw(camera);for(const b of this.bursts.values())if(b.effects)b.effects.group.visible=false;for(const e of this.ground.values())if(e.effects)e.effects.group.visible=false;};});await seek(300);
  await page.locator('#viewport').screenshot({path:fileURLToPath(new URL('barrel-live-breakup.png',out))});await page.evaluate(()=>{const fx=battle3d.renderer.tankEffects;fx.draw=fx.reviewDraw;delete fx.reviewDraw;});
  await seek(6000);assert.equal(await page.evaluate(()=>battle3d.renderer.tankEffects.bursts.size),0);assert.equal(await page.evaluate(()=>battle3d.renderer.tankEffects.ground.get(0).effects.ground.length),81);
- await page.click('#quicksave');await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('saved'));
- await page.click('#quickload');await page.waitForFunction(()=>!battle3d.state.effect&&battle3d.state.fireAnimations===undefined);
+ await clickBattleControl(page,'#quicksave');await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('saved'));
+ await clickBattleControl(page,'#quickload');await page.waitForFunction(()=>!battle3d.state.effect&&battle3d.state.fireAnimations===undefined);
  assert.deepEqual(await page.evaluate(()=>({props:battle3d.state.props.length,hp:battle3d.state.units[1].hp,ap:battle3d.state.units[0].ap,ammo:battle3d.state.units[0].ammo.rifle,fires:battle3d.state.fires.length})),{props:0,hp:0,ap:24,ammo:4,fires:81});
  assert.equal(await page.evaluate(()=>battle3d.renderer.tankEffects.bursts.size),0,'loading must not replay the rupture');
- await page.evaluate(()=>window.oldRenderer=battle3d.renderer);await page.click('#restart');await page.waitForFunction(()=>battle3d.renderer!==oldRenderer&&battle3d.renderer.paintedEnvironment.count===1,{},{timeout:60000});assert.equal(await page.evaluate(()=>oldRenderer.tankEffects.disposed),true);
+ await page.evaluate(()=>window.oldRenderer=battle3d.renderer);await clickBattleControl(page,'#restart');await page.waitForFunction(()=>battle3d.renderer!==oldRenderer&&battle3d.renderer.paintedEnvironment.count===1,{},{timeout:60000});assert.equal(await page.evaluate(()=>oldRenderer.tankEffects.disposed),true);
  // Inspect the actual editor palette, placement, painted mesh, and undo/redo.
  await page.goto(origin+'/tactics/editor-3d.html?editing=1');await page.waitForFunction(()=>window.editor3d?.document&&!editor3d.loading,{},{timeout:60000});
  await page.locator('[data-group="objects"]').click();await page.selectOption('#prop-kind','barrel-explosive');assert.match(await page.locator('#prop-kind option:checked').textContent(),/Explosive barrel/);

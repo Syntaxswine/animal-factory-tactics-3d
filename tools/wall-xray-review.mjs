@@ -1,3 +1,4 @@
+import {clickBattleControl,selectBattleOption} from './battle-ui-review.mjs';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import fs from 'node:fs';
@@ -18,7 +19,7 @@ try{
  assert.ok(pixels.inside>1000);assert.equal(pixels.outside,0);
  await page.screenshot({path:fileURLToPath(new URL('xray.png',output))});
  const radius=await page.evaluate(()=>battle3d.renderer.wallXray.uniforms.xrayRadius.value);await page.mouse.wheel(0,-400);await page.waitForTimeout(120);assert.ok(await page.evaluate(()=>battle3d.renderer.wallXray.uniforms.xrayRadius.value)>radius);
- await page.click('#center');await page.mouse.move(20,25);await page.waitForFunction(()=>!battle3d.renderer.wallXray.uniforms.xrayActive.value);
+ await clickBattleControl(page,'#center');await page.mouse.move(20,25);await page.waitForFunction(()=>!battle3d.renderer.wallXray.uniforms.xrayActive.value);
  // Find exposed door wire/surface space without an actor or loot in front of it.
  const door=await page.evaluate(async()=>{const T=await import('./vendor/three.module.js'),r=battle3d.renderer,c=document.getElementById('battle');for(let y=.1;y<1.6;y+=.1)for(let z=5.55;z<6.46;z+=.05){const p=new T.Vector3(8.58,y,z).project(r.camera),x=(p.x+1)*c.clientWidth/2,sy=(1-p.y)*c.clientHeight/2;if(r.pickDoor(x,sy,c.clientWidth,c.clientHeight,0)==='e:8:6'&&r.pick(x,sy,c.clientWidth,c.clientHeight)===null&&!r.pickLoot(x,sy,c.clientWidth,c.clientHeight))return {x,y:sy};}return null;});assert.ok(door);
  await page.click('#pause');await page.mouse.click(box.x+door.x,box.y+door.y);await page.waitForFunction(()=>battle3d.state.units[0].x===9&&battle3d.state.edges['e:8:6']==='doorway-concrete-open');await page.click('#pause');
@@ -26,7 +27,7 @@ try{
  const memory=await page.evaluate(()=>({...battle3d.renderer.renderer.info.memory}));for(let i=0;i<20;i++)await page.mouse.move(box.x+350+i*8,box.y+450);assert.deepEqual(await page.evaluate(()=>({...battle3d.renderer.renderer.info.memory})),memory);
  // Fog masks wall batches before X-ray attaches; unknown walls remain absent.
  await page.evaluate(()=>{const s=battle3d.state;s.difficulty='standard';s.seen=new Set(['8,6']);battle3d.renderer.world=null;});await page.waitForTimeout(150);assert.equal(await page.evaluate(()=>[...battle3d.renderer.chunks.values()].flatMap(m=>m.userData.boxes).some(b=>b.source.edge==='s:6:8')),false);
- await page.selectOption('#floor','1');await page.waitForTimeout(100);await page.selectOption('#floor','0');await page.waitForTimeout(100);
+ await selectBattleOption(page,'#floor','1');await page.waitForTimeout(100);await selectBattleOption(page,'#floor','0');await page.waitForTimeout(100);
  await page.setViewportSize({width:390,height:844});await page.mouse.move(50,250);await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
  await page.screenshot({path:fileURLToPath(new URL('mobile.png',output))});
  assert.deepEqual(errors,[]);console.log(JSON.stringify({pixels,doorClick:'passed',hiddenActorsAndLoot:'passed',fogWalls:'passed',zoomAndExit:'passed',highDPI:true,mobile:true,memory,errors}));

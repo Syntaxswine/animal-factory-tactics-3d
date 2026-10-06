@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import fs from 'node:fs';
@@ -9,9 +10,9 @@ page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()
 try{
  await page.goto(process.env.REVIEW_URL||'http://127.0.0.1:4318/tactics/battle-3d.html');
  await page.waitForFunction(()=>window.battle3d?.renderer.models.size>=4);
- await page.locator('#squad button').nth(1).click();
+ await page.locator('#squad .merc-select').nth(1).click();
  const stance=process.env.REVIEW_STANCE||'standing';
- if(stance!=='standing'){await page.click('#stance-'+stance);await page.waitForFunction(stance=>{const p=battle3d.renderer.motion.sample(battle3d.state.units[1]).pose;return stance==='prone'?p.prone===1:p.kneel===1;},stance);}
+ if(stance!=='standing'){await clickBattleControl(page,'#stance-'+stance);await page.waitForFunction(stance=>{const p=battle3d.renderer.motion.sample(battle3d.state.units[1]).pose;return stance==='prone'?p.prone===1:p.kneel===1;},stance);}
  await page.evaluate(async()=>{const {refresh}=await import('./core/engine.js'),s=battle3d.state,g=s.units[4];g.x=7;g.y=6;g.hp=g.maxHp=200;refresh(s);});
  await page.waitForFunction(()=>battle3d.picks.some(p=>p.id===4));
  const box=await page.locator('#battle').boundingBox(),point=await page.evaluate(()=>{const b=battle3d,c=document.getElementById('battle'),p=b.picks.find(p=>p.id===4);for(const h of [30,40,20,50]){const y=p.py-h*b.view.zoom;if(b.renderer.pick(p.px,y,c.clientWidth,c.clientHeight)===4)return {x:p.px,y};}throw Error('Cannot pick test target');});

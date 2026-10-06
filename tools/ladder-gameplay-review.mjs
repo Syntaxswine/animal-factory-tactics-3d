@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import {createRequire} from 'node:module';import assert from 'node:assert/strict';import fs from 'node:fs';
 const {chromium}=createRequire(import.meta.url)(process.env.PLAYWRIGHT_PATH||'playwright');const browser=await chromium.launch({channel:'msedge',headless:true});
 try{
@@ -10,7 +11,7 @@ try{
    const {blankMap}=await import('./core/maps.js'),{createGame}=await import('./core/engine.js'),{towerEntry}=await import('./tower-geometry.js'),{startEncounterClock}=await import('./encounter-clock.js');
    const m=blankMap();m.props=[{kind,x:10,y:10,z:0}];m.starts[0]=towerEntry(m.props[0]);const s=createGame(42,m,false,'easy',{awareness:true,statSystem:true,rosterSeed:1947}),u=s.units[0];s.units=[u];u.id=id;u.species=species;u.weapon=species==='hen'?'hands':'rifle';u.slots[0]=u.weapon;s.selected=id;startEncounterClock(s);const r=battle3d.renderer;r.traversal.clear();r.motion.clear();Object.assign(battle3d.state,s);window.frameTicks=0;window.tickTimer=setInterval(()=>window.frameTicks++,16);
   },{species,kind,id});
-  await page.click('#center');await page.click('#pause');await page.click('#climb-tower');
+  await clickBattleControl(page,'#center');await page.click('#pause');await page.click('#climb-tower');
   await page.waitForFunction(()=>battle3d.renderer.traversal.active?.motion||battle3d.renderer.diagnostics.length,null,{timeout:180000});
   const diag=await page.evaluate(()=>battle3d.renderer.diagnostics);assert.deepEqual(diag,[],species+' '+kind);
   await page.click('#pause');
@@ -21,7 +22,7 @@ try{
     await page.waitForFunction(()=>battle3d.renderer.traversal.active?.motion,null,{timeout:180000});
    }
    const snapshot=await page.evaluate(()=>JSON.stringify(battle3d.state.units[0]));
-   await page.evaluate(()=>{const r=battle3d.renderer,a=r.traversal.active,p=a.motion.phases.find(p=>p.label==='Climb');a.start=r.presentationNow-(p.start+p.end)*500;r.actor(battle3d.state.units[0]);battle3d.view.zoom=2;});await page.click('#center');
+   await page.evaluate(()=>{const r=battle3d.renderer,a=r.traversal.active,p=a.motion.phases.find(p=>p.label==='Climb');a.start=r.presentationNow-(p.start+p.end)*500;r.actor(battle3d.state.units[0]);battle3d.view.zoom=2;});await clickBattleControl(page,'#center');
    await page.screenshot({path:`artifacts/ladder-gameplay/${species}-${kind}-${direction}.png`});
    await page.evaluate(()=>{const r=battle3d.renderer,a=r.traversal.active,u=battle3d.state.units[0];a.start=r.presentationNow-a.motion.duration*1000-1;r.actor(u);window.endPoint=a.motion.diagnostics().worldRoot;r.captureCombat(battle3d.state);r.actor(u);});
    assert.equal(await page.evaluate(()=>battle3d.renderer.traversal.busy),false);assert.equal(await page.evaluate(()=>JSON.stringify(battle3d.state.units[0])),snapshot);

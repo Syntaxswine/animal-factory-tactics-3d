@@ -28,6 +28,7 @@ import {FLOOR_PIXELS} from './hybrid-renderer.js';
 import {MOVEMENT_MS,queuedMovementDuration} from './battle-motion.js';
 import {rectangleMembers,pruneSelection,toggleSelection,selectable,stanceSelection,setSelectionStance,movementSelection,setSelectionMovement} from './battle-selection.js';
 import {readSettings} from './settings-3d.js';
+import {createBattleHud} from './battle-hud.js';
 
 const $=id=>document.getElementById(id),canvas=$('battle'),ctx=canvas.getContext('2d');
 $('difficulty').value=readSettings().difficulty;
@@ -46,8 +47,36 @@ const characterScreen=createCharacterScreen({getState:()=>state,onInventoryChang
 const savePanel=createSavePanel({onSave:saveGame,onLoad:loadGame,onOpen:()=>{frameClock.reset();lastUI='';sync();},onClose:()=>{frameClock.reset();lastUI='';sync();}});
 const shotDialog=$('shot-popup');
 const paused=(ignorePlanner=false)=>(!ignorePlanner&&(shotDialog.open||flamePlanner.open))||userPaused||storageBusy||document.hidden||characterScreen.open||savePanel.open;
-function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
+function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('drawer-clock').textContent=$('game-clock').textContent;$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
 const view={x:0,y:0,zoom:1.15};
+let stanceAnchor=null;
+function closeStances(focus=false){$('stance-menu').hidden=true;if(stanceAnchor){stanceAnchor.setAttribute('aria-expanded','false');if(focus)stanceAnchor.focus();}stanceAnchor=null;}
+function setDrawer(open){closeStances();$('command-drawer').hidden=!open;for(const id of ['drawer-toggle','rail-menu'])$(id).setAttribute('aria-expanded',String(open));$('drawer-toggle').textContent=open?'‹':'›';$('drawer-toggle').setAttribute('aria-label',open?'Close command drawer':'Open command drawer');if(!open&&$('command-drawer').contains(document.activeElement))$('drawer-toggle').focus();}
+function openStances(id,anchor){
+ if(paused()||renderer.busy)return;
+ if(stanceAnchor===anchor&&!$('stance-menu').hidden){closeStances(true);return;}
+ closeStances();if(!selectedIds.has(id))selectMerc(id);else state.selected=id;lastUI='';sync();
+ stanceAnchor=anchor;anchor.setAttribute('aria-expanded','true');const menu=$('stance-menu');menu.hidden=false;
+ $('stance-menu-title').textContent=selectedIds.size>1?'Stance · '+selectedIds.size+' selected':'Stance · '+selected().name;
+ const rect=anchor.getBoundingClientRect(),box=menu.getBoundingClientRect();
+ menu.style.left=Math.max(8,Math.min(innerWidth-box.width-8,rect.left))+'px';
+ menu.style.top=Math.max(8,Math.min(innerHeight-box.height-8,rect.top-box.height-8))+'px';
+ menu.querySelector('button:not(:disabled)').focus();
+}
+const hud=createBattleHud($('squad'),{
+ onSelect:(id,toggle)=>{closeStances();selectMerc(id,toggle);center();sync();},
+ onInventory:id=>{closeStances();characterScreen.show(id);},
+ onStance:openStances,
+ onEquip:(id,weapon)=>action(()=>{const unit=state.units.find(u=>u.id===id);return unit&&equip(state,unit,weapon);}),
+ onReload:id=>action(()=>{const unit=state.units.find(u=>u.id===id);return unit&&reload(state,unit);})
+});
+$('drawer-toggle').onclick=$('rail-menu').onclick=()=>setDrawer($('command-drawer').hidden);
+$('rail-overview').onclick=overview;$('rail-saves').onclick=()=>savePanel.show();
+$('stance-close').onclick=()=>closeStances(true);
+document.addEventListener('pointerdown',e=>{if(document.querySelector('dialog[open]'))return;if(!e.target.closest('#stance-menu,.merc-stance'))closeStances();if(!e.target.closest('#command-drawer,#command-rail')&&!$('command-drawer').hidden)setDrawer(false);});
+document.addEventListener('keydown',e=>{if(document.querySelector('dialog[open]'))return;if(e.key==='Escape'&&!$('stance-menu').hidden){e.preventDefault();closeStances(true);}else if(e.key==='Escape'&&!$('command-drawer').hidden){e.preventDefault();setDrawer(false);$('drawer-toggle').focus();}});
+window.addEventListener('resize',()=>closeStances());
+$('squad-dock').addEventListener('scroll',()=>closeStances());
 const climbButton=document.createElement('button');climbButton.id='climb-tower';climbButton.textContent='Climb tower';$('reload').parentNode.insertBefore(climbButton,$('reload'));
 const fieldPanel=document.createElement('section');fieldPanel.id='field-actions';$('reload').parentNode.after(fieldPanel);
 const selected=()=>state.units.find(u=>u.id===state.selected);
@@ -64,13 +93,13 @@ function focus(x,y){overviewMode=false;view.zoom=1.15;view.x=width/2-(x-y)*28*vi
 function syncLevelButtons(){for(const b of document.querySelectorAll('#battle-levels [data-level]'))b.setAttribute('aria-pressed',String(+b.dataset.level===level));}
 function center(){const u=selected();level=u.z||0;$('floor').value=level;syncLevelButtons();focus(u.x,u.y);}
 function overview(){const w=definition.width,h=definition.height;overviewMode=true;view.zoom=Math.min((width-50)/((w+h)*28),(height-60)/((w+h)*14));view.x=width/2-(w-h)*14*view.zoom;view.y=30;$('hint').textContent='Click the map to inspect an area · WASD / arrows or drag to pan · Scroll to zoom · Center returns to your squad';}
-function resize(){const box=canvas.getBoundingClientRect();width=box.width;height=box.height;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(state){if(overviewMode)overview();else center();}}
-function restart(){flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;lastAuto=performance.now();autoRound=state.round;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Exteriors revealed. Look through doors or windows to discover interiors. People still need line of sight.':'Explore to reveal the map.');sync();}
+function resize(){const box=canvas.getBoundingClientRect(),oldWidth=width,oldHeight=height;width=box.width;height=box.height;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(state){if(overviewMode)overview();else if(oldWidth>1&&oldHeight>1){view.x+=(width-oldWidth)/2;view.y+=(height-oldHeight)/2;}else center();}}
+function restart(){closeStances();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;lastAuto=performance.now();autoRound=state.round;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Exteriors revealed. Look through doors or windows to discover interiors. People still need line of sight.':'Explore to reveal the map.');sync();}
 async function saveGame(id){
  if(storageBusy)throw Error('A save or load is already in progress.');settleEncounterRounds(state);const record=captureEncounter(state);storageBusy=true;frameClock.reset();
  try{await putSave(id,record);lastAuto=performance.now();autoRound=state.round;autoDisabled=false;return record;}finally{storageBusy=false;frameClock.reset();lastUI='';}
 }
-function installState(restored){flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=restored;definition=state.definition;$('difficulty').value=state.difficulty;selectedIds=new Set([state.selected]);targetId=null;drag=null;userPaused=true;presentationTime=0;renderer.presentationNow=0;lastStep=0;stepDelay=MOVEMENT_MS;lastClockCombat=undefined;lastUI='';lastAuto=performance.now();autoRound=state.round;frameClock.reset();center();sync();message('Encounter loaded and paused. Press Resume to continue.');}
+function installState(restored){closeStances();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=restored;definition=state.definition;$('difficulty').value=state.difficulty;selectedIds=new Set([state.selected]);targetId=null;drag=null;userPaused=true;presentationTime=0;renderer.presentationNow=0;lastStep=0;stepDelay=MOVEMENT_MS;lastClockCombat=undefined;lastUI='';lastAuto=performance.now();autoRound=state.round;frameClock.reset();center();sync();message('Encounter loaded and paused. Press Resume to continue.');}
 async function loadGame(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);installState(restored);}finally{storageBusy=false;frameClock.reset();lastUI='';}}
 async function quickSave(){try{await saveGame('quick');message('Quicksave saved.');}catch(e){message('Could not save: '+e.message);}}
 async function quickLoad(){try{await loadGame('quick');}catch(e){message('Could not load: '+e.message);}}
@@ -83,14 +112,14 @@ function sync(){
  if(selectedIds.size&&!selectedIds.has(state.selected))state.selected=[...selectedIds][0];
  const u=selected(),t=target();if(t?.barrel||!supportsAim(WEAPONS[u.weapon]))shotZone='torso';if(!(WEAPONS[u.weapon].burstRounds>1))shotBurst=false;const preview=t?previewAttack(state,u,t,shotBurst,shotZone,null,$('aim-level').value):null;
  flamePlanner.refresh(state,u,{blocked:paused(true)||renderer.busy,level});
- const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,level,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.hp,v.ap,Math.floor(v.stamina),v.medkits,v.pinned,v.legWound,heldWeaponJammed(v),v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,renderer.traversal.preparing,userPaused]);
+ const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,level,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.name,v.species,v.outfit,v.weapon,v.slots,v.pack,v.away,v.hp,v.ap,Math.floor(v.stamina),v.medkits,v.pinned,v.legWound,heldWeaponJammed(v),v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,renderer.traversal.preparing,userPaused,paused()]);
  if(signature===lastUI)return;lastUI=signature;
  fieldPanel.replaceChildren();for(const entry of nearbyInteractions(state,u)){const b=document.createElement('button'),p=entry.preview;b.textContent=entry.label+' · '+(p.cost?p.cost+' AP':'1 min')+(p.chance!==undefined?' · '+p.chance+'%':'')+(p.amount>0?' · +'+Math.floor(p.amount):'');b.disabled=paused()||renderer.busy||!p.ok;b.title=p.reason||('Stamina cost: '+p.stamina);b.onclick=()=>action(()=>performInteraction(state,selected(),entry.kind,entry.target));fieldPanel.append(b);}
  for(const entry of nearbyCliffClimbs(state,u)){const b=document.createElement('button');b.textContent=entry.label+' · '+entry.cost+' AP';b.disabled=paused()||renderer.busy||!entry.ok;b.title=entry.reason||'Traverse this ledge';b.onclick=()=>action(()=>move(state,selected(),entry.to.x,entry.to.y,entry.to.z));fieldPanel.append(b);}
  $('phase').textContent=(renderer.traversal.preparing?'Preparing ladder motion… · ':'')+`${state.phase==='explore'?'Exploration':state.phase==='player'?'Your turn':state.phase==='enemy'?'Guard turn':state.phase==='won'?'Encounter cleared':'Encounter ended'} · Round ${state.round}`;
- $('squad').replaceChildren(...state.units.filter(v=>v.team==='squad').map(v=>{const button=document.createElement('button');button.textContent=`${v.id===state.selected?"★ ":""}${v.name} · ${mercStatus(v)}`;button.setAttribute('aria-pressed',String(selectedIds.has(v.id)));button.disabled=!selectable(v);button.onclick=e=>{selectMerc(v.id,e.shiftKey);center();sync();};return button;}));
+ hud.render(state,selectedIds,{blocked:paused()||renderer.busy});
  $('light-exposure').textContent='Light on '+u.name+': '+Math.round(illuminationAt(state,u)*100)+'% · Perception '+(u.perception??50);
- $('selection').textContent=`${selectedIds.size} selected · Primary: ${u.name} · ${WEAPONS[u.weapon].name} · ${u.ammo[u.weapon]||0} loaded`;
+ $('selection').textContent=(selectedIds.size>1?selectedIds.size+' selected · ':'')+u.name+' · '+WEAPONS[u.weapon].short;
  $('selection').textContent+=(u.pinned?' · PINNED':'')+(legImpaired(u)?' · Leg wound: movement ×2, −3 AP':'');
  flameButton.hidden=!WEAPONS[u.weapon].incendiary;flameButton.disabled=!canPlanFlame();flameButton.textContent='Aim flame cone · '+WEAPONS[u.weapon].cost+' AP';
  $('burst-fire').disabled=!(WEAPONS[u.weapon].burstRounds>1);if($('burst-fire').disabled){shotBurst=false;$('burst-fire').checked=false;}
@@ -100,7 +129,7 @@ function sync(){
  for(const [key,aim] of Object.entries(AIM_LEVELS))$('aim-level').querySelector('[value='+key+']').textContent=aim.label+' · '+shotAim(WEAPONS[u.weapon],key,shotBurst).cost+' AP';
  $('aim-level').disabled=!supportsAim(WEAPONS[u.weapon]);
  $('fire').disabled=paused(true)||renderer.busy||!preview?.ok||!canControl(state,u)||!!state.queue.length;
- const climb=climbPreview(state,u,level);climbButton.textContent=climb.label+(combatCosts(state)?' · '+(climb.cost??3)+' AP':climb.kind==='tower'?' · 30 sec':'');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||(climb.kind==='roof'?'Climb this roof edge.':climb.kind==='tower'?'Use the stairs or ladder at the gold entrance ring.':'Use this ladder or stair connection.');
+ const climb=climbPreview(state,u,level);climbButton.hidden=!climb.ok&&!climb.destination;climbButton.textContent=climb.label+(combatCosts(state)?' · '+(climb.cost??3)+' AP':climb.kind==='tower'?' · 30 sec':'');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||(climb.kind==='roof'?'Climb this roof edge.':climb.kind==='tower'?'Use the stairs or ladder at the gold entrance ring.':'Use this ladder or stair connection.');
  $('reload').textContent=heldWeaponJammed(u)?'Clear jam'+(combatCosts(state)?' · 3 AP':''):'Reload';
  $('reload').disabled=paused()||renderer.busy||!canControl(state,u)||!!state.queue.length||!WEAPONS[u.weapon].mag;
  $('end').disabled=paused()||renderer.busy||state.phase!=='player'||!!state.queue.length;
@@ -176,20 +205,20 @@ canvas.addEventListener('pointercancel',()=>{clearHover();drag=null;renderer.wal
 canvas.addEventListener('lostpointercapture',()=>{drag=null;});
 window.addEventListener('blur',()=>{clearHover();drag=null;renderer.wallXray.setPointer(null,null);});
 canvas.addEventListener('wheel',e=>{e.preventDefault();const box=canvas.getBoundingClientRect(),x=e.clientX-box.left,y=e.clientY-box.top,old=view.zoom;view.zoom=Math.max(.08,Math.min(3,old*Math.exp(-e.deltaY*.001)));view.x=x-(x-view.x)*view.zoom/old;view.y=y-(y-view.y)*view.zoom/old;},{passive:false});
-document.addEventListener('keydown',e=>{if(characterScreen.open||savePanel.open)return;if(e.key==='Escape'&&flamePlanner.open){e.preventDefault();flamePlanner.cancel();return;}if(e.key==='Escape'&&!paused()){drag=null;state.queue=[];targetId=null;sync();}});
+document.addEventListener('keydown',e=>{if(e.defaultPrevented||characterScreen.open||savePanel.open)return;if(e.key==='Escape'&&flamePlanner.open){e.preventDefault();flamePlanner.cancel();return;}if(e.key==='Escape'&&!paused()){drag=null;state.queue=[];targetId=null;sync();}});
 document.addEventListener('keydown',e=>{
- if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||characterScreen.open||savePanel.open||document.hidden||e.target.isContentEditable||e.target.closest?.('input,select,textarea,[role="textbox"]')||document.querySelector('dialog[open]'))return;
+ if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||characterScreen.open||savePanel.open||document.hidden||e.target.isContentEditable||e.target.closest?.('input,select,textarea,[role="textbox"],#stance-menu,#command-drawer')||document.querySelector('dialog[open]'))return;
  if(/^[1-3]$/.test(e.key)){e.preventDefault();document.querySelector(`#battle-levels [data-level="${+e.key-1}"]`).click();return;}
  const delta={w:[0,40],ArrowUp:[0,40],s:[0,-40],ArrowDown:[0,-40],a:[40,0],ArrowLeft:[40,0],d:[-40,0],ArrowRight:[-40,0]}[e.key.length===1?e.key.toLowerCase():e.key];
  if(!delta)return;e.preventDefault();view.x+=delta[0];view.y+=delta[1];
 });
 function action(fn){if(paused()||renderer.busy)return;const ok=fn();renderer.captureCombat(state);message(ok?'':'Action unavailable.');sync();}
- for(const name of Object.keys(STANCES))$('stance-'+name).onclick=()=>{if(paused()||renderer.busy)return;const result=setSelectionStance(state,selectedIds,name);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' changed to '+name+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'. Check AP and action availability.':''));sync();};
+ for(const name of Object.keys(STANCES))$('stance-'+name).onclick=()=>{if(paused()||renderer.busy)return;const result=setSelectionStance(state,selectedIds,name);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' changed to '+name+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'. Check AP and action availability.':''));closeStances(true);sync();};
  for(const mode of Object.keys(MOVEMENT_MODES))$('move-'+mode).onclick=()=>{if(paused()||renderer.busy)return;const result=setSelectionMovement(state,selectedIds,mode);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' set to '+mode+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'.':''));sync();};
  $('character').onclick=()=>characterScreen.show(state.selected);
  $('save-load').onclick=()=>savePanel.show();$('quicksave').onclick=quickSave;$('quickload').onclick=quickLoad;
  document.addEventListener('keydown',e=>{if(characterScreen.open||savePanel.open||e.target.closest?.('input,select,textarea'))return;if(e.key==='F6'||e.key==='F9'){e.preventDefault();(e.key==='F6'?quickSave:quickLoad)();}});
- document.querySelector('header a').onclick=async e=>{e.preventDefault();const href=e.currentTarget.href;try{await saveGame('auto');location.href=href;}catch(error){message('Could not save before leaving: '+error.message);}};
+ $('battle-menu').onclick=async e=>{e.preventDefault();const href=e.currentTarget.href;try{await saveGame('auto');location.href=href;}catch(error){message('Could not save before leaving: '+error.message);}};
  $('restart').onclick=async()=>{try{await saveGame('auto');restart();}catch(e){message('Restart cancelled: could not preserve the autosave. '+e.message);}};$('center').onclick=center;$('overview').onclick=overview;
  $('reload').onclick=()=>action(()=>reload(state,selected()));$('end').onclick=()=>action(()=>endTurn(state));
  climbButton.onclick=()=>action(()=>{const preview=climbPreview(state,selected(),level),ok=performClimb(state,selected(),level);if(ok&&preview.kind!=='tower'){level=preview.destination.z;$('floor').value=level;}return ok;});
