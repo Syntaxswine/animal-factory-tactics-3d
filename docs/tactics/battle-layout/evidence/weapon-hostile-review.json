@@ -1,0 +1,12 @@
+{
+  "errors": [],
+  "sameFrame": {
+    "passed": true,
+    "held": "pistol",
+    "busy": false
+  },
+  "pausedReopen": true,
+  "otherMerc": true,
+  "stopMovement": true,
+  "passed": true
+}

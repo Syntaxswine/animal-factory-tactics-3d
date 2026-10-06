@@ -2,6 +2,8 @@
 
 Implements the user's four-character HUD sketch on top of gameplay revision `34b045f`, in branch `work/battle-screen-layout`. This branch is ready for integration review; it does not publish the canonical game.
 
+The [weapon-icon and Inventory follow-up](WEAPON-REFRESH.md) adds the simplified icon set, clickable equipment and fixes for opening Inventory during a weapon draw or queued movement.
+
 ## Visible controls
 
 - A thin left rail opens an overlay drawer for camera options, character details, saves, difficulty, restart, instructions and the event log. Overview and Save / Load also have direct rail shortcuts.

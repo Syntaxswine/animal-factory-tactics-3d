@@ -2,6 +2,7 @@ import {WEAPONS,canControl,combatCosts,equipCost,stanceOf,movementModeOf} from '
 import {reserve} from './core/inventory.js';
 import {unitArt} from './red-hats-art.js';
 import {inventoryArt} from './loot-art.js';
+import {weaponIcon} from './weapon-icons.js';
 const bounded=(v,max)=>Math.max(0,Math.min(Number.isFinite(max)&&max>0?max:1,Number.isFinite(v)?v:0));
 export function resource(value,max){const limit=Number.isFinite(max)&&max>0?max:1,current=bounded(value,limit);return {value:Math.floor(current),max:limit,percent:100*current/limit};}
 export function readyWeapons(u){
@@ -15,7 +16,7 @@ export function weaponReadout(state,u,kind,{blocked=false}={}){
  if(!kind)return {kind:null,name:'Empty ready slot',short:'Empty slot',image:null,amount:null,canEquip:false,canReload:false,reason:'Choose a second ready weapon in Inventory.'};
  const w=WEAPONS[kind],held=kind===u.weapon,rounds=Math.max(0,Math.floor(u.ammo?.[kind]??0)),spare=reserve(u,kind),jammed=!!u.pack?.find(i=>i.type==='weapon'&&i.kind===kind)?.jammed;
  const available=!blocked&&canControl(state,u)&&!state.queue.length,cost=w?equipCost(state,u,kind):0,reloadCost=combatCosts(state)?3:0;
- return {kind,held,name:w?.name||'Wire cutters',short:w?.short||'Cutters',image:inventoryArt({type:w?'weapon':'utility',kind}),amount:w?.mag?rounds:null,capacity:w?.mag||0,reserve:spare,unit:w?.thrown?'grenades':w?.incendiary?'bursts':'rounds',jammed,cost,reloadCost,
+ return {kind,held,name:w?.name||'Wire cutters',short:w?.short||'Cutters',image:weaponIcon(kind)||inventoryArt({type:w?'weapon':'utility',kind}),amount:w?.mag?rounds:null,capacity:w?.mag||0,reserve:spare,unit:w?.thrown?'grenades':w?.incendiary?'bursts':'rounds',jammed,cost,reloadCost,
   canEquip:available&&!!w&&!held&&u.ap>=cost,
   canReload:available&&held&&!!w?.mag&&u.ap>=reloadCost&&(jammed||rounds<w.mag&&spare>0),
   reason:!w?'Open Inventory to manage this tool.':held?'In hand':cost?'Draw · '+cost+' AP':'Draw · Free',

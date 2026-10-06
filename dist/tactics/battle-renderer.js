@@ -163,6 +163,17 @@ export class BattleRenderer extends HybridRenderer {
    if(m.weapon&&m.weapon!==u.weapon&&available&&!m.profile.unarmed&&u.weapon!=='hands'&&this.traversal.active?.event.unitId!==u.id)m.drawRequested=true;
   }
  }
+ settleEquipmentDraws(state){
+  // Inventory may pause an in-flight draw. Finish only that cosmetic pose;
+  // combat, traversals, fire, simulation time and orders must not be skipped.
+  if(this.combat.busy||this.traversal.busy||this.fire.busy||this.tankEffects.busy)return false;
+  for(const u of state.units){const m=this.models.get(u.id);if(!m||!(m.draw||m.drawRequested))continue;
+   m.draw?.dispose();m.draw=null;m.drawRequested=false;m.signature=null;
+   const previous=m.drawSkipWeapon;m.drawSkipWeapon=u.weapon;
+   try{this.actor(u);}finally{m.drawSkipWeapon=previous;}
+  }
+  return true;
+ }
  get busy(){return this.combat.busy||this.traversal.busy||this.fire.busy||this.tankEffects.busy||[...this.models.values()].some(m=>m.draw||m.drawRequested);}
  equipmentState(id){return this.fire.sessions.get(id)?.stow?.state==='stowed'?'stowed':this.traversal.active?.event.unitId===id?(this.traversal.active.motion?.climb.equipmentState||'carried'):this.models.get(id)?.draw||this.models.get(id)?.drawRequested?'drawing':'carried';}
  displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);if(this.fire.entries.has(unit.id))return this.fire.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
