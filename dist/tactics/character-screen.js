@@ -5,7 +5,7 @@ import {WEAPONS,canControl,combatCosts,equipCost} from './core/engine.js';
 import {gridEntries,gridLayout,loadWeight} from './core/inventory.js';
 import {characterArt} from './character-art.js';
 import {inventoryArt} from './loot-art.js';
-import {weaponIcon} from './weapon-icons.js';
+import {weaponIcon,createWeaponSprite} from './weapon-icons.js';
 export {STAT_DEFINITIONS as CHARACTER_STATS} from './character-stats.js';
 import {STAT_DEFINITIONS as CHARACTER_STATS} from './character-stats.js';
 const bounded=v=>Number.isFinite(v)?Math.max(1,Math.min(100,Math.round(v))):null;
@@ -23,7 +23,7 @@ export function characterSheet(u,{equipmentState='carried'}={}){
  return {name:u.name,species:u.species,portrait:characterArt(u.species,'hands').src,stats,equipment,backpack,weight:loadWeight(u),hp:u.hp,maxHp:u.maxHp,ap:u.ap,maxAp:u.maxAp,stamina:u.stamina,maxStamina:u.maxStamina,damageResistance:u.damageResistance,carryCapacity:carryCapacity(u),loadMultiplier:loadMultiplier(u,loadWeight(u))};
 }
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
-function itemCard(item){const name=itemName(item),label=item.type==='ammo'?name+' ammunition':name,card=el('div','dossier-item'),src=(item.type==='weapon'?weaponIcon(item.kind):null)||inventoryArt(item);if(src){const image=el('img');image.src=src;image.alt='';card.append(image);}else card.append(el('span','item-symbol',item.kind==='hands'?'✊':'◆'));card.append(el('strong','',label));const details=item.kind==='largeMedicalKit'?`${item.charges}/10 sector treatments · 2 cells`:item.held?(item.stowed?'Stowed':item.drawing?'Drawing':'In hand'):item.type==='ammo'||item.count?'Quantity: '+item.count:item.type==='weapon'&&WEAPONS[item.kind]?.mag?'Loaded: '+(item.rounds??0):'Ready';card.append(el('small','',details));if(item.type==='weapon'&&item.kind!=='hands')card.append(el('small','','Condition: '+(item.condition??100)+'%'));if(item.jammed)card.append(el('small','','Jammed · clear with Reload'));if(item.held&&WEAPONS[item.kind]?.mag)card.append(el('small','','Loaded: '+(item.rounds??0)));return card;}
+function itemCard(item){const name=itemName(item),label=item.type==='ammo'?name+' ammunition':name,card=el('div','dossier-item'),painted=item.type==='weapon'&&weaponIcon(item.kind),src=painted||inventoryArt(item);if(painted)card.append(createWeaponSprite(item.kind,{height:50}));else if(src){const image=el('img');image.src=src;image.alt='';card.append(image);}else card.append(el('span','item-symbol',item.kind==='hands'?'✊':'◆'));card.append(el('strong','',label));const details=item.kind==='largeMedicalKit'?`${item.charges}/10 sector treatments · 2 cells`:item.held?(item.stowed?'Stowed':item.drawing?'Drawing':'In hand'):item.type==='ammo'||item.count?'Quantity: '+item.count:item.type==='weapon'&&WEAPONS[item.kind]?.mag?'Loaded: '+(item.rounds??0):'Ready';card.append(el('small','',details));if(item.type==='weapon'&&item.kind!=='hands')card.append(el('small','','Condition: '+(item.condition??100)+'%'));if(item.jammed)card.append(el('small','','Jammed · clear with Reload'));if(item.held&&WEAPONS[item.kind]?.mag)card.append(el('small','','Loaded: '+(item.rounds??0)));return card;}
 export function createCharacterScreen({getState,beforeOpen,onOpen,onClose,getEquipmentState=()=> 'carried',onEquip,canEquip=()=>true,onInventoryChange,onStopMovement}){
  const dialog=el('dialog','character-dossier');dialog.id='character-screen';dialog.setAttribute('aria-labelledby','character-name');document.body.append(dialog);let unitId,inventoryNotice='';
  function render(){const state=getState(),roster=state.units.filter(u=>u.team==='squad'),u=roster.find(u=>u.id===unitId)||roster[0];if(!u)return;unitId=u.id;const sheet=characterSheet(u,{equipmentState:getEquipmentState(u.id)});dialog.replaceChildren();
@@ -46,7 +46,7 @@ export function createCharacterScreen({getState,beforeOpen,onOpen,onClose,getEqu
   const equipmentCard=item=>{const card=itemCard(item);if(onEquip&&item.type==='weapon'){
    const held=item.kind===u.weapon,cost=equipCost(state,u,item.kind),reason=blockReason||(u.ap<cost?'Needs '+cost+' AP; '+u.ap+' available.':''),draw=el('button','weapon-choice'+(held?' is-equipped':' draw-weapon'));
    draw.dataset.weapon=item.kind;draw.disabled=held||!!reason;draw.title=held?'Equipped':reason||'Equip '+itemName(item);draw.setAttribute('aria-label',(held?'Equipped ':'Equip ')+itemName(item)+(held?'':cost?' · '+cost+' AP':' · Free'));
-   draw.append(card.querySelector('img,.item-symbol'),card.querySelector('strong'),el('span','weapon-choice-action',held?'Equipped':'Equip · '+(cost?cost+' AP':'Free')));card.prepend(draw);
+   draw.append(card.querySelector('.weapon-sprite,img,.item-symbol'),card.querySelector('strong'),el('span','weapon-choice-action',held?'Equipped':'Equip · '+(cost?cost+' AP':'Free')));card.prepend(draw);
    if(reason&&!held)card.append(el('small','equipment-block-reason',reason));
    draw.onclick=()=>{if(!draw.disabled&&onEquip(u.id,item.kind))dialog.close();else{inventoryNotice='Could not equip this weapon. Check AP and backpack space.';render();}};
   }return card;};

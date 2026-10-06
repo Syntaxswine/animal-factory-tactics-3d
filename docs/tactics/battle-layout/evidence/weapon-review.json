@@ -6,7 +6,7 @@
     "Inventory for another squad member equips that member and leaves the selected merc unchanged",
     "Backpack icon equip costs 3 AP and preserves ammo; insufficient AP exposes the reason and prevents a ready swap",
     "Enemy-turn inspection remains free without permitting equipment changes",
-    "Desktop and narrow-screen HUD/Inventory load vector icons without horizontal overflow"
+    "Desktop and narrow-screen HUD/Inventory load painted sprites without horizontal overflow"
   ],
   "errors": [],
   "badResponses": [],

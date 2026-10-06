@@ -4,14 +4,20 @@ import fs from 'node:fs';
 import {createGame,WEAPONS} from '../dist/tactics/core/engine.js';
 import {blankMap} from '../dist/tactics/core/maps.js';
 import {equipmentBlockReason} from '../dist/tactics/character-screen.js';
-import {WEAPON_ICONS,weaponIcon} from '../dist/tactics/weapon-icons.js';
+import {WEAPON_ICONS,WEAPON_FRAMES,weaponIcon} from '../dist/tactics/weapon-icons.js';
 import {BattleRenderer} from '../dist/tactics/battle-renderer.js';
 
-test('every weapon has a distinct, self-contained vector icon; unknown items do not invent art',()=>{
+test('every weapon has a distinct transparent painted PNG with a valid display frame',()=>{
  assert.deepEqual(Object.keys(WEAPON_ICONS).sort(),Object.keys(WEAPONS).sort());
- const sources=Object.keys(WEAPONS).map(kind=>fs.readFileSync(new URL('../dist/tactics/'+weaponIcon(kind),import.meta.url),'utf8'));
+ const sources=Object.keys(WEAPONS).map(kind=>{
+  const png=fs.readFileSync(new URL('../dist/tactics/'+weaponIcon(kind),import.meta.url));
+  assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+  const size=[png.readUInt32BE(16),png.readUInt32BE(20)],{size:expected,frame:[x,y,w,h]}=WEAPON_FRAMES[kind];
+  assert.deepEqual(size,expected);assert.equal(png[25],6,'PNG must retain RGBA transparency');
+  assert.ok(x>=0&&y>=0&&w>0&&h>0&&x+w<=size[0]&&y+h<=size[1],kind+' viewport stays inside source');
+  return png.toString('base64');
+ });
  assert.equal(new Set(sources).size,sources.length);
- for(const svg of sources){assert.match(svg,/viewBox="0 0 176 64"/);assert.doesNotMatch(svg,/<(?:script|image|foreignObject)|(?:href|filter)=/);}
  assert.equal(weaponIcon('unknown'),null);
 });
 

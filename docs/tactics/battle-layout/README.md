@@ -2,7 +2,7 @@
 
 Implements the user's four-character HUD sketch on top of gameplay revision `34b045f`, in branch `work/battle-screen-layout`. This branch is ready for integration review; it does not publish the canonical game.
 
-The [weapon-icon and Inventory follow-up](WEAPON-REFRESH.md) adds the simplified icon set, clickable equipment and fixes for opening Inventory during a weapon draw or queued movement.
+The [painted weapon sprites and Inventory follow-up](WEAPON-REFRESH.md) adds thirteen painterly equipment sprites, clickable equipment and fixes for opening Inventory during a weapon draw or queued movement.
 
 ## Visible controls
 

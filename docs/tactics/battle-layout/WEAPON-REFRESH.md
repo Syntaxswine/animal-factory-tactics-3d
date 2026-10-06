@@ -1,8 +1,10 @@
-# Weapon icons and Inventory follow-up
+# Painted weapon sprites and Inventory follow-up
 
 ## Changes
 
-All 13 weapon kinds, including empty hands, now have a flat side-profile SVG icon with consistent outlines and colors. The AK magazine, PPSh drum, scoped sniper rifle, launcher cylinder, RPG warhead, machine-gun belt and flamethrower tanks remain recognizable at small sizes. The HUD and Inventory share these icons through `weapon-icons.js`; ground loot retains its existing art.
+All 13 weapon kinds, including empty hands, now have painterly PNG sprites with warm wood, dark steel, visible brushwork and bright edge highlights that match the character artwork. The AK magazine, PPSh drum, scoped sniper rifle, launcher cylinder, RPG warhead, machine-gun belt and red flamethrower tanks remain recognizable at small sizes. The HUD and Inventory share these sprites through `weapon-icons.js`; ground loot retains its existing art.
+
+The final assets live in `dist/assets/equipment/painted-ui/`. They were created with built-in image generation using the original rifle and horse art as style references. The complete [prompt set](WEAPON-SPRITE-PROMPTS.json) records their authoring directions. Original PNG pixels and alpha are preserved; a CSS viewport fits the visible painting into each row without stretching it or letting empty source-canvas margins shrink it. The superseded flat SVG set has been removed.
 
 In Inventory, clicking a weapon's picture or name now runs **Equip**. The button shows the actual AP cost and the held weapon reads **Equipped**. A successful action updates the character, ammunition display and HUD, then closes Inventory to play the draw animation. Inspecting another merc's Inventory changes that merc's equipment, even if a different merc remains selected on the battlefield.
 
@@ -17,12 +19,12 @@ The approved prices remain **2 AP for a ready weapon** and **3 AP for a backpack
 
 ## Evidence
 
-See the [weapon icon sheet](evidence/weapon-icons.png), [updated Inventory](evidence/inventory-weapons.png), [updated HUD](evidence/hud-weapons.png) and [browser check report](evidence/weapon-review.json).
+See the [painted sprite sheet on dark and light backgrounds](evidence/weapon-icons.png), [updated Inventory](evidence/inventory-weapons.png), [updated HUD](evidence/hud-weapons.png) and [browser check report](evidence/weapon-review.json).
 
-The focused 29-test run covers Inventory, HUD, art, blocked-state messaging and cosmetic settlement. `tools/check-inventory-weapons.mjs` exercises seven groups of real browser interactions, including same-frame swap/reopen, paused swaps, queued movement, another merc, backpack draw, insufficient AP, enemy-turn restrictions and narrow screens. It closes its browser in `finally` and records process identity and a close receipt.
+The final focused 29-test run passes and covers Inventory, HUD, PNG assets and valid display frames, blocked-state messaging and cosmetic settlement. `tools/check-inventory-weapons.mjs` passes seven groups of real browser interactions, including painted-image clicks, same-frame swap/reopen, paused swaps, queued movement, another merc, backpack draw, insufficient AP, enemy-turn restrictions and narrow screens. It closes its browser in `finally` and records process identity and a close receipt.
 
-The independent hostile review passed at **9/10 with no blocking findings**. The reviewer independently reran 12 focused tests and verified the same-frame, paused, other-merc and queued-movement paths in the live default map without browser errors ([browser result](evidence/weapon-hostile-review.json)). On narrow screens the equipment section remains below the portrait/statistics; improving that order is optional future polish.
+The fresh painterly hostile review passed at **9/10 with no blocking findings**. The reviewer inspected all thirteen sprites at HUD and Inventory sizes, independently reran 12 focused tests, and verified ready/backpack image-click equips, paused reopening and same-frame swap → Inventory without browser errors. An independent alpha scan found no pixels with alpha ≥32 outside the display frames; only negligible near-transparent canvas noise is excluded. See the [review result](evidence/weapon-hostile-review.json). On narrow screens the equipment section remains below the portrait/statistics; improving that order is optional future polish.
 
-The existing 11-check HUD browser review and the equipment-draw review also pass, including AP costs, animation restoration, modal focus and small-screen layout. The Pages build and pinned-core verification pass.
+The final 11-check HUD browser review, asset audit and Pages build pass. All thirteen PNG files are included in the packaged distribution. Disposable review browsers were closed and verified exited.
 
-Final full `npm run check`: **1,830 tests passed**, zero failures, followed by a successful asset audit.
+The prior full `npm run check` at `50593c5` passed **1,830 tests** with zero failures. This painterly follow-up changes art and its display only; gameplay rules and the tested Inventory fixes are unchanged. The focused and browser checks above were rerun on the final painted revision.
