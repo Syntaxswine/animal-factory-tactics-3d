@@ -57,3 +57,13 @@ When the campaign is ready, reconcile these areas deliberately:
 On `50593c5`, the packaged game rendered the four squad cards, weapon icons and concealed interiors. Browser checks passed portrait selection, Shift multi-selection, group kneeling, a quick weapon swap followed immediately by Inventory reopening, equipping back from Inventory, command drawer opening and Escape dismissal, pause gating, floor selection with keyboard return, and quicksave/quickload. There were no console errors or warnings. At 1280 by 720, the page had no horizontal overflow and retained a 1236 by 416 battlefield after the status notice cleared.
 
 All 1,830 tests and the asset check passed on `50593c5`. The Pages build, generated-core verification and diff whitespace checks passed. The browser checks above are a bounded independent sample; combat AP and rejection rules are also covered by the branch's headless tests. Campaign and HUD changes have not been approved as a combined build.
+
+## Painted weapon sprites
+
+Approved the independent artwork update `91b60aa` against canonical `0eb97b5`. The thirteen painted weapon sprites fit the character artwork well and retain distinct silhouettes on both the dark battle HUD and the pale inventory cards. No blocking findings.
+
+Independent packaged-browser checks confirmed that the displayed sprites load, their crop frames preserve the intended proportions, clicking the pistol artwork equips it and updates the HUD, and the quick-swap control restores the rifle. Inspected the normal 1280 by 720 layout and the changed compact scaling at 1024 by 600. There were no browser console errors or warnings.
+
+All 29 focused HUD, inventory, character-screen and deployment tests passed, as did the asset and diff whitespace checks. The deployment test rebuilt the Pages package with its missing-module validation. All thirteen packaged PNGs match the reviewed source files byte for byte. The earlier 1,830-test result above is the baseline; the full suite was not rerun locally for this artwork update.
+
+Optional loading improvement: the thirteen source PNGs total 12,631,962 bytes despite displaying at 26–50 pixels high. Preserve these masters, but consider smaller display derivatives in a later optimization pass. This is not a release blocker. The campaign hold and integration requirements above remain in effect.
