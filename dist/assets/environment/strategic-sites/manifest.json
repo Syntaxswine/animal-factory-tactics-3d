@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "status": "presentation-assets",
+  "units": "1 world unit = 1 game tile; standard wall height = 2",
+  "footprint": {
+    "width": 8,
+    "depth": 8,
+    "anchor": "center at [0,0,0], local Y up",
+    "boundsXZ": [
+      -4,
+      4
+    ],
+    "slabHeight": 0.24
+  },
+  "library": "../../../tactics/strategic-sites.js",
+  "atlas": "material-atlas.png",
+  "ownership": "Build results borrow cached geometry/materials/textures. Remove roots before disposing their library; input atlas remains caller-owned.",
+  "integration": "Not registered in the gameplay/editor prop catalog. Collision, traversal, damage events and strategic effects are not defined by these art assets.",
+  "assets": [
+    {
+      "id": "radio-intact",
+      "siteId": "radio",
+      "name": "Radio tower",
+      "state": "intact",
+      "tiles": [
+        8,
+        8
+      ],
+      "triangles": 4616,
+      "drawCalls": 21,
+      "height": 9.67,
+      "reference": "reference-radio.png"
+    },
+    {
+      "id": "radio-destroyed",
+      "siteId": "radio",
+      "name": "Radio tower",
+      "state": "destroyed",
+      "tiles": [
+        8,
+        8
+      ],
+      "triangles": 4984,
+      "drawCalls": 33,
+      "height": 2.943,
+      "reference": "reference-radio.png"
+    },
+    {
+      "id": "radar-intact",
+      "siteId": "radar",
+      "name": "Radar tower",
+      "state": "intact",
+      "tiles": [
+        8,
+        8
+      ],
+      "triangles": 9636,
+      "drawCalls": 29,
+      "height": 8.102,
+      "reference": "reference-radar.png"
+    },
+    {
+      "id": "radar-destroyed",
+      "siteId": "radar",
+      "name": "Radar tower",
+      "state": "destroyed",
+      "tiles": [
+        8,
+        8
+      ],
+      "triangles": 8479,
+      "drawCalls": 29,
+      "height": 3.631,
+      "reference": "reference-radar.png"
+    },
+    {
+      "id": "sam-intact",
+      "siteId": "sam",
+      "name": "SAM site",
+      "state": "intact",
+      "tiles": [
+        8,
+        8
+      ],
+      "triangles": 4084,
+      "drawCalls": 24,
+      "height": 3.194,
+      "reference": "reference-sam.png"
+    },
+    {
+      "id": "sam-destroyed",
+      "siteId": "sam",
+      "name": "SAM site",
+      "state": "destroyed",
+      "tiles": [
+        8,
+        8
+      ],
+      "triangles": 4964,
+      "drawCalls": 31,
+      "height": 1.934,
+      "reference": "reference-sam.png"
+    }
+  ]
+}

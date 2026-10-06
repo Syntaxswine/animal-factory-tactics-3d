@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <title>Strategic sites · Animal Factory</title>
+ <link rel="icon" href="data:,">
+ <link rel="stylesheet" href="./strategic-sites-study.css">
+</head>
+<body>
+ <header>
+  <div class="heading"><div><p class="eyebrow">ANIMAL FACTORY / ENVIRONMENT WORKSHOP</p><h1>Strategic sites</h1></div><p class="scope">Intact & destroyed<br>8 × 8 tiles per site</p></div>
+  <nav aria-label="Study controls">
+   <label>Site <select id="site"><option value="radio">Radio tower</option><option value="radar">Radar tower</option><option value="sam">SAM site</option></select></label>
+   <label>Show <select id="mode"><option value="pair">Both states</option><option value="intact">Intact</option><option value="destroyed">Destroyed</option></select></label>
+   <label>View <select id="view"><option value="three">Three-quarter</option><option value="front">Front</option><option value="side">Side</option><option value="rear">Rear</option><option value="top">Overhead</option></select></label>
+   <label>Scale <select id="scale"><option value="fit">Fit site</option><option value="58">Gameplay · 58 px/tile</option><option value="95">Close · 95 px/tile</option></select></label>
+   <label><input id="grid" type="checkbox"> Tile grid</label>
+   <label><input id="horse" type="checkbox" checked> Horse</label>
+   <label><input id="grey" type="checkbox"> Grey</label>
+   <label><input id="wire" type="checkbox"> Wireframe</label>
+   <button id="reset" type="button">Reset view</button>
+  </nav>
+ </header>
+ <main id="stage" aria-label="Interactive 3D site comparison"><div id="labels"></div><p id="error" role="alert"></p></main>
+ <footer>
+  <div><strong id="caption">Loading painted sites…</strong><p id="note"></p></div>
+  <div class="right"><a id="reference" target="_blank" rel="noopener">Painted reference ↗</a><p id="status" aria-live="polite"></p></div>
+  <p class="help">Drag to orbit · Scroll to zoom · Presentation assets; placement, collision and damage rules await gameplay integration.</p>
+ </footer>
+ <script type="module" src="./strategic-sites-study.js"></script>
+</body>
+</html>
