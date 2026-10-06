@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../dist/tactics/vendor/three.module.js';
-import {WallXray,xrayWall,xrayRadius,pickWallDoor} from '../dist/tactics/wall-xray.js';
+import {WallXray,xrayWall,xrayRadius,pickWallDoor,xrayThroughLevel} from '../dist/tactics/wall-xray.js';
 import {wallXrayFixture} from '../dist/tactics/wall-xray-fixture.js';
 import {createGame,move,stepMovement} from '../dist/tactics/core/engine.js';
 import {personVisible} from '../dist/tactics/battle-visibility.js';
@@ -11,13 +11,49 @@ function chunk(){const mesh=new T.InstancedMesh(new T.BoxGeometry(1,2,.12),new T
 test('cursor radius tracks zoom and drawing-buffer scale, leaving disables the effect',()=>{
  const x=new WallXray();try{x.setPointer(30,40);x.update(200,100,1,2);assert.deepEqual(x.uniforms.xrayCenter.value.toArray(),[60,120]);assert.equal(x.uniforms.xrayRadius.value,xrayRadius(1)*2);assert.equal(x.uniforms.xrayActive.value,true);x.update(200,100,2,1);assert.equal(x.uniforms.xrayRadius.value,xrayRadius(1)*2);for(const p of [[-1,20],[201,20],[20,101],[null,null],[NaN,10]]){x.setPointer(...p);x.update(200,100,1);assert.equal(x.uniforms.xrayActive.value,false);}}finally{x.dispose();}
 });
-test('only wall surfaces use clones; source paint and texture ownership stay intact',()=>{
+
+test('selected level is the cutaway floor: lower walls and the supporting slab remain solid',()=>{
+ const cuts=(box,selected)=>{const through=xrayThroughLevel(box);return through!==null&&selected<=through;};
+ for(let selected=0;selected<3;selected++)for(let z=0;z<4;z++){
+  assert.equal(cuts({kind:'wall',source:{edge:`s:4:5:${z}`}},selected),z>=selected);
+  assert.equal(cuts({kind:'floor',source:{z}},selected),z>selected);
+  assert.equal(cuts({kind:'roof',id:'roof:sheet',source:{z}},selected),z>selected);
+  assert.equal(cuts({kind:'roof',id:'roof:parapet:0',source:{z}},selected),z>=selected);
+  assert.equal(cuts({kind:'prop',source:{z}},selected),false);
+ }
+});
+
+test('floors sharing paint have distinct cached cutaway limits and live selection uniforms',()=>{
+ const x=new WallXray(),source=new T.MeshStandardMaterial(),compiled=[],clones=[];let disposed=0;
+ try{
+  for(let z=0;z<3;z++){
+   const m=x.material(source,z),shader={uniforms:{},fragmentShader:'#include <clipping_planes_fragment>'};
+   m.addEventListener('dispose',()=>disposed++);m.onBeforeCompile(shader);clones.push(m);compiled.push(shader);
+   assert.equal(shader.uniforms.xrayThroughLevel.value,z);assert.equal(x.material(source,z),m);
+  }
+  assert.equal(new Set(clones).size,3);x.setPointer(10,10);x.update(100,100,1,1,2);
+  assert.deepEqual(compiled.map(s=>s.uniforms.xraySelectedLevel.value<=s.uniforms.xrayThroughLevel.value),[false,false,true]);
+  x.update(100,100,1,1,0);assert(compiled.every(s=>s.uniforms.xraySelectedLevel.value===0));
+ }finally{x.dispose();assert.equal(disposed,3);source.dispose();}
+});
+test('cutaway clones preserve source paint and texture ownership; only walls get outlines',()=>{
  const x=new WallXray(),texture=new T.Texture(),source=new T.MeshStandardMaterial({map:texture});let disposed=false;texture.addEventListener('dispose',()=>disposed=true);source.onBeforeCompile=s=>s.fragmentShader+='\n// authored paint';
  try{const m=x.material(source);assert.notEqual(m,source);assert.equal(m.map,texture);assert.equal(m,x.material(source));const shader={uniforms:{},fragmentShader:'#include <clipping_planes_fragment>'};m.onBeforeCompile(shader);assert.match(shader.fragmentShader,/authored paint/);assert.match(shader.fragmentShader,/discard/);assert.equal(shader.uniforms.xrayActive,x.uniforms.xrayActive);for(const kind of ['floor','roof','cover','prop','fence'])assert.equal(xrayWall({kind}),false);assert.equal(xrayWall({kind:'wall'}),true);}finally{x.dispose();assert.equal(disposed,false);source.dispose();texture.dispose();}
 });
 test('wire batches preserve original ray selection and release resources on rebuild',()=>{
  const x=new WallXray(),mesh=chunk(),chunks=new Map([['wall',mesh]]);let disposed=0;
  try{x.sync(chunks);const wire=x.overlays.get(mesh);wire.geometry.addEventListener('dispose',()=>disposed++);assert.equal(wire.geometry.instanceCount,2);assert.deepEqual(wire.geometry.getAttribute('wallMatrix').array,mesh.instanceMatrix.array);assert.equal(wire.geometry.getAttribute('position').count,24);for(let i=0;i<50;i++)x.sync(chunks);assert.equal(x.overlays.size,1);const ray=new T.Raycaster(new T.Vector3(0,1,3),new T.Vector3(0,0,-1));assert.equal(pickWallDoor(ray,chunks,0),'s:0:0');x.setPointer(10,10);x.update(100,100,1);assert.equal(pickWallDoor(ray,chunks,0),'s:0:0');assert.equal(pickWallDoor(ray,chunks,1),null);x.sync(new Map());assert.equal(disposed,1);assert.equal(mesh.children.length,0);assert.equal(x.overlays.size,0);}finally{x.dispose();mesh.geometry.dispose();mesh.material.dispose();mesh.dispose();}
+});
+
+test('wire outlines carry each wall floor and stop below the selected level',()=>{
+ const x=new WallXray(),mesh=chunk();
+ try{
+  x.sync(new Map([['walls',mesh]]));const wire=x.overlays.get(mesh);
+  assert.deepEqual([...wire.geometry.getAttribute('wallLevel').array],[0,1]);
+  x.setPointer(10,10);x.update(100,100,1,1,2);assert.equal(wire.visible,false);
+  x.update(100,100,1,1,1);assert.equal(wire.visible,true);
+  assert.equal(x.uniforms.xraySelectedLevel.value,1);
+ }finally{x.dispose();mesh.geometry.dispose();mesh.material.dispose();mesh.dispose();}
 });
 test('X-ray does not change detection, hidden loot, wall blocking or automatic door movement',()=>{
  const state=createGame(1947,wallXrayFixture(),true,'standard'),before=structuredClone(state),x=new WallXray();

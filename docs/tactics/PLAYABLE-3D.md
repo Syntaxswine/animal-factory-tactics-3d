@@ -26,6 +26,8 @@ Enclosed rooms are filled with unlit black volumes until their interior tiles en
 
 The room mask works independently on all three playable levels. Outdoor floors, open platforms and fence enclosures are not treated as rooms. On Standard, fog volumes are not drawn for completely undiscovered buildings. Hidden interior furniture, cargo and lamps are withheld, and the cursor wall X-ray cannot reveal their contents. The map editor remains fully visible. This is presentation only: room fog does not change paths, AP, detection, combat or saved-map formats.
 
+The level selector also sets the bottom of the cursor X-ray cutaway. Walls on the selected level and above open, as do overhead floors, roofs and room masks. Lower levels and the selected supporting floor stay solid. Undiscovered rooms on the selected level stay black; cutting away an upper room does not discover it.
+
 `node --test tests/interior-fog.test.mjs` covers classification, doors/windows, partial discovery, separate levels and saved exploration. `node tools/check-interior-fog.mjs` checks real black pixels, X-ray, hidden contents, window sight, door-click entry and quicksave/quickload; screenshots are stored in `artifacts/interior-fog/`.
 
 ## Verification

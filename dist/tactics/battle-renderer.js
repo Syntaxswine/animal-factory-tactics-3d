@@ -32,7 +32,7 @@ import {barrelTarget,presentBarrel} from './explosive-barrels.js';
 export class BattleRenderer extends HybridRenderer {
  constructor(onReady=()=>{}){
   super(onReady);this.wallXray=new WallXray();this.daylight=new DaylightRig(this.scene,this.renderer);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
-  this.cliffs=new CliffMapScene(this.scene);this.interiorFog=new InteriorFogScene(this.scene);this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
+  this.cliffs=new CliffMapScene(this.scene);this.interiorFog=new InteriorFogScene(this.scene,this.wallXray);this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
   this.loot=new BattleLoot(this.scene);this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.flameEffects=new BattleFlameEffects(this.scene);
