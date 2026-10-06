@@ -39,6 +39,23 @@ try{
  await page.click('#quickload');await page.waitForFunction(()=>!battle3d.state.effect&&battle3d.state.fireAnimations===undefined);
  assert.deepEqual(await page.evaluate(()=>({props:battle3d.state.props.length,hp:battle3d.state.units[1].hp,ap:battle3d.state.units[0].ap,ammo:battle3d.state.units[0].ammo.rifle,fires:battle3d.state.fires.length})),{props:0,hp:0,ap:24,ammo:4,fires:81});
  assert.equal(await page.evaluate(()=>battle3d.renderer.tankEffects.bursts.size),0,'loading must not replay the rupture');
+ // Advance real turn controls through the outer blast's delayed fatal burn.
+ await page.locator('#squad button').filter({hasText:'Misha'}).click();await page.click('#pause');
+ for(const remaining of [2,1,0]){
+  await page.click('#end');await page.waitForFunction(n=>battle3d.state.units[2].burningTurns===n&&battle3d.state.phase!=='enemy'&&!battle3d.renderer.busy,remaining,{timeout:60000});
+  if(remaining===2){
+   await page.locator('#viewport').screenshot({path:fileURLToPath(new URL('barrel-panic.png',out))});
+   await page.click('#quicksave');await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('saved'));await page.click('#quickload');
+   await page.waitForFunction(()=>battle3d.paused&&battle3d.state.units[2].burningTurns===2&&!battle3d.renderer.busy);await page.click('#pause');
+  }
+ }
+ await page.waitForFunction(()=>{const f=battle3d.renderer.fire.sessions.get(2);return f?.effects?.ash.visible&&f.skin.value.value===1;},null,{timeout:30000});
+ const burned=await page.evaluate(()=>{const u=battle3d.state.units[2];return {hp:u.hp,casualty:u.casualty,burnedRemains:u.burnedRemains,burningTurns:u.burningTurns,position:[u.x,u.y]};});
+ assert.deepEqual({...burned,position:undefined},{hp:0,casualty:'dead',burnedRemains:true,burningTurns:0,position:undefined});
+ await page.locator('#viewport').screenshot({path:fileURLToPath(new URL('barrel-delayed-ash.png',out))});
+ await page.click('#quicksave');await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('saved'));await page.click('#quickload');
+ await page.waitForFunction(()=>battle3d.paused&&!battle3d.state.fireAnimations&&battle3d.renderer.fire.sessions.get(2)?.effects?.ash.visible,null,{timeout:30000});
+ assert.equal(await page.evaluate(()=>battle3d.state.units[2].casualty),'dead');assert.equal(await page.evaluate(()=>battle3d.renderer.tankEffects.bursts.size),0);
  await page.evaluate(()=>window.oldRenderer=battle3d.renderer);await page.click('#restart');await page.waitForFunction(()=>battle3d.renderer!==oldRenderer&&battle3d.renderer.paintedEnvironment.count===1,{},{timeout:60000});assert.equal(await page.evaluate(()=>oldRenderer.tankEffects.disposed),true);
  // Inspect the actual editor palette, placement, painted mesh, and undo/redo.
  await page.goto(origin+'/tactics/editor-3d.html?editing=1');await page.waitForFunction(()=>window.editor3d?.document&&!editor3d.loading,{},{timeout:60000});
@@ -56,5 +73,5 @@ try{
   const loader=new T.TextureLoader(),textures=await Promise.all([loader.loadAsync(PAINTED_ATLAS),loader.loadAsync(CARGO_ATLAS)]);textures.forEach(t=>t.colorSpace=T.SRGBColorSpace);const library=createCargoLibrary(...textures),model=library.build('barrel-single','explosiveRed','flammable'),scene=new T.Scene();scene.add(model.root,new T.HemisphereLight(0xfff0cc,0x5d6b6a,2.2));const sun=new T.DirectionalLight(0xffecd0,2.5);sun.position.set(3,5,2);scene.add(sun);
   const camera=new T.PerspectiveCamera(34,1.25,.01,50);camera.position.set(1.45,1.3,2);camera.lookAt(0,.4,0);renderer.render(scene,camera);window.art={renderer,library,textures,model,scene,camera};
  });await page.locator('#view canvas').screenshot({path:fileURLToPath(new URL('explosive-barrel-closeup.png',out))});await page.evaluate(()=>{art.library.dispose();art.textures.forEach(t=>t.dispose());art.renderer.dispose();});
- assert.deepEqual(errors,[]);fs.writeFileSync(new URL('browser-review.json',out),JSON.stringify({committed,breakup,checks:['red/grey hover crosshair','click graphic aim menu','one charged shot','tank-sized blast','red labelled lid/base/panels without duplicate tank debris','quicksave/quickload without replay','restart','editor palette/placement/undo/redo','painted skin/labels'],errors},null,2));console.log('Explosive barrel gameplay, cursor/menu, breakup, save/reload, editor and painted asset browser checks pass.');
+ assert.deepEqual(errors,[]);fs.writeFileSync(new URL('browser-review.json',out),JSON.stringify({committed,breakup,burned,checks:['red/grey hover crosshair','click graphic aim menu','one charged shot','tank-sized blast','red labelled lid/base/panels without duplicate tank debris','quicksave/quickload without replay','three panic turns end in death and visible ash','mid-burn and final ash save/load','restart','editor palette/placement/undo/redo','painted skin/labels'],errors},null,2));console.log('Explosive barrel gameplay, delayed ash, cursor/menu, breakup, save/reload, editor and painted asset browser checks pass.');
 }finally{await browser.close();fs.writeFileSync(new URL('browser-closed.json',out),JSON.stringify({identity,closedAt:new Date().toISOString()}));}

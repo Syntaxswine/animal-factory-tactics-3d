@@ -1,14 +1,24 @@
 // Keep the pinned sprite fork intact; area flames belong to the 3D rules.
-export const flameOverrides={'engine.js':'Flamethrowers use a scenery-clipped lethal area cone; tank blasts retain casualty rules and record worn-pack rupture, burned remains and fire-cell presentation receipts.'};
+export const flameOverrides={'engine.js':'Flamethrowers use a scenery-clipped lethal area cone; fuel fire ends its three panic turns in permanent death and ash through the casualty pipeline, including elapsed guard settling. Tank blasts record worn-pack rupture, burned remains and fire-cell presentation receipts.'};
 export function adaptCoreFlames(name,data){
  if(name!=='engine.js')return data;
  let s=data.toString();
  const once=(a,b)=>{if(s.split(a).length!==2)throw Error('Flame adapter anchor changed: '+a);s=s.replace(a,b);};
  s="import {firePoint,recordBurn} from '../fire-events.js';\nimport {flamePreview,flameShape,flameVictims} from '../flame-cone.js';\n"+s;
- once("s.queue=[];log(s,u.name+' is on fire / panic for 3 turns.');", "recordBurn(s,u,'ignite');s.queue=[];log(s,u.name+' is on fire / panic for 3 turns.');");
+ once("s.queue=[];log(s,u.name+' is on fire / panic for 3 turns.');", "recordBurn(s,u,'ignite');s.queue=[];log(s,u.name+' is on fire / 3 panic turns before burning to ash.');");
  once('const heading=Math.floor(random(s)*8)*45;', 'const fireRoute=[firePoint(u)],heading=Math.floor(random(s)*8)*45;');
  once('u.x=p.x;u.y=p.y;u.steps++;emitNoise(s,u,15);', 'u.x=p.x;u.y=p.y;u.steps++;fireRoute.push(firePoint(u));emitNoise(s,u,15);');
  once('u.ap=0;u.fireActedRound=s.round;', "recordBurn(s,u,'panic',fireRoute);u.ap=0;u.fireActedRound=s.round;");
+ // Expiration is a committed casualty, not a renderer-driven disappearance.
+ // Keep the original three panic turns and the normal loot/morale rules.
+ once('function finishFireRound(s){',`function expireBurn(s,u){
+ u.burningTurns=0;if(!alive(u))return;
+ combatDamage(s,u,Math.max(u.hp,1),true);recordBurn(s,u,'ash');log(s,u.name+' burned to ash.');
+}
+function finishFireRound(s){`);
+ once("if(!u.burningTurns)log(s,u.name+' is no longer on fire.');",'if(!u.burningTurns)expireBurn(s,u);');
+ once('for(const g of guards(s))if(g.burningTurns)g.burningTurns=Math.max(0,g.burningTurns-rounds);',
+  'for(const g of guards(s))if(g.burningTurns){g.burningTurns=Math.max(0,g.burningTurns-rounds);if(!g.burningTurns)expireBurn(s,g);}');
  once('wearer.tanksExploded=true;', 'const wornWeapon=wearer.weapon,newFires=[];wearer.tanksExploded=true;');
  once('else s.fires.push({x,y,z,turns:3});', 'else {const cell={x,y,z,turns:3};s.fires.push(cell);newFires.push({...cell});}');
  once('for(const u of victims)combatDamage(s,u,Math.max(u.hp,1),true,source);', `for(const u of victims){combatDamage(s,u,Math.max(u.hp,1),true,source);if(u!==wearer)recordBurn(s,u,'ash');}

@@ -309,7 +309,7 @@ function ignite(s,u){
  if(!alive(u)||u.burningTurns>0)return;
  u.burningTurns=3;u.ap=0;u.overwatch=null;u.stance='standing';u.sneaking=false;u.running=false;
  if(u.team==='guard'&&stateOf(u)!=='broken')setState(s,u,'alert');
- recordBurn(s,u,'ignite');s.queue=[];log(s,u.name+' is on fire / panic for 3 turns.');
+ recordBurn(s,u,'ignite');s.queue=[];log(s,u.name+' is on fire / 3 panic turns before burning to ash.');
 }
 export function enterFire(s,u){if(s.fires?.some(p=>p.x===u.x&&p.y===u.y&&p.z===levelOf(u)))ignite(s,u);}
 function panicRun(s,u){
@@ -324,8 +324,12 @@ function panicRun(s,u){
  recordBurn(s,u,'panic',fireRoute);u.ap=0;u.fireActedRound=s.round;
  log(s,u.name+' runs in panic / '+u.burningTurns+' turns of fire.');
 }
+function expireBurn(s,u){
+ u.burningTurns=0;if(!alive(u))return;
+ combatDamage(s,u,Math.max(u.hp,1),true);recordBurn(s,u,'ash');log(s,u.name+' burned to ash.');
+}
 function finishFireRound(s){
- for(const u of s.units)if(u.burningTurns>0&&u.fireActedRound===s.round){u.burningTurns--;if(!u.burningTurns)log(s,u.name+' is no longer on fire.');}
+ for(const u of s.units)if(u.burningTurns>0&&u.fireActedRound===s.round){u.burningTurns--;if(!u.burningTurns)expireBurn(s,u);}
  s.fires=(s.fires||[]).map(p=>({...p,turns:p.turns-1})).filter(p=>p.turns>0);
 }
 const fuelHooks={damage:combatDamage,ignite,burn:recordBurn};
@@ -619,7 +623,7 @@ function placeAt(s,g,p){if(towerForUnit(s,g))return false;const z=levelOf(p),sta
 // K rounds take an alert or broken guard to its fix and Searching, M more take it home and wary; suspicion and a stand-down resolve within a round.
 export function settleGuards(s,minutes){const rounds=Math.floor(minutes/ROUND_MINUTES);if(rounds<=0)return;
  if(s.rules?.social)for(const g of guards(s))settleStress(g,rounds*ROUND_MINUTES/60*5); // guards work stress off at the mercs' resting rate
- if(s.fires?.length)s.fires=s.fires.filter(f=>(f.turns-=rounds)>0);for(const g of guards(s))if(g.burningTurns)g.burningTurns=Math.max(0,g.burningTurns-rounds); // fires burn down by the same clock
+ if(s.fires?.length)s.fires=s.fires.filter(f=>(f.turns-=rounds)>0);for(const g of guards(s))if(g.burningTurns){g.burningTurns=Math.max(0,g.burningTurns-rounds);if(!g.burningTurns)expireBurn(s,g);} // fires burn down by the same clock
  cascade(s,()=>{for(const g of guards(s)){let st=stateOf(g);if(st==='rest')continue;
   const home=()=>{if(g.post)placeAt(s,g,g.post);setState(s,g,'rest');g.wary=true;if(g.post)g.heading=g.post.heading;};
   if(st==='suspicious'||st==='standdown'){home();continue;}
