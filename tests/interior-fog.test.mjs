@@ -7,6 +7,7 @@ import {startEncounterClock} from '../dist/tactics/encounter-clock.js';
 import {captureEncounter,restoreEncounter} from '../dist/tactics/encounter-save.js';
 import {interiorCells,concealedInteriorCells,knownInteriorRooms} from '../dist/tactics/interior-fog.js';
 import {InteriorFogScene} from '../dist/tactics/interior-fog-scene.js';
+import {WallXray} from '../dist/tactics/wall-xray.js';
 import {terrainKnown} from '../dist/tactics/battle-visibility.js';
 
 function fixture(){
@@ -32,7 +33,7 @@ test('a closed door conceals the room on Easy; an actual doorway sightline revea
  assert.equal(concealedInteriorCells(cells,state).length,42);assert.deepEqual(state,before,'classification must not change exploration or detection');
  const fog=new InteriorFogScene(new T.Scene()),world={};
  try{
-  fog.update(state,world);assert.equal(fog.mesh.count,42);assert.equal(fog.material.color.getHex(),0);assert.equal(fog.mesh.castShadow,false);assert.equal(fog.mesh.userData.noShadow,true);
+  fog.update(state,world);assert.equal(fog.meshes.get(0).count,42);assert.equal(fog.material.color.getHex(),0);assert.equal(fog.meshes.get(0).castShadow,false);assert.equal(fog.meshes.get(0).userData.noShadow,true);
   assert.equal(terrainKnown({...state,concealedInteriors:fog.hidden},'12,11'),false);assert.equal(terrainKnown({...state,concealedInteriors:fog.hidden},'239,239'),true);
   state.edges['e:9:11']='doorway-concrete-open';refresh(state);fog.update(state,{});
   assert(state.visible.has('12,11'));assert(!fog.hidden.has('12,11'));assert(fog.hidden.size<42&&fog.hidden.size>0,'unseen corners must stay concealed');
@@ -60,8 +61,26 @@ test('Standard does not show black room shapes in unexplored areas; discovering 
  const {state,cells}=fixture();state.difficulty='standard';state.seen=new Set();state.visible=new Set();
  const fog=new InteriorFogScene(new T.Scene()),world={};
  try{
-  fog.update(state,world);assert.equal(fog.mesh,null);assert.equal(fog.hidden.size,42);assert.equal(knownInteriorRooms(cells,state).size,0);
-  state.seen.add('9,11');fog.update(state,world);assert.equal(fog.mesh.count,42);assert.equal(fog.hidden.size,42);
-  for(const p of cells)state.seen.add(p.key);fog.update(state,world);assert.equal(fog.mesh,null);assert.equal(fog.hidden.size,0);
+  fog.update(state,world);assert.equal(fog.meshes.size,0);assert.equal(fog.hidden.size,42);assert.equal(knownInteriorRooms(cells,state).size,0);
+  state.seen.add('9,11');fog.update(state,world);assert.equal(fog.meshes.get(0).count,42);assert.equal(fog.hidden.size,42);
+  for(const p of cells)state.seen.add(p.key);fog.update(state,world);assert.equal(fog.meshes.size,0);assert.equal(fog.hidden.size,0);
  }finally{fog.dispose();}
+});
+
+test('X-ray removes only overhead fog masks; selected and lower unexplored rooms remain black',()=>{
+ const {map}=fixture();stampRoom(map,10,8,7,6,1);stampRoom(map,10,8,7,6,2);
+ const state={...map,difficulty:'easy',seen:new Set(['12,11']),visible:new Set()},before=structuredClone(state);
+ const xray=new WallXray(),fog=new InteriorFogScene(new T.Scene(),xray);
+ try{
+  fog.update(state,{});assert.deepEqual([...fog.meshes.keys()],[0,1,2]);
+  assert.equal(fog.meshes.get(0).material,fog.material,'ground mask always stays black');
+  for(const z of [1,2]){
+   const shader={uniforms:{},fragmentShader:'#include <clipping_planes_fragment>'};fog.meshes.get(z).material.onBeforeCompile(shader);
+   assert.equal(shader.uniforms.xrayThroughLevel.value,z-1);
+  }
+  xray.setPointer(10,10);for(const level of [2,0,1,2])xray.update(100,100,1,1,level);
+  assert(!fog.hidden.has('12,11'));assert(fog.hidden.has('12,11,1'));assert(fog.hidden.has('12,11,2'));
+  assert.deepEqual(state,before,'X-ray cannot explore rooms or change LOS');
+  fog.update({...state,seen:new Set(interiorCells(state).map(p=>p.key))},{});assert.equal(fog.meshes.size,0);
+ }finally{fog.dispose();xray.dispose();}
 });
