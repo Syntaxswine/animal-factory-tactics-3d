@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import {softBox} from './painted-environment-scene.js';
+import {analyzeSiteClearance} from './strategic-site-clearance.js';
 
 export const STRATEGIC_SITE_ATLAS='../assets/environment/strategic-sites/material-atlas.png';
 export const STRATEGIC_SITES=Object.freeze([
@@ -9,12 +10,21 @@ export const STRATEGIC_SITES=Object.freeze([
 ]);
 export const SITE_SLAB_HEIGHT=.24;
 const V=(x,y,z)=>new THREE.Vector3(x,y,z),UP=V(0,1,0);
+// Convex outline of one solid foundation in the site's local X/Z plane.
+// The SAM's round foundation must not be displayed as a square bounding box.
+function foundationOutline(mesh){
+ const points=new Map(),p=mesh.geometry.attributes.position;
+ for(let i=0;i<p.count;i++){const v=V().fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld);points.set(v.x.toFixed(6)+','+v.z.toFixed(6),[v.x,v.z]);}
+ const sorted=[...points.values()].sort((a,b)=>a[0]-b[0]||a[1]-b[1]),cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+ const half=items=>{const h=[];for(const p of items){while(h.length>=2&&cross(h.at(-2),h.at(-1),p)<=1e-9)h.pop();h.push(p);}h.pop();return h;};
+ return [...half(sorted),...half(sorted.slice().reverse())];
+}
 
 // All roots borrow library-owned resources. Dispose the library after removing
 // its roots; the caller retains ownership of the supplied atlas.
 export function createStrategicSiteLibrary(atlas){
  if(!atlas?.isTexture)throw new TypeError('A painted texture atlas is required');
- const geometries=new Set(),materials=new Set(),textures=new Set(),cache=new Map(),templates=new Map();
+ const geometries=new Set(),materials=new Set(),textures=new Set(),cache=new Map(),templates=new Map(),clearances=new Map();
  let disposed=false;
  const own=g=>(geometries.add(g),g);
  const normalizeUV=g=>{
@@ -34,6 +44,7 @@ export function createStrategicSiteLibrary(atlas){
  const mat={red:paint(0),ivory:paint(1),olive:paint(2),concrete:paint(3),steel:paint(4),char:paint(5),rust:paint(6),ash:paint(7)};
  const plain=color=>{const m=new THREE.MeshStandardMaterial({color,roughness:1});materials.add(m);return m;};
  mat.dark=plain(0x292d27);mat.brass=plain(0xb49552);
+ for(const [name,material]of Object.entries(mat))material.name='site-'+name;
  const group=(parent,name)=>{const g=new THREE.Group();g.name=name;parent.add(g);return g;};
  function mesh(parent,g,m,p=[0,0,0],r=[0,0,0]){
   const o=new THREE.Mesh(g,m);o.position.set(...p);o.rotation.set(...r);o.castShadow=o.receiveShadow=true;parent.add(o);return o;
@@ -65,15 +76,16 @@ export function createStrategicSiteLibrary(atlas){
  }
  function hut(parent,x,z,w=1.6,d=1.8,damage=false){
   const h=group(parent,'service-hut');h.position.set(x,.24,z);
+  h.userData.door={width:1.10,height:1.85,threshold:.22,localCenter:[-.10,1.145,d/2+.034]};
   box(h,mat.concrete,[0,.11,0],[w+.2,.22,d+.2],[0,0,0],.025);
-  box(h,damage?mat.char:mat.olive,[0,.86,0],[w,1.42,d],[0,0,0],.035);
-  box(h,damage?mat.rust:mat.olive,[0,1.61,0],[w+.13,.13,d+.14],[0,0,damage?.06:0],.025);
-  box(h,mat.dark,[-.22,.79,d/2+.015],[.66,1.23,.025]);
-  box(h,damage?mat.char:mat.olive,[-.22,.79,d/2+.034],[.59,1.15,.033],[0,damage?-.1:0,0],.012);
-  box(h,mat.brass,[.0,.84,d/2+.063],[.036,.13,.035]);
-  for(let i=0;i<5;i++)box(h,mat.dark,[w/2+.012,.98+i*.065,-.27],[.023,.03,.72]);
-  box(h,mat.ivory,[-.22,1.19,d/2+.057],[.29,.09,.016]);
-  for(const dx of [-1,1])for(const dz of [-1,1])box(h,damage?mat.rust:mat.steel,[dx*(w/2-.055),.85,dz*(d/2-.02)],[.065,1.5,.065]);
+  box(h,damage?mat.char:mat.olive,[0,1.22,0],[w,2.04,d],[0,0,0],.035);
+  box(h,damage?mat.rust:mat.olive,[0,2.29,0],[w+.13,.13,d+.14],[0,0,damage?.06:0],.025);
+  box(h,mat.dark,[-.10,1.145,d/2+.015],[1.10,1.85,.025]);
+  box(h,damage?mat.char:mat.olive,[-.10,1.145,d/2+.034],[1.04,1.79,.033],[0,damage?-.1:0,0],.012);
+  box(h,mat.brass,[.28,1.09,d/2+.063],[.036,.13,.035]);
+  for(let i=0;i<5;i++)box(h,mat.dark,[w/2+.012,1.60+i*.065,-.27],[.023,.03,.72]);
+  box(h,mat.ivory,[-.10,1.85,d/2+.057],[.29,.09,.016]);
+  for(const dx of [-1,1])for(const dz of [-1,1])box(h,damage?mat.rust:mat.steel,[dx*(w/2-.055),1.23,dz*(d/2-.02)],[.065,2.1,.065]);
   return h;
  }
  function cabinet(parent,x,z,damage=false){
@@ -96,7 +108,12 @@ export function createStrategicSiteLibrary(atlas){
   for(let i=0;i<count;i++){
    const a=i*2.399+seed,rad=.5+(i%4)*.43,x=center[0]+Math.cos(a)*rad,z=center[2]+Math.sin(a)*rad;
    const s=[.14+(i%3)*.1,.10+(i%4)*.04,.20+(i%2)*.20];
-   box(r,i%3===0?mat.concrete:i%2?mat.char:mat.rust,[x,.24+s[1]/2,z],s,[0,a,0],.018);
+   // Fragments are uneven wedges, visually distinct from fixed square footings.
+   const g=own(softBox(...s,.018,1)),p=g.attributes.position;
+   for(let j=0;j<p.count;j++){const px=p.getX(j),py=p.getY(j),pz=p.getZ(j);p.setXYZ(j,px+py*.22,py*(.72+.20*px/s[0]+.16*pz/s[2]),pz);}
+   g.computeVertexNormals();normalizeUV(g);
+   const fragment=mesh(r,g,i%3===0?mat.concrete:i%2?mat.char:mat.rust,[x,0,z],[0,a,0]);
+   fragment.updateMatrixWorld(true);fragment.position.y=.24-new THREE.Box3().setFromObject(fragment,true).min.y;
   }
  }
  function ground(group,x,z,rotation){
@@ -192,7 +209,8 @@ export function createStrategicSiteLibrary(atlas){
  }
  function radar(root,damage){
   const base=group(root,'tower-foundations');for(const x of [-1.10,1.10])for(const z of [-.95,.95])footing(base,x+.3,z-.25,.72);
-  hut(root,-2.65,2.25,1.5,1.50,damage);
+  // Keep a full standing approach in front of the service door, including pigs.
+  hut(root,-2.65,1.85,1.5,1.50,damage);
   cabinet(root,2.9,2.55,damage);
   if(!damage){
    const trestle=lattice(root,'radar-trestle',2.95,1.1,.76,3);trestle.position.set(.3,.64,-.25);
@@ -298,6 +316,16 @@ export function createStrategicSiteLibrary(atlas){
   const root=new THREE.Group();root.name=site.id+'-'+state;
   root.userData={siteId:site.id,state,footprint:[8,8],tileSize:1,slabHeight:.24};
   siteBase(root,state==='destroyed');({radio,radar,sam})[site.id](root,state==='destroyed');
+  // Record each permanent concrete component before material batching. These
+  // anchors (including hut/cabinet plinths) must remain identical after damage.
+  root.updateMatrixWorld(true);root.userData.foundations=[];
+  for(const assembly of root.children){
+   if(assembly.name==='scattered-fragments'||assembly.name==='hardstanding')continue;
+   assembly.traverse(o=>{if(o.isMesh&&o.material===mat.concrete){
+    const b=new THREE.Box3().setFromObject(o,true),center=b.getCenter(new THREE.Vector3());
+    root.userData.foundations.push({id:assembly.name+':'+center.x.toFixed(3)+','+center.z.toFixed(3),name:assembly.name,min:b.min.toArray(),max:b.max.toArray(),outline:foundationOutline(o)});
+   }});
+  }
   // Loose top-level meshes are also packed into one assembly.
   const detail=group(root,'fixed-detail');for(const o of [...root.children])if(o.isMesh)detail.attach(o);
   for(const assembly of root.children)pack(assembly);
@@ -313,7 +341,14 @@ export function createStrategicSiteLibrary(atlas){
    const root=template.clone(true);root.updateMatrixWorld(true);
    return {root,site:STRATEGIC_SITES.find(s=>s.id===id),state,bounds:new THREE.Box3().setFromObject(root,true)};
   },
+  clearance(id,{state='intact',profile='horse'}={}){
+   if(disposed)throw Error('Strategic site library has been disposed');
+   const template=templates.get(id+':'+state);if(!template)throw RangeError('Unknown strategic site or state');
+   const key=id+':'+state+':'+profile;
+   if(!clearances.has(key))clearances.set(key,analyzeSiteClearance(template,profile));
+   return structuredClone(clearances.get(key));
+  },
   stats(){return {geometries:geometries.size,materials:materials.size,textures:textures.size,templates:templates.size,disposed};},
-  dispose(){if(disposed)return;disposed=true;for(const g of geometries)g.dispose();for(const m of materials)m.dispose();for(const t of textures)t.dispose();templates.clear();cache.clear();geometries.clear();materials.clear();textures.clear();},
+  dispose(){if(disposed)return;disposed=true;for(const g of geometries)g.dispose();for(const m of materials)m.dispose();for(const t of textures)t.dispose();templates.clear();cache.clear();clearances.clear();geometries.clear();materials.clear();textures.clear();},
  };
 }
