@@ -20,6 +20,14 @@ The source sprite target at that revision and this page therefore execute identi
 
 `battle-visibility.js` separates terrain knowledge from people visibility. Easy's terrain reveal is entirely presentational. It never mutates simulation perception or enemy knowledge. The renderer receives a shallow presentation view with filtered actors and retains the original unit identities.
 
+## Interior exploration
+
+Enclosed rooms are filled with unlit black volumes until their interior tiles enter squad line of sight. Easy reveals exterior scenery, but does not bypass this interior fog. Doors and windows identify room boundaries; actual sight through them follows the existing terrain visibility and window-aperture rules. Entering the room also reveals what the merc can see. Only observed tiles clear, so unseen corners and adjacent rooms remain concealed. Explored scenery stays revealed afterward using the existing saved `seen` set; people and loot still require their usual current visibility.
+
+The room mask works independently on all three playable levels. Outdoor floors, open platforms and fence enclosures are not treated as rooms. On Standard, fog volumes are not drawn for completely undiscovered buildings. Hidden interior furniture, cargo and lamps are withheld, and the cursor wall X-ray cannot reveal their contents. The map editor remains fully visible. This is presentation only: room fog does not change paths, AP, detection, combat or saved-map formats.
+
+`node --test tests/interior-fog.test.mjs` covers classification, doors/windows, partial discovery, separate levels and saved exploration. `node tools/check-interior-fog.mjs` checks real black pixels, X-ray, hidden contents, window sight, door-click entry and quicksave/quickload; screenshots are stored in `artifacts/interior-fog/`.
+
 ## Verification
 
 ### Gameplay movement milestone

@@ -1,5 +1,5 @@
 // Map knowledge is a presentation preference, never a change to perception.
-export const terrainKnown=(state,key)=>state.difficulty==='easy'||state.seen.has(key);
+export const terrainKnown=(state,key)=>!state.concealedInteriors?.has(key)&&(state.difficulty==='easy'||state.seen.has(key));
 export function personVisible(state,unit){
  if(unit.away||['captured','quit'].includes(unit.casualty))return false;
  if(unit.team==='squad')return true;

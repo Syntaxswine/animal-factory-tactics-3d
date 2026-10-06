@@ -1,4 +1,5 @@
 import {WallXray,pickWallDoor} from './wall-xray.js';
+import {InteriorFogScene} from './interior-fog-scene.js';
 import {prepareLadderRoute} from './ladder-preparation.js';
 import {CliffMapScene} from './cliff-map-scene.js';
 import {BattleLoot} from './battle-loot.js';
@@ -31,7 +32,7 @@ import {barrelTarget,presentBarrel} from './explosive-barrels.js';
 export class BattleRenderer extends HybridRenderer {
  constructor(onReady=()=>{}){
   super(onReady);this.wallXray=new WallXray();this.daylight=new DaylightRig(this.scene,this.renderer);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
-  this.cliffs=new CliffMapScene(this.scene);this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
+  this.cliffs=new CliffMapScene(this.scene);this.interiorFog=new InteriorFogScene(this.scene);this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
   this.loot=new BattleLoot(this.scene);this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.flameEffects=new BattleFlameEffects(this.scene);
@@ -40,6 +41,8 @@ export class BattleRenderer extends HybridRenderer {
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
  }
  rebuild(world,seen,level,map){
+  this.interiorFog.update(map,world);
+  map={...map,concealedInteriors:this.interiorFog.hidden};
   const scenery={...world,boxes:world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood'))};
   super.rebuild(scenery,map.difficulty==='easy'?null:seen,level,{...map,coverOccupiedProps:map.props,props:map.props.filter(p=>!PAINTED_PROP_FORMS[p.kind])});
   this.paintedEnvironment.rebuild(map,level);this.cliffs.rebuild(map,level);
@@ -146,7 +149,7 @@ export class BattleRenderer extends HybridRenderer {
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
   // Visibility was resolved from committed units before animation changed HP
   // or position. Do not hide a visible casualty during its pre-impact pose.
-  return super.draw(ctx,{...state,terrain:state.map,units,props:[...state.props,...this.tankEffects.pendingProps()]},...args.slice(0,4),{...args[4],visibilityFiltered:true,showAllLevels:true});
+  return super.draw(ctx,{...state,terrain:state.map,concealedInteriors:this.interiorFog?.hidden,units,props:[...state.props,...this.tankEffects.pendingProps()]},...args.slice(0,4),{...args[4],visibilityFiltered:true,showAllLevels:true});
  }
  captureCombat(state){
   const now=this.presentationNow??performance.now(),reduced=!!this.reducedMotion?.matches;
@@ -165,7 +168,7 @@ export class BattleRenderer extends HybridRenderer {
  displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);if(this.fire.entries.has(unit.id))return this.fire.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
  dispose(){
   this.generation++;this.wallXray.dispose();
-  this.loot.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();
+  this.loot.dispose();this.cliffs.dispose();this.interiorFog.dispose();this.lights.dispose();this.daylight.dispose();
   this.motion.clear();
   this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();this.fire.dispose();this.tankEffects.dispose();
   this.paintedEnvironment.dispose();
