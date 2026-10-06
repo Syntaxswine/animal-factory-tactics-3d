@@ -2,6 +2,8 @@
 
 Independent 3D experiment for Animal Factory Tactics: painted animal characters and isometric industrial environments.
 
+The [opening campaign proposal](docs/tactics/OPENING-CAMPAIGN-PROPOSAL.md) defines the next integration milestone: persistent sector populations, shared loot access in peaceful sectors, campaign saves and a playable five-sector introduction, beginning with a two-sector proof.
+
 The first playable encounter is at `tactics/battle-3d.html`: modeled characters and scenery with the pinned current sprite core, movement, shooting, reloads and guard turns. Easy reveals scenery while people still require line of sight. See [encounter scope](docs/tactics/PLAYABLE-3D.md) and [missing visual elements](docs/tactics/MISSING-3D-VISUALS.md).
 
 The [environment workshop](https://syntaxswine.github.io/animal-factory-tactics-3d/tactics/environment-gallery.html) now includes 76 inspectable scenery, terrain and access entries plus courtyard and clinic scenes. The modeled scenery is also used by the older hybrid game/editor. See [environment validation and limits](docs/tactics/ENVIRONMENT-MODELS.md).
