@@ -48,7 +48,7 @@ try{
   assert.deepEqual(await page.evaluate(anchorPixels),before,site+' foundations move on damage at '+scale);
   await page.evaluate(id=>window.sitesStudy.select(id,'intact'),site);assert.deepEqual(await page.evaluate(anchorPixels),before,'API state swap resets view');
  }
- await page.selectOption('#scale','fit');await page.selectOption('#frame','site');await page.check('#passage');await page.check('#foundations');
+ await page.selectOption('#scale','fit');await page.selectOption('#frame','site');await page.check('#passage');await page.check('#foundations');await page.uncheck('#probe');
  for(const site of ['radio','radar','sam'])for(const profile of ['horse','wide']){
   await page.evaluate(id=>window.sitesStudy.select(id,'pair'),site);await page.selectOption('#profile',profile);await page.selectOption('#view','top');
   const d=await page.evaluate(()=>window.sitesStudy.diagnostics());assert.equal(d.clearance.length,2);
@@ -68,8 +68,20 @@ try{
  // A blocked tile cannot silently teleport the reference into equipment.
  const priorPlacement=await page.evaluate(()=>window.sitesStudy.diagnostics().placementCell);
  assert.equal(await page.evaluate(()=>window.sitesStudy.placeHorse([3,3])),false);assert.deepEqual(await page.evaluate(()=>window.sitesStudy.diagnostics().placementCell),priorPlacement);
+ // Reopened concrete admits the native player; a true obstruction displays a
+ // height-aware turning envelope and a contact marker instead of moving him.
+ await page.evaluate(()=>window.sitesStudy.select('sam','intact'));await page.selectOption('#profile','wide');await page.selectOption('#view','three');await page.selectOption('#frame','ground');await page.check('#probe');
+ assert.equal(await page.evaluate(()=>window.sitesStudy.placeHorse([1,1])),true);
+ await page.screenshot({path:path.join(out,'sam-reopened-close.png')});
+ assert.equal(await page.evaluate(()=>window.sitesStudy.placeHorse([3,3])),false);
+ assert.deepEqual(await page.evaluate(()=>window.sitesStudy.diagnostics().placementCell),[1,1]);
+ assert.deepEqual(await page.evaluate(()=>window.sitesStudy.diagnostics().inspectedCell),[3,3]);
+ assert((await page.locator('#inspection').textContent()).includes('launcher base'));
+ const marker=await page.evaluate(()=>{const s=window.sitesStudy,body=s.scene.getObjectByName('body-clearance-probe'),contact=s.scene.getObjectByName('body-clearance-contacts');return {body:body.visible&&body.geometry.drawRange.count>0,contact:contact.visible&&contact.geometry.drawRange.count>0};});assert.deepEqual(marker,{body:true,contact:true});
+ await page.screenshot({path:path.join(out,'sam-obstruction-inspector.png')});
+ await page.uncheck('#probe');assert.equal(await page.evaluate(()=>window.sitesStudy.scene.getObjectByName('body-clearance-probe').visible),false);
  // Exercise pointer placement, not only a diagnostic API.
- await page.evaluate(()=>window.sitesStudy.select('radio','intact'));await page.selectOption('#profile','horse');await page.selectOption('#view','top');
+ await page.evaluate(()=>window.sitesStudy.select('radio','intact'));await page.selectOption('#frame','site');await page.selectOption('#profile','horse');await page.selectOption('#view','top');
  const point=await page.evaluate(()=>{const s=window.sitesStudy,V=s.camera.position.constructor,p=new V(-2.5,.24,3.5).project(s.camera),r=s.renderer.domElement.getBoundingClientRect();return [r.x+(p.x+1)*r.width/2,r.y+(1-p.y)*r.height/2];});
  await page.mouse.click(...point);assert.deepEqual(await page.evaluate(()=>window.sitesStudy.diagnostics().placementCell),[1,7]);
  await page.selectOption('#view','front');await page.selectOption('#frame','ground');await page.selectOption('#scale','95');await page.uncheck('#passage');await page.screenshot({path:path.join(out,'radio-door-scale.png')});
@@ -95,6 +107,6 @@ try{
  assert.equal(await page.locator('.measure:visible').count(),0,'Hide vertical labels at tiny fit scales');
  await page.evaluate(()=>window.sitesStudy.dispose());assert.equal((await page.evaluate(()=>window.sitesStudy.diagnostics())).disposed,true);
  assert.deepEqual(errors,[],'Browser errors');
- fs.writeFileSync(path.join(out,'browser-check.json'),JSON.stringify({passed:true,checks,lockedCameraComparisons:18,passageProfileComparisons:6,nativePlayerPlacement:true,errors,gpu:after},null,2));
+ fs.writeFileSync(path.join(out,'browser-check.json'),JSON.stringify({passed:true,checks,lockedCameraComparisons:18,passageProfileComparisons:6,nativePlayerPlacement:true,roundedFitInspector:true,errors,gpu:after},null,2));
  console.log('Strategic sites: '+checks.length+' model/view combinations, 18 locked-camera damage swaps, six passage/profile maps, native player placement, controls and lifecycle passed');
 }finally{await review.closeReview();}
