@@ -4,6 +4,8 @@ Build a playable opening campaign by connecting the existing overmap, authored s
 
 The population and peaceful-sector inventory rules below are user decisions. The data organization and delivery sequence are implementation recommendations. This proposal describes work to build, not features already available.
 
+Delivery 1 is implemented in the [two-sector campaign foundation](CAMPAIGN-FOUNDATION.md). That record describes the runnable entry point, persistence contract, verification and remaining deliveries; the full proposal below remains the target for the opening campaign.
+
 ## Player experience
 
 A player starts a campaign, equips a squad, enters a sector, talks and searches where appropriate, fights, and travels onward. Returning shows the sector's current occupants and remaining items. Saving and continuing restores the campaign, including an unfinished fight or journey. Defeating a force changes the population; actual reinforcements can occupy the sector later.

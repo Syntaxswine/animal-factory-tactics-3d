@@ -1,3 +1,4 @@
+import {canUseSectorInventory} from './sector-inventory.js';
 import {canControl,combatCosts,alive,adjacentTo,pileOpen,searchBody,searchPreview,equip,equipCutters,stowWeapon,arrangeInventory,WEAPONS,refresh} from './core/engine.js';
 import {gridLayout,storeLayout,syncWeapons,accepts,receive} from './core/inventory.js';
 import {tileKey} from './core/maps.js';
@@ -14,7 +15,7 @@ function prepare(s,u,action){
  if(!s.units.includes(u)||!canControl(s,u)||s.queue.length)return {ok:false,reason:'Cannot manage equipment now.'};
  const {mode,key,target,index}=action;if(!['take','give','drop'].includes(mode))return {ok:false,reason:'Unknown transfer.'};
  const cost=combatCosts(s)?2:0;if(u.ap<cost)return {ok:false,reason:'Needs 2 AP.'};
- if(mode==='take'&&(!nearbyLoot(s,u).includes(target)||!pileOpen(target)))return {ok:false,reason:'Stand beside visible, searched loot.'};
+ if(mode==='take'&&(!(action.sector?canUseSectorInventory(s,u)&&s.loot.includes(target):nearbyLoot(s,u).includes(target))||!pileOpen(target)))return {ok:false,reason:'Stand beside visible, searched loot.'};
  if(mode==='give'&&!nearbyRecipients(s,u).includes(target))return {ok:false,reason:'Stand beside the recipient with an open edge.'};
  const source=structuredClone(u);syncWeapons(source);const original=mode==='take'&&Number.isInteger(index)?target.items[index]:mode==='take'?null:carriedItem(source,key);
  if(!original||original.kind==='hands')return {ok:false,reason:'Item is unavailable.'};

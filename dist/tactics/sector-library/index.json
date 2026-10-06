@@ -781,6 +781,34 @@
       "authoredVariants": 0
     },
     {
+      "id": "opening-checkpoint",
+      "role": "special",
+      "collectionRole": "special",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 1,
+      "authoredVariants": 1
+    },
+    {
+      "id": "opening-safehouse",
+      "role": "special",
+      "collectionRole": "special",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "orientations": 1,
+      "authoredVariants": 1
+    },
+    {
       "id": "town--land-road-e",
       "role": "town",
       "collectionRole": "town",

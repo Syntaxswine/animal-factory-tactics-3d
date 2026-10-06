@@ -1,3 +1,4 @@
+import {campaignBattle} from './campaign-battle.js';
 import {guardCone,visibleConeGuards,drawGuardCones} from './guard-cones.js';
 import {walkingRoutes,drawWalkingRoutes} from './walking-preview.js';
 import {renderShotPlanner} from './shot-planner.js';
@@ -31,8 +32,8 @@ import {readSettings} from './settings-3d.js';
 
 const $=id=>document.getElementById(id),canvas=$('battle'),ctx=canvas.getContext('2d');
 $('difficulty').value=readSettings().difficulty;
-let definition,initialState;
-try{const slot=new URLSearchParams(location.search).get('load');if(slot){const record=await getSave(slot);if(!record)throw Error('That save slot is empty. Return to the title screen to choose another.');initialState=restoreEncounter(record);definition=initialState.definition;}else definition=await loadBattleMap();}catch(error){$('message').textContent=error.message;$('restart').disabled=true;throw error;}
+let definition,initialState,campaign=null,campaignSavedRevision=-1;
+try{const campaignSlot=new URLSearchParams(location.search).get('campaign');if(campaignSlot){campaign=await campaignBattle(campaignSlot);initialState=campaign.state;definition=initialState.definition;}const slot=new URLSearchParams(location.search).get('load');if(campaign){}else if(slot){const record=await getSave(slot);if(!record)throw Error('That save slot is empty. Return to the title screen to choose another.');initialState=restoreEncounter(record);definition=initialState.definition;}else definition=await loadBattleMap();}catch(error){$('message').textContent=error.message;$('restart').disabled=true;throw error;}
 if(new URLSearchParams(location.search).has('editorPlaytest')){
  const back=document.createElement('button');back.id='return-editor';back.textContent='Return to editor';back.onclick=()=>{window.opener?.focus();window.close();};document.querySelector('header').append(back);
  document.querySelector('aside h1').textContent='Playtest: '+definition.name;
@@ -43,9 +44,9 @@ let renderer,state,targetId=null,level=0,picks=[],width=1,height=1,lastStep=0,st
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
 const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastClockCombat,storageBusy=false,lastAuto=performance.now(),autoRound=0,autoDisabled=false;
 const characterScreen=createCharacterScreen({getState:()=>state,onInventoryChange:()=>{renderer.captureCombat(state);lastUI='';sync();},getEquipmentState:id=>renderer?.equipmentState(id)||'carried',canEquip:()=>!renderer.busy,onEquip:(id,weapon)=>{if(renderer.busy)return false;const ok=equip(state,state.units.find(u=>u.id===id),weapon);if(ok){renderer.captureCombat(state);lastUI='';}return ok;},onOpen:()=>{frameClock.reset();sync();},onClose:()=>{frameClock.reset();sync();}});
-const savePanel=createSavePanel({onSave:saveGame,onLoad:loadGame,onOpen:()=>{frameClock.reset();lastUI='';sync();},onClose:()=>{frameClock.reset();lastUI='';sync();}});
+const savePanel=createSavePanel({...campaign?.saveOptions,onSave:saveGame,onLoad:loadGame,onOpen:()=>{frameClock.reset();lastUI='';sync();},onClose:()=>{frameClock.reset();lastUI='';sync();}});
 const shotDialog=$('shot-popup');
-const paused=(ignorePlanner=false)=>(!ignorePlanner&&(shotDialog.open||flamePlanner.open))||userPaused||storageBusy||document.hidden||characterScreen.open||savePanel.open;
+const paused=(ignorePlanner=false)=>(!ignorePlanner&&(shotDialog.open||flamePlanner.open))||userPaused||storageBusy||campaign?.paused||document.hidden||characterScreen.open||savePanel.open;
 function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
 const view={x:0,y:0,zoom:1.15};
 const climbButton=document.createElement('button');climbButton.id='climb-tower';climbButton.textContent='Climb tower';$('reload').parentNode.insertBefore(climbButton,$('reload'));
@@ -67,16 +68,16 @@ function overview(){const w=definition.width,h=definition.height;overviewMode=tr
 function resize(){const box=canvas.getBoundingClientRect();width=box.width;height=box.height;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(state){if(overviewMode)overview();else center();}}
 function restart(){flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;lastAuto=performance.now();autoRound=state.round;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Exteriors revealed. Look through doors or windows to discover interiors. People still need line of sight.':'Explore to reveal the map.');sync();}
 async function saveGame(id){
- if(storageBusy)throw Error('A save or load is already in progress.');settleEncounterRounds(state);const record=captureEncounter(state);storageBusy=true;frameClock.reset();
- try{await putSave(id,record);lastAuto=performance.now();autoRound=state.round;autoDisabled=false;return record;}finally{storageBusy=false;frameClock.reset();lastUI='';}
+ if(storageBusy)throw Error('A save or load is already in progress.');settleEncounterRounds(state);const record=campaign?null:captureEncounter(state);storageBusy=true;frameClock.reset();
+ try{const saved=campaign?await campaign.save(id):(await putSave(id,record),record);lastAuto=performance.now();autoRound=state.round;campaignSavedRevision=state.revision;autoDisabled=false;return saved;}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}
 }
 function installState(restored){flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=restored;definition=state.definition;$('difficulty').value=state.difficulty;selectedIds=new Set([state.selected]);targetId=null;drag=null;userPaused=true;presentationTime=0;renderer.presentationNow=0;lastStep=0;stepDelay=MOVEMENT_MS;lastClockCombat=undefined;lastUI='';lastAuto=performance.now();autoRound=state.round;frameClock.reset();center();sync();message('Encounter loaded and paused. Press Resume to continue.');}
-async function loadGame(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);installState(restored);}finally{storageBusy=false;frameClock.reset();lastUI='';}}
+async function loadGame(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{if(campaign){const restored=await campaign.load(id);if(restored)installState(restored);}else{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);installState(restored);}}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}}
 async function quickSave(){try{await saveGame('quick');message('Quicksave saved.');}catch(e){message('Could not save: '+e.message);}}
 async function quickLoad(){try{await loadGame('quick');}catch(e){message('Could not load: '+e.message);}}
-function autosave(){saveGame('auto').catch(e=>{autoDisabled=true;message('Autosave failed: '+e.message+' Use Save / Load to retry.');});}
+function autosave(){saveGame('auto').catch(e=>{autoDisabled=true;if(campaign)userPaused=true;sync();message('Autosave failed: '+e.message+' Use Save / Load to retry.');});}
 function sync(){
- settleEncounterRounds(state);const combat=turnBased(state);if(combat!==lastClockCombat){frameClock.reset();lastClockCombat=combat;}syncClock();
+ settleEncounterRounds(state);campaign?.update();const combat=turnBased(state);if(combat!==lastClockCombat){frameClock.reset();lastClockCombat=combat;}syncClock();
  if(cliffViewState!==state){cliffViewState=state;cliffViewId=0;}const traversal=state.cliffTraversals?.at(-1);if(traversal&&traversal.id>cliffViewId){cliffViewId=traversal.id;if(traversal.unitId===state.selected){level=selected().z||0;$('floor').value=level;}}
  syncLevelButtons();
  selectedIds=pruneSelection(state,selectedIds);
@@ -201,9 +202,10 @@ function action(fn){if(paused()||renderer.busy)return;const ok=fn();renderer.cap
  $('stop').onclick=()=>{if(paused())return;state.queue=[];sync();};$('floor').onchange=()=>{level=+$('floor').value;clearHover();targetId=null;drag=null;flamePlanner.cancel();sync();};
  for(const b of document.querySelectorAll('#battle-levels [data-level]'))b.onclick=()=>{$('floor').value=b.dataset.level;$('floor').dispatchEvent(new Event('change'));};
 $('pause').onclick=()=>{userPaused=!userPaused;frameClock.reset();sync();};
-document.addEventListener('visibilitychange',()=>{renderer.wallXray.setPointer(null,null);frameClock.reset();sync();if(document.hidden&&!storageBusy&&!autoDisabled&&(performance.now()-lastAuto>=30000||state.round!==autoRound))autosave();});
+document.addEventListener('visibilitychange',()=>{renderer.wallXray.setPointer(null,null);frameClock.reset();sync();if(document.hidden&&!storageBusy&&!autoDisabled&&(performance.now()-lastAuto>=30000||state.round!==autoRound||campaign&&state.revision!==campaignSavedRevision))autosave();});
 window.addEventListener('pageshow',()=>frameClock.reset());
 new ResizeObserver(resize).observe(canvas);resize();if(initialState)installState(initialState);else restart();
+if(campaign)campaign.mount({changed:()=>{lastUI='';frameClock.reset();sync();},failure:e=>{userPaused=true;message('Campaign checkpoint failed: '+e.message+' Use Save / Load to retry.');}});
 if(new URLSearchParams(location.search).get('view')==='overview')overview();
 function frame(now){
  try{
@@ -218,7 +220,7 @@ function frame(now){
   for(const [id,point] of Object.entries({...state.contacts,...state.glimpses}))if(!state.detected.has(+id)&&(point.z||0)===level){const p=project(point);ctx.font='bold 18px system-ui';ctx.textAlign='center';ctx.fillStyle=state.glimpses[id]?'#f5d480':'#aaa58c';ctx.strokeStyle='#172520';ctx.lineWidth=3;ctx.strokeText('?',p.x,p.y-12);ctx.fillText('?',p.x,p.y-12);}
   if(target()){const t=target(),p=project(t.barrel?t:renderer.displayUnit(t));ctx.strokeStyle='#ff9b80';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,18*view.zoom,9*view.zoom,0,0,Math.PI*2);ctx.stroke();}
   if(drag?.select&&drag.moved){const r=canvas.getBoundingClientRect();ctx.fillStyle='#f2cc8325';ctx.strokeStyle='#f2cc83';ctx.lineWidth=1.5;ctx.fillRect(drag.x-r.left,drag.y-r.top,drag.lastX-drag.x,drag.lastY-drag.y);ctx.strokeRect(drag.x-r.left,drag.y-r.top,drag.lastX-drag.x,drag.lastY-drag.y);}
-  if(!paused()&&!autoDisabled&&!storageBusy&&(performance.now()-lastAuto>=30000||state.round!==autoRound))autosave();
+  if(!paused()&&!autoDisabled&&!storageBusy&&(performance.now()-lastAuto>=30000||state.round!==autoRound||campaign&&state.revision!==campaignSavedRevision))autosave();
   requestAnimationFrame(frame);
  }catch(error){message('Encounter stopped: '+error.message);console.error(error);}
 }

@@ -56,6 +56,8 @@ Generated from the organized authoring collection. Placeholder recipes and rotat
 | fortress | fortress--land-road-ens | 0 | placeholder |
 | fortress | fortress--land-road-ensw | 0 | placeholder |
 | fortress | fortress--land-road-ew | 0 | placeholder |
+| special | opening-checkpoint | 1 | in-progress |
+| special | opening-safehouse | 1 | in-progress |
 | town | town--land-road-e | 0 | placeholder |
 | town | town--land-road-en | 0 | placeholder |
 | town | town--land-road-ens | 0 | placeholder |
