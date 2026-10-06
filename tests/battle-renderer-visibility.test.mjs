@@ -4,6 +4,7 @@ import * as T from '../dist/tactics/vendor/three.module.js';
 import {BattleRenderer} from '../dist/tactics/battle-renderer.js';
 import {BattleCombat} from '../dist/tactics/battle-combat.js';
 import {HybridRenderer} from '../dist/tactics/hybrid-renderer.js';
+import {toWorld} from '../dist/tactics/hybrid-world.js';
 
 // Exercise both renderer draw stages with the real presentation clock. Only
 // WebGL, model loading and effects are replaced; visibility/picking are real.
@@ -13,7 +14,7 @@ function renderer(){
   renderer:{setSize(){},getPixelRatio:()=>1,render(){},domElement:{}},editorWorld:world,world,level:0,
   rebuild(){},prune(){},loot:{sync(){}},motion:{update(){}},traversal:{observe(){}},combat:new BattleCombat(),
   fire:{observe(){},display:u=>u},tankEffects:{observe(){},pendingProps:()=>[]},shotEffects:{hide(){}},flameEffects:{hide(){}},
-  actor(u){let mesh=this.actors.get(u.id);if(!mesh){mesh=new T.Mesh(new T.BoxGeometry(.5,1,.5));this.actors.set(u.id,mesh);}mesh.position.set(u.x,0,u.y);return mesh;}
+  actor(u){let mesh=this.actors.get(u.id);if(!mesh){mesh=new T.Mesh(new T.BoxGeometry(.5,1,.5));this.actors.set(u.id,mesh);}mesh.position.fromArray(toWorld(u));mesh.position.y+=.5;mesh.updateMatrixWorld(true);return mesh;}
  });
  return r;
 }
@@ -33,5 +34,31 @@ for(const weapon of ['rifle','flamethrower'])test(`${weapon}: visible casualties
   assert.deepEqual(state,before,'Presentation must not change detection or casualty state');
   state.visible.delete('2,0');assert.deepEqual(draw(800),[0],'Explored terrain does not reveal a currently unseen corpse');
   state.units=[a,hidden];assert.deepEqual(HybridRenderer.prototype.draw.call(r,ctx,{...state,terrain:state.map},...args).map(p=>p.id),[0],'The legacy renderer still applies its own detection gate');
+ }finally{for(const mesh of r.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}}
+});
+
+test('battle draws every level, keeps fog gates, and only picks people on the interaction level',()=>{
+ const units=[
+  {id:0,x:0,y:0,z:0,team:'squad',hp:100},
+  {id:1,x:3,y:0,z:1,team:'guard',hp:100},
+  {id:2,x:6,y:0,z:2,team:'squad',hp:100},
+  {id:3,x:7,y:1,z:1,team:'guard',hp:100},
+  {id:4,x:8,y:1,z:2,team:'guard',hp:0},
+ ];
+ const state={units,map:[],props:[],detected:new Set([1]),visible:new Set(['0,0']),seen:new Set(['0,0','7,1,1','8,1,2'])},r=renderer(),rebuilt=[],lit=[];
+ r.rebuild=(world,seen,level)=>rebuilt.push(level);r.paintedEnvironment={barrelHit:()=>null};r.fire.pick=()=>null;
+ r.lights={update:(state,level)=>lit.push(level),render(){}};
+ try{
+  for(const level of [0,1,2,0]){
+   assert.deepEqual(r.draw({drawImage(){}},state,{x:210,y:280,zoom:1},700,600,level).map(p=>p.id),[0,1,2]);
+   for(const id of [0,1,2]){
+    const p=r.actors.get(id).position.clone().project(r.camera),hit=r.pick((p.x+1)*350,(1-p.y)*300,700,600);
+    assert.equal(hit,units[id].z===level?id:null,`visible character ${id} with level ${level} selected`);
+   }
+  }
+  assert.deepEqual(rebuilt,[3],'switching the interaction layer does not rebuild or cut away higher scenery');
+  assert.deepEqual(lit,[3,3,3,3],'lamps on every displayed level remain lit');
+  assert.equal(r.actors.has(3),false,'explored floors do not reveal unspotted guards');
+  assert.equal(r.actors.has(4),false,'explored floors do not reveal unseen bodies');
  }finally{for(const mesh of r.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}}
 });

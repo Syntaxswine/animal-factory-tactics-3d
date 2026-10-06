@@ -125,36 +125,36 @@ export class BattleRenderer extends HybridRenderer {
   if(result&&!result.supported){model.aimWarning=`${unit.name||unit.species}: firing animation unavailable (${result.reason}); shot outcome unchanged.`;this.diagnostics.push(model.aimWarning);}
  }
  prune(){this.tankEffects.draw(this.camera);} // Runs after posing, before rendering.
- pick(x,y,width,height){
+ pick(x,y,width,height,level=this.presentationLevel??this.level){
   const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
-  const barrel=this.paintedEnvironment.barrelHit(ray,this.presentationLevel??this.level);
-  const roots=[...this.actors.entries()].filter(([,root])=>root.visible);
+  const barrel=this.paintedEnvironment.barrelHit(ray,level),onLevel=id=>(this.state.units.find(u=>u.id===id)?.z||0)===level;
+  const roots=[...this.actors.entries()].filter(([id,root])=>root.visible&&onLevel(id));
   for(const hit of ray.intersectObjects(roots.map(([,root])=>root),true)){
    if(barrel&&hit.distance>=barrel.distance)break;
    let object=hit.object,visible=true;
    while(object){if(!object.visible)visible=false;const entry=roots.find(([,root])=>root===object);if(entry&&visible)return entry[0];object=object.parent;}
   }
-  return barrel?null:this.fire.pick(ray);
+  return barrel?null:this.fire.pick(ray,onLevel);
  }
  pickDoor(x,y,width,height,level){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return pickWallDoor(ray,this.chunks||new Map(),level);}
  pickBarrel(x,y,width,height,level){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);const p=this.paintedEnvironment.pickBarrel(ray,level);return p&&presentBarrel(this.state,barrelTarget(p))?barrelTarget(p):null;}
- pickLoot(x,y,width,height){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return this.loot.pick(ray);}
+ pickLoot(x,y,width,height,level=this.presentationLevel??this.level){const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);return this.loot.pick(ray,level);}
  draw(ctx,state,...args){
-  this.loot.sync(state,args[3]);
+  this.loot.sync(state,null);
   this.state=state;this.presentationLevel=args[3];this.captureCombat(state);this.shotEffects.hide();this.flameEffects.hide();
   const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.traversal.active?.event.unitId===u.id?{...u,presentationLevel:args[3]}:this.fire.display(this.combat.display(u)));
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
   // Visibility was resolved from committed units before animation changed HP
   // or position. Do not hide a visible casualty during its pre-impact pose.
-  return super.draw(ctx,{...state,terrain:state.map,units,props:[...state.props,...this.tankEffects.pendingProps()]},...args.slice(0,4),{...args[4],visibilityFiltered:true});
+  return super.draw(ctx,{...state,terrain:state.map,units,props:[...state.props,...this.tankEffects.pendingProps()]},...args.slice(0,4),{...args[4],visibilityFiltered:true,showAllLevels:true});
  }
  captureCombat(state){
   const now=this.presentationNow??performance.now(),reduced=!!this.reducedMotion?.matches;
   this.combat.observe(state,now,reduced);this.traversal.observe(state,now,reduced);
-  this.tankEffects.observe(state,this.combat,now,reduced,this.presentationLevel??this.level);
-  this.fire.observe(state,this.combat,now,reduced,this.presentationLevel??this.level);
+  this.tankEffects.observe(state,this.combat,now,reduced,null);
+  this.fire.observe(state,this.combat,now,reduced);
   for(const u of state.units){const m=this.models.get(u.id);if(!m)continue;
-   const visible=personVisible(state,u)&&(this.level===undefined||(u.z||0)===this.level),available=u.hp>0&&visible&&!reduced;
+   const visible=personVisible(state,u),available=u.hp>0&&visible&&!reduced;
    if(m.draw&&(!available||now-m.drawStart>=DRAW_DURATION_MS)){m.draw.dispose();m.draw=null;m.drawRequested=false;m.signature=null;}
    if(!available){m.drawRequested=false;if(m.weapon!==u.weapon)m.drawSkipWeapon=u.weapon;}
    if(m.weapon&&m.weapon!==u.weapon&&available&&!m.profile.unarmed&&u.weapon!=='hands'&&this.traversal.active?.event.unitId!==u.id)m.drawRequested=true;

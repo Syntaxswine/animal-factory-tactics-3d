@@ -16,7 +16,7 @@ const key=p=>p.z?`${p.x},${p.y},${p.z}`:`${p.x},${p.y}`;
 export function fireFloor(state,p){return toWorld({...p,cliffSupport:rampSupportAt(state,p)||cliffSupportAt(state,p)})[1];}
 export function visibleFireLayers(state,level,withheld=new Set()){
  const layers=new Map();for(const p of state.fires||[]){
-  if(p.turns<=0||(p.z||0)!==level||!state.visible.has(key(p))||withheld.has(key(p)))continue;
+  if(p.turns<=0||level!==null&&(p.z||0)!==level||!state.visible.has(key(p))||withheld.has(key(p)))continue;
   const height=fireFloor(state,p);if(!layers.has(height))layers.set(height,[]);layers.get(height).push(p);
  }return layers;
 }
@@ -40,13 +40,13 @@ export class BattleTankEffects {
   for(const e of state.fireAnimations||[]){
    if(e.sequence<=this.sequence)continue;this.sequence=e.sequence;if(!['tank','barrel'].includes(e.kind))continue;
    const barrel=e.kind==='barrel',u=barrel?e.prop:state.units.find(u=>u.id===e.unitId);
-   if(reduced||!u||(barrel?!state.visible.has(barrelKey(u)):!personVisible(state,u))||(u.z||0)!==level)continue;
+   if(reduced||!u||(barrel?!state.visible.has(barrelKey(u)):!personVisible(state,u))||level!==null&&(u.z||0)!==level)continue;
    const p=e.route[0],origin=V(...toWorld(p));if(barrel)origin.y=fireFloor(state,p);origin.y+=barrel?.4:.8;
    this.bursts.set(e.sequence,{event:e,origin,point:p,waiting:true,start:now,worn:!barrel&&paintedOperatorSupported({...u,weapon:e.weapon})});
   }
   for(const [id,b]of this.bursts){
    const barrel=b.event.kind==='barrel',u=barrel?b.event.prop:state.units.find(u=>u.id===b.event.unitId);
-   if(reduced||!u||(barrel?!state.visible.has(barrelKey(u)):!personVisible(state,u))||(u.z||0)!==level||now-b.start>5400&&!b.waiting){this.remove(id);continue;}
+   if(reduced||!u||(barrel?!state.visible.has(barrelKey(u)):!personVisible(state,u))||level!==null&&(u.z||0)!==level||now-b.start>5400&&!b.waiting){this.remove(id);continue;}
    if(b.waiting){const start=burnStart(b.event,combat,now);if(start!==null){b.start=start;b.waiting=false;}}
   }
  }
@@ -58,13 +58,13 @@ export class BattleTankEffects {
  }
  draw(camera){
   const state=this.state;if(!state)return;
-  const visible=[...state.visible].map(k=>k.split(',').map(Number)).filter(p=>(p[2]||0)===this.level).map(p=>({x:p[0],z:p[1]}));
+  const visibleAt=level=>[...state.visible].map(k=>k.split(',').map(Number)).filter(p=>(p[2]||0)===level).map(p=>({x:p[0],z:p[1]}));
   for(const b of this.bursts.values()){
    if(b.waiting||this.now<b.start||b.worn&&!b.originFixed)continue;
    const barrel=b.event.kind==='barrel',floor=barrel?fireFloor(state,b.point):toWorld(b.point)[1],surfaceAt=debrisSurface(state,b.point);
    this.make(b,{floor,surfaceAt});
    if(b.effects){
-    const age=(this.now-b.start)/1000;b.effects.setVisibility(visible);b.effects.update(age,{camera,contract:EMPTY,groundOpacity:0});
+    const age=(this.now-b.start)/1000;b.effects.setVisibility(visibleAt(b.point.z||0));b.effects.update(age,{camera,contract:EMPTY,groundOpacity:0});
     const library=this.renderer.paintedEnvironment?.library;
     if(barrel&&library&&!b.motion){
      const prop=b.event.prop,{skin,label}=cargoFinish(prop);

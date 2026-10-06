@@ -31,6 +31,7 @@ function select(value){selection=value;scene.select(value);$('selected').textCon
 $('factory').onclick=()=>{if(tools.guardReplace())factory();};$('home').onclick=home;$('overview').onclick=()=>{const size=documentModel?.size||240;focus((size-1)/2,(size-1)/2,size*1.55);};
 $('camera').onchange=()=>{view.preset=$('camera').value;dirty=true;};
 $('floor').onchange=()=>{scene.setOptions({level:+$('floor').value});select(null);};
+$('show-all-levels').onchange=()=>{scene.setOptions({showAllLevels:$('show-all-levels').checked});select(null);};
 for(const name of ['roofs','walls'])$(name).onchange=()=>{scene.setOptions({[name]:$(name).checked});select(null);};
 $('sector').onclick=()=>{const max=documentModel?.block?1:10,x=+$('sector-x').value,y=+$('sector-y').value;if(!Number.isInteger(x)||!Number.isInteger(y)||x<1||x>max||y<1||y>max){status('Choose a sector column and row from 1 to '+max+'.');return;}focus((x-1)*24+11.5,(y-1)*24+11.5,28);};
 const zoom=factor=>{view.span=Math.max(6,Math.min(450,view.span*factor));dirty=true;};$('zoom-in').onclick=()=>zoom(.8);$('zoom-out').onclick=()=>zoom(1.25);

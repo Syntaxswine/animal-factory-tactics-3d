@@ -149,8 +149,8 @@ export class BattleFire {
   return {...unit,x:point.x,y:point.z,heading:p.route.length?point.heading*180/Math.PI:unit.heading};
  }
  get busy(){return [...this.entries.values()].some(e=>!this.reduced&&(e.waiting||this.now<e.start||!firePlayback(e,this.now).done));}
- pick(ray){
-  const hits=[];for(const [id,s]of this.sessions)if(s.effects?.group.visible&&s.effects.ash.visible)for(const h of ray.intersectObject(s.effects.ash))hits.push({id,distance:h.distance});
+ pick(ray,include=()=>true){
+  const hits=[];for(const [id,s]of this.sessions)if(include(id)&&s.effects?.group.visible&&s.effects.ash.visible)for(const h of ray.intersectObject(s.effects.ash))hits.push({id,distance:h.distance});
   return hits.sort((a,b)=>a.distance-b.distance)[0]?.id??null;
  }
  release(id){

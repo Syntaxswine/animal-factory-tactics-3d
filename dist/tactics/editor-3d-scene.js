@@ -30,7 +30,7 @@ export class InspectionScene {
   this.markerGeo=new T.RingGeometry(.27,.39,20);this.guardMat=new T.MeshBasicMaterial({color:0xef9e75,side:T.DoubleSide});this.startMat=new T.MeshBasicMaterial({color:0x96dbce,side:T.DoubleSide});this.accessMat=new T.MeshBasicMaterial({color:0xf7d17d,side:T.DoubleSide});
   this.cargo=new BattleEnvironment(this.scene,this.loader,()=>{if(this.document)this.rebuild();},error=>{this.diagnostics.push(error.message);changed();});
   this.cliffs=new CliffMapScene(this.scene);this.lights=new LightingScene(this.scene,this.loader,changed,e=>{this.diagnostics.push('Lighting: '+e.message);changed();});
-  this.options={level:0,roofs:true,walls:true};
+  this.options={level:0,showAllLevels:true,roofs:true,walls:true};
  }
  material(kind){
   if(!this.materials.has(kind)){
@@ -44,7 +44,8 @@ export class InspectionScene {
    this.materials.set(kind,material);
   }return this.materials.get(kind);
  }
- dim(material,z){if(this.options.landEditing||z===this.options.level)return material;if(!this.dimMaterials.has(material)){const m=material.clone();m.onBeforeCompile=(shader,renderer)=>{material.onBeforeCompile(shader,renderer);shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>','outgoingLight *= .38;\n#include <opaque_fragment>');};m.customProgramCacheKey=()=>material.customProgramCacheKey()+'-inspection-dim';this.dimMaterials.set(material,m);}return this.dimMaterials.get(material);}
+ get visibleLevel(){return this.options.showAllLevels?3:this.options.level;}
+ dim(material,z){if(this.options.showAllLevels||z===this.options.level)return material;if(!this.dimMaterials.has(material)){const m=material.clone();m.onBeforeCompile=(shader,renderer)=>{material.onBeforeCompile(shader,renderer);shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>','outgoingLight *= .38;\n#include <opaque_fragment>');};m.customProgramCacheKey=()=>material.customProgramCacheKey()+'-inspection-dim';this.dimMaterials.set(material,m);}return this.dimMaterials.get(material);}
  clearScenery(){for(const mesh of this.scenery.children)mesh.dispose();this.scenery.clear();}
  async open(document){
   const generation=++this.generation,start=performance.now();this.clearModels();this.document=document;this.diagnostics=[];
@@ -69,7 +70,7 @@ export class InspectionScene {
    this.scene.add(root);const model={root,worker,paint,equipment,cap,capMaterial:cap?.mesh.material,unit};this.models.push(model);this.showModel(model);this.changed();
   }catch(error){cap?.dispose();equipment?.dispose();paint?.dispose();worker?.skeleton.dispose();worker?.dispose();if(generation===this.generation){this.diagnostics.push(unit.role+': '+error.message);this.changed();}}
  }
- showModel(model){const z=model.unit.z||0;model.root.visible=z<=(this.options.landEditing?2:this.options.level);for(const part of model.worker.parts)part.material=this.dim(model.paint.material,z);if(model.cap)model.cap.mesh.material=this.dim(model.capMaterial,z);}
+ showModel(model){const z=model.unit.z||0;model.root.visible=z<=this.visibleLevel;for(const part of model.worker.parts)part.material=this.dim(model.paint.material,z);if(model.cap)model.cap.mesh.material=this.dim(model.capMaterial,z);}
  async update(document){
   this.document=document;this.world=buildWorld(document.map);
   const wanted=new Map(document.units.map(u=>[u.id,u]));
@@ -77,8 +78,8 @@ export class InspectionScene {
   this.rebuild();for(const unit of wanted.values())await this.loadUnit(unit,this.generation);this.changed();
  }
  rebuild(){
-  if(!this.document)return;const started=performance.now(),{roofs,walls}=this.options,level=this.options.landEditing?2:this.options.level,source=this.document.map;
-  this.cliffs.rebuild(source,level,{editor:true,dim:!this.options.landEditing});
+  if(!this.document)return;const started=performance.now(),{roofs,walls}=this.options,level=this.visibleLevel,source=this.document.map;
+  this.cliffs.rebuild(source,level,{editor:true,dim:!this.options.showAllLevels});
   const map={...source,canopies:roofs?source.canopies:[],coverOccupiedProps:source.props,props:source.props.filter(p=>!PAINTED_PROP_FORMS[p.kind]&&(roofs||!p.kind.startsWith('roof-')))};
   const world={...this.world,boxes:this.world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood')&&(walls||!b.source.edge)&&(roofs||b.kind!=='roof'))};
   const groups=new Map(),matrix=new T.Matrix4(),q=new T.Quaternion(),yaw=new T.Quaternion(),euler=new T.Euler(),position=new T.Vector3(),scale=new T.Vector3();
@@ -111,12 +112,8 @@ export class InspectionScene {
   else for(const p of selection?.cells||[]){const corners=[[-.5,-.5],[.5,-.5],[.5,.5],[-.5,.5]];for(let i=0;i<4;i++){const a=corners[i],b=corners[(i+1)%4];points.push(new T.Vector3(p.x+a[0],h,p.y+a[1]),new T.Vector3(p.x+b[0],h,p.y+b[1]));}}
   this.highlight.geometry.dispose();this.highlight.geometry=new T.BufferGeometry().setFromPoints(points);this.changed();
  }
- draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.lights.update(this.document?.map,this.options.level,this.previewMinutes??mapStartMinutes(this.document?.map),this.reducedMotion?.matches?null:performance.now()/1000,true);this.daylight.update(this.previewMinutes??mapStartMinutes(this.document?.map),this.camera,0,true);this.lights.render(this.renderer,this.camera);}
+ draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.lights.update(this.document?.map,this.visibleLevel,this.previewMinutes??mapStartMinutes(this.document?.map),this.reducedMotion?.matches?null:performance.now()/1000,true);this.daylight.update(this.previewMinutes??mapStartMinutes(this.document?.map),this.camera,0,true);this.lights.render(this.renderer,this.camera);}
  pick(x,y,width,height){return floorPoint(this.camera,x,y,width,height,this.options.level);}
- pickLand(x,y,width,height){
-  for(let z=2;z>=1;z--){const p=floorPoint(this.camera,x,y,width,height,z);if(p&&this.document?.map.landPaint?.[`${Math.floor(p.x+.5)},${Math.floor(p.y+.5)}`]?.[0]===z)return p;}
-  return floorPoint(this.camera,x,y,width,height,0);
- }
  pickCliff(x,y,width,height){
   const raycaster=new T.Raycaster();raycaster.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
   let nearest=null,distance=Infinity;
