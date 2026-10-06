@@ -44,7 +44,7 @@ export class InspectionScene {
    this.materials.set(kind,material);
   }return this.materials.get(kind);
  }
- dim(material,z){if(z===this.options.level)return material;if(!this.dimMaterials.has(material)){const m=material.clone();m.onBeforeCompile=(shader,renderer)=>{material.onBeforeCompile(shader,renderer);shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>','outgoingLight *= .38;\n#include <opaque_fragment>');};m.customProgramCacheKey=()=>material.customProgramCacheKey()+'-inspection-dim';this.dimMaterials.set(material,m);}return this.dimMaterials.get(material);}
+ dim(material,z){if(this.options.landEditing||z===this.options.level)return material;if(!this.dimMaterials.has(material)){const m=material.clone();m.onBeforeCompile=(shader,renderer)=>{material.onBeforeCompile(shader,renderer);shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>','outgoingLight *= .38;\n#include <opaque_fragment>');};m.customProgramCacheKey=()=>material.customProgramCacheKey()+'-inspection-dim';this.dimMaterials.set(material,m);}return this.dimMaterials.get(material);}
  clearScenery(){for(const mesh of this.scenery.children)mesh.dispose();this.scenery.clear();}
  async open(document){
   const generation=++this.generation,start=performance.now();this.clearModels();this.document=document;this.diagnostics=[];
@@ -69,7 +69,7 @@ export class InspectionScene {
    this.scene.add(root);const model={root,worker,paint,equipment,cap,capMaterial:cap?.mesh.material,unit};this.models.push(model);this.showModel(model);this.changed();
   }catch(error){cap?.dispose();equipment?.dispose();paint?.dispose();worker?.skeleton.dispose();worker?.dispose();if(generation===this.generation){this.diagnostics.push(unit.role+': '+error.message);this.changed();}}
  }
- showModel(model){const z=model.unit.z||0;model.root.visible=z<=this.options.level;for(const part of model.worker.parts)part.material=this.dim(model.paint.material,z);if(model.cap)model.cap.mesh.material=this.dim(model.capMaterial,z);}
+ showModel(model){const z=model.unit.z||0;model.root.visible=z<=(this.options.landEditing?2:this.options.level);for(const part of model.worker.parts)part.material=this.dim(model.paint.material,z);if(model.cap)model.cap.mesh.material=this.dim(model.capMaterial,z);}
  async update(document){
   this.document=document;this.world=buildWorld(document.map);
   const wanted=new Map(document.units.map(u=>[u.id,u]));
@@ -77,8 +77,8 @@ export class InspectionScene {
   this.rebuild();for(const unit of wanted.values())await this.loadUnit(unit,this.generation);this.changed();
  }
  rebuild(){
-  if(!this.document)return;const started=performance.now(),{level,roofs,walls}=this.options,source=this.document.map;
-  this.cliffs.rebuild(source,level,{editor:true});
+  if(!this.document)return;const started=performance.now(),{roofs,walls}=this.options,level=this.options.landEditing?2:this.options.level,source=this.document.map;
+  this.cliffs.rebuild(source,level,{editor:true,dim:!this.options.landEditing});
   const map={...source,canopies:roofs?source.canopies:[],coverOccupiedProps:source.props,props:source.props.filter(p=>!PAINTED_PROP_FORMS[p.kind]&&(roofs||!p.kind.startsWith('roof-')))};
   const world={...this.world,boxes:this.world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood')&&(walls||!b.source.edge)&&(roofs||b.kind!=='roof'))};
   const groups=new Map(),matrix=new T.Matrix4(),q=new T.Quaternion(),yaw=new T.Quaternion(),euler=new T.Euler(),position=new T.Vector3(),scale=new T.Vector3();
@@ -113,6 +113,10 @@ export class InspectionScene {
  }
  draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.lights.update(this.document?.map,this.options.level,this.previewMinutes??mapStartMinutes(this.document?.map),this.reducedMotion?.matches?null:performance.now()/1000,true);this.daylight.update(this.previewMinutes??mapStartMinutes(this.document?.map),this.camera,0,true);this.lights.render(this.renderer,this.camera);}
  pick(x,y,width,height){return floorPoint(this.camera,x,y,width,height,this.options.level);}
+ pickLand(x,y,width,height){
+  for(let z=2;z>=1;z--){const p=floorPoint(this.camera,x,y,width,height,z);if(p&&this.document?.map.landPaint?.[`${Math.floor(p.x+.5)},${Math.floor(p.y+.5)}`]?.[0]===z)return p;}
+  return floorPoint(this.camera,x,y,width,height,0);
+ }
  pickCliff(x,y,width,height){
   const raycaster=new T.Raycaster();raycaster.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
   let nearest=null,distance=Infinity;
@@ -125,7 +129,7 @@ export class InspectionScene {
   if(!result){this.select(null);return;}
   const cells=result.cells||[],z=this.options.level;
   const geometry=new T.PlaneGeometry(.98,.98),material=new T.MeshBasicMaterial({color:result.ok?0x91ddba:0xff6655,transparent:true,opacity:.4,depthTest:false,side:T.DoubleSide});
-  const mesh=new T.InstancedMesh(geometry,material,cells.length),matrix=new T.Matrix4();cells.forEach((p,i)=>{matrix.makeRotationX(-Math.PI/2);matrix.setPosition(p.x,z*D.floorSpacing+.06,p.y);mesh.setMatrixAt(i,matrix);});mesh.renderOrder=19;mesh.frustumCulled=false;this.scene.add(mesh);this.previewMesh=mesh;
+  const mesh=new T.InstancedMesh(geometry,material,cells.length),matrix=new T.Matrix4();cells.forEach((p,i)=>{matrix.makeRotationX(-Math.PI/2);matrix.setPosition(p.x,(p.z??z)*D.floorSpacing+.06,p.y);mesh.setMatrixAt(i,matrix);});mesh.renderOrder=19;mesh.frustumCulled=false;this.scene.add(mesh);this.previewMesh=mesh;
   if(result.orientation&&cells.length){const x=cells.reduce((n,p)=>n+p.x,0)/cells.length,y=cells.reduce((n,p)=>n+p.y,0)/cells.length;this.previewArrow=new T.ArrowHelper(new T.Vector3(result.orientation[0],0,result.orientation[1]),new T.Vector3(x,z*D.floorSpacing+.12,y),1.6,0xffe5a5,.4,.25);for(const part of [this.previewArrow.line,this.previewArrow.cone]){part.material.depthTest=false;part.renderOrder=21;}this.scene.add(this.previewArrow);}
   this.highlight.material.color.setHex(result.ok?0xffe5a5:0xff6655);this.select(result.edges?.length?{type:'edge',edges:result.edges}:{cells});
  }

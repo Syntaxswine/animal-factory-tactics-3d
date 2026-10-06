@@ -1,3 +1,4 @@
+import {paintLand} from './editor-land-brush.js';
 import {diagonalRoad,ROAD_CORNERS} from './diagonal-roads.js';
 import {STRUCTURE_PRESETS} from './editor-structure-presets.js';
 import {rampStroke} from './editor-ramp-stroke.js';
@@ -21,7 +22,7 @@ export class EditingDocument extends InspectionDocument {
  open(text){super.open(text);if(!this.block)mapStartMinutes(this.map);this.editor=createEditor(this.block?openBlock(this.original):this.map);this.refresh();this.changed=false;this.revision=0;return this;}
  refresh(){if(this.block){const original={...this.original,...extractBlock(this.editor.map)};if(!this.editor.map.blockConnections?.['0,0'])delete original.connections;const display=new InspectionDocument().open(JSON.stringify(original));this.map=display.map;this.original=original;}else{this.map=this.editor.map;this.original=this.map;}this.units=[...this.map.starts.map((p,i)=>({...p,id:'start-'+i,species:p.species||['horse','goat','donkey','sheep'][i],weapon:p.weapon||'rifle',heading:0,role:characterName(p,'Squad start '+(i+1))})),...this.map.guards.map((p,i)=>({...p,id:'guard-'+i,role:characterName(p,(p.character?.category==='npc'?'NPC ':'Guard ')+(i+1))}))];for(const u of this.units){const support=rampSupportAt(this.map,u);if(support)u.cliffSupport=support;}this.changed=true;this.revision++;}
  preview(command){
-  let {tool,start,end=start,options={}}=command;const prefab=tool==='prefab'?STRUCTURE_PRESETS[options.preset]:null;if(tool==='prefab'&&!prefab)return {ok:false,error:'Choose a preset structure.'};if(prefab){tool='room';options={...options,width:prefab.width,height:prefab.height};}if(start?.z===3)return previewCanopy(this.editor.map,command,this.size);
+  let {tool,start,end=start,options={}}=command;const prefab=tool==='prefab'?STRUCTURE_PRESETS[options.preset]:null;if(tool==='prefab'&&!prefab)return {ok:false,error:'Choose a preset structure.'};if(prefab){tool='room';options={...options,width:prefab.width,height:prefab.height};}if(tool!=='land'&&start?.z===3)return previewCanopy(this.editor.map,command,this.size);
   if(!start||![start.x,start.y,start.z??0].every(Number.isInteger))return {ok:false,error:'Choose a map cell.'};
   if(this.block&&(['squad','exit'].includes(tool)||[start,end].some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24)))return {ok:false,error:'Keep block edits inside 24 × 24 tiles; squad and travel markers belong to full maps.'};
   const foliage=['foliage-cover','clear-foliage'].includes(tool),shapeTool=foliage||['cliff','erase-cliff'].includes(tool)?'woodland':tool;
@@ -31,6 +32,12 @@ export class EditingDocument extends InspectionDocument {
   if(tool==='cliff'&&points.length>CLIFF_LIMIT)return {ok:false,error:'Paint at most '+CLIFF_LIMIT+' cliff tiles at a time.'};
   if(!points.length)return {ok:false,error:'Choose a cell inside the map.'};
   try{
+   if(tool==='land'){
+    const result=paintLand(candidate.map,command,this.size);
+    if(this.block)validateBlock(extractBlock(candidate.map));
+    const errors=validateMap(candidate.map,{connectivity:false});
+    return {...result,ok:!errors.length,error:errors[0]||'',map:candidate.map};
+   }
    if(tool==='ramp'){
     const plan=rampStroke(candidate.map,start,end,options.rampSurface||'grass');
     for(const p of plan.landings){if(terrainAt(candidate.map,p.x,p.y,p.z)==='void'){const error=applyBrush(candidate,'floor',p.x,p.y,'',{level:p.z});if(error)throw Error(error);}}
@@ -41,6 +48,7 @@ export class EditingDocument extends InspectionDocument {
     return {ok:!errors.length,error:errors[0]||'',cells,edges,map:candidate.map,orientation:plan.orientation};
    }
    for(const p of points){
+    if(tool==='erase-tile'&&candidate.map.landPaint?.[`${p.x},${p.y}`]||['erase-cliff','erase-prop'].includes(tool)&&candidate.map.props.some(q=>q.landAuto&&q.x===p.x&&q.y===p.y&&(q.z||0)===(start.z||0)))throw Error('Use Land and choose Ground to lower painted terrain and rebuild its cliff edge.');
     let actualTool=tool==='npc'?'guard':tool,actualOptions=tool==='npc'?{...options,category:'npc'}:options;
     if(['cliff','erase-cliff'].includes(tool)){
      const existing=candidate.map.props.find(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(start.z||0));

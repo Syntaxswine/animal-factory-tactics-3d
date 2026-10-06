@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import {createRequire} from 'node:module';
+import {execFileSync} from 'node:child_process';
+const {chromium}=createRequire(import.meta.url)(process.env.PLAYWRIGHT_PATH||'playwright'),out=new URL('../artifacts/land-brush/',import.meta.url);
+fs.mkdirSync(out,{recursive:true});
+const browser=await chromium.launch({channel:'msedge',headless:true});let identity,page;
+try{
+ const cdp=await browser.newBrowserCDPSession(),info=await cdp.send('SystemInfo.getProcessInfo'),pid=info.processInfo.find(p=>p.type==='browser').id;
+ identity=JSON.parse(execFileSync('powershell.exe',['-NoProfile','-Command',`Get-Process -Id ${Number(pid)} | Select-Object Id,Path,@{n='CreationFileTime';e={$_.StartTime.ToUniversalTime().ToFileTimeUtc().ToString()}} | ConvertTo-Json`],{encoding:'utf8',windowsHide:true}));
+ fs.writeFileSync(new URL('browser-helper.json',out),JSON.stringify({identity,owner:process.env.CODEX_THREAD_ID||'01a0c679-1b4c-7322-a1a3-64e8f6a9247a',project:'AnimalFactory3D/game',purpose:'Disposable land brush mouse, save and render check',start:new Date().toISOString(),port:null,expiry:'End of this command',stop:'browser.close in finally'},null,2));
+ page=await browser.newPage({viewport:{width:1500,height:1040}});const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('dialog',d=>d.accept());
+ await page.goto((process.env.EDITOR_ORIGIN||'http://127.0.0.1:4364')+'/tactics/editor-3d.html?editing=1');
+ await page.waitForFunction(()=>window.editor3d?.document&&!editor3d.loading,null,{timeout:60000});
+ await page.evaluate(async()=>{const {blankMap}=await import('./core/maps.js');await editor3d.open(JSON.stringify(blankMap('Land brush review')));Object.assign(editor3d.view,{x:36,y:36,span:33});await editor3d.changed();window.previewDurations=[];const doc=editor3d.document,preview=doc.preview.bind(doc);doc.preview=c=>{const start=performance.now(),r=preview(c);previewDurations.push(performance.now()-start);return r;};});
+ const project=async(x,y,z=0)=>page.evaluate(async({x,y,z})=>{const T=await import('./vendor/three.module.js'),r=document.querySelector('#scene').getBoundingClientRect(),p=new T.Vector3(x,z,y).project(editor3d.scene.camera);return {x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2};},{x,y,z});
+ const settled=()=>page.waitForFunction(()=>!editor3d.loading&&!document.querySelector('#undo').disabled);
+ await page.click('[data-group=land]');assert(await page.locator('#land-options').isVisible());assert(!(await page.locator('#stroke-mode-label').isVisible()));
+ await page.selectOption('#land-shape','square');await page.fill('#land-size','9');await page.selectOption('#ground-kind','ground-grass');
+ const path=await Promise.all([[35,35],[42,35],[42,41]].map(([x,y])=>project(x,y)));
+ await page.mouse.move(path[0].x,path[0].y);await page.mouse.down();for(const p of path.slice(1))await page.mouse.move(p.x,p.y,{steps:6});await page.mouse.up();await settled();
+ const first=await page.evaluate(()=>({land:Object.keys(editor3d.document.map.landPaint||{}).length,props:editor3d.document.map.props.length,undo:editor3d.document.editor.undo.length}));assert(first.land>150);assert.equal(first.undo,1);
+ const before=await page.evaluate(()=>editor3d.export());const cancelAt=await project(28,27);await page.mouse.move(cancelAt.x,cancelAt.y);await page.mouse.down();await page.keyboard.press('Escape');await page.mouse.up();assert.equal(await page.evaluate(()=>editor3d.export()),before);
+ await page.click('#undo');await page.waitForFunction(()=>!editor3d.loading&&!editor3d.document.map.landPaint);await page.click('#redo');await settled();assert.equal(await page.evaluate(()=>editor3d.export()),before);
+ // The brush picks the existing plateau surface even while the bottom altitude remains ground.
+ await page.selectOption('#land-height','2');await page.selectOption('#land-shape','round');await page.fill('#land-size','5');const high=await project(39,36,2.12);await page.mouse.click(high.x,high.y);await settled();
+ assert.equal(await page.evaluate(()=>editor3d.document.map.landPaint['39,36'][0]),2);assert.equal(await page.inputValue('#floor'),'0');
+ await page.click('[data-group=ramps]');await page.selectOption('#ramp-surface','road');const low=await project(46.5,34,1),end=await project(46.5,36,1);await page.mouse.move(low.x,low.y);await page.mouse.down();await page.mouse.move(end.x,end.y,{steps:8});await page.mouse.up();
+ await page.waitForFunction(()=>editor3d.document.map.props.filter(p=>p.kind==='ramp-road-west').length===3&&!editor3d.loading,null,{timeout:30000});
+ await page.click('#quick-save-map');await page.waitForFunction(()=>!editor3d.document.changed);const saved=await page.evaluate(()=>editor3d.export());
+ await page.evaluate(async()=>{const {blankMap}=await import('./core/maps.js');await editor3d.open(JSON.stringify(blankMap('Temporary')));});
+ await page.click('#settings-button');await page.click('#load-map');await page.waitForFunction(()=>editor3d.document.map.name==='Land brush review'&&!editor3d.loading);await page.click('#close-settings');assert.equal(await page.evaluate(()=>editor3d.export()),saved);
+ await page.evaluate(async()=>{Object.assign(editor3d.view,{x:36,y:36,span:32});await editor3d.changed();});await page.click('[data-group=land]');await page.mouse.move(10,10);
+ assert.equal(await page.evaluate(()=>editor3d.scene.options.landEditing),true);assert.equal(await page.evaluate(()=>editor3d.scene.cliffs.parts.length),2);
+ await page.screenshot({path:fileURLToPath(new URL('editor.png',out))});fs.writeFileSync(new URL('review-map.json',out),saved);
+ await page.click('[data-group=library]');assert.equal(await page.evaluate(()=>editor3d.scene.options.landEditing),false);
+ assert.deepEqual(errors,[]);const durations=await page.evaluate(()=>window.previewDurations);fs.writeFileSync(new URL('browser-review.json',out),JSON.stringify({first,previewMilliseconds:{max:Math.max(...durations),mean:durations.reduce((a,b)=>a+b,0)/durations.length},checks:['real freehand mouse drag','one undo step','cancel','undo / redo','surface picking / second tier','manual three-wide ramp','browser save / reload','render'],errors},null,2));
+ console.log('Land brush mouse input, two tiers, manual ramp, cancellation, undo/redo, save/reload and rendering passed.');
+}catch(e){if(page){await page.screenshot({path:fileURLToPath(new URL('failure.png',out))}).catch(()=>{});console.error(await page.locator('#status').textContent().catch(()=>''));}throw e;}finally{await browser.close();fs.writeFileSync(new URL('browser-closed.json',out),JSON.stringify({identity,closedAt:new Date().toISOString()}));}
