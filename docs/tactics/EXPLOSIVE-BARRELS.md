@@ -1,5 +1,13 @@
 # Explosive barrels — 3D integration
 
+## Architect approval — October 5, 2026
+
+Reviewed builder reconciliation `61b2417` against canonical `6b60606`. All three release concerns are resolved: the asset audit validates the procedural explosive drum, the branch incorporates canonical without merge conflicts, and accepted barrel shots now play the approved lid, base and six torn panels in the live battle. The earlier release hold below is superseded by this approval.
+
+Independent verification passed all **1,798 tests**, the complete asset audit, pinned-core synchronization and Pages packaging/module closure. The merged renderer preserves canonical's pre-impact casualty visibility fix. A normal Quick Fight UI shot produced the painted barrel breakup and persistent ground fire, charged 8 AP and one AK-47 round, and reported no browser warnings or errors through the aftermath. The review tab was closed; the builder's existing preview and its expiry were left unchanged. Local test output and the breakup capture are retained under `artifacts/oct05-fuel-final*` in the review checkout and are not published assets.
+
+Approved for canonical publication. This approval covers the live tank/barrel integration and its reconciliation; newer visual work on other branches has its own review scope.
+
 ## Builder reconciliation — October 5, 2026
 
 The builder incorporates canonical `6b60606` and addresses the three review items below. Canonical publication remains the architect's decision.
