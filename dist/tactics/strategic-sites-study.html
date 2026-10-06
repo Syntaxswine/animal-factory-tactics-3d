@@ -12,7 +12,9 @@
   <nav aria-label="Study controls">
    <label>Site <select id="site"><option value="radio">Radio tower</option><option value="radar">Radar tower</option><option value="sam">SAM site</option></select></label>
    <label>Show <select id="mode"><option value="pair">Both states</option><option value="intact">Intact</option><option value="destroyed">Destroyed</option></select></label>
+   <button id="damage" type="button">Toggle damage in place</button>
    <label>View <select id="view"><option value="three">Three-quarter</option><option value="front">Front</option><option value="side">Side</option><option value="rear">Rear</option><option value="top">Overhead</option></select></label>
+   <label>Frame <select id="frame"><option value="site">Whole site</option><option value="ground">Ground & player</option></select></label>
    <label>Scale <select id="scale"><option value="fit">Fit site</option><option value="58">Gameplay · 58 px/tile</option><option value="95">Close · 95 px/tile</option></select></label>
    <label><input id="grid" type="checkbox"> Tile grid</label>
    <label><input id="horse" type="checkbox" checked> Horse</label>
@@ -20,12 +22,22 @@
    <label><input id="wire" type="checkbox"> Wireframe</label>
    <button id="reset" type="button">Reset view</button>
   </nav>
+  <nav class="fitting" aria-label="Scale and passage controls">
+   <label><input id="passage" type="checkbox"> Passage map</label>
+   <label>Clearance <select id="profile"><option value="horse">Horse</option><option value="wide">Whole roster · conservative</option></select></label>
+   <label><input id="foundations" type="checkbox"> Fixed foundations</label>
+   <label><input id="ruler" type="checkbox" checked> Wall-height ruler</label>
+   <label>Horse tile <select id="tile" aria-label="Place horse on a clear tile"></select></label>
+  </nav>
  </header>
  <main id="stage" aria-label="Interactive 3D site comparison"><div id="labels"></div><p id="error" role="alert"></p></main>
  <footer>
   <div><strong id="caption">Loading painted sites…</strong><p id="note"></p></div>
   <div class="right"><a id="reference" target="_blank" rel="noopener">Painted reference ↗</a><p id="status" aria-live="polite"></p></div>
-  <p class="help">Drag to orbit · Scroll to zoom · Presentation assets; placement, collision and damage rules await gameplay integration.</p>
+  <p id="clearance" aria-live="polite"></p>
+  <p id="legend" hidden><span class="clear">■</span> Clear route <span class="blocked">■</span> Blocked <span class="isolated">■</span> Isolated pocket · Lines show clear connections between tiles.</p>
+  <p id="placement" aria-live="polite"></p>
+  <p class="help">Drag to orbit · Scroll to zoom · With Passage map on, click a clear tile to place the horse. Standing clearance study; gameplay integration is still pending.</p>
  </footer>
  <script type="module" src="./strategic-sites-study.js"></script>
 </body>
