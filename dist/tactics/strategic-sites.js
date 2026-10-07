@@ -155,8 +155,11 @@ export function createStrategicSiteLibrary(atlas){
  }
  function radio(root,damage){
   const base=group(root,'tower-foundations');for(const x of [-1.05,1.05])for(const z of [-1.05,1.05])footing(base,x+.60,z-.30);
-  hut(root,-2.55,1.65,1.5,1.8,damage);cabinet(root,2.90,-2.85,damage);
-  tube(root,mat.dark,[[-2.15,.28,2.0],[-1.30,.28,1.65],[.25,.28,1.1],[.48,.46,.62]]);
+  // Cell centers are half-integers. Keep service equipment on those anchors
+  // in both states, with the cable leaving the same point on the moved hut.
+  const hutX=-2.5,hutZ=1.5;
+  hut(root,hutX,hutZ,1.5,1.8,damage);cabinet(root,2.5,-2.5,damage);
+  tube(root,mat.dark,[[hutX+.40,.28,hutZ+.35],[hutX+1.25,.28,hutZ],[.25,.28,1.1],[.48,.46,.62]]);
   if(!damage){
    const tower=lattice(root,'radio-mast',7.65,1.05,.25,6);tower.position.set(.60,.63,-.30);
    for(let i=0;i<24;i++)beam(tower,mat.steel,[-.17,i*.30,-.28],[.17,i*.30,-.28],.028);
