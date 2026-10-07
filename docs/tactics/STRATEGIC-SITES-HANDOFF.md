@@ -38,6 +38,7 @@ events. The two states are static models; there is no destruction animation.
 - [x] Correct the radio hut to the center of a **2 × 2 tile block**, not one tile.
 - [x] Verify its complete geometry occupies four cells and adjacent horse positions stay usable.
 - [x] Independent hostile review of the 2 × 2 footprint correction: **9/10**.
+- [x] Apply the same 2 × 2 footprint alignment to the radar hut; independent review **9/10**.
 
 ## Assets and visual intent
 
@@ -55,8 +56,7 @@ The radio mast is about 9.67 units tall, the radar tower 8.10, and the SAM site
 3.19. A normal wall remains 2 units high. Each model is approximately 4,000–9,600
 triangles (the radar is 9,636). Exact counts and bounds are generated into the asset manifest.
 The horse retains its original 1.65-unit height. Both service huts now have
-1.85 × 1.10-unit door openings; their original doors were too short. The radar
-hut moves rearward by 0.40 units in **both** states to open its front approach.
+1.85 × 1.10-unit door openings; their original doors were too short.
 
 The radio hut now centers at local X/Z **[-3, 2]**, in the middle of columns
 **1–2, rows 6–7**. Its complete geometry fits the four-cell area X[-4,-2], Z[1,3],
@@ -71,6 +71,11 @@ is inset 0.01 to keep its swung corner inside its plinth; this shared detail als
 corrects the radar hut. Native scale and tower/wreck geometry are unchanged.
 All six in-site wall-adjacent cells admit the horse, with tested movement along
 each wall. Both side-wall cells also permit whole-roster turning.
+
+The radar hut follows the same **[-3, 2]** center and four occupied cells. Its
+existing 1.5 × 1.5 wall body is retained; complete geometry fits X[-3.862,-2.138],
+Z[1.15,2.85]. All six adjacent horse positions and three wall-parallel movements
+are clear in both states. Its tower, cabinet and fallen equipment are unchanged.
 
 Materials use broad hand-painted wear, cream highlights, olive/red industrial
 paint and charcoal scorch. Generated raster sources are preserved unmodified;
@@ -202,8 +207,8 @@ and convex X/Z outlines for each permanent concrete foundation.
 | --- | ---: | ---: |
 | Radio intact | 50 | 42 |
 | Radio destroyed | 38 | 28 |
-| Radar intact | 45 | 40 |
-| Radar destroyed | 38 | 34 |
+| Radar intact | 47 | 42 |
+| Radar destroyed | 40 | 37 |
 | SAM intact | 40 | 36 |
 | SAM destroyed | 35 | 33 |
 
@@ -228,7 +233,7 @@ $env:PLAYWRIGHT_PATH = 'PATH/TO/node_modules/playwright'
 node tools/check-strategic-sites.mjs
 ```
 
-The twenty-four focused tests cover all six forms and all four quarter turns,
+The twenty-five focused tests cover all six forms and all four quarter turns,
 per-assembly ground contact, retained foundations, finite geometry and bounded
 UVs, clone independence, repeat construction, single disposal, radar platform
 clearance and the manifest. Additional checks compare exact permanent concrete
@@ -238,8 +243,8 @@ masks and exported navigation proposals. Rounded-clearance regressions check
 triangle cross-sections through band boundaries, low versus shoulder-height
 obstacles, diagonal corners, capsule sweeps past endpoints, the formerly blocked
 SAM perimeter, genuine central obstructions and on-surface contact markers.
-The radio-footprint regression includes all hut geometry, retains the model size,
-requires exactly four occupied cells and tests the six adjacent horse positions
+Both hut-footprint regressions include all hut geometry, retain the model sizes,
+require exactly four occupied cells and test the six adjacent horse positions
 plus three continuous wall-parallel movements in both damage states.
 The browser check covers 24 model/view combinations, 18 in-place damage swaps
 across scale/framing controls after orbiting and zooming, six passage/profile
@@ -265,6 +270,25 @@ Do not register these only in an older editor catalog. Previous large-tree work
 showed that the current 3D editor and game must agree on their shared prop types.
 
 ## Hostile review result — 2026-10-06
+
+### Radar 2 × 2 footprint correction
+
+Independent scoped review: **9/10 — pass**, with no blocking findings. The radar
+hut now centers at [-3,2] and occupies only columns 1–2, rows 6–7 in both states.
+Fresh overhead and front/back/side close views confirm all six neighboring horse
+positions, with actual skin bounds at least 0.2327 tile from the hut. All three
+wall-parallel routes remain clear. Foundations match across damage states and
+custom orbit/zoom remains fixed when comparing in place.
+
+All **25** focused tests and the browser matrix pass, including close native-horse
+placement beside both huts in both states. The Pages build and all ten packaged
+file comparisons pass. Main tower scale and wreck geometry are unchanged. Review
+browsers closed successfully and exact recorded identities were verified absent.
+Gameplay cover behavior remains separate integration work.
+
+![Radar hut occupies a true four-tile block](strategic-sites-review/radar-hut-2x2.png)
+![Native horse beside the intact radar hut](strategic-sites-review/radar-hut-cover-intact.png)
+![Native horse beside the destroyed radar hut](strategic-sites-review/radar-hut-cover-destroyed.png)
 
 ### Radio 2 × 2 footprint correction
 
