@@ -20,14 +20,14 @@ import {nearbyInteractions,performInteraction} from './field-actions.js';
 import {createCharacterScreen} from './character-screen.js';
 import {AIM_LEVELS,shotAim,supportsAim} from './aim-levels.js';
 import {climbPreview,performClimb} from './ladder-actions.js';
-import {TOWER_HEIGHT,unitBaseHeight} from './tower-geometry.js';
+import {unitBaseHeight} from './tower-geometry.js';
 import {illuminationAt} from './awareness.js';
 import {FrameClock,formatClock,timeOfDay,turnBased} from './game-clock.js';
 import {startEncounterClock,tickEncounterClock,settleEncounterRounds} from './encounter-clock.js';
 import {createGame,move,stepMovement,previewAttack,attack,attackGround,equip,reload,endTurn,stepEnemy,stepInvestigation,canControl,canSee,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts,MOVEMENT_MODES,movementModeOf,movementCost,effectiveStealth} from './core/engine.js';
 import {loadBattleMap} from './battle-map.js';
 import {BattleRenderer} from './battle-renderer.js';
-import {FLOOR_PIXELS} from './hybrid-renderer.js';
+import {projectBattlePoint,battleFloorPoint,rotateBattleView,focusBattleView,overviewBattleView} from './isometric-camera.js';
 import {MOVEMENT_MS,queuedMovementDuration} from './battle-motion.js';
 import {rectangleMembers,pruneSelection,toggleSelection,selectable,stanceSelection,setSelectionStance,movementSelection,setSelectionMovement} from './battle-selection.js';
 import {readSettings} from './settings-3d.js';
@@ -50,7 +50,7 @@ const savePanel=createSavePanel({...campaign?.saveOptions,onSave:saveGame,onLoad
 const shotDialog=$('shot-popup');
 const paused=(ignorePlanner=false)=>(!ignorePlanner&&(shotDialog.open||flamePlanner.open))||userPaused||storageBusy||campaign?.paused||document.hidden||characterScreen.open||savePanel.open;
 function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
-const view={x:0,y:0,zoom:1.15};
+const view={x:0,y:0,zoom:1.15,turn:0};
 const climbButton=document.createElement('button');climbButton.id='climb-tower';climbButton.textContent='Climb tower';$('reload').parentNode.insertBefore(climbButton,$('reload'));
 const fieldPanel=document.createElement('section');fieldPanel.id='field-actions';$('reload').parentNode.after(fieldPanel);
 const selected=()=>state.units.find(u=>u.id===state.selected);
@@ -62,11 +62,11 @@ flameButton.onclick=()=>{if(!canPlanFlame())return;targetId=null;flamePlanner.st
 const target=()=>{const site=state.props.find(p=>intactSite(p)&&siteId(p)===targetId);if(site)return strategicTarget(site);const p=state.props.find(p=>isExplosiveBarrel(p)&&barrelId(p)===targetId);return p?barrelTarget(p):state.units.find(u=>u.id===targetId&&u.hp>0&&state.detected.has(u.id));};
 const mercStatus=u=>u.away?'Away':u.casualty==='captured'?'Captured':u.casualty==='quit'?'Left squad':u.hp>0?`${stanceOf(u)} · ${movementModeOf(u)} · ${u.hp} HP · ${u.ap} AP · ${Math.floor(u.stamina)} stamina`:u.casualty==='bleeding'?`Bleeding · ${u.bleedTurns} turns`:u.casualty==='stable'?'Stabilized':'Dead';
 const message=text=>{$('message').textContent=text;};
-const project=u=>({x:view.x+(u.x-u.y)*28*view.zoom,y:view.y+(u.x+u.y)*14*view.zoom-((u.z||0)-level+((u.towerPost?TOWER_HEIGHT:u.towerElevation||0)/2.12))*FLOOR_PIXELS*view.zoom});
-function focus(x,y){overviewMode=false;view.zoom=1.15;view.x=width/2-(x-y)*28*view.zoom;view.y=height*.55-(x+y)*14*view.zoom;$('hint').textContent='Hover for wall X-ray · Click ground/doors to move · Shift-drag to select mercs · WASD / arrows or drag to pan · Scroll to zoom';}
+const project=u=>projectBattlePoint(u,view,level);
+function focus(x,y){overviewMode=false;focusBattleView(view,x,y,width,height);$('hint').textContent='Hover for wall X-ray · Click ground/doors to move · Shift-drag to select mercs · WASD / arrows or drag to pan · Q / E rotate camera · Scroll to zoom';}
 function syncLevelButtons(){for(const b of document.querySelectorAll('#battle-levels [data-level]'))b.setAttribute('aria-pressed',String(+b.dataset.level===level));}
 function center(){const u=selected();level=u.z||0;$('floor').value=level;syncLevelButtons();focus(u.x,u.y);}
-function overview(){const w=definition.width,h=definition.height;overviewMode=true;view.zoom=Math.min((width-50)/((w+h)*28),(height-60)/((w+h)*14));view.x=width/2-(w-h)*14*view.zoom;view.y=30;$('hint').textContent='Click the map to inspect an area · WASD / arrows or drag to pan · Scroll to zoom · Center returns to your squad';}
+function overview(){overviewMode=true;overviewBattleView(view,definition.width,definition.height,width,height);$('hint').textContent='Click the map to inspect an area · WASD / arrows or drag to pan · Q / E rotate camera · Scroll to zoom · Center returns to your squad';}
 function resize(){const box=canvas.getBoundingClientRect();width=box.width;height=box.height;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(state){if(overviewMode)overview();else center();}}
 function restart(){flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;lastAuto=performance.now();autoRound=state.round;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Exteriors revealed. Look through doors or windows to discover interiors. People still need line of sight.':'Explore to reveal the map.');sync();}
 async function saveGame(id){
@@ -123,9 +123,9 @@ function selectMerc(id,toggle=false){
  selectedIds=toggle?toggleSelection(selectedIds,id):new Set([id]);state.selected=selectedIds.has(id)?id:[...selectedIds][0];targetId=null;state.queue=[];
  flamePlanner.cancel();
 }
-function flamePoint(x,y){const lift=unitBaseHeight(selected())-(selected().z||0)*3,px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom)+(lift/2.12)*FLOOR_PIXELS/14;return {x:(px+py)/2,y:(py-px)/2,z:level};}
+function flamePoint(x,y){const lift=unitBaseHeight(selected())-(selected().z||0)*3;return battleFloorPoint(view,x,y,level,lift);}
 function click(x,y,shift=false){
- if(overviewMode){const px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom);focus((px+py)/2,(py-px)/2);return;}
+ if(overviewMode){const p=battleFloorPoint(view,x,y,level);focus(p.x,p.y);return;}
  if(flamePlanner.open){if(!shift&&canPlanFlame())flamePlanner.aim(flamePoint(x,y),true);return;}
  const hit=renderer.pick(x,y,width,height,level);
  if(hit!==null){const u=state.units.find(u=>u.id===hit);if(selectable(u)){selectMerc(u.id,shift);}else if(u.hp<=0&&nearbyLoot(state,selected()).some(p=>p.body===u.id)){characterScreen.show(state.selected);}else if(state.detected.has(u.id)&&u.hp>0){if(WEAPONS[selected().weapon].incendiary){if(canPlanFlame())flamePlanner.start(state,selected(),{x:u.x,y:u.y,z:u.z||0});}else{targetId=u.id;shotDialog.showModal();frameClock.reset();lastUI='';}}sync();return;}
@@ -139,7 +139,7 @@ function click(x,y,shift=false){
   if(state.edgeLocks?.[door]){message('Door locked. Use Pick lock or Force door in the action panel.');return;}
   const to=cells.find(p=>p.x!==u.x||p.y!==u.y);const ok=move(state,u,to.x,to.y,to.z);message(ok?'Moving through the door.':'Door route unavailable. Check AP, stamina and the other side.');sync();return;
  }
- const px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom),tx=Math.round((px+py)/2),ty=Math.round((py-px)/2);
+ const point=battleFloorPoint(view,x,y,level),tx=Math.round(point.x),ty=Math.round(point.y);
  if(selectedIds.size>1?moveGroup(state,[...selectedIds],selected(),tx,ty,level):move(state,selected(),tx,ty,level)){targetId=null;message('');}else message('Cannot move there now. Check the route, floor, AP and stamina. Walk or catch your breath if exhausted.');sync();
 }
 let hoverPointer=null,lastHoverCheck=0;
@@ -166,7 +166,7 @@ function showGuardSight(now){
 function showWalkingRoute(){
  if(overviewMode||shotDialog.open||flamePlanner.open||drag?.moved){walkingCacheKey='';walkingCache=[];return;}
  let goal=null;
- if(hoverPointer&&!canvas.dataset.targetCursor){const bounds=canvas.getBoundingClientRect(),x=hoverPointer.x-bounds.left,y=hoverPointer.y-bounds.top,px=(x-view.x)/(28*view.zoom),py=(y-view.y)/(14*view.zoom);goal={x:Math.round((px+py)/2),y:Math.round((py-px)/2),z:level};}
+ if(hoverPointer&&!canvas.dataset.targetCursor){const bounds=canvas.getBoundingClientRect(),p=battleFloorPoint(view,hoverPointer.x-bounds.left,hoverPointer.y-bounds.top,level);goal={x:Math.round(p.x),y:Math.round(p.y),z:level};}
  const key=JSON.stringify([state.revision,state.phase,state.selected,level,[...selectedIds],goal,state.queue,state.units.filter(u=>selectedIds.has(u.id)).map(u=>[u.x,u.y,u.z,u.ap,u.stance,u.running,u.sneaking,u.legWound])]);
  if(key!==walkingCacheKey){walkingCacheKey=key;walkingCache=walkingRoutes(state,[...selectedIds],selected(),goal);}
  drawWalkingRoutes(ctx,walkingCache,project,level,view.zoom,turnBased(state));
@@ -183,6 +183,7 @@ document.addEventListener('keydown',e=>{if(characterScreen.open||savePanel.open)
 document.addEventListener('keydown',e=>{
  if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||characterScreen.open||savePanel.open||document.hidden||e.target.isContentEditable||e.target.closest?.('input,select,textarea,[role="textbox"]')||document.querySelector('dialog[open]'))return;
  if(/^[1-3]$/.test(e.key)){e.preventDefault();document.querySelector(`#battle-levels [data-level="${+e.key-1}"]`).click();return;}
+ if(['q','e'].includes(e.key.toLowerCase())){e.preventDefault();if(!e.repeat&&!drag){rotateBattleView(view,e.key.toLowerCase()==='q'?-1:1,width,height,level);clearHover();renderer.wallXray.setPointer(null,null);}return;}
  const delta={w:[0,40],ArrowUp:[0,40],s:[0,-40],ArrowDown:[0,-40],a:[40,0],ArrowLeft:[40,0],d:[-40,0],ArrowRight:[-40,0]}[e.key.length===1?e.key.toLowerCase():e.key];
  if(!delta)return;e.preventDefault();view.x+=delta[0];view.y+=delta[1];
 });

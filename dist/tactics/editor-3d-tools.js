@@ -79,5 +79,5 @@ export function installEditing({canvas,scene,getDocument,getSelection,open,chang
  const library=installLibrary({getDocument,run,open,guardReplace,refreshSaves,status,switchWorkspace:mode=>{if(busy||isLoading()){library.sync();return;}switchWorkspace(mode).catch(e=>status(e.message));}});
  workbench=installWorkbench({rotate:rotateBoth,clearSelection:cancel,getSelection});
  refreshSaves().catch(e=>status('Browser saves unavailable: '+e.message));window.addEventListener('beforeunload',e=>{if(hasUnsaved()){e.preventDefault();e.returnValue='';}});
- return {sync,apply,selectionChanged:()=>{characterPanel.sync();if($('edit-tool').value==='inspect')$('site-sabotage').checked=getSelection()?.data?.sabotage===true;workbench?.context();},reset(){cancel();scene.previewMinutes=null;recordId=getDocument().libraryId||null;sync();workbench.floorSync();},guardReplace};
+ return {sync,apply,get painting(){return !!stroke;},selectionChanged:()=>{characterPanel.sync();if($('edit-tool').value==='inspect')$('site-sabotage').checked=getSelection()?.data?.sabotage===true;workbench?.context();},reset(){cancel();scene.previewMinutes=null;recordId=getDocument().libraryId||null;sync();workbench.floorSync();},guardReplace};
 }

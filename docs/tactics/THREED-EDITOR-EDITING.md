@@ -10,6 +10,26 @@ Tools include terrain, water, bridges, woodland, floors, walls/fences, doors, ro
 
 Previews operate on a temporary blueprint using the same brush operation as commit. Invalid strokes do not partly apply. Structural validation runs before commit; connectivity can be temporarily broken while constructing a room. Full validation, including reachability, is required for Playtest. Undo/redo uses the original 50-entry history. Unknown top-level map fields are retained. Imports must pass canonical structural validation; importing malformed drafts is not supported.
 
+## Camera shortcuts (2026-10-07)
+
+Q and E turn the camera by 90 degrees in both the editor and gameplay, preserving
+the viewed area and zoom. One press makes one turn; holding a key does not spin
+through repeated turns. Editor top-down views rotate without changing tilt. The
+camera menu stays synchronized, and Home restores the editor's default angle.
+R remains the object/placement rotation key. Camera shortcuts are ignored while
+typing, in dialogs, or during a pointer drag/paint stroke.
+
+Gameplay overlays, ground picking, flame templates, Center and Overview share the
+rendered camera's orientation. Turning the camera does not spend AP or change
+units, map contents, saved designs or editor history. Camera orientation is a
+view preference for the current page, not a new saved map field.
+
+`tests/isometric-camera.test.mjs` checks projection/picking across every angle,
+level and zoom. `tools/check-camera-rotation.mjs` checks actual keyboard input,
+movement clicks and footprint previews in all four views, editor controls, input
+protection, and a placed flame template. Use `PLAYWRIGHT_PATH` and `REVIEW_URL`;
+screenshots go to local `artifacts/camera-rotation/`.
+
 ## Save and playtest
 
 Save updates the current named record; Save copy creates another record. Names can be changed independently. IndexedDB uses `animal-factory-tactics-3d-designs-v1`, with the existing editor's record/transaction pattern and no automatic import or migration from `red-shift-designs`. The 3D namespace starts empty. JSON export remains the portable backup. Saves happen only on explicit request; leaving or replacing unsaved edits warns the user. Browser storage errors are shown without claiming success.

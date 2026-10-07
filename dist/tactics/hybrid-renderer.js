@@ -1,9 +1,11 @@
 import {environmentGeometries} from './environment-geometry.js';
+import {setBattleCamera} from './isometric-camera.js';
+export {FLOOR_PIXELS} from './isometric-camera.js';
 import {surfaceLevel,xrayThroughLevel,xrayWall} from './wall-xray.js';
 import {environmentVisuals} from './environment-visuals.js';
 import {FOLIAGE_ATLAS,FOLIAGE_MATERIALS,paintFoliageMaterial} from './foliage-materials.js';
 import * as THREE from './vendor/three.module.js';
-import {buildWorld,DIMENSIONS,GAME_CAMERA,toWorld} from './hybrid-world.js';
+import {buildWorld,GAME_CAMERA,toWorld} from './hybrid-world.js';
 import {hybridWorld} from './hybrid-combat.js';
 import {surfacePixels,materialKind} from './hybrid-materials.js';
 import {spriteVertex,alphaBounds,weaponLandmarks} from './hybrid-sprites.js';
@@ -12,7 +14,6 @@ import {bodyArt} from './body-art.js';
 import {FLAME_NOZZLES} from './flame-nozzles.js';
 import {drawFlamethrower} from './flamethrower-art.js';
 import {weaponExpansionArt} from './weapon-expansion-art.js';
-export const FLOOR_PIXELS=DIMENSIONS.floorSpacing*28*Math.sqrt(2)*Math.cos(GAME_CAMERA.elevation);
 // Bound retained poses across turns, map transitions, and editor imports.
 export const TEXTURE_LIMIT=64;
 export function hybridArtwork(unit){
@@ -82,9 +83,9 @@ export class HybridRenderer{
  }
  draw(ctx,state,view,width,height,level,{editor=false,visibilityFiltered=false,showAllLevels=false}={}){
   const drawStart=performance.now();
-  const scale=28*Math.sqrt(2)*view.zoom,baseY=view.y+(editor?0:level*FLOOR_PIXELS*view.zoom),camera=this.camera;
+  const camera=this.camera;
   if(this.width!==width||this.height!==height){this.renderer.setSize(width,height,false);this.width=width;this.height=height;}
-  camera.left=-view.x/scale;camera.right=(width-view.x)/scale;camera.top=baseY/scale;camera.bottom=(baseY-height)/scale;camera.near=.1;camera.far=1600;camera.position.set(Math.sqrt(3/8)*800,400,Math.sqrt(3/8)*800);camera.lookAt(0,0,0);camera.updateProjectionMatrix();camera.updateMatrixWorld();
+  setBattleCamera(camera,view,width,height,editor?0:level);
   let world;if(state.geometryMode==='hybrid')world=hybridWorld(state);else{const signature=JSON.stringify([state.terrain,state.upper,state.edges,state.props,state.stairs]);if(signature!==this.mapSignature){this.mapSignature=signature;this.editorWorld=buildWorld(state);}world=this.editorWorld;}
   const renderLevel=showAllLevels?3:level,seen=editor?null:state.seen,rebuild=this.world!==world||this.seenCount!==seen?.size||this.renderLevel!==renderLevel;if(rebuild){this.rebuild(world,seen,renderLevel,state);this.world=world;this.seenCount=seen?.size;this.renderLevel=renderLevel;}this.level=level;
   const units=editor?[...state.starts.map((p,i)=>({...p,id:i,species:['horse','goat','donkey','sheep'][i],weapon:'rifle',hp:100,team:'squad'})),...state.guards.map((p,i)=>({...p,id:i+4,hp:100,team:'guard'}))]:state.units;

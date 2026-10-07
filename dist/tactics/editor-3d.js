@@ -7,6 +7,7 @@ import {PREVIEW_FOOTPRINTS} from './editor-3d-model.js';
 import {EditingDocument} from './editor-3d-controller.js';
 import {installEditing} from './editor-3d-tools.js';
 import {InspectionScene} from './editor-3d-scene.js';
+import {rotateInspectionView} from './editor-3d-camera.js';
 const $=id=>document.getElementById(id),canvas=$('scene');
 let documentModel,dirty=true,loading=false,serial=0,selection=null,drag=null;
 const workspaces={};
@@ -16,7 +17,7 @@ const status=text=>$('status').textContent=text;
 function diagnostics(){$('diagnostics').textContent=scene.diagnostics.join('\n')||'No missing scene assets reported.';$('metrics').textContent=`${scene.models.length} modeled starts · load ${Math.round(scene.loadMs||0)} ms · scenery ${Math.round(scene.rebuildMs||0)} ms · ${scene.renderer.info.memory.geometries} geometries / ${scene.renderer.info.memory.textures} textures`;}
 function render(){if(dirty||scene.lights?.animated){scene.draw(view,canvas.clientWidth,canvas.clientHeight);dirty=false;diagnostics();}requestAnimationFrame(render);}
 function focus(x,y,span=24){view.x=x;view.y=y;view.span=span;dirty=true;}
-function home(){view.preset='0';$('camera').value='0';const p=documentModel?.map.starts[0];focus(p?.x??11.5,p?.y??11.5,22);}
+function home(){view.preset='0';view.topTurn=0;$('camera').value='0';const p=documentModel?.map.starts[0];focus(p?.x??11.5,p?.y??11.5,22);}
 async function open(text){
  const next=text instanceof EditingDocument?text:new EditingDocument().open(text),ticket=++serial;documentModel=next;workspaces[next.block?'block':'map']=next;loading=true;selection=null;scene.preview(null);$('properties').textContent='';$('selected').textContent='Choose a cell or object.';$('visual-note').textContent='';
  $('name').textContent=next.map.name;$('counts').textContent=`${next.size} × ${next.size} · ${next.block?'Block':next.map.guards.length+' placed characters'} · ${next.map.props.length} objects · ${next.map.canopies?.length||0} decorative roofs`;
@@ -44,6 +45,7 @@ canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;c
 canvas.addEventListener('wheel',e=>{e.preventDefault();zoom(Math.exp(e.deltaY*.001));},{passive:false});
 document.addEventListener('keydown',e=>{
  if(document.querySelector('#editor-settings')?.open||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||e.target.isContentEditable||e.target.closest?.('input,textarea,select,[role="textbox"]'))return;
+ if(['q','e'].includes(e.key.toLowerCase())){e.preventDefault();if(!e.repeat&&!drag&&!loading&&!tools.painting){rotateInspectionView(view,e.key.toLowerCase()==='q'?-1:1);$('camera').value=view.preset;dirty=true;}return;}
  const key=({w:'ArrowUp',a:'ArrowLeft',s:'ArrowDown',d:'ArrowRight'})[e.key.toLowerCase()]||e.key;
  if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-','Home'].includes(key))return;
  e.preventDefault();
