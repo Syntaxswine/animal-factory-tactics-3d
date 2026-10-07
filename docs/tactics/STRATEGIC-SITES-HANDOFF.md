@@ -33,6 +33,8 @@ events. The two states are static models; there is no destruction animation.
 - [x] Reopen false-positive concrete cells without shrinking the characters.
 - [x] Show the selected turning envelope and real geometry contact on inspection.
 - [x] Independent hostile review of the rounded-clearance correction: **9/10**.
+- [x] Center the radio service hut and upper-right cabinet on tile anchors in both states.
+- [x] Independent hostile review of the radio placement correction: **9/10**.
 
 ## Assets and visual intent
 
@@ -52,6 +54,14 @@ triangles (the radar is 9,636). Exact counts and bounds are generated into the a
 The horse retains its original 1.65-unit height. Both service huts now have
 1.85 × 1.10-unit door openings; their original doors were too short. The radar
 hut moves rearward by 0.40 units in **both** states to open its front approach.
+
+The radio hut now uses local X/Z **[-2.5, 1.5]** (column 2, row 6), and its
+upper-right cabinet uses **[2.5, -2.5]** (column 7, row 2). Both are tile-center
+anchors. Their foundations move with them, and the service cable follows the
+hut while retaining its tower attachment. Intact and destroyed states use the
+same positions; their native sizes and the tower/wreck geometry are unchanged.
+The larger hut still occupies several tiles, and the roster's turning clearance
+can extend beyond the cabinet's own tile.
 
 Materials use broad hand-painted wear, cream highlights, olive/red industrial
 paint and charcoal scorch. Generated raster sources are preserved unmodified;
@@ -175,8 +185,8 @@ and convex X/Z outlines for each permanent concrete foundation.
 
 | Site/state | Horse reachable tiles | Whole-roster reachable tiles |
 | --- | ---: | ---: |
-| Radio intact | 43 | 40 |
-| Radio destroyed | 31 | 27 |
+| Radio intact | 45 | 41 |
+| Radio destroyed | 33 | 28 |
 | Radar intact | 45 | 40 |
 | Radar destroyed | 38 | 34 |
 | SAM intact | 40 | 36 |
@@ -237,6 +247,26 @@ Do not register these only in an older editor catalog. Previous large-tree work
 showed that the current 3D editor and game must agree on their shared prop types.
 
 ## Hostile review result — 2026-10-06
+
+### Radio tile-center placement
+
+The service hut and upper-right cabinet now sit on half-integer tile centers.
+Regenerated passage maps give the horse 45 intact / 33 destroyed reachable
+tiles, and the whole roster 41 / 28. The doorway approach stays usable; all
+permanent concrete remains identical between the two damage states.
+
+All **23** existing focused tests and the browser matrix pass, including native
+player scale, passage maps and camera-preserving state changes. The Pages build
+passes. Independent scoped review: **9/10 — pass**, with no blocking findings.
+Fresh overhead and native-player close views confirm both placements. All 1,656
+permanent radio concrete vertices match across damage states, and orbit/zoom and
+screen projections remain fixed when damage is toggled. The rear cabinet approach
+is clear in both states; nearby destroyed-state exclusions are actual fallen
+mast beams. All ten packaged files match source. Temporary browser processes
+closed successfully and their exact recorded identities are absent.
+
+![Radio equipment centered on the tile grid](strategic-sites-review/radio-tile-centered.png)
+![Native player beside the relocated service hut](strategic-sites-review/radio-centered-door-scale.png)
 
 ### Rounded-clearance correction
 
