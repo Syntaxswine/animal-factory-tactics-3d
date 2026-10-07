@@ -81,7 +81,8 @@ export function createStrategicSiteLibrary(atlas){
   box(h,damage?mat.char:mat.olive,[0,1.22,0],[w,2.04,d],[0,0,0],.035);
   box(h,damage?mat.rust:mat.olive,[0,2.29,0],[w+.13,.13,d+.14],[0,0,damage?.06:0],.025);
   box(h,mat.dark,[-.10,1.145,d/2+.015],[1.10,1.85,.025]);
-  box(h,damage?mat.char:mat.olive,[-.10,1.145,d/2+.034],[1.04,1.79,.033],[0,damage?-.1:0,0],.012);
+  // Keep the damaged door's swung corner within the unchanged concrete plinth.
+  box(h,damage?mat.char:mat.olive,[-.10,1.145,d/2+(damage?.024:.034)],[1.04,1.79,.033],[0,damage?-.1:0,0],.012);
   box(h,mat.brass,[.28,1.09,d/2+.063],[.036,.13,.035]);
   for(let i=0;i<5;i++)box(h,mat.dark,[w/2+.012,1.60+i*.065,-.27],[.023,.03,.72]);
   box(h,mat.ivory,[-.10,1.85,d/2+.057],[.29,.09,.016]);
@@ -155,9 +156,9 @@ export function createStrategicSiteLibrary(atlas){
  }
  function radio(root,damage){
   const base=group(root,'tower-foundations');for(const x of [-1.05,1.05])for(const z of [-1.05,1.05])footing(base,x+.60,z-.30);
-  // Cell centers are half-integers. Keep service equipment on those anchors
-  // in both states, with the cable leaving the same point on the moved hut.
-  const hutX=-2.5,hutZ=1.5;
+  // The 2 x 2 hut belongs at the center of four cells, not on a single-cell
+  // center. Its plinth fits X[-4,-2], Z[1,3]; the cabinet stays on its own tile.
+  const hutX=-3,hutZ=2;
   hut(root,hutX,hutZ,1.5,1.8,damage);cabinet(root,2.5,-2.5,damage);
   tube(root,mat.dark,[[hutX+.40,.28,hutZ+.35],[hutX+1.25,.28,hutZ],[.25,.28,1.1],[.48,.46,.62]]);
   if(!damage){
