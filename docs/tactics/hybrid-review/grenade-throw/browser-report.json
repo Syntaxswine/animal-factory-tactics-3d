@@ -1,0 +1,149 @@
+{
+  "browserConfigurations": 36,
+  "playbackSamples": 363,
+  "errors": [],
+  "stats": {
+    "before": {
+      "time": 0,
+      "phase": "Prepare",
+      "released": false,
+      "ball": {
+        "phase": "held",
+        "position": [
+          0.24,
+          1.09,
+          0.104
+        ],
+        "quaternion": [
+          0,
+          0,
+          0.34289780745545134,
+          0.9393727128473789
+        ],
+        "groundClearance": 1.0459347390148248
+      },
+      "palm": [
+        0.24000000000000007,
+        1.09,
+        0.12000000000000001
+      ],
+      "gripError": 8.441528768080324e-17,
+      "feet": {
+        "1": {
+          "target": [
+            -0.035,
+            0.12,
+            0.232
+          ],
+          "ankle": [
+            -0.03500000000000001,
+            0.12000000000000016,
+            0.23199999999999998
+          ],
+          "planted": true
+        },
+        "-1": {
+          "target": [
+            -0.035,
+            0.12,
+            -0.232
+          ],
+          "ankle": [
+            -0.03500000000000001,
+            0.12000000000000016,
+            -0.23199999999999998
+          ],
+          "planted": true
+        }
+      },
+      "hips": [
+        0,
+        0.8,
+        0
+      ],
+      "chest": [
+        -0.025,
+        1.08,
+        0
+      ],
+      "playing": false,
+      "mode": "motion",
+      "view": "side",
+      "scale": "close",
+      "triangles": 820,
+      "geometryCount": 23,
+      "textureCount": 7
+    },
+    "after": {
+      "time": 0,
+      "phase": "Prepare",
+      "released": false,
+      "ball": {
+        "phase": "held",
+        "position": [
+          0.24,
+          1.09,
+          0.104
+        ],
+        "quaternion": [
+          0,
+          0,
+          0.34289780745545134,
+          0.9393727128473789
+        ],
+        "groundClearance": 1.0459347390148248
+      },
+      "palm": [
+        0.24000000000000007,
+        1.09,
+        0.12000000000000001
+      ],
+      "gripError": 8.441528768080324e-17,
+      "feet": {
+        "1": {
+          "target": [
+            -0.035,
+            0.12,
+            0.232
+          ],
+          "ankle": [
+            -0.03500000000000001,
+            0.12000000000000016,
+            0.23199999999999998
+          ],
+          "planted": true
+        },
+        "-1": {
+          "target": [
+            -0.035,
+            0.12,
+            -0.232
+          ],
+          "ankle": [
+            -0.03500000000000001,
+            0.12000000000000016,
+            -0.23199999999999998
+          ],
+          "planted": true
+        }
+      },
+      "hips": [
+        0,
+        0.8,
+        0
+      ],
+      "chest": [
+        -0.025,
+        1.08,
+        0
+      ],
+      "playing": false,
+      "mode": "motion",
+      "view": "side",
+      "scale": "close",
+      "triangles": 820,
+      "geometryCount": 23,
+      "textureCount": 7
+    }
+  }
+}

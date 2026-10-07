@@ -2,6 +2,7 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
+for(const file of ['grenade-model.js','grenade-throw-motion.js','grenade-throw-study.js','grenade-throw-study.html','grenade-throw-study.css'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['weapon-icons.js','battle-hud.js','battle-hud-model.js','battle-hud.css','interior-fog.js','interior-fog-scene.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['strategic-sites.js','strategic-site-clearance.js','strategic-sites-study.js','strategic-sites-study.html','strategic-sites-study.css'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.copyFileSync(new URL('dist/assets/environment/strategic-sites/manifest.json',root),new URL('.pages-output/assets/environment/strategic-sites/manifest.json',root));
@@ -24,4 +25,4 @@ console.log('Built Animal Factory Tactics 3D landing page.');
 
 fs.cpSync(new URL('dist/tactics/sector-library/',root),new URL('.pages-output/tactics/sector-library/',root),{recursive:true});
 import {checkModuleClosure} from './check-module-closure.mjs';
-checkModuleClosure(new URL('.pages-output/',root),['tactics/strategic-sites-study.js','tactics/barrel-blast-study.js','tactics/tank-blast-study.js','tactics/painted-fire-study.js','tactics/helicoid-shot-study.js','tactics/battle-3d.js','tactics/editor-3d.js','tactics/title-3d.js','tactics/overmap.js','tactics/roof-mantle-study.js','tactics/ledge-descent-study.js']);
+checkModuleClosure(new URL('.pages-output/',root),['tactics/grenade-throw-study.js','tactics/strategic-sites-study.js','tactics/barrel-blast-study.js','tactics/tank-blast-study.js','tactics/painted-fire-study.js','tactics/helicoid-shot-study.js','tactics/battle-3d.js','tactics/editor-3d.js','tactics/title-3d.js','tactics/overmap.js','tactics/roof-mantle-study.js','tactics/ledge-descent-study.js']);

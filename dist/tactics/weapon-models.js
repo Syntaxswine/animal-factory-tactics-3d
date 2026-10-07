@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import {createWorkerRifle} from './horse-rifle.js';
+import {createGrenadeModel} from './grenade-model.js';
 
 export const WEAPON_MODELS={
  hands:{label:'Unarmed',kind:'unarmed'},knife:{label:'NR-40 knife',kind:'melee'},pistol:{label:'TT-33 pistol',kind:'firearm'},
@@ -11,6 +12,7 @@ const V=a=>new THREE.Vector3(...a);
 const defaultCarry={position:[.24,1.005,.035],axis:[.20,.38,-.90],hands:[1,-1]};
 export function createWeaponModel(id,texture=null){
  if(!WEAPON_MODELS[id])throw Error('Unknown weapon model: '+id);
+ if(id==='grenade')return createGrenadeModel();
  if(id==='rifle'){const asset=createWorkerRifle(texture);return {...asset,id,...WEAPON_MODELS[id],carry:defaultCarry,muzzleMesh:asset.parts.find(p=>p.name==='muzzle opening')};}
  // Keep the architect-approved shotgun/flamethrower materials and geometry frozen.
  const revised=['assault','smg','sniper','launcher','hmg','rpg'].includes(id);
@@ -103,11 +105,6 @@ export function createWeaponModel(id,texture=null){
   rod('launch tube',[-.39,.025,0],[.35,.025,0],.033,'olive');rod('rear venturi',[-.48,.025,0],[-.39,.025,0],.062,'steel',.033);ring('rear rim',.057,.004,[-.48,.025,0],'edge','x');
   for(const x of [-.25,-.12,.28])ring('tube clamp',.035,.004,[x,.025,0],'steel','x');rod('ribbed heat sleeve',[-.24,.025,0],[-.095,.025,0],.039,'wood');for(const x of [-.23,-.19,-.15,-.11])ring('heat sleeve groove',.039,.0018,[x,.025,0],'dark','x');box('shoulder saddle',[.105,.025,.058],[-.18,-.019,0],'dark');box('sight bracket',[.046,.014,.052],[-.002,.068,0],'steel');pistolGrip(-.035,-.046,'dark');box('forward grip',[.035,.106,.03],[.05,-.057,0],'wood');anchor('support',[.05,-.060,0]);
   const warhead=new THREE.LatheGeometry([[.027,.35],[.030,.405],[.056,.435],[.070,.48],[.066,.525],[.051,.577],[.023,.644],[.006,.689]].map(p=>new THREE.Vector2(...p)),12);warhead.rotateZ(-Math.PI/2);warhead.translate(0,.025,0);add(warhead,'olive','shaped RPG warhead');ring('warhead shoulder seam',.067,.0025,[.478,.025,0],'dark','x');rod('nose fuse',[.688,.025,0],[.705,.025,0],.006,'brass',.004,8);muzzle(.35,.025,.033);box('folding sight',[.013,.10,.017],[.02,.095,-.04],'steel');carry={...carry,position:[.22,1.245,.185],axis:[1,.015,-.10]};
- }
- if(id==='grenade'){
-  const body=add(new THREE.SphereGeometry(.034,12,8),'olive','segmented grenade body');body.scale.y=1.35;for(const y of [-.025,-.010,.010,.025])ring('body groove',Math.sqrt(Math.max(0,.034*.034-(y/1.35)**2)),.0015,[0,y,0],'dark','y');
-  for(let i=0;i<6;i++){const angle=i*Math.PI/3,points=[];for(let j=0;j<=10;j++){const a=.24+j*(Math.PI-.48)/10;points.push(V([.034*Math.sin(a)*Math.cos(angle),.046*Math.cos(a),.034*Math.sin(a)*Math.sin(angle)]));}add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),10,.0014,4,false),'dark','vertical grenade groove');}
-  rod('fuse neck',[0,.037,0],[0,.061,0],.012,'steel');box('safety lever',[.018,.068,.012],[.020,.029,0],'steel');ring('pull ring',.014,.002,[-.018,.057,0],'edge');anchor('grip',[0,0,0]);anchor('release',[0,0,0]);carry={position:[.17,1.28,.34],axis:[.65,.1,-.7],hands:[1]};
  }
  if(id==='flamethrower'){
   receiver(.12);pistolGrip(-.06,-.060,'dark');guard([-.025,-.065,0]);rod('fuel lance',[-.07,.020,0],[.46,.020,0],.021);barrel(.30,.49,.028);box('support grip',[.035,.070,.035],[.18,-.037,0],'dark');anchor('support',[.18,-.046,0]);rod('igniter tube',[.27,-.017,0],[.50,-.017,0],.007,'brass');anchor('hoseIn',[-.11,.014,.026]);
