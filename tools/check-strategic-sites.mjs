@@ -86,6 +86,15 @@ try{
  await page.mouse.click(...point);assert.deepEqual(await page.evaluate(()=>window.sitesStudy.diagnostics().placementCell),[1,7]);
  await page.selectOption('#view','front');await page.selectOption('#frame','ground');await page.selectOption('#scale','95');await page.uncheck('#passage');await page.screenshot({path:path.join(out,'radio-door-scale.png')});
  const framedPlayer=await page.evaluate(()=>{const s=window.sitesStudy,d=s.diagnostics(),V=s.camera.position.constructor,w=d.workers[0];return [new V(...w.min).project(s.camera).y,new V(...w.max).project(s.camera).y];});assert(framedPlayer.every(y=>Math.abs(y)<1),'Ground framing must show the entire scale reference');
+ // Inspect the 2 x 2 hut at an actual neighboring cover tile, in both states.
+ await page.selectOption('#view','three');await page.check('#passage');
+ for(const state of ['intact','destroyed']){
+  await page.evaluate(state=>window.sitesStudy.select('radio',state),state);
+  assert.equal(await page.evaluate(()=>window.sitesStudy.placeHorse([2,6])),true);
+  assert.deepEqual((await page.evaluate(()=>window.sitesStudy.diagnostics())).workers[0].root,[-1.5,.24,2.5]);
+  await page.screenshot({path:path.join(out,'radio-hut-cover-'+state+'.png')});
+ }
+ await page.uncheck('#passage');
  await page.selectOption('#scale','fit');await page.selectOption('#frame','site');await page.selectOption('#view','three');await page.uncheck('#foundations');
  // Exercise actual controls at game scale and ensure resource ownership is bounded.
  const stable=await page.evaluate(()=>window.sitesStudy.diagnostics().gpu);

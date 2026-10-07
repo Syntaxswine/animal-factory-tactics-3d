@@ -31,7 +31,33 @@ test('hut doors clear the native horse height and retain reachable front approac
   const h=l.build(id,{state}).root.getObjectByName('service-hut'),door=h.userData.door;
   assert(door.height>=1.85&&door.width>=1.10,'Undersized service doorway');
   assert(door.height>1.65+.15,'Native horse needs visible headroom');
-  for(const profile of ['horse','wide'])assert.equal(cell(l.clearance(id,{state,profile}),1,7).reachable,true,id+' service door approach is blocked');
+  // A doorway approach needs the visible character to fit; it does not need
+  // every species to spin through every heading while standing against it.
+  assert.equal(cell(l.clearance(id,{state,profile:'horse'}),1,7).reachable,true,id+' service door approach is blocked');
+ }
+}));
+
+test('radio hut occupies four tiles and leaves adjacent wall positions reachable',()=>fixture(l=>{
+ for(const state of ['intact','destroyed']){
+  const hut=l.build('radio',{state}).root.getObjectByName('service-hut');
+  const bounds=new THREE.Box3().setFromObject(hut,true),epsilon=1e-6;
+  // A 2 x 2 building centers between cells. Include the roof and swung door,
+  // not just its plinth, so neither state silently spills into a third row.
+  assert(bounds.min.x>=-4-epsilon&&bounds.max.x<=-2+epsilon);
+  assert(bounds.min.z>=1-epsilon&&bounds.max.z<=3+epsilon);
+  const occupied=[];
+  for(let z=0;z<8;z++)for(let x=0;x<8;x++)if(bounds.max.x>x-4+epsilon&&bounds.min.x<x-3-epsilon&&bounds.max.z>z-4+epsilon&&bounds.min.z<z-3-epsilon)occupied.push([x,z]);
+  assert.deepEqual(occupied,[[0,5],[1,5],[0,6],[1,6]]);
+  assert(bounds.max.x-bounds.min.x>1.7&&bounds.max.z-bounds.min.z>1.99,'Keep the existing hut size');
+  const map=l.clearance('radio',{state,profile:'horse'});
+  for(const c of occupied)assert(!cell(map,...c).passable,'Hut interior stays blocked');
+  const wallPairs=[[[0,4],[1,4]],[[2,5],[2,6]],[[0,7],[1,7]]];
+  for(const [a,b]of wallPairs){
+   assert(cell(map,...a).reachable&&cell(map,...b).reachable,'Wall-adjacent native horse position must be usable');
+   assert(map.links.some(link=>link.from.join(',')===a.join(',')&&link.to.join(',')===b.join(',')),'Characters must be able to move along the wall');
+  }
+  const wide=l.clearance('radio',{state,profile:'wide'});
+  for(const c of [[2,5],[2,6]])assert(cell(wide,...c).reachable,'Even the whole roster can turn beside the long wall');
  }
 }));
 

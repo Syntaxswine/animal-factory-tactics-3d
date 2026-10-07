@@ -35,6 +35,9 @@ events. The two states are static models; there is no destruction animation.
 - [x] Independent hostile review of the rounded-clearance correction: **9/10**.
 - [x] Center the radio service hut and upper-right cabinet on tile anchors in both states.
 - [x] Independent hostile review of the radio placement correction: **9/10**.
+- [x] Correct the radio hut to the center of a **2 × 2 tile block**, not one tile.
+- [x] Verify its complete geometry occupies four cells and adjacent horse positions stay usable.
+- [x] Independent hostile review of the 2 × 2 footprint correction: **9/10**.
 
 ## Assets and visual intent
 
@@ -55,13 +58,19 @@ The horse retains its original 1.65-unit height. Both service huts now have
 1.85 × 1.10-unit door openings; their original doors were too short. The radar
 hut moves rearward by 0.40 units in **both** states to open its front approach.
 
-The radio hut now uses local X/Z **[-2.5, 1.5]** (column 2, row 6), and its
-upper-right cabinet uses **[2.5, -2.5]** (column 7, row 2). Both are tile-center
-anchors. Their foundations move with them, and the service cable follows the
-hut while retaining its tower attachment. Intact and destroyed states use the
-same positions; their native sizes and the tower/wreck geometry are unchanged.
-The larger hut still occupies several tiles, and the roster's turning clearance
-can extend beyond the cabinet's own tile.
+The radio hut now centers at local X/Z **[-3, 2]**, in the middle of columns
+**1–2, rows 6–7**. Its complete geometry fits the four-cell area X[-4,-2], Z[1,3],
+including the roof and damaged door. The existing hut size is retained. The
+one-tile cabinet remains at **[2.5, -2.5]** (column 7, row 2). Even-sized buildings
+must be centered between their occupied cells; centering this hut on a single
+cell made it straddle a 3 × 3 area.
+
+Foundations move with the hut, and the cable follows it while retaining the
+tower attachment. Both damage states use the same placement. The damaged door
+is inset 0.01 to keep its swung corner inside its plinth; this shared detail also
+corrects the radar hut. Native scale and tower/wreck geometry are unchanged.
+All six in-site wall-adjacent cells admit the horse, with tested movement along
+each wall. Both side-wall cells also permit whole-roster turning.
 
 Materials use broad hand-painted wear, cream highlights, olive/red industrial
 paint and charcoal scorch. Generated raster sources are preserved unmodified;
@@ -90,12 +99,18 @@ The horse is a scale reference and is not part of the asset footprint. Choose
 scale. The ruler is exactly two tiles tall (a normal wall) and hides in overhead
 views or below 30 px/tile, where its labels would overlap.
 
-**Passage map** displays individual 1 × 1 cells: green for reachable clear space,
-red for blocked space, amber for a clear but disconnected pocket. The connecting
+**Passage map** displays individual 1 × 1 cells: green for reachable turning space,
+red for restricted turning space, amber for a clear but disconnected pocket. The connecting
 lines represent tested cardinal sweeps. Click any cell to inspect its body outline
 and, if blocked, the actual point of contact with the site. The outline represents
 room to turn at every heading: the whole-roster option also accommodates broader
 bodies and the skunk's tail. **Body outline** hides these inspection lines.
+This is not an occupied-footprint or gameplay-cover map. A red whole-roster cell
+may fit an individual character facing a particular way, but cannot guarantee
+every species can turn freely there. Use **Horse** for the visible character.
+The radio hut occupies four cells even when a larger turning envelope excludes
+additional neighboring centers; those exclusions must not become extra solid
+building tiles in the gameplay catalog.
 
 Click a clear cell, or use **Horse tile**,
 to place the horse on the slab without resizing it. In the paired view the chosen
@@ -185,8 +200,8 @@ and convex X/Z outlines for each permanent concrete foundation.
 
 | Site/state | Horse reachable tiles | Whole-roster reachable tiles |
 | --- | ---: | ---: |
-| Radio intact | 45 | 41 |
-| Radio destroyed | 33 | 28 |
+| Radio intact | 50 | 42 |
+| Radio destroyed | 38 | 28 |
 | Radar intact | 45 | 40 |
 | Radar destroyed | 38 | 34 |
 | SAM intact | 40 | 36 |
@@ -213,7 +228,7 @@ $env:PLAYWRIGHT_PATH = 'PATH/TO/node_modules/playwright'
 node tools/check-strategic-sites.mjs
 ```
 
-The twenty-three focused tests cover all six forms and all four quarter turns,
+The twenty-four focused tests cover all six forms and all four quarter turns,
 per-assembly ground contact, retained foundations, finite geometry and bounded
 UVs, clone independence, repeat construction, single disposal, radar platform
 clearance and the manifest. Additional checks compare exact permanent concrete
@@ -223,6 +238,9 @@ masks and exported navigation proposals. Rounded-clearance regressions check
 triangle cross-sections through band boundaries, low versus shoulder-height
 obstacles, diagonal corners, capsule sweeps past endpoints, the formerly blocked
 SAM perimeter, genuine central obstructions and on-surface contact markers.
+The radio-footprint regression includes all hut geometry, retains the model size,
+requires exactly four occupied cells and tests the six adjacent horse positions
+plus three continuous wall-parallel movements in both damage states.
 The browser check covers 24 model/view combinations, 18 in-place damage swaps
 across scale/framing controls after orbiting and zooming, six passage/profile
 comparisons, on-slab native player placement, rendered mask parity, the body/contact
@@ -248,7 +266,34 @@ showed that the current 3D editor and game must agree on their shared prop types
 
 ## Hostile review result — 2026-10-06
 
+### Radio 2 × 2 footprint correction
+
+The prior single-tile anchor review missed the even-sized building requirement.
+The hut is now centered between four cells, with its cable and unchanged concrete
+foundation following the corrected placement. All six in-site neighboring horse
+positions and their wall-parallel movements remain clear. The side-wall pair also
+admits the full roster's turning envelope. Broader front/back turning restrictions
+are labeled as turning clearance, not additional occupied building tiles.
+
+All **24** focused tests and the browser matrix pass. Fresh native-horse close
+views exercise a wall-adjacent position in both states; the Pages build passes.
+Independent scoped review: **9/10 — pass**, with no blocking findings. Every hut
+vertex is within X[-3.862,-2.138], Z[1,3] in both states. Fresh front/back/side
+views confirm the actual horse skin clears the hut by at least 0.0827 tile at
+each of the six neighboring positions. Foundation records and custom-orbit
+damage comparisons match exactly. All ten packaged files match source, and
+temporary browser processes closed and were verified absent. Approval covers
+the asset layout and proposed clearance; implemented gameplay cover remains
+separate integration work.
+
+![Radio hut occupies a true four-tile block](strategic-sites-review/radio-hut-2x2.png)
+![Native horse beside the intact hut wall](strategic-sites-review/radio-hut-cover-intact.png)
+![Native horse beside the destroyed hut wall](strategic-sites-review/radio-hut-cover-destroyed.png)
+
 ### Radio tile-center placement
+
+Historical record: the hut's single-cell centering was incorrect for its 2 × 2
+size and is superseded by the footprint correction above. The cabinet remains centered.
 
 The service hut and upper-right cabinet now sit on half-integer tile centers.
 Regenerated passage maps give the horse 45 intact / 33 destroyed reachable
