@@ -1,3 +1,4 @@
+import {isStrategicSite} from './strategic-site-rules.js';
 import {trellisParts,trellisSegment,TRELLIS_KIND,TRELLIS_ARCH_KIND} from './bridge-trellis.js';
 import {canopyPresentation} from './editor-canopies.js';
 import {roofVisualKind,parapetEdges} from './climbable-roofs.js';
@@ -62,7 +63,7 @@ export function buildWorld(map){map=canopyPresentation(map);
   }else diagnostics.push({source:`edge:${key}`,kind,message:'Unsupported edge'});
  }
  for(const p of map.props||[]){if(isRampBank(p)){const id='prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind;box(id,'prop',p.kind,[p.x,(p.z||0)*D.floorSpacing+1,p.y],[1,2,1],{prop:id,x:p.x,y:p.y,z:p.z||0},{blocksShot:false,blocksSight:false});continue;}if(isRamp(p)){const r=rampInfo(p),rule=RAMP_PROPS[p.kind],id='prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind;if(r.surface.startsWith('wood')){for(const [i,part] of woodenRampParts(p,D.floorSpacing).entries()){box(id+':timber:'+i,'prop',r.surface==='woodgold'?'ground-wood-planks':'wood',part.center,part.size,{prop:id,x:p.x,y:p.y,z:p.z||0},{rotation:part.rotation,trellisPart:part});const b=boxes.at(-1),radius=Math.hypot(...part.size)/2;b.min=part.center.map(v=>v-radius);b.max=part.center.map(v=>v+radius);}continue;}box(id,'prop',p.kind,[(r.low.x+r.high.x)/2,r.z*D.floorSpacing+1,(r.low.y+r.high.y)/2],[rule.w,2,rule.h],{prop:id,x:p.x,y:p.y,z:p.z||0},{blocksShot:false,blocksSight:false});continue;}
-  if(isCliff(p))continue;
+  if(isCliff(p)||isStrategicSite(p))continue;
   if(LIGHT_FORMS[p.kind])continue;
   const id=`prop:${p.x},${p.y},${p.z||0}:${p.kind}`;
   if(!supportedProps.has(p.kind)){diagnostics.push({source:id,kind:p.kind,message:'Unsupported prop'});continue;}

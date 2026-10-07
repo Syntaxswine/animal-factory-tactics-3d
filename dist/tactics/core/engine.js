@@ -1,3 +1,5 @@
+import {intactSite,siteId,siteEscapeSteps} from '../strategic-site-rules.js';
+import {flameStrategicSites} from '../strategic-site-damage.js';
 import {presentBarrel,isExplosiveBarrel} from '../explosive-barrels.js';
 import {previewBarrelAttack} from '../barrel-targeting.js';
 import {applyFuelBlast,detonateBarrels,fuelBlastReaches} from '../fuel-blast.js';
@@ -65,7 +67,7 @@ export const movementModeOf=u=>u?.sneaking?'sneak':u?.running?'run':'walk';
 export const movementMultiplier=u=>MOVEMENT_MODES[movementModeOf(u)].apMultiplier*injuryMovement(u);
 export const movementCost=u=>STANCES[stanceOf(u)].moveCost*movementMultiplier(u);
 export const effectiveStealth=u=>Math.min(100,Math.max(0,(u.stealth||0)+(u.sneaking?20:0)));
-export function movementNeighbors(s,u,p=u,stairs){if(towerForUnit(s,u))return [];return neighbors(s,p,stairs).filter(q=>(q.kind==='ramp'||levelOf(q)===levelOf(p)||stanceOf(u)==='standing')&&!(levelOf(q)===levelOf(p)&&q.x!==p.x&&q.y!==p.y&&[occupant(s,q.x,p.y,levelOf(p)),occupant(s,p.x,q.y,levelOf(p))].some(v=>v&&v!==u))).map(q=>({...q,cost:q.kind==='cliff'?8*injuryMovement(u):(q.kind==='ramp'||levelOf(q)===levelOf(p)?STANCES[stanceOf(u)].moveCost*q.cost:q.cost)*movementMultiplier(u)}));}
+export function movementNeighbors(s,u,p=u,stairs){if(towerForUnit(s,u))return [];return neighbors(s,p,stairs).concat(siteEscapeSteps(s,u,p)).filter(q=>(q.kind==='ramp'||levelOf(q)===levelOf(p)||stanceOf(u)==='standing')&&!(levelOf(q)===levelOf(p)&&q.x!==p.x&&q.y!==p.y&&[occupant(s,q.x,p.y,levelOf(p)),occupant(s,p.x,q.y,levelOf(p))].some(v=>v&&v!==u))).map(q=>({...q,cost:q.kind==='cliff'?8*injuryMovement(u):(q.kind==='ramp'||levelOf(q)===levelOf(p)?STANCES[stanceOf(u)].moveCost*q.cost:q.cost)*movementMultiplier(u)}));}
 export const key=tileKey;
 export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,unitBaseHeight(a)-unitBaseHeight(b));
 export const alive=u=>u.hp>0&&!u.away&&u.casualty!=='quit'; // A unit that crossed the map edge is off this map: not a target, not an occupant, not controllable here; a merc that quit (G5) has left the squad.
@@ -270,6 +272,12 @@ export function coverAgainst(s,a,b){
 const retaliationToken=Symbol('retaliation');
 export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel='hip'){if(a?.team==='guard'&&!playerThreat(s,a))return {ok:false,reason:'Character does not fight the player'};
  if(!a||!b||!alive(a)||!alive(b)||a.team===b.team&&token!==retaliationToken)return {ok:false,reason:'Choose a living opponent'};
+ if(b.structure){
+  if(!s.props.some(p=>intactSite(p)&&siteId(p)===b.id))return {ok:false,reason:'Structure already destroyed'};
+  if(WEAPONS[a.weapon].incendiary)return flamePreview(s,a,{...b,ground:true},WEAPONS[a.weapon],combatCosts(s));
+  if(WEAPONS[a.weapon].blast)return explosivePreview(s,a,b,WEAPONS[a.weapon]);
+  return {ok:false,reason:'Use a flamethrower or explosive weapon',cost:WEAPONS[a.weapon].cost,rounds:1};
+ }
  if(b.barrel){
   if(!presentBarrel(s,b))return {ok:false,reason:'Barrel already destroyed'};
   if(WEAPONS[a.weapon].incendiary)return flamePreview(s,a,{...b,ground:true},WEAPONS[a.weapon],combatCosts(s));
@@ -353,7 +361,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
  if(byAI&&!playerThreat(s,a))return false;const p=previewAttack(s,reaction?{...a,ap:WEAPONS[a.weapon].cost}:a,b,burst,zone,null,reaction?'hip':aimLevel);if(!p.ok)return false;a.overwatch=null;
  a.fired=true;
  // Orienting reflex: an attack from outside the victim's field spins it toward the attacker (turning is free).
- if(!b.ground&&!b.barrel&&!inCone(b,a)){b.heading=headingTo(b,a);b.facing=Math.cos(b.heading*Math.PI/180)-Math.sin(b.heading*Math.PI/180)>=0?1:-1;log(s,b.name+' spins toward the attack.');}
+ if(!b.ground&&!b.barrel&&!b.structure&&!inCone(b,a)){b.heading=headingTo(b,a);b.facing=Math.cos(b.heading*Math.PI/180)-Math.sin(b.heading*Math.PI/180)>=0?1:-1;log(s,b.name+' spins toward the attack.');}
  if(b.team==='guard')targeted(s,b,a);
  // A squad attack from real time opens a turn (engaged holds it until the squad ends that turn); the shot is re-checked against the AP the turn actually has.
  if(['explore','won'].includes(s.phase)){s.engaged=true;refresh(s);if(s.phase==='player'&&a.team==='squad'&&a.ap<p.cost){log(s,a.name+': not enough AP to fire.');return false;}}
@@ -372,7 +380,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   const accurate=w.incendiary?false:shotRoll?shotRoll.rolledHit:w.blast?false:random(s)*100<shotChance;
   const pellets=w.pellets?shotgunTrajectories(s,shooter,f.aim,{accurate,zone:f.zone,chance:shotChance,shotRoll,precision:w.precision??80,reach:w.range*1.5,pellets:w.pellets},()=>random(s)):null;
   const shot=pellets?pellets[0]:w.blast?explosiveTrajectory(s,shooter,f.aim,w,f.p,()=>random(s)):ballistic?bulletTrajectory(s,shooter,f.aim,{accurate,zone:f.zone,chance:shotChance,shotRoll,precision:w.precision??80,burst:f.p.rounds>1,reach:w.range*1.5},()=>random(s)):null;
-  if(ballistic&&!target.barrel&&alive(target)){
+  if(ballistic&&!target.barrel&&!target.structure&&alive(target)){
    // A clear aimed ray threatens the target even if this round misses. A solid
    // obstacle intercepting that ray prevents distant fire from pinning them.
    const threat=bulletTrajectory(s,shooter,f.aim,{accurate:true,zone:f.zone,reach:w.range*1.5},()=>0);
@@ -383,9 +391,9 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   const event={shooter:shooter.id,target:target.id,ax:shooter.x,ay:shooter.y,bx:f.aim.x,by:f.aim.y,az:levelOf(shooter),bz:levelOf(f.aim),hit:!!victim,incendiary:!!w.incendiary,trajectories:pellets||(shot?[shot]:[]),explosions:[],downed:[],reply:f.reply,shotChance,shotRoll};sequence.push(event);
   const flame=w.incendiary?flameShape(s,shooter,f.aim,w):null;
   const flameHits=flame?flameVictims(s,shooter,flame).map(unit=>({unit,zone:'torso',damage:Math.max(1,unit.hp)})):null;
-  if(flame){event.flame=flame;event.hit=flameHits.length>0;log(s,shooter.name+' sprays a cone of flame.');}
+  if(flame){event.flame=flame;event.sites=flameStrategicSites(s,flame);event.hit=flameHits.length>0||event.sites.length>0;log(s,shooter.name+' sprays a cone of flame.');}
   const blastResult=w.blast?detonate(s,shot,w):null;
-  if(blastResult){event.explosions.push(blastResult.blast);explosions.push(blastResult.blast);event.hit=blastResult.hits.length>0;log(s,`${shooter.name}: ${w.short} detonated / ${blastResult.blast.destroyed} structures destroyed.`);}
+  if(blastResult){event.explosions.push(blastResult.blast);explosions.push(blastResult.blast);event.sites=blastResult.sites;event.hit=blastResult.hits.length>0||event.sites.length>0;log(s,`${shooter.name}: ${w.short} detonated / ${blastResult.blast.destroyed} structures destroyed.`);}
   const barrelHits=[...(pellets||(shot?[shot]:[])).filter(p=>p.propId).map(p=>p.propId),...(blastResult?.barrels||[]),...(flame?flameBarrels(s,flame):[])];
   appendBarrelBlasts(s,event,explosions,barrelHits,shooter);
   if(!victim&&!blastResult&&!pellets&&!flame){if(!event.hit)log(s,`${shooter.name} → ${target.name}: miss${f.reply?' / retaliation':''}.`);continue;}
@@ -653,7 +661,7 @@ export function boundedRoute(s,g,goals,budget){if(towerForUnit(s,g))return null;
   if(goals.has(p.k))return trace(p.k);
   const hp=p.f-p.g;if(hp<bestH){bestH=hp;best=p;}
   // Lean expansion: the same legality as movementNeighbors (level changes need standing, no cutting a corner past a body) checked against the precomputed occupied set.
-  for(const n of neighbors(s,p,stairs)){const same=n.kind==='ramp'||n.z===p.z;if(!same&&stanceOf(g)!=='standing')continue;if(same&&n.x!==p.x&&n.y!==p.y&&(occupied.has(key(n.x,p.y,p.z))||occupied.has(key(p.x,n.y,p.z))))continue;const k=key(n.x,n.y,n.z),c=p.g+(n.kind==='cliff'?8*injuryMovement(g):same?unit*n.cost:n.cost*movementMultiplier(g));if(occupied.has(k)||c>=(scores.get(k)??Infinity))continue;scores.set(k,c);const q={x:n.x,y:n.y,z:n.z,kind:n.kind,cost:n.kind==='cliff'?8*injuryMovement(g):same?unit*n.cost:n.cost*movementMultiplier(g)};parents.set(k,{parent:p.k,point:q});push({...q,k,g:c,f:c+h(q)});}}
+  for(const n of neighbors(s,p,stairs).concat(siteEscapeSteps(s,g,p))){const same=n.kind==='ramp'||n.z===p.z;if(!same&&stanceOf(g)!=='standing')continue;if(same&&n.x!==p.x&&n.y!==p.y&&(occupied.has(key(n.x,p.y,p.z))||occupied.has(key(p.x,n.y,p.z))))continue;const k=key(n.x,n.y,n.z),c=p.g+(n.kind==='cliff'?8*injuryMovement(g):same?unit*n.cost:n.cost*movementMultiplier(g));if(occupied.has(k)||c>=(scores.get(k)??Infinity))continue;scores.set(k,c);const q={x:n.x,y:n.y,z:n.z,kind:n.kind,cost:n.kind==='cliff'?8*injuryMovement(g):same?unit*n.cost:n.cost*movementMultiplier(g)};parents.set(k,{parent:p.k,point:q});push({...q,k,g:c,f:c+h(q)});}}
  // Out of budget: head for the closest tile explored (partial route), or give up when nothing is closer than where the guard stands.
  return best===first||!Number.isFinite(bestH)?null:trace(best.k);
 }

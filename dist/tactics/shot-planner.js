@@ -33,6 +33,9 @@ export function renderShotPlanner(node,s,a,b,{zone,aim,burst,onSelect}){
  node.replaceChildren();if(!b)return;
  const heading=document.createElement('h2');heading.id='shot-title';heading.textContent=b.name;
  const subtitle=document.createElement('p');subtitle.className='shot-distance';subtitle.textContent=a.name+' · '+a.ap+' AP available · '+WEAPONS[a.weapon].name+' · '+(Math.hypot(a.x-b.x,a.y-b.y)*METRES_PER_TILE).toFixed(1)+' m';node.append(heading,subtitle);
+ if(b.structure){
+  const p=previewAttack(s,a,b,false,'torso'),note=document.createElement('p');note.className='shot-detail';note.textContent=p.ok?`${p.cost} AP · ${WEAPONS[a.weapon].name}. Fire or a damaging explosion destroys this structure and leaves a wreck. Allies in the blast are at risk.`:p.reason;node.append(note);return;
+ }
  if(!supportsAim(WEAPONS[a.weapon])){const note=document.createElement('p');note.textContent='Use Fire to attack with your held weapon.';node.append(note);return;}
  const body=document.createElement('div');body.className='shot-body';
  body.innerHTML='<svg viewBox="0 0 320 300" aria-hidden="true"><defs><pattern id="shot-lines" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M 12 0 L 0 0 0 12" fill="none" stroke="currentColor" stroke-opacity=".12"/></pattern></defs><rect width="320" height="300" fill="url(#shot-lines)"/><path class="body-outline" data-zone="head" d="M140 60 L133 41 144 29 156 38 165 29 179 41 173 60 Q174 78 158 82 Q140 79 140 60 Z"/><path class="body-outline" data-zone="torso" d="M139 88 Q158 82 179 88 L193 155 177 164 174 137 174 173 137 173 137 133 128 166 113 158 Z"/><path class="body-outline" data-zone="legs" d="M137 173 H174 L177 266 H159 L155 194 150 266 H132 Z"/><path data-zone="weapon" class="body-weapon" d="M129 125 L194 148 192 160 157 148 150 164 141 160 146 144 125 139 Z"/><path class="shot-leaders" d="M145 64 H96 M141 109 H219 M142 223 H94 M175 148 H220"/></svg>';

@@ -18,7 +18,13 @@ import {openBlock,extractBlock,validateBlock,placeBlock} from './core/blocks.js'
 import {connectionSet} from './core/connections.js';
 import {EDGES,propCells} from './core/environment.js';
 export function brushPoint(p){const x=Math.floor(p.x+.5),y=Math.floor(p.y+.5),dx=p.x-x,dy=p.y-y,axis=Math.abs(dx)>Math.abs(dy)?'e':'s';return {x,y,z:p.z,edge:edgeKey(axis,x-(axis==='e'&&dx<0?1:0),y-(axis==='s'&&dy<0?1:0),p.z)};}
+import {isStrategicSite} from './strategic-site-rules.js';
 export class EditingDocument extends InspectionDocument {
+ siteSabotage(selection,enabled){
+  const p=selection?.data;if(selection?.type!=='prop'||!isStrategicSite(p))throw Error('Select a radio tower, radar tower or SAM site.');
+  if(typeof enabled!=='boolean')throw Error('Choose whether sabotage is allowed.');
+  this.replace({...this.editor.map,props:this.editor.map.props.map(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(p.z||0)&&q.kind===p.kind?{...q,sabotage:enabled}:q)});
+ }
  open(text){super.open(text);if(!this.block)mapStartMinutes(this.map);this.editor=createEditor(this.block?openBlock(this.original):this.map);this.refresh();this.changed=false;this.revision=0;return this;}
  refresh(){if(this.block){const original={...this.original,...extractBlock(this.editor.map)};if(!this.editor.map.blockConnections?.['0,0'])delete original.connections;const display=new InspectionDocument().open(JSON.stringify(original));this.map=display.map;this.original=original;}else{this.map=this.editor.map;this.original=this.map;}this.units=[...this.map.starts.map((p,i)=>({...p,id:'start-'+i,species:p.species||['horse','goat','donkey','sheep'][i],weapon:p.weapon||'rifle',heading:0,role:characterName(p,'Squad start '+(i+1))})),...this.map.guards.map((p,i)=>({...p,id:'guard-'+i,role:characterName(p,(p.character?.category==='npc'?'NPC ':'Guard ')+(i+1))}))];for(const u of this.units){const support=rampSupportAt(this.map,u);if(support)u.cliffSupport=support;}this.changed=true;this.revision++;}
  preview(command){

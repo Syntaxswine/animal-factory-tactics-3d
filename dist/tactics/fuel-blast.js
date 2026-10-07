@@ -1,3 +1,4 @@
+import {blastStrategicSites} from './strategic-site-damage.js';
 import {inBounds,terrainAt,levelOf} from './core/maps.js';
 import {unitBaseHeight} from './tower-geometry.js';
 import {barrelId,isExplosiveBarrel} from './explosive-barrels.js';
@@ -19,7 +20,8 @@ export function applyFuelBlast(s,origin,{damage,ignite,burn},source=null,owner=n
  const victims=s.units.filter(u=>present(u)&&levelOf(u)===z&&Math.abs(unitBaseHeight(u)-unitBaseHeight(origin))<=1&&Math.max(Math.abs(u.x-origin.x),Math.abs(u.y-origin.y))<=1);
  for(const u of victims){damage(s,u,Math.max(u.hp,1),true,source);if(u!==owner)burn(s,u,'ash');}
  for(const u of s.units)if(fuelBlastReaches(origin,u))ignite(s,u);
- return {fires,victims,burns:s.units.filter(u=>victims.includes(u)||u.burningTurns&&fuelBlastReaches(origin,u)).map(u=>u.id)};
+ const sites=blastStrategicSites(s,{...origin,h:unitBaseHeight(origin)+.4},FUEL_BLAST_RADIUS);
+ return {sites,fires,victims,burns:s.units.filter(u=>victims.includes(u)||u.burningTurns&&fuelBlastReaches(origin,u)).map(u=>u.id)};
 }
 
 // Remove before expanding the queue: every barrel commits exactly once, even

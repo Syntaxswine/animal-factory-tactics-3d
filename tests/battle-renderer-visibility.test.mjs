@@ -12,7 +12,7 @@ function renderer(){
  const r=Object.create(BattleRenderer.prototype),world={boxes:[]};
  Object.assign(r,{camera:new T.OrthographicCamera(),actors:new Map(),models:new Map(),materials:new Map(),
   renderer:{setSize(){},getPixelRatio:()=>1,render(){},domElement:{}},editorWorld:world,world,level:0,
-  rebuild(){},prune(){},loot:{sync(){}},motion:{update(){}},traversal:{observe(){}},combat:new BattleCombat(),
+  rebuild(){},prune(){},loot:{sync(){}},sites:{hit:()=>null},motion:{update(){}},traversal:{observe(){}},combat:new BattleCombat(),
   fire:{observe(){},display:u=>u},tankEffects:{observe(){},pendingProps:()=>[]},shotEffects:{hide(){}},flameEffects:{hide(){}},
   actor(u){let mesh=this.actors.get(u.id);if(!mesh){mesh=new T.Mesh(new T.BoxGeometry(.5,1,.5));this.actors.set(u.id,mesh);}mesh.position.fromArray(toWorld(u));mesh.position.y+=.5;mesh.updateMatrixWorld(true);return mesh;}
  });

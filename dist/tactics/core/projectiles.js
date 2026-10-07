@@ -1,3 +1,4 @@
+import {siteRayHit,isStrategicSite,siteId} from '../strategic-site-rules.js';
 import {barrelRayHit,barrelId} from '../explosive-barrels.js';
 import {bodyIntersection,firearmTrajectory,pelletTrajectories} from '../ballistic-shot.js';
 import {bankRayHit} from '../ramp-banks.js';
@@ -29,6 +30,8 @@ export function traceProjectile(state,shooter,origin,direction,reach){
  }
  const barrelHit=barrelRayHit(state.props,origin,d,limit);let nearestProp=barrelHit?.prop;
  if(barrelHit){limit=barrelHit.distance;nearest=null;}
+ const siteHit=siteRayHit(state.props,origin,d,limit);
+ if(siteHit){limit=siteHit.distance;nearest=null;nearestProp=siteHit.prop;}
  const impact=(kind,t,extra={})=>{const p=point(origin,d,t);return {kind,...p,z:Math.max(0,Math.min(LEVELS-1,Math.floor((p.h+EPS)/3))),distance:t,...extra};};
  const hits=[bankRayHit(state.props,origin,d,limit),rampRayHit(state.props,origin,d,limit),towerRayHit(state.props,origin,d,limit),cliffRayHit(state.props,origin,d,limit)].filter(t=>t!==null),terrainHit=hits.length?Math.min(...hits):null;if(terrainHit!==null&&terrainHit<limit){limit=terrainHit;nearest=null;nearestProp=null;}
  // Exact grid/level crossings keep thin walls, corner joins and floor slabs solid.
@@ -66,7 +69,7 @@ export function traceProjectile(state,shooter,origin,direction,reach){
   if(height){const vertical=slab(origin.h,d.h,z*3,z*3+height);if(vertical){const hit=Math.max(t,vertical[0]);if(hit<=Math.min(end,vertical[1]))return impact('cover',hit);}}
  }
  if(terrainHit!==null&&limit===terrainHit)return impact('cover',limit);
- if(nearestProp)return impact('prop',limit,{propId:barrelId(nearestProp),propKind:nearestProp.kind});
+ if(nearestProp)return impact('prop',limit,{propId:isStrategicSite(nearestProp)?siteId(nearestProp):barrelId(nearestProp),propKind:nearestProp.kind});
  if(nearest){const result=impact('unit',limit,{unitId:nearest.id}),relative=(result.h-unitBaseHeight(nearest))/bodyHeight(nearest);result.zone=relative>.85?'head':relative<.38?'legs':'torso';return result;}
  return impact('range',reach);
 }

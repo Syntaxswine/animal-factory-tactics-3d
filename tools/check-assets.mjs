@@ -10,6 +10,7 @@ import {surfacePixels,materialKind} from '../dist/tactics/hybrid-materials.js';
 import {TRELLIS_KIND,TRELLIS_ARCH_KIND} from '../dist/tactics/bridge-trellis.js';
 import {CARGO_ATLAS} from '../dist/tactics/painted-cargo.js';
 import {PAINTED_ATLAS} from '../dist/tactics/painted-environment-scene.js';
+import {STRATEGIC_SITE_ATLAS} from '../dist/tactics/strategic-sites.js';
 import {FOLIAGE_ATLAS,FOLIAGE_MATERIALS} from '../dist/tactics/foliage-materials.js';
 import {PROPS,EDGES,GROUNDS} from '../dist/tactics/environment.js';
 import {CHARACTER_SPECIES,ARMED_WEAPONS,characterArt} from '../dist/tactics/character-art.js';
@@ -88,6 +89,10 @@ for(const file of active)await readFile(new URL('assets/environment/'+file,root)
 const cargoAtlas=CARGO_ATLAS.replace('../assets/environment/','');active.add(cargoAtlas);await checkPNG('assets/environment/'+cargoAtlas,1536,1024,2);
 const studyAtlas=PAINTED_ATLAS.replace('../assets/environment/','');active.add(studyAtlas);await checkPNG('assets/environment/'+studyAtlas,1254,1254,2);
 const foliageAtlas=FOLIAGE_ATLAS.replace('../assets/environment/','');active.add(foliageAtlas);await checkPNG('assets/environment/'+foliageAtlas,1254,1254,2);
+const siteManifest=JSON.parse(await readFile(new URL('assets/environment/strategic-sites/manifest.json',root)));
+assert.equal(STRATEGIC_SITE_ATLAS,'../assets/environment/strategic-sites/'+siteManifest.atlas);
+assert.deepEqual([...new Set(siteManifest.assets.map(a=>a.reference))].sort(),['reference-radar.png','reference-radio.png','reference-sam.png']);
+for(const [name,width,height]of [[siteManifest.atlas,1774,887],['reference-radio.png',1774,887],['reference-radar.png',1536,1024],['reference-sam.png',1774,887]]){const file='strategic-sites/'+name;active.add(file);await checkPNG('assets/environment/'+file,width,height,2);}
 active.add('foliage/river-water.png');active.add('foliage/shore-tiles-atlas.png');
 for(const kind of ['lathe','mill','press']){for(const name of [kind+'-sketch-v1.png',kind+'-paint-v1.png',...(kind==='press'?['press-paint-v2.png']:[])])active.add('factory-machines/'+name);await checkPNG('assets/environment/factory-machines/'+kind+'-paint-v'+(kind==='press'?2:1)+'.png',1536,1024,2);}
 // Reusable cliff-study paint is intentionally separate from the gameplay catalog.

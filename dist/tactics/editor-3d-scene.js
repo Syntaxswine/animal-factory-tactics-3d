@@ -1,3 +1,5 @@
+import {StrategicSiteScene} from './strategic-site-scene.js';
+import {siteSupportAt} from './strategic-site-rules.js';
 import {CliffMapScene} from './cliff-map-scene.js';
 import {unitBaseHeight} from './tower-geometry.js';
 import {motionPreference} from './settings-3d.js';
@@ -29,7 +31,7 @@ export class InspectionScene {
   this.highlight=new T.LineSegments(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffe5a5,depthTest:false}));this.highlight.renderOrder=20;this.scene.add(this.highlight);
   this.markerGeo=new T.RingGeometry(.27,.39,20);this.guardMat=new T.MeshBasicMaterial({color:0xef9e75,side:T.DoubleSide});this.startMat=new T.MeshBasicMaterial({color:0x96dbce,side:T.DoubleSide});this.accessMat=new T.MeshBasicMaterial({color:0xf7d17d,side:T.DoubleSide});
   this.cargo=new BattleEnvironment(this.scene,this.loader,()=>{if(this.document)this.rebuild();},error=>{this.diagnostics.push(error.message);changed();});
-  this.cliffs=new CliffMapScene(this.scene);this.lights=new LightingScene(this.scene,this.loader,changed,e=>{this.diagnostics.push('Lighting: '+e.message);changed();});
+  this.sites=new StrategicSiteScene(this.scene,this.loader,()=>{if(this.document)this.rebuild();changed();},e=>{this.diagnostics.push('Strategic sites: '+e.message);changed();});this.cliffs=new CliffMapScene(this.scene);this.lights=new LightingScene(this.scene,this.loader,changed,e=>{this.diagnostics.push('Lighting: '+e.message);changed();});
   this.options={level:0,showAllLevels:true,roofs:true,walls:true};
  }
  material(kind){
@@ -66,7 +68,7 @@ export class InspectionScene {
    for(const part of worker.parts)part.material=paint.material;
    if(!profile.unarmed){equipment=createWeaponModel(unit.weapon);worker.equipWeapon(equipment);}
    worker.pose(profile.unarmed?'neutral':'carry',-(unit.heading||0));paint.setGripForearm?.(!!equipment?.carry?.handPoses?.support?.gripMesh);
-   const root=new T.Group();root.add(worker.root);root.position.set(unit.x,unitBaseHeight(unit,D.floorSpacing),unit.y);root.updateMatrixWorld(true);worker.skeleton.update();for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}
+   const root=new T.Group();root.add(worker.root);root.position.set(unit.x,unitBaseHeight({...unit,cliffSupport:siteSupportAt(this.document.map,unit)||unit.cliffSupport},D.floorSpacing),unit.y);root.updateMatrixWorld(true);worker.skeleton.update();for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}
    this.scene.add(root);const model={root,worker,paint,equipment,cap,capMaterial:cap?.mesh.material,unit};this.models.push(model);this.showModel(model);this.changed();
   }catch(error){cap?.dispose();equipment?.dispose();paint?.dispose();worker?.skeleton.dispose();worker?.dispose();if(generation===this.generation){this.diagnostics.push(unit.role+': '+error.message);this.changed();}}
  }
@@ -79,7 +81,7 @@ export class InspectionScene {
  }
  rebuild(){
   if(!this.document)return;const started=performance.now(),{roofs,walls}=this.options,level=this.visibleLevel,source=this.document.map;
-  this.cliffs.rebuild(source,level,{editor:true,dim:!this.options.showAllLevels});
+  this.sites.rebuild({...source,difficulty:'easy'},this.visibleLevel);this.cliffs.rebuild(source,level,{editor:true,dim:!this.options.showAllLevels});
   const map={...source,canopies:roofs?source.canopies:[],coverOccupiedProps:source.props,props:source.props.filter(p=>!PAINTED_PROP_FORMS[p.kind]&&(roofs||!p.kind.startsWith('roof-')))};
   const world={...this.world,boxes:this.world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood')&&(walls||!b.source.edge)&&(roofs||b.kind!=='roof'))};
   const groups=new Map(),matrix=new T.Matrix4(),q=new T.Quaternion(),yaw=new T.Quaternion(),euler=new T.Euler(),position=new T.Vector3(),scale=new T.Vector3();
@@ -132,5 +134,5 @@ export class InspectionScene {
  }
  clearMarkers(){for(const object of this.markers.children)if(object.isArrowHelper||object.type==='ArrowHelper'){object.line.material.dispose();object.cone.material.dispose();}this.markers.clear();}
  clearModels(){for(const m of this.models){m.root.removeFromParent();m.root.position.set(0,0,0);m.root.updateMatrixWorld(true);m.cap?.dispose();m.equipment?.dispose();m.paint.dispose();m.worker.skeleton.dispose();m.worker.dispose();}this.models=[];for(const m of this.dimMaterials.values())m.dispose();this.dimMaterials.clear();}
- dispose(){this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();this.disposed=true;this.preview(null);this.generation++;this.clearModels();this.clearScenery();this.clearMarkers();this.cargo.dispose();for(const g of Object.values(this.geometry))g.dispose();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.highlight.geometry.dispose();this.highlight.material.dispose();this.markerGeo.dispose();this.guardMat.dispose();this.startMat.dispose();this.accessMat.dispose();this.renderer.dispose();}
+ dispose(){this.sites.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();this.disposed=true;this.preview(null);this.generation++;this.clearModels();this.clearScenery();this.clearMarkers();this.cargo.dispose();for(const g of Object.values(this.geometry))g.dispose();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.highlight.geometry.dispose();this.highlight.material.dispose();this.markerGeo.dispose();this.guardMat.dispose();this.startMat.dispose();this.accessMat.dispose();this.renderer.dispose();}
 }
