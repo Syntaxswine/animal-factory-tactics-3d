@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>Strategic destruction · Animal Factory</title><link rel="stylesheet" href="./strategic-destruction-study.css"></head>
+<body>
+ <header><div class="heading"><div><p class="eyebrow">ANIMAL FACTORY / ENVIRONMENT WORKSHOP</p><h1>Strategic destruction</h1></div><a href="./strategic-sites-study.html">Intact & wrecked sites ↗</a></div>
+ <nav aria-label="Animation controls">
+  <label>Site <select id="site"><option value="radio">Radio tower</option><option value="radar">Radar tower</option><option value="sam">SAM site</option></select></label>
+  <label>Show <select id="mode"><option value="board">Keyframes</option><option value="motion">Animation</option></select></label>
+  <label>View <select id="view"><option value="three">Three-quarter</option><option value="front">Front</option><option value="side">Side</option><option value="rear">Rear</option><option value="top">Overhead</option></select></label>
+  <label>Scale <select id="scale"><option value="fit">Fit site</option><option value="game">Gameplay</option></select></label>
+  <label><input type="checkbox" id="grid" checked> Tile grid</label>
+  <label><input type="checkbox" id="effects"> Explosions & smoke</label>
+  <button id="play" type="button">Play collapse</button><button id="reset" type="button">Restart</button>
+  <label class="scrub">Time <input id="time" type="range" min="0" max="7.6" step=".01" value="0"><output id="clock">0.00 s</output></label>
+ </nav></header>
+ <main id="stage"><div id="panels"></div><p id="error" role="alert"></p></main>
+ <footer><strong id="caption">Loading painted sites…</strong><p id="note">Toggle explosions and smoke to inspect the underlying collapse.</p><p class="help">Click a keyframe to inspect it · Drag to orbit · Scroll to zoom · 8 × 8 tiles · Study only; gameplay integration is pending.</p></footer>
+ <script type="module" src="./strategic-destruction-study.js"></script>
+</body></html>

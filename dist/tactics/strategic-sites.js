@@ -24,7 +24,7 @@ function foundationOutline(mesh){
 // its roots; the caller retains ownership of the supplied atlas.
 export function createStrategicSiteLibrary(atlas){
  if(!atlas?.isTexture)throw new TypeError('A painted texture atlas is required');
- const geometries=new Set(),materials=new Set(),textures=new Set(),cache=new Map(),templates=new Map(),clearances=new Map();
+ const geometries=new Set(),materials=new Set(),textures=new Set(),cache=new Map(),templates=new Map(),articulatedTemplates=new Map(),clearances=new Map();
  let disposed=false;
  const own=g=>(geometries.add(g),g);
  const normalizeUV=g=>{
@@ -126,14 +126,15 @@ export function createStrategicSiteLibrary(atlas){
   const g=group(parent,name),step=length/bays;
   for(let i=0;i<bays;i++){
    const y=i*step,lo=bottom+(top-bottom)*i/bays,hi=bottom+(top-bottom)*(i+1)/bays,m=damage?(i%3===0?mat.char:i%2?mat.ivory:mat.red):(i%2?mat.ivory:mat.red);
-   for(const sx of [-1,1])for(const sz of [-1,1])beam(g,m,[sx*lo,y,sz*lo],[sx*hi,y+step,sz*hi],.092);
+   const mark=(o,key)=>{o.userData.morphKey='lattice-'+(i%3)+'-'+key;o.userData.latticeBay=i;return o;};
+   for(const sx of [-1,1])for(const sz of [-1,1])mark(beam(g,m,[sx*lo,y,sz*lo],[sx*hi,y+step,sz*hi],.092),'post-'+sx+'-'+sz);
    for(let face=0;face<4;face++){
     const side=face<2?-1:1,axis=face%2;
     const p=(n,h,t)=>axis?[side*t,h,n*t]:[n*t,h,side*t];
-    beam(g,m,p(-1,y,lo),p(1,y,lo),.061);
+    mark(beam(g,m,p(-1,y,lo),p(1,y,lo),.061),'ring-'+face);
     if(!(damage&&i===skip&&face===1)){
-     beam(g,m,p(-1,y,lo),p(1,y+step,hi),.045);
-     beam(g,m,p(1,y,lo),p(-1,y+step,hi),.045);
+     mark(beam(g,m,p(-1,y,lo),p(1,y+step,hi),.045),'brace-a-'+face);
+     mark(beam(g,m,p(1,y,lo),p(-1,y+step,hi),.045),'brace-b-'+face);
     }
    }
   }
@@ -185,6 +186,7 @@ export function createStrategicSiteLibrary(atlas){
   const pt=(r,a)=>V(r*Math.cos(a),r*Math.sin(a),depth*((r/R)**2-1));
   for(let s=0;s<sectors;s++){
    if(damage&&s>=2&&s<=6)continue;
+   const sectorStart=g.children.length;
    const a=s/sectors*Math.PI*2,b=(s+1)/sectors*Math.PI*2,pos=[],uv=[];
    for(let ring=0;ring<rings;ring++){
     const r0=R*ring/rings,r1=R*(ring+1)/rings,verts=ring===0?[pt(0,a),pt(r1,a),pt(r1,b)]:[pt(r0,a),pt(r1,a),pt(r1,b),pt(r0,a),pt(r1,b),pt(r0,b)];
@@ -201,14 +203,15 @@ export function createStrategicSiteLibrary(atlas){
     const seam=Array.from({length:6},(_,i)=>pt(R*i/5,a).add(V(0,0,.007)).toArray());
     tube(g,damage?mat.char:mat.olive,seam,.014);
    }
+   g.children.slice(sectorStart).forEach((child,j)=>{child.userData.reflectorSector=s;child.userData.morphKey='sector-'+s+'-'+j;});
   }
-  cylinder(g,mat.steel,[0,0,-.74],.29,.38,.32,12,[Math.PI/2,0,0]);
+  cylinder(g,mat.steel,[0,0,-.74],.29,.38,.32,12,[Math.PI/2,0,0]).userData.morphKey='reflector-hub';
   if(!damage)beam(g,mat.steel,[-1.12,0,-.77],[1.12,0,-.77],.14);
   for(const a of [Math.PI/2,Math.PI*7/6,Math.PI*11/6]){
    if(damage&&a===Math.PI/2)continue;
-   beam(g,damage?mat.rust:mat.ivory,pt(1.68,a).toArray(),[0,0,.85],.047);
+   beam(g,damage?mat.rust:mat.ivory,pt(1.68,a).toArray(),[0,0,.85],.047).userData.morphKey='feed-arm-'+a;
   }
-  cylinder(g,damage?mat.char:mat.ivory,[0,0,.85],.13,.18,.32,12,[Math.PI/2,0,0]);
+  cylinder(g,damage?mat.char:mat.ivory,[0,0,.85],.13,.18,.32,12,[Math.PI/2,0,0]).userData.morphKey='reflector-feed';
   return g;
  }
  function radar(root,damage){
@@ -246,7 +249,7 @@ export function createStrategicSiteLibrary(atlas){
   const g=group(parent,name);
   cylinder(g,damage?mat.char:mat.ivory,[0,0,0],.17,.17,length,16,[Math.PI/2,0,0],damage);
   for(const z of [-length*.33,length*.34])cylinder(g,damage?mat.rust:mat.steel,[0,0,z],.176,.176,.055,16,[Math.PI/2,0,0]);
-  if(!damage)cylinder(g,mat.red,[0,0,length/2+.34],0,.17,.68,16,[Math.PI/2,0,0]);
+  if(!damage)cylinder(g,mat.red,[0,0,length/2+.34],0,.17,.68,16,[Math.PI/2,0,0]).name='missile-nose';
   cylinder(g,mat.dark,[0,0,-length/2-.018],.12,.14,.04,12,[Math.PI/2,0,0]);
   for(let i=0;i<4;i++){
    const fin=group(g,'missile-fin');fin.rotation.z=i*Math.PI/2;
@@ -346,6 +349,17 @@ export function createStrategicSiteLibrary(atlas){
    const root=template.clone(true);root.updateMatrixWorld(true);
    return {root,site:STRATEGIC_SITES.find(s=>s.id===id),state,bounds:new THREE.Box3().setFromObject(root,true)};
   },
+  articulated(id,{state='intact'}={}){
+   if(disposed)throw Error('Strategic site library has been disposed');
+   const key=id+':'+state,template=templates.get(key);if(!template)throw RangeError('Unknown strategic site or state');
+   if(!articulatedTemplates.has(key)){
+    const root=new THREE.Group();root.name=template.name;root.userData=structuredClone(template.userData);
+    siteBase(root,state==='destroyed');({radio,radar,sam})[id](root,state==='destroyed');
+    const detail=group(root,'fixed-detail');for(const o of [...root.children])if(o.isMesh)detail.attach(o);
+    root.updateMatrixWorld(true);articulatedTemplates.set(key,root);
+   }
+   const root=articulatedTemplates.get(key).clone(true);root.updateMatrixWorld(true);return root;
+  },
   clearance(id,{state='intact',profile='horse'}={}){
    if(disposed)throw Error('Strategic site library has been disposed');
    const template=templates.get(id+':'+state);if(!template)throw RangeError('Unknown strategic site or state');
@@ -354,6 +368,6 @@ export function createStrategicSiteLibrary(atlas){
    return structuredClone(clearances.get(key));
   },
   stats(){return {geometries:geometries.size,materials:materials.size,textures:textures.size,templates:templates.size,disposed};},
-  dispose(){if(disposed)return;disposed=true;for(const g of geometries)g.dispose();for(const m of materials)m.dispose();for(const t of textures)t.dispose();templates.clear();cache.clear();clearances.clear();geometries.clear();materials.clear();textures.clear();},
+  dispose(){if(disposed)return;disposed=true;for(const g of geometries)g.dispose();for(const m of materials)m.dispose();for(const t of textures)t.dispose();templates.clear();articulatedTemplates.clear();cache.clear();clearances.clear();geometries.clear();materials.clear();textures.clear();},
  };
 }

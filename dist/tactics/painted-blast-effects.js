@@ -36,6 +36,8 @@ function burstMaterial(texture){return new T.ShaderMaterial({transparent:true,de
  void main(){if(world.y<.008)discard;vec4 c=mix(frame(floor(phase)),frame(ceil(phase)),smoothstep(.0,1.0,fract(phase)));c.a*=opacity;if(c.a<.01)discard;gl_FragColor=c;
  #include <colorspace_fragment>
  }`});}
+// Share the approved painted burst skin with large environment destruction.
+export {burstMaterial as paintedBurstMaterial};
 
 export async function loadPaintedBlastTextures(loader){
  const textures=[];

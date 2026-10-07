@@ -9,7 +9,8 @@ layouts retain usable approaches within 8 × 8; their placement footprint is
 
 This is an **art library and comparison study**. The sites are not yet registered
 as editor props and do not implement strategic effects, targeting or destruction
-events. The two states are static models; there is no destruction animation.
+events. The two states also serve as exact endpoints for the separate
+[destruction animation study](STRATEGIC-DESTRUCTION-HANDOFF.md).
 
 ## Review checklist
 

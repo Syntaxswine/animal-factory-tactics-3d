@@ -2,7 +2,7 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
-for(const file of ['strategic-sites.js','strategic-site-clearance.js','strategic-sites-study.js','strategic-sites-study.html','strategic-sites-study.css'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+for(const file of ['strategic-sites.js','strategic-site-clearance.js','strategic-sites-study.js','strategic-sites-study.html','strategic-sites-study.css','site-destruction-geometry.js','strategic-site-destruction.js','strategic-destruction-effects.js','strategic-destruction-study.js','strategic-destruction-study.html','strategic-destruction-study.css'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.copyFileSync(new URL('dist/assets/environment/strategic-sites/manifest.json',root),new URL('.pages-output/assets/environment/strategic-sites/manifest.json',root));
 for(const file of ['campaign.html','campaign.css','campaign-page.js','campaign-opening.js','campaign-model.js','campaign-save.js','campaign-store.js','campaign-battle.js','sector-inventory.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['interior-fog.js','interior-fog-scene.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
@@ -25,4 +25,4 @@ console.log('Built Animal Factory Tactics 3D landing page.');
 
 fs.cpSync(new URL('dist/tactics/sector-library/',root),new URL('.pages-output/tactics/sector-library/',root),{recursive:true});
 import {checkModuleClosure} from './check-module-closure.mjs';
-checkModuleClosure(new URL('.pages-output/',root),['tactics/strategic-sites-study.js','tactics/campaign-page.js','tactics/barrel-blast-study.js','tactics/tank-blast-study.js','tactics/painted-fire-study.js','tactics/helicoid-shot-study.js','tactics/battle-3d.js','tactics/editor-3d.js','tactics/title-3d.js','tactics/overmap.js','tactics/roof-mantle-study.js','tactics/ledge-descent-study.js']);
+checkModuleClosure(new URL('.pages-output/',root),['tactics/strategic-sites-study.js','tactics/strategic-destruction-study.js','tactics/campaign-page.js','tactics/barrel-blast-study.js','tactics/tank-blast-study.js','tactics/painted-fire-study.js','tactics/helicoid-shot-study.js','tactics/battle-3d.js','tactics/editor-3d.js','tactics/title-3d.js','tactics/overmap.js','tactics/roof-mantle-study.js','tactics/ledge-descent-study.js']);
