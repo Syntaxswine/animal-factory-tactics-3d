@@ -88,6 +88,32 @@ owned; disposal releases only effect cards and materials.
 The library's new `articulated()` accessor lazily supplies an unbatched hierarchy
 for authoring; ordinary `build()` assets retain the approved batched geometry.
 
+## Scorched ground
+
+Both viewers now include **Burn marks**, enabled by default and independent of
+the explosions/smoke toggle. Intact sites stay clean. Four overlapping painted
+stains per site appear from 0.5 to 2 seconds and remain beneath the settled wreck.
+Broad marks cross paving joins, with broken alpha edges and translucent areas
+that retain the original concrete. The shader clips to the local 8 by 8 slab,
+including when the whole site is rotated or translated. Foundations and raised
+equipment occlude the flat paint through ordinary depth testing.
+
+`createSiteScorch(atlas, siteId)` in `strategic-site-scorch.js` returns a separate
+`root`, `setAmount(0..1)`, `at(seconds)`, `diagnostics()` and `dispose()`. Place this
+root with the same transform as the site's root. Load `SITE_SCORCH_ATLAS` with
+`SRGBColorSpace`. The atlas is caller-owned; the
+decal owns its one eight-triangle mesh and material. The exported asset manifest
+names this companion layer. The structural library and passage masks are unchanged.
+
+The [existing approved scorch atlas](strategic-destruction-review/SCORCH-ATLAS.md)
+is reused byte-for-byte from the earlier ground-fire study. This is soot painted
+on the ground, separate from the character ash-pile texture. It creates no new
+burning terrain, obstruction or damage rules. The layer is hidden in grey and
+wireframe comparison modes so it cannot become an opaque rectangular mesh.
+
+Run `node --test tests/strategic-site-scorch.test.mjs` and
+`node tools/check-strategic-scorch.mjs` for the focused follow-up checks.
+
 ## Validation
 
 Run the focused geometry and motion tests:

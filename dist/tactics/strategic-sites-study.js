@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import {STRATEGIC_SITES,STRATEGIC_SITE_ATLAS,createStrategicSiteLibrary} from './strategic-sites.js';
 import {SITE_CLEARANCE_PROFILES} from './strategic-site-clearance.js';
+import {SITE_SCORCH_ATLAS,createSiteScorch} from './strategic-site-scorch.js';
 import {createLightHorse,LIGHT_ATLAS} from './horse-light-model.js';
 import {createModelPaint,MODEL_PAINT} from './horse-model-paint.js';
 const $=id=>document.getElementById(id),stage=$('stage');
@@ -14,11 +15,14 @@ async function start(){
  Object.assign(sun.shadow.camera,{left:-20,right:20,top:15,bottom:-15,near:.1,far:60});sun.shadow.bias=-.00015;sun.shadow.normalBias=.015;scene.add(sun);
  const fill=new THREE.DirectionalLight(0xe0eeff,.7);fill.position.set(6,6,-8);scene.add(fill);
  const loader=new THREE.TextureLoader();
- const [atlas,horseAtlas,horsePaint,data]=await Promise.all([
+ const loaded=await Promise.allSettled([
   loader.loadAsync(STRATEGIC_SITE_ATLAS),loader.loadAsync(LIGHT_ATLAS),loader.loadAsync(MODEL_PAINT),
   fetch('./horse-10k-data.json').then(r=>{if(!r.ok)throw Error('Horse model failed to load');return r.json();}),
+  loader.loadAsync(SITE_SCORCH_ATLAS),
  ]);
- for(const t of [atlas,horseAtlas,horsePaint]){t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());}
+ if(loaded.some(r=>r.status==='rejected')){for(const r of loaded)if(r.status==='fulfilled'&&r.value?.isTexture)r.value.dispose();renderer.dispose();renderer.domElement.remove();throw loaded.find(r=>r.status==='rejected').reason;}
+ const [atlas,horseAtlas,horsePaint,data,scorchAtlas]=loaded.map(r=>r.value);
+ for(const t of [atlas,horseAtlas,horsePaint,scorchAtlas]){t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());}
  const library=createStrategicSiteLibrary(atlas),horse=createLightHorse(data,horseAtlas),paint=createModelPaint(renderer,horse,horsePaint);
  // A generic Object3D clone keeps a SkinnedMesh's original skeleton. Use two
  // independently bound horses so each scale reference follows its own root.
@@ -44,7 +48,7 @@ async function start(){
  const bodyOutline=lineLayer(0xfff1bd,.65,2048),contacts=lineLayer(0xff7755,1);bodyOutline.name='body-clearance-probe';contacts.name='body-clearance-contacts';
  bodyOutline.material.depthTest=contacts.material.depthTest=false;bodyOutline.renderOrder=2;contacts.renderOrder=3;
  function setLines(line,points){const p=line.geometry.attributes.position;if(points.length>p.count)throw Error('Overlay capacity exceeded');points.forEach((v,i)=>p.setXYZ(i,...v));p.needsUpdate=true;line.geometry.setDrawRange(0,points.length);}
- let azimuth=.66,elevation=.50,zoom=1,selection=[],tags=[],disposed=false,ppu=58,clearanceMaps=[],placementCell=[1,7],inspectedCell=null;
+ let azimuth=.66,elevation=.50,zoom=1,selection=[],scorches=[],tags=[],disposed=false,ppu=58,clearanceMaps=[],placementCell=[1,7],inspectedCell=null;
  const focus=new THREE.Vector3(),bounds=new THREE.Box3();
  const idForCell=c=>c.join(','),reachable=(map,c)=>map.cells.some(t=>t.x===c[0]&&t.z===c[1]&&t.reachable);
  function addTag(text,point,kind=''){
@@ -55,6 +59,7 @@ async function start(){
   zoom=1;render();
  }
  function rebuild(){
+  for(const scorch of scorches)scorch.dispose();scorches=[];
   models.clear();horses.clear();grids.clear();$('labels').replaceChildren();tags=[];
   const id=$('site').value,site=STRATEGIC_SITES.find(s=>s.id===id),states=$('mode').value==='pair'?['intact','destroyed']:[$('mode').value];
   // State-independent bounds prevent the slab from sliding or changing size
@@ -64,6 +69,7 @@ async function start(){
   if($('frame').value==='ground')localBounds.max.y=3.3;
   selection=states.map((state,i)=>{
    const asset=library.build(id,{state}),x=states.length===2?(i-.5)*10.2:0;asset.root.position.x=x;models.add(asset.root);
+   const scorch=createSiteScorch(scorchAtlas,id);scorch.root.position.x=x;scorches.push(scorch);scene.add(scorch.root);
    bounds.union(localBounds.clone().translate(new THREE.Vector3(x,0,0)));
    const grid=new THREE.LineSegments(gridGeometry,gridMaterial);grid.position.x=x;grids.add(grid);
    horses.add(workers[i].root);
@@ -137,7 +143,7 @@ async function start(){
   placementCell=cell?cell.slice():null;$('tile').value=cell?idForCell(cell):'outside';placeWorkers();
   $('placement').textContent=placementDescription();render();return true;
  }
- function syncUrl(){const p=new URLSearchParams(location.search);for(const id of ['site','mode','view','frame','scale','profile'])p.set(id,$(id).value);for(const id of ['passage','foundations','ruler'])p.set(id,$(id).checked?'1':'0');history.replaceState(null,'','?'+p);}
+ function syncUrl(){const p=new URLSearchParams(location.search);for(const id of ['site','mode','view','frame','scale','profile'])p.set(id,$(id).value);for(const id of ['passage','foundations','ruler','scorch'])p.set(id,$(id).checked?'1':'0');history.replaceState(null,'','?'+p);}
  function render(){
   if(disposed)return;const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;
   renderer.setSize(w,h,false);camera.position.copy(focus).add(new THREE.Vector3(Math.sin(azimuth)*Math.cos(elevation),Math.sin(elevation),Math.cos(azimuth)*Math.cos(elevation)).multiplyScalar(36));
@@ -155,6 +161,7 @@ async function start(){
   bodyOutline.visible=contacts.visible=Boolean(inspectedCell)&&$('passage').checked&&$('probe').checked;
   models.traverse(o=>{if(o.isMesh)o.material.wireframe=$('wire').checked;});
   greyMaterial.wireframe=$('wire').checked;scene.overrideMaterial=$('grey').checked?greyMaterial:null;
+  scorches.forEach((s,i)=>s.setAmount(selection[i].state==='destroyed'&&$('scorch').checked&&!$('grey').checked&&!$('wire').checked?1:0));
   // Keep the colored fitting overlays readable in grey sculpt mode.
   fitting.visible=false;renderer.render(scene,camera);fitting.visible=true;
   const priorOverride=scene.overrideMaterial;scene.overrideMaterial=null;renderer.autoClear=false;
@@ -165,7 +172,7 @@ async function start(){
  }
  const params=new URLSearchParams(location.search);
  for(const id of ['site','mode','view','frame','scale','profile'])if([...$(id).options].some(o=>o.value===params.get(id)))$(id).value=params.get(id);
- for(const id of ['passage','foundations','ruler'])if(params.has(id))$(id).checked=params.get(id)==='1';
+ for(const id of ['passage','foundations','ruler','scorch'])if(params.has(id))$(id).checked=params.get(id)==='1';
  $('site').onchange=()=>{zoom=1;placementCell=[1,7];inspectedCell=null;rebuild();};
  $('mode').onchange=rebuild;
  $('frame').onchange=rebuild;
@@ -175,7 +182,7 @@ async function start(){
  $('view').onchange=()=>{orientation();syncUrl();};
  $('scale').onchange=()=>{zoom=1;render();syncUrl();};
  for(const id of ['grid','horse','grey','wire','probe'])$(id).onchange=render;
- for(const id of ['passage','foundations','ruler'])$(id).onchange=()=>{syncUrl();render();};
+ for(const id of ['passage','foundations','ruler','scorch'])$(id).onchange=()=>{syncUrl();render();};
  $('reset').onclick=()=>{orientation();};
  let pointer=null;const canvas=renderer.domElement;
  canvas.onpointerdown=e=>{canvas.setPointerCapture(e.pointerId);pointer={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false};};
@@ -190,13 +197,13 @@ async function start(){
  canvas.onpointercancel=()=>pointer=null;
  canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=THREE.MathUtils.clamp(zoom*Math.exp(-e.deltaY*.001),.45,2.8);render();},{passive:false});
  rebuild();orientation();const resize=new ResizeObserver(render);resize.observe(stage);
- function diagnostics(){return {site:$('site').value,mode:$('mode').value,ppu,focus:focus.toArray(),zoom,azimuth,elevation,placementCell,inspectedCell,clearance:clearanceMaps,resources:library.stats(),gpu:{...renderer.info.memory},workers:workers.slice(0,selection.length).map(w=>({root:w.root.position.toArray(),scale:w.root.scale.toArray(),...w.diagnostics()})),assets:selection.map(a=>({id:a.site.id,state:a.state,tiles:a.site.tiles,foundations:a.root.userData.foundations,bounds:new THREE.Box3().setFromObject(a.root,true),triangles:(()=>{let n=0;a.root.traverse(o=>{if(o.isMesh)n+=o.geometry.attributes.position.count/3;});return n;})()})),disposed};}
+ function diagnostics(){return {site:$('site').value,mode:$('mode').value,ppu,focus:focus.toArray(),zoom,azimuth,elevation,placementCell,inspectedCell,clearance:clearanceMaps,scorch:scorches.map(s=>s.diagnostics()),resources:library.stats(),gpu:{...renderer.info.memory},workers:workers.slice(0,selection.length).map(w=>({root:w.root.position.toArray(),scale:w.root.scale.toArray(),...w.diagnostics()})),assets:selection.map(a=>({id:a.site.id,state:a.state,tiles:a.site.tiles,foundations:a.root.userData.foundations,bounds:new THREE.Box3().setFromObject(a.root,true),triangles:(()=>{let n=0;a.root.traverse(o=>{if(o.isMesh)n+=o.geometry.attributes.position.count/3;});return n;})()})),disposed};}
  function dispose(){
-  if(disposed)return;disposed=true;resize.disconnect();library.dispose();paint.dispose();
+  if(disposed)return;disposed=true;resize.disconnect();library.dispose();paint.dispose();for(const scorch of scorches)scorch.dispose();scorchAtlas.dispose();
   for(const worker of workers){worker.dispose();worker.skeleton.dispose();}
   for(const t of [atlas,horseAtlas])t.dispose();floor.geometry.dispose();floor.material.dispose();gridGeometry.dispose();gridMaterial.dispose();greyMaterial.dispose();cellsMesh.dispose();cellGeometry.dispose();cellMaterial.dispose();for(const layer of [paths,bases,rulers,bodyOutline,contacts]){layer.geometry.dispose();layer.material.dispose();}renderer.dispose();
  }
- window.sitesStudy={ready:true,scene,camera,renderer,models,library,selection:()=>selection,diagnostics,dispose,placeHorse,select(id,mode='pair'){if(!STRATEGIC_SITES.some(s=>s.id===id)||!['pair','intact','destroyed'].includes(mode))throw RangeError('Invalid study selection');if(id!==$('site').value){zoom=1;placementCell=[1,7];inspectedCell=null;}$('site').value=id;$('mode').value=mode;rebuild();},view(name){if(![...$('view').options].some(o=>o.value===name))throw RangeError('Invalid view');$('view').value=name;orientation();syncUrl();}};
+ window.sitesStudy={ready:true,scene,camera,renderer,models,library,get scorches(){return scorches;},selection:()=>selection,diagnostics,dispose,placeHorse,select(id,mode='pair'){if(!STRATEGIC_SITES.some(s=>s.id===id)||!['pair','intact','destroyed'].includes(mode))throw RangeError('Invalid study selection');if(id!==$('site').value){zoom=1;placementCell=[1,7];inspectedCell=null;}$('site').value=id;$('mode').value=mode;rebuild();},view(name){if(![...$('view').options].some(o=>o.value===name))throw RangeError('Invalid view');$('view').value=name;orientation();syncUrl();}};
  window.addEventListener('pagehide',dispose,{once:true});
 }
 start().catch(error=>{$('error').textContent='Could not load strategic sites: '+error.message;console.error(error);});

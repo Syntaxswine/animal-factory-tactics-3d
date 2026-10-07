@@ -11,6 +11,15 @@
   },
   "library": "../../../tactics/strategic-sites.js",
   "atlas": "material-atlas.png",
+  "cosmeticLayers": {
+    "scorch": {
+      "library": "../../../tactics/strategic-site-scorch.js",
+      "atlas": "../../effects/painted-fire/ground-scorch-atlas-v1.png",
+      "surface": "Horizontal hardstanding at local Y=0.24; clipped to the 8 by 8 site",
+      "state": "Static destroyed sites use amount 1; destruction study reveals from 0.5 to 2 seconds and retains it",
+      "scope": "Separate painted layer; no new geometry in clearance, cover, or passage masks"
+    }
+  },
   "ownership": "Build results borrow cached geometry/materials/textures. Remove roots before disposing their library; input atlas remains caller-owned.",
   "integration": "Not registered in the gameplay/editor prop catalog. Clearance is an authored standing-fit proposal, not gameplay navigation. Collision, cover, surface entry, damage events and strategic effects still require integration.",
   "clearance": {

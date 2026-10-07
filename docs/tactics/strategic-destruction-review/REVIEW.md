@@ -46,3 +46,28 @@ Boards: [radio](radio-effects.png), [radar](radar-effects.png),
 - Delivery belongs to `work/strategic-sites`; this branch does not deploy Pages.
   Editor registration, damage triggers, passage-state timing and sound still
   require gameplay integration.
+
+## Scorched-ground follow-up — 9/10
+
+The user requested persistent scorched ground beneath the sites. A separate
+painted layer now covers the blast/impact area on each slab, reusing the approved
+four-cell ground-scorch atlas. The source PNG is unchanged (SHA-256
+`b3455a35d765b4a0c675d2278c2999c02f1e5be67f7c354488312a7262c2a62a`).
+
+The independent review passed **9/10** on 2026-10-07. Fresh static/animation
+views show flat, irregular soot spanning tile joins, clean slab borders and
+readable foundations. The original six structural endpoint hashes, passage
+maps and camera framing remain unchanged. Static and animated aftermaths use
+identical mark geometry; intact sites are clean. Marks reach full strength by
+two seconds and persist through the final hold independently of the smoke.
+
+All **42 focused site, clearance, animation, effects and scorch tests passed**.
+The automated browser check also passed all three sites, including rotated and
+translated slab clipping with zero spill. Isolated scorch rasters have positive
+paint coverage and are pixel-identical after resetting. Whole-scene captures
+retain tiny edge differences as diagnostics; the independent review's whole-
+scene round trips were pixel-identical. The Pages
+build and asset checker passed. Both short-lived review browsers closed.
+
+Scorched comparison captures: [radio](radio-scorch.png),
+[radar](radar-scorch.png), [SAM](sam-scorch.png).
