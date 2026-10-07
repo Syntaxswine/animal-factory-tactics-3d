@@ -213,8 +213,9 @@ export function createStrategicSiteLibrary(atlas){
  }
  function radar(root,damage){
   const base=group(root,'tower-foundations');for(const x of [-1.10,1.10])for(const z of [-.95,.95])footing(base,x+.3,z-.25,.72);
-  // Keep a full standing approach in front of the service door, including pigs.
-  hut(root,-2.65,1.85,1.5,1.50,damage);
+  // Center the 2 x 2 service hut between its four occupied cells, matching
+  // the radio hut's grid convention while preserving the smaller hut body.
+  hut(root,-3,2,1.5,1.50,damage);
   cabinet(root,2.9,2.55,damage);
   if(!damage){
    const trestle=lattice(root,'radar-trestle',2.95,1.1,.76,3);trestle.position.set(.3,.64,-.25);

@@ -86,13 +86,13 @@ try{
  await page.mouse.click(...point);assert.deepEqual(await page.evaluate(()=>window.sitesStudy.diagnostics().placementCell),[1,7]);
  await page.selectOption('#view','front');await page.selectOption('#frame','ground');await page.selectOption('#scale','95');await page.uncheck('#passage');await page.screenshot({path:path.join(out,'radio-door-scale.png')});
  const framedPlayer=await page.evaluate(()=>{const s=window.sitesStudy,d=s.diagnostics(),V=s.camera.position.constructor,w=d.workers[0];return [new V(...w.min).project(s.camera).y,new V(...w.max).project(s.camera).y];});assert(framedPlayer.every(y=>Math.abs(y)<1),'Ground framing must show the entire scale reference');
- // Inspect the 2 x 2 hut at an actual neighboring cover tile, in both states.
+ // Inspect both 2 x 2 huts at actual neighboring cover tiles, in both states.
  await page.selectOption('#view','three');await page.check('#passage');
- for(const state of ['intact','destroyed']){
-  await page.evaluate(state=>window.sitesStudy.select('radio',state),state);
+ for(const site of ['radio','radar'])for(const state of ['intact','destroyed']){
+  await page.evaluate(([site,state])=>window.sitesStudy.select(site,state),[site,state]);
   assert.equal(await page.evaluate(()=>window.sitesStudy.placeHorse([2,6])),true);
   assert.deepEqual((await page.evaluate(()=>window.sitesStudy.diagnostics())).workers[0].root,[-1.5,.24,2.5]);
-  await page.screenshot({path:path.join(out,'radio-hut-cover-'+state+'.png')});
+  await page.screenshot({path:path.join(out,site+'-hut-cover-'+state+'.png')});
  }
  await page.uncheck('#passage');
  await page.selectOption('#scale','fit');await page.selectOption('#frame','site');await page.selectOption('#view','three');await page.uncheck('#foundations');
@@ -116,6 +116,6 @@ try{
  assert.equal(await page.locator('.measure:visible').count(),0,'Hide vertical labels at tiny fit scales');
  await page.evaluate(()=>window.sitesStudy.dispose());assert.equal((await page.evaluate(()=>window.sitesStudy.diagnostics())).disposed,true);
  assert.deepEqual(errors,[],'Browser errors');
- fs.writeFileSync(path.join(out,'browser-check.json'),JSON.stringify({passed:true,checks,lockedCameraComparisons:18,passageProfileComparisons:6,nativePlayerPlacement:true,roundedFitInspector:true,errors,gpu:after},null,2));
+ fs.writeFileSync(path.join(out,'browser-check.json'),JSON.stringify({passed:true,checks,lockedCameraComparisons:18,passageProfileComparisons:6,hutCoverPlacements:4,nativePlayerPlacement:true,roundedFitInspector:true,errors,gpu:after},null,2));
  console.log('Strategic sites: '+checks.length+' model/view combinations, 18 locked-camera damage swaps, six passage/profile maps, native player placement, controls and lifecycle passed');
 }finally{await review.closeReview();}
