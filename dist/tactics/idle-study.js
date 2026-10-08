@@ -36,7 +36,7 @@ try{
   }catch(e){if(current())throw e;}
   finally{if(!adopted){nextMotion?.dispose();nextPaint?.dispose();nextWorker?.skeleton.dispose();nextWorker?.dispose();for(const t of textures)t.dispose();}}
  }
- // Each seed is its own loop; switching rebuilds the motion (about 0.15 s: the character's fitted limits ship in
+ // Each seed is its own loop; switching rebuilds the motion (0.15-0.22 s: the character's fitted limits ship in
  // idle-fits.js) and keeps the time. The gaze line starts at the character's own eyes.
  function load(seed){motion?.dispose();motion=createIdle(worker,{seed,eye});showSchedule();}
  function showSchedule(){$('time').max=motion.length;time%=motion.length;

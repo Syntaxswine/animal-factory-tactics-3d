@@ -555,9 +555,9 @@ skeleton its parts had and their weights.
 
 ## Independent integration review — October 8, 2026
 
-Reviewed `0ab4372`. Approved as a separate animation study with the viewer correction below; this does not enable battle idles. The restored neck bend and restrained weight shifts read well on the horse and donkey. The limited sheep and pig-director motion remains a documented clothing limitation.
+Reviewed `0ab4372` and the subsequent `6d1fba7` revision. Approved as a separate animation study with the viewer correction below; this does not enable battle idles. The restored neck bend and restrained weight shifts read well on the horse and donkey. The latest sheep can turn much farther left, and the pig director has more body movement; their remaining head restrictions are documented clothing limitations.
 
-All 30 focused tests passed: idle motion, clothing, cached fits, distribution module graph and Pages file coverage. Independently inspected the packaged horse, donkey and pig director, plus character/seed changes during playback.
+All 39 focused tests passed on the latest revision: idle motion, clothing, cached fits, distribution module graph and Pages file coverage. This includes refitting all eleven mammals. Independently inspected the packaged horse, donkey, sheep and pig director across the two revisions, plus character/seed changes during playback. The earlier 30-test suite also passed before the revision arrived.
 
 Found and reproduced a viewer failure: play the study, then select the rabbit. While its paint loads, the old `cast()` cleared `motion`; the next frame read `motion.length`, threw, and stopped scheduling frames. The correction keeps the previous actor alive until a complete replacement is ready, ignores superseded loads, disposes unadopted actors and respects page disposal. Repeated character changes and a seed change now keep the timeline advancing, including through its wrap, with no new console errors. Syntax and the rebuilt Pages module checks also pass.
 
