@@ -1,0 +1,28 @@
+{
+  "browserConfigurations": 35,
+  "seekSamples": 866,
+  "characters": [
+    "horse",
+    "goat",
+    "bull",
+    "cow",
+    "donkey",
+    "sheep",
+    "skunk",
+    "pig-foreman",
+    "pig-director",
+    "rabbit",
+    "dog"
+  ],
+  "errors": [],
+  "stats": {
+    "before": {
+      "geometries": 13,
+      "textures": 6
+    },
+    "after": {
+      "geometries": 13,
+      "textures": 6
+    }
+  }
+}
