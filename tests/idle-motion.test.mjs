@@ -139,6 +139,13 @@ test('looking down, the neck bends forward like a heavy branch and carries the h
   assert.ok(moved.length()<.08,'the bend stays within the neck skin');assert.ok(chest<-1,'the chest rounds forward '+(-chest).toFixed(1)+' degrees');
  },{seed:deepest.seed});
 });
+test('the chest rounds no further than its fitted rounding, on every mammal over four of its own seeds',()=>{
+ // the deepest glances ask the chest for 30% of the look below 12 degrees down, up to 10; a rig whose clothes allow less
+ // rounds only that far
+ MAMMALS.forEach((profile,i)=>{for(const seed of [1,2,3,4].map(k=>k+11*i))fixture(({worker,motion})=>{const top=motion.fitted.rounding;let most=-Infinity,at=0;
+  for(let t=0;t<motion.length;t+=.05){motion.at(t);const flex=-new T.Euler().setFromQuaternion(bone(worker,'spine').quaternion,'YXZ').z*DEG;if(flex>most){most=flex;at=t;}}
+  assert.ok(most<=top+.25,`${profile.id} seed ${seed} rounds its chest ${most.toFixed(2)} degrees at ${at.toFixed(2)} s (fitted ${top})`);},{profile,seed});});
+});
 test('leaning toward one hoof: the hips move over toward it and hike, and that leg does not buckle, on every mammal',()=>{
  let checked=0;
  for(const profile of [null,...MAMMALS])for(const seed of [1,2])fixture(({worker,motion})=>{worker.pose('neutral');worker.root.updateMatrixWorld(true);const restKnee={[-1]:knee(worker,-1),[1]:knee(worker,1)},restZ=wp(worker,'hips').z;

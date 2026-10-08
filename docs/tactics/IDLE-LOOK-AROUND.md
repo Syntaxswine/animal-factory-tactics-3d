@@ -190,8 +190,7 @@ Each character's limits are measured on its own skinned meshes, by two tests on 
   Its depth in one is its distance from that garment's nearest point, inside where it lies behind that
   point by the angle-weighted pseudo-normal (Bærentzen and Aanæs; exact for a closed surface). Each garment
   is first wound consistently, triangle by triangle across its edges and turned outward: a few welded-on
-  parts are wound against their neighbours (298 edges of the pig foreman's trousers, belt and braces). By a
-  knife edge (a thin band's rim, its faces 145° or more apart) a point counts as outside. Skin already
+  parts are wound against their neighbours (298 edges of the pig foreman's trousers, belt and braces). Skin already
   inside the cloth at rest is hidden there, however deep it goes; any sinking shows where the skin beside
   it, which showed, goes under.
 
@@ -275,7 +274,7 @@ workers.
 | builds | all eleven, seeds 1–16 and loops of 12, 12.37, 47.3 and 120 s | no failures; balance residual at most 0.36 mm; seam velocity jump at most 0.04 mm/s |
 
 **Tests**: three files, about five minutes on parallel workers.
-- `tests/idle-motion.test.mjs` (20):
+- `tests/idle-motion.test.mjs` (21):
   - scale, bone lengths and legal IK over the whole loop, on all eleven and twelve horse seeds; the
     shoulders' shrug is the only joint that moves, up the chest, under 15 mm;
   - hooves planted: no floor vertex moves, on all eleven;
@@ -295,7 +294,8 @@ workers.
     trunk's more than 30 ms behind;
   - the arms follow at 5 Hz on the rigs whose chest twists less than 10°, at 2 Hz on the rest, and sooner
     at 5;
-  - looking down, the head joint is carried more than 3 cm forward and the chest rounds;
+  - looking down, the head joint is carried more than 3 cm forward and the chest rounds; the chest never
+    rounds further than its fitted rounding, on all eleven over four seeds each;
   - the neck: the neck bone at the branch's base and the head joint at its tip, bent by the branch's chord
     toward the face, restated apart from the module and posed on all eleven;
   - leaning: the hips move toward the hoof and hike as far as the fitted share of a full lean, the nearer
@@ -316,6 +316,14 @@ workers.
   limits and 5° past them.
 - `tests/idle-fits.test.mjs` (3): every mammal has its row in `idle-fits.js` and reads it; a refit of the
   horse, the rabbit and the pig foreman matches; a rig's key changes when the rig does.
+
+**Mutations.** 23 mutants of v3, each on an untracked copy of the module and of the test files that should
+catch it (`mutate-v3.mjs` in the session's scratchpad), across the measure (the graze, the crossing's grade,
+covered skin, the garments' winding), the neck and its cloth, the fitted shares, the plan's rules, the fit
+margins and the table's key. A mutant in the fit code shows only through a refit, since the fits ship in a
+table. All are killed but two: "the chest's rounding not fitted", which a new test (the chest never rounds
+further than its fit) now kills; and "no knife-edge rule", which changed no character's fit, so the rule was
+dropped (below).
 
 **Browser** (`tools/check-idle-study.mjs`, preview on port 4486): 35 configurations and 866 seeks with no
 errors; GPU resources stable across repeated seeking; the look buttons work; unknown controls and values,
@@ -343,6 +351,8 @@ In v3:
   over finely weighted skin, a knot and its ends projected onto different skin, and the outer layers'
   own weights each made new crossings; the rabbit, the cow and the dog lost their turns. Only the mane, with
   nothing on it, keeps it.
+- **A knife-edge rule** (a point by a thin band's rim, its faces 145° or more apart, counts as outside): no
+  character's fit changed without it.
 - **Neck skin the cloth holds losing its head weight.** The cow lost its turn left; the sheep and the pig
   director gained nothing.
 - **Swinging held arms further out** (to 10°): the sleeves crossed the shirts at the armpits before the
@@ -382,7 +392,7 @@ In v2 and v1:
 | M2 the neck does not bend | a runtime neck bone, the skin and cloth weighted along it | the neck geometry is pinned by a test |
 | S1 a slid crossing may sink without limit; the arm fit clears a rule | covered skin, with an inside test for closed garments; weight shift, ease, shrug and rounding fitted per character | the census finds none; the pig foreman's forearm is held, not sunk |
 | S2 glances become stares at the floor | after a glance the gaze rests ahead or drifts up | at most 2.75 s below −12° a stretch; a median 7% of a loop (at most 24%) |
-| S3 test gaps | limits posed and 5° past them, by an independent census; the neck pinned; a 1 ms seam stencil; the 5 Hz arms; the all-pairs census; each character on its own seed; glance statistics | 25 tests in three files |
+| S3 test gaps | limits posed and 5° past them, by an independent census; the neck pinned; a 1 ms seam stencil; the 5 Hz arms; the all-pairs census; each character on its own seed; glance statistics | 26 tests in three files; 22 of 22 mutants killed |
 | S4 doc claims | this document: the rabbit's and the dog's 2.8 and 2.5 cm, the dog's 7.9 cm sole, 5.67 cm, the residual and the head turn measured afresh; the equivalence claims and the old neck image gone | — |
 | S5 breaths barely visible | the shrug is 5 mm a unit (from 4) | 2.5–6.4 mm a breath on eight characters |
 | nits | the gaze from each character's own eyes; `set({gaze})` takes only true or false; a second idle on one rig is refused; the trouser cuffs documented; characters on their own seeds in the tests; a character loads in 0.15–0.2 s; phantom-wrench prints its 0.5% gate as 0.5% | — |

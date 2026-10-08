@@ -313,13 +313,11 @@ export function createIdle(worker,{seed=1,length=IDLE.length,eye=null,refit=fals
   // surface), as deep as it is far from that point; its depth is the deepest it lies in any one garment, or 0.
   const sunk=(p,list,cornersOf,reach)=>{const near=new Map();for(const b of list){const r=nearest(p,cornersOf(b));if(r.d2>=reach*reach)continue;const m=tri[b].mesh,o=near.get(m);if(!o||r.d2<o.best.d2)near.set(m,{best:r,bn:b});}
    let deep=0;for(const {best,bn} of near.values()){
-   const t=tri[bn],N=[0,0,0];let total=0;const add=(n,w=1)=>{const u=outward(n,cornersOf(n));for(let x=0;x<3;x++)N[x]+=w*u[x];total+=w;};
+   const t=tri[bn],N=[0,0,0],add=(n,w=1)=>{const u=outward(n,cornersOf(n));for(let x=0;x<3;x++)N[x]+=w*u[x];};
    if(best.feat<0)add(bn);else if(best.feat<3)for(const m of byEdge.get(edgeKey(t.keys[best.feat],t.keys[(best.feat+1)%3])))add(m);
    else{const key=t.keys[best.feat-3];for(const m of byCorner.get(key)){const c=cornersOf(m),i=tri[m].keys.indexOf(key),o=c[i],u=c[(i+1)%3].map((x,k)=>x-o[k]),v=c[(i+2)%3].map((x,k)=>x-o[k]);
      add(m,Math.acos(clamp((u[0]*v[0]+u[1]*v[1]+u[2]*v[2])/((Math.hypot(...u)*Math.hypot(...v))||1),-1,1)));}}
-   // at a knife edge (a thin band's rim, its faces turned 145 degrees or more apart) the sum is too small to tell, and a
-   // point beside it is outside: the band is thinner there than any skin could sink
-   if(Math.hypot(...N)>=.3*total&&best.e[0]*N[0]+best.e[1]*N[1]+best.e[2]*N[2]<0)deep=Math.max(deep,Math.sqrt(best.d2));}
+   if(best.e[0]*N[0]+best.e[1]*N[1]+best.e[2]*N[2]<0)deep=Math.max(deep,Math.sqrt(best.d2));}
    return deep;};
   // How far a crossing goes: the shallower of the two triangles' pokes through the other's plane, each the less of its
   // reaches either side of that plane (their overlap along each one's normal). Two triangles meeting nearly flat, a coarse
