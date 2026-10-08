@@ -1,3 +1,4 @@
+import {previewGroundFire} from '../ground-fire.js';
 import {intactSite,siteId,siteEscapeSteps} from '../strategic-site-rules.js';
 import {flameStrategicSites} from '../strategic-site-damage.js';
 import {presentBarrel,isExplosiveBarrel} from '../explosive-barrels.js';
@@ -290,6 +291,7 @@ export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel
   return p;
  }
  if(WEAPONS[a.weapon].blast)return explosivePreview(s,a,b,WEAPONS[a.weapon]);
+ if(b.ground)return previewGroundFire(s,a,b,WEAPONS[a.weapon],combatCosts(s),burst,aimLevel);
  if(!Object.hasOwn(AIM_ZONES,zone))return {ok:false,reason:'Choose an aim location'};
  const aiming=shotAim(WEAPONS[a.weapon],aimLevel,burst);if(!aiming)return {ok:false,reason:'Choose an aim level'};
  const aim=AIM_ZONES[zone];
@@ -380,7 +382,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   const accurate=w.incendiary?false:shotRoll?shotRoll.rolledHit:w.blast?false:random(s)*100<shotChance;
   const pellets=w.pellets?shotgunTrajectories(s,shooter,f.aim,{accurate,zone:f.zone,chance:shotChance,shotRoll,precision:w.precision??80,reach:w.range*1.5,pellets:w.pellets},()=>random(s)):null;
   const shot=pellets?pellets[0]:w.blast?explosiveTrajectory(s,shooter,f.aim,w,f.p,()=>random(s)):ballistic?bulletTrajectory(s,shooter,f.aim,{accurate,zone:f.zone,chance:shotChance,shotRoll,precision:w.precision??80,burst:f.p.rounds>1,reach:w.range*1.5},()=>random(s)):null;
-  if(ballistic&&!target.barrel&&!target.structure&&alive(target)){
+  if(ballistic&&!target.ground&&!target.barrel&&!target.structure&&alive(target)){
    // A clear aimed ray threatens the target even if this round misses. A solid
    // obstacle intercepting that ray prevents distant fire from pinning them.
    const threat=bulletTrajectory(s,shooter,f.aim,{accurate:true,zone:f.zone,reach:w.range*1.5},()=>0);
@@ -425,7 +427,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
 }
 
 export function groundTarget(point){return {...point,barrel:false,id:'ground',name:'Terrain',team:'terrain',hp:1,ground:true,weapon:'hands'};}
-export function attackGround(s,u,point){if(!WEAPONS[u?.weapon]?.blast&&!WEAPONS[u?.weapon]?.incendiary)return false;return attack(s,u,groundTarget(point));}
+export function attackGround(s,u,point){if(!WEAPONS[u?.weapon]?.mag)return false;return attack(s,u,groundTarget(point));}
 export function equip(s,u,id,slot=1){if(!canControl(s,u)||s.queue.length||!WEAPONS[id]||u.weapon===id||!(id==='hands'||u.pack.some(i=>i.type==='weapon'&&i.kind===id)))return false;const stored=id!=='hands'&&!u.slots.includes(id),cost=stored?3:0;if(combatCosts(s)&&u.ap<cost)return false;const slots=[...u.slots];if(stored)slots[slot===0?0:1]=id;const layout=gridLayout({...u,slots});if(!layout.ok)return false;if(combatCosts(s))u.ap-=cost;u.slots=slots;storeLayout(u,layout);u.weapon=id;if(u.stats)u.accuracy=weaponAccuracy(u);if(id==='flamethrower')delete u.tanksExploded;u.overwatch=null;log(s,u.name+' equipped '+WEAPONS[id].name+'.');return true;}
 export function equipCutters(s,u,slot){
  if(!canControl(s,u)||s.queue.length||!u.wireCutters||![0,1].includes(slot)||u.slots.includes('wireCutters'))return false;

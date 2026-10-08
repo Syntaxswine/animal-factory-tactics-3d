@@ -33,6 +33,14 @@ export function renderShotPlanner(node,s,a,b,{zone,aim,burst,onSelect}){
  node.replaceChildren();if(!b)return;
  const heading=document.createElement('h2');heading.id='shot-title';heading.textContent=b.name;
  const subtitle=document.createElement('p');subtitle.className='shot-distance';subtitle.textContent=a.name+' · '+a.ap+' AP available · '+WEAPONS[a.weapon].name+' · '+(Math.hypot(a.x-b.x,a.y-b.y)*METRES_PER_TILE).toFixed(1)+' m';node.append(heading,subtitle);
+ if(b.ground){
+  const graphic=document.createElement('div');graphic.className='ground-shot-graphic';graphic.innerHTML='<svg viewBox="0 0 320 140" aria-hidden="true"><path d="M30 98 160 33 290 98 160 132Z M73 77 203 120 M117 55 247 98 M73 120 203 55 M117 132 247 77" fill="none" stroke="currentColor" stroke-opacity=".3"/><g fill="none" stroke="#a33225" stroke-width="3"><ellipse cx="160" cy="85" rx="31" ry="16"/><path d="M160 51V75 M160 95V119 M108 85H145 M175 85H212"/></g></svg>';node.append(graphic);
+  const modes=document.createElement('div');modes.className='shot-aims';modes.setAttribute('aria-label','Aim level');
+  for(const [key,value]of Object.entries(AIM_LEVELS)){if(!supportsAim(WEAPONS[a.weapon])&&key!=='hip')continue;const p=previewAttack(s,a,b,burst,'torso',null,key),button=document.createElement('button');button.dataset.choice=key;button.dataset.aim=key;button.setAttribute('aria-pressed',String(aim===key));button.textContent=value.label+' · '+p.cost+' AP';button.disabled=!!a.pinned&&key!=='hip';button.onclick=()=>onSelect('torso',key);modes.append(button);}node.append(modes);
+  const p=previewAttack(s,a,b,burst,'torso',null,aim),detail=document.createElement('p');detail.className='shot-detail';detail.textContent=(p.chance!==undefined?p.chance+'% on aim · ':'')+p.cost+' AP. Aim at the tile surface; bullets still strike cover or anyone in their path.';
+  if(p.obstruction)detail.textContent+=' '+(p.obstruction.friendly?'Friendly fire risk: '+p.obstruction.name+' is in the line of fire.':'An obstruction may intercept the shot.');node.append(detail);
+  if(!p.ok){const error=document.createElement('p');error.className='shot-blockers';error.textContent=p.reason;node.append(error);}if(focused)node.querySelector('[data-choice="'+focused+'"]')?.focus({preventScroll:true});return;
+ }
  if(b.structure){
   const p=previewAttack(s,a,b,false,'torso'),note=document.createElement('p');note.className='shot-detail';note.textContent=p.ok?`${p.cost} AP · ${WEAPONS[a.weapon].name}. Fire or a damaging explosion destroys this structure and leaves a wreck. Allies in the blast are at risk.`:p.reason;node.append(note);return;
  }

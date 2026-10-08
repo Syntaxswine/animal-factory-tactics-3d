@@ -13,7 +13,7 @@ const EPS=1e-7;
 export const bodyHeight=u=>u.hp<=0?.3:u.stance==='prone'?.55:u.stance==='kneeling'?1.2:1.8;
 export const muzzleHeight=u=>u.stance==='prone'?.35:u.stance==='kneeling'?.9:1.3;
 export const eyeHeight=muzzleHeight;
-export const targetHeight=(u,zone='torso')=>u.barrel?.4:zone==='weapon'?muzzleHeight(u):bodyHeight(u)*(zone==='head'?.92:zone==='legs'?.28:.72);
+export const targetHeight=(u,zone='torso')=>u.ground?.04:u.barrel?.4:zone==='weapon'?muzzleHeight(u):bodyHeight(u)*(zone==='head'?.92:zone==='legs'?.28:.72);
 const point=(origin,direction,t)=>({x:origin.x+direction.x*t,y:origin.y+direction.y*t,h:origin.h+direction.h*t});
 const slab=(origin,velocity,low,high)=>Math.abs(velocity)<EPS?(origin>=low&&origin<=high?[-Infinity,Infinity]:null):[Math.min((low-origin)/velocity,(high-origin)/velocity),Math.max((low-origin)/velocity,(high-origin)/velocity)];
 

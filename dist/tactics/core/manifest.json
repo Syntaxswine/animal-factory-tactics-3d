@@ -16,7 +16,7 @@
       "upstreamSha256": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262"
     },
     "engine.js": {
-      "reason": "Hand grenades have a five-tile fragmentation blast and immutable release/fuse trajectory events. Flamethrowers destroy exposed strategic sites; explosive targeting supports structures. Support persistent searchable containers alongside body searches; opening and searching remain separate actions. Shoot explosive barrels with normal aim/AP/ammo; share tank blast rules and commit chained barrels once. Flamethrowers use a scenery-clipped lethal area cone; fuel fire ends its three panic turns in permanent death and ash through the casualty pipeline, including elapsed guard settling. Tank blasts record worn-pack rupture, burned remains and fire-cell presentation receipts. Roll firearm probability once with D20 extremes; use shared roll-margin misses for bullets and shells. Shared aimed-shot, burst recoil, leg injury and suppression rules. Retain decorative roof layer for rendering. Expose discovered roof connections and emit committed roof traversal events. Use walking costs and live ramp support at combat query positions. Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events. Apply character identity, allegiance, hostility and noncombatant reactions during playtesting.",
+      "reason": "Context ground targeting permits ordinary firearms with normal AP, ammo and real projectile impacts. Hand grenades have a five-tile fragmentation blast and immutable release/fuse trajectory events. Flamethrowers destroy exposed strategic sites; explosive targeting supports structures. Support persistent searchable containers alongside body searches; opening and searching remain separate actions. Shoot explosive barrels with normal aim/AP/ammo; share tank blast rules and commit chained barrels once. Flamethrowers use a scenery-clipped lethal area cone; fuel fire ends its three panic turns in permanent death and ash through the casualty pipeline, including elapsed guard settling. Tank blasts record worn-pack rupture, burned remains and fire-cell presentation receipts. Roll firearm probability once with D20 extremes; use shared roll-margin misses for bullets and shells. Shared aimed-shot, burst recoil, leg injury and suppression rules. Retain decorative roof layer for rendering. Expose discovered roof connections and emit committed roof traversal events. Use walking costs and live ramp support at combat query positions. Use shared timing, opt-in 3D awareness, stats, stamina and authored door locks. Use fixed cliff costs for all movement and emit committed traversal events. Apply character identity, allegiance, hostility and noncombatant reactions during playtesting.",
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
     "environment.js": {
@@ -40,7 +40,7 @@
       "upstreamSha256": "8cf9aed74b163167aa7e432ad0c744ab9d3f55a30d5a3f3eaf218c163bde4e23"
     },
     "projectiles.js": {
-      "reason": "Use the actual strategic-site triangles for shots and sight; retain open lattice gaps. Trace the actual explosive drum cylinder, including incidental misses and pellets. Share actor intersections with helicoid miss placement while retaining tactical obstacle tracing. Intersect the continuous ramp solid. Trace open tower windows, elevated occupants and welded cliff surfaces. Use physical cliff caps instead of phantom upper slabs.",
+      "reason": "Terrain targets aim at the tile surface rather than a fictional torso. Use the actual strategic-site triangles for shots and sight; retain open lattice gaps. Trace the actual explosive drum cylinder, including incidental misses and pellets. Share actor intersections with helicoid miss placement while retaining tactical obstacle tracing. Intersect the continuous ramp solid. Trace open tower windows, elevated occupants and welded cliff surfaces. Use physical cliff caps instead of phantom upper slabs.",
       "upstreamSha256": "f8b2afc98c686cd892189d17f4fe7cb7ae7c16b8d8f2f8609ca78cf8b3192674"
     },
     "visibility.js": {
@@ -57,7 +57,7 @@
     "blocks.js": "017b2ab668ba62e741d219c584cc586ca121c86d98ae8152d4fd6f7a15c7724b",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
     "editor-model.js": "de903d031f6258118abd519ad41be42a8fe5e07af7380bfac9e0e9d01aaa5498",
-    "engine.js": "bfdbae22d8408d85901d8e5b3f5edff0a1ca2ba5f5608607c124e73778379fde",
+    "engine.js": "04f013de73d4b7d08623d6fec3151c566074ae44ebf3b551eb0c601fff56059e",
     "environment.js": "90bee382317bb2b135439c386c6c1cf361176bc0066165136d173c94328f4e95",
     "explosives.js": "a87d4a10d7b137c725a3f760869a6b2b9ef9e0a89267d743379340f16ab42432",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
@@ -67,7 +67,7 @@
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",
-    "projectiles.js": "cceee9bddb985d596bc1c194b865f1780c615462e117177b5e1f0ee8730dca10",
+    "projectiles.js": "b28f2abb48349b7498b18bc8ae5f59c8b9d35859738722eb0ccd23aca35bf75e",
     "recruits.js": "5e4495962cdad3d0b57f0d1784bddbf54fa785e6e00a9ae932cfb7dbbbeeb81b",
     "sector-rules.js": "d20ee872471a503a60ac706655b19f9ba9857c41882dd6cc6a08d61e3572132a",
     "visibility.js": "f8530edecfdd4007f48ace3cb2ca5241b8a65b9cc21709466bd6e68a87927c33",

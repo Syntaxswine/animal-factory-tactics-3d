@@ -28,6 +28,7 @@ function shotFrame(shooter,target,zone,geometry){
  return {origin,aim};
 }
 function strikesSelected(target,zone,origin,geometry){
+ if(target.ground)return ()=>false;
  if(target.barrel)return ray=>!!barrelIntersection(target,origin,point(ray.direction));
  return ray=>bodyIntersection(target,origin,point(ray.direction),Infinity,geometry.bodyHeight(target))?.zone===zone;
 }
