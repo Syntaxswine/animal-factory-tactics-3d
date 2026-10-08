@@ -1,0 +1,1874 @@
+[
+  {
+    "animal": "horse",
+    "weapon": "hands",
+    "worst": -0.10313847054295212,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801963802425943,
+    "drift": 2.7578591853223444e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "horse",
+    "weapon": "knife",
+    "worst": -0.10315419278653871,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801959419425314,
+    "drift": 3.0217644318588e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "horse",
+    "weapon": "pistol",
+    "worst": -0.10318937700044539,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801958563807515,
+    "drift": 3.8133640510527246e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "horse",
+    "weapon": "rifle",
+    "worst": -0.0999908987198412,
+    "worstAt": {
+      "t": 5.6,
+      "mood": "mercenary"
+    },
+    "minF": 9.80187188475247,
+    "drift": 3.021607460046844e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "horse",
+    "weapon": "assault",
+    "worst": -0.1033328898548941,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801847844338367,
+    "drift": 4.540214131064839e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "horse",
+    "weapon": "smg",
+    "worst": -0.10342111528748582,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.80183029297356,
+    "drift": 3.38879976518146e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "horse",
+    "weapon": "hmg",
+    "worst": -0.10384705242833987,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801623079624859,
+    "drift": 3.6004419769913897e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "horse",
+    "weapon": "shotgun",
+    "worst": -0.10333628508032605,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.80187280996793,
+    "drift": 2.8767207976419145e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "horse",
+    "weapon": "sniper",
+    "worst": -0.10342358242684113,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801849190257299,
+    "drift": 4.276843971948773e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "horse",
+    "weapon": "grenade",
+    "worst": -0.10316563254238353,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.80195717292011,
+    "drift": 4.788582182689571e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "horse",
+    "weapon": "launcher",
+    "worst": -0.10339707201323885,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.80184405423236,
+    "drift": 4.415657735427775e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "horse",
+    "weapon": "rpg",
+    "worst": -0.10349843071549855,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801972747803715,
+    "drift": 3.0747277818219083e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "horse",
+    "weapon": "flamethrower",
+    "worst": -0.10404841853326106,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.80163475355779,
+    "drift": 3.1533164201515217e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "hands",
+    "worst": -0.07138234682126494,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801973608848284,
+    "drift": 3.153206029292791e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "knife",
+    "worst": -0.07140352920693377,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801969555441785,
+    "drift": 3.228562058957849e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "pistol",
+    "worst": -0.07145021296588863,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.80197015063679,
+    "drift": 3.778271064733052e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "rifle",
+    "worst": -0.06934155042040657,
+    "worstAt": {
+      "t": 5.6,
+      "mood": "mercenary"
+    },
+    "minF": 9.801847032942971,
+    "drift": 3.6227679193739454e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "assault",
+    "worst": -0.07163914227008861,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.80181431852513,
+    "drift": 2.414105685615138e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "smg",
+    "worst": -0.07175340862270638,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801792679221448,
+    "drift": 3.526285253821784e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "hmg",
+    "worst": -0.07215017208259134,
+    "worstAt": {
+      "t": 4.48,
+      "mood": "mercenary"
+    },
+    "minF": 9.801460091708362,
+    "drift": 3.160474624545754e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "shotgun",
+    "worst": -0.07164398745654149,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.80184791962037,
+    "drift": 2.711014737173928e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "sniper",
+    "worst": -0.07175720788281101,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801811745099213,
+    "drift": 4.2504410401988115e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "grenade",
+    "worst": -0.07141888213623508,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801967305730257,
+    "drift": 2.3434256891737943e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "launcher",
+    "worst": -0.0717224725855361,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801809537620569,
+    "drift": 3.005230233507416e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "rpg",
+    "worst": -0.0718535389767562,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801946947686117,
+    "drift": 3.7027190152388625e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "goat",
+    "weapon": "flamethrower",
+    "worst": -0.07248319961231013,
+    "worstAt": {
+      "t": 4.48,
+      "mood": "mercenary"
+    },
+    "minF": 9.80154647926325,
+    "drift": 2.821625265714961e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "hands",
+    "worst": -0.0784657260132445,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801969763240008,
+    "drift": 2.1442718320168675e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "knife",
+    "worst": -0.07847709371775019,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801964627783503,
+    "drift": 2.820688385356236e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "pistol",
+    "worst": -0.07850291471577327,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801963080026026,
+    "drift": 3.931872426793116e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "rifle",
+    "worst": -0.07863209687368795,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801900699436443,
+    "drift": 3.03980593145104e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "assault",
+    "worst": -0.07860874217738495,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801883383527736,
+    "drift": 3.9228956482305657e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "smg",
+    "worst": -0.07867461536184785,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801869713715787,
+    "drift": 3.0746782724816285e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "hmg",
+    "worst": -0.0789978821435622,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.80174687196124,
+    "drift": 3.261701542620799e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "shotgun",
+    "worst": -0.07861096346043489,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.80190081037881,
+    "drift": 4.915008938400193e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "sniper",
+    "worst": -0.07867616117637254,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801885035672823,
+    "drift": 5.099600680669697e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "grenade",
+    "worst": -0.07848537486955517,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801962265353252,
+    "drift": 3.5790681421893675e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "launcher",
+    "worst": -0.07865655016629053,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801879922180971,
+    "drift": 2.8367403447189775e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "rpg",
+    "worst": -0.07873212125944357,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.802005021391961,
+    "drift": 2.440659022968241e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "bull",
+    "weapon": "flamethrower",
+    "worst": -0.0791668894957017,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801724058165943,
+    "drift": 2.9048720273706357e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "hands",
+    "worst": -0.07846572601334467,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801969763231126,
+    "drift": 2.4444277530375427e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "knife",
+    "worst": -0.07848149740571027,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801965157883911,
+    "drift": 3.0294211059663435e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "pistol",
+    "worst": -0.07851672409508041,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801964450707372,
+    "drift": 2.4227200482255296e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "rifle",
+    "worst": -0.07869226462392927,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801875881990567,
+    "drift": 3.138410843829699e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "assault",
+    "worst": -0.07866054153323312,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801851709273405,
+    "drift": 3.2941271374980694e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "smg",
+    "worst": -0.07874883229388299,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801834212034192,
+    "drift": 2.905658791457305e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "hmg",
+    "worst": -0.07917519140359446,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801622768638067,
+    "drift": 3.281840157579842e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "shotgun",
+    "worst": -0.07866390058623761,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801876525324841,
+    "drift": 3.315536347332618e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "sniper",
+    "worst": -0.07875129710762868,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801852209975108,
+    "drift": 2.2235875814236525e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "grenade",
+    "worst": -0.0784929615174583,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.80196284678149,
+    "drift": 3.3810324890267256e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "launcher",
+    "worst": -0.07872478955182445,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.80184778570971,
+    "drift": 2.8806368780371975e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "rpg",
+    "worst": -0.07882632185164358,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801978333158116,
+    "drift": 3.3163422616490085e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "cow",
+    "weapon": "flamethrower",
+    "worst": -0.07936512588309855,
+    "worstAt": {
+      "t": 10.88,
+      "mood": "mercenary"
+    },
+    "minF": 9.801717486524934,
+    "drift": 3.188844105510001e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "hands",
+    "worst": -0.10207993511172556,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801969018280358,
+    "drift": 3.019011518356757e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "knife",
+    "worst": -0.10209667448578087,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.80196536855095,
+    "drift": 3.526033958575115e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "pistol",
+    "worst": -0.10213412462607942,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801964929959565,
+    "drift": 2.9731680237808224e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "rifle",
+    "worst": -0.1003836778430659,
+    "worstAt": {
+      "t": 5.6,
+      "mood": "mercenary"
+    },
+    "minF": 9.80187585980387,
+    "drift": 2.741204202824075e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "assault",
+    "worst": -0.10228636843390607,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801850389013948,
+    "drift": 3.2154709365396176e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "smg",
+    "worst": -0.1023798998572639,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801833002104258,
+    "drift": 2.1366871677824132e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "hmg",
+    "worst": -0.10280457347714066,
+    "worstAt": {
+      "t": 4.48,
+      "mood": "mercenary"
+    },
+    "minF": 9.801614713747979,
+    "drift": 3.6798281734561687e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "shotgun",
+    "worst": -0.10229011231191483,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801876553053772,
+    "drift": 2.972070101059472e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "sniper",
+    "worst": -0.10238257754212143,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801852191891795,
+    "drift": 2.6227567666835363e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "grenade",
+    "worst": -0.1021088648032554,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801963348939806,
+    "drift": 3.7916204011602133e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "launcher",
+    "worst": -0.1023543928659325,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801847608074025,
+    "drift": 2.3424227029435873e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "rpg",
+    "worst": -0.10246166448626123,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801974189041955,
+    "drift": 3.140732258878497e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "donkey",
+    "weapon": "flamethrower",
+    "worst": -0.10303634868117681,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801624585948813,
+    "drift": 2.623244254470576e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "hands",
+    "worst": -0.06960436694811299,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801962838921112,
+    "drift": 2.510344310005218e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "knife",
+    "worst": -0.06962383174874234,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801958644596224,
+    "drift": 2.1148725184018403e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "pistol",
+    "worst": -0.06966693578885834,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801958469607312,
+    "drift": 3.146706655703594e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "rifle",
+    "worst": -0.06987802465726618,
+    "worstAt": {
+      "t": 4.48,
+      "mood": "mercenary"
+    },
+    "minF": 9.801847521396693,
+    "drift": 3.729118884311843e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "assault",
+    "worst": -0.06984185988749887,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801817569684472,
+    "drift": 3.046996232055714e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "smg",
+    "worst": -0.06994616986179682,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.80178841171954,
+    "drift": 3.7459767414963027e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "hmg",
+    "worst": -0.07035579410140343,
+    "worstAt": {
+      "t": 4.48,
+      "mood": "mercenary"
+    },
+    "minF": 9.80150384842217,
+    "drift": 4.230383490052338e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "shotgun",
+    "worst": -0.06984624994488646,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801848965033015,
+    "drift": 3.0295350157971313e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "sniper",
+    "worst": -0.06995159920230634,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801817109288306,
+    "drift": 3.0582351110416473e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "grenade",
+    "worst": -0.06963796382677716,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.80195635537852,
+    "drift": 3.2180881163840347e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "launcher",
+    "worst": -0.06991936831508455,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801812755535392,
+    "drift": 3.5884492702771596e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "rpg",
+    "worst": -0.07004144932933618,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801946835962154,
+    "drift": 3.6333709657988707e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "sheep",
+    "weapon": "flamethrower",
+    "worst": -0.07058567056790885,
+    "worstAt": {
+      "t": 10.88,
+      "mood": "mercenary"
+    },
+    "minF": 9.801580514588919,
+    "drift": 2.6970557650962296e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "hands",
+    "worst": -0.07339294672549501,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.801867738673435,
+    "drift": 2.1612348608994317e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "knife",
+    "worst": -0.0733733204023205,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.801867691591097,
+    "drift": 2.4867072038907214e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "pistol",
+    "worst": -0.07333603861512991,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.801865620039278,
+    "drift": 3.051243160348356e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "rifle",
+    "worst": -0.06826554013782284,
+    "worstAt": {
+      "t": 5.6,
+      "mood": "mercenary"
+    },
+    "minF": 9.80177622664881,
+    "drift": 2.881976813165723e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "assault",
+    "worst": -0.07312004516364824,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.801743994529614,
+    "drift": 3.117879897974607e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "smg",
+    "worst": -0.07307167199268301,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.80171940981313,
+    "drift": 3.7870287683025354e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "hmg",
+    "worst": -0.07344112012749325,
+    "worstAt": {
+      "t": 10.88,
+      "mood": "mercenary"
+    },
+    "minF": 9.801449572842584,
+    "drift": 3.374824613554006e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "shotgun",
+    "worst": -0.07317417444691936,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.801783113975075,
+    "drift": 4.580528658394971e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "sniper",
+    "worst": -0.07307948734904003,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.801759611370768,
+    "drift": 3.1653125987524964e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "grenade",
+    "worst": -0.07336090503765225,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.80186632179793,
+    "drift": 2.8219635826988515e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "launcher",
+    "worst": -0.07289331530907993,
+    "worstAt": {
+      "t": 10.88,
+      "mood": "mercenary"
+    },
+    "minF": 9.801741790266176,
+    "drift": 3.0231991439321723e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "rpg",
+    "worst": -0.07398575116252522,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.801852666489934,
+    "drift": 2.0217537004468144e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "skunk",
+    "weapon": "flamethrower",
+    "worst": -0.07322976328107257,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.80158662492782,
+    "drift": 4.3972609724380407e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "hands",
+    "worst": -0.0725452252472052,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.7975603630084,
+    "drift": 2.4906792137273976e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "knife",
+    "worst": -0.07198906123971442,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797565577317384,
+    "drift": 4.300000862998532e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "pistol",
+    "worst": -0.07157592439978286,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797575933753093,
+    "drift": 3.5392186959633687e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "rifle",
+    "worst": -0.0693131317022579,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797550953024496,
+    "drift": 3.3151958845318136e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "assault",
+    "worst": -0.06889539338549049,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797541448156492,
+    "drift": 2.0909715206843052e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "smg",
+    "worst": -0.06881964266621032,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797528280804839,
+    "drift": 4.638172948856051e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "hmg",
+    "worst": -0.06902238055501772,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797555566152154,
+    "drift": 3.262103907862093e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "shotgun",
+    "worst": -0.06937904995915162,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797550209015197,
+    "drift": 2.6520225577684536e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "sniper",
+    "worst": -0.06921336477861789,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797540001855635,
+    "drift": 2.5089321551769123e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "grenade",
+    "worst": -0.07123974971260841,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797571861126412,
+    "drift": 4.2857708001888275e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "launcher",
+    "worst": -0.06907789773923897,
+    "worstAt": {
+      "t": 10.88,
+      "mood": "mercenary"
+    },
+    "minF": 9.797531869694025,
+    "drift": 3.1561245930331864e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "rpg",
+    "worst": -0.07016607744522836,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.79762641572725,
+    "drift": 2.8514923193987025e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-foreman",
+    "weapon": "flamethrower",
+    "worst": -0.0700161880047673,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797310423890108,
+    "drift": 2.924846767038426e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "hands",
+    "worst": -0.1200613286129082,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.797485660506437,
+    "drift": 4.2858776894064163e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "knife",
+    "worst": -0.12072450600524158,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.797495478563915,
+    "drift": 3.5105247555493525e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "pistol",
+    "worst": -0.1213240200507037,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.797511978423172,
+    "drift": 2.9627466034552934e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "rifle",
+    "worst": -0.11334030962338085,
+    "worstAt": {
+      "t": 5.6,
+      "mood": "mercenary"
+    },
+    "minF": 9.797503415068702,
+    "drift": 3.3064956600002264e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "assault",
+    "worst": -0.1199550011984869,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797504340497325,
+    "drift": 3.3146651561881437e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "smg",
+    "worst": -0.1200391052915953,
+    "worstAt": {
+      "t": 10.88,
+      "mood": "mercenary"
+    },
+    "minF": 9.797485580561498,
+    "drift": 3.9457665564635817e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "hmg",
+    "worst": -0.11903697136346794,
+    "worstAt": {
+      "t": 4.48,
+      "mood": "mercenary"
+    },
+    "minF": 9.797461235155806,
+    "drift": 2.6411050508974306e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "shotgun",
+    "worst": -0.12068877749852597,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.79750524353497,
+    "drift": 2.754535458428571e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "sniper",
+    "worst": -0.12053836162553803,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797499110476464,
+    "drift": 3.7831133237424175e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "grenade",
+    "worst": -0.121531512083955,
+    "worstAt": {
+      "t": 11.16,
+      "mood": "guard"
+    },
+    "minF": 9.79750650885171,
+    "drift": 2.4342283135172633e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "launcher",
+    "worst": -0.11999208804314097,
+    "worstAt": {
+      "t": 10.88,
+      "mood": "mercenary"
+    },
+    "minF": 9.79749567765799,
+    "drift": 4.2652730711402573e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "rpg",
+    "worst": -0.12033463226924161,
+    "worstAt": {
+      "t": 6.4,
+      "mood": "mercenary"
+    },
+    "minF": 9.797571537971576,
+    "drift": 2.8664203796453404e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "pig-director",
+    "weapon": "flamethrower",
+    "worst": -0.1200164367616036,
+    "worstAt": {
+      "t": 12,
+      "mood": "mercenary"
+    },
+    "minF": 9.797366011691137,
+    "drift": 4.3344746216003767e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "hands",
+    "worst": -0.020607128251335257,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801772073864027,
+    "drift": 3.189425334326533e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "knife",
+    "worst": -0.020629608692261377,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801776148382528,
+    "drift": 3.876402494865192e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "pistol",
+    "worst": -0.020682100590748632,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801772607730312,
+    "drift": 2.9886812517235246e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "rifle",
+    "worst": -0.02093838035380223,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801714202218774,
+    "drift": 3.254604363161538e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "assault",
+    "worst": -0.020889919520839535,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801681707340874,
+    "drift": 2.4926900937473587e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "smg",
+    "worst": -0.021018653573810515,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801654529800656,
+    "drift": 2.5962869766564184e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "hmg",
+    "worst": -0.021698194835669864,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801429215953076,
+    "drift": 2.641191956744077e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "shotgun",
+    "worst": -0.02089643853656847,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801726053032437,
+    "drift": 2.442616988543422e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "sniper",
+    "worst": -0.021024080516410505,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801712819067403,
+    "drift": 2.8284884930048337e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "grenade",
+    "worst": -0.02064658892794638,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801775645238335,
+    "drift": 2.8702416191186156e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "launcher",
+    "worst": -0.02098363122750794,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801681960977985,
+    "drift": 3.161767379994094e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "rpg",
+    "worst": -0.02120283982851467,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801780005750286,
+    "drift": 3.7589238238463875e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "flamethrower",
+    "worst": -0.021776554979141466,
+    "worstAt": {
+      "t": 10.88,
+      "mood": "mercenary"
+    },
+    "minF": 9.80149390242259,
+    "drift": 3.3311005431596583e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "hands",
+    "worst": -0.02400712700638604,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801877820484377,
+    "drift": 4.537941359769703e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "knife",
+    "worst": -0.024023002882523122,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801877254554851,
+    "drift": 4.1880889572300285e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "pistol",
+    "worst": -0.024059644746560863,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801874834703865,
+    "drift": 3.0680865348384064e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "rifle",
+    "worst": -0.024240543257491445,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.80181283880212,
+    "drift": 3.187342513679207e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "assault",
+    "worst": -0.024206582182201904,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801789280970878,
+    "drift": 4.771760326708877e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "smg",
+    "worst": -0.02429889290982315,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801771029819177,
+    "drift": 2.971308154081258e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "hmg",
+    "worst": -0.024717907711223265,
+    "worstAt": {
+      "t": 4.48,
+      "mood": "mercenary"
+    },
+    "minF": 9.80161472883813,
+    "drift": 3.447300138564095e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "shotgun",
+    "worst": -0.024210898198981517,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801817479019219,
+    "drift": 3.0235056197827315e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "sniper",
+    "worst": -0.024301663839839803,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801802928702712,
+    "drift": 2.7386438223055103e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "grenade",
+    "worst": -0.024034766163712862,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801876115297274,
+    "drift": 2.402796553572376e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "launcher",
+    "worst": -0.024273471210449753,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801788235584878,
+    "drift": 4.2434701376442775e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "rpg",
+    "worst": -0.024377968096944615,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.801894652842106,
+    "drift": 2.58373815980518e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "dog",
+    "weapon": "flamethrower",
+    "worst": -0.02495447368086321,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.80156122797217,
+    "drift": 3.005051549281403e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "hen",
+    "weapon": "hands",
+    "worst": -0.18675650601354926,
+    "worstAt": {
+      "t": 13.44,
+      "mood": "mercenary"
+    },
+    "minF": 9.80152140104819,
+    "drift": 6.062443233696526e-16,
+    "seamVelocity": 1.715871889018672e-7
+  },
+  {
+    "animal": "hen",
+    "weapon": "knife",
+    "worst": -0.18757901766162688,
+    "worstAt": {
+      "t": 6.4,
+      "mood": "mercenary"
+    },
+    "minF": 9.801482075287764,
+    "drift": 1.4466153477565994e-15,
+    "seamVelocity": 1.724989595608406e-7
+  },
+  {
+    "animal": "hen",
+    "weapon": "pistol",
+    "worst": -0.1841451496233172,
+    "worstAt": {
+      "t": 7.199999999999999,
+      "mood": "guard"
+    },
+    "minF": 9.801114528974379,
+    "drift": 1.3782862154893983e-15,
+    "seamVelocity": 0.0000012133827276272768
+  },
+  {
+    "animal": "hen",
+    "weapon": "rifle",
+    "worst": -0.17952999722517238,
+    "worstAt": {
+      "t": 5.6,
+      "mood": "mercenary"
+    },
+    "minF": 9.801284609084375,
+    "drift": 9.097315019467484e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "hen",
+    "weapon": "assault",
+    "worst": -0.18768054911144508,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801265386771744,
+    "drift": 5.031532776659628e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "hen",
+    "weapon": "smg",
+    "worst": -0.18809865075583243,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801243455879087,
+    "drift": 4.877074479049873e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "hen",
+    "weapon": "hmg",
+    "worst": -0.18888362779268553,
+    "worstAt": {
+      "t": 4.48,
+      "mood": "mercenary"
+    },
+    "minF": 9.801129754635111,
+    "drift": 3.700124058979359e-16,
+    "seamVelocity": 1.5421372512314227e-7
+  },
+  {
+    "animal": "hen",
+    "weapon": "shotgun",
+    "worst": -0.18792015040437063,
+    "worstAt": {
+      "t": 10.88,
+      "mood": "mercenary"
+    },
+    "minF": 9.801316792176122,
+    "drift": 9.152353042566815e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "hen",
+    "weapon": "sniper",
+    "worst": -0.1879275865984868,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.801309641043103,
+    "drift": 3.564677522118482e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "hen",
+    "weapon": "grenade",
+    "worst": -0.16883334008968523,
+    "worstAt": {
+      "t": 9.6,
+      "mood": "mercenary"
+    },
+    "minF": 9.801598266388948,
+    "drift": 1.538123275914891e-15,
+    "seamVelocity": 9.470890738327853e-7
+  },
+  {
+    "animal": "hen",
+    "weapon": "launcher",
+    "worst": -0.1878224774522778,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.8012633788135,
+    "drift": 4.759597648831724e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "hen",
+    "weapon": "rpg",
+    "worst": -0.18827414680731092,
+    "worstAt": {
+      "t": 12.64,
+      "mood": "mercenary"
+    },
+    "minF": 9.80132735828411,
+    "drift": 3.7148260016370614e-16,
+    "seamVelocity": 1.5421256844755818e-7
+  },
+  {
+    "animal": "hen",
+    "weapon": "flamethrower",
+    "worst": -0.1886576806690599,
+    "worstAt": {
+      "t": 4.48,
+      "mood": "mercenary"
+    },
+    "minF": 9.801272731776349,
+    "drift": 1.0893266002053621e-15,
+    "seamVelocity": 1.5421256844755818e-7
+  }
+]
