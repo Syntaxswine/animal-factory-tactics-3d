@@ -22,7 +22,7 @@ try{
  }
  await page.evaluate(()=>window.grenadeStudy.set({mode:'motion',view:'side',scale:'close',arc:false}));
  const stats=await page.evaluate(()=>{const before=window.grenadeStudy.seek(0);for(let pass=0;pass<3;pass++)for(let i=0;i<=120;i++)window.grenadeStudy.seek(window.grenadeStudy.timing.duration*i/120);const after=window.grenadeStudy.seek(0);return {before,after};});assert.equal(stats.before.geometryCount,stats.after.geometryCount);assert.equal(stats.before.textureCount,stats.after.textureCount);
- await page.locator('#keyframes button').nth(3).click();assert.equal(await page.locator('#play').textContent(),'Play');assert.match(await page.locator('#status').textContent(),new RegExp('^'+release.toFixed(2)));
+ await page.locator('#keyframes button').nth(3).click();assert.equal(await page.locator('#play').textContent(),'Play');assert.match(await page.locator('#status').textContent(),new RegExp('^'+release.toFixed(2).replace('.','\\.')));
  await page.setViewportSize({width:760,height:740});await page.evaluate(()=>window.grenadeStudy.set({mode:'keys'}));await page.screenshot({path:path.join(out,'compact.png')});
  assert.deepEqual(errors,[]);const report={browserConfigurations:36,playbackSamples:363,errors,stats};fs.writeFileSync(path.join(out,'browser-report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify({browserConfigurations:36,playbackSamples:363,errors}));
 }finally{await closeReview();}
