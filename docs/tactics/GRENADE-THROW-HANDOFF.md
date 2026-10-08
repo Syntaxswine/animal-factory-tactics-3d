@@ -14,100 +14,157 @@ Against the keyframes published at `44b956b`, the throw had five problems:
 
 An inverse-dynamics audit (table below) also found that the weight transfer was carried, not pushed.
 
-**The throw now follows FM 3-23.30 (2009), §3-14 to 3-24.** The free hand pulls the pin. The
-thrower stands side-on with the grenade shoulder high and the free hand pointing at the target, throws
-overhand so the grenade arcs, and lets the arm follow through.
+**The throw follows steps 1 to 6 of the standing throw in FM 3-23.30 (2009), §3-14 to 3-24.** The
+free hand pulls the pin. The thrower stands side-on with the grenade shoulder high and the free arm
+pointing at the target, throws overhand so the grenade arcs, and follows through. Where it departs from
+the manual:
+- Step 7, taking cover, is not animated.
+- The grip is the study's palm-down chest hold, not the grip of §3-15.
+- The free arm points about 35° above horizontal, not the 45° of the manual's figure.
 
 | time (s) | phase | what moves |
 |---|---|---|
-| 0–0.30 | Ready | grenade palm-down at the chest, ring lying on top of the fist |
-| 0.30–0.70 | Pull pin | free index finger hooks the ring, twists it toward the body, pulls it along the pin, drops it |
-| 0.70–1.24 | Turn & load | rear hoof drop-steps behind and turns out 77°; hips and shoulders close to side-on; grenade drawn up behind the ear; free arm points along the throwing line |
-| 1.24–1.60 | Stride | lead hoof steps toward the target and plants |
-| 1.60–1.92 | Throw | hips open first (peak 3.7 rad/s at 1.79 s), then the chest (5.6 rad/s at 1.86 s), then the forearm whips over the throwing shoulder |
-| 1.92 | Release | hand at its top speed (5.5 m/s); elbow still bent 68°; launch 5.5 m/s at 30° |
-| 1.92–2.12 | Follow through | arm decelerates hard (to half speed within 80 ms) and swings down across to the free knee; trunk bends over the lead leg; rear heel lifts, hoof rolls onto its inner corner and pivots on it |
-| 2.10–3.85 | Recover | rear hoof steps forward, lead hoof steps back, body returns exactly to the neutral stance |
-| 3.85–4.60 | Watch | eyes follow the grenade, lead to the landing spot before it hits, then return |
+| 0–0.30 | Ready | grenade held still, palm-down at the chest, ring lying on top of the fist |
+| 0.30–0.72 | Pull pin | free index finger hooks the ring, twists it toward the body, pulls it along the pin (out at 0.50), carries it clear and drops it (0.70) |
+| 0.72–1.32 | Turn & load | rear hoof drop-steps behind (0.84–1.14) and turns out 77°; hips close to 65° and chest to 79° off the throwing line; grenade drawn up and back; free arm points along the line (5–10° off it, 33–35° up) |
+| 1.32–1.58 | Stride | lead hoof steps toward the target |
+| 1.58–1.66 | Plant | lead hoof lands at 1.60 |
+| 1.66–1.935 | Throw | hips open first (peak 4.0 rad/s at 1.785 s), then the chest (5.3 rad/s at 1.84 s); the elbow bends deepest (97°) at 1.80–1.84 s and from then on only opens; the forearm whips over the throwing shoulder |
+| 1.94 | Release | hand at its top speed, 5.5 m/s, 13.6 cm ahead of and 31.5 cm above the throwing shoulder; elbow still bent 74°; launch 5.47 m/s at 25° |
+| 1.945–2.40 | Follow through | the arm brakes to 72% of release speed within 40 ms, then only slows. It sweeps down in front of the lead thigh (7.5 cm past the centreline, 66 cm up) while the trunk stays bent over the lead leg and the chest turns on to 38° past square. The rear heel lifts and the hoof pivots on its inner corner (1.64–2.10); the free glove tucks beside the hip. |
+| 2.40–4.60 | Recover | the arm swings back to the side like a pendulum as the trunk rises; the rear hoof steps forward (2.10–2.55) and the lead hoof back (3.10–3.45); the eyes follow the grenade, lead to its landing spot before it hits, and return; the body ends exactly in the neutral stance |
 
 Where the loose parts end up:
-- **Casing:** lands short of the tile centre, bounces twice and rolls onto its side, resting 0.11 m
-  past the centre.
-- **Pull ring:** falls clear of both hooves.
-- **Safety lever:** flips off 25 ms after release and lands 1.9 m out.
+- **Casing:** lands short of the tile centre, bounces twice and rolls onto its side, resting 0.12 m
+  past the centre and 0.06 m to the side.
+- **Pull ring:** dropped at 0.70 s; it rests 0.44 m forward and 0.24 m to the free side, clear of
+  both hooves.
+- **Safety lever:** flips off 25 ms after release; air drag on the light strip brings it down 1.95 m
+  out and 0.65 m to the free side.
 
 **Balance is computed, not keyed.** The pelvis's horizontal path comes from a linear inverted
 pendulum running over a centre-of-pressure plan:
 - The plan walks hoof to hoof.
-- It includes the anticipatory push toward the stepping hoof that real gait initiation shows (0.18 m).
+- It includes the anticipatory push that real gait initiation shows: the pressure point first moves
+  0.10 m toward the stepping hoof (peak at 0.52 s), which starts the body toward the stance hoof, then
+  0.17 m onto the stance hoof.
 - It folds in the arms' and trunk's angular momentum.
 
-The pendulum is solved as a boundary-value problem, so the body starts and ends at rest. The pelvis
-is then shifted until the real segment centre of mass follows the path: 4 passes, 0.8 mm residual,
-about 170 ms when the motion is created.
+The pendulum is solved as a boundary-value problem on a 5 ms grid, so the body starts and ends at
+rest. A 10 ms grid could not follow the arm braking just after release. The pelvis is then shifted
+until the real segment centre of mass follows the path: 4 passes, 0.9 mm residual, about 250 ms when
+the motion is created.
 
-Measured with `phantom-wrench` (inverse dynamics with friction pyramids at the actual contacts; the
-rig is `rigs/grenade-throw.mjs` in `Syntaxswine/phantom-wrench`) and with the new balance test:
+Measured with `phantom-wrench` and with the tests. `phantom-wrench` is an inverse-dynamics audit
+with friction pyramids at the actual contacts; its rig is `rigs/grenade-throw.mjs` in
+`Syntaxswine/phantom-wrench`. The rig gives the trunk 0.13 kg·m² of twisting inertia and leaves out
+the grenade's 0.4 kg, so the mass stays constant across the release.
 
 | | `44b956b` | this revision |
 |---|---|---|
-| peak phantom force | 1669 N (227% body weight), Load rear leg | 41 N (6%), Turn & load |
-| audit gate (≤10% BW phantom; no impulses; no overlap > 2 cm; speeds; joint ranges) | FAIL: 0.92 s over, forearm 7.8 cm inside the trunk | PASS |
-| required centre of pressure outside the hooves (Dempster masses, 20 ms) | up to 236 cm; 58 samples over 5 cm | never (worst sample 0.2 cm inside) |
+| peak phantom force | 1639 N (223% body weight), Load rear leg | 29 N (4%), Follow through; 44 N (6%) at friction 0.6 |
+| audit gate (≤10% BW phantom; no impulses; no overlap > 2 cm; speeds; joint ranges) | FAIL: 0.91 s over; 4 capsule pairs over 2 cm, forearm 7.8 cm inside the trunk | PASS at friction 0.9 and 0.6 |
+| required centre of pressure outside the hooves (Dempster masses) | up to 236 cm (sampled every 20 ms) | never, sampled every 5 ms and every 1 ms through the release; the closest sample is 2.0 cm inside |
+| forearm or glove inside the torso mesh | not measured | at most 0.65 cm: the throwing glove resting on the chest in the opening hold |
 
 Other mechanics:
-- Curves are quintic Hermite (C2). A cubic's acceleration steps at every key, which reads as a jolt
-  of force.
-- Two-bone limbs carry twist: the bend plane maps onto the rest bend plane. There is no candy-wrapper
-  at the hip or elbow when the trunk turns 85°.
-- The throwing palm moves on arcs about the shoulder (azimuth, elevation, reach). After release the
-  wrist is smoothly reach-limited.
-- Knees and elbows bend in the rig's own rest directions, so the clip opens and closes on the neutral
-  pose. The previous version's knee pole put the knees about 1.6 cm off it.
-- The head aims in world space, so it stays level as the trunk leans, with a smooth 83° neck limit.
+- **Position curves are C2.** Pelvis, trunk angles, arm arcs, elbow poles and feet are quintic
+  Hermite, so nothing jolts at a key. A cubic's acceleration steps at every key.
+- **Hand orientations are C1.** They are cubic rotation-vector segments joined through the inverse
+  left Jacobian of SO(3). Angular velocity is continuous; angular acceleration can step at a key.
+- **Two-bone limbs carry twist.** The bend plane maps onto the rest bend plane, so there is no
+  candy-wrapper at the hip or elbow when the trunk turns 85°.
+- **Throwing palm.** It moves on arcs about the shoulder (azimuth, elevation, reach). After release
+  the wrist is smoothly reach-limited.
+- **Neutral ends.** Knees and elbows bend in the rig's own rest directions. The clip ends on the
+  neutral pose, every bone within 2 mm, head included. It starts from the two-hand ready hold with the
+  head neutral. The previous knee pole put the knees 2.5 cm off neutral.
+- **Head.** It aims in world space, so it stays level as the trunk leans. Its turn from the chest is
+  smoothly capped at 40°, easing in from 30°, because the skinned neck seam tears beyond that. The look
+  blends in over the first 0.35 s and out from 3.95 to 4.45 s.
 
-**Tests** (`tests/grenade-throw.test.mjs`, 12):
-- **Kept as written (six of Codex's eight):**
-  - scale, lengths and IK;
-  - palm-to-flight continuity (the loop bound is now the release time; the casing must also rest on its side);
-  - gravity, bounce and rest;
-  - skinned soles on the floor;
-  - deterministic scrubbing;
-  - prop semantics.
-- **Replaced with physical versions:**
-  - "each lifted hoof is preceded by weight shift" → the required centre of pressure lies under the soles;
-  - "both planted hooves fixed through follow-through" → the lead hoof stays fixed, and the rear
-    contact stays fixed while it pivots.
-- **New:**
-  - ring and lever;
-  - hips, then chest, then hand, with the top hand speed at release;
+**Tests** (`tests/grenade-throw.test.mjs`, 21):
+- **Codex's, kept as written (3):** scale, lengths and IK; deterministic scrubbing; prop semantics.
+- **Codex's, edited (3):**
+  - palm-to-flight continuity: the loop now runs to the release time, 1.94 s instead of 1.90;
+  - gravity, bounce and rest: the floor check starts at the release, and the casing must rest on its side;
+  - skinned soles: a hoof standing on its toe must touch the floor too.
+- **Codex's, replaced (2):**
+  - "each lifted hoof is preceded by weight shift" → the required centre of pressure stays under the
+    soles;
+  - "both planted hooves fixed through follow-through" → the lead hoof plants at least 0.25 s before
+    release and holds, and the rear contact holds while it pivots.
+- **New (13):**
+  - no touching sole vertex slides, on either hoof, over the whole clip;
+  - every accessor rejects non-finite time, and a disposed motion refuses time;
+  - phase labels name the key frames;
+  - ring and lever: the ring rides rigidly in the free hand, the pin is out before the hips turn 10°,
+    the ring lies clear of the hooves, and the lever lands 0.5–3 m out;
+  - the ring and lever meshes are drawn exactly where the motion reports them;
+  - hips, then chest, then hand: top hand speed at the release, braking within 40 ms after it;
+  - no lull in the hand's last 80 ms, and the elbow opens once over the whole stroke;
+  - after release the hand only slows, and finishes low, across the body;
   - overhand release on a rising arc;
-  - end in the neutral stance after starting from rest.
-- **Mutation check:** 8 of 8 mutants killed:
-  - no planner;
-  - no anticipatory push;
-  - pivot without the inner roll;
-  - casing not lying down;
-  - flat launch;
-  - chest before hips;
-  - ring kept to the turn;
-  - arm accelerating after release.
+  - the head turns at most 40° from the chest;
+  - while loading, the free arm points along the throw and the rear hoof is turned out;
+  - neither arm passes into the torso, measured on the skinned meshes;
+  - head neutral at both ends, and the stance neutral at the end.
+- **Mutation check:** all 23 mutants killed. They cover:
+  - balance: no planner, no anticipatory push, a 10 ms grid, a late plant;
+  - the rear pivot: no inner roll, turning while flat, the hoof not turned out;
+  - props: the casing not lying down, the ring kept to the turn, the ring mesh left behind, a lever
+    without drag;
+  - the arm: flat launch, chest before hips, accelerating after release, an elbow double pump, the old
+    follow-through timing and path, the old free-hand tuck;
+  - the free arm: hanging, or pointing high;
+  - the head: no return, no blend-in, no neck cap.
 
 **API changes:**
-- **`createGrenadeThrow`:** `createGrenadeThrow(worker, grenade, {releaseArc})` takes an optional
-  release arc.
-- **Returned object:** adds `ring(t)`, `lever(t)`, `palmAt(t)`, `balance` and `release`. It keeps
-  `at`, `projectile`, `impacts`, `launch`, `releaseCenter` and `dispose`.
-- **`GRENADE_THROW`:** adds `pin`, `drop` and `lever`. `release` moves from 1.90 to 1.92 s, and
-  `plant` from 1.52 to 1.60 s.
+- **`createGrenadeThrow`:** `createGrenadeThrow(worker, grenade, {releaseArc, launchAngle})` takes
+  an optional release arc and launch angle.
+- **Returned object:** adds `ring(t)`, `lever(t)`, `palmAt(t)`, `release` and `balance`. `balance`
+  holds `cop(t)` (the planned centre of pressure), `centre(t)` (the actual segment centre of mass),
+  `residual` and `push`. It keeps `at`, `projectile`, `impacts`, `launch`, `releaseCenter` and
+  `dispose`.
+- **Time checks:** every time accessor clamps finite times to 0–4.6 s, throws on a non-finite time,
+  and throws after `dispose`.
+- **`GRENADE_THROW` and `GRENADE_KEYS`:** both are frozen. `GRENADE_THROW` adds `pin`, `drop` and
+  `lever`. `release` moves from 1.90 to 1.94 s, and `plant` from 1.52 to 1.60 s.
 - **`grenadePalmAt`:** the module-level export is gone. The palm now rides the planned trunk, so it
   exists only per rig, as `motion.palmAt(t)`.
-- **`tools/check-grenade-study.mjs`:** reads the timing from the page (`window.grenadeStudy.timing`).
+- **`tools/check-grenade-study.mjs`:** reads the timing from the page (`window.grenadeStudy.timing`)
+  and escapes the decimal point in its status pattern.
+
+**Corrections after review round 1 (2026-10-08).** Review round 1 of 5 (one hostile subagent)
+scored the first version of this section 7/10. It found these claims wrong; each is fixed above:
+- **Follow-through.** "Swings down across to the free knee": it never crossed the body, and on the
+  way back the forearm passed 5.6 cm into the overalls. It now sweeps 7.5 cm past the centreline in
+  front of the lead thigh, and both arms stay out of the torso.
+- **Centre of pressure.** "Never outside the hooves" held only on the 20 ms grid. Every 5 ms, it
+  left them by 6.3 cm for a moment around 1.95 s. Planning on a 5 ms grid fixed it; the test now
+  samples at that density.
+- **Free glove.** "Grazes the fuse collar for 0.1 s": it went 1.0 cm into the casing and 1.6 cm into
+  the other glove, and the free forearm 7 cm into the chest. Now 0, 0 and 0.4 cm.
+- **Field manual.** The FM claim was too broad; it is narrowed above. The "Watch" row was not a phase
+  of the motion, nor an FM step.
+- **Curves.** "Quintic, so no acceleration steps" was true of positions only; hand orientations are C1.
+- **Neutral pose.** "Opens and closes on the neutral pose": the head was pitched 12.5°, and the arms
+  start in the ready hold. The head is now neutral at both ends.
+- **Small numbers.** The knee-pole error was 2.5 cm, not 1.6. The anticipatory push of "0.18 m" was
+  the bump amplitude; the pressure point moves 0.10 m.
+- **Tests.** "Kept as written: six of eight": three were kept, three edited, two replaced.
+- **Fixed in the motion as well:**
+  - The 83° neck limit tore the skinned neck seam at 79°; the limit is now 40°.
+  - The elbow pumped twice before release; it now opens once.
+  - The release read early, the hand only 2.8 cm ahead of the shoulder; now 13.6 cm.
+
+Review rounds 2–5 have not run yet.
 
 **Still open:**
 - **Horse only.** Each species needs its own rest geometry and a balance pass.
 - **Local space, flat ground only.**
-- **Glove contact.** The free glove grazes the fuse collar for about 0.1 s while hooking the ring.
+- **Contact depth.** In the opening hold, the throwing glove rests 0.65 cm into the shirt. While
+  hooking the ring, the free glove sits 0.4 cm into the chest. Both are contact, not a pass-through.
 - **Fixed effort.** The release speed suits the five-tile study; a gameplay range would scale the effort.
 - **Integration.** Codex's integration list below is unchanged.
 
