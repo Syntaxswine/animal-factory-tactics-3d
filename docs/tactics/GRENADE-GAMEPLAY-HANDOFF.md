@@ -99,3 +99,7 @@ different local server. Screenshots and the report go to
 The Pages build includes the new modules and painted texture and retains its
 missing-module checks. This builder branch does not itself deploy GitHub Pages;
 canonical publication remains with the architect.
+
+## Independent review, October 8
+
+Reviewed through `bd58196`. The live horse/hen throw sample and all-animal integration tests passed, but the coding branch remains held for the campaign arrival failure, base Pages dependency omission and canonical reconciliation. The preparation check also needs CRLF-safe comparison; the normalized generated data matches. See [the detailed follow-up](INTEGRATION-REVIEW-2026-10-06.md#october-8-follow-up-gameplay-branch-bd58196) for reproduction, checks and integration requirements.

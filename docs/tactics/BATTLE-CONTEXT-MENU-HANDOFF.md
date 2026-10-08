@@ -66,3 +66,7 @@ core. Regenerate with `node tools/sync-tactics-core.mjs`; do not hand-edit core.
 
 The existing local preview on port 4364 is reused with its original automatic
 shutdown deadline. No new persistent helper is required.
+
+## Independent review, October 8
+
+Reviewed `bd58196`. All nine context-rule tests passed; packaged-browser checks confirmed the terrain menu, grenade-planner handoff, direct interaction entries and a two-AP kneel action. Release is held with the rest of the coding branch. Preserve the accepted canonical HUD and its two-AP ready swaps when integrating: the context equipment labels currently describe the branch's older free-ready-swap rule. See [the detailed follow-up](INTEGRATION-REVIEW-2026-10-06.md#october-8-follow-up-gameplay-branch-bd58196).

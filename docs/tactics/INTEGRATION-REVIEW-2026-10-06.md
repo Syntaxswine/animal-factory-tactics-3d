@@ -57,3 +57,32 @@ When the campaign is ready, reconcile these areas deliberately:
 On `50593c5`, the packaged game rendered the four squad cards, weapon icons and concealed interiors. Browser checks passed portrait selection, Shift multi-selection, group kneeling, a quick weapon swap followed immediately by Inventory reopening, equipping back from Inventory, command drawer opening and Escape dismissal, pause gating, floor selection with keyboard return, and quicksave/quickload. There were no console errors or warnings. At 1280 by 720, the page had no horizontal overflow and retained a 1236 by 416 battlefield after the status notice cleared.
 
 All 1,830 tests and the asset check passed on `50593c5`. The Pages build, generated-core verification and diff whitespace checks passed. The browser checks above are a bounded independent sample; combat AP and rejection rules are also covered by the branch's headless tests. Campaign and HUD changes have not been approved as a combined build.
+
+## October 8 follow-up: gameplay branch `bd58196`
+
+Release remains held. The grenade integration and right-click actions are useful additions, but this branch has not been approved as a replacement for canonical `84a87d9`.
+
+### P1: blocked arrivals still leave the campaign unsaveable
+
+Reran the exact blocked-entry reproduction above on `bd58196`. It still throws `Entry is blocked or occupied. The group has not been transferred.` after setting the reinforcement group's travel position to sector 71 and clearing its route. Its member still has `{kind:'travel', group:'relief-1', from:101, to:71}`. `captureCampaign` then rejects the live campaign as damaged or inconsistent. The existing campaign tests pass because their blocked-entry case uses a staged strategic transfer; add coverage for `syncCampaignEncounter` on an active encounter as described above. Fix the mutation ordering before release.
+
+### P2: the base Pages file list omits a new dependency
+
+`node --test tests/tactics-pages-files.test.mjs` fails its base-build case with `weapon-models.js → grenade-model.js`. The 3D build passes, but the repository's complete check runs both. Preserve canonical's grenade module entries while merging `tools/build-tactics-pages.mjs`; keep the missing-module guard.
+
+### Integration requirements
+
+A read-only `git merge-tree --write-tree --name-only 84a87d9 bd58196` reports 20 conflicted paths, including the battle HTML/controller/renderer, character screen, generated core, both build scripts, strategic-site assets and grenade motion modules. Reconcile against canonical instead of taking the branch versions of whole files. Canonical already includes the accepted HUD, painted weapon sprites, site study revisions and grenade roster.
+
+- Preserve the HUD's squad cards, command drawer, inventory draw-settling hook and two-AP ready swaps. The new context equipment menu currently labels ready-slot changes free; update its cost/availability to the reconciled engine rule.
+- Preserve campaign entry, population and container integration and mount its actions in an interactive HUD container, as specified above.
+- Preserve the approved grenade poses while adding prepared runtime motion. Keep both idle study modules and their deployment entries. The separate held horse correction is not part of this approval.
+- Regenerate core through the adapters and rerun its check after resolving engine conflicts. Do not hand-resolve generated core independently of its generator.
+
+### Independent checks
+
+144 of 145 focused tests passed across battle combat/context, campaigns, grenade integration/roster/throw, camera projection, strategic-site integration and distribution coverage. The sole failing test is the missing base-build dependency above. The asset check and `node tools/sync-tactics-core.mjs --check` passed. This was a focused run, not a rerun of the entire repository suite.
+
+`node tools/prepare-grenade-motion.mjs --check` reports stale preparation in a Windows CRLF checkout. Regenerating into separate review artifacts shows that both prepared-motion and release files match exactly after CRLF-to-LF normalization. This is a validator portability issue, not a motion-data discrepancy: normalize line endings in its comparisons or enforce LF for the generated files, then require this check in validation.
+
+Independent packaged-browser checks confirmed: the test battle renders; right-click ground opens its actions; unknown terrain is rejected by grenade targeting; a discovered target shows the lob/rebound/blast preview; live horse and hen throws each use one grenade and five AP and recover without console errors; the merc menu exposes interactions directly; changing to kneeling through its submenu costs two AP. The all-animal release/origin and cancellation checks passed headlessly. No claim is made here that every pickup route, camera angle or campaign scenario was retested in the browser.
