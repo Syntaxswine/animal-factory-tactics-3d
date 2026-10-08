@@ -39,7 +39,7 @@ export class BattleRenderer extends HybridRenderer {
   this.loot=new BattleLoot(this.scene);this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.flameEffects=new BattleFlameEffects(this.scene);
-  this.grenades=new BattleGrenades(this.scene);
+  this.grenades=new BattleGrenades(this.scene,{loader:this.loader,onError:message=>this.diagnostics.push(message)});
   this.fire=new BattleFire(this);
   this.tankEffects=new BattleTankEffects(this);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
@@ -135,7 +135,7 @@ export class BattleRenderer extends HybridRenderer {
   if(model.aimWarning){const i=this.diagnostics.indexOf(model.aimWarning);if(i>=0)this.diagnostics.splice(i,1);model.aimWarning=null;}
   if(result&&!result.supported){model.aimWarning=`${unit.name||unit.species}: firing animation unavailable (${result.reason}); shot outcome unchanged.`;this.diagnostics.push(model.aimWarning);}
  }
- prune(){this.grenades.update(this.combat.active,this.state);this.tankEffects.draw(this.camera);} // Runs after posing, before rendering.
+ prune(){this.grenades.update(this.combat.active,this.state,this.camera);this.tankEffects.draw(this.camera);} // Runs after posing, before rendering.
  pick(x,y,width,height,level=this.presentationLevel??this.level){
   const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
   const barrel=[this.paintedEnvironment.barrelHit(ray,level),this.sites.hit(ray,level)].filter(Boolean).sort((a,b)=>a.distance-b.distance)[0],onLevel=id=>(this.state.units.find(u=>u.id===id)?.z||0)===level;
