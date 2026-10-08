@@ -1,6 +1,6 @@
 // Writes dist/tactics/idle-fits.js: each catalog mammal's fitted idle limits (how far its head turns, nods, looks up and
 // tilts, its chest twist and its arms' swing; see createIdle in idle-motion.js), keyed by the rig's fingerprint, so the
-// idle study and the game skip the 6-11 s fit. Run it after changing a rig or the fit; tests/idle-fits.test.mjs refits
+// idle study and the game skip the 1.4-6 s fit. Run it after changing a rig or the fit; tests/idle-fits.test.mjs refits
 // every rig and fails while the table is stale.
 //   node tools/fit-idle-rigs.mjs
 import fs from 'node:fs';
