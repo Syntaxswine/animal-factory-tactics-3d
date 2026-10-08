@@ -40,6 +40,8 @@ try{
  await page.evaluate(async()=>{await window.idleStudy.cast('horse');window.idleStudy.set({seed:1,view:'three',scale:'close',gaze:false});});
  const stats=await page.evaluate(()=>{const before=window.idleStudy.seek(0);for(let pass=0;pass<3;pass++)for(let i=0;i<=120;i++)window.idleStudy.seek(window.idleStudy.length*i/120);const after=window.idleStudy.seek(0);return {before:{geometries:before.geometryCount,textures:before.textureCount},after:{geometries:after.geometryCount,textures:after.textureCount}};});
  assert.equal(stats.before.geometries,stats.after.geometries);assert.equal(stats.before.textures,stats.after.textures);samples+=363;
+ // An unknown control or value, and a gaze line that is not simply on or off, are refused.
+ for(const o of [{colour:'red'},{species:'hen'},{seed:9},{gaze:'no'},{gaze:1}]){const refused=await page.evaluate(async o=>{try{await window.idleStudy.set(o);return null;}catch(e){return e.message;}},o);assert.ok(refused,JSON.stringify(o)+' is refused');}
  // A look button pauses and jumps to where that look lands.
  await page.locator('#keyframes button').nth(2).click();assert.equal(await page.locator('#play').textContent(),'Play');
  const landed=await page.evaluate(()=>{const l=window.idleStudy.schedule.looks[2];return (l.time+l.dur).toFixed(2);});assert.match(await page.locator('#status').textContent(),new RegExp('^'+landed.replace('.','\\.')));
@@ -47,8 +49,9 @@ try{
  for(const [name,o,t] of [['close-three',{view:'three',scale:'close',gaze:true},4.4],['gameplay',{view:'three',scale:'game',gaze:false},4.4],['surroundings',{view:'three',scale:'wide',gaze:true},24.9]]){await page.evaluate(({o,t})=>{window.idleStudy.set(o);window.idleStudy.seek(t);},{o,t});await page.screenshot({path:path.join(out,name+'.png')});}
  const looks=await page.evaluate(()=>window.idleStudy.schedule.looks.map(l=>l.time+l.dur));
  await sheet(page,'looks-horse.png',looks.map(t=>['horse',1,t,[.02,1.0,0],.62,.66,.22]),7);
- // The deepest glance at the ground each of six characters makes in loops 1-8, beside the same loop's opening look ahead.
- const downs=[];for(const id of ['horse','cow','donkey','dog','goat','pig-director'])downs.push(await page.evaluate(async id=>{const S=window.idleStudy;await S.cast(id);let best=null;
+ // The deepest glance at the ground each of six characters makes in loops 1-8, beside the same loop's opening look ahead
+ // (the sheep and the pig director, whose clothes hold their heads, do not glance at the ground).
+ const downs=[];for(const id of ['horse','cow','donkey','dog','goat','pig-foreman'])downs.push(await page.evaluate(async id=>{const S=window.idleStudy;await S.cast(id);let best=null;
   for(let seed=1;seed<=8;seed++){await S.set({seed});for(const l of S.schedule.looks)if(l.kind==='ground'&&(!best||l.pitch<best.pitch))best={seed,start:l.time,land:l.time+l.dur+.4,pitch:l.pitch};}return {id,...best};},id));
  assert.ok(downs.every(d=>d.pitch<-8),'each of the six glances down at least 8 degrees');
  await sheet(page,'glance-down-profile.png',downs.flatMap(d=>[[d.id,d.seed,0,[.05,1.3,0],.32,0,.02],[d.id,d.seed,d.land,[.05,1.3,0],.32,0,.02]]),6);

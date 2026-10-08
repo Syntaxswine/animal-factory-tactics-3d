@@ -13,7 +13,7 @@ const tile=new T.Line(new T.BufferGeometry().setFromPoints([[-.5,-.5],[.5,-.5],[
 // Gaze overlay: a dashed line from between the eyes to where they point, and a small ring there.
 const gazeLine=new T.Line(new T.BufferGeometry(),new T.LineDashedMaterial({color:0xebc778,dashSize:.06,gapSize:.04,transparent:true,opacity:.8}));scene.add(gazeLine);
 const marker=new T.Mesh(new T.TorusGeometry(.07,.008,8,32),new T.MeshBasicMaterial({color:0xebc778}));scene.add(marker);
-const loader=new T.TextureLoader(),ownedTextures=[];let worker,paint,motion,atlas,disposed=false,ready=false,raf,observer;
+const loader=new T.TextureLoader(),ownedTextures=[];let worker,eye=null,paint,motion,atlas,disposed=false,ready=false,raf,observer;
 let time=Math.max(0,Number(params.get('time'))||0),playing=!params.has('paused')&&!matchMedia('(prefers-reduced-motion: reduce)').matches,orbit=0,elevation=0,drag=null;
 // The hen has wings, not arms and hands; like the all-animal motion study, the idle is for the eleven mammals.
 const CAST=ANIMAL_MOTION_CATALOG.filter(p=>!p.unarmed);for(const p of CAST)$('species').append(new Option(p.label,p.id));
@@ -25,11 +25,11 @@ try{
  atlas=await loader.loadAsync(LIGHT_ATLAS);atlas.colorSpace=T.SRGBColorSpace;
  // Switching character replaces the worker, its paint and its motion; the seed and the time are kept.
  async function cast(id){const profile=CAST.find(p=>p.id===id),data=await fetch('./'+profile.file).then(r=>{if(!r.ok)throw Error(profile.label+' mesh failed to load');return r.json();});release();
-  worker=profile.create(data,atlas);paint=await createAnimalPaint(renderer,worker,profile,{loadAsync:async(...args)=>{const t=await loader.loadAsync(...args);ownedTextures.push(t);return t;}});for(const p of worker.parts){p.material=paint.material;p.castShadow=true;}
+  worker=profile.create(data,atlas);eye=profile.eye??null;paint=await createAnimalPaint(renderer,worker,profile,{loadAsync:async(...args)=>{const t=await loader.loadAsync(...args);ownedTextures.push(t);return t;}});for(const p of worker.parts){p.material=paint.material;p.castShadow=true;}
   scene.add(worker.root);load(Number($('seed').value));}
- // Each seed is its own loop; switching rebuilds the motion and keeps the time (about 0.15 s, or about a second for a
- // character's first loop, while its clothes are measured).
- function load(seed){motion?.dispose();motion=createIdle(worker,{seed});$('time').max=motion.length;time%=motion.length;
+ // Each seed is its own loop; switching rebuilds the motion (about 0.15 s: the character's fitted limits ship in
+ // idle-fits.js) and keeps the time. The gaze line starts at the character's own eyes.
+ function load(seed){motion?.dispose();motion=createIdle(worker,{seed,eye});$('time').max=motion.length;time%=motion.length;
   $('keyframes').replaceChildren();for(const l of motion.schedule.looks){const b=document.createElement('button');b.textContent=l.label;b.dataset.time=l.time+l.dur;b.title=(l.time+l.dur).toFixed(2)+' s';b.onclick=()=>{playing=false;time=l.time+l.dur;draw();};$('keyframes').append(b);}}
  await cast($('species').value);
  function aim(w,h,focus,ppu){const view=$('view').value,angle=({three:.66,side:0,front:Math.PI/2,rear:-Math.PI/2}[view])+orbit;
@@ -44,7 +44,7 @@ try{
  }
  window.idleStudy={timing:IDLE,get species(){return $('species').value;},get length(){return motion.length;},get schedule(){return motion.schedule;},seek(t){if(!Number.isFinite(t))throw Error('Time must be finite');playing=false;time=((t%motion.length)+motion.length)%motion.length;return draw();},
   // Any of the page's controls by name; a character or seed is loaded, and an unknown control or value is refused.
-  async set(options){for(const [k,v]of Object.entries(options)){if(k==='gaze'){$('gaze').checked=!!v;continue;}if(!['species','seed','view','scale','speed'].includes(k))throw Error('The study has no '+k+' control');
+  async set(options){for(const [k,v]of Object.entries(options)){if(k==='gaze'){if(typeof v!=='boolean')throw Error('The gaze line is on or off: true or false');$('gaze').checked=v;continue;}if(!['species','seed','view','scale','speed'].includes(k))throw Error('The study has no '+k+' control');
     if(![...$(k).options].some(o=>o.value===String(v)))throw Error('No '+k+' '+v);$(k).value=String(v);if(k==='species')await cast(String(v));else if(k==='seed')load(Number(v));}orbit=elevation=0;return draw();},play(){playing=true;return draw();},draw,dispose,get worker(){return worker;},get motion(){return motion;},cast:async id=>{$('species').value=id;await cast(id);return draw();},renderer,scene,camera};
  $('play').onclick=()=>{playing=!playing;draw();};$('restart').onclick=()=>{time=0;playing=true;draw();};$('time').oninput=()=>{playing=false;time=+$('time').value;draw();};
  $('seed').onchange=()=>{load(Number($('seed').value));draw();};$('species').onchange=async()=>{await cast($('species').value);draw();};for(const id of ['view','scale','gaze','speed'])$(id).onchange=()=>{orbit=elevation=0;draw();};
