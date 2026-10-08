@@ -27,7 +27,7 @@ try{
  async function cast(id){const profile=CAST.find(p=>p.id===id),data=await fetch('./'+profile.file).then(r=>{if(!r.ok)throw Error(profile.label+' mesh failed to load');return r.json();});release();
   worker=profile.create(data,atlas);eye=profile.eye??null;paint=await createAnimalPaint(renderer,worker,profile,{loadAsync:async(...args)=>{const t=await loader.loadAsync(...args);ownedTextures.push(t);return t;}});for(const p of worker.parts){p.material=paint.material;p.castShadow=true;}
   scene.add(worker.root);load(Number($('seed').value));}
- // Each seed is its own loop; switching rebuilds the motion (about 0.15 s: the character's fitted limits ship in
+ // Each seed is its own loop; switching rebuilds the motion (0.15-0.22 s: the character's fitted limits ship in
  // idle-fits.js) and keeps the time. The gaze line starts at the character's own eyes.
  function load(seed){motion?.dispose();motion=createIdle(worker,{seed,eye});$('time').max=motion.length;time%=motion.length;
   $('keyframes').replaceChildren();for(const l of motion.schedule.looks){const b=document.createElement('button');b.textContent=l.label;b.dataset.time=l.time+l.dur;b.title=(l.time+l.dur).toFixed(2)+' s';b.onclick=()=>{playing=false;time=l.time+l.dur;draw();};$('keyframes').append(b);}}

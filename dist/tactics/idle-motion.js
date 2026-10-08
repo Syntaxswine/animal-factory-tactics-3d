@@ -142,26 +142,40 @@ function closest(p,A,B,C){const ab=[B[0]-A[0],B[1]-A[1],B[2]-A[2]],ac=[C[0]-A[0]
       if(va<=0&&d4-d3>=0&&d5-d6>=0){const t=(d4-d3)/((d4-d3)+(d5-d6));b=[0,1-t,t];feat=1;}else{const den=1/(va+vb+vc),v=vb*den,w=vc*den;b=[1-v-w,v,w];feat=-1;}}}}}}
  const e=[0,1,2].map(k=>p[k]-(b[0]*A[k]+b[1]*B[k]+b[2]*C[k]));return {b,e,d2:dot(e,e),feat};}
 
-// The fitted limits depend only on the rig, not the seed: one fit per rig shape (6-11 s), kept for every later loop. The
+// The fitted limits depend only on the rig, not the seed: one fit per rig shape (1.4-6 s), kept for every later loop. The
 // catalog rigs' fits ship in idle-fits.js, keyed by rigKey (tools/fit-idle-rigs.mjs writes it; tests/idle-fits.test.mjs
 // refits every rig against it); a rig not in it is fitted when its first idle is made, and `refit: true` fits afresh.
-const FITS=new Map(),LIVE=new WeakSet();
-const fingerprint=worker=>worker.bones.map(b=>b.name+b.position.toArray().map(x=>x.toFixed(4)).join(',')).join(';')+'|'+worker.parts.map(p=>{const a=p.geometry.attributes.position.array;let sum=0;for(let i=0;i<a.length;i++)sum+=a[i]*(1+i%3);return p.name+':'+a.length/3+':'+sum.toFixed(3);}).join(';');
-// A rig's key: its bones' rest places and its parts' names, sizes and vertex sums (the fingerprint), hashed (FNV-1a).
-export const rigKey=worker=>{const f=fingerprint(worker);let h=0x811c9dc5;for(let i=0;i<f.length;i++){h^=f.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return 'k'+h.toString(16).padStart(8,'0');};
+// (LIVE: each worker with an idle running, and its rig's key as read before the idle weighted it afresh)
+const FITS=new Map(),LIVE=new WeakMap();
+const sum=(a,k)=>{let s=0;for(let i=0;i<a.length;i++)s+=a[i]*(1+i%k);return s;};
+// each vertex's bones and weights, whatever slots they sit in
+const skinSum=a=>{let s=0,t=0;for(let i=0;i<a.skinIndex.count;i++)for(let k=0;k<4;k++){const b=a.skinIndex.getComponent(i,k)+1,w=a.skinWeight.getComponent(i,k);s+=b*w*(1+i%7);t+=b*b*w;}return s.toFixed(3)+','+t.toFixed(3);};
+const fingerprint=worker=>worker.bones.map(b=>b.name+[...b.position.toArray(),...b.quaternion.toArray(),...b.scale.toArray()].map(x=>x.toFixed(4)).join(',')).join(';')+'|'+worker.parts.map(p=>{const g=p.geometry,a=g.attributes;
+ return [p.name,a.position.count,sum(a.position.array,3).toFixed(3),g.index?sum(g.index.array,3):'-',skinSum(a),p.skeleton.bones.map(b=>b.name).join(',')].join(':');}).join(';');
+// A rig's key: its bones' rest places, turns and scales, and its parts' names, sizes, vertex sums, triangles, skin weights
+// and the bones those name (the fingerprint), hashed (FNV-1a). While an idle runs on the worker (and weights it afresh),
+// the key is the one read before it started.
+export const rigKey=worker=>{if(LIVE.has(worker))return LIVE.get(worker);const f=fingerprint(worker);let h=0x811c9dc5;for(let i=0;i<f.length;i++){h^=f.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return 'k'+h.toString(16).padStart(8,'0');};
 
-export function createIdle(worker,{seed=1,length=IDLE.length,eye=null,refit=false}={}){
+export function createIdle(worker,options={}){
+ if(options===null||typeof options!=='object'||Array.isArray(options))throw Error('Idle options must be an object: {seed, length, eye, refit}');
+ for(const k of Object.keys(options))if(!['seed','length','eye','refit'].includes(k))throw Error('Idle option "'+k+'" is not one of seed, length, eye, refit');
+ const {seed=1,length=IDLE.length,eye=null,refit=false}=options;
  if(!Number.isInteger(seed)||seed<0||seed>0xffffffff)throw Error('Idle seed must be a whole number from 0 to 4294967295');
  if(typeof length!=='number'||!Number.isFinite(length)||length<12||length>600)throw Error('Idle loop must last 12 to 600 s');
  if(eye!==null&&!(Array.isArray(eye)&&eye.length===3&&eye.every(Number.isFinite)))throw Error('Idle eye must be a world point [x, y, z] on the rest pose');
  if(typeof refit!=='boolean')throw Error('Idle refit must be true or false');
  if(LIVE.has(worker))throw Error('This worker already has an idle running: dispose it first');
- const key=rigKey(worker),L=length,root=worker.root,bones=Object.fromEntries(worker.bones.map(b=>[b.name,b])),base0=worker.skeleton;
+ const bones=Object.fromEntries(worker.bones.map(b=>[b.name,b])),missing=['hips','spine','head',...[-1,1].flatMap(s=>['upperArm','forearm','hand','fingers','thigh','shin','hoof'].map(b=>b+s))].filter(n=>!bones[n]);
+ if(missing.length)throw Error('Idle needs a mammal rig with arms and legs: this worker has no '+missing.slice(0,3).join(', ')+(missing.length>3?' (and '+(missing.length-3)+' more)':'')+(missing.length>1?' bones':' bone'));
+ // the skeleton the parts are bound to now: the rig's own, or one a motion has made (the game's adds tail bones)
+ const base0=worker.parts[0].skeleton;if(worker.parts.some(m=>m.skeleton!==base0))throw Error('Idle needs every part of the worker bound to one skeleton');
+ const key=rigKey(worker),L=length,root=worker.root;
  root.position.set(0,0,0);root.quaternion.identity();worker.pose('neutral');root.updateMatrixWorld(true);
  const rest=new Map(worker.bones.map(b=>[b,b.getWorldPosition(V())])),at0=b=>rest.get(bones[b]).clone(),palm=V([.052,-.010,0]);
  const restHips=at0('hips'),spineOffset=at0('spine').sub(restHips),headOffset=at0('head').sub(at0('spine'));
  // Where the eyes sit on the head (the catalog's eye height and depth, or the horse's): the gaze line starts there.
- const EYE=eye?V([eye[0],eye[1],0]).sub(at0('head')):V([.123,.177,0]);
+ const EYE=eye?V([eye[0],eye[1],0]).sub(at0('head')):V([.123,.177,0]);if(EYE.length()>.5)throw Error('Idle eye must lie on the head: ['+eye.join(', ')+'] is '+EYE.length().toFixed(2)+' m from the head joint');
  // The neck as a branch rising from the shoulders to the head joint along the rest neck, three quarters as long as the
  // spine-to-head span of this rig.
  const NECK=clamp(.75*headOffset.length(),.15,.22),NECK_AXIS=headOffset.clone().normalize(),NECK_BASE=headOffset.clone().addScaledVector(NECK_AXIS,-NECK);
@@ -197,7 +211,11 @@ export function createIdle(worker,{seed=1,length=IDLE.length,eye=null,refit=fals
  // a belt moves with the cloth behind it. Trousers more than 10-18 cm in front of the hip joints are round a belly, not a
  // leg, and stay with the hips; below the knee the trousers keep the rig's own weights (the cuffs ride the hooves).
  const hipY=at0('hips').y,kneeY=at0('shin1').y,thighX=at0('thigh1').x,waistAt=y=>smooth((y-(hipY+.08))/.16);
- const sleeves=(a,i,side)=>{const w=weightsOf(a,i);return [w[bi('upperArm'+side)]||0,w[bi('forearm'+side)]||0];};
+ // The rigs weight some cloth beside the arms to them (a shirt's side at the waist, beside a hanging hand, moves with
+ // the forearm), so the hip tears it as the weight shifts: the arm's weight stays on the sleeve, fading out from 10 to
+ // 12 cm from the arm's bones (shoulder to elbow to wrist), and goes to the cloth's own blend beyond.
+ const fromArm=(x,s)=>{const seg=(a,b)=>{const ab=b.clone().sub(a),t=clamp(x.clone().sub(a).dot(ab)/ab.lengthSq());return x.distanceTo(a.clone().addScaledVector(ab,t));};return Math.min(seg(at0('upperArm'+s),at0('forearm'+s)),seg(at0('forearm'+s),at0('hand'+s)));};
+ const sleeves=(a,i,side)=>{const w=weightsOf(a,i),k=1-smooth((fromArm(V([a.position.getX(i),a.position.getY(i),a.position.getZ(i)]),side)-.10)/.02);return [k*(w[bi('upperArm'+side)]||0),k*(w[bi('forearm'+side)]||0)];};
  for(const mesh of worker.parts.filter(m=>/shirt|waistcoat|jacket|belt|pouch/.test(m.name)&&!/trousers/.test(m.name))){const a=mesh.geometry.attributes,p=a.position;
   for(let i=0;i<p.count;i++){const side=p.getZ(i)<0?-1:1,[upper,lower]=sleeves(a,i,side),torso=1-upper-lower,waist=waistAt(p.getY(i));
    setWeights(a,i,{[bi('hips')]:torso*(1-waist),[bi('spine')]:torso*waist,[bi('upperArm'+side)]:upper,[bi('forearm'+side)]:lower});}
@@ -209,36 +227,48 @@ export function createIdle(worker,{seed=1,length=IDLE.length,eye=null,refit=fals
    const own=weightsOf(a,i),keep=1-smooth((y-(kneeY-.12))/.08),w={};for(const [b,x] of Object.entries(own))w[b]=(w[b]||0)+keep*x;for(const [b,x] of Object.entries(blend))w[b]=(w[b]||0)+(1-keep)*x;setWeights(a,i,w);}
   a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;}
  // The neck weighted along its bone by height above the branch's base (u, in branch lengths), in rings: of the weight not
- // on the head, the neck bone takes neckShare(u), so the neck bends most at its base. Everything round the neck takes the
- // ring at its height, the neck skin and every layer of cloth on it (a collar, a neckerchief with its knot and ends, the
- // tops of a shirt, waistcoat, bib or braces), in full within 3 cm of the neck's median radius and easing to its own
- // weights 13 cm out: one smooth field for every part, so the layers on the neck and the shoulders move as one instead of
- // folding through each other. The neck skin keeps the head weight the rig gave it, and cloth takes none (the head's own
- // turn and nod do not drag the layers); the head itself (vertices the rig gives wholly to it) is left alone. A mane, which
- // nothing lies on, takes in full the weights of the skin it grows from, at the nearest point of the skull's surface.
+ // on the head, the neck bone takes neckShare(u), so the neck bends most at its base. The neck skin keeps the head weight
+ // the rig gave it, and the head itself (vertices the rig gives wholly to it) is left alone.
  const skull=worker.parts.find(m=>/unified/.test(m.name)&&/skull/.test(m.name))??worker.parts.find(m=>/skull/.test(m.name)),hi=bi('head'),si=bi('spine'),ni=bi('neck'),B=at0('spine').add(NECK_BASE);
  const restAt=(m,i)=>{const v=V().fromBufferAttribute(m.geometry.attributes.position,i);m.applyBoneTransform(i,v);return v.applyMatrix4(m.matrixWorld);};
  const heightOf=v=>v.clone().sub(B).dot(NECK_AXIS)/NECK,radiusOf=v=>{const d=v.clone().sub(B);return d.addScaledVector(NECK_AXIS,-d.dot(NECK_AXIS)).length();};
  const field=v=>(1-smooth((radiusOf(v)-NECK_RADIUS-.03)/.10))*smooth((heightOf(v)+.5)/.3);
  const mix=(own,target,f)=>{const w={};for(const [b,x] of Object.entries(own))w[b]=(w[b]||0)+(1-f)*x;for(const [b,x] of Object.entries(target))w[b]=(w[b]||0)+f*x;return w;};
+ // A part's surface at rest, for the cloth that lies on it: its triangles in 4 cm cells, searched in growing shells for
+ // the nearest point to v (only on triangles with a corner no higher than `top` by height(), if that is given, and only
+ // within `far`), whose weights (the corners', in proportion) and squared distance it returns.
+ const surfaceOf=(m,height)=>{const a=m.geometry.attributes,ix=m.geometry.index?.array,corner=(t,k)=>ix?ix[3*t+k]:3*t+k,faces=(ix?ix.length:a.position.count)/3,P=Array.from({length:a.position.count},(_,i)=>restAt(m,i)),H=height?P.map(height):null,SIDE=.04,cells=new Map(),cellKey=(x,y,z)=>((x+2048)*4096+y+2048)*4096+z+2048,stamp=new Int32Array(faces).fill(-1);let query=0;
+  for(let t=0;t<faces;t++){const c=[0,1,2].map(k=>P[corner(t,k)].toArray()),lo=[0,1,2].map(k=>Math.floor(Math.min(c[0][k],c[1][k],c[2][k])/SIDE)),up=[0,1,2].map(k=>Math.floor(Math.max(c[0][k],c[1][k],c[2][k])/SIDE));
+   for(let x=lo[0];x<=up[0];x++)for(let y=lo[1];y<=up[1];y++)for(let z=lo[2];z<=up[2];z++){const k=cellKey(x,y,z);if(!cells.has(k))cells.set(k,[]);cells.get(k).push(t);}}
+  const Q=P.map(v=>v.toArray());
+  return (v,top=Infinity,far=Infinity)=>{const p=v.toArray(),c=p.map(x=>Math.floor(x/SIDE));let best=null,near=null;query++;
+   for(let r=0;r<=8&&(r-1)*SIDE<=far&&!(best&&Math.sqrt(best.d2)<=(r-1)*SIDE);r++)for(let x=-r;x<=r;x++)for(let y=-r;y<=r;y++)for(let z=-r;z<=r;z++){if(Math.max(Math.abs(x),Math.abs(y),Math.abs(z))<r)continue;
+    for(const t of cells.get(cellKey(c[0]+x,c[1]+y,c[2]+z))||[]){if(stamp[t]===query)continue;stamp[t]=query;const k=[0,1,2].map(j=>corner(t,j));if(H&&Math.min(H[k[0]],H[k[1]],H[k[2]])>top)continue;const q=closest(p,Q[k[0]],Q[k[1]],Q[k[2]]);if(!best||q.d2<best.d2){best=q;near=k;}}}
+   if(!best||best.d2>far*far)return null;const w={};near.forEach((i,j)=>{for(const [b,x] of Object.entries(weightsOf(a,i)))w[b]=(w[b]||0)+best.b[j]*x;});return {w,d2:best.d2};};};
  let NECK_RADIUS=0;
  if(skull){const a=skull.geometry.attributes,radii=[],at=Array.from({length:a.position.count},(_,i)=>restAt(skull,i));
   for(const v of at){const u=heightOf(v);if(u>.2&&u<.8)radii.push(radiusOf(v));}radii.sort((x,y)=>x-y);NECK_RADIUS=radii[radii.length>>1]||.06;
-  for(const mesh of worker.parts.filter(m=>!/forearm and hand|hoof|boot|foot|tail|mane/.test(m.name))){const b=mesh.geometry.attributes;
-   for(let i=0;i<b.position.count;i++){const own=weightsOf(b,i);if((own[hi]||0)>.98)continue;const v=restAt(mesh,i),f=field(v);if(f<=0)continue;
-    const h=mesh===skull?(own[hi]||0):0,n=neckShare(heightOf(v));setWeights(b,i,mix(own,{[hi]:h,[ni]:(1-h)*n,[si]:(1-h)*(1-n)},f));}
-   b.skinIndex.needsUpdate=b.skinWeight.needsUpdate=true;}
-  // the mane: the skull's triangles in 4 cm cells, searched in growing shells for the nearest point of its surface, whose
-  // weights (the corners' as weighted above, in proportion) the mane takes
-  const mane=worker.parts.filter(m=>/mane/.test(m.name));
-  if(mane.length){const ix=skull.geometry.index?.array,corner=(t,k)=>ix?ix[3*t+k]:3*t+k,faces=(ix?ix.length:a.position.count)/3,P=at.map(v=>v.toArray()),SIDE=.04,cells=new Map(),cellKey=(x,y,z)=>x+','+y+','+z;
-   for(let t=0;t<faces;t++){const c=[0,1,2].map(k=>P[corner(t,k)]),lo=[0,1,2].map(k=>Math.floor(Math.min(c[0][k],c[1][k],c[2][k])/SIDE)),up=[0,1,2].map(k=>Math.floor(Math.max(c[0][k],c[1][k],c[2][k])/SIDE));
-    for(let x=lo[0];x<=up[0];x++)for(let y=lo[1];y<=up[1];y++)for(let z=lo[2];z<=up[2];z++){const k=cellKey(x,y,z);if(!cells.has(k))cells.set(k,[]);cells.get(k).push(t);}}
-   const skinAt=v=>{const p=v.toArray(),c=p.map(x=>Math.floor(x/SIDE)),seen=new Set();let best=null,near=null;
-    for(let r=0;r<=8&&!(best&&Math.sqrt(best.d2)<=(r-1)*SIDE);r++)for(let x=-r;x<=r;x++)for(let y=-r;y<=r;y++)for(let z=-r;z<=r;z++){if(Math.max(Math.abs(x),Math.abs(y),Math.abs(z))<r)continue;
-     for(const t of cells.get(cellKey(c[0]+x,c[1]+y,c[2]+z))||[]){if(seen.has(t))continue;seen.add(t);const k=[0,1,2].map(j=>corner(t,j)),q=closest(p,P[k[0]],P[k[1]],P[k[2]]);if(!best||q.d2<best.d2){best=q;near=k;}}}
-    const w={};if(best)near.forEach((i,j)=>{for(const [b,x] of Object.entries(weightsOf(a,i)))w[b]=(w[b]||0)+best.b[j]*x;});return best?w:null;};
-   for(const mesh of mane){const b=mesh.geometry.attributes;for(let i=0;i<b.position.count;i++){const w=skinAt(restAt(mesh,i));if(w)setWeights(b,i,w);}b.skinIndex.needsUpdate=b.skinWeight.needsUpdate=true;}}}
+  for(let i=0;i<a.position.count;i++){const own=weightsOf(a,i),h=own[hi]||0;if(h>.98)continue;const f=field(at[i]);if(f<=0)continue;const n=neckShare(heightOf(at[i]));setWeights(a,i,mix(own,{[hi]:h,[ni]:(1-h)*n,[si]:(1-h)*(1-n)},f));}
+  a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;
+  // Every layer on the neck (a collar, a neckerchief with its knot and ends, the tops of a shirt, waistcoat, bib or braces)
+  // takes the weights of the skin under it, in full within 3 cm of the neck's median radius and easing to its own weights
+  // 13 cm out: one smooth field, so that the layers and the skin they lie on move as one and nothing on the neck slides
+  // through anything as the head turns, nods or tilts. The skin under a layer is the nearest point of the skull's surface
+  // no higher up the neck than the layer is (with 1 cm, about a triangle, to spare): the nearest point outright would put
+  // a collar's top edge on the jaw above it, and the band would fold as the jaw turned. Hair, which nothing lies on (a
+  // mane, a beard), takes in full the weights of the skin it grows from, at the nearest point.
+  const skin=surfaceOf(skull,v=>v.clone().sub(B).dot(NECK_AXIS));
+  for(const mesh of worker.parts.filter(m=>m!==skull&&!/forearm and hand|hoof|boot|foot|tail/.test(m.name))){const b=mesh.geometry.attributes,hair=/mane|beard/.test(mesh.name);
+   for(let i=0;i<b.position.count;i++){const v=restAt(mesh,i),f=hair?1:field(v);if(f<=0)continue;const r=hair?skin(v):skin(v,v.clone().sub(B).dot(NECK_AXIS)+.01)??skin(v);if(r)setWeights(b,i,mix(weightsOf(b,i),r.w,f));}
+   b.skinIndex.needsUpdate=b.skinWeight.needsUpdate=true;}}
+ // A sleeve's end round a forearm takes the weights of the skin under it, in full within 1 cm of it and easing to its own
+ // 3 cm away, so the forearm does not slide out through the cloth wrapped round it (the rigs weight a sleeve's inside at
+ // the elbow mostly to the chest).
+ for(const s of [-1,1]){const arm=worker.parts.find(m=>m.name==='forearm and hand '+s);if(!arm)continue;const under=surfaceOf(arm);
+  for(const mesh of worker.parts.filter(m=>/shirt|waistcoat|jacket/.test(m.name))){const b=mesh.geometry.attributes;
+   for(let i=0;i<b.position.count;i++){if((b.position.getZ(i)<0?-1:1)!==s)continue;const own=weightsOf(b,i);if((own[bi('upperArm'+s)]||0)+(own[bi('forearm'+s)]||0)<.01)continue;
+    const r=under(restAt(mesh,i),Infinity,.03),g=r?1-smooth((Math.sqrt(r.d2)-.01)/.02):0;if(g>0)setWeights(b,i,mix(own,r.w,g));}
+   b.skinIndex.needsUpdate=b.skinWeight.needsUpdate=true;}}
  const restoreSkin=()=>{for(const {m,index,weight} of savedSkin){m.geometry.attributes.skinIndex.copy(index);m.geometry.attributes.skinWeight.copy(weight);m.geometry.attributes.skinIndex.needsUpdate=m.geometry.attributes.skinWeight.needsUpdate=true;}
   for(const [m,sk,bm] of savedBind)m.bind(sk,bm);neck.removeFromParent();skeleton.dispose();};
 
@@ -264,91 +294,94 @@ export function createIdle(worker,{seed=1,length=IDLE.length,eye=null,refit=fals
  const hangAt=(s,yaw)=>{const q=turn([0,1,0],yaw),sh=bones['upperArm'+s].getWorldPosition(V());limb(bones['upperArm'+s],bones['forearm'+s],bones['hand'+s],sh.add(HANG[s].clone().applyQuaternion(q)),BEND[s].arm.clone().applyQuaternion(q));};
 
  // ---- fitted to this rig: how far the head can turn, nod and look up, the chest twist, and the arms' swing ----
- // Two tests, on every part of the rig as skinned. Crossings: a pose fails when two triangles cross that the rest pose does
- // not have crossing, skin through cloth, cloth through cloth or a part through itself (triangles that share a corner aside;
- // two held rigidly by one bone cannot cross anew and are not tested). The rest pose already has crossings (neck skin under
- // a collar, an arm a coat sits over), and moving slides them along: a crossing within two triangles, on both sides, of one
- // in the rest pose is that crossing slid along, and one that goes 3 mm deep or less is a graze: a pixel at the study's
- // close-up scale (280-400 px a metre as the window allows; the game draws at 130). A crossing goes as deep as the
- // shallower of the two triangles pokes through the other's plane, so two that meet nearly flat (a coarse band on the
- // skin it wraps) read the sliver they cross in, not their size. Depth: the skin of the head, the forearms and the hands
- // is measured inside the cloth (every garment is a closed solid: a vertex's depth is its distance, up to 6 cm, from the
- // nearest point of the garment it lies deepest in), and a pose fails where skin that shows in the rest pose (outside
- // every garment) goes more than 3 mm into one: a slid crossing may not sink in. Skin already inside the cloth at rest is
- // hidden there, however deep it goes; any sinking shows where the skin beside it, which showed, goes under.
+ // Two tests, on every part of the rig as skinned. Sinking: a vertex of any part that shows in the rest pose (outside
+ // every other part, or less than 0.5 mm into one) may go no more than 3 mm into another part, a pixel at the study's
+ // close-up scale (280-400 px a metre as the window allows; the game draws at 130). Every part is a closed surface (each
+ // edge, its corners welded to 0.1 mm, shared by two triangles), so a point is inside a part where a ray from it crosses
+ // the part an odd number of times, and as deep as it is far from the part's surface. A vertex the rest pose already
+ // hides (neck skin under a collar, a shirt under the trousers' waist, a forearm up its sleeve) is hidden however deep it
+ // goes: what shows of any sinking is a vertex beside it, which showed, going under. Crossings: a part may not pass
+ // through itself (a sleeve into its own shirt, a mane folding, an ear into its skull). Two of its triangles that share
+ // no corner cross where an edge of either passes through the other, and a crossing is new unless the rest pose has it,
+ // or one within two triangles of it on both sides (the same crossing slid along), or it goes 3 mm deep or less: as deep
+ // as the shallower of the two triangles pokes through the other's plane, so two that meet nearly flat read the sliver
+ // they cross in, not their size. Two triangles held rigidly by one bone cannot cross anew and are not tested.
  const fits=(!refit&&(FITS.get(key)??IDLE_FITS[key]))||(()=>{
-  const tri=[],skins=new Map(worker.parts.map(m=>[m,skinner(m)])),keyOf=(m,i)=>m.uuid+':'+[0,1,2].map(k=>Math.round(m.geometry.attributes.position.getComponent(i,k)*1e4)).join(',');
-  const COVER=/shirt|overalls|trousers|waistcoat|jacket|neckerchief|collar|belt|pouch|mane|cap/;
-  for(const mesh of worker.parts){const g=mesh.geometry,a=g.attributes,ix=g.index?g.index.array:null,n=ix?ix.length:a.position.count,cover=COVER.test(mesh.name);
-   for(let t=0;t<n;t+=3){const v=ix?[ix[t],ix[t+1],ix[t+2]]:[t,t+1,t+2],w=v.map(i=>weightsOf(a,i)),names=new Set(w.flatMap(x=>Object.keys(x).map(b=>boneName(+b))));
+  const parts=worker.parts.map(mesh=>({mesh,skin:skinner(mesh),names:null,tris:[]})),tri=[];
+  parts.forEach((part,p)=>{const a=part.mesh.geometry.attributes,ix=part.mesh.geometry.index?.array,n=ix?ix.length:a.position.count,keyOf=i=>p+':'+[0,1,2].map(k=>Math.round(a.position.getComponent(i,k)*1e4)).join(',');
+   part.names=Array.from({length:a.position.count},(_,i)=>[...new Set(Object.keys(weightsOf(a,i)).map(b=>boneName(+b)))]);
+   for(let t=0;t<n;t+=3){const v=ix?[ix[t],ix[t+1],ix[t+2]]:[t,t+1,t+2],w=v.map(i=>weightsOf(a,i)),names=[...new Set(v.flatMap(i=>part.names[i]))];
     const solo=w.every(x=>Object.keys(x).length===1)&&new Set(w.map(x=>Object.keys(x)[0])).size===1?+Object.keys(w[0])[0]:-1;
-    tri.push({mesh,v,names,solo,cover,keys:v.map(i=>keyOf(mesh,i))});}}
-  const byCorner=new Map();tri.forEach((t,n)=>{for(const k of t.keys){if(!byCorner.has(k))byCorner.set(k,[]);byCorner.get(k).push(n);}});
+    part.tris.push(tri.push({p,v,names,solo,keys:v.map(keyOf)})-1);}});
+  const byCorner=new Map();tri.forEach((t,n)=>{for(const k of t.keys){let l=byCorner.get(k);if(!l)byCorner.set(k,l=[]);l.push(n);}});
   const one=n=>new Set(tri[n].keys.flatMap(k=>byCorner.get(k))),memo=new Map(),ring=n=>{let r=memo.get(n);if(!r){r=new Set();for(const m of one(n))for(const x of one(m))r.add(x);memo.set(n,r);}return r;};
-  const touching=(a,b)=>a.mesh===b.mesh&&a.keys.some(k=>b.keys.includes(k));
-  // Each garment is a closed solid, but a few of its triangles are wound the wrong way round (where a brace, a pocket or a
-  // cuff is welded on). For the measure each cloth mesh is wound again, triangle by triangle across its edges from one
-  // triangle, and the whole turned outward where that walk left it inside out (its signed volume negative).
-  const edgeKey=(x,y)=>x<y?x+'|'+y:y+'|'+x,byEdge=new Map(),sense=new Int8Array(tri.length);
-  tri.forEach((t,n)=>{if(!t.cover)return;for(let e=0;e<3;e++){const x=t.keys[e],y=t.keys[(e+1)%3];if(x===y)continue;const k=edgeKey(x,y);if(!byEdge.has(k))byEdge.set(k,[]);byEdge.get(k).push(n);}});
-  const restCorners=n=>{const t=tri[n],P=t.mesh.geometry.attributes.position;return t.v.map(i=>[P.getX(i),P.getY(i),P.getZ(i)]);};
-  for(let first=0;first<tri.length;first++){if(!tri[first].cover||sense[first])continue;const part=[first];sense[first]=1;
-   for(let q=0;q<part.length;q++){const i=part[q],t=tri[i];for(let e=0;e<3;e++){const x=t.keys[e],y=t.keys[(e+1)%3];if(x===y)continue;const l=byEdge.get(edgeKey(x,y));if(l.length!==2)continue;const o=l[0]===i?l[1]:l[0];if(sense[o])continue;
-     // two triangles face the same side when they run their shared edge in opposite directions
-     const j=tri[o].keys.indexOf(x);sense[o]=tri[o].keys[(j+1)%3]===y?-sense[i]:sense[i];part.push(o);}}
-   let volume=0;for(const i of part){const [A,B,C]=restCorners(i);volume+=sense[i]*(A[0]*(B[1]*C[2]-B[2]*C[1])-A[1]*(B[0]*C[2]-B[2]*C[0])+A[2]*(B[0]*C[1]-B[1]*C[0]));}if(volume<0)for(const i of part)sense[i]=-sense[i];}
-  // the skin measured for depth: every vertex of a forearm and hand, and of the skull those the rig gives mostly to the head
-  const orig=new Map(savedSkin.map(x=>[x.m,x])),origHead=(m,i)=>{const {index,weight}=orig.get(m);let h=0;for(let k=0;k<4;k++)if(base0.bones[index.getComponent(i,k)]===bones.head)h+=weight.getComponent(i,k);return h;};
-  const skinV=[];for(const mesh of worker.parts){const a=mesh.geometry.attributes,head=mesh===skull;if(!head&&!/forearm and hand/.test(mesh.name))continue;
-   for(let i=0;i<a.position.count;i++){if(head&&origHead(mesh,i)<=.5)continue;skinV.push({mesh,i,names:new Set(Object.keys(weightsOf(a,i)).map(b=>boneName(+b)))});}}
-  const corners=n=>{const t=tri[n],P=skins.get(t.mesh).out;return t.v.map(i=>[P[3*i],P[3*i+1],P[3*i+2]]);};
-  const CELL=.04,range=(c,pad,f)=>{const lo=[0,1,2].map(k=>Math.floor((Math.min(...c.map(p=>p[k]))-pad)/CELL)),hi=[0,1,2].map(k=>Math.floor((Math.max(...c.map(p=>p[k]))+pad)/CELL));for(let x=lo[0];x<=hi[0];x++)for(let y=lo[1];y<=hi[1];y++)for(let z=lo[2];z<=hi[2];z++)f(x+','+y+','+z);};
-  const put=(grid,k,n)=>{let g=grid.get(k);if(!g)grid.set(k,g=[]);g.push(n);};
-  const nearest=(p,c)=>closest(p,c[0],c[1],c[2]);
-  // A cloth triangle's outward unit normal, as wound for the measure.
-  const outward=(n,c)=>{const ab=[c[1][0]-c[0][0],c[1][1]-c[0][1],c[1][2]-c[0][2]],ac=[c[2][0]-c[0][0],c[2][1]-c[0][1],c[2][2]-c[0][2]],m=[ab[1]*ac[2]-ab[2]*ac[1],ab[2]*ac[0]-ab[0]*ac[2],ab[0]*ac[1]-ab[1]*ac[0]],l=(Math.hypot(...m)||1)*sense[n];return m.map(x=>x/l);};
-  // How deep point p sits in the cloth: for each garment within reach, p lies inside it where it lies behind that garment's
-  // nearest point, as told by the angle-weighted pseudo-normal there (the face's normal inside a face, the sum of the two
-  // faces' at an edge, the faces' round a corner weighted by their angles there: Baerentzen and Aanaes, exact for a closed
-  // surface), as deep as it is far from that point; its depth is the deepest it lies in any one garment, or 0.
-  const sunk=(p,list,cornersOf,reach)=>{const near=new Map();for(const b of list){const r=nearest(p,cornersOf(b));if(r.d2>=reach*reach)continue;const m=tri[b].mesh,o=near.get(m);if(!o||r.d2<o.best.d2)near.set(m,{best:r,bn:b});}
-   let deep=0;for(const {best,bn} of near.values()){
-   const t=tri[bn],N=[0,0,0],add=(n,w=1)=>{const u=outward(n,cornersOf(n));for(let x=0;x<3;x++)N[x]+=w*u[x];};
-   if(best.feat<0)add(bn);else if(best.feat<3)for(const m of byEdge.get(edgeKey(t.keys[best.feat],t.keys[(best.feat+1)%3])))add(m);
-   else{const key=t.keys[best.feat-3];for(const m of byCorner.get(key)){const c=cornersOf(m),i=tri[m].keys.indexOf(key),o=c[i],u=c[(i+1)%3].map((x,k)=>x-o[k]),v=c[(i+2)%3].map((x,k)=>x-o[k]);
-     add(m,Math.acos(clamp((u[0]*v[0]+u[1]*v[1]+u[2]*v[2])/((Math.hypot(...u)*Math.hypot(...v))||1),-1,1)));}}
-   if(best.e[0]*N[0]+best.e[1]*N[1]+best.e[2]*N[2]<0)deep=Math.max(deep,Math.sqrt(best.d2));}
-   return deep;};
+  const ids=new Map(),cid=Int32Array.from(tri.flatMap(t=>t.keys.map(k=>{let i=ids.get(k);if(i===undefined)ids.set(k,i=ids.size);return i;})));
+  const touching=(a,b)=>{for(let i=0;i<3;i++)for(let j=0;j<3;j++)if(cid[3*a+i]===cid[3*b+j])return true;return false;};
+  const corners=n=>{const t=tri[n],P=parts[t.p].skin.out;return t.v.map(i=>[P[3*i],P[3*i+1],P[3*i+2]]);};
+  // Each part's triangles in 4 cm cells, and in 2 cm columns of the ground for the rays, which rise nearly straight up
+  // (tipped a little off the vertical, so that none meets an edge squarely; they drift under 3 mm in 2 m).
+  const CELL=.04,COL=.02,RAY=(()=>{const r=[.0011,1,.0009],l=Math.hypot(...r);return r.map(x=>x/l);})();
+  const into=(map,k,n)=>{let l=map.get(k);if(!l)map.set(k,l=[]);l.push(n);},cellKey=(x,y,z)=>((x+2048)*4096+y+2048)*4096+z+2048;
+  const span=(lo,hi,f)=>{for(let x=Math.floor(lo[0]/CELL);x<=Math.floor(hi[0]/CELL);x++)for(let y=Math.floor(lo[1]/CELL);y<=Math.floor(hi[1]/CELL);y++)for(let z=Math.floor(lo[2]/CELL);z<=Math.floor(hi[2]/CELL);z++)f(cellKey(x,y,z));};
+  // (a triangle's bounds, kept in B at 6n: low corner, high corner)
+  const restB=new Float64Array(6*tri.length),nowB=new Float64Array(6*tri.length);
+  const apart=(a,A,b,B)=>A[6*a]>B[6*b+3]||B[6*b]>A[6*a+3]||A[6*a+1]>B[6*b+4]||B[6*b+1]>A[6*a+4]||A[6*a+2]>B[6*b+5]||B[6*b+2]>A[6*a+5];
+  const cells=(n,B,f)=>{const t=tri[n],P=parts[t.p].skin.out,o=6*n;for(let k=0;k<3;k++){B[o+k]=Infinity;B[o+3+k]=-Infinity;}for(const i of t.v)for(let k=0;k<3;k++){const v=P[3*i+k];if(v<B[o+k])B[o+k]=v;if(v>B[o+3+k])B[o+3+k]=v;}
+   const lo=[B[o],B[o+1],B[o+2]],hi=[B[o+3],B[o+4],B[o+5]];span(lo,hi,f);
+   for(let x=Math.floor((lo[0]-.004)/COL);x<=Math.floor((hi[0]+.004)/COL);x++)for(let z=Math.floor((lo[2]-.004)/COL);z<=Math.floor((hi[2]+.004)/COL);z++)f(-1-((x+2048)*4096+z+2048));};
+  const columnOf=x=>-1-((Math.floor(x[0]/COL)+2048)*4096+Math.floor(x[2]/COL)+2048);
+  // does the ray up from x pass through triangle n (Moller-Trumbore), and how near is x to it (squared; Ericson)?
+  const rises=(x,n)=>{const t=tri[n],P=parts[t.p].skin.out,a=3*t.v[0],b=3*t.v[1],c=3*t.v[2],e1x=P[b]-P[a],e1y=P[b+1]-P[a+1],e1z=P[b+2]-P[a+2],e2x=P[c]-P[a],e2y=P[c+1]-P[a+1],e2z=P[c+2]-P[a+2];
+   const px=RAY[1]*e2z-RAY[2]*e2y,py=RAY[2]*e2x-RAY[0]*e2z,pz=RAY[0]*e2y-RAY[1]*e2x,det=e1x*px+e1y*py+e1z*pz;if(Math.abs(det)<1e-14)return false;
+   const inv=1/det,sx=x[0]-P[a],sy=x[1]-P[a+1],sz=x[2]-P[a+2],u=(sx*px+sy*py+sz*pz)*inv;if(u<0||u>1)return false;
+   const qx=sy*e1z-sz*e1y,qy=sz*e1x-sx*e1z,qz=sx*e1y-sy*e1x,v=(RAY[0]*qx+RAY[1]*qy+RAY[2]*qz)*inv;if(v<0||u+v>1)return false;return (e2x*qx+e2y*qy+e2z*qz)*inv>0;};
+  const gap=(x,n)=>{const t=tri[n],P=parts[t.p].skin.out,i=3*t.v[0],j=3*t.v[1],k=3*t.v[2];return closest(x,[P[i],P[i+1],P[i+2]],[P[j],P[j+1],P[j+2]],[P[k],P[k+1],P[k+2]]).d2;};
+  const bounds=P=>{const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];for(let i=0;i<P.length;i+=3)for(let k=0;k<3;k++){lo[k]=Math.min(lo[k],P[i+k]);hi[k]=Math.max(hi[k],P[i+k]);}return [lo,hi];};
+  const inBox=(x,[lo,hi],pad=0)=>x[0]>=lo[0]-pad&&x[0]<=hi[0]+pad&&x[1]>=lo[1]-pad&&x[1]<=hi[1]+pad&&x[2]>=lo[2]-pad&&x[2]<=hi[2]+pad;
+  // The rest pose, once: each part's cells and bounds, and which vertices show.
+  neutral();for(const part of parts)part.skin.update();
+  const restCells=parts.map(part=>{const map=new Map();for(const n of part.tris)cells(n,restB,k=>into(map,k,n));return map;}),restBox=parts.map(part=>bounds(part.skin.out));
+  // Whether x is inside part q, and whether part q has a triangle within r of x: over the triangles of the part that a
+  // probe holds still (moved[n] 0: where they rest) and those it moves (in `now`, the cells they are in now).
+  const inside=(x,q,moved,now)=>{const k=columnOf(x);let hits=0;if(!now?.whole)for(const n of restCells[q].get(k)||[])if(!moved[n]&&rises(x,n))hits++;if(now)for(const n of now.cells.get(k)||[])if(rises(x,n))hits++;return hits%2===1;};
+  const near=(x,q,r,moved,now)=>{let hit=false;span([x[0]-r,x[1]-r,x[2]-r],[x[0]+r,x[1]+r,x[2]+r],k=>{if(hit)return;if(!now?.whole)for(const n of restCells[q].get(k)||[])if(!moved[n]&&gap(x,n)<r*r){hit=true;return;}if(now)for(const n of now.cells.get(k)||[])if(gap(x,n)<r*r){hit=true;return;}});return hit;};
+  const still=new Uint8Array(tri.length);
+  const shows=parts.map((part,p)=>{const P=part.skin.out,out=new Uint8Array(P.length/3).fill(1);
+   for(let i=0;i<out.length;i++){const x=[P[3*i],P[3*i+1],P[3*i+2]];for(let q=0;q<parts.length;q++)if(q!==p&&inBox(x,restBox[q])&&inside(x,q,still)&&!near(x,q,.0005,still)){out[i]=0;break;}}return out;});
   // How far a crossing goes: the shallower of the two triangles' pokes through the other's plane, each the less of its
-  // reaches either side of that plane (their overlap along each one's normal). Two triangles meeting nearly flat, a coarse
-  // band on the skin it wraps, cross in a sliver and read the sliver's depth, not their size.
+  // reaches either side of that plane (their overlap along each one's normal).
   const overlap=(A,B)=>{const reach=(P,Q)=>{const o=Q[0],e1=[Q[1][0]-o[0],Q[1][1]-o[1],Q[1][2]-o[2]],e2=[Q[2][0]-o[0],Q[2][1]-o[1],Q[2][2]-o[2]],n=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]],l=Math.hypot(...n)||1;
     let hi=0,lo=0;for(const p of P){const d=((p[0]-o[0])*n[0]+(p[1]-o[1])*n[1]+(p[2]-o[2])*n[2])/l;hi=Math.max(hi,d);lo=Math.min(lo,d);}return Math.min(hi,-lo);};return Math.min(reach(A,B),reach(B,A));};
   const pairOf=(A,B)=>{for(const [i,j] of [[0,1],[1,2],[2,0]])if(meets(A[i],A[j],B[0],B[1],B[2])||meets(B[i],B[j],A[0],A[1],A[2]))return overlap(A,B);return -1;};
-  // The crossings in the current pose that involve a moving triangle ('low:high' triangle numbers with their edge depth),
-  // and how deep each moving skin vertex sits behind cloth.
-  // (A probe passes stop, and the skin is measured first: the first vertex or pair stop names as failing ends the
-  // measure, null for the probe's answer.)
-  const contact=({movers,still,skin},reach=.06,stop=null)=>{root.updateMatrixWorld(true);for(const s of skins.values())s.update();const grid=new Map(),cover=new Map(),C=new Map(movers.map(n=>[n,corners(n)])),pairs=new Map(),depth=new Map(),cornersOf=b=>C.get(b)??still.at.get(b);
-   for(const [n,c] of C)if(tri[n].cover)range(c,reach,k=>put(cover,k,n));
-   for(const j of skin){const {mesh,i}=skinV[j],P=skins.get(mesh).out,p=[P[3*i],P[3*i+1],P[3*i+2]],k=Math.floor(p[0]/CELL)+','+Math.floor(p[1]/CELL)+','+Math.floor(p[2]/CELL),near=new Set();
-    for(const list of [cover.get(k),still.cover.get(k)])for(const b of list||[])near.add(b);const d=sunk(p,near,cornersOf,reach);depth.set(j,d);if(stop?.depth(j,d))return null;}
-   for(const [n,c] of C)range(c,0,k=>put(grid,k,n));
-   let failed=false;
-   for(const [a,A] of C){const seen=new Set(),ta=tri[a];range(A,0,k=>{if(failed)return;for(const list of [grid.get(k),still.grid.get(k)])for(const b of list||[]){if(failed||b===a||seen.has(b)||(C.has(b)&&b<a))continue;seen.add(b);const tb=tri[b];if(ta.solo>=0&&ta.solo===tb.solo)continue;if(touching(ta,tb))continue;
-     const d=pairOf(A,C.get(b)??still.at.get(b));if(d>=0){const key=a<b?a+':'+b:b+':'+a;pairs.set(key,d);if(stop?.pair(key,d))failed=true;}}});if(failed)return null;}
-   return {pairs,depth};};
-  // The triangles and skin a probe's bones move; the rest are skinned once, in the rest pose, and sit in a fixed grid (and
-  // the cloth among them also in the cells 6 cm round it, so that skin under it finds it).
-  const probe=moves=>{neutral();for(const s of skins.values())s.update();const movers=[],grid=new Map(),cover=new Map(),at=new Map(),skin=[];
-   tri.forEach((t,n)=>{if([...t.names].some(moves))movers.push(n);else{const c=corners(n);at.set(n,c);range(c,0,k=>put(grid,k,n));if(t.cover)range(c,.06,k=>put(cover,k,n));}});
-   skinV.forEach((v,j)=>{if([...v.names].some(moves))skin.push(j);});return {movers,still:{grid,cover,at},skin};};
-  // the rest pose is measured to 10 cm, so skin a little deeper than a pose's 6 cm reach is known deep and not taken as new
-  const everything=probe(()=>true),rest=contact(everything,.10);
-  const freshPair=(k,d,hand=0)=>{if(d<=.003-hand||rest.pairs.has(k))return false;const [a,b]=k.split(':').map(Number);for(const x of ring(a))for(const y of ring(b))if(rest.pairs.has(x<y?x+':'+y:y+':'+x))return false;return true;};
-  // (a probe of the arms keeps a millimetre in hand, for what it does not combine: the hips turning, the arm lagging, the
-  // chest opening on a breath)
-  const clear=(family,hand=0)=>contact(family,.06,{depth:(j,d)=>d>.003-hand&&rest.depth.get(j)<.0005,pair:(k,d)=>freshPair(k,d,hand)})!==null;
+  // Each part's crossings of itself in the rest pose, and for each triangle the rest crossings it is within two
+  // triangles of (with the other side's triangle), so that a crossing near one is known slid along.
+  const restPairs=[],seen=new Int32Array(tri.length).fill(-1);
+  for(const part of parts)for(const a of part.tris){const ta=tri[a];let A=null;cells(a,restB,k=>{if(k<0)return;for(const b of restCells[ta.p].get(k)||[]){if(b<=a||seen[b]===a)continue;seen[b]=a;if(apart(a,restB,b,restB))continue;const tb=tri[b];if(ta.solo>=0&&ta.solo===tb.solo||touching(a,b))continue;if(pairOf(A??=corners(a),corners(b))>=0)restPairs.push([a,b]);}});}
+  const slid=new Map();for(const [a,b] of restPairs)for(const [x,y] of [[a,b],[b,a]])for(const t of ring(x))into(slid,t,y);
+  const fresh=(a,b)=>{for(const y of slid.get(a)||[])if(ring(y).has(b))return false;return true;};
+  // The triangles and vertices a probe's bones move (the vertices only those that show at rest), for clear().
+  const probe=moves=>{const moved=new Uint8Array(tri.length),byPart=parts.map(()=>[]);tri.forEach((t,n)=>{if(t.names.some(moves)){moved[n]=1;byPart[t.p].push(n);}});
+   const verts=parts.map((part,p)=>{const moving=[],held=[];part.names.forEach((names,i)=>{if(shows[p][i])(names.some(moves)?moving:held).push(i);});return {moving,held};});
+   return {moved,byPart,verts};};
+  // Whether the current pose clears: no vertex that shows at rest more than 3 mm into another part (a moving vertex
+  // against every part round it; a still one against the parts moving within 3 cm of it, all that one of a probe's steps
+  // can bring), and no new crossing of a part through itself (less hand on each: see the arms).
+  const clear=({moved,byPart,verts},hand=0)=>{root.updateMatrixWorld(true);for(const part of parts)part.skin.update();const lim=.003-hand;
+   const now=byPart.map((list,q)=>{if(!list.length)return null;const map=new Map();for(const n of list)cells(n,nowB,k=>into(map,k,n));const P=parts[q].skin.out,box=[[Infinity,Infinity,Infinity],[-Infinity,-Infinity,-Infinity]];
+    for(const n of list)for(const i of tri[n].v)for(let k=0;k<3;k++){box[0][k]=Math.min(box[0][k],P[3*i+k]);box[1][k]=Math.max(box[1][k],P[3*i+k]);}return {list,cells:map,box,whole:list.length===parts[q].tris.length};});
+   const bound=parts.map((part,q)=>now[q]?bounds(part.skin.out):restBox[q]),sinks=(x,q)=>inside(x,q,moved,now[q])&&!near(x,q,lim,moved,now[q]);
+   for(let p=0;p<parts.length;p++){const P=parts[p].skin.out,{moving,held}=verts[p];
+    for(const i of moving){const x=[P[3*i],P[3*i+1],P[3*i+2]];for(let q=0;q<parts.length;q++)if(q!==p&&inBox(x,bound[q])&&sinks(x,q))return false;}
+    for(const i of held){const x=[P[3*i],P[3*i+1],P[3*i+2]];for(let q=0;q<parts.length;q++)if(q!==p&&now[q]&&inBox(x,now[q].box,.03)&&sinks(x,q))return false;}}
+   const stamp=new Int32Array(tri.length).fill(-1);
+   for(let q=0;q<parts.length;q++){const l=now[q];if(!l)continue;
+    for(const a of l.list){const ta=tri[a];let A=null,bad=false;
+     const test=(b,moving)=>{if(bad||b===a||stamp[b]===a||(moving?b<a:moved[b]))return;stamp[b]=a;if(apart(a,nowB,b,moving?nowB:restB))return;const tb=tri[b];
+      if(ta.solo>=0&&ta.solo===tb.solo||touching(a,b))return;if(pairOf(A??=corners(a),corners(b))>lim&&fresh(a,b))bad=true;};
+     span([nowB[6*a],nowB[6*a+1],nowB[6*a+2]],[nowB[6*a+3],nowB[6*a+4],nowB[6*a+5]],k=>{if(bad)return;for(const b of l.cells.get(k)||[])test(b,true);if(!l.whole)for(const b of restCells[q].get(k)||[])test(b,false);});
+     if(bad)return false;}}
+   return true;};
+  const everything=probe(()=>true);
   // The largest angle, in 5 degree steps, at which a pose makes no new crossing, less 5 degrees kept in hand for the idle's
   // other motions (a lean, a breath or a tilt the probe does not make); the probe runs 5 degrees past its top for that.
   const fit=(moves,pose,top)=>{const family=probe(moves);let ok=0;for(let deg=5;deg<=top+5;deg+=5){neutral();pose(deg*DEG);if(!clear(family))break;ok=deg;}neutral();return Math.min(top,Math.max(0,ok-5));};
@@ -365,17 +398,18 @@ export function createIdle(worker,{seed=1,length=IDLE.length,eye=null,refit=fals
   // hips and head take the rest of a wide look.
   const twist=Object.fromEntries([1,-1].map(dir=>[dir,fit(b=>b!=='hips'&&!/^(thigh|shin|hoof)/.test(b),a=>{bones.spine.quaternion.copy(turn([0,1,0],dir*a));root.updateMatrixWorld(true);for(const s of [-1,1])hangAt(s,dir*a*.5);},30)]));
   // The arms against the clothes. A probe poses the trunk (leaning w of a full lean toward a hoof, the hips carried about
-  // 7 cm over and hiked at a full lean, as the balance will carry them; the chest rounded flex degrees), the shoulders
-  // risen by shrug with the chest opened as a breath that deep opens it, each arm swung out by out[s] and eased to each
+  // 7 cm over and hiked at a full lean, as the balance will carry them; the chest rounded flex degrees), a breath [amp,
+  // share] amp units deep (the chest opened as the motion opens it, in full, and the shoulders risen by the shrug share
+  // of their rise), each arm swung out by out[s] and eased to each
   // extreme its easing reaches over a loop, scaled by k (see drift: the elbow 3.5 degrees past its rest bend, or half a
   // degree short of it; the wrist 9 degrees and the fingers 8, one way and then the other). It clears where none of those
   // covers skin that shows at rest or crosses anything new, a millimetre in hand.
-  const EXTREMES=[[3.5,9,.14],[3.5,-9,-.14],[-.5,0,0]],SIGH=BREATH.shrug*2.8,BREATHE=BREATH.shrug*1.15,none={[-1]:0,[1]:0};
-  const posture=(w,flex,out,k,shrug,[elbow,wrist,curl])=>{neutral();bones.hips.position.copy(restHips).add(V([0,-POSTURE.sink*w*w,.072*w]));bones.hips.quaternion.copy(trunkQ(0,0,POSTURE.roll*DEG*w));
-   bones.spine.quaternion.copy(trunkQ(0,(flex-BREATH.chest*shrug/BREATH.shrug)*DEG,-POSTURE.lean*DEG*w));for(const s of [-1,1])bones['upperArm'+s].position.copy(ARM_ROOT[s]).add(V([0,shrug,0]));root.updateMatrixWorld(true);
+  const EXTREMES=[[3.5,9,.14],[3.5,-9,-.14],[-.5,0,0]],SIGH=2.8,BREATHE=1.15,none={[-1]:0,[1]:0};
+  const posture=(w,flex,out,k,[amp,share],[elbow,wrist,curl])=>{neutral();const shrug=BREATH.shrug*share*amp;bones.hips.position.copy(restHips).add(V([0,-POSTURE.sink*w*w,.072*w]));bones.hips.quaternion.copy(trunkQ(0,0,POSTURE.roll*DEG*w));
+   bones.spine.quaternion.copy(trunkQ(0,(flex-BREATH.chest*amp)*DEG,-POSTURE.lean*DEG*w));for(const s of [-1,1])bones['upperArm'+s].position.copy(ARM_ROOT[s]).add(V([0,shrug,0]));root.updateMatrixWorld(true);
    for(const s of [-1,1]){const q=turn([1,0,0],-s*out[s]*DEG),sh=bones['upperArm'+s].getWorldPosition(V());limb(bones['upperArm'+s],bones['forearm'+s],bones['hand'+s],sh.add(HANG[s].clone().multiplyScalar(reachAt(s,elbow*k)).applyQuaternion(q)),BEND[s].arm.clone().applyQuaternion(q));
     bones['hand'+s].quaternion.multiply(turn([0,0,1],wrist*k*DEG));bones['fingers'+s].rotation.z=-.08+curl*k;}root.updateMatrixWorld(true);};
-  const clears=(w,flex,out,k,shrug)=>{const ok=EXTREMES.every(x=>{posture(w,flex,out,k,shrug,x);return clear(everything,.001);});neutral();return ok;};
+  const clears=(w,flex,out,k,breath=[0,0])=>{const ok=EXTREMES.every(x=>{posture(w,flex,out,k,breath,x);return clear(everything,.001);});neutral();return ok;};
   const least=test=>{if(test(0))return 0;for(let a=.5;a<=4;a+=.5)if(test(a))return a+1;return 5;};
   // In that order, each the most (in quarters) that clears with those before it: weightShift, the share of a full lean
   // toward each hoof, the arms held still (the hip juts toward the hand on that side, and an arm that crosses the clothes
@@ -384,13 +418,13 @@ export function createIdle(worker,{seed=1,length=IDLE.length,eye=null,refit=fals
   // the shoulders' rise, a sigh standing and an ordinary breath leaning; and rounding, how far (in steps of 2.5 degrees,
   // up to its full 10) the chest rounds, standing and leaning (a look down while leaning). A rig whose clothes hold its
   // arms at rest (a forearm in a waistband) keeps its weight shift before its arms' ease.
-  const leanAt=(share,k,shrug)=>Object.fromEntries([-1,1].map(s=>[s,least(a=>clears(share*s,0,{[s]:a,[-s]:0},k,shrug))]));
+  const leanAt=share=>Object.fromEntries([-1,1].map(s=>[s,least(a=>clears(share*s,0,{[s]:a,[-s]:0},0))]));
   let weightShift=0,lean={[-1]:0,[1]:0};
-  for(const share of [1,.75,.5,.25]){const fit=leanAt(share,0,0);if(fit[-1]<5&&fit[1]<5){weightShift=share;lean=fit;break;}}
+  for(const share of [1,.75,.5,.25]){const fit=leanAt(share);if(fit[-1]<5&&fit[1]<5){weightShift=share;lean=fit;break;}}
   const holds=(k,stand,leaning)=>clears(0,0,none,k,stand)&&(!weightShift||[-1,1].every(s=>clears(s*weightShift,0,{[s]:lean[s],[-s]:0},k,leaning)));
-  const ease=[1,.75,.5,.25].find(k=>holds(k,0,0))??0,shrug=[1,.5,.25].find(x=>holds(ease,SIGH*x,BREATHE*x))??0;
+  const ease=[1,.75,.5,.25].find(k=>holds(k,[0,0],[0,0]))??0,shrug=[1,.5,.25,0].find(x=>holds(ease,[SIGH,x],[BREATHE,x]))??0;
   let rounding=0,round=0;
-  for(const flex of [10,7.5,5,2.5]){const a=least(x=>[0,-1,1].every(w=>clears(w*weightShift,flex,{[-1]:x+(w<0?lean[-1]:0),[1]:x+(w>0?lean[1]:0)},ease,BREATHE*shrug)));if(a<5){rounding=flex;round=a;break;}}
+  for(const flex of [10,7.5,5,2.5]){const a=least(x=>[0,-1,1].every(w=>clears(w*weightShift,flex,{[-1]:x+(w<0?lean[-1]:0),[1]:x+(w>0?lean[1]:0)},ease,[BREATHE,shrug])));if(a<5){rounding=flex;round=a;break;}}
   const swing={lean,round};
   neutral();
   const out={nod,up,yaw,tilt,twist,swing,ease,shrug,weightShift,rounding};FITS.set(key,out);return out;})();
@@ -406,7 +440,8 @@ export function createIdle(worker,{seed=1,length=IDLE.length,eye=null,refit=fals
  // turn) from the chest either way, down by its fitted nod and the chest's 10 degrees, and up by its fitted look up.
  const neckTop=s=>Math.min(35,yawLimit[s]),reachYaw=s=>{let lo=0,hi=90;for(let i=0;i<30;i++){const m=(lo+hi)/2;if(m-chestTwist(s*m)*s-hipsTwist(s*m)*s<=neckTop(s)+.5)lo=m;else hi=m;}return lo;};
  const reach={left:reachYaw(1),right:reachYaw(-1),down:nodLimit+ROUND,up:upLimit,tilt:tiltLimit};
- const r=random(seed),looks=lookPlan(r,L,reach),stances=SHIFTED?stancePlan(r,L):[],breaths=breathPlan(r,L);
+ // each rig draws its own loops (the seed is mixed with the rig's key), so the cast on one seed do not share a choreography
+ const r=random((seed^parseInt(key.slice(1),16))>>>0),looks=lookPlan(r,L,reach),stances=SHIFTED?stancePlan(r,L):[],breaths=breathPlan(r,L);
  const ch=(key,fn,part)=>steps(fn(looks.home[key]),looks.list.map(l=>{const [cd,cs,hd,hs]=TIMINGS[l.trunk||0],[d,k]=part==='chest'?[cd,cs]:part==='hips'?[hd,hs]:[0,1];return [l.time+d,l.dur*k,fn(l[key])];}));
  let gazeYaw,gazePitch,gazeRoll,chestYaw,hipsYaw,chestFlex;
  const build=()=>{gazeYaw=ch('yaw',y=>y);gazePitch=ch('pitch',p=>p);gazeRoll=ch('roll',x=>x);chestYaw=ch('yaw',chestTwist,'chest');hipsYaw=ch('yaw',hipsTwist,'hips');chestFlex=ch('pitch',chestPitch);};
@@ -499,7 +534,7 @@ export function createIdle(worker,{seed=1,length=IDLE.length,eye=null,refit=fals
   if(stretch<.995)break;SHIFT*=.8;}
  if(stretch>=.995){throw Error('Idle pose unreachable on this rig: a leg would stretch to '+(stretch*100).toFixed(1)+'% of its reach');}
  const {trunk,head,arm,kneePole,body}=kin;
- LIVE.add(worker);built=true;
+ LIVE.set(worker,key);built=true;
 
  // ---- posing ----
  const eyeAt=(tr,h)=>tr.chest.clone().add(h.offset.clone().applyQuaternion(tr.qc)).add(EYE.clone().applyQuaternion(tr.qc.clone().multiply(h.q)));
