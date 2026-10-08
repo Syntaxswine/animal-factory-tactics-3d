@@ -24,7 +24,7 @@
       "upstreamSha256": "424fa8b3f1287ac42a84f24e853ed382dabfd51bae10940fe62caa2b460d123a"
     },
     "explosives.js": {
-      "reason": "Hand grenades use stat-scaled ballistic lobs, original-target accuracy, swept bounces and steep cover-shielded damage falloff. Replace exposed strategic structures with persistent wrecks rather than deleting their footprints. Report exposed explosive barrels for the shared fuel-blast pipeline instead of silently deleting them. Use physical tower heights, weapon skills and endurance-aware explosive previews.",
+      "reason": "Hand grenades use stat-scaled ballistic lobs, original-target accuracy, swept bounces and steep cover-shielded damage falloff. Launched blasts retain their kind, native presentation height and per-detonation surviving cover. Replace exposed strategic structures with persistent wrecks rather than deleting their footprints. Report exposed explosive barrels for the shared fuel-blast pipeline instead of silently deleting them. Use physical tower heights, weapon skills and endurance-aware explosive previews.",
       "upstreamSha256": "ab0e3a635edf516022bbe247b3a20651d2323053321573ea0bf6fb1e42525b38"
     },
     "inventory.js": {
@@ -59,7 +59,7 @@
     "editor-model.js": "de903d031f6258118abd519ad41be42a8fe5e07af7380bfac9e0e9d01aaa5498",
     "engine.js": "04f013de73d4b7d08623d6fec3151c566074ae44ebf3b551eb0c601fff56059e",
     "environment.js": "90bee382317bb2b135439c386c6c1cf361176bc0066165136d173c94328f4e95",
-    "explosives.js": "a87d4a10d7b137c725a3f760869a6b2b9ef9e0a89267d743379340f16ab42432",
+    "explosives.js": "e99b1c200e4d6b720fe21f1d718f7e51f204eec23dd6e07a7bcfa5256ceaa489",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "8e63ac2c2783edf5e4884f31c687494dbc4910edbfe620299302911394c539cb",

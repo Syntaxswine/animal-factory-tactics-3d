@@ -2,6 +2,8 @@ import {personVisible} from './battle-visibility.js';
 import {flamePhase} from './battle-flame-effects.js';
 import {paintedOperatorSupported,paintedFlamePhase} from './painted-fire-state.js';
 import {grenadePhase} from './battle-grenades.js';
+import {launchedBlast} from './grenade-blast-field.js';
+import {GRENADE_BLAST_DURATION} from './grenade-blast-effects.js';
 export const RIFLE_SHOT_MS=380,RIFLE_DURATION_MS=1100;
 export const dischargeDelay=shot=>shot.reduced?0:shot.event.grenade?(shot.event.grenade.release+shot.event.trajectories[0].fuse)*1000:shot.paintedFire?640:shot.event.flame?150:shot.rifle?RIFLE_SHOT_MS:0;
 // Burns and ruptures wait for the exact attack that committed them, including
@@ -24,11 +26,12 @@ export class BattleCombat {
    this.lastEffect=state.effect;
    for(const event of state.effect.sequence||[state.effect]){
     const unit=state.units.find(u=>u.id===event.shooter),before=this.previous.get(event.shooter);
-    if(!unit||!personVisible(state,unit)&&!event.grenade)continue;
+    const launched=!!launchedBlast(event);
+    if(!unit||!personVisible(state,unit)&&!event.grenade&&!launched)continue;
     const shooter=before||unit;
     // Flames carry their actual area; other attacks need resolved trajectories.
-    if(!event.flame&&(!event.trajectories?.length||event.incendiary||event.explosions?.some(e=>!['tank','barrel','grenade'].includes(e.kind))))continue;
-    const shot={event:structuredClone(event),shooter:{...shooter,...event.grenade?.shooter,x:event.ax,y:event.ay,z:event.az||0},rifle:!event.flame&&shooter.weapon==='rifle',reduced,knownUnitIds:[...this.previous.keys(),...state.detected]};
+    if(!event.flame&&(!event.trajectories?.length||event.incendiary||event.explosions?.some(e=>!['tank','barrel','grenade','rocket','launcher'].includes(e.kind))))continue;
+    const shot={event:structuredClone(event),shooter:{...shooter,...event.grenade?.shooter,x:event.ax,y:event.ay,z:event.az||0},rifle:!event.flame&&!launched&&!event.grenade&&shooter.weapon==='rifle',launched,reduced,knownUnitIds:[...this.previous.keys(),...state.detected]};
     shot.paintedFire=!!event.flame&&paintedOperatorSupported(shooter);
     this.queue.push(shot);
     for(const id of event.downed||[]){const prior=this.previous.get(id);if(prior)this.held.set(id,prior);}
@@ -38,7 +41,7 @@ export class BattleCombat {
   this.previous=new Map(state.units.filter(u=>personVisible(state,u)).map(u=>[u.id,{...u}]));
  }
  advance(now){
-  const phase=(shot,elapsed)=>shot.event.grenade?grenadePhase(shot,elapsed):shot.paintedFire?paintedFlamePhase(elapsed,shot.reduced):shot.event.flame?flamePhase(elapsed,shot.reduced):shotPhase(elapsed,shot.rifle,shot.reduced);
+  const phase=(shot,elapsed)=>shot.event.grenade?grenadePhase(shot,elapsed):shot.launched?{...shotPhase(elapsed,false,shot.reduced),duration:shot.reduced?180:GRENADE_BLAST_DURATION*1000,blastAge:elapsed/1000,time:elapsed/1000,impact:false}:shot.paintedFire?paintedFlamePhase(elapsed,shot.reduced):shot.event.flame?flamePhase(elapsed,shot.reduced):shotPhase(elapsed,shot.rifle,shot.reduced);
   if(this.active&&now-this.active.start>=phase(this.active,0).duration)this.active=null;
   if(!this.active&&this.queue.length)this.active={...this.queue.shift(),start:now};
   if(this.active){this.active.phase=phase(this.active,now-this.active.start);if(this.active.phase.discharged)for(const id of this.active.event.downed||[])this.held.delete(id);}

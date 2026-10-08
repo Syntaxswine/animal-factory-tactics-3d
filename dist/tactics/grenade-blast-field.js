@@ -1,43 +1,58 @@
 import {GRENADE} from './grenade-ballistics.js';
 import {grenadeWorld,sweepGrenade,GRENADE_FLOOR} from './grenade-geometry.js';
 import {TOWERS,TOWER_HEIGHT} from './tower-geometry.js';
+import {shotPoint} from './battle-shot-effects.js';
+import {cliffSupportAt} from './cliff-support.js';
 export const BLAST_RAYS=96;
+export const launchedBlast=event=>event?.explosions?.find(p=>p.kind==='rocket'||p.kind==='launcher');
+export function resolvedLaunchedBlast(shot,state){
+ const blast=launchedBlast(shot.event);if(!blast)return null;
+ // Launcher ballistics retain the older tactical height frame. Convert only
+ // for presentation; grenade events already use native scene heights.
+ const point=shotPoint({...blast,unitId:shot.event.trajectories[0]?.unitId},state);
+ return {...blast,x:point.x,y:point.z,h:blast.presentation?.h??point.y,z:blast.presentation?.level??blast.z};
+}
 export function resolvedGrenadeBlast(shot){
  const p=shot.event.explosions?.find(p=>p.kind==='grenade'||p.grenade)||shot.event.trajectories[0];
  return {...p,radius:Number.isFinite(p.radius)&&p.radius>0?p.radius:GRENADE.blast};
 }
 // Tower platforms have native height but keep their parent prop's logical level.
 export function grenadeBlastLevel(state,p){
+ for(let z=3;z>=1;z--){const support=cliffSupportAt(state,{x:p.x,y:p.y,z});if(!support)continue;const top=support.level*GRENADE_FLOOR+support.height;if(p.h>=top-.002&&p.h<top+1.8)return z;}
  for(const tower of state.props||[]){const f=TOWERS[tower.kind];if(!f)continue;const h=p.h-(tower.z||0)*GRENADE_FLOOR;
   if(h>=TOWER_HEIGHT-.2&&h<=TOWER_HEIGHT+3&&p.x>=tower.x-.5&&p.x<tower.x+(tower.rotated?f.h:f.w)-.5&&p.y>=tower.y-.5&&p.y<tower.y+(tower.rotated?f.w:f.h)-.5)return tower.z||0;
  }
  return Math.max(0,Math.min(3,p.z??Math.floor(p.h/GRENADE_FLOOR)));
 }
 export const blastCellKey=(x,y,z)=>z?`${x},${y},${z}`:`${x},${y}`;
-export function grenadeBlastField(state,shot){
- const origin=resolvedGrenadeBlast(shot),old=shot.event.grenade.scenery;
- let scenery=state;
+export function grenadeBlastField(state,shot,origin=resolvedGrenadeBlast(shot)){
+ const old=shot.event.grenade?.scenery;
+ let scenery=origin.cover?{...state,...origin.cover}:state;
  if(old){
   scenery={...state,map:(state.map||state.terrain).map(r=>[...r]),upper:structuredClone(state.upper||[{},{}]),edges:{...state.edges,...old.edges},props:[...(state.props||[]),...(old.props||[])]};
   for(const p of old.tiles||[])if(p.z)(scenery.upper[p.z-1]??={})[`${p.x},${p.y}`]=p.kind;else scenery.map[p.y][p.x]=p.kind;
   for(const site of shot.event.sites||[])scenery.props=scenery.props.map(p=>p.x===site.before.x&&p.y===site.before.y&&(p.z||0)===(site.before.z||0)?site.before:p);
  }
  const world=grenadeWorld(scenery),rays=new Float32Array(BLAST_RAYS);
+ // Exact triangle contact is two-sided to the collision solver. Probe just
+ // outside the struck face so outward dust is not trapped at t=0. The painted
+ // origin and authoritative impact remain untouched; inward rays still stop.
+ const normal=origin.presentation?.normal,probe=normal?{...origin,x:origin.x+normal.x*.004,y:origin.y+normal.y*.004,h:origin.h+normal.h*.004}:origin;
  // Conservative horizontal reach through the intact cover used for damage.
  // This is a dust envelope, not a second damage calculation.
  for(let i=0;i<BLAST_RAYS;i++){
-  let reach=origin.radius;for(const offset of [-.5,0,.5]){const angle=(i+offset)*Math.PI*2/BLAST_RAYS,end={x:origin.x+Math.cos(angle)*origin.radius,y:origin.y+Math.sin(angle)*origin.radius,h:origin.h},hit=sweepGrenade(world,origin,end,0);if(hit)reach=Math.min(reach,origin.radius*hit.t);}
+  let reach=origin.radius;for(const offset of [-.5,0,.5]){const angle=(i+offset)*Math.PI*2/BLAST_RAYS,end={x:probe.x+Math.cos(angle)*origin.radius,y:probe.y+Math.sin(angle)*origin.radius,h:probe.h},hit=sweepGrenade(world,probe,end,0);if(hit)reach=Math.min(reach,origin.radius*hit.t);}
   rays[i]=reach;
  }
  // The burst can rise above the low dust rays. Keep it beneath the intact
  // ceiling, including one destroyed by this very explosion.
- const below=sweepGrenade(world,origin,{...origin,h:-.001},0),above=sweepGrenade(world,origin,{...origin,h:origin.h+origin.radius},0);
+ const below=sweepGrenade(world,probe,{...probe,h:-.001},0),above=sweepGrenade(world,probe,{...probe,h:probe.h+origin.radius},0);
  const floor=below?.normal?.h>.6?below.h:0,ceiling=above?above.h:origin.h+origin.radius;
  // Sample every tactical column too: a burst outside an overhang must not
  // poke above the adjacent floor simply because its origin has open sky.
  const x=Math.floor(origin.x-origin.radius)-1,y=Math.floor(origin.y-origin.radius)-1,size=Math.ceil(origin.radius*2)+4,ceilings=new Float32Array(size*size);
  for(let j=0;j<size;j++)for(let i=0;i<size;i++){
-  const from={x:x+i,y:y+j,h:origin.h},hit=sweepGrenade(world,from,{...from,h:origin.h+origin.radius},0);
+  const from={x:x+i,y:y+j,h:probe.h},hit=sweepGrenade(world,from,{...from,h:probe.h+origin.radius},0);
   ceilings[j*size+i]=Math.min(ceiling,hit?.h??ceiling);
  }
  return {origin,radius:origin.radius,rays,floor,ceiling,columns:{x,y,size,ceilings},level:grenadeBlastLevel(scenery,origin)};

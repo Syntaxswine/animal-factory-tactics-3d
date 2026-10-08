@@ -5,7 +5,7 @@ import {createHenGrenadeThrow} from './hen-grenade-throw.js';
 import {GRENADE_PREPARED} from './grenade-prepared.js';
 import {createWorkerLocomotion} from './worker-locomotion.js';
 import {grenadeBase} from './grenade-geometry.js';
-import {grenadeBlastField} from './grenade-blast-field.js';
+import {grenadeBlastField,resolvedLaunchedBlast} from './grenade-blast-field.js';
 import {createGrenadeBlastEffects,loadGrenadeBlastTextures,GRENADE_BLAST_DURATION} from './grenade-blast-effects.js';
 export function grenadePhase(shot,elapsed){
  const release=shot.reduced?0:shot.event.grenade.release*1000,blast=shot.reduced?0:release+shot.event.trajectories[0].fuse*1000;
@@ -60,11 +60,12 @@ export class BattleGrenades {
   if(this.disposed)return;
   this.projectile.root.visible=this.dust.visible=false;
   if(this.session&&(this.session.shot!==shot||shot?.reduced))this.finish();
-  if(!shot?.event.grenade){this.fieldEvent=null;this.field=null;return;}
+  const launched=shot&&resolvedLaunchedBlast(shot,state);
+  if(!shot?.event.grenade&&!launched){this.fieldEvent=null;this.field=null;return;}
   const trajectory=shot.event.trajectories[0],phase=shot.phase;
-  if(phase.released&&!phase.discharged&&!shot.reduced){const p=grenadeAt(trajectory.path,phase.flightAge);this.projectile.root.visible=visibleGrenade(state,p);this.projectile.root.position.set(p.x,p.h,p.y);this.projectile.root.rotation.set(phase.flightAge*7,phase.flightAge*3,phase.flightAge*5);for(const part of this.projectile.parts)part.visible=!['pull ring','curved safety lever'].includes(part.name);}
+  if(shot.event.grenade&&phase.released&&!phase.discharged&&!shot.reduced){const p=grenadeAt(trajectory.path,phase.flightAge);this.projectile.root.visible=visibleGrenade(state,p);this.projectile.root.position.set(p.x,p.h,p.y);this.projectile.root.rotation.set(phase.flightAge*7,phase.flightAge*3,phase.flightAge*5);for(const part of this.projectile.parts)part.visible=!['pull ring','curved safety lever'].includes(part.name);}
   if(phase.discharged){
-   if(this.fieldEvent!==shot.event){this.field=grenadeBlastField(state,shot);this.fieldEvent=shot.event;}
+   if(this.fieldEvent!==shot.event){this.field=grenadeBlastField(state,shot,launched||undefined);this.fieldEvent=shot.event;}
    this.blast.update(phase.blastAge,{field:this.field,state,camera,reduced:shot.reduced});
   }
  }

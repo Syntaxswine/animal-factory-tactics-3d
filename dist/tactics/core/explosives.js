@@ -1,3 +1,4 @@
+import {nativeBlastPresentation,blastCover} from '../launched-blast-receipt.js';
 import {grenadePreview,grenadeTrajectory} from '../grenade-ballistics.js';
 import {detonateGrenade} from '../grenade-blast.js';
 import {isStrategicSite} from '../strategic-site-rules.js';
@@ -47,7 +48,7 @@ const boxDistance=(p,x0,y0,h0,x1,y1,h1)=>Math.hypot(Math.max(x0-p.x,0,p.x-x1),Ma
 function blastClear(s,impact,end,propId=null){const origin={x:impact.x,y:impact.y,h:Math.max(.03,impact.h)},d={x:end.x-origin.x,y:end.y-origin.y,h:end.h-origin.h},length=Math.hypot(d.x,d.y,d.h);if(length<.06)return true;const hit=traceProjectile({...s,units:[]},null,origin,d,length);return propId!==null&&hit.propId===propId||hit.kind==='range'||hit.distance>=length-.06;}
 export function detonate(s,impact,w){
  if(w.thrown)return detonateGrenade(s,impact);
- const radius=w.blast,candidates=[];
+ const radius=w.blast,candidates=[],presentation=nativeBlastPresentation(s,impact);
  for(const [key,kind]of Object.entries(s.edges)){
   const [a,b]=edgePoints(key),h=a.z*3,dist=boxDistance(impact,Math.min(a.x,b.x),Math.min(a.y,b.y),h,Math.max(a.x,b.x),Math.max(a.y,b.y),h+2.7);
   const resistance=/concrete|steel|^wall$/.test(kind)?50:/brick/.test(kind)?40:20;
@@ -69,5 +70,5 @@ export function detonate(s,impact,w){
   return dist<radius&&w.damage*(1-dist/radius)>=1&&blastClear(s,impact,{x:p.x,y:p.y,h:h+.4},barrelId(p));
  });
  const sites=blastStrategicSites(s,impact,radius);destroyed+=sites.length;
- return {hits,barrels,sites,blast:{x:impact.x,y:impact.y,z:impact.z,h:impact.h,radius,destroyed}};
+ return {hits,barrels,sites,blast:{kind:w.arc?'launcher':'rocket',x:impact.x,y:impact.y,z:impact.z,h:impact.h,radius,destroyed,presentation,cover:blastCover(s)}};
 }

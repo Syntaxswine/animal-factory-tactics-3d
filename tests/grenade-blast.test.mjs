@@ -22,7 +22,7 @@ test('open ground reaches the five-tile perimeter; cover is the intact pre-damag
  const open=grenadeBlastFixture();assert.ok(grenadeBlastField(open.state,open.shot).rays.every(r=>r===5));
 });
 test('roof, cliff and native-height tower flashes stay at their physical surface and logical visibility layer',()=>{
- for(const [kind,level] of [['open',0],['roof',1],['cliff',0],['tower',0]]){
+ for(const [kind,level] of [['open',0],['roof',1],['cliff',1],['tower',0]]){
   const {state,shot,floor}=grenadeBlastFixture(kind),field=grenadeBlastField(state,shot);
   assert.ok(Math.abs(field.floor-floor)<1e-6,kind+' surface');assert.equal(field.level,level,kind+' layer');
   assert.ok(blastPointVisible(field,state,8,8),kind+' visible');

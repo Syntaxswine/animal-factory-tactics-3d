@@ -1,4 +1,4 @@
-# Grenade blast readability
+# Painted explosive blast readability
 
 The gameplay grenade damages out to five tiles, but its previous twelve small dust meshes never conveyed that reach. The replacement uses the approved painted burst and smoke atlases: a brief central detonation followed by overlapping, uneven dust spreading toward the resolved five-tile perimeter.
 
@@ -17,9 +17,26 @@ This branch starts at the integrated grenade implementation, `bd58196`. It chang
 
 The dust envelope conservatively indicates reach. It does not calculate damage or promise that every tile inside the circle is hit: distance falloff, elevation and intact cover still govern the authoritative result. Ceiling sampling uses native tile columns. Narrow tower supports can leave angular gaps in the dust; softening these is optional future polish.
 
+## RPG and grenade launcher
+
+The same painted effect now handles RPG rockets (`rpg`, four-tile radius) and grenade-launcher rounds (`launcher`, three-tile radius) in the encounter renderer. It reads the primary resolved explosion, independently of tank or barrel chain effects. The study's Weapon selector compares all three blast sizes; its gameplay link opens a range with the selected weapon family.
+
+Launcher shots retain their existing resolved trajectories, damage, AP and ammunition costs. Their previously omitted detonation now receives 0.8 seconds of queued presentation, or 0.18 seconds for reduced motion. This change does not add an authored launch pose or slower projectile flight.
+
+- [x] Record the launched explosion kind through the core adapter and generated manifest, so core synchronization preserves the integration.
+- [x] Capture native impact height and logical visibility floor before damage removes the struck geometry. Preserve native cliff/ramp/tower heights instead of scaling their dimensions with the older room floor convention.
+- [x] Keep a surviving-cover snapshot for each detonation, so later queued replies cannot open its clipping mask early. Existing launched-weapon rules breach scenery before resolving damage; the visual follows those existing breaches.
+- [x] Keep visible impacts from hidden shooters while preserving current-fog clipping and hiding the unseen actor and shot path.
+- [x] Probe just outside exact surface contacts, with the impact normal, so floor tile seams and two-sided cliff/ramp triangles cannot swallow the blast. This four-millimetre query offset leaves the authoritative impact and painted origin unchanged; the solid side still blocks dust.
+- [x] Place upward floor hits against the actual ceiling underside and use the room below for visibility, so the flash cannot leak above an intact floor slab.
+- [x] Verify real committed attacks, elevated surfaces, queued chains, cancellation, reduced motion and resource costs.
+- [x] Hostile subagent review: **9/10**, after correcting exact-surface clipping and upward ceiling contacts.
+
+The reviewer identified the exact-surface clipping bug during this extension. Regression checks now require usable outward reach and visible rendered pixels, in addition to correct coordinates.
+
 ## Destructible building follow-up
 
-Walls and floors are destructible, with resistance depending on the building. They must not become permanently solid merely because this effect clips against them. The current blast holds a snapshot of cover at impact for its short lifetime, even if existing damage handling has already removed an element from state.
+Walls and floors are destructible, with resistance depending on the building. They must not become permanently solid merely because this effect clips against them. The hand-grenade blast holds a snapshot of cover at impact for its short lifetime, even if existing damage handling has already removed an element from state. Launched blasts follow their existing breach-first rules using each detonation's surviving cover. A future destruction presentation should coordinate these transitions explicitly.
 
 - [ ] When the building-destruction presentation is implemented, keep the initial flash/pressure event synchronized with intact cover, then allow the trailing dust and debris through the actual breach after that wall or floor fails.
 - [ ] Supply the presentation with the affected element identities, prior geometry and destruction time. Update or replace the cover mask at that transition without recalculating or enlarging authoritative damage.
@@ -29,12 +46,13 @@ This is an integration hook for the later building-destruction work, not a claim
 
 ## Review and verification
 
-Open `tactics/grenade-blast-study.html`; it includes open ground, wall shielding, rooftop, below-roof, overhang, cliff, tower and partial-visibility scenes, three views, two scales, a radius guide and reduced motion. The horse is native size and each square is one tile. The gameplay link opens the existing grenade encounter.
+Open `tactics/grenade-blast-study.html`; it includes a weapon selector, open ground, wall shielding, rooftop, below-roof, overhang, cliff, tower and partial-visibility scenes, three views, two scales, a radius guide and reduced motion. The horse is native size and each square is one tile. The gameplay link opens the corresponding grenade or launcher encounter.
 
 Focused tests:
 
 ```text
-node --test tests/grenade-blast.test.mjs tests/grenade-integration.test.mjs tests/battle-combat.test.mjs tests/tactics-3d-deployment.test.mjs
+node --test tests/launched-blast.test.mjs tests/grenade-blast.test.mjs tests/grenade-integration.test.mjs tests/tactics-explosives.test.mjs tests/battle-combat.test.mjs tests/tactics-3d-deployment.test.mjs
+node tools/sync-tactics-core.mjs --check
 node tools/build-tactics-3d.mjs
 ```
 
@@ -43,13 +61,18 @@ Browser scripts use `PLAYWRIGHT_PATH` for the installed Playwright package:
 ```text
 node tools/check-grenade-blast.mjs
 node tools/check-grenade-gameplay.mjs
+node tools/check-launched-blast.mjs
 ```
 
 Set `GRENADE_REVIEW_URL` to the review server's `tactics/battle-3d.html?study=grenades` page. `GRENADE_BLAST_REVIEW_URL` optionally overrides the blast study URL. The blast script checks rendered pixels outside the radius, behind cover, in fog and above ceilings, plus repeated scene changes and resource counts. The gameplay script checks real committed throws, AP/ammunition, projectile playback, a paused peak-blast capture and queue cleanup for horse, goat, pig director and hen.
 
+`LAUNCHED_BLAST_REVIEW_URL` overrides the base origin for the launcher checker (default `http://127.0.0.1:4476`). It checks 24 view/scale/reduced-motion combinations, each weapon's rendered blast radius, actual cliff-top/cliff-face/ceiling impacts, and four committed launcher transactions in the live encounter. Peak captures use the paused presentation clock; costs and impact outcomes still come from the real attack transaction. Evidence is saved under `artifacts/grenade-blast/launchers/`.
+
 Local evidence is under `artifacts/grenade-blast/` and `artifacts/grenade-integration/`; browser helper records and close receipts are under `artifacts/strategic-sites/helpers/`. Each test browser closes in `finally`.
 
 Final checks on October 8: **51 focused tests passed** (8 blast, 25 grenade integration, 16 combat, 2 deployment), build passed, **96 browser configurations** passed with no errors. Pixel comparisons found no effect outside the radius, behind the sampled wall/fog boundary, or above the tested ceiling/overhang. Four committed gameplay throws passed with painted five-tile blasts and correct AP/ammunition; their peak captures use a paused playback clock to avoid racing the 0.8-second effect. Repeated scene changes retained the same GPU resource counts. Hostile review independently confirmed the overhang correction and returned **9/10**.
+
+Launcher extension checks on October 8: **69 tests passed** (8 launched-blast, 8 blast, 25 grenade integration, 10 explosives, 16 combat, 2 deployment). Core synchronization verification and distribution build passed. **24 browser configurations and four committed live launcher shots passed**, including reduced motion and exact AP/ammunition costs. Pixel comparisons confirmed each radius, visible cliff contacts, and no flash above an intact ceiling. All test browsers closed. Final independent hostile review returned **9/10**, with no remaining blockers.
 
 ## Retained preview
 

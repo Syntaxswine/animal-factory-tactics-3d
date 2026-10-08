@@ -1,7 +1,8 @@
 import {blankMap} from './core/maps.js';
-export function grenadeFixture(){
+export function grenadeFixture(launched=false){
  const m=blankMap('Grenade range · lob, rebound and rooftop throws');
- m.starts=['horse','goat','pig-director','hen'].map((species,i)=>({x:20+i*2,y:24,z:0,species,weapon:'grenade',stats:{strength:50,agility:50,dexterity:65,explosives:75}}));
+ m.starts=['horse','goat','pig-director','hen'].map((species,i)=>({x:20+i*2,y:24,z:0,species,weapon:launched?(i%2?'launcher':'rpg'):'grenade',stats:{strength:50,agility:50,dexterity:65,explosives:75}}));
+ if(launched)m.name='Launcher range · RPG rockets and grenade-launcher rounds';
  m.exits=[{x:18,y:26,z:0}];
  for(let y=12;y<=32;y++)for(let x=15;x<=40;x++)m.terrain[y][x]='ground-grass';
  for(let y=18;y<=22;y++)for(let x=27;x<=31;x++){m.terrain[y][x]='floor';m.upper[0][`${x},${y}`]='floor';}

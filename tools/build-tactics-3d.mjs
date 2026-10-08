@@ -2,6 +2,7 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
+fs.copyFileSync(new URL('dist/tactics/launched-blast-receipt.js',root),new URL('.pages-output/tactics/launched-blast-receipt.js',root));
 for(const file of ['campaign.html','campaign.css','campaign-page.js','campaign-opening.js','campaign-model.js','campaign-save.js','campaign-store.js','campaign-battle.js','sector-inventory.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['interior-fog.js','interior-fog-scene.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['explosive-barrels.js','barrel-targeting.js','fuel-blast.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));

@@ -9,6 +9,7 @@ export async function loadBattleMap(fetcher=fetch){
  const token=globalThis.location?new URLSearchParams(location.search).get('editorPlaytest'):null;
  if(token)return receivePlaytest(token);
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='grenades')return grenadeFixture();
+ if(globalThis.location&&new URLSearchParams(location.search).get('study')==='launchers')return grenadeFixture(true);
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='wall-xray')return wallXrayFixture();
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='strategic-sites')return strategicSiteFixture();
  const response=await fetcher(new URL('./default-factory.json',import.meta.url),{cache:'no-store'});
