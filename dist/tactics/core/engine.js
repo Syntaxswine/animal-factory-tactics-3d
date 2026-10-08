@@ -1,3 +1,7 @@
+import {projectileStructureDamage,commitStructureDamage} from '../structure-damage.js';
+import {planFlameStructureDamage} from '../structure-flame.js';
+import {settleStructureCollapse} from '../structure-collapse.js';
+import {mergeScenery} from '../structure-health.js';
 import {previewGroundFire} from '../ground-fire.js';
 import {intactSite,siteId,siteEscapeSteps} from '../strategic-site-rules.js';
 import {flameStrategicSites} from '../strategic-site-damage.js';
@@ -349,7 +353,7 @@ function explodeTanks(s,wearer,source=null){
  if(wearer.weapon==='flamethrower')wearer.weapon='hands';wearer.overwatch=null;
  const result=applyFuelBlast(s,wearer,fuelHooks,source,wearer),receipt=recordBurn(s,wearer,'tank');receipt.weapon=wornWeapon;receipt.fires=result.fires;
  log(s,wearer.name+"'s fuel tanks exploded / "+result.victims.length+' caught in blast.');
- return {x:wearer.x,y:wearer.y,z:levelOf(wearer),h:unitBaseHeight(wearer)+.8,kind:'tank',unitId:wearer.id,fireSequence:receipt.sequence,burns:result.burns};
+ return {x:wearer.x,y:wearer.y,z:levelOf(wearer),h:unitBaseHeight(wearer)+.8,kind:'tank',unitId:wearer.id,fireSequence:receipt.sequence,burns:result.burns,structures:result.structures,before:result.before};
 }
 function appendBarrelBlasts(s,event,explosions,targets,source){
  const standing=s.units.filter(alive),blasts=detonateBarrels(s,targets,fuelHooks,source);
@@ -357,6 +361,12 @@ function appendBarrelBlasts(s,event,explosions,targets,source){
  for(const u of standing)if(!alive(u)&&!event.downed.includes(u.id))event.downed.push(u.id);
 }
 
+function settleAttackStructures(s,event,source){
+ const receipts=[...(event.structures||[]),...event.explosions.flatMap(e=>e.structures||[])],fallen=settleStructureCollapse(s,receipts,{fatal:(s,u)=>combatDamage(s,u,Math.max(u.hp,1),true,source)});
+ event.falls=fallen.falls;
+ if(event.grenade){for(const e of event.explosions)mergeScenery(event.grenade.scenery,e.before);mergeScenery(event.grenade.scenery,fallen.before);}
+ for(const f of fallen.falls){const u=s.units.find(u=>u.id===f.id);if(u.hp<=0&&!event.downed.includes(u.id))event.downed.push(u.id);if(u.burningTurns||u.burnedRemains){recordBurn(s,u,u.hp>0?'ignite':'ash');(event.burns??=[]).push(u.id);}log(s,u.name+' fell to level '+(f.to.z+1)+'.');}
+}
 export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,aimLevel='hip'){
  if(s.queue.length)return false;
  if(reaction?!(s.phase==='enemy'&&a?.team==='squad'&&alive(a)&&!a.burningTurns&&a.overwatch?.weapon===a.weapon&&a.overwatch.heading===a.heading&&!burst&&zone==='torso'&&withinOverwatch(a,b)&&canSee(s,a,b)):byAI?!(s.phase==='enemy'&&a?.team==='guard'&&alive(a)&&!a.burningTurns):!canControl(s,a))return false;
@@ -392,13 +402,17 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   const victim=ballistic?s.units.find(u=>u.id===shot.unitId):accurate&&alive(target)?target:null;
   const event={shooter:shooter.id,target:target.id,ax:shooter.x,ay:shooter.y,bx:f.aim.x,by:f.aim.y,az:levelOf(shooter),bz:levelOf(f.aim),hit:!!victim,incendiary:!!w.incendiary,trajectories:pellets||(shot?[shot]:[]),explosions:[],downed:[],reply:f.reply,shotChance,shotRoll};if(w.thrown)event.grenade={shooter:structuredClone(shooter),release:1.92,recovery:4.6};sequence.push(event);
   const flame=w.incendiary?flameShape(s,shooter,f.aim,w):null;
+  const flameStructures=flame?planFlameStructureDamage(s,flame,w.damage):[],flameBarrelHits=flame?flameBarrels(s,flame):[];
   const flameHits=flame?flameVictims(s,shooter,flame).map(unit=>({unit,zone:'torso',damage:Math.max(1,unit.hp)})):null;
   if(flame){event.flame=flame;event.sites=flameStrategicSites(s,flame);event.hit=flameHits.length>0||event.sites.length>0;log(s,shooter.name+' sprays a cone of flame.');}
+  const structureResult=flame?commitStructureDamage(s,flameStructures):w.blast?null:projectileStructureDamage(s,pellets||(shot?[shot]:[]),p=>weaponDamage(w,p.distance));
+  event.structures=structureResult?.receipts||[];
   const blastResult=w.blast?detonate(s,shot,w):null;
-  if(blastResult){if(event.grenade)event.grenade.scenery=blastResult.before;event.explosions.push(blastResult.blast);explosions.push(blastResult.blast);event.sites=blastResult.sites;event.hit=blastResult.hits.length>0||event.sites.length>0;log(s,`${shooter.name}: ${w.short} detonated / ${blastResult.blast.destroyed} structures destroyed.`);}
-  const barrelHits=[...(pellets||(shot?[shot]:[])).filter(p=>p.propId).map(p=>p.propId),...(blastResult?.barrels||[]),...(flame?flameBarrels(s,flame):[])];
+  if(blastResult){event.structures=blastResult.structures||[];if(event.grenade)event.grenade.scenery=blastResult.before;event.explosions.push(blastResult.blast);explosions.push(blastResult.blast);event.sites=blastResult.sites;event.hit=blastResult.hits.length>0||event.sites.length>0;log(s,`${shooter.name}: ${w.short} detonated / ${blastResult.blast.destroyed} structures destroyed.`);}
+  if(event.structures.length){event.hit=true;for(const r of event.structures)log(s,r.kind.replaceAll('-',' ')+': '+(r.destroyed?'destroyed':r.hp+'/'+r.maxHp+' HP')+'.');}
+  const barrelHits=[...(pellets||(shot?[shot]:[])).filter(p=>p.propId).map(p=>p.propId),...(blastResult?.barrels||[]),...flameBarrelHits];
   appendBarrelBlasts(s,event,explosions,barrelHits,shooter);
-  if(!victim&&!blastResult&&!pellets&&!flame){if(!event.hit)log(s,`${shooter.name} → ${target.name}: miss${f.reply?' / retaliation':''}.`);continue;}
+  if(!victim&&!blastResult&&!pellets&&!flame){settleAttackStructures(s,event,shooter);if(!event.hit)log(s,`${shooter.name} → ${target.name}: miss${f.reply?' / retaliation':''}.`);continue;}
   const pelletHits=pellets?.map(p=>({unit:s.units.find(u=>u.id===p.unitId),zone:p.zone,damage:Math.round(w.damage*AIM_ZONES[p.zone||f.zone].damage*(shooter.team==='guard'?.65:1))})).filter(p=>p.unit);
   if(pellets){event.hit=event.hit||pelletHits.length>0;if(!event.hit)log(s,`${shooter.name} → ${target.name}: pellets missed.`);}
   const impacts=flameHits||(blastResult?blastResult.hits:pelletHits)||[{unit:victim,damage:Math.round(Math.round(weaponDamage(w,Math.hypot(shooter.x-victim.x,shooter.y-victim.y))*AIM_ZONES[shot?.zone||f.zone].damage)*(shooter.team==='guard'&&!w.incendiary?.65:1))}];
@@ -421,6 +435,7 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
    if(response){event.dialogue=`${response.speaker}: “${response.line}”`;log(s,event.dialogue);if(response.retaliate){frames.push({a:victim,b:shooter,p:reply,zone:'torso',left:1,weapon:victim.weapon,aim:{...shooter},reply:true});}}
   }
  }
+ settleAttackStructures(s,event,shooter);
  }});
  s.effect=sequence.length?{...sequence[0],trajectories,explosions,explosion:explosions.at(-1),sequence}:null;
  refresh(s);if(byAI)resolveOverwatch(s,a);return true;

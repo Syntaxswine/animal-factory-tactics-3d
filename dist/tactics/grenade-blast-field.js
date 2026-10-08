@@ -19,6 +19,7 @@ export function grenadeBlastField(state,shot){
  let scenery=state;
  if(old){
   scenery={...state,map:(state.map||state.terrain).map(r=>[...r]),upper:structuredClone(state.upper||[{},{}]),edges:{...state.edges,...old.edges},props:[...(state.props||[]),...(old.props||[])]};
+  for(const field of ['canopies','stairs','climbs'])scenery[field]=[...state[field]||[],...old[field]||[]];
   for(const p of old.tiles||[])if(p.z)(scenery.upper[p.z-1]??={})[`${p.x},${p.y}`]=p.kind;else scenery.map[p.y][p.x]=p.kind;
   for(const site of shot.event.sites||[])scenery.props=scenery.props.map(p=>p.x===site.before.x&&p.y===site.before.y&&(p.z||0)===(site.before.z||0)?site.before:p);
  }

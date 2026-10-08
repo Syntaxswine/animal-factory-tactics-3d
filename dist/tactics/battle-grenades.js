@@ -47,10 +47,11 @@ export class BattleGrenades {
   const pending=[combat.active,...combat.queue].filter(s=>s?.event.grenade&&!s.phase?.discharged),key=JSON.stringify([state.revision,pending.map(s=>s.event.grenade.scenery)]);
   if(!pending.length){this.sceneryCache=null;return state;}
   if(this.sceneryCache?.key===key&&this.sceneryCache.state===state)return {...state,...this.sceneryCache.values};
-  const values={map:state.map.map(row=>[...row]),upper:structuredClone(state.upper),edges:{...state.edges},props:[...state.props]};
+  const values={map:state.map.map(row=>[...row]),upper:structuredClone(state.upper),edges:{...state.edges},props:[...state.props],canopies:[...state.canopies||[]],stairs:[...state.stairs||[]],climbs:[...state.climbs||[]]};
   // Rewind in reverse order so sequential explosions can affect the same wall.
   for(const shot of [...pending].reverse()){
    const old=shot.event.grenade.scenery;if(!old)continue;Object.assign(values.edges,old.edges);values.props.push(...old.props);
+   for(const field of ['canopies','stairs','climbs'])values[field].push(...old[field]||[]);
    for(const p of old.tiles)if(p.z)values.upper[p.z-1][`${p.x},${p.y}`]=p.kind;else values.map[p.y][p.x]=p.kind;
    for(const site of shot.event.sites||[])values.props=values.props.map(p=>p.x===site.before.x&&p.y===site.before.y&&(p.z||0)===(site.before.z||0)?site.before:p);
   }

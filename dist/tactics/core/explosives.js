@@ -1,3 +1,5 @@
+import {planStructureBlast,commitStructureDamage} from '../structure-damage.js';
+import {structureInfo} from '../structure-health.js';
 import {grenadePreview,grenadeTrajectory} from '../grenade-ballistics.js';
 import {detonateGrenade} from '../grenade-blast.js';
 import {isStrategicSite} from '../strategic-site-rules.js';
@@ -47,15 +49,16 @@ const boxDistance=(p,x0,y0,h0,x1,y1,h1)=>Math.hypot(Math.max(x0-p.x,0,p.x-x1),Ma
 function blastClear(s,impact,end,propId=null){const origin={x:impact.x,y:impact.y,h:Math.max(.03,impact.h)},d={x:end.x-origin.x,y:end.y-origin.y,h:end.h-origin.h},length=Math.hypot(d.x,d.y,d.h);if(length<.06)return true;const hit=traceProjectile({...s,units:[]},null,origin,d,length);return propId!==null&&hit.propId===propId||hit.kind==='range'||hit.distance>=length-.06;}
 export function detonate(s,impact,w){
  if(w.thrown)return detonateGrenade(s,impact);
- const radius=w.blast,candidates=[];
+ const radius=w.blast,candidates=[],structures=planStructureBlast(s,impact,radius,d=>Math.max(0,Math.round(w.damage*(1-d/radius))),{spacing:3});
  for(const [key,kind]of Object.entries(s.edges)){
+  if(structureInfo(s,{edge:key}))continue;
   const [a,b]=edgePoints(key),h=a.z*3,dist=boxDistance(impact,Math.min(a.x,b.x),Math.min(a.y,b.y),h,Math.max(a.x,b.x),Math.max(a.y,b.y),h+2.7);
   const resistance=/concrete|steel|^wall$/.test(kind)?50:/brick/.test(kind)?40:20;
   if(dist<=radius&&w.damage*(1-dist/radius)>=resistance)candidates.push({dist,point:{x:Math.max(Math.min(a.x,b.x),Math.min(impact.x,Math.max(a.x,b.x))),y:Math.max(Math.min(a.y,b.y),Math.min(impact.y,Math.max(a.y,b.y))),h:Math.max(h+.03,Math.min(impact.h,h+2.6))},remove:()=>{delete s.edges[key];}});
  }
- for(const prop of s.props){if(isExplosiveBarrel(prop)||isStrategicSite(prop))continue;const cells=propCells(prop),z=levelOf(prop);let nearest=null;for(const c of cells){const d=boxDistance(impact,c.x-.5,c.y-.5,z*3,c.x+.5,c.y+.5,z*3+2.7);if(!nearest||d<nearest.dist)nearest={dist:d,point:{x:Math.max(c.x-.49,Math.min(impact.x,c.x+.49)),y:Math.max(c.y-.49,Math.min(impact.y,c.y+.49)),h:Math.max(z*3+.03,Math.min(impact.h,z*3+2.6))}};}if(nearest&&nearest.dist<=radius&&w.damage*(1-nearest.dist/radius)>=20)candidates.push({...nearest,remove:()=>{s.props=s.props.filter(p=>p!==prop);}});}
+ for(const prop of s.props){if(isExplosiveBarrel(prop)||isStrategicSite(prop)||/^(roof-|cliff-|ramp)/.test(prop.kind))continue;const cells=propCells(prop),z=levelOf(prop);let nearest=null;for(const c of cells){const d=boxDistance(impact,c.x-.5,c.y-.5,z*3,c.x+.5,c.y+.5,z*3+2.7);if(!nearest||d<nearest.dist)nearest={dist:d,point:{x:Math.max(c.x-.49,Math.min(impact.x,c.x+.49)),y:Math.max(c.y-.49,Math.min(impact.y,c.y+.49)),h:Math.max(z*3+.03,Math.min(impact.h,z*3+2.6))}};}if(nearest&&nearest.dist<=radius&&w.damage*(1-nearest.dist/radius)>=20)candidates.push({...nearest,remove:()=>{s.props=s.props.filter(p=>p!==prop);}});}
  for(let z=0;z<3;z++)for(let y=Math.max(0,Math.floor(impact.y-radius));y<=Math.min(H-1,Math.ceil(impact.y+radius));y++)for(let x=Math.max(0,Math.floor(impact.x-radius));x<=Math.min(W-1,Math.ceil(impact.x+radius));x++){
-  const terrain=terrainAt(s,x,y,z);if(!['wall','crate'].includes(terrain))continue;
+  const terrain=terrainAt(s,x,y,z);if(terrain!=='crate')continue;
   const dist=boxDistance(impact,x-.5,y-.5,z*3,x+.5,y+.5,z*3+2.7);
   if(dist<radius&&w.damage*(1-dist/radius)>=(terrain==='wall'?50:20))candidates.push({dist,point:{x:Math.max(x-.5,Math.min(impact.x,x+.5)),y:Math.max(y-.5,Math.min(impact.y,y+.5)),h:Math.max(z*3+.03,Math.min(impact.h,z*3+2.6))},remove:()=>{if(z)s.upper[z-1][tileKey(x,y)]='floor';else (s.map||s.terrain)[y][x]='ground-gravel';}});
  }
@@ -68,6 +71,6 @@ export function detonate(s,impact,w){
   const h=unitBaseHeight(p),dist=boxDistance(impact,p.x-.328,p.y-.328,h,p.x+.328,p.y+.328,h+.8);
   return dist<radius&&w.damage*(1-dist/radius)>=1&&blastClear(s,impact,{x:p.x,y:p.y,h:h+.4},barrelId(p));
  });
- const sites=blastStrategicSites(s,impact,radius);destroyed+=sites.length;
- return {hits,barrels,sites,blast:{x:impact.x,y:impact.y,z:impact.z,h:impact.h,radius,destroyed}};
+ const sites=blastStrategicSites(s,impact,radius),structural=commitStructureDamage(s,structures);destroyed+=sites.length+structural.destroyed;
+ return {hits,barrels,sites,structures:structural.receipts,before:structural.before,blast:{x:impact.x,y:impact.y,z:impact.z,h:impact.h,radius,destroyed}};
 }

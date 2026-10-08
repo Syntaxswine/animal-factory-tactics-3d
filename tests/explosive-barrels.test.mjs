@@ -81,7 +81,7 @@ test('area flame and grenade attacks ignite exposed barrels, while solid walls s
 });
 test('upper-floor barrels spare characters below and create fire only on their own floor',()=>{
  const {s,a,b}=fixture({z:1}),hp=s.units.map(u=>u.hp);assert.ok(attack(s,a,b));
- assert.deepEqual(s.units.map(u=>u.hp),hp);assert.ok(s.units.every(u=>!u.burningTurns));assert.equal(s.fires.length,81);assert.ok(s.fires.every(p=>p.z===1));
+ assert.deepEqual(s.units.map(u=>u.hp),hp);assert.ok(s.units.every(u=>!u.burningTurns));assert.ok(s.fires.length>0&&s.fires.length<81,'the blast removes floor tiles in its centre');assert.ok(s.fires.every(p=>p.z===1&&s.upper[0][`${p.x},${p.y}`]),'fire remains on surviving upper slabs only');assert.equal(s.upper[0]['20,20'],undefined);
  assert.equal(s.effect.explosions[0].h,3.4);
 });
 test('a worn tank explosion can ignite nearby barrels through the same committed event',()=>{

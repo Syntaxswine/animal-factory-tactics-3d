@@ -17,7 +17,7 @@ export function shotPhase(elapsed,rifle=true,reduced=false){
   recoil:reduced||t<0||t>.45e3?0:t<30?ease(t/30):1-ease((t-30)/420),flash:!reduced&&t>=0&&t<65,trace:!reduced&&t>=0&&t<180,impact:t>=0&&t<180};
 }
 export class BattleCombat {
- constructor(){this.lastEffect=null;this.previous=new Map();this.queue=[];this.held=new Map();this.active=null;}
+ constructor(){this.lastEffect=null;this.previous=new Map();this.queue=[];this.held=new Map();this.falling=new Map();this.active=null;}
  observe(state,now,reduced=false){
   if(reduced)for(const shot of [this.active,...this.queue])if(shot)shot.reduced=true;
   if(state.effect&&state.effect!==this.lastEffect){
@@ -32,6 +32,7 @@ export class BattleCombat {
     shot.paintedFire=!!event.flame&&paintedOperatorSupported(shooter);
     this.queue.push(shot);
     for(const id of event.downed||[]){const prior=this.previous.get(id);if(prior)this.held.set(id,prior);}
+    for(const fall of event.falls||[])if(this.previous.has(fall.id)&&!this.falling.has(fall.id))this.falling.set(fall.id,fall.from);
    }
   }
   this.advance(now);
@@ -41,10 +42,10 @@ export class BattleCombat {
   const phase=(shot,elapsed)=>shot.event.grenade?grenadePhase(shot,elapsed):shot.paintedFire?paintedFlamePhase(elapsed,shot.reduced):shot.event.flame?flamePhase(elapsed,shot.reduced):shotPhase(elapsed,shot.rifle,shot.reduced);
   if(this.active&&now-this.active.start>=phase(this.active,0).duration)this.active=null;
   if(!this.active&&this.queue.length)this.active={...this.queue.shift(),start:now};
-  if(this.active){this.active.phase=phase(this.active,now-this.active.start);if(this.active.phase.discharged)for(const id of this.active.event.downed||[])this.held.delete(id);}
-  if(!this.active&&!this.queue.length)this.held.clear();
+  if(this.active){this.active.phase=phase(this.active,now-this.active.start);if(this.active.phase.discharged){for(const id of this.active.event.downed||[])this.held.delete(id);for(const f of this.active.event.falls||[])this.falling.delete(f.id);}}
+  if(!this.active&&!this.queue.length){this.held.clear();this.falling.clear();}
  }
  get busy(){return !!this.active||this.queue.length>0;}
- display(unit){return this.held.has(unit.id)?{...unit,hp:this.held.get(unit.id).hp,casualty:null}:unit;}
- clear(){this.lastEffect=null;this.previous.clear();this.queue=[];this.held.clear();this.active=null;}
+ display(unit){const held=this.held.get(unit.id),position=this.falling.get(unit.id);return held||position?{...unit,...held&&{hp:held.hp,casualty:null},...position}:unit;}
+ clear(){this.lastEffect=null;this.previous.clear();this.queue=[];this.held.clear();this.falling.clear();this.active=null;}
 }

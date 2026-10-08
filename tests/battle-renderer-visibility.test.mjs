@@ -13,7 +13,7 @@ function renderer(){
  Object.assign(r,{camera:new T.OrthographicCamera(),actors:new Map(),models:new Map(),materials:new Map(),
   renderer:{setSize(){},getPixelRatio:()=>1,render(){},domElement:{}},editorWorld:world,world,level:0,
   rebuild(){},prune(){},loot:{sync(){}},sites:{hit:()=>null},motion:{update(){}},traversal:{observe(){}},combat:new BattleCombat(),
-  fire:{observe(){},display:u=>u},tankEffects:{observe(){},pendingProps:()=>[]},shotEffects:{hide(){}},flameEffects:{hide(){}},
+  fire:{observe(){},display:u=>u},grenades:{scenery:s=>s},tankEffects:{observe(){},pendingProps:()=>[]},shotEffects:{hide(){}},flameEffects:{hide(){}},
   actor(u){let mesh=this.actors.get(u.id);if(!mesh){mesh=new T.Mesh(new T.BoxGeometry(.5,1,.5));this.actors.set(u.id,mesh);}mesh.position.fromArray(toWorld(u));mesh.position.y+=.5;mesh.updateMatrixWorld(true);return mesh;}
  });
  return r;
@@ -60,5 +60,15 @@ test('battle draws every level, keeps fog gates, and only picks people on the in
   assert.deepEqual(lit,[3,3,3,3],'lamps on every displayed level remain lit');
   assert.equal(r.actors.has(3),false,'explored floors do not reveal unspotted guards');
   assert.equal(r.actors.has(4),false,'explored floors do not reveal unseen bodies');
+ }finally{for(const mesh of r.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}}
+});
+
+test('a previously visible falling guard stays at its old level until detonation, then follows current fog',()=>{
+ const a={id:0,x:0,y:0,z:0,team:'squad',weapon:'grenade',hp:100},b={id:1,x:2,y:0,z:1,team:'guard',hp:70},hidden={id:2,x:3,y:0,z:1,team:'guard',hp:70},r=renderer();
+ const state={units:[a,b,hidden],map:[],props:[],detected:new Set([1]),visible:new Set(['0,0','2,0,1']),seen:new Set(['0,0','2,0,1'])};
+ const draw=now=>{r.presentationNow=now;return r.draw({drawImage(){}},state,{x:250,y:250,zoom:1},500,500,0).map(p=>p.id);};
+ try{
+  assert.deepEqual(draw(0),[0,1]);b.z=0;hidden.z=0;state.detected.clear();state.effect={sequence:[{shooter:0,ax:0,ay:0,az:0,grenade:{release:1.92},trajectories:[{fuse:4}],falls:[{id:1,from:{x:2,y:0,z:1}},{id:2,from:{x:3,y:0,z:1}}]}]};
+  assert.deepEqual(draw(10),[0,1]);assert.equal(r.combat.display(b).z,1);assert.equal(r.combat.falling.has(2),false);assert.deepEqual(draw(5940),[0]);
  }finally{for(const mesh of r.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}}
 });

@@ -6,7 +6,7 @@ import {rampRayHit} from '../cliff-ramps.js';
 import {cliffSupportAt} from '../cliff-support.js';
 import {cliffRayHit} from '../cliff-map-geometry.js';
 import {unitBaseHeight,towerRayHit} from '../tower-geometry.js';
-import {terrainAt,levelOf,sightEdge,W,H,LEVELS} from './maps.js';
+import {terrainAt,levelOf,sightEdge,edgeBetween,W,H,LEVELS} from './maps.js';
 import {PROPS,propAt} from './environment.js';
 
 const EPS=1e-7;
@@ -51,22 +51,22 @@ export function traceProjectile(state,shooter,origin,direction,reach){
    const lower=Math.floor(Math.min(before.h,after.h)/3),upper=Math.floor(Math.max(before.h,after.h)/3);
    if(lower!==upper&&upper>=0&&upper<LEVELS){
     const cells=new Set([`${ax},${ay}`,`${bx},${by}`]);
-    for(const cell of cells){const [x,y]=cell.split(',').map(Number);if((upper===0||terrainAt(state,x,y,upper)!=='void'&&!cliffSupportAt(state,{x,y,z:upper}))&&!(state.stairs||[]).some(s=>s.x===x&&s.y===y&&s.z===upper-1))return impact('floor',t);}
+    for(const cell of cells){const [x,y]=cell.split(',').map(Number);if((upper===0||terrainAt(state,x,y,upper)!=='void'&&!cliffSupportAt(state,{x,y,z:upper}))&&!(state.stairs||[]).some(s=>s.x===x&&s.y===y&&s.z===upper-1))return impact('floor',t,{structure:{x,y,z:upper}});}
    }
    const z=Math.floor(p.h/3),height=p.h-z*3;
    if(z>=0&&z<LEVELS&&height<=2.7){
-    if(ax!==bx&&ay!==by)for(const [x,y]of [[ax,by],[bx,ay]]){const terrain=terrainAt(state,x,y,z),prop=PROPS[propAt(state,x,y,z)?.kind],top=terrain==='wall'||prop?.tall?2.7:terrain==='crate'||prop?.solid&&!prop.explosive&&prop.cover>0?.8:0;if(top&&height<=top)return impact('cover',t);}
-    if(ax!==bx)for(const y of new Set([ay,by]))if(sightEdge(state,{x:ax,y,z},{x:bx,y,z},{height,offset:p.y-y+.5}))return impact('wall',t);
-    if(ay!==by)for(const x of new Set([ax,bx]))if(sightEdge(state,{x,y:ay,z},{x,y:by,z},{height,offset:p.x-x+.5}))return impact('wall',t);
+    if(ax!==bx&&ay!==by)for(const [x,y]of [[ax,by],[bx,ay]]){const terrain=terrainAt(state,x,y,z),prop=PROPS[propAt(state,x,y,z)?.kind],top=terrain==='wall'||prop?.tall?2.7:terrain==='crate'||prop?.solid&&!prop.explosive&&prop.cover>0?.8:0;if(top&&height<=top)return impact('cover',t,{...(terrain==='wall'?{structure:{x,y,z}}:{})});}
+    if(ax!==bx)for(const y of new Set([ay,by]))if(sightEdge(state,{x:ax,y,z},{x:bx,y,z},{height,offset:p.y-y+.5}))return impact('wall',t,{structure:{edge:edgeBetween({x:ax,y,z},{x:bx,y,z})}});
+    if(ay!==by)for(const x of new Set([ax,bx]))if(sightEdge(state,{x,y:ay,z},{x,y:by,z},{height,offset:p.x-x+.5}))return impact('wall',t,{structure:{edge:edgeBetween({x,y:ay,z},{x,y:by,z})}});
    }
   }
   if(i===times.length-1)break;
   const end=times[i+1],mid=point(origin,d,(t+end)/2),x=Math.round(mid.x),y=Math.round(mid.y),z=Math.floor(mid.h/3);
-  if(z<0)return impact('floor',t);
+  if(z<0)return impact('floor',t,{structure:{x,y,z:0}});
   if(z>=LEVELS)continue;
   const terrain=terrainAt(state,x,y,z),prop=PROPS[propAt(state,x,y,z)?.kind];
   const height=terrain==='wall'||prop?.tall?2.7:(terrain==='crate'||prop?.solid&&!prop.explosive&&prop.cover>0)?.8:0;
-  if(height){const vertical=slab(origin.h,d.h,z*3,z*3+height);if(vertical){const hit=Math.max(t,vertical[0]);if(hit<=Math.min(end,vertical[1]))return impact('cover',hit);}}
+  if(height){const vertical=slab(origin.h,d.h,z*3,z*3+height);if(vertical){const hit=Math.max(t,vertical[0]);if(hit<=Math.min(end,vertical[1]))return impact('cover',hit,{...(terrain==='wall'?{structure:{x,y,z}}:{})});}}
  }
  if(terrainHit!==null&&limit===terrainHit)return impact('cover',limit);
  if(nearestProp)return impact('prop',limit,{propId:isStrategicSite(nearestProp)?siteId(nearestProp):barrelId(nearestProp),propKind:nearestProp.kind});

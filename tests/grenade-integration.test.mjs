@@ -81,7 +81,7 @@ for(const profile of ANIMAL_MOTION_CATALOG)test(profile.id+': prepared live thro
   }}finally{fx.dispose();model.locomotion.dispose();model.equipment?.dispose();worker.skeleton.dispose();worker.dispose();}
 });
 test('destructible scenery stays intact in presentation until the fuse completes',()=>{
- const {s}=scene();s.edges['e:12:10']='wall-concrete';s.units=[];const impact={x:12,y:10,h:.4,z:0,grenade:true},result=detonate(s,impact,weapon);assert.equal(s.edges['e:12:10'],undefined);
+ const {s}=scene();s.edges['e:12:10']='wall-concrete';s.units=[];const impact={x:12,y:10,h:.4,z:0,grenade:true};detonate(s,impact,weapon);assert.equal(s.edges['e:12:10'],'wall-concrete','a pristine heavy wall survives the first grenade');const result=detonate(s,impact,weapon);assert.equal(s.edges['e:12:10'],undefined);
  const fx=new BattleGrenades(new T.Scene()),shot={event:{grenade:{scenery:result.before},sites:result.sites},phase:{discharged:false}},combat={active:shot,queue:[]};
  try{assert.equal(fx.scenery(s,combat).edges['e:12:10'],'wall-concrete');assert.equal(s.edges['e:12:10'],undefined);shot.phase.discharged=true;assert.equal(fx.scenery(s,combat).edges['e:12:10'],undefined);}finally{fx.dispose();}
 });

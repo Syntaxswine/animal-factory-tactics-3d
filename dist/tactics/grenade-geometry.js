@@ -32,7 +32,8 @@ export function grenadeWorld(s){
   const barrel=b.source?.prop&&(s.props||[]).find(p=>isExplosiveBarrel(p)&&b.source.prop===`prop:${p.x},${p.y},${p.z||0}:${p.kind}`);
   add(oriented(b.trellisPart||b,{kind:b.kind,...b.source,...barrel&&{propId:barrelId(barrel)}}));
  }
- for(let y=0;y<key.length;y++)for(let x=0;x<key[y].length;x++)if(key[y][x]==='wall')add(oriented({center:[x,1,y],size:[1,2,1]},{kind:'wall'}));
+ for(let y=0;y<key.length;y++)for(let x=0;x<key[y].length;x++)if(key[y][x]==='wall')add(oriented({center:[x,1,y],size:[1,2,1]},{kind:'wall',x,y,z:0}));
+ for(const [level,layer]of (s.upper||[]).entries())for(const [key,kind]of Object.entries(layer))if(kind==='wall'){const [x,y]=key.split(',').map(Number),z=level+1;add(oriented({center:[x,z*GRENADE_FLOOR+1,y],size:[1,2,1]},{kind:'wall',x,y,z}));}
  // Terrain triangles are welded by the same builder that renders cliffs.
  const cliffs=new Set([...cliffGeometry(s.props||[]).index.values()].flat());
  for(const t of cliffs){const ps=t.points.map(p=>[p.x,p.y+t.level*(GRENADE_FLOOR-3),p.z]);tri(...ps,{kind:'cliff'});}

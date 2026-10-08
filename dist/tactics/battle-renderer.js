@@ -80,8 +80,8 @@ export class BattleRenderer extends HybridRenderer {
    if(!model.profile.unarmed&&model.weapon!==unit.weapon){const old=model.equipment;model.equipment=createWeaponModel(unit.weapon);model.worker.equipWeapon(model.equipment);old?.dispose();model.weapon=unit.weapon;}
    try{if(this.traversal.pose(model,unit,this.presentationNow??performance.now()))return model.root;}catch(error){this.diagnostics.push('Traversal animation: '+error.message);this.traversal.finish();}
   }
-  const {worker,root,profile}=model,shot=this.combat.active?.event.shooter===unit.id?this.combat.active:null;
-  const sample=this.traversal?.preparing&&this.traversal.active?.event.unitId===unit.id?{...this.motion.sample(unit),...this.traversal.display(unit),blend:0,pose:{}}:shot?{...this.motion.sample(unit),x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0,blend:0}:this.motion.sample(unit);
+  const {worker,root,profile}=model,shot=this.combat.active?.event.shooter===unit.id?this.combat.active:null,fallen=shot?.phase.discharged&&shot.event.falls?.some(f=>f.id===unit.id);
+  const sample=this.traversal?.preparing&&this.traversal.active?.event.unitId===unit.id?{...this.motion.sample(unit),...this.traversal.display(unit),blend:0,pose:{}}:shot&&!fallen?{...this.motion.sample(unit),x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0,blend:0}:this.motion.sample(unit);
   const now=this.presentationNow??performance.now();
   this.grenades.prepareActor(model,unit,shot);
   if(this.fire.pose(model,unit,shot,now,this.state,this.camera))return model.root;
@@ -158,7 +158,7 @@ export class BattleRenderer extends HybridRenderer {
  draw(ctx,state,...args){
   this.loot.sync(state,null);
   this.state=state;this.presentationLevel=args[3];this.captureCombat(state);this.shotEffects.hide();this.flameEffects.hide();
-  const units=state.units.filter(u=>personVisible(state,u)).map(u=>this.traversal.active?.event.unitId===u.id?{...u,presentationLevel:args[3]}:this.fire.display(this.combat.display(u)));
+  const units=state.units.filter(u=>personVisible(state,u)||this.combat.falling.has(u.id)).map(u=>this.traversal.active?.event.unitId===u.id?{...u,presentationLevel:args[3]}:this.fire.display(this.combat.display(u)));
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
   // Visibility was resolved from committed units before animation changed HP
   // or position. Do not hide a visible casualty during its pre-impact pose.
@@ -179,7 +179,7 @@ export class BattleRenderer extends HybridRenderer {
  }
  get busy(){return this.combat.busy||this.traversal.busy||this.fire.busy||this.tankEffects.busy||[...this.models.values()].some(m=>m.draw||m.drawRequested);}
  equipmentState(id){return this.fire.sessions.get(id)?.stow?.state==='stowed'?'stowed':this.traversal.active?.event.unitId===id?(this.traversal.active.motion?.climb.equipmentState||'carried'):this.models.get(id)?.draw||this.models.get(id)?.drawRequested?'drawing':'carried';}
- displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);if(this.fire.entries.has(unit.id))return this.fire.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id)return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(unit);}
+ displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);if(this.fire.entries.has(unit.id))return this.fire.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id&&!(shot.phase.discharged&&shot.event.falls?.some(f=>f.id===unit.id)))return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(this.combat.display(unit));}
  dispose(){
   this.generation++;this.wallXray.dispose();
   this.sites.dispose();this.loot.dispose();this.cliffs.dispose();this.interiorFog.dispose();this.lights.dispose();this.daylight.dispose();
