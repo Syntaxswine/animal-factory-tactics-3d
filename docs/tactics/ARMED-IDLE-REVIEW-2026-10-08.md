@@ -92,3 +92,11 @@ narrow stock neck is an intentional grasp; the broad butt must clear the arm.
 Follow-up evidence is in [rifle-tuck](hybrid-review/armed-idle/rifle-tuck/).
 These are sampled study checks, not proof of general collision avoidance or
 gameplay integration.
+
+## Independent integration review
+
+Reviewed `4af7409` against canonical `d2ab2d6`. Approved for publication as a standalone study. The rifle stock sits behind the relaxed forearm as requested; the HMG support hand uses its upper handle. The quiet guard and mercenary movement is a useful baseline.
+
+All 63 independently rerun tests passed: armed idle, rifle overlap, weapon grips/models, paint lifecycle, distribution module graph and Pages file coverage. Packaged-browser inspection covered horse/rifle keyframes and front view, pig foreman/HMG, hen/HMG, skunk/flamethrower from the rear and donkey guide/rifle at gameplay size. No browser errors or warnings occurred in that sample.
+
+Battle integration remains separate. Preserve world placement outside this local-space pose controller, give idle exclusive ownership only while an actor is waiting, and test handoff to locomotion, aim/fire, traversal, throws, damage and death. Do not run both idle implementations on the same rig simultaneously. Clothing/grip polish remains allowed; the sampled study is not a general collision solver.
