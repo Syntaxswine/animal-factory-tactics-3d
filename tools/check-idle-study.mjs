@@ -47,7 +47,11 @@ try{
  for(const [name,o,t] of [['close-three',{view:'three',scale:'close',gaze:true},4.4],['gameplay',{view:'three',scale:'game',gaze:false},4.4],['surroundings',{view:'three',scale:'wide',gaze:true},24.9]]){await page.evaluate(({o,t})=>{window.idleStudy.set(o);window.idleStudy.seek(t);},{o,t});await page.screenshot({path:path.join(out,name+'.png')});}
  const looks=await page.evaluate(()=>window.idleStudy.schedule.looks.map(l=>l.time+l.dur));
  await sheet(page,'looks-horse.png',looks.map(t=>['horse',1,t,[.02,1.0,0],.62,.66,.22]),7);
- await sheet(page,'glance-down-profile.png',['horse','cow','donkey','dog','goat','pig-director'].flatMap(id=>[[id,1,8.5,[.05,1.3,0],.32,0,.02],[id,1,9.4,[.05,1.3,0],.32,0,.02]]),6);
+ // The deepest glance at the ground each of six characters makes in loops 1-8, beside the same loop's opening look ahead.
+ const downs=[];for(const id of ['horse','cow','donkey','dog','goat','pig-director'])downs.push(await page.evaluate(async id=>{const S=window.idleStudy;await S.cast(id);let best=null;
+  for(let seed=1;seed<=8;seed++){await S.set({seed});for(const l of S.schedule.looks)if(l.kind==='ground'&&(!best||l.pitch<best.pitch))best={seed,start:l.time,land:l.time+l.dur+.4,pitch:l.pitch};}return {id,...best};},id));
+ assert.ok(downs.every(d=>d.pitch<-8),'each of the six glances down at least 8 degrees');
+ await sheet(page,'glance-down-profile.png',downs.flatMap(d=>[[d.id,d.seed,0,[.05,1.3,0],.32,0,.02],[d.id,d.seed,d.land,[.05,1.3,0],.32,0,.02]]),6);
  await sheet(page,'cast.png',cast.map(id=>[id,3,11.6,[.02,.95,0],.75,.66,.2]),6);
  await page.evaluate(async()=>{await window.idleStudy.cast('horse');window.idleStudy.set({seed:1,view:'three',scale:'close',gaze:true});window.idleStudy.seek(4.4);});
  await page.setViewportSize({width:760,height:740});await page.evaluate(()=>window.idleStudy.draw());await page.screenshot({path:path.join(out,'compact.png')});

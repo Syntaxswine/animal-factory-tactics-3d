@@ -27,7 +27,8 @@ try{
  async function cast(id){const profile=CAST.find(p=>p.id===id),data=await fetch('./'+profile.file).then(r=>{if(!r.ok)throw Error(profile.label+' mesh failed to load');return r.json();});release();
   worker=profile.create(data,atlas);paint=await createAnimalPaint(renderer,worker,profile,{loadAsync:async(...args)=>{const t=await loader.loadAsync(...args);ownedTextures.push(t);return t;}});for(const p of worker.parts){p.material=paint.material;p.castShadow=true;}
   scene.add(worker.root);load(Number($('seed').value));}
- // Each seed is its own loop; switching rebuilds the motion (about a third of a second) and keeps the time.
+ // Each seed is its own loop; switching rebuilds the motion and keeps the time (about 0.15 s, or about a second for a
+ // character's first loop, while its clothes are measured).
  function load(seed){motion?.dispose();motion=createIdle(worker,{seed});$('time').max=motion.length;time%=motion.length;
   $('keyframes').replaceChildren();for(const l of motion.schedule.looks){const b=document.createElement('button');b.textContent=l.label;b.dataset.time=l.time+l.dur;b.title=(l.time+l.dur).toFixed(2)+' s';b.onclick=()=>{playing=false;time=l.time+l.dur;draw();};$('keyframes').append(b);}}
  await cast($('species').value);
@@ -42,7 +43,9 @@ try{
   window.idleStudyState={...state,species:$('species').value,gaze:{eye:g.eye.toArray(),target:g.target.toArray()},playing,seed:motion.seed,view:$('view').value,scale,geometryCount:renderer.info.memory.geometries,textureCount:renderer.info.memory.textures};return window.idleStudyState;
  }
  window.idleStudy={timing:IDLE,get species(){return $('species').value;},get length(){return motion.length;},get schedule(){return motion.schedule;},seek(t){if(!Number.isFinite(t))throw Error('Time must be finite');playing=false;time=((t%motion.length)+motion.length)%motion.length;return draw();},
-  set(options){for(const [k,v]of Object.entries(options)){if(k==='gaze')$('gaze').checked=!!v;else if($(k)&&[...$(k).options||[]].some(o=>o.value===String(v))){$(k).value=String(v);if(k==='seed')load(Number(v));}}orbit=elevation=0;return draw();},play(){playing=true;return draw();},draw,dispose,get worker(){return worker;},get motion(){return motion;},cast:async id=>{$('species').value=id;await cast(id);return draw();},renderer,scene,camera};
+  // Any of the page's controls by name; a character or seed is loaded, and an unknown control or value is refused.
+  async set(options){for(const [k,v]of Object.entries(options)){if(k==='gaze'){$('gaze').checked=!!v;continue;}if(!['species','seed','view','scale','speed'].includes(k))throw Error('The study has no '+k+' control');
+    if(![...$(k).options].some(o=>o.value===String(v)))throw Error('No '+k+' '+v);$(k).value=String(v);if(k==='species')await cast(String(v));else if(k==='seed')load(Number(v));}orbit=elevation=0;return draw();},play(){playing=true;return draw();},draw,dispose,get worker(){return worker;},get motion(){return motion;},cast:async id=>{$('species').value=id;await cast(id);return draw();},renderer,scene,camera};
  $('play').onclick=()=>{playing=!playing;draw();};$('restart').onclick=()=>{time=0;playing=true;draw();};$('time').oninput=()=>{playing=false;time=+$('time').value;draw();};
  $('seed').onchange=()=>{load(Number($('seed').value));draw();};$('species').onchange=async()=>{await cast($('species').value);draw();};for(const id of ['view','scale','gaze','speed'])$(id).onchange=()=>{orbit=elevation=0;draw();};
  host.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,orbit,elevation};host.setPointerCapture(e.pointerId);};host.onpointermove=e=>{if(!drag)return;orbit=drag.orbit+(e.clientX-drag.x)*.007;elevation=Math.max(-1,Math.min(4,drag.elevation-(e.clientY-drag.y)*.014));draw();};host.onpointerup=host.onpointercancel=()=>drag=null;
