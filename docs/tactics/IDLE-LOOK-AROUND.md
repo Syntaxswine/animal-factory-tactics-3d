@@ -455,3 +455,13 @@ skeleton and its own weights.
 - **Targets.** Looks are random directions. The game would supply real ones: a sound, a teammate, a
   threat.
 - **No eyes or ears to animate.** The heads have no eye or ear bones, so all looking is done by turning.
+
+## Independent integration review — October 8, 2026
+
+Reviewed `0ab4372`. Approved as a separate animation study with the viewer correction below; this does not enable battle idles. The restored neck bend and restrained weight shifts read well on the horse and donkey. The limited sheep and pig-director motion remains a documented clothing limitation.
+
+All 30 focused tests passed: idle motion, clothing, cached fits, distribution module graph and Pages file coverage. Independently inspected the packaged horse, donkey and pig director, plus character/seed changes during playback.
+
+Found and reproduced a viewer failure: play the study, then select the rabbit. While its paint loads, the old `cast()` cleared `motion`; the next frame read `motion.length`, threw, and stopped scheduling frames. The correction keeps the previous actor alive until a complete replacement is ready, ignores superseded loads, disposes unadopted actors and respects page disposal. Repeated character changes and a seed change now keep the timeline advancing, including through its wrap, with no new console errors. Syntax and the rebuilt Pages module checks also pass.
+
+Before gameplay integration, choose how this unarmed study and the armed idle share pose ownership, and test transitions to movement, aiming, climbing, damage and death. Their current local-space controllers reset the root transform and must not be applied directly to world-positioned battle actors.
