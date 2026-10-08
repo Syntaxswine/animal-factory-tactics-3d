@@ -88,6 +88,9 @@
         1.08,
         0
       ],
+      "animal": "horse",
+      "outfit": "normal",
+      "kind": "overhand throw",
       "playing": false,
       "mode": "motion",
       "view": "side",
@@ -181,6 +184,9 @@
         1.08,
         0
       ],
+      "animal": "horse",
+      "outfit": "normal",
+      "kind": "overhand throw",
       "playing": false,
       "mode": "motion",
       "view": "side",

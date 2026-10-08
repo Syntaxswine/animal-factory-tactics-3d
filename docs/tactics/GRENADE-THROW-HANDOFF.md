@@ -1,4 +1,17 @@
-# Hand grenade and horse throwing study
+# Hand grenade throwing study
+
+## Current roster revision (2026-10-08)
+
+Claude's approved `fc1573e` horse baseline now extends to all **12 animals and
+25 outfits**, with a separate feather-cup toss for the hen. The hostile subagent
+review passed at **9/10**. Native dimensions, the side-on loading action,
+hip/chest/hand sequence, planted lead foot, rear-foot pivot, loose parts and
+relaxed recovery are preserved.
+
+See [the roster handoff and validation](GRENADE-ROSTER-HANDOFF.md) for the
+species fits, remaining polish, checks and integration boundary. The sections
+below retain the history of the two horse-only studies; their measurements
+refer to those revisions rather than the current roster implementation.
 
 ## Naturalistic revision (Claude, 2026-10-08)
 
@@ -166,7 +179,8 @@ Playwright package and a preview on port 4476 (or a URL argument).
 
 ## Integration and next passes
 
-- [ ] Fit the throw to the other animals and outfits, with a separate hen pass.
+- [x] Fit the throw to the other animals and outfits, with a separate hen pass
+  (2026-10-08; see the roster handoff above).
 - [ ] Add gameplay target/range/facing/obstruction handling. This proof aims at
   one flat-ground target; it is not a general projectile collision solver.
 - [ ] Connect throw events to inventory/ammunition/AP spending and the existing

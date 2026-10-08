@@ -1,0 +1,47 @@
+{
+  "hash": "d65ba5b85ca458bc7497c1b86240f3debb45c7e8df04fabb80349420529a2e67",
+  "all": [
+    {
+      "animal": "skunk",
+      "weightError": 3.3527612686157227e-8,
+      "groups": [],
+      "findings": []
+    },
+    {
+      "animal": "pig-director",
+      "weightError": 4.470348358154297e-8,
+      "groups": [
+        {
+          "parts": "forearm and hand -1 / unified director skull folded ears and snout",
+          "first": 0.4,
+          "last": 0.42,
+          "max": 1,
+          "timeMax": 0.4,
+          "depth": 0.0022523407006349028
+        }
+      ],
+      "findings": [
+        {
+          "time": 0.4,
+          "arm": "forearm and hand -1",
+          "solid": "unified director skull folded ears and snout",
+          "count": 1,
+          "depth": 0.00206581171409637
+        },
+        {
+          "time": 0.42,
+          "arm": "forearm and hand -1",
+          "solid": "unified director skull folded ears and snout",
+          "count": 1,
+          "depth": 0.0022523407006349028
+        }
+      ]
+    },
+    {
+      "animal": "hen",
+      "weightError": 2.9802322387695312e-8,
+      "groups": [],
+      "findings": []
+    }
+  ]
+}
