@@ -81,16 +81,18 @@ function entryConnected(map,start,goal){
  const seen=new Set([tileKey(start.x,start.y,start.z)]),queue=[start];for(let i=0;i<queue.length;i++){const p=queue[i];if(p.x===goal.x&&p.y===goal.y&&p.z===(goal.z||0))return true;for(const q of neighbors(map,p,undefined,false)){const k=tileKey(q.x,q.y,q.z);if(!seen.has(k)){seen.add(k);queue.push(q);}}}return false;
 }
 function gateCells(entry){const out=[];for(let d=1;d<=entry.depth;d++)for(let t=117;t<=122;t++)out.push(entry.side==='west'?{x:d,y:t,z:0}:entry.side==='east'?{x:239-d,y:t,z:0}:entry.side==='north'?{x:t,y:d,z:0}:{x:t,y:239-d,z:0});return out;}
-export function landingPlan(c,index,side,ids){
+class BlockedEntryError extends Error {}
+export function landingPlan(c,index,side,ids,{reserved=[]}={}){
  const sector=initializeSector(c,index),s=sector.state,entry=c.assignments[index].entries.find(e=>e.side===side);
  if(!entry)fail('This sector has no compatible entry on that side.');
  const occupied=new Set(sector.population.filter(id=>!ids.includes(id)).map(id=>c.characters[id].unit).filter(u=>alive(u)||incapacitated(u)).map(u=>tileKey(u.x,u.y,u.z||0)));
+ for(const key of reserved)occupied.add(key);
  for(const p of s.loot)if(p.container&&!p.searched)occupied.add(tileKey(p.x,p.y,p.z||0));
  const cells=gateCells(entry),allowed=new Set(cells.map(p=>tileKey(p.x,p.y))),reachable=new Set(),queue=[];
  for(const p of cells)if((side==='west'?p.x===1:side==='east'?p.x===238:side==='north'?p.y===1:p.y===238)&&walkable(s,p.x,p.y,0)){const boundary={...p,...(side==='west'?{x:0}:side==='east'?{x:239}:side==='north'?{y:0}:{y:239})};if(walkable(s,boundary.x,boundary.y,0)&&neighbors(s,boundary,undefined,false).some(q=>q.x===p.x&&q.y===p.y)){queue.push(p);reachable.add(tileKey(p.x,p.y));}}
  for(let i=0;i<queue.length;i++)for(const p of neighbors(s,queue[i],undefined,false)){const k=tileKey(p.x,p.y,p.z);if(allowed.has(k)&&!reachable.has(k)){reachable.add(k);queue.push(p);}}
  const free=cells.filter(p=>reachable.has(tileKey(p.x,p.y))&&!occupied.has(tileKey(p.x,p.y)));
- if(free.length<ids.length)fail('Entry is blocked or occupied. The group has not been transferred.');
+ if(free.length<ids.length)throw new BlockedEntryError('Entry is blocked or occupied. The group has not been transferred.');
  return new Map(ids.map((id,i)=>[id,free[i]]));
 }
 function removePopulation(c,id,{history=false}={}){const r=c.characters[id];if(r.location.kind==='sector'){const s=sectorRecord(c,r.location.sector);s.population=s.population.filter(p=>p!==id);if(s.state&&(!history||c.active?.sector!==r.location.sector))s.state.units=s.state.units.filter(u=>u.campaignId!==id);}}
@@ -98,9 +100,19 @@ function depart(c,g){
  if(!g.travel.route.length||g.waitMinutes>1e-8)return;
  const edge=g.travel.route[0];for(const id of g.memberIds){removePopulation(c,id);c.characters[id].location={kind:'travel',group:g.id,from:edge.from,to:edge.to};}
 }
-function arrive(c,g,index,from){
+function prepareArrivals(c,groups,index,from,reservations){
  const side=direction(index,from);if(!side)fail('Arrival must cross a neighboring sector boundary.');
- const plan=c.assignments[index]?landingPlan(c,index,side,g.memberIds):null,sector=sectorRecord(c,index);
+ // Reserve the whole contact before transferring either side. Failed plans
+ // leave other arrivals' reservations intact and never consume landing cells.
+ const reserved=new Set(reservations.get(index)),plans=groups.map(g=>{
+  const plan=c.assignments[index]?landingPlan(c,index,side,g.memberIds,{reserved}):null;
+  if(plan)for(const p of plan.values())reserved.add(tileKey(p.x,p.y,p.z));
+  return {index,plan};
+ });
+ reservations.set(index,reserved);return plans;
+}
+function arrive(c,g,{index,plan}){
+ const sector=sectorRecord(c,index);
  for(const id of g.memberIds){removePopulation(c,id);const r=c.characters[id];r.location={kind:'sector',sector:index};if(!sector.population.includes(id))sector.population.push(id);if(plan){Object.assign(r.unit,plan.get(id));delete r.unit.away;r.unit.overwatch=null;r.unit.post={...plan.get(id),heading:r.unit.heading};}}
  if(sector.state){sector.state.units=[...sector.state.units.filter(u=>!g.memberIds.includes(u.campaignId)),...groupMembers(c,g)];if(c.active?.sector===index){if(sector.state.phase==='won'&&hostilePopulation(c,index))sector.state.phase='explore';refresh(sector.state);}}
  if(g.faction==='red-hats'&&!sector.population.some(id=>mobile(c.characters[id].unit))&&hostilePopulation(c,index)){sector.owner='red-hats';c.overmap.sectors[index].owner='red-hats';}
@@ -122,7 +134,7 @@ export function reconcileCampaign(c){
   if(retired(u)&&r.location.kind!=='removed'){removePopulation(c,r.id,{history:true});r.location={kind:'removed',reason:u.casualty==='quit'?'quit':'dead'};}
  }}
  for(const g of c.groups)g.memberIds=g.memberIds.filter(id=>{const r=c.characters[id];return r.location.kind!=='removed'&&r.unit.casualty!=='captured';});
- for(const g of c.groups)if(!g.memberIds.length){g.disbanded=true;g.travel.route=[];g.travel.progress=0;g.waitMinutes=0;}
+ for(const g of c.groups)if(!g.memberIds.length){g.disbanded=true;g.travel.route=[];g.travel.progress=0;g.waitMinutes=0;delete g.entryBlocked;}
  for(const [index,sector]of Object.entries(c.sectors))if(sector.state?.phase==='won'&&!hostilePopulation(c,+index))releaseBodyLoot(c,sector.state);
  if(!c.groups.some(g=>g.id===c.selectedGroup&&g.memberIds.length))c.selectedGroup=c.groups.find(g=>g.faction==='player'&&g.memberIds.length)?.id||null;
  enqueueContacts(c);c.log=c.log.slice(-80);return c;
@@ -160,17 +172,38 @@ export function advanceCampaign(c,minutes,{duringEncounter=false}={}){
  const end=c.clock.minutes+minutes;let moved=0;
  while(c.clock.minutes<end-1e-8){
   const step=Math.min(1,end-c.clock.minutes),moving=c.groups.filter(g=>g.travel.route.length&&!g.memberIds.some(id=>atSector(c,id,c.active?.sector)));
-  const before=new Map(moving.map(g=>[g.id,{position:g.travel.position,edge:g.travel.route[0]}]));
-  const session={clock:c.clock,groups:moving.map(g=>({id:g.id,state:travelState(c,g),waitMinutes:g.waitMinutes}))};
-  advanceGroups(session,step);moved+=step;
-  for(const run of session.groups){const g=c.groups.find(g=>g.id===run.id);g.waitMinutes=run.waitMinutes;const {members,clock,...travel}=run.state;g.travel=travel;}
-  for(const g of moving){const old=before.get(g.id);if(g.travel.position!==old.position){arrive(c,g,g.travel.position,old.position);const people=sectorRecord(c,g.travel.position).population;if(people.some(id=>mobile(c.characters[id].unit))&&hostilePopulation(c,g.travel.position)){g.travel.route=[];g.travel.progress=0;}}if(g.travel.route.length)depart(c,g);}
+  // Advance copies of travel and fatigue first. Active tactical units, clocks
+  // and sector state objects must retain their identities during a live frame.
+  const trial=g=>({...travelState(c,g),route:g.travel.route.map(e=>({...e})),members:groupMembers(c,g).map(u=>({...u,social:{...u.social}}))});
+  const runs=moving.map(g=>({g,state:trial(g),waitMinutes:g.waitMinutes})),session={clock:{...c.clock},groups:runs},arrivals=[];
+  advanceGroups(session,step);
+  for(const run of runs)if(run.state.position!==run.g.travel.position)arrivals.push({runs:[run],index:run.state.position,from:run.g.travel.position});
   // Opposing groups make contact on their shared edge; neither can pass through the other.
-  for(const g of moving.filter(g=>g.faction==='player'))for(const enemy of moving.filter(g=>g.faction!=='player')){
-   const a=g.travel.route[0],b=enemy.travel.route[0];if(!a||!b||g.waitMinutes||enemy.waitMinutes||a.from!==b.to||a.to!==b.from)continue;
-   if(g.travel.progress/groupPace(groupMembers(c,g),a.road).minutes+enemy.travel.progress/groupPace(groupMembers(c,enemy),b.road).minutes<1-1e-8)continue;
-   const index=a.from;arrive(c,g,index,a.to);arrive(c,enemy,index,a.to);for(const q of [g,enemy]){q.travel.position=index;q.travel.route=[];q.travel.progress=0;}
+  for(const run of runs.filter(r=>r.g.faction==='player'))for(const enemy of runs.filter(r=>r.g.faction!=='player')){
+   const a=run.state.route[0],b=enemy.state.route[0];if(!a||!b||run.waitMinutes||enemy.waitMinutes||a.from!==b.to||a.to!==b.from)continue;
+   if(run.state.progress/groupPace(run.state.members,a.road).minutes+enemy.state.progress/groupPace(enemy.state.members,b.road).minutes<1-1e-8)continue;
+   for(let i=arrivals.length-1;i>=0;i--)if(arrivals[i].runs.includes(run)||arrivals[i].runs.includes(enemy))arrivals.splice(i,1);
+   arrivals.push({runs:[run,enemy],index:a.from,from:a.to});
+   for(const q of [run,enemy]){q.state.position=a.from;q.state.route=[];q.state.progress=0;}
   }
+  const reservations=new Map();
+  for(const arrival of arrivals){
+   try{const plans=prepareArrivals(c,arrival.runs.map(r=>r.g),arrival.index,arrival.from,reservations);arrival.runs.forEach((run,i)=>run.arrival=plans[i]);}
+   catch(error){if(!(error instanceof BlockedEntryError))throw error;
+    // Hold at the last valid point on the edge. Waiting consumes world time,
+    // but never repeatedly charges the rejected final movement's fatigue.
+    for(const run of arrival.runs){run.state=trial(run.g);run.waitMinutes=run.g.waitMinutes;run.blocked=true;}
+   }
+  }
+  Object.assign(c.clock,session.clock);moved+=step;
+  for(const run of runs){const g=run.g;g.waitMinutes=run.waitMinutes;const {members,clock,...travel}=run.state;g.travel=travel;
+   members.forEach((u,i)=>{const real=c.characters[g.memberIds[i]].unit;if(u.social.fatigue!==undefined){real.social??={};real.social.fatigue=u.social.fatigue;}});
+   if(run.blocked){if(!g.entryBlocked)c.log.push({time:c.clock.minutes,text:g.name+' is waiting for a clear sector entry.'});g.entryBlocked=true;}else delete g.entryBlocked;
+  }
+  // All arrivals commit before anyone continues onward, so simultaneous
+  // opponents share an encounter instead of passing through one another.
+  for(const run of runs)if(run.arrival)arrive(c,run.g,run.arrival);
+  for(const run of runs){const g=run.g;if(run.arrival){const people=sectorRecord(c,g.travel.position).population;if(people.some(id=>mobile(c.characters[id].unit))&&hostilePopulation(c,g.travel.position)){g.travel.route=[];g.travel.progress=0;}}if(g.travel.route.length)depart(c,g);}
   for(const [index,s]of Object.entries(c.sectors))if(s.state&&c.active?.sector!==+index)s.state.clock.minutes=c.clock.minutes;
   reconcileCampaign(c);
   if(!duringEncounter&&c.incidents.some(i=>i.status==='pending'))break;

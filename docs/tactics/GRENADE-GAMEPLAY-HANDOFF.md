@@ -82,6 +82,8 @@ throw, spends resources again or resurrects destroyed scenery.
 `node tools/sync-tactics-core.mjs`. Do not edit generated core files directly.
 After changing the reviewed rig or motion, regenerate the prepared balance and
 release points with `node tools/prepare-grenade-motion.mjs` and verify `--check`.
+The check accepts LF or Windows CRLF line endings while still rejecting changed
+generated data.
 
 Focused checks cover range/stat boundaries, ceilings and wall bounces, miss-roll
 ordering, steep blast falloff, cover, barrel chaining, native elevation, save
@@ -96,8 +98,10 @@ to the installed Playwright module and optionally `GRENADE_REVIEW_URL` to a
 different local server. Screenshots and the report go to
 `artifacts/grenade-integration/`; the browser closes in `finally`.
 
-The Pages build includes the new modules and painted texture and retains its
-missing-module checks. This builder branch does not itself deploy GitHub Pages;
+The base Pages build includes `grenade-model.js`, a shared dependency of
+`weapon-models.js`, and the equipment textures. The 3D build adds the gameplay
+and animation modules. Both retain their packaging checks, including the 3D
+missing-module check. This builder branch does not itself deploy GitHub Pages;
 canonical publication remains with the architect.
 
 ## Independent review, October 8

@@ -18,7 +18,11 @@ The portable map collection contains `special/opening-safehouse/` and `special/o
 
 `campaign-opening.js` supplies the explicit assignments, seed and reserve orders. `tools/create-campaign-fixtures.mjs` creates the initial source folders only when they do not exist. It deliberately refuses to overwrite authored work. Normal builds use the existing sector export workflow.
 
-Each assignment declares midpoint, six-tile ground entrances. Both sides of neighbouring assignments must match. Creation and save loading check passable boundary tiles and a route to the local travel marker. Actual arrivals separately check the current changed geometry, occupants and unopened containers, then choose legal positions deterministically. A blocked entry rejects the staged transition without moving anyone.
+Each assignment declares midpoint, six-tile ground entrances. Both sides of neighbouring assignments must match. Creation and save loading check passable boundary tiles and a route to the local travel marker. Actual arrivals separately check the current changed geometry, occupants and unopened containers, then choose legal positions deterministically.
+
+A blocked entry holds the whole group at its last valid travel position while world time continues. Travel and fatigue are staged before placement; a rejected final step does not charge fatigue repeatedly. The campaign map reports the entry hold, and the next time update retries it. These holds survive saving and loading. Clearing space allows a single arrival with the original character records and equipment. Live encounter, unit and clock objects retain their identities.
+
+Simultaneous arrivals reserve distinct landing cells before committing anyone. An intercepted pair needs enough space for both groups; otherwise both wait. All arrivals commit before onward travel, so opposing groups entering the same sector make contact. Direct placement still rejects a blocked entry; campaign time advancement defers it safely.
 
 The `campaignLoot` extension defines initial loose supplies and containers. It is preserved by the portable map editor, but does not yet have a dedicated placement/property tool. Container locks and search state are separate. Only the existing search action reveals contents; opening a door is not a search.
 
@@ -50,6 +54,10 @@ The only shared-engine additions in this milestone are searchable-container supp
 
 `tools/check-campaign.mjs` uses normal browser controls for title entry, new game, searching, sector inventory, travel, mid-journey reload, a real shot, quicksave/load and retreat. Set `CAMPAIGN_ROOT=.pages-output` to run against a temporary packaged-build server. Its browser and optional server close in `finally`; screenshots and lifecycle records go to `artifacts/campaign` or `CAMPAIGN_OUTPUT`.
 
-Delivery verification: all 1,836 tests pass, including 18 campaign regressions. `node tools/sync-tactics-core.mjs --check` and `npm run build:tactics-3d` pass. The packaged browser playthrough passes, with additional IndexedDB checks for stale-write rejection and corrupt named-save rejection preserving the continue checkpoint.
+Initial delivery verification: all 1,836 tests passed, including 18 campaign regressions. `node tools/sync-tactics-core.mjs --check` and `npm run build:tactics-3d` passed. The packaged browser playthrough passed, with additional IndexedDB checks for stale-write rejection and corrupt named-save rejection preserving the continue checkpoint.
+
+The October 8 arrival correction adds live blocked-terrain and occupied-entry regressions, simultaneous arrivals competing for capacity, and atomic placement of intercepted groups. These check save/restore, elapsed time, fatigue, retained object identity and exactly-once arrival after clearing the entrance.
+
+Fix verification: 157 focused tests pass, including all 22 campaign cases and both base/3D packaging checks. The exact live blocked-arrival browser reproduction quicksaves and reloads at minute 880, then admits the three reinforcements exactly once at minute 881 after clearing the entry. The packaged normal-controls campaign playthrough and generated-core check also pass. This is focused release-fix verification, not a new full-suite run.
 
 Dialogue, trader transactions, quest rewards, the authored five-sector plateau, hiring/wages and the three factory leads are delivery 2/3 work. Existing strategic logistics and militia demonstrations remain in the overmap tester; this fixture does not yet run their full simulation or import tester saves. The campaign retains an extension record for that integration without representing it as finished gameplay.

@@ -36,6 +36,7 @@ export function validateCampaign(c,{assignments=true}={}){
  for(const r of Object.values(c.characters))if(r.location.kind==='sector'&&!physical.has(r.id))fail();
  for(const g of c.groups){
   if(typeof g.id!=='string'||!g.id||typeof g.name!=='string'||!['player','red-hats'].includes(g.faction)||!Array.isArray(g.memberIds)||!finite(g.waitMinutes))fail();
+  if(g.entryBlocked!==undefined&&(typeof g.entryBlocked!=='boolean'||g.entryBlocked&&(!g.memberIds.length||!g.travel.route.length)))fail();
   if(!g.memberIds.length){if(g.disbanded!==true||g.travel.route.length||g.travel.progress||g.waitMinutes)fail();continue;}
   // A synchronised group may wait partway along an edge. Waiting does not put
   // its people back into the sector they have already left.

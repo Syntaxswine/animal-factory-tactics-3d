@@ -81,9 +81,10 @@ test('split and partial journeys preserve identities, fatigue and carried equipm
  advanceCampaign(c,100);for(const id of ids)assert.equal(c.characters[id].location.sector,71);assert.equal(c.sectors[70].population.filter(id=>ids.includes(id)).length,0);
 });
 
-test('blocked entry rejects an entire staged transfer and a failed storage write preserves live state',async()=>{
+test('blocked entry defers a staged transfer and a failed storage write preserves live state',async()=>{
  const c=fresh();initializeSector(c,71);for(let x=0;x<=8;x++)for(let y=117;y<=122;y++)c.sectors[71].state.map[y][x]='water';
- const before=structuredClone(c);let wrote=false;await assert.rejects(()=>checkpointTransition(c,n=>{orderCampaignTravel(n,'group-1',71);advanceCampaign(n,100);},async()=>{wrote=true;}),/Entry/);assert.equal(wrote,false);assert.deepEqual(c,before);
+ const before=structuredClone(c);assert.throws(()=>landingPlan(c,71,'west',c.groups[0].memberIds),/Entry/);
+ let wrote=false;const held=await checkpointTransition(c,n=>{orderCampaignTravel(n,'group-1',71);advanceCampaign(n,100);},async()=>{wrote=true;});assert.equal(wrote,true);assert.deepEqual(c,before);assert.equal(held.groups[0].entryBlocked,true);restoreCampaign(captureCampaign(held));
  const d=fresh(),original=structuredClone(d);await assert.rejects(()=>checkpointTransition(d,n=>orderCampaignTravel(n,'group-1',71),async()=>{throw Error('disk full');}),/disk full/);assert.deepEqual(d,original);
  const session=new CampaignSession(d,async()=>{throw Error('disk full');});await assert.rejects(()=>session.transition(n=>openCampaignSector(n,70)),/disk full/);assert.deepEqual(session.campaign,original);assert.equal(session.busy,false);
 });
@@ -109,6 +110,59 @@ test('corrupt whole-campaign records are rejected; template edits cannot overwri
  const restored=restoreCampaign(record);restored.assignments[71].map.guards=[];initializeSector(restored,71);assert.equal(guards(restored).length,6);assert.deepEqual(captureCampaign(c,1),record);
 });
 
+function occupyEntry(c,index,side,free=0){
+ const s=initializeSector(c,index).state,ids=[];let count=0;
+ for(let d=1;d<=8;d++)for(let t=117;t<=122;t++){
+  if(count++<free)continue;
+  const id=`${c.id}:entry-blocker:${index}:${side}:${d}:${t}`;
+  const p=side==='south'?{x:t,y:239-d}:side==='east'?{x:239-d,y:t}:{x:d,y:t};
+  s.loot.push({id,...p,z:0,container:{id,name:'Entry supplies',locked:false},searched:false,items:[]});ids.push(id);
+ }
+ return ()=>{s.loot=s.loot.filter(p=>!ids.includes(p.id));};
+}
+
+test('blocked reinforcement terrain holds arrivals while live encounter time and saves remain valid',()=>{
+ let c=fresh(),s=openCampaignSector(c,70),target=initializeSector(c,71).state;
+ const clock=s.clock,merc=s.units[0],refs=c.groups.find(g=>g.faction==='red-hats').memberIds.map(id=>c.characters[id].unit);
+ for(let y=231;y<=239;y++)for(let x=117;x<=122;x++)target.map[y][x]='water';
+ captureCampaign(c);elapsed(c,400);
+ assert.equal(activeState(c),s);assert.equal(s.clock,clock);assert.equal(s.units[0],merc);
+ assert.equal(c.clock.minutes,880);assert.equal(target.clock.minutes,880);
+ let g=c.groups.find(g=>g.faction==='red-hats');assert.equal(g.entryBlocked,true);assert.equal(g.travel.position,101);assert.equal(guards(c).length,6);
+ refs.forEach((u,i)=>{assert.equal(c.characters[g.memberIds[i]].unit,u);assert.equal(c.characters[g.memberIds[i]].location.kind,'travel');});
+ const progress=g.travel.progress,fatigue=refs.map(u=>u.social.fatigue);
+ elapsed(c,30);assert.equal(g.travel.progress,progress);assert.deepEqual(refs.map(u=>u.social.fatigue),fatigue);
+ c=restoreCampaign(captureCampaign(c));g=c.groups.find(g=>g.faction==='red-hats');assert.equal(g.entryBlocked,true);
+ for(let y=231;y<=239;y++)for(let x=117;x<=122;x++)c.sectors[71].state.map[y][x]='ground-grass';
+ elapsed(c,1);assert.equal(g.entryBlocked,undefined);assert.equal(g.travel.position,71);assert.equal(g.travel.route.length,0);assert.equal(guards(c).length,9);
+ elapsed(c,10);c=restoreCampaign(captureCampaign(c));assert.equal(guards(c).length,9);
+ assert.equal(c.log.filter(l=>l.text.includes('Red Hat relief squad 1 arrived')).length,1);
+});
+
+test('occupied entry defers travelling mercs without replacing active objects or corrupting a checkpoint',async()=>{
+ let c=fresh();splitCampaignGroup(c,'group-1',c.groups[0].memberIds.slice(0,2));orderCampaignTravel(c,'group-2',71);
+ const s=openCampaignSector(c,70),u=s.units[0],clear=occupyEntry(c,71,'west'),g=c.groups.find(g=>g.id==='group-2'),pack=structuredClone(c.characters[g.memberIds[0]].unit.pack);
+ elapsed(c,100);assert.equal(activeState(c),s);assert.equal(s.units[0],u);assert.equal(g.entryBlocked,true);
+ assert.equal(g.travel.position,70);for(const id of g.memberIds)assert.equal(c.characters[id].location.kind,'travel');
+ let saved;const session=new CampaignSession(c,async(slot,record)=>{saved=record;});await session.save();assert.equal(session.busy,false);
+ assert.equal(restoreCampaign(saved).groups.find(g=>g.id==='group-2').entryBlocked,true);
+ clear();elapsed(c,1);assert.equal(activeState(c),s);assert.equal(g.travel.position,71);assert.equal(g.entryBlocked,undefined);
+ assert.deepEqual(c.characters[g.memberIds[0]].unit.pack,pack);assert.equal(c.sectors[71].population.filter(id=>g.memberIds.includes(id)).length,2);
+ c=restoreCampaign(captureCampaign(c));assert.equal(c.incidents[0].status,'pending');assert.equal(c.active.sector,70);
+});
+
+test('simultaneous arrivals reserve distinct cells and defer only the group that cannot fit',()=>{
+ let c=fresh();for(const id of c.groups[0].memberIds)c.characters[id].unit.stats.agility=50;
+ splitCampaignGroup(c,'group-1',c.groups[0].memberIds.slice(0,2));const clear=occupyEntry(c,71,'west',2);
+ orderCampaignTravel(c,'group-1',71);orderCampaignTravel(c,'group-2',71);advanceCampaign(c,60);
+ const [first,second]=c.groups.filter(g=>g.faction==='player');assert.equal(first.travel.position,71);assert.equal(second.travel.position,70);assert.equal(second.entryBlocked,true);
+ for(const id of second.memberIds)assert.equal(c.characters[id].location.kind,'travel');
+ captureCampaign(c);openCampaignSector(c,71);clear();elapsed(c,1);
+ const units=[...first.memberIds,...second.memberIds].map(id=>c.characters[id].unit);
+ assert.equal(second.travel.position,71);assert.equal(new Set(units.map(u=>`${u.x},${u.y},${u.z}`)).size,4);
+ c=restoreCampaign(captureCampaign(c));assert.deepEqual(c.incidents[0].groupIds.filter(id=>id.startsWith('group-')).sort(),['group-1','group-2']);
+});
+
 test('a second conflict is queued behind an active fight and survives save/load in chronological order',()=>{
  const fixture=structuredClone(content);fixture.assignments[70].entries.push({side:'south',offset:.5,width:6,z:0,depth:8});fixture.reinforcements=[{source:101,destination:71,delay:0,count:3},{source:100,destination:70,delay:40,count:1}];
  let c=createCampaign(fixture,{id:'queue'});splitCampaignGroup(c,'group-1',c.groups[0].memberIds.slice(0,2));orderCampaignTravel(c,'group-2',71);advanceCampaign(c,100);openCampaignSector(c,71);elapsed(c,200);
@@ -121,6 +175,19 @@ test('opposing travel groups meet on the edge rather than passing through each o
  orderCampaignTravel(c,'group-1',71);const minutes=advanceCampaign(c,100);assert(minutes<72);assert.equal(c.incidents.at(-1).sector,70);
  assert.equal(c.groups[0].travel.position,70);assert.equal(enemy.travel.position,70);assert.equal(enemy.travel.route.length,0);assert.equal(c.groups[0].travel.route.length,0);
  c=restoreCampaign(captureCampaign(c));assert.equal(guards(c,70).filter(u=>!u.character).length,3);
+});
+
+test('an intercepted arrival reserves space for both sides or holds both groups without partial transfers',()=>{
+ let c=fresh();advanceCampaign(c,400);const enemy=c.groups.find(g=>g.faction==='red-hats');
+ enemy.travel.route=planRoute(c.overmap,71,70,enemy.memberIds.map(id=>c.characters[id].unit));
+ const clear=occupyEntry(c,70,'east',4);orderCampaignTravel(c,'group-1',71);advanceCampaign(c,100);
+ const player=c.groups[0];assert.equal(c.incidents.length,0);assert.equal(player.travel.position,70);assert.equal(enemy.travel.position,71);
+ for(const g of [player,enemy]){assert.equal(g.entryBlocked,true);for(const id of g.memberIds)assert.equal(c.characters[id].location.kind,'travel');}
+ restoreCampaign(captureCampaign(c));clear();advanceCampaign(c,1);
+ for(const g of [player,enemy]){assert.equal(g.travel.position,70);assert.equal(g.travel.route.length,0);assert.equal(g.entryBlocked,undefined);}
+ const people=[...player.memberIds,...enemy.memberIds].map(id=>c.characters[id].unit);
+ assert.equal(new Set(people.map(u=>`${u.x},${u.y},${u.z}`)).size,7);
+ c=restoreCampaign(captureCampaign(c));assert.equal(c.incidents.length,1);assert.equal(c.incidents[0].sector,70);
 });
 
 test('synchronised arrivals can wait on an already-started journey without restoring departed people to the origin',()=>{
