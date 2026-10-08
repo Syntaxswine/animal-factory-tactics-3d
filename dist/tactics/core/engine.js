@@ -48,7 +48,7 @@ export const WEAPONS={
  hmg:{name:'Heavy machine gun',short:'HMG',cost:6,range:28,damage:48,mag:50,burstRounds:3,rangeLoss:24},
  shotgun:{name:'Pump-action shotgun',short:'Shotgun',cost:5,range:12,damage:27,mag:6,penetrationClass:'pistol',pellets:6,rangeLoss:15},
  sniper:{name:'Sniper rifle',short:'Sniper',cost:8,range:36,damage:75,mag:5,accuracy:10,rangeLoss:12},
- grenade:{name:'Fragmentation grenade',short:'Grenade',cost:5,range:10,damage:120,mag:3,blast:3,arc:true,thrown:true},
+ grenade:{name:'Fragmentation grenade',short:'Grenade',cost:5,range:10,damage:120,mag:3,blast:5,arc:true,thrown:true},
  launcher:{name:'Grenade launcher',short:'Launcher',cost:6,range:22,damage:140,mag:1,blast:3,arc:true},
  rpg:{name:'RPG',short:'RPG',cost:7,range:40,damage:220,mag:1,blast:4},
  flamethrower:{name:'Backpack flamethrower',short:'Flamer',cost:6,range:10,damage:180,mag:4,rangeLoss:15,incendiary:true}
@@ -388,12 +388,12 @@ export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,
   }
   if(shot)trajectories.push(...(pellets||[shot]));
   const victim=ballistic?s.units.find(u=>u.id===shot.unitId):accurate&&alive(target)?target:null;
-  const event={shooter:shooter.id,target:target.id,ax:shooter.x,ay:shooter.y,bx:f.aim.x,by:f.aim.y,az:levelOf(shooter),bz:levelOf(f.aim),hit:!!victim,incendiary:!!w.incendiary,trajectories:pellets||(shot?[shot]:[]),explosions:[],downed:[],reply:f.reply,shotChance,shotRoll};sequence.push(event);
+  const event={shooter:shooter.id,target:target.id,ax:shooter.x,ay:shooter.y,bx:f.aim.x,by:f.aim.y,az:levelOf(shooter),bz:levelOf(f.aim),hit:!!victim,incendiary:!!w.incendiary,trajectories:pellets||(shot?[shot]:[]),explosions:[],downed:[],reply:f.reply,shotChance,shotRoll};if(w.thrown)event.grenade={shooter:structuredClone(shooter),release:1.92,recovery:4.6};sequence.push(event);
   const flame=w.incendiary?flameShape(s,shooter,f.aim,w):null;
   const flameHits=flame?flameVictims(s,shooter,flame).map(unit=>({unit,zone:'torso',damage:Math.max(1,unit.hp)})):null;
   if(flame){event.flame=flame;event.sites=flameStrategicSites(s,flame);event.hit=flameHits.length>0||event.sites.length>0;log(s,shooter.name+' sprays a cone of flame.');}
   const blastResult=w.blast?detonate(s,shot,w):null;
-  if(blastResult){event.explosions.push(blastResult.blast);explosions.push(blastResult.blast);event.sites=blastResult.sites;event.hit=blastResult.hits.length>0||event.sites.length>0;log(s,`${shooter.name}: ${w.short} detonated / ${blastResult.blast.destroyed} structures destroyed.`);}
+  if(blastResult){if(event.grenade)event.grenade.scenery=blastResult.before;event.explosions.push(blastResult.blast);explosions.push(blastResult.blast);event.sites=blastResult.sites;event.hit=blastResult.hits.length>0||event.sites.length>0;log(s,`${shooter.name}: ${w.short} detonated / ${blastResult.blast.destroyed} structures destroyed.`);}
   const barrelHits=[...(pellets||(shot?[shot]:[])).filter(p=>p.propId).map(p=>p.propId),...(blastResult?.barrels||[]),...(flame?flameBarrels(s,flame):[])];
   appendBarrelBlasts(s,event,explosions,barrelHits,shooter);
   if(!victim&&!blastResult&&!pellets&&!flame){if(!event.hit)log(s,`${shooter.name} → ${target.name}: miss${f.reply?' / retaliation':''}.`);continue;}

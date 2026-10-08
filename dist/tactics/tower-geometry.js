@@ -46,6 +46,7 @@ function shell(kind){if(shells.has(kind))return shells.get(kind);const parts=[],
  }
  shells.set(kind,parts);return parts;
 }
+export function towerShellParts(p,spacing=2.12){const c=towerCenter(p);return shell(p.kind).map(part=>({center:[c.x+(p.rotated?-part.c[2]:part.c[0]),c.z*spacing+part.c[1],c.y+(p.rotated?part.c[0]:part.c[2])],size:part.size,rotation:[0,p.rotated?-Math.PI/2:0,part.angle]}));}
 function fraction(p,origin,end){const a=towerLocal(p,origin),b=towerLocal(p,end);let nearest=null;
  for(const part of shell(p.kind)){const cs=Math.cos(part.angle),sn=Math.sin(part.angle),local=v=>{const x=v[0]-part.c[0],h=v[1]-part.c[1];return [x*cs+h*sn,-x*sn+h*cs,v[2]-part.c[2]];},loPoint=local(a),hiPoint=local(b);let lo=0,hi=1,hit=true;
   for(let i=0;i<3;i++){const v=loPoint[i],d=hiPoint[i]-v,r=part.size[i]/2;if(Math.abs(d)<1e-9){if(v < -r||v>r){hit=false;break;}}else{const l=(-r-v)/d,h=(r-v)/d;lo=Math.max(lo,Math.min(l,h));hi=Math.min(hi,Math.max(l,h));if(lo>hi){hit=false;break;}}}

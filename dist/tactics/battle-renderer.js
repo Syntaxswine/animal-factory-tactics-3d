@@ -22,6 +22,7 @@ import {createBattlePosture} from './battle-posture.js';
 import {BattleMotion} from './battle-motion.js';
 import {createWorkerLocomotion} from './worker-locomotion.js';
 import {BattleCombat} from './battle-combat.js';
+import {BattleGrenades} from './battle-grenades.js';
 import {createRifleFiring} from './rifle-firing.js';
 import {BattleShotEffects,shotPoint} from './battle-shot-effects.js';
 import {BattleFlameEffects} from './battle-flame-effects.js';
@@ -38,6 +39,7 @@ export class BattleRenderer extends HybridRenderer {
   this.loot=new BattleLoot(this.scene);this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.flameEffects=new BattleFlameEffects(this.scene);
+  this.grenades=new BattleGrenades(this.scene);
   this.fire=new BattleFire(this);
   this.tankEffects=new BattleTankEffects(this);
   this.paintedEnvironment=new BattleEnvironment(this.scene,this.loader,()=>{this.world=null;onReady();},error=>{this.diagnostics.push('Painted environment failed: '+error.message);onReady();});
@@ -72,6 +74,7 @@ export class BattleRenderer extends HybridRenderer {
   const model=this.models.get(unit.id);
   if(!model){if(!this.pending.has(unit.id))this.loadModel(unit);return null;}
   if(this.traversal?.active?.event.unitId===unit.id){
+   if(this.grenades.session?.model===model)this.grenades.finish();
    this.fire.remove(unit.id);
    model.draw?.dispose();model.draw=null;model.drawRequested=false;
    if(!model.profile.unarmed&&model.weapon!==unit.weapon){const old=model.equipment;model.equipment=createWeaponModel(unit.weapon);model.worker.equipWeapon(model.equipment);old?.dispose();model.weapon=unit.weapon;}
@@ -80,7 +83,9 @@ export class BattleRenderer extends HybridRenderer {
   const {worker,root,profile}=model,shot=this.combat.active?.event.shooter===unit.id?this.combat.active:null;
   const sample=this.traversal?.preparing&&this.traversal.active?.event.unitId===unit.id?{...this.motion.sample(unit),...this.traversal.display(unit),blend:0,pose:{}}:shot?{...this.motion.sample(unit),x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0,blend:0}:this.motion.sample(unit);
   const now=this.presentationNow??performance.now();
+  this.grenades.prepareActor(model,unit,shot);
   if(this.fire.pose(model,unit,shot,now,this.state,this.camera))return model.root;
+  if(this.grenades.pose(model,unit,shot,now))return model.root;
   if(unit.hp<=0||this.reducedMotion?.matches)model.drawRequested=false;
   if(model.draw&&(unit.hp<=0||model.weapon!==unit.weapon||this.reducedMotion?.matches)){model.draw.dispose();model.draw=null;model.drawRequested=false;}
   const signature=`${model.drawRequested||model.draw?now:''}:${JSON.stringify(sample.pose)}:${unit.casualty}:${unit.weapon}:${sample.heading}:${unit.hp>0}:${sample.blend}:${sample.blend?sample.distance:0}:${shot?.start}:${shot?.phase.aim}:${shot?.phase.recoil}`;
@@ -121,15 +126,16 @@ export class BattleRenderer extends HybridRenderer {
   if(shot){
    const gun=model.equipment,anchor=gun?.anchors?.muzzle;
    const muzzle=shot.rifle?(!shot.presentationUnsupported&&model.firing?model.firing.muzzle():null):anchor&&gun.root.visible?{origin:anchor.getWorldPosition(new T.Vector3()),direction:new T.Vector3(1,0,0).transformDirection((gun.barrel||gun.root).matrixWorld)}:null;
-   if(shot.event.flame)this.flameEffects.update(shot,this.state,muzzle);else this.shotEffects.update(shot,this.state,muzzle);
+   if(shot.event.flame)this.flameEffects.update(shot,this.state,muzzle);else if(!shot.event.grenade)this.shotEffects.update(shot,this.state,muzzle);
   }
+  this.grenades.afterActor(model,unit,shot);
   return root;
  }
  firingDiagnostic(model,result,unit){
   if(model.aimWarning){const i=this.diagnostics.indexOf(model.aimWarning);if(i>=0)this.diagnostics.splice(i,1);model.aimWarning=null;}
   if(result&&!result.supported){model.aimWarning=`${unit.name||unit.species}: firing animation unavailable (${result.reason}); shot outcome unchanged.`;this.diagnostics.push(model.aimWarning);}
  }
- prune(){this.tankEffects.draw(this.camera);} // Runs after posing, before rendering.
+ prune(){this.grenades.update(this.combat.active,this.state);this.tankEffects.draw(this.camera);} // Runs after posing, before rendering.
  pick(x,y,width,height,level=this.presentationLevel??this.level){
   const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
   const barrel=[this.paintedEnvironment.barrelHit(ray,level),this.sites.hit(ray,level)].filter(Boolean).sort((a,b)=>a.distance-b.distance)[0],onLevel=id=>(this.state.units.find(u=>u.id===id)?.z||0)===level;
@@ -156,7 +162,8 @@ export class BattleRenderer extends HybridRenderer {
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
   // Visibility was resolved from committed units before animation changed HP
   // or position. Do not hide a visible casualty during its pre-impact pose.
-  return super.draw(ctx,{...state,terrain:state.map,concealedInteriors:this.interiorFog?.hidden,units,props:[...state.props,...this.tankEffects.pendingProps()]},...args.slice(0,4),{...args[4],visibilityFiltered:true,showAllLevels:true});
+  const scenery=this.grenades.scenery(state,this.combat);
+  return super.draw(ctx,{...scenery,terrain:scenery.map,concealedInteriors:this.interiorFog?.hidden,units,props:[...scenery.props,...this.tankEffects.pendingProps()]},...args.slice(0,4),{...args[4],visibilityFiltered:true,showAllLevels:true});
  }
  captureCombat(state){
   const now=this.presentationNow??performance.now(),reduced=!!this.reducedMotion?.matches;
@@ -177,7 +184,7 @@ export class BattleRenderer extends HybridRenderer {
   this.generation++;this.wallXray.dispose();
   this.sites.dispose();this.loot.dispose();this.cliffs.dispose();this.interiorFog.dispose();this.lights.dispose();this.daylight.dispose();
   this.motion.clear();
-  this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();this.fire.dispose();this.tankEffects.dispose();
+  this.grenades.dispose();this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();this.fire.dispose();this.tankEffects.dispose();
   this.paintedEnvironment.dispose();
   for(const {worker,paint,root,equipment,locomotion,cap,draw}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();

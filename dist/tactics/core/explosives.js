@@ -1,3 +1,5 @@
+import {grenadePreview,grenadeTrajectory} from '../grenade-ballistics.js';
+import {detonateGrenade} from '../grenade-blast.js';
 import {isStrategicSite} from '../strategic-site-rules.js';
 import {blastStrategicSites} from '../strategic-site-damage.js';
 import {isExplosiveBarrel,barrelId} from '../explosive-barrels.js';
@@ -8,6 +10,7 @@ import {levelOf,inBounds,terrainAt,edgePoints,tileKey,W,H} from './maps.js';
 import {propCells} from './environment.js';
 
 export function explosivePreview(s,a,target,w){
+ if(w.thrown)return grenadePreview(s,a,target,w);
  const range=Math.hypot(target.x-a.x,target.y-a.y),height=(unitBaseHeight(a)-unitBaseHeight(target))/3,effectiveRange=w.range+Math.max(0,height)*3;
  const maxRange=w.arc?(w.thrown?effectiveRange:effectiveRange*2):w.range*2;
  let reason='';
@@ -24,6 +27,7 @@ export function explosivePreview(s,a,target,w){
 // Parabolas are swept in short 3D segments through the same exact wall/floor/body
 // collision geometry as bullets. Rockets sweep one continuous ray.
 export function explosiveTrajectory(s,a,target,w,p,random){
+ if(w.thrown)return grenadeTrajectory(s,a,target,w,p,random);
  const origin={x:a.x,y:a.y,h:unitBaseHeight(a)+muzzleHeight(a)},accurate=random()*100<p.chance;
  let x=target.x,y=target.y;
  if(!accurate){const angle=random()*Math.PI*2,spread=(p.beyond?Math.max(4,Math.hypot(x-a.x,y-a.y)*.3):1+Math.hypot(x-a.x,y-a.y)*.12)*(.35+random()*.65);x+=Math.cos(angle)*spread;y+=Math.sin(angle)*spread;}
@@ -42,6 +46,7 @@ export function explosiveTrajectory(s,a,target,w,p,random){
 const boxDistance=(p,x0,y0,h0,x1,y1,h1)=>Math.hypot(Math.max(x0-p.x,0,p.x-x1),Math.max(y0-p.y,0,p.y-y1),Math.max(h0-p.h,0,p.h-h1));
 function blastClear(s,impact,end,propId=null){const origin={x:impact.x,y:impact.y,h:Math.max(.03,impact.h)},d={x:end.x-origin.x,y:end.y-origin.y,h:end.h-origin.h},length=Math.hypot(d.x,d.y,d.h);if(length<.06)return true;const hit=traceProjectile({...s,units:[]},null,origin,d,length);return propId!==null&&hit.propId===propId||hit.kind==='range'||hit.distance>=length-.06;}
 export function detonate(s,impact,w){
+ if(w.thrown)return detonateGrenade(s,impact);
  const radius=w.blast,candidates=[];
  for(const [key,kind]of Object.entries(s.edges)){
   const [a,b]=edgePoints(key),h=a.z*3,dist=boxDistance(impact,Math.min(a.x,b.x),Math.min(a.y,b.y),h,Math.max(a.x,b.x),Math.max(a.y,b.y),h+2.7);

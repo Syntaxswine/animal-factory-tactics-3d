@@ -7,6 +7,9 @@ for(const file of ['interior-fog.js','interior-fog-scene.js'])fs.copyFileSync(ne
 for(const file of ['explosive-barrels.js','barrel-targeting.js','fuel-blast.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['strategic-site-fixture.js','strategic-sites.js','strategic-site-clearance.js','strategic-site-rules.js','strategic-site-data.js','strategic-site-damage.js','strategic-site-scene.js','strategic-sites-study.js','strategic-sites-study.html','strategic-sites-study.css'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.cpSync(new URL('dist/assets/environment/strategic-sites/',root),new URL('.pages-output/assets/environment/strategic-sites/',root),{recursive:true});
+for(const file of ['grenade-fixture.js','grenade-model.js','grenade-throw-motion.js','hen-grenade-throw.js','grenade-throw-actor.js','grenade-prepared.js','grenade-release.js','grenade-geometry.js','grenade-ballistics.js','grenade-blast.js','grenade-planner.js','battle-grenades.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+fs.mkdirSync(new URL('.pages-output/assets/equipment/painted-ui/',root),{recursive:true});
+fs.copyFileSync(new URL('dist/assets/equipment/painted-ui/grenade-surface.png',root),new URL('.pages-output/assets/equipment/painted-ui/grenade-surface.png',root));
 fs.copyFileSync(new URL('dist/tactics-3d.html',root),new URL('.pages-output/index.html',root));
 for(const file of ['tactics-3d.html','tactics-3d-gallery.html'])fs.copyFileSync(new URL('dist/'+file,root),new URL('.pages-output/'+file,root));
 for(const file of ['title-3d.css','title-3d.js','title-3d-scene.js','settings-3d.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));

@@ -24,8 +24,8 @@ and playtesting use the same saved props.
   movement occurs. Other characters cannot enter the blocked debris cells.
 
 Target a structure by clicking its model with an explosive weapon equipped;
-the shot popup shows its name and AP cost. With a flamethrower, clicking opens
-the normal cone planner. Scenery targeting respects the selected interaction
+hand grenades open the lob planner, while launchers and RPGs use the shot popup.
+With a flamethrower, clicking opens the normal cone planner. Scenery targeting respects the selected interaction
 level. Both editor and gameplay render the same native-scale models, including
 the 0.24-tile hardstanding height under characters.
 

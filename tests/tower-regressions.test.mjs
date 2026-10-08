@@ -1,3 +1,5 @@
+import {grenadeOrigin} from '../dist/tactics/grenade-ballistics.js';
+import {grenadeBase,GRENADE_FLOOR} from '../dist/tactics/grenade-geometry.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../dist/tactics/vendor/three.module.js';
@@ -40,21 +42,21 @@ test('grenades, launchers and rockets launch from tower height and aim at elevat
  for(const weapon of ['grenade','launcher','rpg'])for(const z of [0,1]){
   const {s,a}=combat();Object.assign(a,{z,weapon,towerPost:{},ammo:{[weapon]:5}});const w=WEAPONS[weapon],target={x:18,y:10,z,towerPost:{},ground:false};
   const trajectory=explosiveTrajectory(s,a,target,w,{chance:100},()=>0);
-  assert.equal(trajectory.origin.h,unitBaseHeight(a)+muzzleHeight(a));
+  assert.equal(trajectory.origin.h,w.thrown?grenadeOrigin(a,target).h:unitBaseHeight(a)+muzzleHeight(a));
   const near=trajectory.path.reduce((best,p)=>Math.abs(p.x-target.x)<Math.abs(best.x-target.x)?p:best);
-  if(w.arc)assert.ok(Math.abs(near.h-(unitBaseHeight(target)+.08))<.25);
+  if(w.arc)assert.ok(Math.abs(near.h-(w.thrown?grenadeBase(target)+.045:unitBaseHeight(target)+.08))<.25);
   else {const end=trajectory.path.at(-1);assert.ok(Math.abs((end.h-trajectory.origin.h)/(end.x-a.x)-(unitBaseHeight(target)+1-trajectory.origin.h)/8)<1e-8);}
  }
 });
 test('throw range uses actual tower elevation for both uphill and downhill throws',()=>{
  const {s,a}=combat();Object.assign(a,{weapon:'grenade',ammo:{grenade:5},towerPost:{}});const target={x:24,y:10,z:0};
- assert.equal(explosivePreview(s,a,target,WEAPONS.grenade).ok,true);assert.equal(explosivePreview(s,a,target,WEAPONS.grenade).range,16.36);
- delete a.towerPost;target.x=15;target.towerPost={};assert.equal(explosivePreview(s,a,target,WEAPONS.grenade).reason,'Out of range');delete target.towerPost;assert.equal(explosivePreview(s,a,target,WEAPONS.grenade).ok,true);
+ assert.equal(explosivePreview(s,a,target,WEAPONS.grenade).ok,true);assert.equal(explosivePreview(s,a,target,WEAPONS.grenade).range,22);
+ delete a.towerPost;target.x=16;target.towerPost={};assert.equal(explosivePreview(s,a,target,WEAPONS.grenade).reason,'Out of throwing range');delete target.towerPost;assert.equal(explosivePreview(s,a,target,WEAPONS.grenade).ok,true);
 });
 test('blast distance and metadata preserve physical height, separating lookouts from people below',()=>{
  for(const z of [0,1])for(const elevated of [false,true]){
   const {s,a}=combat();a.z=z;const lookout={...a,id:99,towerPost:{}};s.units=[a,lookout];
-  const impact={x:a.x,y:a.y,z,h:z*3+.8+(elevated?6.36:0)},result=detonate(s,impact,WEAPONS.grenade);
+  const impact={x:a.x,y:a.y,z,h:z*GRENADE_FLOOR+.8+(elevated?6.36:0),grenade:true},result=detonate(s,impact,WEAPONS.grenade);
   assert.deepEqual(result.hits.map(h=>h.unit.id),[elevated?99:a.id]);assert.equal(result.hits[0].damage,WEAPONS.grenade.damage);assert.equal(result.blast.h,impact.h);
  }
 });
