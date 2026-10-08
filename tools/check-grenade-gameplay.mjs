@@ -2,7 +2,7 @@ import {createRequire} from 'node:module';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {launchSiteReview} from './site-review-browser.mjs';
-const require=createRequire(import.meta.url),{chromium}=require(process.env.PLAYWRIGHT_PATH),review=await launchSiteReview(chromium,'grenade-gameplay'),out='artifacts/grenade-integration';
+const require=createRequire(import.meta.url),{chromium}=require(process.env.PLAYWRIGHT_PATH),review=await launchSiteReview(chromium,'grenade-gameplay-'+Date.now()),out='artifacts/grenade-integration';
 fs.mkdirSync(out,{recursive:true});
 const report={throws:[],errors:[]};
 try{
@@ -27,8 +27,15 @@ try{
   await page.screenshot({path:out+'/'+before.species+'-throw.png'});await page.locator('#pause').click();
   await page.waitForFunction(()=>battle3d.renderer.combat.active?.phase.released&&!battle3d.renderer.combat.active?.phase.discharged);
   const flight=await page.evaluate(()=>({visible:battle3d.renderer.grenades.projectile.root.visible,position:battle3d.renderer.grenades.projectile.root.position.toArray()}));assert.ok(flight.visible);
+  // Freeze and scrub the real committed event to its peak. This avoids a
+  // sub-second screenshot race on machines running other WebGL reviews.
+  await page.evaluate(()=>{document.querySelector('#pause').click();const r=battle3d.renderer,s=r.combat.active;s.start=r.presentationNow-(s.event.grenade.release+s.event.trajectories[0].fuse+.22)*1000;r.combat.advance(r.presentationNow);r.grenades.update(s,battle3d.state,r.camera);});
+  await page.waitForFunction(()=>battle3d.renderer.grenades.dust.visible);
+  const blast=await page.evaluate(()=>{const fx=battle3d.renderer.grenades;return {visible:fx.dust.visible,radius:fx.field?.radius,painted:fx.blast.core.material.uniforms.textured.value,origin:fx.field?.origin,age:battle3d.renderer.combat.active?.phase.blastAge};});
+  assert.ok(blast.visible,JSON.stringify(blast));assert.equal(blast.radius,5);assert.equal(blast.painted,1);
+  await page.screenshot({path:out+'/'+before.species+'-blast.png'});await page.locator('#pause').click();
   await page.waitForFunction(()=>!battle3d.renderer.busy,{},{timeout:20000});
-  assert.equal(await page.evaluate(()=>battle3d.renderer.grenades.session),null);report.throws.push({...thrower,flight});
+  assert.equal(await page.evaluate(()=>battle3d.renderer.grenades.session),null);assert.equal(await page.evaluate(()=>battle3d.renderer.grenades.dust.visible),false);report.throws.push({...thrower,flight,blast});
  }
  // Blocked aim remains confirmable under a roof; changing the interaction
  // layer while targeting doesn't move the thrower or spend AP.

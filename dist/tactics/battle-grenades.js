@@ -5,20 +5,20 @@ import {createHenGrenadeThrow} from './hen-grenade-throw.js';
 import {GRENADE_PREPARED} from './grenade-prepared.js';
 import {createWorkerLocomotion} from './worker-locomotion.js';
 import {grenadeBase} from './grenade-geometry.js';
+import {grenadeBlastField} from './grenade-blast-field.js';
+import {createGrenadeBlastEffects,loadGrenadeBlastTextures,GRENADE_BLAST_DURATION} from './grenade-blast-effects.js';
 export function grenadePhase(shot,elapsed){
  const release=shot.reduced?0:shot.event.grenade.release*1000,blast=shot.reduced?0:release+shot.event.trajectories[0].fuse*1000;
- return {duration:blast+(shot.reduced?180:800),released:elapsed>=release,discharged:elapsed>=blast,flightAge:Math.max(0,(elapsed-release)/1000),blastAge:(elapsed-blast)/1000,time:elapsed/1000,aim:0,recoil:0};
+ return {duration:blast+(shot.reduced?180:GRENADE_BLAST_DURATION*1000),released:elapsed>=release,discharged:elapsed>=blast,flightAge:Math.max(0,(elapsed-release)/1000),blastAge:(elapsed-blast)/1000,time:elapsed/1000,aim:0,recoil:0};
 }
 export function grenadeAt(path,time){let i=1;while(i<path.length-1&&path[i].t<time)i++;const a=path[i-1],b=path[i],t=Math.max(0,Math.min(1,(time-a.t)/Math.max(1e-9,b.t-a.t)));return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,h:a.h+(b.h-a.h)*t};}
 export const visibleGrenade=(s,p)=>[0,1,2,3].some(z=>s.visible.has(z?`${Math.round(p.x)},${Math.round(p.y)},${z}`:`${Math.round(p.x)},${Math.round(p.y)}`));
 const animatedThrow=(unit,shot)=>shot?.event.grenade&&!shot.reduced&&unit.hp>0&&unit.weapon==='grenade'&&GRENADE_PREPARED[unit.species]&&(shot.shooter.stance||'standing')==='standing'&&shot.phase.time<(shot.event.grenade.recovery??4.6)&&!(unit.burningTurns&&shot.phase.discharged);
 export class BattleGrenades {
- constructor(scene){
+ constructor(scene,{loader=null,onError=()=>{}}={}){
   this.scene=scene;this.session=null;this.projectile=createGrenadeModel();scene.add(this.projectile.root);this.projectile.root.visible=false;
-  // Fragmentation has a brief flash and dust, not the fuel blast's burning body
-  // sequence. The authoritative event supplies its position and timing.
-  this.dust=new T.Group();scene.add(this.dust);this.dust.visible=false;this.parts=[];
-  for(let i=0;i<12;i++){const mesh=new T.Mesh(new T.IcosahedronGeometry(1,1),new T.MeshBasicMaterial({color:i?0x998973:0xffe3a3,transparent:true,opacity:0,depthWrite:false}));this.parts.push(mesh);this.dust.add(mesh);}
+  this.blast=createGrenadeBlastEffects(scene);this.dust=this.blast.group;this.parts=[this.blast.core,...this.blast.puffs];
+  this.ready=loader?loadGrenadeBlastTextures(loader).then(textures=>{if(this.disposed)textures.forEach(t=>t.dispose());else{this.textures=textures;this.blast.setTextures(textures);}}).catch(error=>onError('Grenade blast paint: '+error.message)):Promise.resolve();
  }
  finish(){const s=this.session;if(!s)return;this.session=null;s.motion?.dispose();const m=s.model;m.root.position.set(0,0,0);m.worker.root.position.set(0,0,0);m.worker.root.quaternion.identity();m.root.updateMatrixWorld(true);if(m.profile.unarmed)m.locomotion=createWorkerLocomotion(m.worker,m.profile);else m.worker.equipWeapon(m.equipment);if(s.paint)for(const [part,attribute]of s.paint)part.geometry.setAttribute('paintPosition',attribute);m.equipment.root.visible=true;for(const part of m.equipment.parts)part.visible=true;m.signature=null;m.placement=null;}
  prepareActor(model,unit,shot){if(this.session?.model===model&&(this.session.shot!==shot||!animatedThrow(unit,shot)))this.finish();}
@@ -56,16 +56,17 @@ export class BattleGrenades {
   }
   this.sceneryCache={key,state,values};return {...state,...values};
  }
- update(shot,state){
+ update(shot,state,camera=new T.Camera()){
+  if(this.disposed)return;
   this.projectile.root.visible=this.dust.visible=false;
   if(this.session&&(this.session.shot!==shot||shot?.reduced))this.finish();
-  if(!shot?.event.grenade)return;
+  if(!shot?.event.grenade){this.fieldEvent=null;this.field=null;return;}
   const trajectory=shot.event.trajectories[0],phase=shot.phase;
   if(phase.released&&!phase.discharged&&!shot.reduced){const p=grenadeAt(trajectory.path,phase.flightAge);this.projectile.root.visible=visibleGrenade(state,p);this.projectile.root.position.set(p.x,p.h,p.y);this.projectile.root.rotation.set(phase.flightAge*7,phase.flightAge*3,phase.flightAge*5);for(const part of this.projectile.parts)part.visible=!['pull ring','curved safety lever'].includes(part.name);}
-  if(phase.discharged&&phase.blastAge<.8&&visibleGrenade(state,trajectory)){
-   this.dust.visible=true;this.dust.position.set(trajectory.x,trajectory.h,trajectory.y);
-   for(let i=0;i<this.parts.length;i++){const p=this.parts[i],a=i*2.4,t=Math.max(0,phase.blastAge),r=t*(i?3.5:0),size=i?.15+t*.7:.12+t*.9;p.position.set(Math.cos(a)*r,t*(i%3+1)*.6,Math.sin(a)*r);p.scale.setScalar(size);p.material.opacity=i?Math.max(0,.65*(1-t/.8)):Math.max(0,1-t/.12);if(shot.reduced){p.position.set(0,0,0);p.scale.setScalar(.25);p.material.opacity=i?0:.6;}}
+  if(phase.discharged){
+   if(this.fieldEvent!==shot.event){this.field=grenadeBlastField(state,shot);this.fieldEvent=shot.event;}
+   this.blast.update(phase.blastAge,{field:this.field,state,camera,reduced:shot.reduced});
   }
  }
- dispose(){this.finish();this.projectile.root.removeFromParent();this.projectile.dispose();this.dust.removeFromParent();for(const p of this.parts){p.geometry.dispose();p.material.dispose();}}
+ dispose(){if(this.disposed)return;this.disposed=true;this.finish();this.projectile.root.removeFromParent();this.projectile.dispose();this.blast.dispose();this.textures?.forEach(t=>t.dispose());this.field=this.fieldEvent=null;}
 }
