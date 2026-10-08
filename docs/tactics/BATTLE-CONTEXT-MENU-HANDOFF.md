@@ -13,7 +13,8 @@ submenu. Decorative scenery is not an inventory item.
 
 Right-clicking a merc offers character/inventory, stance, movement mode, held
 equipment, reload/clear jam, and existing field interactions such as treatment,
-rest, lockpicking, repair and nearby climbs. The menu uses their existing costs
+rest, lockpicking, repair and nearby climbs. Field interactions, including
+**Climb ladder**, appear directly in the main menu. The menu uses their existing costs
 and availability rules. Selecting another merc makes that merc the sole selected
 actor. Right-clicking the current merc pauses an existing order without issuing
 another one; **Stop movement** remains available.

@@ -152,7 +152,7 @@ function contextChoices(info,merc){
   const interactions=nearbyInteractions(state,u).map(e=>entry('interact-'+e.kind,e.label,'✚',{kind:'interact',entry:e},free&&e.preview.ok,e.preview.reason,e.preview.cost?e.preview.cost+' AP':'1 minute'));
   const climb=climbPreview(state,u,level);if(climb.ok)interactions.push(entry('climb',climb.label,'↟',{kind:'climb'},ready,'',combatCosts(state)?climb.cost+' AP':''));
   for(const e of nearbyCliffClimbs(state,u))interactions.push(entry('cliff-'+e.to.x+'-'+e.to.y,e.label,'↟',{kind:'cliff',point:e.to},free&&e.ok,e.reason,e.cost+' AP'));
-  entries.push({id:'interactions',label:'Interactions',icon:'✚',children:interactions});
+  entries.push(...interactions);
   if(state.queue.length)entries.push(entry('stop','Stop movement','■',{kind:'stop'},free));
  }else{
   entries.push(entry('move','Move here','↗',{kind:'move',point},free&&canControl(state,u)));
