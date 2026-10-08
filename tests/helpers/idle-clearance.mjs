@@ -3,7 +3,8 @@ const v=()=>new T.Vector3(),direction=new T.Vector3(.71,.29,.643).normalize();
 export function posedSurface(mesh){const a=mesh.geometry.attributes.position,points=Array.from({length:a.count},(_,i)=>{const p=v().fromBufferAttribute(a,i);if(mesh.isSkinnedMesh)mesh.applyBoneTransform(i,p);return p.applyMatrix4(mesh.matrixWorld);}),index=mesh.geometry.index;return {points,index,box:new T.Box3().setFromPoints(points)};}
 export function inside(point,{points,index,box}){
  if(!box.containsPoint(point))return false;const ray=new T.Ray(point,direction),hit=v(),hits=[];
- for(let i=0;i<index.count;i+=3)if(ray.intersectTriangle(points[index.getX(i)],points[index.getX(i+1)],points[index.getX(i+2)],false,hit))hits.push(point.distanceTo(hit));
+ const count=index?.count??points.length,at=i=>index?index.getX(i):i;
+ for(let i=0;i<count;i+=3)if(ray.intersectTriangle(points[at(i)],points[at(i+1)],points[at(i+2)],false,hit))hits.push(point.distanceTo(hit));
  hits.sort((a,b)=>a-b);return hits.filter((d,i)=>!i||d-hits[i-1]>1e-6).length%2===1;
 }
 export function weaponClearance(worker,weapon){

@@ -53,3 +53,42 @@ The review approves this study's grounded quiet movement, supported carries,
 loop continuity and gameplay-size readability. It does **not** establish
 gameplay integration, slope adaptation, obstruction avoidance, general hen
 firearm handling, or a full physical dynamics simulation.
+
+## Rifle forearm overlap follow-up
+
+**9/10 — focused correction approved**, 2026-10-08.
+
+The horse's rifle butt now tucks behind the trigger forearm. A lower carry,
+slightly raised muzzle and turned wrist preserve the grasp while the elbow
+rests below the shoulder. This is actual posed geometry and depth occlusion.
+Rifle geometry, model scale and rendering order are unchanged.
+
+The same correction applies to horse, goat, bull, cow, donkey, sheep, skunk,
+rabbit and dog, in their available outfits and both idle moods. Pigs and hen
+retain their previously approved species-specific carries; other weapons are
+unchanged. The sheep needs a 5 mm lower carry to clear the stock during the
+grip adjustment.
+
+The hostile reviewer held the first trial for its raised elbow and strained
+sleeve. The lower carry resolved this. Their triangle audit then caught a
+sheep intersection that vertex containment alone missed; the final regression
+checks both edge/triangle crossings and containment in both directions. The
+narrow stock neck is an intentional grasp; the broad butt must clear the arm.
+
+- **61 tests passed:** 39 existing idle, 9 rifle overlap, 4 weapon grip,
+  4 weapon model, 3 paint lifecycle, and 2 packaging tests.
+- New overlap checks cover **576 poses**, physical stock occlusion from front
+  and three-quarter views, reciprocal containment, surface crossings, and
+  a relaxed elbow below the shoulder.
+- Independent hostile audit: **864 additional midpoint samples**, all nine
+  changed mammals and both moods, with no stock/arm or stock/shirt crossings.
+- **50 packaged rifle selections / 650 seek samples**, all 25 appearances in
+  both moods, with no browser errors. Repeated swaps return to the same
+  **20 geometries / 7 textures**. UI controls, keyframes, scale, camera views,
+  compact layout, and source sketch loading also passed.
+- Fresh front, side and three-quarter renders, motion keyframes and gameplay
+  scale were reviewed. The distribution build passed.
+
+Follow-up evidence is in [rifle-tuck](hybrid-review/armed-idle/rifle-tuck/).
+These are sampled study checks, not proof of general collision avoidance or
+gameplay integration.

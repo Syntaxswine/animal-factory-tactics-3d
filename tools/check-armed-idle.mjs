@@ -7,8 +7,9 @@ import {IDLE_ANIMALS,idleOutfits} from '../dist/tactics/armed-idle-actor.js';
 import {WEAPON_MODELS} from '../dist/tactics/weapon-models.js';
 const runtime=process.env.PLAYWRIGHT_PATH;if(!runtime)throw Error('Set PLAYWRIGHT_PATH to the installed Playwright package');
 const {chromium}=await import(pathToFileURL(path.join(runtime,'index.mjs')).href),{browser,closeReview}=await launchGrenadeReview(chromium,'armed-idle');
-const out=path.resolve('artifacts/idle-study/browser');fs.mkdirSync(out,{recursive:true});
-const packaged=process.argv.includes('--packaged'),base=packaged?'http://idle-study.test/af3d':process.argv[2]||'http://127.0.0.1:4476',errors=[],report=[];
+const rifleOnly=process.argv.includes('--rifle'),weapons=rifleOnly?['rifle']:Object.keys(WEAPON_MODELS);
+const out=path.resolve('artifacts/idle-study/'+(rifleOnly?'rifle-browser':'browser'));fs.mkdirSync(out,{recursive:true});
+const packaged=process.argv.includes('--packaged'),base=packaged?'http://idle-study.test/af3d':process.argv.slice(2).find(a=>!a.startsWith('--'))||'http://127.0.0.1:4476',errors=[],report=[];
 try{
  const page=await browser.newPage({viewport:{width:1200,height:930},deviceScaleFactor:1});
  if(packaged)await page.route('http://idle-study.test/af3d/**',async route=>{
@@ -19,7 +20,7 @@ try{
  });
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.goto(base+'/tactics/armed-idle-study.html?paused',{waitUntil:'networkidle'});await page.waitForFunction(()=>window.idleStudyReady,null,{timeout:90000});
- for(const profile of IDLE_ANIMALS)for(const outfit of idleOutfits(profile.id))for(const weapon of Object.keys(WEAPON_MODELS)){
+ for(const profile of IDLE_ANIMALS)for(const outfit of idleOutfits(profile.id))for(const weapon of weapons){
   const rows=await page.evaluate(async options=>{await idleStudy.set({...options,mode:'motion',view:'three',scale:'close'});const rows=[];
    for(const mood of ['guard','mercenary']){idleStudy.set({mood});let maxGrip=0;for(let i=0;i<=12;i++){const s=idleStudy.seek((mood==='guard'?12:16)*i/12);maxGrip=Math.max(maxGrip,...s.contacts.map(c=>c.error),0);if(!s.com.every(Number.isFinite))throw Error('Nonfinite COM');}
     const s=idleStudy.seek((mood==='guard'?12:16)*.6);rows.push({animal:s.animal,outfit:s.outfit,weapon:s.weapon,mood:s.mood,maxGrip,geometries:s.geometryCount,textures:s.textureCount});}
@@ -30,7 +31,7 @@ try{
    if(['rifle','hmg','flamethrower'].includes(weapon)){await page.evaluate(()=>idleStudy.set({mode:'keys'}));await page.screenshot({path:path.join(out,profile.id+'-'+weapon+'-keys.png')});}
   }
   if(weapon==='rifle'){await page.evaluate(()=>{idleStudy.set({mode:'motion',scale:'game'});idleStudy.seek(9.6);});await page.screenshot({path:path.join(out,profile.id+'-'+outfit+'-game.png')});}
-  if(weapon==='hands')console.log(profile.id,outfit,'loaded');
+  if(weapon===weapons.at(-1))console.log(profile.id,outfit,'loaded');
  }
  const memory=await page.evaluate(async()=>{
   await idleStudy.set({animal:'horse',outfit:'normal',weapon:'rifle',mode:'motion',scale:'close'});const a=idleStudy.seek(0);

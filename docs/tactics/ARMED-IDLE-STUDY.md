@@ -66,6 +66,14 @@ samples per mood; it also checks controls, original-sketch loading, compact
 layout, superseded selection disposal, and stable renderer resource counts.
 Raw capture/check output lives in ignored `artifacts/idle-study/`.
 
+For the rifle forearm-overlap follow-up, run
+`node --test tests/armed-idle-rifle.test.mjs` and, after building,
+`node tools/check-armed-idle.mjs --packaged --rifle`. The focused browser mode
+covers every rifle appearance and both moods, writing its separate report to
+`artifacts/idle-study/rifle-browser/`. The nine shared mammal carries now cradle
+the butt behind the forearm with a relaxed elbow; pigs and hen keep their
+species-specific carry. See the dated review for final evidence and scope.
+
 ## Scope and next integration work
 
 - [ ] Blend entry/exit to the game's existing carry, walking and aiming poses.

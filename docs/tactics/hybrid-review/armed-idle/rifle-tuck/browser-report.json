@@ -1,0 +1,473 @@
+{
+  "source": "http://idle-study.test/af3d",
+  "combinations": 50,
+  "playbackSamples": 650,
+  "errors": [],
+  "memory": {
+    "before": [
+      20,
+      7
+    ],
+    "after": [
+      20,
+      7
+    ],
+    "repeated": [
+      20,
+      7
+    ],
+    "animal": "horse"
+  },
+  "report": [
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.7341307954279784e-16,
+      "geometries": 20,
+      "textures": 7
+    },
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 3.7238012298709097e-16,
+      "geometries": 20,
+      "textures": 7
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.7341307954279784e-16,
+      "geometries": 38,
+      "textures": 14
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 3.7238012298709097e-16,
+      "geometries": 38,
+      "textures": 14
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 4.4147945634195513e-16,
+      "geometries": 20,
+      "textures": 7
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 2.9275225451776116e-16,
+      "geometries": 20,
+      "textures": 7
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 4.4147945634195513e-16,
+      "geometries": 38,
+      "textures": 14
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 2.9275225451776116e-16,
+      "geometries": 38,
+      "textures": 14
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.7030556577017743e-16,
+      "geometries": 20,
+      "textures": 7
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 3.411368008432962e-16,
+      "geometries": 20,
+      "textures": 7
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.7030556577017743e-16,
+      "geometries": 38,
+      "textures": 14
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 3.411368008432962e-16,
+      "geometries": 38,
+      "textures": 14
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 4.034117999026819e-16,
+      "geometries": 24,
+      "textures": 8
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 2.622130794118103e-16,
+      "geometries": 24,
+      "textures": 8
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 4.034117999026819e-16,
+      "geometries": 42,
+      "textures": 15
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 2.622130794118103e-16,
+      "geometries": 42,
+      "textures": 15
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.7341307954279784e-16,
+      "geometries": 25,
+      "textures": 7
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 3.549703742730299e-16,
+      "geometries": 25,
+      "textures": 7
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.7341307954279784e-16,
+      "geometries": 43,
+      "textures": 14
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 3.549703742730299e-16,
+      "geometries": 43,
+      "textures": 14
+    },
+    {
+      "animal": "donkey",
+      "outfit": "blue-hawaiian",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.7341307954279784e-16,
+      "geometries": 31,
+      "textures": 7
+    },
+    {
+      "animal": "donkey",
+      "outfit": "blue-hawaiian",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 3.549703742730299e-16,
+      "geometries": 31,
+      "textures": 7
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.4219371797089426e-16,
+      "geometries": 25,
+      "textures": 10
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 4.652682298944613e-16,
+      "geometries": 25,
+      "textures": 10
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.4219371797089426e-16,
+      "geometries": 43,
+      "textures": 17
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 4.652682298944613e-16,
+      "geometries": 43,
+      "textures": 17
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 4.041272810440265e-16,
+      "geometries": 20,
+      "textures": 8
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 3.188872858294072e-16,
+      "geometries": 20,
+      "textures": 8
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 4.041272810440265e-16,
+      "geometries": 38,
+      "textures": 15
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 3.188872858294072e-16,
+      "geometries": 38,
+      "textures": 15
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.4618057540754037e-16,
+      "geometries": 21,
+      "textures": 8
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 2.6945789820192466e-16,
+      "geometries": 21,
+      "textures": 8
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.4618057540754037e-16,
+      "geometries": 21,
+      "textures": 8
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 2.6945789820192466e-16,
+      "geometries": 21,
+      "textures": 8
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 4.632458786145298e-16,
+      "geometries": 20,
+      "textures": 7
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 4.585973723508303e-16,
+      "geometries": 20,
+      "textures": 7
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 4.632458786145298e-16,
+      "geometries": 38,
+      "textures": 14
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 4.585973723508303e-16,
+      "geometries": 38,
+      "textures": 14
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.7341307954279784e-16,
+      "geometries": 24,
+      "textures": 9
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 3.6506759942727966e-16,
+      "geometries": 24,
+      "textures": 9
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.7341307954279784e-16,
+      "geometries": 42,
+      "textures": 16
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 3.6506759942727966e-16,
+      "geometries": 42,
+      "textures": 16
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.3766115072321297e-16,
+      "geometries": 29,
+      "textures": 9
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 2.55987824628e-16,
+      "geometries": 29,
+      "textures": 9
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.3766115072321297e-16,
+      "geometries": 47,
+      "textures": 16
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 2.55987824628e-16,
+      "geometries": 47,
+      "textures": 16
+    },
+    {
+      "animal": "hen",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.387999773988765e-16,
+      "geometries": 25,
+      "textures": 13
+    },
+    {
+      "animal": "hen",
+      "outfit": "normal",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 4.75098925995612e-16,
+      "geometries": 25,
+      "textures": 13
+    },
+    {
+      "animal": "hen",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "guard",
+      "maxGrip": 3.387999773988765e-16,
+      "geometries": 48,
+      "textures": 20
+    },
+    {
+      "animal": "hen",
+      "outfit": "red-hats",
+      "weapon": "rifle",
+      "mood": "mercenary",
+      "maxGrip": 4.75098925995612e-16,
+      "geometries": 48,
+      "textures": 20
+    }
+  ]
+}

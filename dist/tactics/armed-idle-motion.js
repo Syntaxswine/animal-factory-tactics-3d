@@ -22,6 +22,14 @@ export function fitIdleCarry(worker,profile,weapon){
   sheep:{smg:[.37,1.04,.035]},hen:{smg:[.37,1.04,.035]},
  }[profile.id]?.[id];if(fitted)carry.position=fitted;
  if(profile.id==='pig-director'&&id==='rpg')carry.axis=[-.5,.2,-1];
+ if(id==='rifle'&&!bird&&!pig){
+  // Lower the butt behind the forearm, with the elbow relaxed near the ribs.
+  // The turned palm keeps its grip on the stock neck without lifting the arm.
+  carry.position=[.24,profile.id==='sheep'?.965:.97,.035];carry.axis=[.55,.35,-.977];
+  const axis=v(carry.axis).normalize(),gunQ=q().setFromUnitVectors(v([1,0,0]),axis);
+  const handQ=q().setFromUnitVectors(v([0,-1,0]),axis).multiply(q().setFromAxisAngle(v([0,1,0]),Math.PI*1.20));
+  carry.handPoses={...carry.handPoses,grip:{...carry.handPoses.grip,elbowPole:[1,-.4,.8],quaternion:gunQ.invert().multiply(handQ).toArray()}};
+ }
  weapon.carry=carry;return carry;
 }
 
