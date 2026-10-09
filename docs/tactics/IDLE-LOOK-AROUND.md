@@ -12,7 +12,8 @@ The draft tipped the head about its one joint, a stiff rod pivoting on the neck.
 jaw into the chest: 2.8–5.8 cm into the clothes on most characters. The section on the neck below
 answers this: the idle gives the rigs a neck bone and bends it.
 
-This is the fifth version (v5). Review rounds 1–4 of 5 scored the first four 5/10, 6.5/10, 7.5/10 and 7/10;
+This is the fifth version (v5). Review rounds 1–4 of 5 scored the first four 5/10, 6.5/10, 7.5/10 and 7/10, and round 5 scored v5 8/10 (its findings are open, and v5's
+transferable corrections went to a handoff on `main`);
 what each found and what changed are in their own sections near the end.
 
 ## The study
@@ -223,14 +224,19 @@ Each character's limits are measured on its own skinned meshes, by two tests on 
   outside it, so the others need no points. A point that shows at rest (outside every other part, or less
   than 0.5 mm into one) may go no more than 3 mm deeper into another part than it lay at rest: a pixel at the
   study's close-up scale (280–400 px a metre as the window allows; the game draws at 130).
-  - **An edge may slide two pixels.** Where layers overlap, an edge slides over what it covers: a bib's top
-    edge over the shirt, a sleeve's cuff over a forearm. A point may go further in where, within 6 mm of it at
-    rest (on its own triangle or one sharing a corner with it), its own part lay hidden under the same stretch
-    of the other part: as deep as that hidden point lay (to 2 cm), and 3 mm more. The same stretch: the point
-    of the other part's surface nearest the point now, taken back to where it rests, lies within 1 cm of the
-    point of it nearest the hidden one at rest. So an edge may advance 6 mm over the surface it already
-    covers, and no further; a part that comes in over another from anywhere else (a shirt's hem over a
-    forearm that lay in its sleeve) is held to 3 mm.
+  - **Deeper only beside what was already covered.** Where layers overlap, an edge slides over what it
+    covers: a bib's top edge over the shirt, a sleeve's cuff over a forearm. A point may go further in where,
+    within 6 mm of it at rest (on its own triangle or one sharing a corner with it), its own part lay hidden
+    under the same stretch of the other part: as deep as that hidden point lay (to 2 cm), and 3 mm more. The
+    same stretch: the point of the other part's surface nearest the point now, taken back to where it rests,
+    lies within 1 cm of the point of it nearest the hidden one at rest. A part that comes in over another
+    from anywhere else (a shirt's hem over a forearm that lay in its sleeve) is held to 3 mm. This bounds how
+    deep a point goes, within a 6 mm zone, not how far an edge travels: an edge may advance any distance
+    while what it covers sinks 3 mm or less. Through loops, review round 5 measured edges advancing 15–18 mm
+    over what they cover (5–6 px at the close-up) on the sheep (its neckerchief over its neck, its left
+    forearm over its shirt) and the pig foreman (his trousers over his hands), 14 mm on the dog's knot and
+    5–7.3 mm on the other loops it audited; none reads as a tear in its renders. (Corrected after round 5:
+    this doc had said an edge "may advance 6 mm ... and no further".)
   - **Inside.** Every part of these rigs is a closed surface (each edge, its corners welded to 0.1 mm, shared
     by exactly two triangles, once zero-area slivers are set aside; the donkey's mane also holds two loose
     two-triangle slivers inside it), so a point is inside a part where a ray from it crosses the part an odd
@@ -307,13 +313,15 @@ Only two characters' arms swing out: the pig foreman's 1.5° as he leans (a half
 lag), and the sheep's right arm the same.
 
 **Held by their clothes.** Two characters' heads are still held where moving would push skin under cloth,
-and two characters' arms; the next 2.5° (or quarter) past each limit is what fails, so each is the clothes',
-not the fit's rounding:
-- **The sheep's head.** Its wool ruff overhangs a neckerchief tied tight on it: 2.5° past its turns the
-  neckerchief goes 3.0–4.0 mm into the wool, on a 5–7.5° tilt or nod 3.2–3.3 mm. So it turns its head 20° left
+and two characters' arms; each limit is clear 2.5° past it in every way it is probed, and what fails is the
+step after (5° past a head's limit, the next quarter of a share), so each is the clothes', not the fit's
+rounding:
+- **The sheep's head.** Its wool ruff overhangs a neckerchief tied tight on it: 5° past its turns the
+  neckerchief goes 3.0–4.0 mm into the wool, and over 3 mm on a 7.5° tilt, or a 7.5° nod with the head turned
+  20° left (a 5° tilt or nod is clear). So it turns its head 20° left
   and 10° right, and nods, tilts and looks up 2.5°. (v4 let it turn 40° left: round 4 found the neckerchief
   5.9 mm into the wool there.)
-- **The pig director's head.** His jowls rest on his collar (their contact line shows at rest): 2.5° past his
+- **The pig director's head.** His jowls rest on his collar (their contact line shows at rest): 5° past his
   turns the collar goes 3.1–4.4 mm into the jowls, and a 2.5–5° nod 3.4–11.2 mm. So his head turns 2.5° each way,
   looks up 10°, and does not nod or tilt; he looks about with his chest and hips, 9° each way. The
   rest of him moves: three quarters of the lean (a full one folds his trousers through themselves at the knee,
@@ -375,18 +383,20 @@ neckerchiefs' ends move over the bib; the bib's top edge shows a light sliver at
 
 **The sweeps** (round 4's S2). Each local number changed alone, all eleven refitted under the same measure; the
 total is every character's head and chest range summed (turn both ways, nod, look up, tilt, twist both ways and
-rounding, in degrees) with each share (ease, shrug, weight shift) as 10° a whole; the shipped table sums 1,822.5.
+rounding, in degrees) with each share (ease, shrug, weight shift) as 10° a whole. The sweeps ran before the
+lean probes bent the knees, which took a quarter of the pig director's lean, so their base sums 1,822.5; the
+shipped table sums 1,820.
 
 | number | values tried (total) | what moves | criterion |
 |---|---|---|---|
-| the slide an edge may make over what it covers | 4 mm (1,677.5), **6 mm** (1,822.5), 8 mm (1,907.5), 10 mm (1,980) | everything, steadily: at 10 mm the horse turns 40° right and the goat, the bull and the cow nod 20° | not range: what shows. 6 mm is two pixels at the close-up. The range bought by more slide is a slide that shows: the boss's call (Still open) |
+| the zone beside what a part lay covered at rest, in which a point may go as deep as the covered point lay | 4 mm (1,677.5), **6 mm** (1,822.5), 8 mm (1,907.5), 10 mm (1,980) | everything, steadily: at 10 mm the horse turns 40° right and the goat, the bull and the cow nod 20° | not range: what shows. The zone is 6 mm (two pixels at the close-up); the edges themselves travel further (15–18 mm on the sheep and the pig foreman, review round 5). The range a larger zone buys is more slide on screen: the boss's call (Still open) |
 | the same stretch: how near the covering point must rest to where it covered | 5 mm (1,697.5), **1 cm** (1,822.5), 2 cm (1,827.5) | 5 mm costs every character; 2 cm frees the bull's rounding 2.5° and the director's turn right 2.5° | about a triangle of these meshes; the total is flat from 1 to 2 cm |
 | the neck glue's height margin | 0 (1,795), 0.5 cm (1,822.5), **1 cm** (1,822.5), 1.5 cm (1,825), 2 cm (1,825) | nods trade 5–10° between characters from 0.5 to 2 cm (the skunk's, the goat's, the horse's); 0 costs the horse 12.5° of turn each way | about a triangle; the total is flat from 0.5 to 2 cm |
 | where the forearm's weight starts fading from the cloth beside it | 8 cm (1,755), **10 cm** (1,822.5), 12 cm (1,750) | 8 cm costs the pig director his ease, shrug, lean and rounding and the skunk its ease and rounding; 12 cm costs the donkey its twist (27.5°/30° to 7.5°/7.5°), ease, shrug and rounding | where the sleeves end and the cloth beside the hand begins: the tightest sleeves (the sheep's, the pig foreman's, the dog's) lie 95% within 8.7–9.5 cm of the forearm's bone, while on every rig 5–23 vertices of the cloth the forearm drags (weighted 1–50% to it) lie 10–12 cm out and 3–66 beyond; and the only value of the three that costs no character anything |
 | how near a layer must lie to take the weights of the layer under it | 1 cm (1,805), **1.5 cm** (1,822.5), 2 cm (1,810) | 1 cm costs the horse 15° of nod; 2 cm costs three characters 7.5° of turn | the largest total of the three |
 
 The fit is no longer knife-edged by where vertices fall (round 4's M1); what remains knife-edged is a single
-character's nod against a glue number, and the totals are flat round each choice but the slide.
+character's nod against a glue number, and the totals are flat round each choice but the zone.
 
 **Tests**: three files.
 - `tests/idle-motion.test.mjs` (33):
@@ -471,14 +481,16 @@ In v5:
   covers it now). The pig foreman's shirt edge then slid 15 mm down his forearms in his leans, the very
   defect round 4 found, since his forearms lie under the shirt at rest close by. Asking for the same stretch
   of the covering (a hem is not the sleeve) did not catch it: the stretch over his forearms is the same
-  shirt edge, sliding. Bounding the slide itself (6 mm) does.
+  shirt edge, sliding. Allowing the extra depth only within 6 mm of where the part lay covered does (his
+  forearms then sink at most 4.8 mm on round 4's strict census); it bounds depth, not how far the edge
+  travels (review round 5).
 - **Occlusion for garments only, then skin under hair excused**: special cases, and the pig director's head
-  could not turn at all; the slide bound treats every part alike.
+  could not turn at all; the 6 mm zone treats every part alike.
 - **Treating points up to 3 mm under as showing**, the threshold round 4 suggested for "visually at the
   surface". The layers' edge regions all lie 0.5–3 mm under at rest, so every nod and twist sank them.
 - **An outward swing at rest** for arms their clothes hold (as little as lets the elbows ease), for the sheep
   and the pig foreman: no swing up to 4° lets their elbows ease in full standing square.
-- **The sweeps** (Measured): the slide bound at 4, 8 and 10 mm, the same stretch at 5 mm and 2 cm, the height
+- **The sweeps** (Measured): the 6 mm zone at 4, 8 and 10 mm, the same stretch at 5 mm and 2 cm, the height
   margin at 0–2 cm, the forearm strip at 8 and 12 cm, the layer reach at 1 and 2 cm.
 
 In v4:
@@ -550,14 +562,44 @@ In v2 and v1:
   with the pelvis's tilt swung the free hand into the hip; a sinking weight shift buckled the bearing knee
   from 21° to 30°; abs() and max() of the weight snapped the hand and the centre of mass.
 
+## Review round 5 of 5 (8/10): open, and where v5 went
+
+One independent reviewer, October 9, 2026, on `4a819dc`; its report, whole, is
+[IDLE-REVIEW-ROUND-5.md](IDLE-REVIEW-ROUND-5.md). 8/10 (round 4: 7/10; the target is 9), no MUST-FIX. Round
+five is the last the standing rule allows without asking, so none of its findings is fixed in the code; this
+doc's text is corrected where the review showed it wrong (listed below the table).
+
+| finding | what the review measured | status |
+|---|---|---|
+| S1 the fit never probes what the loop combines | the census test's own census on seeds 5–10, every 0.5 s: 3 of 3,960 frames over the rule by 0.1–0.8 mm, on the pig foreman (a wide look with his hips turned 8.1° in a lean; the sigh's top in a lean) and the sheep (its arm lagging a chest twist), none visible in its renders; the probes never turn the hips, lag the arms or take a sigh inside a lean | open: probe those, or keep the plan from combining them on the held characters |
+| S2 the 6 mm zone bounds depth, not travel | edges advance 15–18 mm over what they cover on the sheep and the pig foreman (14 mm on the dog's knot, 5.0–7.3 mm on the other loops audited), none reading as a tear at the close-up; round 4's strict census on seeds 5–6 finds at most 6.5 mm (the horse's shirt under its overalls) | the description corrected; the boss's question restated with these numbers (Still open) |
+| S3 the depth rule cannot tell a natural slide from clipping | one step past their limits the horse, the bull and the cow fail in the natural direction (the shirt under the overalls' bib, 3.0–7.5 mm, unseen at 2,100 px a metre), the goat in the clipping one (braces into its shirt, 6.9–7.2 mm, on a side never seen); the bull's glances at the ground go 12.6–16.4° down | open: a directional rule by the neck glue's layer order, then refit |
+| S4 the tests do not pin the trunk and arm fits | of 11 mutants, 5 survive: the knee fix reverted (the director's trousers fold through themselves at the knee again, seed 2), the arm probes without their millimetre in hand (five rows loosen), the key hashing only the first part, the glances at the ground unclamped, the knees not following the hips; v5's own pass had no mutant that loosens a trunk or arm fit | open: census the held three every 0.5 s on 3–4 seeds, seed 2 among them; a key edit on a later part; the reach test on the director |
+| S5 the key hashes the current pose | a worker another motion left posed misses its row and refits on the main thread for 22–37 s: the horse after `pose('carry')` 33.3 s, a dog mid-walk 22.6–23.3 s (a new key each pose) | open: hash the rest pose |
+| nits | the director's glances at the ground go only 5.1–8.9° down; fresh samples pass three sample maxima (seam 0.056 mm/s on 88 builds, leg reach 99.17% on seeds 9–12, strict census 6.5 mm); "arm out at most 4.2°" is one component (the full angle reaches 8.0°, the cow); the game's tail stays frozen during an idle on a game-driven worker; the horse's shirt back stretches 55% on a glance down (17% on the rig's own weights), the goat's beard 53% | noted |
+
+Corrected in this doc after the review: the slide rule (The clothes, the sweeps, What was tried and dropped,
+round 4's table, Still open) bounds depth within a 6 mm zone, not how far an edge travels; what fails past a
+held limit is 5° past it (2.5° past is confirmed clear), and the sheep's tilt and nod fail at 7.5°, not 5°
+(measured again: clean at 5°, over 3 mm at a 7.5° tilt and at a 7.5° nod with the head turned 20° left); the
+sweeps' base, 1,822.5, is the module before the knee fix (the shipped table sums 1,820); and round 4's M1 row
+no longer says the census finds nothing "through every loop".
+
+**Where v5 went.** The independent integration review of October 9 did not merge v5. It wrote a handoff on
+`main` for the visual builder,
+[IDLE-SKINNING-V5-HANDOFF.md](https://github.com/Syntaxswine/animal-factory-tactics-3d/blob/main/docs/tactics/IDLE-SKINNING-V5-HANDOFF.md)
+(`b546dfb`): v5's clothing and skinning corrections to carry into the current models and controllers, with
+this branch at `4a819dc` as the reference. Round 5's findings that bear on a port (S1, S2, S3, S5) are offered
+to the handoff in a docs pull request against `main`.
+
 ## Review round 4 of 5 (7/10), and what changed
 
 | finding | change | measured now |
 |---|---|---|
-| M1 the sinking rule measures vertices, not surfaces; through loops the pig foreman's forearms go 16 mm into his shirt hem, the horse's shirt 11–13 mm under its bib | points 4 mm apart across every triangle that meets another part, in the fit and in the census (both written afresh, the census apart from the module); an edge may slide 6 mm over what it already covers and no further; the layers on the neck move with the layer under them; the fits bisected to 2.5° and refitted | the census finds none through every loop and at every limit (the tests); round 4's surface census (`sdepth.mjs`, 3 mm points, its rule with no slide) finds at most 5.9 mm through loops 1–2 (the foreman's forearms 4.8 mm), every case within 6 mm of where the same part lay under the same stretch at rest; the renders in Measured |
+| M1 the sinking rule measures vertices, not surfaces; through loops the pig foreman's forearms go 16 mm into his shirt hem, the horse's shirt 11–13 mm under its bib | points 4 mm apart across every triangle that meets another part, in the fit and in the census (both written afresh, the census apart from the module); a point may go deeper only within 6 mm of where its part lay covered at rest (a bound on depth, not on how far an edge travels: round 5); the layers on the neck move with the layer under them; the fits bisected to 2.5° and refitted | the census finds none in the loops it ran (seeds 1–2, every 0.5 s) or at any limit (the tests), though on seeds 5–10 round 5 found 3 of 3,960 frames over, by 0.1–0.8 mm; round 4's surface census (`sdepth.mjs`, 3 mm points, its rule with no slide) finds at most 5.9 mm through loops 1–2 (6.5 mm on seeds 5–6, round 5; the foreman's forearms 4.8 mm), every case within 6 mm of where the same part lay under the same stretch at rest; the renders in Measured |
 | (M1, fix 2) bound each hidden point by its rest depth | not taken as such: a point half a millimetre or more under another part at rest is drawn behind it, and what shows of it going deeper is the surface beside it, which now has points every 4 mm, each bounded; the slide rule bounds a showing point next to a hidden one by how deep that one lay | round 4's own check of points 0.5–3 mm under at rest (`shallow.mjs`), the pig foreman, seed 1: the forearm vertex 2.8 mm into his shirt at rest goes 4.1 mm in (round 4: 18.5 mm); the deepest such, 2.5 to 5.0 mm |
-| S1 the sheep's hold is partly the fit's rounding | 2.5° steps, 2.5° in hand, and the limit confirmed in every way the fit probes it, at the limit and past it; the census poses exactly those; the doc names what fails 2.5° past each held limit | the sheep nods, tilts and looks up 2.5° (from 0, 0, 5) and turns 20° / 10° (from 40° / 10°: the neckerchief went 5.9 mm into the wool at 40°); the director's turn is 2.5° / 2.5° (from 5° / 0°); each held limit fails 2.5° on, on the clothes |
-| S2 the fits are knife-edge functions of local numbers chosen by their outcome | the sweeps, below, each with its criterion; the surface measure no longer depends on where the vertices fall | the summed range is flat round every local number but the slide: 1,822.5 shipped, 1,795–1,827.5 over the margins, the same-stretch radius and the layer reach, 1,750–1,755 for the forearm strip either side of 10 cm, and 1,677.5–1,980 over 4–10 mm of slide |
+| S1 the sheep's hold is partly the fit's rounding | 2.5° steps, 2.5° in hand, and the limit confirmed in every way the fit probes it, at the limit and past it; the census poses exactly those; the doc names what fails 5° past each held limit (2.5° past is confirmed clear) | the sheep nods, tilts and looks up 2.5° (from 0, 0, 5) and turns 20° / 10° (from 40° / 10°: the neckerchief went 5.9 mm into the wool at 40°); the director's turn is 2.5° / 2.5° (from 5° / 0°); each held limit fails 5° on, on the clothes |
+| S2 the fits are knife-edge functions of local numbers chosen by their outcome | the sweeps, below, each with its criterion; the surface measure no longer depends on where the vertices fall | the summed range is flat round every local number but the 6 mm zone: 1,822.5 at the sweeps' base (1,820 shipped, after the knee fix), 1,795–1,827.5 over the margins, the same-stretch radius and the layer reach, 1,750–1,755 for the forearm strip either side of 10 cm, and 1,677.5–1,980 over a 4–10 mm zone |
 | S3 the neck glue: a loose height cap, an undocumented fallback, drag below the neck, two layers on two skin points | the height read at the skin point itself; no fallback (cloth with no skin that low keeps its own weights); the field fades in from a tenth of the branch below the neck's base; each layer takes the weights of the layer under it within 1.5 cm | cloth the rig weights wholly to the chest moves 0.6–4.3 mm on six characters' deepest glance down of seed 1 against the chest bone (round 4: 8.1–15.9 mm) |
 | S4 the arm strip takes the upper arm's weight off the pigs' sleeves | the strip measures from the forearm's bone only and takes only the forearm's weight; the upper arm keeps what the rig gave it | the director's upper sleeve moves up to 15.7 mm (on the rig's own weights 11.5 mm) against his upper arm through a loop (round 4: 31 mm; the rig's own weights 7–11 mm); a test keeps nine tenths of the upper arm's weight on nine tenths of the cloth the rigs weight to it |
 | S5 tests: five documented constants unpinned, no bone moved in the key test, no sigh in the census, the mutation pass on an older revision | tests restate the drift (0.45° / 0.30° rms), the head's share and the trunk's split, the chest's rounding, the shrug, and the neck share on the skull's weights; the key test moves a bone, rebinds a part to another skeleton, swaps two vertices and nudges two apart; the census samples the top of the sigh; the mutation pass runs on this revision, fit mutants each with its own refitted table | 37 mutants of this revision, each on an untracked copy of the module and of the test files that should catch it (`mutate-v5.mjs` in the session's scratchpad), three at a time and every copy deleted in a `finally` block. A mutant of the fit gets its own fits table, refitted under it, so that only the property tests can kill it (the census for the measure, the key test for the key, the limits test for the steps); the others read the shipped table. 33 are killed, each by the property test it names (`mut-v5-results-final.json`): the measure's by the census (the graze at 6 mm, a 2 cm slide, no same-stretch test, vertices only, no crossing trigger, no self-crossing test, no breath in the arm probes); the weights' by the census and the weight tests (no layer glue, no height cap, the band reaching further down, hair on its own weights, the forearm's weight left beside it, the upper arm's stripped, no sleeve glue, the neck share starting lower, the neck skin off the neck bone); the five documented constants by the constants test; the key's three by the key test; no 2.5° in reserve by the limits test (it put turns 2.5° past the 40° seam); the rest by the tests of the API, the seed, disposal and the belly rule. Four survive. Three are equivalent on these rigs, each one's refitted table the shipped one: no trigger for a triangle with a corner inside another part (here such a triangle also crosses it, or its corner fails first), no confirmation of the limit (no limit here needed one) and no test of still vertices (as in v4). The fourth, points up to 5 mm inside another part at rest counted as showing, makes the fit stricter (the summed range falls 115°): no test that looks for clipping can see a fit that holds back more. |
@@ -651,12 +693,16 @@ the rig's own weights and skeleton back) is left as it is.
 
 ## Still open
 
-- **How far an edge may slide** (the boss's call, being what the eye should forgive). v5 lets a layer's edge
-  slide 6 mm over what it already covers, two pixels at the close-up; the range the fits find grows with
-  that allowance and with nothing else (the sweeps): at 10 mm the horse turns its head 40° right (27.5° now),
-  the goat, the bull and the cow nod 20° (12.5°), most chest twists grow 5–15°, and the sheep shrugs; at
-  4 mm nearly everything shrinks. What the eye sees at 6 mm is in the renders (Measured); a larger allowance is a
-  larger slide on screen.
+- **How far an edge may slide** (the boss's call, being what the eye should forgive). v5 lets a point go
+  deeper only within 6 mm of where its part already lay covered. That bounds depth, not how far an edge
+  travels: through loops, edges advance up to 15–18 mm over what they cover (5–6 px at the close-up) on the
+  sheep and the pig foreman, none reading as a tear in review round 5's renders. The range the fits find
+  grows with that zone and with nothing else (the sweeps): at 10 mm the horse turns its head 40° right (27.5°
+  now), the goat, the bull and the cow nod 20° (12.5°), most chest twists grow 5–15°, and the sheep shrugs;
+  at 4 mm nearly everything shrinks. What the eye sees is in the renders (Measured). Round 5 proposes a
+  better measure before a larger zone: tell an inner layer going under an outer one (a bib's edge covering
+  more shirt, which is natural) from an outer layer going into an inner one (braces into a shirt, which is
+  clipping) by the neck glue's layer order; the natural case is what holds the horse, the bull and the cow.
 - **Two heads and two pairs of arms their clothes hold** (the boss's call, being the characters' design).
   The sheep's wool ruff overhangs a neckerchief tied tight on it, so its head turns 20° left and 10° right and
   nods, tilts and looks up 2.5°; the pig director's jowls rest on his collar (their contact line shows at
