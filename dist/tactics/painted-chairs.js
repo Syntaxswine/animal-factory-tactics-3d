@@ -71,7 +71,10 @@ export function createChairLibrary(atlas){
   const root=new T.Group();root.name=form.name;roots.add(root);
   const upholstered=id==='wingback'||id==='desk',red=finish==='russet',base=finish==='walnut'?'walnut':id==='wood'?'wood':id==='wingback'?'walnut':id==='metal'&&finish==='sage'?'metal':'iron';
   const side=upholstered?(red?'redSide':'tealSide'):base,seat=upholstered?(red?'redSeat':'tealSeat'):id==='metal'&&finish==='sage'?'metalSeat':id==='wood'&&finish==='honey'?'woodSeat':base,back=upholstered?(red?'redBack':'tealBack'):id==='metal'&&finish==='sage'?'metalBack':id==='wood'&&finish==='honey'?'woodBack':base;
-  panel(root,'Shared seat',[.84,.62,.08],[0,.44,-.01],{front:seat,top:side,side},[-Math.PI/2,0,0]);
+  // The wingback's padding fills the shell beneath both arms and overlaps the
+  // lower back. Its usable sitting area and top height stay on the shared targets.
+  const seatSize=id==='wingback'?[.96,.76,.12]:[.84,.62,.08],seatPosition=id==='wingback'?[0,.42,-.08]:[0,.44,-.01];
+  panel(root,'Shared seat',seatSize,seatPosition,{front:seat,top:side,side},[-Math.PI/2,0,0]);
   if(id==='desk'){
    bar(root,'Swivel column',[0,.12,-.01],[0,.40,-.01],.085,'iron',true);
    // Five spokes avoid the forward heel channel. Wheels are deliberately
@@ -91,7 +94,7 @@ export function createChairLibrary(atlas){
   if(id==='wood'){
    for(const y of [.75,.92])panel(root,'Wooden back slat',[.79,.13,.045],[0,y,-.405-(y-.75)*.08],{front:back,top:base,side:base},[-.08,0,0]);
   }else{
-   const height=id==='wingback'?.905:.32,y=id==='wingback'?.9075:.825,z=id==='wingback'?-.398:-.424;
+   const height=id==='wingback'?.965:.32,y=id==='wingback'?.8775:.825,z=id==='wingback'?-.398:-.424;
    panel(root,'Back cushion',[id==='wingback'?.90:.85,height,id==='metal'?.034:.075],[0,y,z],{front:back,top:side,side},[-.10,0,0]);
   }
   if(id==='wingback')for(const s of [-1,1]){

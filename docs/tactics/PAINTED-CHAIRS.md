@@ -1,6 +1,6 @@
 # Painted chairs and shared sitting targets
 
-Four low-poly chair models use one painterly atlas for eight finishes. The seat and contact targets are identical in every variant, so the future sit/stand sequence can use the same furniture coordinates rather than a separate animation for each chair.
+Four low-poly chair models use one painterly atlas for eight finishes. The usable sitting area and contact targets are identical in every variant, so the future sit/stand sequence can use the same furniture coordinates rather than a separate animation for each chair.
 
 | Chair | Finishes | Triangles |
 | --- | --- | ---: |
@@ -12,6 +12,8 @@ Four low-poly chair models use one painterly atlas for eight finishes. The seat 
 Seams, buttons, cushion channels, wood grain, stamped ribs, fasteners and wear are painted. Geometry supplies the major silhouette, seat, back, supports, wingback arms and five simple desk-chair casters. The wingback has a continuous upholstered back extending into the seat and faceted cabriole front legs with shaped rear legs. All models fit within one native 1×1 tile; the characters are not rescaled.
 
 The wingback remains about 1.36 high. The wooden, metal and desk chairs end at approximately 0.99, level with the original horse's rolled cuffs (the cuff sculpt runs around Y 0.99–1.035). Only their backs/supports were lowered; the shared seat remains at 0.48.
+
+The wingback's outer seat padding is 0.96 wide × 0.76 deep × 0.12 thick. It extends under both arm supports and farther beneath the back; the back cushion's lower bevels tuck into it to close the corner gaps. This extra padding surrounds the common 0.84 × 0.62 sitting area. Its top is still Y 0.48, with the same pelvis, foot and approach targets and no additional triangles. Other chairs keep their original seat dimensions.
 
 Open `tactics/painted-chairs-study.html`. Select the collection or an individual chair, either finish, grey forms, five views and 58 px/tile gameplay scale. Horse, pig director and pig foreman are standing references. The optional gold fitting mannequin is identical across all four models; it is a furniture-space check, not an animated or species-fitted character.
 
@@ -80,7 +82,9 @@ node tools/check-painted-chairs.mjs
 
 The browser checker accepts `PLAYWRIGHT_PATH` and `CHAIR_REVIEW_URL`, reuses the existing preview, and closes its owned browser in `finally`. It writes screenshots, exact helper identities, close receipts and its report under `artifacts/painted-chairs/`.
 
-Current verification: **14 focused/build tests passed** and **100 browser configurations passed**. Checks cover both finishes, all angles/scales, each native reference, mobile overflow, repeated model replacement, delayed-reference cancellation and idempotent teardown. Geometry checks also verify real continuous upholstery over the formerly open back and complete lower-chair bounds at cuff height. After warming the variants, the renderer remains at 46 geometries / 2 textures with no character selected. No console errors were observed. The build packages the atlas and viewer and validates the complete module import graph.
+The height/closed-back revision `2125cc1` passed **14 focused/build tests and 100 browser configurations**. Checks covered both finishes, all angles/scales, each native reference, mobile overflow, repeated model replacement, delayed-reference cancellation and idempotent teardown. Geometry checks also verified real continuous upholstery over the formerly open back and complete lower-chair bounds at cuff height. That revision's warmed renderer held at 46 geometries / 2 textures with no character selected. No console errors were observed. The build packages the atlas and viewer and validates the complete module import graph.
+
+The subsequent cushion-gap correction passed all **six chair tests** and **nine fresh rendered views**, including front, side, rear, top, three-quarter, grey, alternate finish, gameplay scale and the collection beside the horse. No browser errors occurred. Independent hostile review scored it **9/10**, with no blockers; 2,937 front rays across the actual seat/back joint found no holes. Evidence is saved under `hybrid-review/painted-chairs/cushion-*`.
 
 Independent hostile subagent review of the refinement: **9/10**, no blocking findings. The reviewer inspected nine fresh views, including the closed wingback from front/rear/side, grey forms, alternate finishes, gameplay scale and a front comparison against the unscaled horse. Complete lower-chair heights measure 0.986–0.988; all shared anchors are unchanged. Six chair tests passed independently with no browser errors. The initial asset review also covered 28 live configurations and resource ownership. Current review and selected evidence are recorded in `hybrid-review/painted-chairs/`. These results certify assets and the shared furniture contract, not a completed sit/stand animation or playable chair integration.
 

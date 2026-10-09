@@ -1,0 +1,246 @@
+{
+  "name": "chair-cushion-1791571330397",
+  "states": [
+    {
+      "forms": [
+        {
+          "id": "wingback",
+          "finish": "russet",
+          "triangles": 448
+        }
+      ],
+      "seatHeight": 0.48,
+      "reference": "none",
+      "referenceReady": true,
+      "grey": false,
+      "fit": false,
+      "view": "three",
+      "ppu": 310.4868194215893,
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      },
+      "resources": {
+        "geometries": 13,
+        "textures": 2
+      }
+    },
+    {
+      "forms": [
+        {
+          "id": "wingback",
+          "finish": "russet",
+          "triangles": 448
+        }
+      ],
+      "seatHeight": 0.48,
+      "reference": "none",
+      "referenceReady": true,
+      "grey": false,
+      "fit": false,
+      "view": "front",
+      "ppu": 376.6364398981332,
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      },
+      "resources": {
+        "geometries": 13,
+        "textures": 2
+      }
+    },
+    {
+      "forms": [
+        {
+          "id": "wingback",
+          "finish": "russet",
+          "triangles": 448
+        }
+      ],
+      "seatHeight": 0.48,
+      "reference": "none",
+      "referenceReady": true,
+      "grey": false,
+      "fit": false,
+      "view": "side",
+      "ppu": 370.53514594924326,
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      },
+      "resources": {
+        "geometries": 13,
+        "textures": 2
+      }
+    },
+    {
+      "forms": [
+        {
+          "id": "wingback",
+          "finish": "russet",
+          "triangles": 448
+        }
+      ],
+      "seatHeight": 0.48,
+      "reference": "none",
+      "referenceReady": true,
+      "grey": false,
+      "fit": false,
+      "view": "rear",
+      "ppu": 346.3742656613805,
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      },
+      "resources": {
+        "geometries": 13,
+        "textures": 2
+      }
+    },
+    {
+      "forms": [
+        {
+          "id": "wingback",
+          "finish": "russet",
+          "triangles": 448
+        }
+      ],
+      "seatHeight": 0.48,
+      "reference": "none",
+      "referenceReady": true,
+      "grey": false,
+      "fit": false,
+      "view": "top",
+      "ppu": 500,
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      },
+      "resources": {
+        "geometries": 13,
+        "textures": 2
+      }
+    },
+    {
+      "forms": [
+        {
+          "id": "wingback",
+          "finish": "russet",
+          "triangles": 448
+        }
+      ],
+      "seatHeight": 0.48,
+      "reference": "none",
+      "referenceReady": true,
+      "grey": true,
+      "fit": false,
+      "view": "three",
+      "ppu": 310.4868194215893,
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      },
+      "resources": {
+        "geometries": 13,
+        "textures": 2
+      }
+    },
+    {
+      "forms": [
+        {
+          "id": "wingback",
+          "finish": "teal",
+          "triangles": 448
+        }
+      ],
+      "seatHeight": 0.48,
+      "reference": "none",
+      "referenceReady": true,
+      "grey": false,
+      "fit": false,
+      "view": "three",
+      "ppu": 310.4868194215893,
+      "library": {
+        "geometries": 16,
+        "materials": 2,
+        "models": 1
+      },
+      "resources": {
+        "geometries": 18,
+        "textures": 2
+      }
+    },
+    {
+      "forms": [
+        {
+          "id": "wingback",
+          "finish": "russet",
+          "triangles": 448
+        }
+      ],
+      "seatHeight": 0.48,
+      "reference": "none",
+      "referenceReady": true,
+      "grey": false,
+      "fit": false,
+      "view": "three",
+      "ppu": 58,
+      "library": {
+        "geometries": 16,
+        "materials": 2,
+        "models": 1
+      },
+      "resources": {
+        "geometries": 18,
+        "textures": 2
+      }
+    },
+    {
+      "forms": [
+        {
+          "id": "wingback",
+          "finish": "russet",
+          "triangles": 448
+        },
+        {
+          "id": "wood",
+          "finish": "honey",
+          "triangles": 180
+        },
+        {
+          "id": "metal",
+          "finish": "sage",
+          "triangles": 248
+        },
+        {
+          "id": "desk",
+          "finish": "teal",
+          "triangles": 284
+        }
+      ],
+      "seatHeight": 0.48,
+      "reference": "horse",
+      "referenceReady": true,
+      "grey": false,
+      "fit": false,
+      "view": "front",
+      "ppu": 204.35963613800516,
+      "library": {
+        "geometries": 32,
+        "materials": 2,
+        "models": 4
+      },
+      "resources": {
+        "geometries": 45,
+        "textures": 7
+      }
+    }
+  ],
+  "errors": []
+}
