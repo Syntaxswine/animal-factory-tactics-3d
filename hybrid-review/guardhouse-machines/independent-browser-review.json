@@ -1,0 +1,797 @@
+{
+  "name": "independent-guardhouse-1791525739327",
+  "records": [
+    {
+      "asset": "computer",
+      "screen": "green",
+      "context": "isolated",
+      "view": "three",
+      "grey": false,
+      "scale": "close",
+      "triangles": 72,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 414.1548152627534,
+      "resources": {
+        "geometries": 28,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      }
+    },
+    {
+      "asset": "computer",
+      "screen": "green",
+      "context": "isolated",
+      "view": "front",
+      "grey": false,
+      "scale": "close",
+      "triangles": 72,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 500,
+      "resources": {
+        "geometries": 28,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      }
+    },
+    {
+      "asset": "computer",
+      "screen": "green",
+      "context": "isolated",
+      "view": "side",
+      "grey": false,
+      "scale": "close",
+      "triangles": 72,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 500,
+      "resources": {
+        "geometries": 28,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      }
+    },
+    {
+      "asset": "computer",
+      "screen": "green",
+      "context": "isolated",
+      "view": "top",
+      "grey": false,
+      "scale": "close",
+      "triangles": 72,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 500,
+      "resources": {
+        "geometries": 28,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      }
+    },
+    {
+      "asset": "computer",
+      "screen": "green",
+      "context": "isolated",
+      "view": "rear",
+      "grey": false,
+      "scale": "close",
+      "triangles": 72,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 500,
+      "resources": {
+        "geometries": 28,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      }
+    },
+    {
+      "asset": "telephone",
+      "screen": "green",
+      "context": "isolated",
+      "view": "three",
+      "grey": false,
+      "scale": "close",
+      "triangles": 128,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 414.1548152627534,
+      "resources": {
+        "geometries": 28,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      }
+    },
+    {
+      "asset": "telephone",
+      "screen": "green",
+      "context": "isolated",
+      "view": "front",
+      "grey": false,
+      "scale": "close",
+      "triangles": 128,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 500,
+      "resources": {
+        "geometries": 28,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      }
+    },
+    {
+      "asset": "telephone",
+      "screen": "green",
+      "context": "isolated",
+      "view": "side",
+      "grey": false,
+      "scale": "close",
+      "triangles": 128,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 500,
+      "resources": {
+        "geometries": 28,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      }
+    },
+    {
+      "asset": "telephone",
+      "screen": "green",
+      "context": "isolated",
+      "view": "top",
+      "grey": false,
+      "scale": "close",
+      "triangles": 128,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 500,
+      "resources": {
+        "geometries": 28,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      }
+    },
+    {
+      "asset": "telephone",
+      "screen": "green",
+      "context": "isolated",
+      "view": "rear",
+      "grey": false,
+      "scale": "close",
+      "triangles": 128,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 500,
+      "resources": {
+        "geometries": 28,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 1
+      }
+    },
+    {
+      "asset": "pair",
+      "screen": "green",
+      "context": "wall",
+      "view": "three",
+      "grey": false,
+      "scale": "game",
+      "triangles": 200,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 58,
+      "resources": {
+        "geometries": 30,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 2
+      }
+    },
+    {
+      "asset": "pair",
+      "screen": "green",
+      "context": "wall",
+      "view": "front",
+      "grey": false,
+      "scale": "game",
+      "triangles": 200,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 58,
+      "resources": {
+        "geometries": 30,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 2
+      }
+    },
+    {
+      "asset": "pair",
+      "screen": "green",
+      "context": "room",
+      "view": "three",
+      "grey": false,
+      "scale": "close",
+      "triangles": 200,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 140.4320436096218,
+      "resources": {
+        "geometries": 36,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 2
+      }
+    },
+    {
+      "asset": "pair",
+      "screen": "green",
+      "context": "wall",
+      "view": "side",
+      "grey": false,
+      "scale": "close",
+      "triangles": 200,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 229.87381770812618,
+      "resources": {
+        "geometries": 34,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 11,
+        "materials": 2,
+        "models": 2
+      }
+    },
+    {
+      "asset": "pair",
+      "screen": "amber",
+      "context": "isolated",
+      "view": "three",
+      "grey": false,
+      "scale": "close",
+      "triangles": 200,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 355.67304737890925,
+      "resources": {
+        "geometries": 35,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 12,
+        "materials": 2,
+        "models": 2
+      }
+    },
+    {
+      "asset": "pair",
+      "screen": "amber",
+      "context": "isolated",
+      "view": "three",
+      "grey": true,
+      "scale": "close",
+      "triangles": 200,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 355.67304737890925,
+      "resources": {
+        "geometries": 35,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 12,
+        "materials": 2,
+        "models": 2
+      }
+    }
+  ],
+  "geometry": {
+    "states": [
+      {
+        "name": "computer",
+        "position": [
+          -0.5,
+          0.00191999837756196,
+          -0.9969999992549419
+        ],
+        "bounds": {
+          "min": [
+            -0.9699999988079071,
+            0.0019199980050329316,
+            -1.3969999909102917
+          ],
+          "max": [
+            -0.030000001192092896,
+            0.8019200102984909,
+            -0.8170000075995922
+          ]
+        },
+        "parts": [
+          {
+            "name": "Recessed plinth",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": -0.949999988079071,
+                "y": 0.0019199980050329316,
+                "z": -1.377000009983778
+              },
+              "max": {
+                "x": -0.050000011920928955,
+                "y": 0.05191999875009099,
+                "z": -0.8369999885261059
+              }
+            }
+          },
+          {
+            "name": "Console cabinet",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": -0.9699999988079071,
+                "y": 0.051919992417097494,
+                "z": -1.3969999909102917
+              },
+              "max": {
+                "x": -0.030000001192092896,
+                "y": 0.6019200043380264,
+                "z": -0.8170000075995922
+              }
+            }
+          },
+          {
+            "name": "Worktop",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": -0.9699999988079071,
+                "y": 0.6019199981912975,
+                "z": -1.3969999909102917
+              },
+              "max": {
+                "x": -0.030000001192092896,
+                "y": 0.6269199985638265,
+                "z": -0.8170000075995922
+              }
+            }
+          },
+          {
+            "name": "Recessed CRT monitor",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": -0.8299999946355819,
+                "y": 0.626919998377562,
+                "z": -1.3819999897181987
+              },
+              "max": {
+                "x": -0.350000005364418,
+                "y": 0.8019200102984909,
+                "z": -1.021999999627471
+              }
+            }
+          },
+          {
+            "name": "Painted keyboard",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": -0.8249999994039535,
+                "y": 0.6269199983254079,
+                "z": -0.9880000022351741
+              },
+              "max": {
+                "x": -0.3550000005960464,
+                "y": 0.638919998429716,
+                "z": -0.8379999962747097
+              }
+            }
+          },
+          {
+            "name": "Computer control pad",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": -0.27799999821186067,
+                "y": 0.6269199983254079,
+                "z": -1.177000000745058
+              },
+              "max": {
+                "x": -0.11800000178813935,
+                "y": 0.638919998429716,
+                "z": -0.9769999977648258
+              }
+            }
+          }
+        ],
+        "invalidUV": 0
+      },
+      {
+        "name": "telephone",
+        "position": [
+          0.5,
+          0.00191999837756196,
+          -0.9969999992549419
+        ],
+        "bounds": {
+          "min": [
+            0.030000001192092896,
+            0.0019199980050329316,
+            -1.3969999909102917
+          ],
+          "max": [
+            0.9699999988079071,
+            0.8019200102984909,
+            -0.8170000075995922
+          ]
+        },
+        "parts": [
+          {
+            "name": "Recessed plinth",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": 0.050000011920928955,
+                "y": 0.0019199980050329316,
+                "z": -1.377000009983778
+              },
+              "max": {
+                "x": 0.949999988079071,
+                "y": 0.05191999875009099,
+                "z": -0.8369999885261059
+              }
+            }
+          },
+          {
+            "name": "Console cabinet",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": 0.030000001192092896,
+                "y": 0.051919992417097494,
+                "z": -1.3969999909102917
+              },
+              "max": {
+                "x": 0.9699999988079071,
+                "y": 0.6019200043380264,
+                "z": -0.8170000075995922
+              }
+            }
+          },
+          {
+            "name": "Worktop",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": 0.030000001192092896,
+                "y": 0.6019199981912975,
+                "z": -1.3969999909102917
+              },
+              "max": {
+                "x": 0.9699999988079071,
+                "y": 0.6269199985638265,
+                "z": -0.8170000075995922
+              }
+            }
+          },
+          {
+            "name": "Radio control panel",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": 0.08499999821186066,
+                "y": 0.626919998377562,
+                "z": -1.3869999849498271
+              },
+              "max": {
+                "x": 0.42500000178813935,
+                "y": 0.8019200102984909,
+                "z": -1.1770000064074992
+              }
+            }
+          },
+          {
+            "name": "Telephone base",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": 0.47499999761581424,
+                "y": 0.626919998377562,
+                "z": -1.1670000010430812
+              },
+              "max": {
+                "x": 0.8450000023841858,
+                "y": 0.7269200222194199,
+                "z": -0.841999998062849
+              }
+            }
+          },
+          {
+            "name": "Handset cradle",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": 0.4799999998509884,
+                "y": 0.7209199981614951,
+                "z": -1.1519999994039534
+              },
+              "max": {
+                "x": 0.5500000001490116,
+                "y": 0.7349199985936288,
+                "z": -1.0819999991059301
+              }
+            }
+          },
+          {
+            "name": "Handset cradle",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": 0.7699999998509883,
+                "y": 0.7209199981614951,
+                "z": -1.1519999994039534
+              },
+              "max": {
+                "x": 0.8400000001490115,
+                "y": 0.7349199985936288,
+                "z": -1.0819999991059301
+              }
+            }
+          },
+          {
+            "name": "Telephone handset",
+            "bounds": {
+              "isBox3": true,
+              "min": {
+                "x": 0.4599999970197678,
+                "y": 0.734919998377562,
+                "z": -1.1519999994039534
+              },
+              "max": {
+                "x": 0.8600000029802323,
+                "y": 0.7979199993908409,
+                "z": -1.0819999991059301
+              }
+            }
+          }
+        ],
+        "invalidUV": 0
+      }
+    ],
+    "sillMin": 0.8230800001323226,
+    "wallInner": -1.399999999254942,
+    "actualGaps": [
+      {
+        "id": "computer",
+        "sill": 0.021159989833831716,
+        "rear": 0.0030000083446501957
+      },
+      {
+        "id": "telephone",
+        "sill": 0.021159989833831716,
+        "rear": 0.0030000083446501957
+      }
+    ],
+    "pairGap": 0.06000000238418579
+  },
+  "resources": {
+    "warm": {
+      "geometries": 35,
+      "textures": 8
+    },
+    "after": {
+      "geometries": 35,
+      "textures": 8
+    },
+    "warmLibrary": {
+      "geometries": 12,
+      "materials": 2,
+      "models": 2
+    },
+    "afterLibrary": {
+      "geometries": 12,
+      "materials": 2,
+      "models": 2
+    }
+  },
+  "mobile": {
+    "scroll": 390,
+    "width": 390,
+    "state": {
+      "asset": "pair",
+      "screen": "amber",
+      "context": "wall",
+      "view": "three",
+      "grey": false,
+      "scale": "close",
+      "triangles": 200,
+      "height": 0.800000011920929,
+      "sill": 0.8230800001323226,
+      "floor": 0.00191999837756196,
+      "clearance": 0.021159989833831716,
+      "backGap": 0.003,
+      "ppu": 62.4687483387205,
+      "resources": {
+        "geometries": 35,
+        "textures": 8
+      },
+      "library": {
+        "geometries": 12,
+        "materials": 2,
+        "models": 2
+      }
+    }
+  },
+  "teardown": {
+    "disposed": true,
+    "ready": false,
+    "textures": [
+      {
+        "uuid": "0d5bdbfe-3849-49a7-adea-8531fae3300d",
+        "src": "http://127.0.0.1:4476/assets/environment/painted-study/cargo-materials-v1.png"
+      },
+      {
+        "uuid": "17d88b25-d807-4601-9c06-eacf8d56d3c1",
+        "src": "http://127.0.0.1:4476/assets/environment/painted-study/cargo-materials-v1.png"
+      },
+      {
+        "uuid": "f7dd5633-5863-41b5-82d3-c31ec07da9fd",
+        "src": "http://127.0.0.1:4476/assets/environment/painted-study/cargo-materials-v1.png"
+      },
+      {
+        "uuid": "a644646e-974b-415a-a6c1-92bff39ba518",
+        "src": "http://127.0.0.1:4476/assets/environment/painted-study/cargo-materials-v1.png"
+      },
+      {
+        "uuid": "c1989c55-4936-4ce8-8da0-6cf2d06a5aaa",
+        "src": "http://127.0.0.1:4476/assets/environment/painted-study/cargo-materials-v1.png"
+      },
+      {
+        "uuid": "dd5238da-45c0-4ed4-813c-38696331b6b5",
+        "src": "http://127.0.0.1:4476/assets/environment/painted-study/material-atlas-v2.png"
+      },
+      {
+        "uuid": "95e3c8b5-6b24-419f-83d9-8b9d97483a0c",
+        "src": "http://127.0.0.1:4476/assets/environment/painted-study/material-atlas-v2.png"
+      },
+      {
+        "uuid": "b4fe3598-8b76-4ad1-926e-349b83b85d93",
+        "src": "http://127.0.0.1:4476/assets/environment/painted-study/material-atlas-v2.png"
+      },
+      {
+        "uuid": "ddeb31fb-a409-48e4-b5c3-8d183ee74366",
+        "src": "http://127.0.0.1:4476/assets/environment/painted-study/cargo-materials-v1.png"
+      },
+      {
+        "uuid": "fd8e41d7-25e1-4fae-a2ab-a755a4302dd4",
+        "src": null
+      },
+      {
+        "uuid": "307933ac-f915-4923-8939-e40ecc15630e",
+        "src": "http://127.0.0.1:4476/assets/characters/lowpoly-proof/horse-worker-model-paint-v1.png"
+      },
+      {
+        "uuid": "a155fe53-815b-4861-b321-11be0e2adc1b",
+        "src": null
+      },
+      {
+        "uuid": "e6387991-c833-4379-a1e1-2184aa80e11e",
+        "src": null
+      },
+      {
+        "uuid": "12b18b0d-12e4-4c79-be8e-eef63cca3576",
+        "src": "http://127.0.0.1:4476/assets/environment/guardhouse-consoles/paint-atlas-v1.png"
+      },
+      {
+        "uuid": "ba8ceb88-66c7-40d6-9b0f-90abdea749c1",
+        "src": "http://127.0.0.1:4476/assets/environment/painted-study/material-atlas-v2.png"
+      },
+      {
+        "uuid": "74128765-be9e-4406-9b47-135604367bb0",
+        "src": "http://127.0.0.1:4476/assets/environment/painted-study/cargo-materials-v1.png"
+      }
+    ]
+  },
+  "errors": []
+}
