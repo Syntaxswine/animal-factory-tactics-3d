@@ -25,7 +25,7 @@ function crossings(a,b,toGun){
 }
 
 export function rifleArmCrossings(worker,weapon){
- const stock=weapon.parts.find(p=>p.name==='wooden shoulder stock');
+ const stock=weapon.parts.find(p=>/wooden shoulder stock|AK angular butt|PPSh continuous|sniper continuous|launcher short|HMG deep/.test(p.name));
  const a=triangles(stock),toGun=weapon.root.matrixWorld.clone().invert(),out=[];
  for(const arm of worker.parts.filter(p=>/forearm|shirt/.test(p.name))){
   const b=triangles(arm),hits=[];
@@ -33,5 +33,16 @@ export function rifleArmCrossings(worker,weapon){
   if(hits.length){hits.sort((p,z)=>p.local[0]-z.local[0]);out.push({arm:arm.name,count:hits.length,minLocalX:hits[0].local[0],maxLocalX:hits.at(-1).local[0],deepest:hits[0]});}
  }
  return out;
+}
+
+export function stockCoverage(worker,weapon,direction){
+ const stock=weapon.parts.find(p=>/wooden shoulder stock|AK angular butt|PPSh continuous|sniper continuous|launcher short|HMG deep/.test(p.name));
+ const arm=posedSurface(worker.parts.find(p=>p.name==='forearm and hand 1')),surface=posedSurface(stock),toGun=weapon.root.matrixWorld.clone().invert();
+ const at=(s,i)=>s.index?s.index.getX(i):i,n=surface.index?.count??surface.points.length,points=[];
+ for(let i=0;i<n;i+=3){const p=[0,1,2].map(k=>surface.points[at(surface,i+k)]);points.push(...p,p[0].clone().add(p[1]).add(p[2]).divideScalar(3));}
+ const butt=points.filter(p=>p.clone().applyMatrix4(toGun).x<-.10),hit=new T.Vector3(),ray=new T.Ray(),toward=direction.clone().negate(),count=arm.index?.count??arm.points.length;
+ return butt.some(p=>{ray.set(p.clone().addScaledVector(direction,3),toward);if(!ray.intersectBox(arm.box,hit))return false;
+  for(let i=0;i<count;i+=3)if(ray.intersectTriangle(...[0,1,2].map(k=>arm.points[at(arm,i+k)]),false,hit)&&ray.origin.distanceTo(hit)<2.997)return true;return false;
+ });
 }
 

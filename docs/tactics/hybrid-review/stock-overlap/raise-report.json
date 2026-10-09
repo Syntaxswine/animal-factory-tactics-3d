@@ -1,0 +1,317 @@
+[
+  {
+    "animal": "horse",
+    "weapon": "rifle",
+    "failed": []
+  },
+  {
+    "animal": "horse",
+    "weapon": "assault",
+    "failed": []
+  },
+  {
+    "animal": "horse",
+    "weapon": "smg",
+    "failed": []
+  },
+  {
+    "animal": "horse",
+    "weapon": "shotgun",
+    "failed": []
+  },
+  {
+    "animal": "horse",
+    "weapon": "sniper",
+    "failed": []
+  },
+  {
+    "animal": "horse",
+    "weapon": "launcher",
+    "failed": []
+  },
+  {
+    "animal": "horse",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "goat",
+    "weapon": "rifle",
+    "failed": []
+  },
+  {
+    "animal": "goat",
+    "weapon": "assault",
+    "failed": []
+  },
+  {
+    "animal": "goat",
+    "weapon": "smg",
+    "failed": []
+  },
+  {
+    "animal": "goat",
+    "weapon": "shotgun",
+    "failed": []
+  },
+  {
+    "animal": "goat",
+    "weapon": "sniper",
+    "failed": []
+  },
+  {
+    "animal": "goat",
+    "weapon": "launcher",
+    "failed": []
+  },
+  {
+    "animal": "goat",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "bull",
+    "weapon": "rifle",
+    "failed": []
+  },
+  {
+    "animal": "bull",
+    "weapon": "assault",
+    "failed": []
+  },
+  {
+    "animal": "bull",
+    "weapon": "smg",
+    "failed": []
+  },
+  {
+    "animal": "bull",
+    "weapon": "shotgun",
+    "failed": []
+  },
+  {
+    "animal": "bull",
+    "weapon": "sniper",
+    "failed": []
+  },
+  {
+    "animal": "bull",
+    "weapon": "launcher",
+    "failed": []
+  },
+  {
+    "animal": "bull",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "cow",
+    "weapon": "rifle",
+    "failed": []
+  },
+  {
+    "animal": "cow",
+    "weapon": "assault",
+    "failed": []
+  },
+  {
+    "animal": "cow",
+    "weapon": "smg",
+    "failed": []
+  },
+  {
+    "animal": "cow",
+    "weapon": "shotgun",
+    "failed": []
+  },
+  {
+    "animal": "cow",
+    "weapon": "sniper",
+    "failed": []
+  },
+  {
+    "animal": "cow",
+    "weapon": "launcher",
+    "failed": []
+  },
+  {
+    "animal": "cow",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "donkey",
+    "weapon": "rifle",
+    "failed": []
+  },
+  {
+    "animal": "donkey",
+    "weapon": "assault",
+    "failed": []
+  },
+  {
+    "animal": "donkey",
+    "weapon": "smg",
+    "failed": []
+  },
+  {
+    "animal": "donkey",
+    "weapon": "shotgun",
+    "failed": []
+  },
+  {
+    "animal": "donkey",
+    "weapon": "sniper",
+    "failed": []
+  },
+  {
+    "animal": "donkey",
+    "weapon": "launcher",
+    "failed": []
+  },
+  {
+    "animal": "donkey",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "sheep",
+    "weapon": "rifle",
+    "failed": []
+  },
+  {
+    "animal": "sheep",
+    "weapon": "assault",
+    "failed": []
+  },
+  {
+    "animal": "sheep",
+    "weapon": "smg",
+    "failed": []
+  },
+  {
+    "animal": "sheep",
+    "weapon": "shotgun",
+    "failed": []
+  },
+  {
+    "animal": "sheep",
+    "weapon": "sniper",
+    "failed": []
+  },
+  {
+    "animal": "sheep",
+    "weapon": "launcher",
+    "failed": []
+  },
+  {
+    "animal": "sheep",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "skunk",
+    "weapon": "rifle",
+    "failed": []
+  },
+  {
+    "animal": "skunk",
+    "weapon": "assault",
+    "failed": []
+  },
+  {
+    "animal": "skunk",
+    "weapon": "smg",
+    "failed": []
+  },
+  {
+    "animal": "skunk",
+    "weapon": "shotgun",
+    "failed": []
+  },
+  {
+    "animal": "skunk",
+    "weapon": "sniper",
+    "failed": []
+  },
+  {
+    "animal": "skunk",
+    "weapon": "launcher",
+    "failed": []
+  },
+  {
+    "animal": "skunk",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "rifle",
+    "failed": []
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "assault",
+    "failed": []
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "smg",
+    "failed": []
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "shotgun",
+    "failed": []
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "sniper",
+    "failed": []
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "launcher",
+    "failed": []
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "dog",
+    "weapon": "rifle",
+    "failed": []
+  },
+  {
+    "animal": "dog",
+    "weapon": "assault",
+    "failed": []
+  },
+  {
+    "animal": "dog",
+    "weapon": "smg",
+    "failed": []
+  },
+  {
+    "animal": "dog",
+    "weapon": "shotgun",
+    "failed": []
+  },
+  {
+    "animal": "dog",
+    "weapon": "sniper",
+    "failed": []
+  },
+  {
+    "animal": "dog",
+    "weapon": "launcher",
+    "failed": []
+  },
+  {
+    "animal": "dog",
+    "weapon": "hmg",
+    "failed": []
+  }
+]

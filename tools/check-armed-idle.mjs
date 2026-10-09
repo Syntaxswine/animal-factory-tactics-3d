@@ -5,10 +5,11 @@ import assert from 'node:assert/strict';
 import {launchGrenadeReview} from './grenade-review-browser.mjs';
 import {IDLE_ANIMALS,idleOutfits} from '../dist/tactics/armed-idle-actor.js';
 import {WEAPON_MODELS} from '../dist/tactics/weapon-models.js';
+import {STOCKED_WEAPONS} from '../dist/tactics/weapon-carry-fit.js';
 const runtime=process.env.PLAYWRIGHT_PATH;if(!runtime)throw Error('Set PLAYWRIGHT_PATH to the installed Playwright package');
 const {chromium}=await import(pathToFileURL(path.join(runtime,'index.mjs')).href),{browser,closeReview}=await launchGrenadeReview(chromium,'armed-idle');
-const rifleOnly=process.argv.includes('--rifle'),weapons=rifleOnly?['rifle']:Object.keys(WEAPON_MODELS);
-const out=path.resolve('artifacts/idle-study/'+(rifleOnly?'rifle-browser':'browser'));fs.mkdirSync(out,{recursive:true});
+const rifleOnly=process.argv.includes('--rifle'),stocksOnly=process.argv.includes('--stocks'),weapons=rifleOnly?['rifle']:stocksOnly?STOCKED_WEAPONS:Object.keys(WEAPON_MODELS);
+const out=path.resolve('artifacts/idle-study/'+(rifleOnly?'rifle-browser':stocksOnly?'stocks-browser':'browser'));fs.mkdirSync(out,{recursive:true});
 const packaged=process.argv.includes('--packaged'),base=packaged?'http://idle-study.test/af3d':process.argv.slice(2).find(a=>!a.startsWith('--'))||'http://127.0.0.1:4476',errors=[],report=[];
 try{
  const page=await browser.newPage({viewport:{width:1200,height:930},deviceScaleFactor:1});

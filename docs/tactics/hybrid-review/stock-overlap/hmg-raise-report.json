@@ -1,0 +1,47 @@
+[
+  {
+    "animal": "horse",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "goat",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "bull",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "cow",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "donkey",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "sheep",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "skunk",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "rabbit",
+    "weapon": "hmg",
+    "failed": []
+  },
+  {
+    "animal": "dog",
+    "weapon": "hmg",
+    "failed": []
+  }
+]

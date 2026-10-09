@@ -1,3 +1,4 @@
+import {weaponHandPose,STOCK_RAISE_ARC} from './weapon-carry-fit.js';
 import * as T from './vendor/three.module.js';
 import {dogMotionState,DOG_SHOT_TIME,createDogMotion} from './dog-motion.js';
 const clamp=T.MathUtils.clamp,V=(x,y,z)=>new T.Vector3(x,y,z),ease=x=>{x=clamp(x,0,1);return x*x*x*(x*(x*6-15)+10);};
@@ -32,7 +33,7 @@ export function createMammalMotion(worker,profile){
  }
  for(const m of worker.parts){m.bind(skeleton);m.geometry.attributes.skinIndex.needsUpdate=m.geometry.attributes.skinWeight.needsUpdate=true;}
  const limbs=[-1,1].map(side=>({side,shoulder:named['upperArm'+side],elbow:named['forearm'+side],hand:named['hand'+side],finger:named['fingers'+side],hip:named['thigh'+side],knee:named['shin'+side],ankle:named['hoof'+side]}));
- const palm=V(.052,-.010,0),rifle=worker.rifle,carryAxis=new T.Vector3(...(worker.rifle.carry?.axis||[.20,.38,-.90])).normalize(),carryQ=new T.Quaternion().setFromUnitVectors(V(1,0,0),carryAxis);
+ const palm=V(.052,-.010,0),rifle=worker.rifle,carry=worker.getCarry(),carryAxis=new T.Vector3(...(carry.axis||[.20,.38,-.90])).normalize(),carryQ=new T.Quaternion().setFromUnitVectors(V(1,0,0),carryAxis);
  const triangles=worker.diagnostics().triangles;
  let state,heading=0,pitch=0,contacts=[],joints={},shot=null,shotKey='';
  function rotation(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(q));root.updateMatrixWorld(true);}
@@ -60,7 +61,7 @@ export function createMammalMotion(worker,profile){
   root.updateMatrixWorld(true);
   for(const l of limbs){const f=state.feet[l.side],target=V(f.x-state.distance,ankleRest.y+f.lift,l.side*Math.abs(ankleRest.z));limb(l.hip,l.knee,l.ankle,target,V(1,0,0));rotation(l.ankle,new T.Quaternion());}
   const spineQ=named.spine.getWorldQuaternion(new T.Quaternion()),spineOrigin=named.spine.getWorldPosition(V());
-  const carryPosition=new T.Vector3(...(rifle.carry?.position||[.24,1.005,.035])).sub(rest.get(named.spine)).applyQuaternion(spineQ).add(spineOrigin);
+  const carryPosition=new T.Vector3(...(carry.position||[.24,1.005,.035])).sub(rest.get(named.spine)).applyQuaternion(spineQ).add(spineOrigin);
   const yaw=-(profile.bodyYaw??35)*Math.PI/180,angle=pitch*Math.PI/180;
   const axis=V(Math.cos(yaw)*Math.cos(angle),Math.sin(angle),Math.sin(yaw)*Math.cos(angle));
   const aimQ=new T.Quaternion().setFromUnitVectors(V(1,0,0),axis);
@@ -68,12 +69,12 @@ export function createMammalMotion(worker,profile){
   const aimPosition=stock.clone().sub(rifle.anchors.stock.position.clone().applyQuaternion(aimQ));
   rifle.root.quaternion.copy(spineQ.clone().multiply(carryQ)).slerp(aimQ,state.aim);
   rifle.root.position.copy(carryPosition).lerp(aimPosition,state.aim).addScaledVector(axis,-.038*state.recoil);
+  if(carry?.stockFitted)rifle.root.position.add(V(STOCK_RAISE_ARC.forward,0,STOCK_RAISE_ARC.outward).multiplyScalar(Math.sin(Math.PI*state.aim)));
   rifle.root.visible=true;root.updateMatrixWorld(true);contacts=[];
-  const gunAxis=V(1,0,0).applyQuaternion(rifle.root.quaternion),handQ=new T.Quaternion().setFromUnitVectors(V(0,-1,0),gunAxis);
-  for(const l of limbs){const name=l.side===1?'grip':'support',target=rifle.anchors[name].getWorldPosition(V()),wrist=target.clone().sub(palm.clone().applyQuaternion(handQ));limb(l.shoulder,l.elbow,l.hand,wrist,new T.Vector3(...(rifle.carry?.handPoses?.[name]?.elbowPole||[-.12,-1,l.side*.55])));rotation(l.hand,handQ);l.finger.rotation.z=-.9;contacts.push({side:l.side,name});}
+  for(const l of limbs){const name=l.side===1?'grip':'support',fit=weaponHandPose(carry,rifle.root.quaternion,l.side,state.aim,spineQ),target=rifle.anchors[name].getWorldPosition(V()),wrist=target.clone().sub(fit.palm.clone().applyQuaternion(fit.quaternion));limb(l.shoulder,l.elbow,l.hand,wrist,fit.pole);rotation(l.hand,fit.quaternion);l.finger.rotation.z=fit.fingerCurl;contacts.push({side:l.side,name});}
   // Body stands obliquely to the aim line; +heading turns the actual bore toward +Z.
   root.rotation.y=-(heading+(profile.bodyYaw??35))*Math.PI/180;root.position.set(state.distance*Math.cos((heading+(profile.bodyYaw??35))*Math.PI/180),0,state.distance*Math.sin((heading+(profile.bodyYaw??35))*Math.PI/180));
-  root.updateMatrixWorld(true);skeleton.update();
+  root.updateMatrixWorld(true);skeleton.update();root.getObjectByName('fitted glove cuff')?.update?.();
   joints={};for(const l of limbs)joints[l.side]=Object.fromEntries(['shoulder','elbow','hand','hip','knee','ankle'].map(k=>[k,l[k].getWorldPosition(V()).toArray()]));
  }
  function muzzle(){return {origin:rifle.anchors.muzzle.getWorldPosition(V()),direction:V(1,0,0).transformDirection(rifle.barrel.matrixWorld)};}

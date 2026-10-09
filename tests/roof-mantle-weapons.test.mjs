@@ -6,7 +6,7 @@ import {ANIMAL_MOTION_CATALOG} from '../dist/tactics/animal-motion-catalog.js';
 import {createRoofMantle} from '../dist/tactics/roof-mantle.js';
 import {createWeaponModel,WEAPON_MODELS} from '../dist/tactics/weapon-models.js';
 import {STOW_MODES} from '../dist/tactics/equipment-stow.js';
-import {poseRoofMantleCarry} from '../dist/tactics/roof-mantle-equipment.js';
+import {poseRoofMantleCarry,roofMantleApproachOffset} from '../dist/tactics/roof-mantle-equipment.js';
 
 // Independent equipment geometry checks: include the tank, hose, holders and
 // sling, not only the weapon's named origin or diagnostic contact markers.
@@ -21,6 +21,41 @@ function assertGrip(w,id){for(const side of w.weapon.carry.hands){const name=sid
 test('weapon mantle matrix includes every authored equipment mode and every completed mammal',()=>{
  assert.equal(mammals.length,11);assert.equal(weapons.length,13);assert.deepEqual(new Set(weapons),new Set(Object.keys(STOW_MODES)));
  assert.deepEqual(new Set(weapons.map(id=>STOW_MODES[id])),new Set(['empty','sheath','holster','pouch','sling','pack']));
+});
+
+const hmgApproaches=['horse','bull','donkey','sheep','skunk'];
+for(const id of hmgApproaches)test(`${id}/hmg: dense stow and ready sampling clears the lip with the deployed bipod`,()=>fixture(mammals.find(p=>p.id===id),'hmg',(w,m)=>{
+ // The first tenth of a second used to swing the bipod forward from the
+ // fitted carry. Sample both sling placements and the reverse ready motion.
+ for(const phase of [m.phases[0],m.phases.at(-1)])for(let i=0;i<=120;i++){
+  const r=m.apply((phase.start+(phase.end-phase.start)*i/120)/m.duration);
+  for(const c of r.contacts)assert(c.error<1e-5,`${id}/hmg ${r.time} ${c.id} reach ${c.error}`);
+  const cuff=w.root.getObjectByName('fitted glove cuff');
+  if(cuff&&visible(cuff)){const before=cuff.geometry.attributes.position.array.slice();cuff.update();assert(before.every((v,j)=>Math.abs(v-cuff.geometry.attributes.position.array[j])<1e-6),`${id}/hmg stale glove cuff at ${r.time}`);}
+  for(const {p,name}of vertices(w).values()){
+   assert(p.y>=-.001,`${id}/hmg ${name} floor depth ${-p.y} at ${r.time}`);
+   if(phase===m.phases[0])assert(p.x<=0,`${id}/hmg ${name} crosses the ledge face during stow at ${r.time}`);
+   if(p.x>0&&p.x<3&&p.y>0&&p.y<2&&Math.abs(p.z)<2){const depth=Math.min(p.x,3-p.x,p.y,2-p.y,2-Math.abs(p.z));assert(depth<.004,`${id}/hmg ${name} roof depth ${depth} at ${r.time}`);}
+  }
+ }
+}));
+
+test('fitted HMG approach clears the full weapon, plants both feet through crouch and preserves the landing',()=>{
+ for(const id of hmgApproaches)fixture(mammals.find(p=>p.id===id),'hmg',(w,m)=>{
+  const offset=roofMantleApproachOffset(w),carry=w.bones.map(b=>b.getWorldPosition(V())),gunPosition=w.weapon.root.position.clone();
+  m.apply(0);assert(Math.max(...[...vertices(w).values()].map(v=>v.p.x))<=-.0059,id+' approach misses equipment gap');
+  const feet=[-1,1].map(side=>w.bones.find(b=>b.name==='hoof'+side).localToWorld(new T.Vector3(0,-.12,0)));
+  for(let i=0;i<=60;i++){
+   const r=m.apply((m.phases[1].end-1e-6)*i/(60*m.duration));
+   for(const c of r.contacts.filter(c=>c.id.startsWith('foot'))){assert(c.planted&&c.kind==='floor',id+' approach foot released');assert(c.error<1e-5,id+' approach foot unreachable');}
+   for(const [j,side]of [-1,1].entries())assert(w.bones.find(b=>b.name==='hoof'+side).localToWorld(new T.Vector3(0,-.12,0)).distanceTo(feet[j])<1e-8,id+' approach foot slides');
+  }
+  for(const progress of [0,.4,1]){
+   m.apply(progress,{origin:[4,3,-2],heading:73});assert(Math.abs(roofMantleApproachOffset(w)-offset)<1e-8,id+' approach depends on pose/world placement');
+  }
+  m.apply(1);assert.deepEqual(w.root.position.toArray(),[.75,2,.35],id+' final landing changed');assert(w.weapon.root.position.distanceTo(gunPosition)<1e-8,id+' carry placement changed');
+  w.bones.forEach((b,i)=>assert(b.getWorldPosition(V()).sub(w.root.position).distanceTo(carry[i])<1e-8,id+' final carry joint '+b.name));assertGrip(w,id+'/hmg');
+ });
 });
 
 for(const profile of mammals)for(const id of weapons){

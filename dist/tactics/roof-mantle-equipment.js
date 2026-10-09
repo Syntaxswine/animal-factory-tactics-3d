@@ -6,7 +6,23 @@ const beltModes={knife:'sheath',pistol:'holster',grenade:'pouch'};
 export function roofMantleApproachOffset(worker){
  // Its forward-pointing warhead needs room before it is slung. Keep the feet
  // planted at this farther starting mark through stow and the crouch.
- return worker.weapon?.id==='rpg'?.32:0;
+ const gun=worker.weapon;if(gun?.id==='rpg')return .32;if(gun?.id!=='hmg')return 0;
+ const carry=worker.getCarry?.();if(!carry?.stockFitted)return 0;
+ // Measure rendered HMG vertices in the carry, independently of the current
+ // pose or world placement. Its deployed bipod can reach beyond the muzzle.
+ // The authored root starts .65 m from the face; reserve a 6 mm equipment gap.
+ gun.root.updateWorldMatrix(true,true);
+ const inverse=gun.root.matrixWorld.clone().invert(),quaternion=new T.Quaternion().setFromUnitVectors(new T.Vector3(1,0,0),new T.Vector3().fromArray(carry.axis).normalize());
+ const carried=new T.Matrix4().compose(new T.Vector3().fromArray(carry.position),quaternion,gun.root.scale),point=new T.Vector3();let forward=-Infinity;
+ gun.root.traverse(mesh=>{
+  if(!mesh.isMesh||!mesh.geometry.attributes.position)return;
+  // Neutral posing hides the weapon root; only authored part visibility counts.
+  for(let object=mesh;object!==gun.root;object=object.parent)if(!object.visible)return;
+  const matrix=carried.clone().multiply(inverse).multiply(mesh.matrixWorld),position=mesh.geometry.attributes.position,index=mesh.geometry.index;
+  const ids=index?new Set(index.array):Array.from({length:position.count},(_,i)=>i);
+  for(const i of ids)forward=Math.max(forward,mesh.getVertexPosition(i,point).applyMatrix4(matrix).x);
+ });
+ return Math.max(0,forward-.65+.006);
 }
 
 export function positionRoofMantleEquipment(worker,profile){

@@ -1,0 +1,116 @@
+[
+  {
+    "animal": "horse",
+    "source": "84a87d9",
+    "targetY": 1.4,
+    "minClearance": 0,
+    "worst": 0,
+    "unsupported": [],
+    "actualCrossingsAtWorst": 22
+  },
+  {
+    "animal": "horse",
+    "source": "84a87d9",
+    "targetY": 3,
+    "minClearance": 0,
+    "worst": 0,
+    "unsupported": [],
+    "actualCrossingsAtWorst": 22
+  },
+  {
+    "animal": "horse",
+    "source": "current",
+    "targetY": 1.4,
+    "minClearance": 0.005763646289910131,
+    "worst": 1,
+    "unsupported": [],
+    "actualCrossingsAtWorst": 0
+  },
+  {
+    "animal": "horse",
+    "source": "current",
+    "targetY": 3,
+    "minClearance": 0.002663978177056587,
+    "worst": 0.90625,
+    "unsupported": [
+      1
+    ],
+    "actualCrossingsAtWorst": 0
+  },
+  {
+    "animal": "goat",
+    "source": "84a87d9",
+    "targetY": 1.4,
+    "minClearance": 0,
+    "worst": 0,
+    "unsupported": [],
+    "actualCrossingsAtWorst": 42
+  },
+  {
+    "animal": "goat",
+    "source": "84a87d9",
+    "targetY": 3,
+    "minClearance": 0,
+    "worst": 0,
+    "unsupported": [],
+    "actualCrossingsAtWorst": 42
+  },
+  {
+    "animal": "goat",
+    "source": "current",
+    "targetY": 1.4,
+    "minClearance": 0.0036677467787588035,
+    "worst": 1,
+    "unsupported": [],
+    "actualCrossingsAtWorst": 0
+  },
+  {
+    "animal": "goat",
+    "source": "current",
+    "targetY": 3,
+    "minClearance": 0,
+    "worst": 0.90625,
+    "unsupported": [
+      1
+    ],
+    "actualCrossingsAtWorst": 10
+  },
+  {
+    "animal": "sheep",
+    "source": "84a87d9",
+    "targetY": 1.4,
+    "minClearance": 0,
+    "worst": 0,
+    "unsupported": [],
+    "actualCrossingsAtWorst": 34
+  },
+  {
+    "animal": "sheep",
+    "source": "84a87d9",
+    "targetY": 3,
+    "minClearance": 0,
+    "worst": 0,
+    "unsupported": [],
+    "actualCrossingsAtWorst": 34
+  },
+  {
+    "animal": "sheep",
+    "source": "current",
+    "targetY": 1.4,
+    "minClearance": 0.003409720707091872,
+    "worst": 1,
+    "unsupported": [],
+    "actualCrossingsAtWorst": 0
+  },
+  {
+    "animal": "sheep",
+    "source": "current",
+    "targetY": 3,
+    "minClearance": 0,
+    "worst": 0.84375,
+    "unsupported": [
+      1
+    ],
+    "actualCrossingsAtWorst": 10
+  }
+]

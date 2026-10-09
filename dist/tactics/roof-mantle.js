@@ -51,7 +51,7 @@ export function createRoofMantle(worker,profile){
  const stow=equipment=createEquipmentStow(worker,profile,{riflePlacement:{back:-.29,side:-.20,axis:[0,.95,.20]}});
  const duration=phases.at(-1).end,stowWeapon=worker.weapon;let disposed=false,result=null;
  const capture=()=>({bones:bones.map(b=>({p:b.position.clone(),q:b.quaternion.clone()})),gun:{p:worker.weapon.root.position.clone(),q:worker.weapon.root.quaternion.clone()}});
- poseRoofMantleCarry(worker,profile);const carry=capture();worker.pose('neutral');const neutral=capture();
+ poseRoofMantleCarry(worker,profile);const carry=capture(),hmgRetract=worker.getCarry?.()?.stockFitted ? .16 : .10;worker.pose('neutral');const neutral=capture();
  // Dedicated pose study: keep the published cliff traversal untouched.
  const keys=[
   {p:[-.65,0,0]}, {p:[-.65,0,0]}, {p:[-.60,-.13,0],lean:-.16},
@@ -106,7 +106,9 @@ export function createRoofMantle(worker,profile){
   const contacts=[],last=index===11,transition=index===0||last,handBlend=index===0?w:last?1-w:1;clothPaint.set(handBlend);pigSurface.set(handBlend);
   if(transition){const weight=last?w:1-w;bones.forEach((bone,i)=>{bone.position.copy(neutral.bones[i].p).lerp(carry.bones[i].p,weight);bone.quaternion.copy(neutral.bones[i].q).slerp(carry.bones[i].q,weight);});root.updateMatrixWorld(true);}
   stow.apply();positionRoofMantleEquipment(worker,profile);const gun=worker.weapon.root;adaptation?.placeEquipment?.({index,w,gun});const tuckGun=index===7?w:index===8||index===9?1:index===10?1-w:0;gun.position.add(V(stow.id==='hmg'||['holster','sheath','pouch'].includes(stow.mode)?0:(adaptation?.tuckGun?.({index,w})??.10*tuckGun),0,0).applyQuaternion(named.spine.getWorldQuaternion(Q())));root.updateMatrixWorld(true);
-  if(transition){const amount=handBlend,parked={p:gun.position.clone(),q:gun.quaternion.clone()};gun.position.copy(carry.gun.p).lerp(parked.p,amount);gun.position.y+=(stow.id==='rifle'?.24:.12)*Math.sin(Math.PI*amount);gun.position.z+=(stow.id==='rifle'?.48:stow.mode==='sling'?.18:.08)*Math.sin(Math.PI*amount);if(stow.id==='hmg')gun.position.x-=.10*Math.sin(Math.PI*amount);gun.quaternion.copy(carry.gun.q).slerp(parked.q,amount);stow.blend(amount);root.updateMatrixWorld(true);
+  // Retract the HMG as it turns: its full-size deployed bipod swings forward
+  // from the fitted carry before the receiver reaches the back sling.
+  if(transition){const amount=handBlend,parked={p:gun.position.clone(),q:gun.quaternion.clone()};gun.position.copy(carry.gun.p).lerp(parked.p,amount);gun.position.y+=(stow.id==='rifle'?.24:.12)*Math.sin(Math.PI*amount);gun.position.z+=(stow.id==='rifle'?.48:stow.mode==='sling'?.18:.08)*Math.sin(Math.PI*amount);if(stow.id==='hmg')gun.position.x-=hmgRetract*Math.sin(Math.PI*amount);gun.quaternion.copy(carry.gun.q).slerp(parked.q,amount);stow.blend(amount);root.updateMatrixWorld(true);
    for(const l of limbs.filter(l=>!unarmed&&l.id.startsWith('hand')&&(worker.weapon.carry?.hands||[1,-1]).includes(l.side))){const grasp=1-ease((amount-(l.side===1?.64:0))/(l.side===1?.25:.18));if(!grasp)continue;const boneQ=l.c.getWorldQuaternion(Q()),anchor=worker.weapon.anchors[l.side===1?'grip':'support'].getWorldPosition(V()),palm=V(...(worker.weapon.carry?.handPoses?.[l.side===1?'grip':'support']?.palm||[.052,-.010,0])),from=l.c.localToWorld(palm.clone());contacts.push({id:l.id,kind:'weapon',error:solve({...l,offset:palm},from.lerp(anchor,grasp),boneQ,l.b.getWorldPosition(V()).sub(l.a.getWorldPosition(V())).lerp(V(-.3,-.3,l.side*.8),ease(amount/.15)))});}
   }
   for(const [i,l]of limbs.filter(l=>l.id.startsWith('foot')).entries()){
