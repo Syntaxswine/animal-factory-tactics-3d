@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {CHAIR_CONTACT as C} from './painted-chairs.js';
+import {CHAIR_CONTACT as C,CHAIR_PLAN_SCALE} from './painted-chairs.js';
 
 // A furniture fitting mannequin, deliberately not a skinned-character clip.
 // Same proportions and contacts for every chair; no model-ID special cases.
@@ -12,7 +12,7 @@ const referencePoints={
  leftElbow:[-.32,.80,.12],rightElbow:[.32,.80,.12],
  leftHand:[-.23,.66,.31],rightHand:[.23,.66,.31]
 };
-export const CHAIR_FIT_POINTS=Object.freeze(Object.fromEntries(Object.entries(referencePoints).map(([name,p])=>[name,[p[0],p[1]-(name.includes('Ankle')?0:.48-C.seatHeight),p[2]]])));
+export const CHAIR_FIT_POINTS=Object.freeze(Object.fromEntries(Object.entries(referencePoints).map(([name,p])=>[name,[p[0],p[1]-(name.includes('Ankle')?0:.48-C.seatHeight),/Knee|Ankle/.test(name)?C.feet[0][2]:p[2]*CHAIR_PLAN_SCALE]])));
 export function createChairFitGuide(){
  const root=new T.Group(),geometries=[],materials=[];
  const flesh=new T.MeshStandardMaterial({color:0xf6bd67,transparent:true,opacity:.30,roughness:1,depthWrite:false}),line=new T.LineBasicMaterial({color:0xffd488}),contact=new T.MeshBasicMaterial({color:0x7bf2c4});materials.push(flesh,line,contact);

@@ -9,11 +9,14 @@ export const CHAIR_FORMS=Object.freeze([
 ]);
 // Native scene coordinates: Y up, +Z forward. All chairs share this contact
 // contract. It defines furniture targets, not species-specific bone positions.
+// Match the seat-height reduction (.48 → .42), preserving its proportions.
+export const CHAIR_PLAN_SCALE=.42/.48;
+const S=CHAIR_PLAN_SCALE;
 export const CHAIR_CONTACT=Object.freeze({
- seatHeight:.42,seatWidth:.84,seatDepth:.62,seatCenter:Object.freeze([0,.42,-.01]),
- pelvis:Object.freeze([0,.56,-.03]),feet:Object.freeze([Object.freeze([-.23,0,.43]),Object.freeze([.23,0,.43])]),
- approach:Object.freeze([0,0,.80]),back:Object.freeze([0,.91,-.36]),
- armInside:.44,armTop:.66,bodyWidth:.80,bodyFront:.32,bodyRear:-.30,
+ seatHeight:.42,seatWidth:.84*S,seatDepth:.62*S,seatCenter:Object.freeze([0,.42,-.01*S]),
+ pelvis:Object.freeze([0,.56,-.03*S]),feet:Object.freeze([Object.freeze([-.23,0,.43]),Object.freeze([.23,0,.43])]),
+ approach:Object.freeze([0,0,.80]),back:Object.freeze([0,.91,-.36*S]),
+ armInside:.44*S,armTop:.66,bodyWidth:.80*S,bodyFront:.32*S,bodyRear:-.30*S,
  needsSpeciesAdapter:true
 });
 const cells={redBack:[0,0],redSeat:[1,0],redSide:[2,0],walnut:[3,0],
@@ -99,8 +102,8 @@ export function createChairLibrary(atlas){
   }
   if(id==='wingback')for(const s of [-1,1]){
    // A continuous upholstered side runs from the base through the arm into
-   // the wing. Rolls are flush with its inside face: .88 clear across, with
-   // their rounded bulk overhanging the outside by .04 per side.
+   // the wing. At the authored size, rolls leave .88 clear across and extend
+   // .04 past each side of the tile; the final X/Z reduction below includes them.
    const shell=cache('wingback-side:'+side,()=>{
     const shape=new T.Shape(),outline=[[.22,.36],[.22,.49],[.15,.57],[.15,.655],[.17,.676],[-.19,.70],[-.18,.83],[-.115,1.25],[-.15,1.32],[-.23,1.36],[-.465,1.34],[-.455,.36]];
     const drop=.48-CHAIR_CONTACT.seatHeight,lower=y=>y<1?y-drop:y;
@@ -110,8 +113,12 @@ export function createChairLibrary(atlas){
    const roll=cache('wingback-arm-roll:'+side,()=>painted(new T.CylinderGeometry(.05,.05,.55,8,1).rotateX(Math.PI/2),{front:side,top:side,side}));
    add(root,'Rolled arm',roll,[s*.49,CHAIR_CONTACT.armTop-.05,-.085]);
   }
+  // Apply the requested plan-size reduction to furniture only. The contact
+  // anchors below are already in final dimensions; animals keep native scale.
+  const furniture=new T.Group();furniture.name='Furniture forms';furniture.scale.set(S,1,S);
+  for(const mesh of [...root.children])furniture.add(mesh);root.add(furniture);
   const anchors={};for(const [name,point]of Object.entries({seat:CHAIR_CONTACT.seatCenter,pelvis:CHAIR_CONTACT.pelvis,back:CHAIR_CONTACT.back,approach:CHAIR_CONTACT.approach,leftFoot:CHAIR_CONTACT.feet[0],rightFoot:CHAIR_CONTACT.feet[1]})){const a=new T.Object3D();a.name='chair-'+name;a.position.fromArray(point);root.add(a);anchors[name]=a;}
-  root.userData.chair={id,finish,footprint:[1,1],paddingOverhang:id==='wingback'?.04:0,contact:CHAIR_CONTACT,backClosed:id==='wingback',tailOutlet:id==='wingback'?null:{width:.62,bottom:CHAIR_CONTACT.seatHeight,top:id==='wood'?.68:.65},gameplayIntegrated:false};
+  root.userData.chair={id,finish,footprint:[1,1],paddingOverhang:Math.max(0,((id==='wingback'?1.08:1)*S-1)/2),contact:CHAIR_CONTACT,backClosed:id==='wingback',tailOutlet:id==='wingback'?null:{width:.62*S,bottom:CHAIR_CONTACT.seatHeight,top:id==='wood'?.68:.65},gameplayIntegrated:false};
   return {root,anchors,form,finish,dispose(){root.removeFromParent();roots.delete(root);}};
  }
  function setGrey(value){greyMode=!!value;for(const root of roots)root.traverse(p=>{if(p.isMesh)p.material=greyMode?grey:material;});}
