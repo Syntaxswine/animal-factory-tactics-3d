@@ -53,7 +53,7 @@ export function materialKind(box){
  if(box.material==='ground-wood-planks')return 'wood-planks';
  if(diagonalRoad(box.material))return box.material;
  if(box.material==='bark'||box.material==='grass-blade')return box.material;
- if(['steel','leaf-light','leaf-olive','pine','foliage','water','linen','screen','dark-metal','rust','red','olive','metal','wood','sand'].includes(box.material))return box.material;
+ if(['steel','leaf-light','leaf-dry','leaf-sage','leaf-olive','pine','foliage','water','linen','screen','dark-metal','rust','red','olive','metal','wood','sand'].includes(box.material))return box.material;
  if(['woodland','woodland-dense'].includes(box.material))return box.kind==='floor'?'cover-grass':'foliage';
  if(box.material==='ground-asphalt'||box.material==='bridge')return 'asphalt';
  if(box.material==='ground-dirt'||box.material==='ground-gravel')return 'sand';

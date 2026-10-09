@@ -26,7 +26,7 @@ const grounds=new Set(['yard','floor','bridge','woodland','woodland-dense','wate
 const chunk=8, D=DIMENSIONS;
 export function buildWorld(map){map=canopyPresentation(map);
  const boxes=[],diagnostics=[],ids=new Set();
- let hasWoodland=false;
+ let hasWoodland=!!Object.keys(map.foliage||{}).length;
  const roofs=new Map();for(const p of map.props||[])if(p.kind.startsWith('roof-'))for(const q of propCells(p))roofs.set(`${q.x},${q.y},${q.z}`,p);
  function box(id,kind,material,center,size,source,policies={}){
   if(ids.has(id))throw Error('Duplicate geometry ID: '+id);ids.add(id);

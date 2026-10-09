@@ -1,3 +1,4 @@
+import {foliageAt} from '../dist/tactics/foliage-data.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../dist/tactics/vendor/three.module.js';
@@ -19,9 +20,9 @@ const command=(tool,a={x:8,y:8,z:0},b={x:20,y:20,z:0})=>({tool,start:a,end:b});
 test('large foliage strokes skip structural terrain, complete prop footprints and access tiles; one undo restores all',()=>{
  const map=blankMap();map.terrain[10][10]='water';map.terrain[10][11]='floor';map.terrain[10][12]='ground-concrete';map.terrain[10][13]='bridge';map.terrain[10][14]='ground-asphalt';map.terrain[10][15]='void';map.props=[{x:12,y:12,z:0,kind:'workbench-metal'}];addStairs(map,18,18,0,'ladder');
  const d=new EditingDocument().open(JSON.stringify(map)),before=d.export(),r=d.apply(command('foliage-cover'));assert.ok(r.ok,r.error);assert.equal(d.editor.undo.length,1);
- for(let x=10;x<=15;x++)assert.equal(d.map.terrain[10][x],map.terrain[10][x]);assert.equal(d.map.terrain[12][12],'yard');assert.equal(d.map.terrain[12][13],'yard');assert.equal(d.map.terrain[18][18],map.terrain[18][18]);assert.equal(d.map.terrain[9][9],'woodland');
+ for(let x=10;x<=15;x++)assert.equal(d.map.terrain[10][x],map.terrain[10][x]);assert.equal(d.map.terrain[12][12],'yard');assert.equal(d.map.terrain[12][13],'yard');assert.equal(d.map.terrain[18][18],map.terrain[18][18]);assert.equal(d.map.terrain[9][9],'yard');assert.deepEqual(foliageAt(d.map,9,9),[100,false]);
  const painted=d.export();assert.ok(d.undo());assert.equal(d.export(),before);assert.ok(d.redo());assert.equal(d.export(),painted);assert.equal(new EditingDocument().open(painted).export(),painted);
- assert.ok(d.apply(command('clear-foliage')).ok);assert.equal(d.map.terrain[9][9],'ground-grass');assert.equal(d.map.terrain[10][10],'water');assert.equal(d.map.terrain[12][12],'yard');
+ assert.ok(d.apply(command('clear-foliage')).ok);assert.equal(d.map.terrain[9][9],'yard');assert.equal(foliageAt(d.map,9,9),null);assert.equal(d.map.terrain[10][10],'water');assert.equal(d.map.terrain[12][12],'yard');
  assert.equal(d.apply(command('foliage-cover',{x:8,y:8,z:1},{x:20,y:20,z:1})).ok,false);
 });
 test('painted cover remains traversable while hiding distant people and reducing close detection',()=>{
@@ -44,12 +45,12 @@ test('both foliage types paint supported levels 2 and 3, retain block/map identi
  const d=new EditingDocument().open(JSON.stringify(map));
  for(const z of [1,2])for(const [x,kind]of [[8,'undergrowth'],[9,'dense']]){
   const before=d.export(),r=d.apply({...command('foliage-cover',{x,y:9,z},{x,y:10,z}),options:{foliageKind:kind}});
-  assert.ok(r.ok,r.error);assert.equal(r.cells.length,1,'void beside the ledge is never filled');assert.equal(terrainAt(d.map,x,9,z),kind==='dense'?'woodland-dense':'woodland');
+  assert.ok(r.ok,r.error);assert.equal(r.cells.length,1,'void beside the ledge is never filled');assert.equal(terrainAt(d.map,x,9,z),'ground-grass');assert.deepEqual(foliageAt(d.map,x,9,z),[100,kind==='dense']);
   const after=d.export();d.undo();assert.equal(d.export(),before);d.redo();assert.equal(d.export(),after);
  }
  assert.equal(terrainAt(d.map,8,9,0),'yard');const loaded=new EditingDocument().open(d.export());assert.equal(loaded.export(),d.export());
  const block=extractBlock(d.map);validateBlock(block);const copy=placeBlock(blankMap(),block,1,1);
- for(const z of [1,2]){assert.equal(terrainAt(copy,32,33,z),'woodland');assert.equal(terrainAt(copy,33,33,z),'woodland-dense');}
+ for(const z of [1,2]){assert.deepEqual(foliageAt(copy,32,33,z),[100,false]);assert.deepEqual(foliageAt(copy,33,33,z),[100,true]);}
  const beforeClear=d.export();assert.ok(d.apply(command('clear-foliage',{x:8,y:9,z:2},{x:9,y:9,z:2})).ok);
  assert.equal(terrainAt(d.map,8,9,2),'ground-grass');assert.equal(terrainAt(d.map,9,9,2),'ground-grass');d.undo();assert.equal(d.export(),beforeClear);
 });
@@ -57,10 +58,10 @@ test('both foliage types paint supported levels 2 and 3, retain block/map identi
 test('dense fill blocks paths, skips characters and access, and survives encounter save/load',()=>{
  const map=blankMap();map.starts[0]={x:10,y:10};map.guards=[{x:14,y:10,species:'cow',weapon:'rifle'}];map.exits=[{x:15,y:10}];addStairs(map,16,10,0,'ladder');
  const d=new EditingDocument().open(JSON.stringify(map)),r=d.apply({...command('foliage-cover',{x:10,y:9,z:0},{x:17,y:11,z:0}),options:{foliageKind:'dense'}});assert.ok(r.ok,r.error);
- for(const x of [10,14,15,16])assert.notEqual(terrainAt(d.map,x,10,0),'woodland-dense');assert.equal(passable(d.map,{x:12,y:10,z:0}),false);
+ for(const x of [10,14,15,16])assert.equal(foliageAt(d.map,x,10,0),null);assert.equal(passable(d.map,{x:12,y:10,z:0}),false);
  assert.ok(d.apply(command('clear-foliage',{x:14,y:9,z:0},{x:16,y:9,z:0})).ok);
  const state=createGame(1,d.map,false);assert.equal(pathTo(state,state.units[0],12,10,0),null);assert.ok(woodlandDepth(state,{x:10,y:11},{x:17,y:11})>6);
- startEncounterClock(state);const loaded=restoreEncounter(captureEncounter(state));assert.equal(loaded.map[9][12],'woodland-dense');assert.equal(passable(loaded,{x:12,y:9,z:0}),false);
+ startEncounterClock(state);const loaded=restoreEncounter(captureEncounter(state));assert.equal(loaded.map[9][12],'yard');assert.deepEqual(foliageAt(loaded,12,9),[100,true]);assert.equal(passable(loaded,{x:12,y:9,z:0}),false);
 });
 
 test('plateau ledge caps keep foliage at their actual height without adding duplicate floor slabs',()=>{

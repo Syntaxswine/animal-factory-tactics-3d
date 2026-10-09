@@ -3,7 +3,7 @@ import {SAND_GLSL} from './painted-sand.js';
 import {DIAGONAL_ROADS,diagonalRoad} from './diagonal-roads.js';
 import * as T from './vendor/three.module.js';
 export const FOLIAGE_ATLAS='../assets/environment/painted/foliage-atlas-v1.png';
-export const FOLIAGE_MATERIALS=new Set([...DIAGONAL_ROADS,'cover-grass','grass','grass-blade','foliage','leaf-light','leaf-olive','pine','bark']);
+export const FOLIAGE_MATERIALS=new Set([...DIAGONAL_ROADS,'cover-grass','grass','grass-blade','foliage','leaf-light','leaf-dry','leaf-sage','leaf-olive','pine','bark']);
 // Mirrored repetition makes both sides of every texture boundary meet, even
 // where hand-painted source edges differ. Insets keep mip filtering in a panel.
 export function mirroredPaintUV(u,v,panel){
@@ -15,7 +15,7 @@ export function paintFoliageMaterial(material,kind,texture,{cliff=false}={}){
  const panel=kind==='pine'?2:kind==='bark'?3:kind==='cover-grass'||kind==='grass'||kind==='grass-blade'?0:1;
  const offset=[[0,.5],[.5,.5],[0,0],[.5,0]][panel];
  if(material.map!==texture)material.map?.dispose();material.map=texture;material.roughness=1;
- material.color.setHex(kind==='cover-grass'?0x77956e:kind==='leaf-light'?0xe5edb8:kind==='leaf-olive'?0xb7ba8a:kind==='grass-blade'?0xbcca83:0xd4ddbf);
+ material.color.setHex(kind==='cover-grass'?0x77956e:kind==='leaf-light'?0xe5edb8:kind==='leaf-dry'?0xdbbc7b:kind==='leaf-sage'?0xacb18c:kind==='leaf-olive'?0xb7ba8a:kind==='grass-blade'?0xbcca83:0xd4ddbf);
  material.customProgramCacheKey=()=> 'painted-foliage-v3-'+cacheKind+'-'+cliff;
  material.onBeforeCompile=shader=>{
   shader.vertexShader='varying vec3 vNaturePosition,vNatureNormal,vNatureLocal;\n'+(cliff?'attribute float cliffRim,sandBlend;varying float vNatureRim,vNatureSand;\n':'')+shader.vertexShader;

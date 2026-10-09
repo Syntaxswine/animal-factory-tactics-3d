@@ -38,14 +38,15 @@ export function grassTufts(box){
  });
 }
 
-// Two low-poly, overlapping masses per tile; the painted skin carries leaf detail.
-// Terrain decides walkability. Instances retain their level for fog and picking.
+// At most two low-poly masses per tile; paint carries leaf detail. Stable sampling
+// makes density changes add growth without moving plants that are already there.
+// Passability never changes the appearance or amount of growth.
 export function coverUndergrowth(box){
- if(box.kind!=='floor'||!isWoodland(box.material))return [];
+ if(box.kind!=='floor'||!box.foliage&&!isWoodland(box.material))return [];
  const {x,y,z=0}=box.source,seed=(Math.imul(x+17,73856093)^Math.imul(y+61,19349663)^Math.imul(z+3,83492791))>>>0;
  const random=i=>((Math.imul(seed^(i*374761393),1597334677)>>>0)%10000)/10000,top=box.center[1]+box.size[1]/2;
- const dense=box.material==='woodland-dense',shapes=['cover-crown','cover-spreading','cover-spire'],colors=['foliage','leaf-light','leaf-olive'];
- return Array.from({length:2},(_,i)=>{const shape=shapes[Math.floor(random(i+19)*shapes.length)],spire=shape==='cover-spire',h=(dense?.95:.50)+random(i+3)*(dense?.9:.65),width=(dense?.90:.65)+random(i+5)*.35;
+ const dense=!box.foliage&&box.material==='woodland-dense',dry=box.habitat==='dry',density=box.foliage?.[0]??100,shapes=dry?['cover-spreading','cover-crown','cover-spreading']:['cover-crown','cover-spreading','cover-spire'],colors=dry?['leaf-dry','leaf-sage','leaf-olive']:['foliage','leaf-light','leaf-olive'];
+ return Array.from({length:2},(_,i)=>i).filter(i=>random(i+41)*100<density).map(i=>{const shape=shapes[Math.floor(random(i+19)*shapes.length)],spire=shape==='cover-spire',h=((dense?.95:.50)+random(i+3)*(dense?.9:.65))*(dry?.65:1),width=(dense?.90:.65)+random(i+5)*.35;
   return {id:box.id+':cover:'+i,source:box.source,kind:'foliage-cover',material:colors[Math.floor(random(i+23)*colors.length)],shape,center:[x+(random(i+1)-.5)*.6,top+h/2-.04,y+(random(i+7)-.5)*.6],size:[width*(spire?.8:1),h,width*(.75+random(i+11)*.3)],rotation:[0,random(i+13)*Math.PI*2,0]};
  });
 }

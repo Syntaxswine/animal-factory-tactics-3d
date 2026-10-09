@@ -12,37 +12,48 @@ const origin=process.env.REVIEW_URL||'http://127.0.0.1:4363',out=path.resolve(im
 const map=blankMap('Foliage · raised terrain review');map.terrain.forEach(row=>row.fill('ground-grass'));
 const doc=new EditingDocument().open(JSON.stringify(map));
 for(const [height,size]of [[1,17],[2,9]]){const r=doc.apply({tool:'land',start:{x:12,y:12,z:0},options:{landHeight:height,landSize:size,landShape:'square',groundKind:'ground-grass'}});assert.ok(r.ok,r.error);}
+for(let y=0;y<4;y++)for(let x=12;x<24;x++)doc.map.terrain[y][x]=x<18?'ground-dirt':'ground-gravel';
 const block=extractBlock(doc.map),report={checks:[],errors:[]},review=await launchBattleReview(chromium,'editor-foliage');
 try{
  const page=await review.browser.newPage({viewport:{width:1500,height:1000}});page.on('pageerror',e=>report.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
  await page.goto(origin+'/tactics/editor-3d.html?editing=1');await page.waitForFunction(()=>window.editor3d&&!editor3d.loading,null,{timeout:60000});
  await page.evaluate(async data=>{await editor3d.open(JSON.stringify(data));Object.assign(editor3d.view,{x:11.5,y:11.5,span:28});await editor3d.changed();},block);
  await page.waitForFunction(()=>editor3d.scene.foliageReady);
- await page.click('[data-group="foliage"]');await page.selectOption('#stroke-mode','rectangle');assert.equal(await page.locator('#foliage-kind').inputValue(),'dense');
+ await page.click('[data-group="foliage"]');await page.selectOption('#foliage-shape','rectangle');assert.equal(await page.locator('#foliage-passability').inputValue(),'blocked');assert.equal(await page.locator('#foliage-size').inputValue(),'17');
  assert.equal(await page.locator('#foliage-options').isVisible(),true);
  const project=async p=>page.evaluate(async p=>{const {Vector3}=await import('./vendor/three.module.js'),r=document.getElementById('scene').getBoundingClientRect(),q=new Vector3(p.x,p.z*2.12,p.y).project(editor3d.scene.camera);return {x:r.left+(q.x+1)*r.width/2,y:r.top+(1-q.y)*r.height/2};},p);
- for(const [z,a,b,kind,terrain]of [[1,[6,6],[10,7],'dense','woodland-dense'],[2,[10,10],[14,12],'undergrowth','woodland']]){
-  await page.click(`[data-level="${z}"]`);await page.selectOption('#foliage-kind',kind);
+ for(const [z,a,b,density,movement]of [[1,[6,6],[10,7],25,'blocked'],[2,[10,10],[14,12],90,'passable']]){
+  await page.click(`[data-level="${z}"]`);await page.selectOption('#foliage-passability',movement);await page.locator('#foliage-density').fill(String(density));
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   const start=await project({x:a[0],y:a[1],z}),end=await project({x:b[0],y:b[1],z});
   await page.mouse.move(start.x,start.y);await page.mouse.down();await page.mouse.move(end.x,end.y,{steps:5});await page.mouse.up();
-  await page.waitForFunction(({x,y,z,terrain})=>!editor3d.loading&&editor3d.document.map.upper[z-1][`${x},${y}`]===terrain,{x:b[0],y:b[1],z,terrain});
+  await page.waitForFunction(({x,y,z,density,movement})=>!editor3d.loading&&editor3d.document.map.foliage?.[`${x},${y},${z}`]?.[0]===density&&editor3d.document.map.foliage[`${x},${y},${z}`][1]===(movement==='blocked'),{x:b[0],y:b[1],z,density,movement});
   const painted=await page.evaluate(()=>editor3d.export());await page.click('#undo');await page.waitForFunction(()=>!editor3d.loading);assert.notEqual(await page.evaluate(()=>editor3d.export()),painted);await page.click('#redo');await page.waitForFunction(()=>!editor3d.loading);assert.equal(await page.evaluate(()=>editor3d.export()),painted);
-  report.checks.push(`Level ${z+1}: real rectangle drag paints ${kind}; undo and redo restore it.`);
+  report.checks.push(`Level ${z+1}: real rectangle drag paints ${density}% ${movement} foliage; undo and redo restore it.`);
  }
+ await page.click('[data-level="0"]');await page.selectOption('#foliage-shape','round');await page.locator('#foliage-size').fill('5');await page.locator('#foliage-density').fill('80');
+ const dragPoints=[{x:3,y:2,z:0},{x:21,y:2,z:0},{x:22,y:5,z:0}];
+ const beforeStroke=await page.evaluate(()=>editor3d.export());
+ const screen=await Promise.all(dragPoints.map(project));await page.mouse.move(screen[0].x,screen[0].y);await page.mouse.down();await page.mouse.move(screen[1].x,screen[1].y,{steps:4});await page.mouse.move(screen[2].x,screen[2].y,{steps:3});await page.mouse.up();
+ await page.waitForFunction(()=>!editor3d.loading&&editor3d.document.map.foliage?.['15,2,0']?.[0]===80);
+ assert.equal(await page.evaluate(()=>editor3d.document.map.terrain[2][15]),'ground-dirt');assert.equal(await page.locator('#foliage-density-value').textContent(),'80%');
+ const freehand=await page.evaluate(()=>editor3d.export());await page.click('#undo');await page.waitForFunction(()=>!editor3d.loading);assert.equal(await page.evaluate(()=>editor3d.export()),beforeStroke);await page.click('#redo');await page.waitForFunction(()=>!editor3d.loading);assert.equal(await page.evaluate(()=>editor3d.export()),freehand);
+ const cancelPoint=await project({x:2,y:21,z:0});await page.mouse.move(cancelPoint.x,cancelPoint.y);await page.mouse.down();await page.keyboard.press('Escape');await page.mouse.up();assert.equal(await page.evaluate(()=>editor3d.export()),freehand);
+ report.checks.push('Freehand drag crosses grass, dirt and gravel without changing ground; one undo, redo and Escape cancellation verified.');
  await page.mouse.move(1400,180);await page.screenshot({path:path.join(out,'upper-level-foliage.png')});
  const exported=await page.evaluate(()=>editor3d.export());await page.evaluate(async text=>editor3d.open(text),exported);assert.equal(await page.evaluate(()=>editor3d.export()),exported);report.checks.push('Editor block export/import retains both upper-level foliage types.');
- assert.deepEqual(await page.evaluate(()=>editor3d.scene.diagnostics),[]);
+ assert.deepEqual(await page.evaluate(()=>editor3d.scene.diagnostics),[]);assert.ok(!(await page.locator('#foliage-brush').textContent()).includes('\uFFFD'));
+ if(process.env.REVIEW_UI_ONLY){assert.deepEqual(report.errors,[]);console.log(JSON.stringify(report,null,2));}else{
  // Review the actual tutorial rim as well as the small UI fixture, without writing it.
  await page.evaluate(async()=>{const r=await fetch('./sector-library/tutorial-step-1/rough-plateau.json');if(!r.ok)throw Error('Tutorial fixture: '+r.status);await editor3d.open(await r.text());const cliffs=editor3d.document.map.props.filter(p=>p.kind==='cliff-ledge'&&p.z===1&&p.x>60&&p.x<140);const p=cliffs[Math.floor(cliffs.length/2)];if(!p)throw Error('Tutorial cliff not found');Object.assign(editor3d.view,{x:p.x,y:p.y,span:25});await editor3d.changed();});
  await page.click('[data-level="2"]');await page.mouse.move(1400,180);await page.waitForFunction(()=>editor3d.scene.foliageReady);
  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await page.screenshot({path:path.join(out,'tutorial-cliff-grass.png')});
  assert.deepEqual(await page.evaluate(()=>editor3d.scene.diagnostics),[]);report.checks.push('Authored tutorial renders both closed tiers with the shared grass atlas and no missing scene assets.');
- const gameMap=structuredClone(doc.map);gameMap.terrain[3][8]='woodland-dense';gameMap.upper[0]['6,6']='woodland-dense';gameMap.upper[1]['12,12']='woodland';
+ const gameMap=structuredClone(doc.map);gameMap.foliage={'8,3,0':[25,true],'6,6,1':[100,true],'12,12,2':[80,false]};
  const fight=await review.browser.newPage({viewport:{width:1500,height:1000}});fight.on('pageerror',e=>report.errors.push(e.message));fight.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
  await fight.route('**/default-factory.json',r=>r.fulfill({json:gameMap}));await fight.goto(origin+'/tactics/battle-3d.html');
  await fight.waitForFunction(()=>window.battle3d?.renderer.models.size>=4&&!battle3d.renderer.busy,null,{timeout:60000});await fight.click('#pause');
- const gameplay=await fight.evaluate(async()=>{const {pathTo}=await import('./core/engine.js'),r=battle3d.renderer,s=battle3d.state;return {terrain:s.map[3][8],blocked:pathTo(s,s.units[0],8,3,0)===null,sharedGrass:r.cliffs.parts.every(p=>p.original[1].map===r.material('grass').map),diagnostics:r.diagnostics};});
- assert.equal(gameplay.terrain,'woodland-dense');assert.equal(gameplay.blocked,true);assert.equal(gameplay.sharedGrass,true);assert.deepEqual(gameplay.diagnostics,[]);report.checks.push('Quick Fight loads dense and upper foliage, blocks movement into dense fill, and renders the same grass on cliffs.');
- assert.deepEqual(report.errors,[]);console.log(JSON.stringify(report,null,2));
+ const gameplay=await fight.evaluate(async()=>{const {pathTo}=await import('./core/engine.js'),r=battle3d.renderer,s=battle3d.state;return {foliage:s.foliage,plants:[...r.chunks.values()].flatMap(m=>m.userData.boxes||[]).filter(b=>b.kind==='foliage-cover').length,terrain:s.map[3][8],blocked:pathTo(s,s.units[0],8,3,0)===null,sharedGrass:r.cliffs.parts.every(p=>p.original[1].map===r.material('grass').map),diagnostics:r.diagnostics};});
+ assert.deepEqual(gameplay.foliage,gameMap.foliage);assert.ok(gameplay.plants>0);assert.equal(gameplay.terrain,'ground-grass');assert.equal(gameplay.blocked,true);assert.equal(gameplay.sharedGrass,true);assert.deepEqual(gameplay.diagnostics,[]);report.checks.push('Quick Fight loads overlays, blocks sparse impassable foliage, and renders the same grass on cliffs.');
+ assert.deepEqual(report.errors,[]);console.log(JSON.stringify(report,null,2));}
 }finally{fs.writeFileSync(path.join(out,'review.json'),JSON.stringify(report,null,2));await review.closeReview();}
