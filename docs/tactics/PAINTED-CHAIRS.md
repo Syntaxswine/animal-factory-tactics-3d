@@ -4,16 +4,18 @@ Four low-poly chair models use one painterly atlas for eight finishes. The usabl
 
 | Chair | Finishes | Triangles |
 | --- | --- | ---: |
-| Wingback | Russet leather / teal upholstery | 448 |
+| Wingback | Russet leather / teal upholstery | 480 |
 | Simple wooden chair | Honey / walnut | 180 |
 | Metal chair | Sage enamel / dark iron | 248 |
 | Desk chair | Teal / russet upholstery | 284 |
 
-Seams, buttons, cushion channels, wood grain, stamped ribs, fasteners and wear are painted. Geometry supplies the major silhouette, seat, back, supports, wingback arms and five simple desk-chair casters. The wingback has a continuous upholstered back extending into the seat and faceted cabriole front legs with shaped rear legs. All models fit within one native 1×1 tile; the characters are not rescaled.
+Seams, buttons, cushion channels, wood grain, stamped ribs, fasteners and wear are painted. Geometry supplies the major silhouette, seat, back, supports, wingback arms and five simple desk-chair casters. The wingback has a continuous upholstered back extending into the seat, solid upholstered sides joining the base to the wings, cylindrical padded armrests, and faceted cabriole front legs with shaped rear legs. Every base fits within one native 1×1 tile; the wingback's padded armrests overhang by 0.04 on each side (1.08 total visible width). `paddingOverhang` records that visual extent separately from the base footprint. The characters are not rescaled.
 
 The wingback remains about 1.36 high. The wooden, metal and desk chairs end at approximately 0.99, level with the original horse's rolled cuffs (the cuff sculpt runs around Y 0.99–1.035). Only their backs/supports were lowered; the shared seat remains at 0.48.
 
 The wingback's outer seat padding is 0.96 wide × 0.76 deep × 0.12 thick. It extends under both arm supports and farther beneath the back; the back cushion's lower bevels tuck into it to close the corner gaps. This extra padding surrounds the common 0.84 × 0.62 sitting area. Its top is still Y 0.48, with the same pelvis, foot and approach targets and no additional triangles. Other chairs keep their original seat dimensions.
+
+Following the user's classic-chair reference, each side is a single low-poly upholstered shell. The separate eight-sided armrest cylinder is 0.10 in diameter. Its inside edge is flush with the inner flat side at X ±0.44, and its rounded bulk projects outward to X ±0.54. Its top remains Y 0.72. Flat sides and rolls both leave 0.88 across; `armInside` remains 0.44. Seat, pelvis, back, foot and approach targets are unchanged.
 
 Open `tactics/painted-chairs-study.html`. Select the collection or an individual chair, either finish, grey forms, five views and 58 px/tile gameplay scale. Horse, pig director and pig foreman are standing references. The optional gold fitting mannequin is identical across all four models; it is a furniture-space check, not an animated or species-fitted character.
 
@@ -30,7 +32,7 @@ Open `tactics/painted-chairs-study.html`. Select the collection or an individual
 | Left / right sole | `[−0.23, 0, 0.43]` / `[0.23, 0, 0.43]` |
 | Forward approach | `[0, 0, 0.80]` |
 | Back reference | `[0, 0.91, -0.36]` |
-| Minimum arm inside gap | 0.88 |
+| Minimum arm inside gap | 0.88 (rolls flush with the flat inside panels) |
 | Wingback arm top | Y 0.72 |
 
 Geometry checks reserve the same seated torso volume, forward rise volume and both heel channels across the collection. There is no front stretcher. The desk base has its forward spoke between the feet, keeping both heel channels open. Casters and swivel stay fixed in this study.
@@ -85,6 +87,8 @@ The browser checker accepts `PLAYWRIGHT_PATH` and `CHAIR_REVIEW_URL`, reuses the
 The height/closed-back revision `2125cc1` passed **14 focused/build tests and 100 browser configurations**. Checks covered both finishes, all angles/scales, each native reference, mobile overflow, repeated model replacement, delayed-reference cancellation and idempotent teardown. Geometry checks also verified real continuous upholstery over the formerly open back and complete lower-chair bounds at cuff height. That revision's warmed renderer held at 46 geometries / 2 textures with no character selected. No console errors were observed. The build packages the atlas and viewer and validates the complete module import graph.
 
 The subsequent cushion-gap correction passed all **six chair tests** and **nine fresh rendered views**, including front, side, rear, top, three-quarter, grey, alternate finish, gameplay scale and the collection beside the horse. No browser errors occurred. Independent hostile review scored it **9/10**, with no blockers; 2,937 front rays across the actual seat/back joint found no holes. Evidence is saved under `hybrid-review/painted-chairs/cushion-*`.
+
+The solid-side and cylindrical-armrest refinement passed the same **six chair tests** and **ten rendered views**, adding the common seated fit guide to those angles and finishes. No browser errors occurred. Independent hostile review scored the final outward-roll version **9/10**, confirming the rolls' inner edges are flush with the flat side faces, 0.88 clearance remains, and all sitting anchors are unchanged. The continuous sides passed 5,642 side-directed ray checks with no holes. Evidence is saved under `hybrid-review/painted-chairs/side-shell-*`.
 
 Independent hostile subagent review of the refinement: **9/10**, no blocking findings. The reviewer inspected nine fresh views, including the closed wingback from front/rear/side, grey forms, alternate finishes, gameplay scale and a front comparison against the unscaled horse. Complete lower-chair heights measure 0.986–0.988; all shared anchors are unchanged. Six chair tests passed independently with no browser errors. The initial asset review also covered 28 live configurations and resource ownership. Current review and selected evidence are recorded in `hybrid-review/painted-chairs/`. These results certify assets and the shared furniture contract, not a completed sit/stand animation or playable chair integration.
 
