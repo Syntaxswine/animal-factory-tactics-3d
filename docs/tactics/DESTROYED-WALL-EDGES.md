@@ -66,6 +66,21 @@ node tools/check-wall-breaches.mjs
 
 The browser script takes `PLAYWRIGHT_PATH` for an installed Playwright package and optional `WALL_BREACH_REVIEW_URL` for the server origin (default `http://127.0.0.1:4476`). Screenshots and its report are local under `artifacts/wall-breaches/`. Browser helpers close in `finally`; their close receipts and exact process identities were verified.
 
+## Independent review, October 8: `ae6569f`
+
+The wall feature is approved on the integration branch. No blocking wall defect was found in this review. This is not approval to replace canonical with the whole `work/editor-3d` branch: its outstanding integration conflicts are recorded in [the integration review](INTEGRATION-REVIEW-2026-10-06.md#october-8-wall-damage-review-ae6569f).
+
+- **160 relevant tests passed** in two disjoint runs: 100 covering structure HP, wall breaches, grenade damage/presentation, encounter and campaign persistence, renderer visibility and both deployment graphs; 60 covering projectiles, explosives, fuel barrels, combat presentation, environment models and X-ray. This was not a full repository test run.
+- Asset validation, generated-core verification and the packaged 3D build passed.
+- Independently inspected brick, concrete beside a window, and corrugated metal with separated gaps, at gameplay scale. The openings are readable, and their broken edges stay attached to the surviving wall sections.
+- In the packaged demolition range, used the ordinary right-click planner to fire an RPG at visible ground beside the brick wall. The shot spent one round and 7 AP, destroyed one segment and left neighboring sections at 11/200 and 4/200 HP. The selected character then walked through the opening to the far side.
+- Quicksaved, restarted to verify that the wall was intact again, then quickloaded. The breach and the character's far-side position both returned. No browser errors or warnings were recorded.
+- The previous blocked campaign-arrival reproduction also now waits coherently and remains saveable. Both Pages dependency checks pass; those earlier release defects are resolved on this branch.
+
+These are destruction visuals, not progressive cracking: a surviving 1-HP wall keeps its intact silhouette and collision. Ordinary floor-collapse injury damage remains deferred as already documented. Neither point is a blocker for this pass.
+
+Review evidence is local under `artifacts/oct08-wall-damage/`, including the test logs and `breach-restored.png`. The independent preview is disposable and is stopped after review; this does not change the builder preview's retention deadline below.
+
 ## Delivery and retained preview
 
 Integrated delivery branch: `work/editor-3d`. Source branch: `work/destroyed-wall-edges`. Canonical integration/publication remains a separate step; Pages deploys only `main`.

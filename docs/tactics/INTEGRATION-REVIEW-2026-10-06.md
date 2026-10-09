@@ -94,3 +94,18 @@ The blocked-entry reproduction now defers arrival while world time continues. Tr
 The base Pages list now includes the shared `grenade-model.js` dependency. The grenade preparation validator normalizes CRLF before comparing both generated modules; the full twelve-animal generation check passed with actual CRLF copies as well as the original LF files. Generated motion data was unchanged.
 
 157 focused tests pass, including 22 campaign cases, both packaging cases and the deployed-module checks. Generated-core verification, the packaged campaign playthrough and the isolated live blocked-arrival save/load reproduction pass. Temporary browser/server helpers were closed. These are builder fixes and verification; reconciliation with canonical's HUD and the integration requirements above remain the next release step, without an implied independent approval.
+
+## October 8 wall-damage review: `ae6569f`
+
+**Wall HP and broken-edge gameplay are approved on the branch. Canonical publication remains held for integration.** See [the independent wall review](DESTROYED-WALL-EDGES.md) for the bounded visual and gameplay checks.
+
+Independent verification now closes the two concrete defects from the earlier gameplay review:
+
+- The original blocked-entry reproduction no longer throws or corrupts the campaign. The reinforcement remains on its 101-to-71 journey at progress 126, its member still has the matching travel location, and `captureCampaign` succeeds.
+- Both the base and 3D Pages dependency tests pass, including `grenade-model.js` and the new structure/wall modules. Keep those guards during reconciliation.
+
+All 160 relevant tests in this review passed, together with asset validation, core verification and the packaged 3D build. A live RPG breach, movement through it, and a quicksave/restart/quickload round trip passed without browser errors. This does not substitute for the full checks on the eventual combined canonical build.
+
+`git merge-tree --write-tree --name-only 84a87d9 ae6569f` still reports **21 conflicted paths**. The previous 20 areas remain, with `.gitignore` added. No merge is in progress and no canonical code was changed by this review. The accepted HUD, inventory behavior, strategic-site updates and both idle studies must survive integration alongside the campaign, context menu, grenade effects and structure HP changes.
+
+Use the integration requirements above. In particular, combine the new `core-structure-adapter.mjs` with canonical's adapters and regenerate the generated core/manifest; preserve the two-AP ready swaps and match their context-menu labels; put campaign actions in an interactive HUD mount; and retain every new structure, breach, grenade and idle module in the relevant deployment lists. After reconciliation, run the full checks and smoke-test packaged Quick Fight, the campaign and demolition range before publishing main.
