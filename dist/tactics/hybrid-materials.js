@@ -7,6 +7,7 @@ export function surfaceUV(position,normal){
  return [Math.abs(normal[0])>.5?position[2]:position[0],position[1]];
 }
 export function surfacePixels(kind,size=128){
+ if(kind?.startsWith('breach-'))kind=kind.slice(7);
  const data=new Uint8Array(size*size*4);
  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
   const u=x/size,v=y/size,noise=((x*73+y*97+(x*y)%31)%17)-8;
@@ -47,6 +48,7 @@ export function surfacePixels(kind,size=128){
  return {data,width:size,height:size};
 }
 export function materialKind(box){
+ if(box.material?.startsWith('breach-'))return box.material;
  if(box.material==='ground-wood-planks')return 'wood-planks';
  if(diagonalRoad(box.material))return box.material;
  if(box.material==='bark'||box.material==='grass-blade')return box.material;

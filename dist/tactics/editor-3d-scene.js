@@ -10,7 +10,7 @@ import {FOLIAGE_ATLAS,FOLIAGE_MATERIALS,paintFoliageMaterial} from './foliage-ma
 import * as T from './vendor/three.module.js';
 import {buildWorld,DIMENSIONS as D} from './hybrid-world.js';
 import {environmentVisuals} from './environment-visuals.js';
-import {environmentGeometries} from './environment-geometry.js';
+import {environmentGeometries,environmentGeometry} from './environment-geometry.js';
 import {surfacePixels,materialKind} from './hybrid-materials.js';
 import {BattleEnvironment,PAINTED_PROP_FORMS,cargoPlacements,cargoFinish} from './battle-environment.js';
 import {toWorld} from './hybrid-world.js';
@@ -37,7 +37,7 @@ export class InspectionScene {
  material(kind){
   if(!this.materials.has(kind)){
    const p=surfacePixels(kind),map=new T.DataTexture(p.data,p.width,p.height);map.colorSpace=T.SRGBColorSpace;map.wrapS=map.wrapT=T.RepeatWrapping;map.needsUpdate=true;
-   const material=new T.MeshStandardMaterial({map,roughness:1});
+   const material=new T.MeshStandardMaterial({map,roughness:1,vertexColors:kind.startsWith('breach-')});
    material.onBeforeCompile=shader=>{shader.vertexShader=shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n#ifdef USE_MAP\n vec3 surfaceWorld=(instanceMatrix*vec4(position,1.0)).xyz; vMapUv=abs(normal.y)>.5?surfaceWorld.xz:abs(normal.x)>.5?surfaceWorld.zy:surfaceWorld.xy;\n#endif');};
    if(FOLIAGE_MATERIALS.has(kind)){
     if(!this.foliageTexture){this.foliageTexture=this.loader.load(FOLIAGE_ATLAS,texture=>{if(this.disposed){texture.dispose();return;}this.foliageReady=true;this.changed();},undefined,()=>{this.diagnostics.push('Failed asset: '+FOLIAGE_ATLAS);this.changed();});this.foliageTexture.colorSpace=T.SRGBColorSpace;this.foliageTexture.anisotropy=Math.min(8,this.renderer.capabilities.getMaxAnisotropy());}
@@ -89,7 +89,7 @@ export class InspectionScene {
   for(const b of environmentVisuals(world,map)){
    const z=b.source.z??Number(b.source.edge?.split(':')[3]||0);if(z>level)continue;
    q.setFromEuler(euler.set(...(b.rotation||[0,0,0])));yaw.setFromAxisAngle(new T.Vector3(0,1,0),b.yaw||0);q.premultiply(yaw);matrix.compose(position.fromArray(b.center),q,scale.fromArray(b.size));
-   add(this.geometry[b.shape||'box'],this.material(materialKind(b)),matrix,z,b.center[0],b.center[2]);
+   add(environmentGeometry(this.geometry,b.shape||'box'),this.material(materialKind(b)),matrix,z,b.center[0],b.center[2]);
   }
   if(this.cargo.library)for(const p of cargoPlacements(source)){
    const z=p.z||0;if(z>level)continue;const {skin,label,id:key}=cargoFinish(p);

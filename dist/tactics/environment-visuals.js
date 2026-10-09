@@ -8,6 +8,7 @@ import {PROPS,propCells} from './environment.js';
 import {environmentModel} from './environment-models.js';
 import {DIMENSIONS as D} from './hybrid-world.js';
 import {grassTufts,coverUndergrowth} from './foliage-models.js';
+import {damagedWallVisuals} from './wall-breaches.js';
 
 // The visual catalog deliberately does not replace simulation collision volumes.
 export function environmentVisuals(world,map){map=canopyPresentation(map);
@@ -55,5 +56,5 @@ export function environmentVisuals(world,map){map=canopyPresentation(map);
    const east=b.size[0]<b.size[2];add(b.id+':handle',b.source,'wall','dark-metal',[b.center[0]+(east?b.size[0]/2+.025:.3),b.center[1]+.03,b.center[2]+(east?.3:b.size[2]/2+.025)],east?[.05,.045,.18]:[.18,.045,.05]);
   }
  }
- return result;
+ return damagedWallVisuals(result,map);
 }
