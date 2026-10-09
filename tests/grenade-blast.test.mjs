@@ -21,6 +21,13 @@ test('open ground reaches the five-tile perimeter; cover is the intact pre-damag
  assert.deepEqual(state.edges,{});assert.deepEqual(shot.event.grenade.scenery.edges,before.edges);
  const open=grenadeBlastFixture();assert.ok(grenadeBlastField(open.state,open.shot).rays.every(r=>r===5));
 });
+test('a flight study can supply its resolved rocket impact without a hand-grenade event',()=>{
+ const {state,shot}=grenadeBlastFixture();delete shot.event.grenade;
+ const impact={kind:'rocket',x:9,y:8,h:1.2,z:0,radius:4},before=structuredClone(shot);
+ const field=grenadeBlastField(state,shot,impact);
+ assert.deepEqual(field.origin,impact);assert.equal(field.radius,4);
+ assert.ok(field.rays.every(r=>r===4));assert.deepEqual(shot,before);
+});
 test('roof, cliff and native-height tower flashes stay at their physical surface and logical visibility layer',()=>{
  for(const [kind,level] of [['open',0],['roof',1],['cliff',0],['tower',0]]){
   const {state,shot,floor}=grenadeBlastFixture(kind),field=grenadeBlastField(state,shot);
