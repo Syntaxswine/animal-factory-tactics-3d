@@ -1,10 +1,19 @@
 # Local sector placeholder library
 
-The library lives in `dist/tactics/sector-library/`. Open `tactics/sector-library.html` or follow **Sector map library** from the overmap. This is an authoring inventory, not automatic campaign assignment.
+The library lives in `dist/tactics/sector-library/`. In the 3D editor, use **Sector presets** on the left to browse layouts and saved maps without leaving the editor. The separate `tactics/sector-library.html` catalog and the overmap's **Sector map library** link remain available. This is an authoring inventory, not automatic campaign assignment.
+
+## Make modular variants
+
+1. Open **Sector presets** and filter by role, terrain or a name such as `tutorial` or `factory workshop`. All 80 current configurations are included. The Tutorial filter also includes the fifth sector, the starting town.
+2. Choose the base layout or an existing saved map, then **Open in editor**. Existing maps open in their saved orientation; rotated/mirrored placeholders remain available for inspection. Start at 0° when authoring into the configuration's folder.
+3. Edit the map normally. The main **Save** button now defaults to **Save a new sector variant** for these maps. It suggests an unused name and displays `role/configuration/name.json`. The configuration determines the destination; each save creates a new file. Existing variants cannot be overwritten.
+4. With `npm run serve:workspace`, saves go to the organized authoring collection and refresh the runtime library. Alternatively, use **Choose map folder** or **Create map folder** in the preset browser to connect a portable library. Open **Sector presets** again to see new variants and continue the next modular piece.
+
+On a static site without a writable folder, Save offers **Download variant JSON** and shows the intended folder. The downloaded map retains its configuration identity and can be reopened with Import JSON. It becomes a registered library variant when saved through a connected map folder or the workspace server; a download alone does not update the catalog. Ordinary maps without a sector configuration keep the existing browser Save behavior. Cancelling the unsaved-changes prompt keeps the current map, and opening the preset/save dialogs does not operate the camera or editing shortcuts underneath.
 
 ## Inventory and scope
 
-78 folders cover the current generator's canonical boundary geometries with separate countryside, village, town, city and fortress identities, including town workshop and city factory/workshop combinations. Five folders reserve the tutorial steps. Difficulty, ownership, biome/ground covering, encounters, decoration, and internal settlement layout are variation axes within folders, not additional boundary shapes. Villages are eligible only in easy and medium under the current schedule.
+78 folders cover the current generator's canonical boundary geometries with separate countryside, village, town, city and fortress identities, including town workshop and city factory/workshop combinations. This includes five tutorial folders; two additional special campaign configurations bring the current collection to 80. Difficulty, ownership, biome/ground covering, encounters, decoration, and internal settlement layout are variation axes within folders, not additional boundary shapes. Villages are eligible only in easy and medium under the current schedule.
 
 Enumeration is exhaustive over 80 oriented boundary patterns before role constraints and symmetry reduction: 16 road port subsets; for each of river and cliff, 24 pairs of distinct sides at either third, plus 8 opposite-side crossing patterns. Countryside dead-end roads are excluded; settlements and fortresses require roads. Fortresses cannot occupy barriers. River settlements always provide a crossing. The generator permits a single river or cliff in a sector, with no branches, river/cliff intersections, or same-side local endpoints. A whole river may return to the same world boundary through multiple sectors. New generator rules require expanding this inventory.
 
@@ -18,7 +27,7 @@ Each folder contains:
 - `preview.svg`: the placeholder paths and attachment labels.
 - `README.md`: authoring instructions.
 
-Save authored exports back into that folder, e.g. `orchard-01.json`. Add the filename to the recipe's `variants` array, then change its `status` to `in-progress` or `authored`. The catalog reads progress and variants from these files. Browser exports download normally; they cannot silently write into the repository. Full authored variants open in their saved orientation. Only the primitive placeholders are transformed automatically, avoiding unsafe rotation of props, lights, scripts or animations.
+The editor's variant save creates the map JSON and preview, registers the filename in the recipe's `variants` array and updates its progress label. The catalog reads progress and variants from these files. Manual exports can still be copied into the folder and registered in `variants`; browser downloads cannot silently write into the repository. Full authored variants open in their saved orientation. Only the primitive placeholders are transformed automatically, avoiding unsafe rotation of props, lights, scripts or animations.
 
 Run `node tools/generate-sector-library.mjs` to recreate generated previews/index and create missing folders. Existing recipes, README files and authored variations are never overwritten. Run with `--check` to verify generated files. The index doesn't embed authoring status, so rebuilding never resets progress.
 
@@ -45,6 +54,8 @@ Canonical keys preserve feature type, both offsets and road ports. The eight tra
 ## Checks
 
 - `node --test tests/sector-library.test.mjs`
+- `node --test tests/sector-presets.test.mjs tests/sector-authoring.test.mjs`
+- `node tools/check-editor-sector-presets.mjs` (Playwright runtime; isolated temporary map collection and server, closed after the check)
 - `node tools/generate-sector-library.mjs --check`
 - `node tools/check-sector-library.mjs` (Playwright runtime, local server on 4323)
 - `node tools/sync-tactics-core.mjs --check`

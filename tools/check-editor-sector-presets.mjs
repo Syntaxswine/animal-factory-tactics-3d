@@ -1,0 +1,51 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {createWorkspaceServer} from './serve-workspace.mjs';
+import {launchBattleReview} from './battle-review-browser.mjs';
+const {chromium}=createRequire(import.meta.url)(process.env.PLAYWRIGHT_PATH||'playwright');
+const out=path.resolve(import.meta.dirname,'../artifacts/sector-presets');fs.mkdirSync(out,{recursive:true});
+const temp=fs.mkdtempSync(path.join(out,'fixture-')),source=path.join(temp,'sectors'),runtime=path.join(temp,'runtime');
+const id='city-factory-workshop--river-e1-w2-road-ns',fixtures=[[id,'city'],['tutorial-step-1','tutorial'],['tutorial-step-5','town']];
+for(const [key,role]of fixtures){fs.mkdirSync(path.join(source,role),{recursive:true});fs.cpSync(new URL('../dist/tactics/sector-library/'+key,import.meta.url),path.join(source,role,key),{recursive:true});}
+const original=fs.readFileSync(path.join(source,'city',id,'placeholder.json'),'utf8'),report={checks:[],errors:[]};
+const server=createWorkspaceServer({source,runtime});let closeReview;
+try{
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin='http://127.0.0.1:'+server.address().port;
+ fs.writeFileSync(path.join(out,'server.json'),JSON.stringify({pid:process.pid,port:server.address().port,start:new Date().toISOString(),purpose:'Temporary sector authoring UI regression',end:'Finally closes server and removes verified fixture directory'}));
+ const review=await launchBattleReview(chromium,'editor-sector-presets');closeReview=review.closeReview;
+ const page=await review.browser.newPage({viewport:{width:1440,height:1000}});page.on('pageerror',e=>report.errors.push(e.message));
+ const ready=()=>page.waitForFunction(()=>window.editor3d?.document&&!editor3d.loading&&!document.querySelector('#sector-presets-dialog').open,null,{timeout:120000});
+ const browse=async()=>{await page.click('#sector-presets');await page.waitForFunction(()=>document.querySelectorAll('.sector-preset-card').length>0&&document.querySelector('#sector-presets-dialog').getAttribute('aria-busy')==='false');};
+ const card=key=>page.locator('[data-preset="'+key+'"]');
+ const save=async()=>{await page.click('#quick-save-map');await page.waitForFunction(()=>document.querySelector('#sector-save-dialog').open&&!document.querySelector('#sector-save-submit').disabled);};
+ await page.goto(origin+'/tactics/editor-3d.html?editing=1');await ready();await browse();assert.equal(await page.locator('.sector-preset-card').count(),3);
+ const view=await page.evaluate(()=>({view:editor3d.view,revision:editor3d.document.revision,floor:document.querySelector('#floor').value}));
+ await page.focus('#sector-presets-close');for(const key of ['q','r','2','Control+z'])await page.keyboard.press(key);
+ assert.deepEqual(await page.evaluate(()=>({view:editor3d.view,revision:editor3d.document.revision,floor:document.querySelector('#floor').value})),view);await page.keyboard.press('Escape');assert.equal(await page.locator('#sector-presets-dialog').isVisible(),false);await browse();
+ await page.selectOption('#presets-role','city');await page.selectOption('#presets-feature','river');assert.equal(await page.locator('.sector-preset-card').count(),1);
+ await card(id).locator('select[aria-label^="Orientation"]').selectOption('5');assert.match(await card(id).locator('img').getAttribute('style'),/scaleX\(-1\)/);await card(id).locator('select[aria-label^="Orientation"]').selectOption('0');
+ await page.screenshot({path:path.join(out,'browser.png')});await card(id).locator('.open-sector-preset').click();await ready();
+ assert.equal(await page.evaluate(()=>editor3d.document.map.sectorTemplate.id),id);
+ report.checks.push('In-editor preset filtering, previews, orientation and keyboard isolation work without leaving the editor');
+ await page.evaluate(async()=>{const result=await editor3d.apply({tool:'texture',start:{x:30,y:30,z:0},options:{groundKind:'ground-concrete'}});if(!result.ok)throw Error(result.error);});assert.equal(await page.evaluate(()=>editor3d.document.changed),true);
+ await browse();await page.selectOption('#presets-role','tutorial');await page.selectOption('#presets-feature','');assert.equal(await page.locator('.sector-preset-card').count(),2);
+ page.once('dialog',dialog=>dialog.dismiss());await card('tutorial-step-5').locator('.open-sector-preset').click();assert.equal(await page.evaluate(()=>editor3d.document.map.sectorTemplate.id),id);assert.equal(await page.evaluate(()=>editor3d.document.map.terrain[30][30]),'ground-concrete');await page.click('#sector-presets-close');
+ await save();assert.match(await page.locator('#sector-variant-path').innerText(),new RegExp('city/'+id+'/variant-01.json'));await page.fill('#sector-variant-name','market-test');await page.click('#sector-save-submit');await page.waitForFunction(()=>document.querySelector('#sector-save-result').textContent.startsWith('Saved:'));
+ assert.equal(JSON.parse(fs.readFileSync(path.join(source,'city',id,'market-test.json'),'utf8')).terrain[30][30],'ground-concrete');assert.equal(await page.evaluate(()=>editor3d.document.changed),false);assert.equal(new URL(page.url()).searchParams.get('variant'),'market-test.json');
+ const metadata=JSON.parse(fs.readFileSync(path.join(source,'city',id,'placeholder.json'),'utf8')),originalMetadata=JSON.parse(original);for(const key of ['config','allowedTransforms','notes'])assert.deepEqual(metadata[key],originalMetadata[key]);assert.ok(metadata.variants.includes('placeholder.json'));
+ await page.screenshot({path:path.join(out,'saved-variant.png')});await page.click('#sector-save-close');await browse();await page.selectOption('#presets-role','city');assert.equal(await card(id).locator('select[aria-label^="Variant"]').inputValue(),'market-test.json');await card(id).locator('.open-sector-preset').click();await ready();assert.equal(await page.evaluate(()=>editor3d.document.map.terrain[30][30]),'ground-concrete');
+ await save();assert.equal(await page.inputValue('#sector-variant-name'),'market-test-01');await page.fill('#sector-variant-name','market-test');await page.click('#sector-save-submit');await page.waitForFunction(()=>document.querySelector('#sector-save-result').textContent.includes('already exists'));await page.click('#sector-save-close');
+ report.checks.push('Default Save makes a new correctly filed variant; unsaved changes, base geometry, and existing names are protected; saved variants reopen with edits');
+ await page.route('**/'+id+'/market-test.json',route=>route.fulfill({status:404,body:'missing'}));await browse();await card(id).locator('.open-sector-preset').click();await page.waitForFunction(()=>document.querySelector('#presets-status').textContent.startsWith('Cannot open preset:'));assert.equal(await page.evaluate(()=>editor3d.document.map.terrain[30][30]),'ground-concrete');await page.click('#sector-presets-close');await page.unroute('**/'+id+'/market-test.json');
+ await page.route('**/api/sector-authoring',route=>route.fulfill({status:404,body:'No local authoring API'}));await save();assert.equal(await page.locator('#sector-save-submit').innerText(),'Download variant JSON');await page.fill('#sector-variant-name','portable-copy');const downloadPromise=page.waitForEvent('download');await page.click('#sector-save-submit');const download=await downloadPromise;await download.saveAs(path.join(out,'downloaded-variant.json'));const copy=JSON.parse(fs.readFileSync(path.join(out,'downloaded-variant.json'),'utf8'));assert.equal(download.suggestedFilename(),'portable-copy.json');assert.equal(copy.sectorTemplate.id,id);assert.equal(copy.terrain[30][30],'ground-concrete');assert.equal(fs.existsSync(path.join(source,'city',id,'portable-copy.json')),false);await page.click('#sector-save-close');
+ report.checks.push('Failed loads keep the current map; static hosting downloads an editable variant with its intended folder and provenance');
+ await page.evaluate(()=>{window.showDirectoryPicker=async()=>{const root=await navigator.storage.getDirectory();return root.getDirectoryHandle('AnimalFactoryMaps',{create:true});};});
+ await browse();await page.click('#presets-create');await page.waitForFunction(()=>document.querySelector('#presets-source').textContent==='Map folder: AnimalFactoryMaps'&&document.querySelector('#sector-presets-dialog').getAttribute('aria-busy')==='false');await card(id).locator('.open-sector-preset').click();await ready();await save();await page.fill('#sector-variant-name','portable-edition');await page.click('#sector-save-submit');await page.waitForFunction(()=>document.querySelector('#sector-save-result').textContent.startsWith('Saved:'));assert.equal(new URL(page.url()).searchParams.get('library'),'folder');await page.click('#sector-save-close');await page.reload();await ready();assert.equal(await page.evaluate(()=>editor3d.document.map.terrain[30][30]),'ground-concrete');await browse();assert.ok((await card(id).locator('select[aria-label^="Variant"]').textContent()).includes('portable-edition'));
+ report.checks.push('A portable map folder can be created in the editor, saved without the authoring API, and reopened after a reload');
+ assert.deepEqual(report.errors,[]);report.passed=true;console.log(JSON.stringify(report,null,2));
+}finally{
+ if(closeReview)await closeReview();await new Promise(r=>server.close(r));report.serverClosed=!server.listening;fs.writeFileSync(path.join(out,'review.json'),JSON.stringify(report,null,2));
+ assert.equal(path.dirname(path.resolve(temp)),out);assert.ok(path.basename(temp).startsWith('fixture-'));fs.rmSync(temp,{recursive:true,force:true});
+}

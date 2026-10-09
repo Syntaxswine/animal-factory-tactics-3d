@@ -1,6 +1,6 @@
-import {readLibraryFile} from './sector-folder.js';
 import {installSectorSave} from './editor-sector-save.js';
-import {expandPlaceholder} from './sector-placeholder.js';
+import {installSectorPresets} from './editor-sector-presets.js';
+import {loadPreset,presetSearch} from './sector-presets.js';
 import {blockCanvas,extractBlock} from './core/blocks.js';
 import {blankMap} from './core/maps.js';
 import {PREVIEW_FOOTPRINTS} from './editor-3d-model.js';
@@ -21,6 +21,7 @@ function home(){view.preset='0';view.topTurn=0;$('camera').value='0';const p=doc
 async function open(text){
  const next=text instanceof EditingDocument?text:new EditingDocument().open(text),ticket=++serial;documentModel=next;workspaces[next.block?'block':'map']=next;loading=true;selection=null;scene.preview(null);$('properties').textContent='';$('selected').textContent='Choose a cell or object.';$('visual-note').textContent='';
  $('name').textContent=next.map.name;$('counts').textContent=`${next.size} × ${next.size} · ${next.block?'Block':next.map.guards.length+' placed characters'} · ${next.map.props.length} objects · ${next.map.canopies?.length||0} decorative roofs`;
+ $('quick-save-map').title=next.map.sectorTemplate?.id&&!next.block?'Save as a new sector variant':'Save this design';$('save-sector-variant').disabled=next.block||!next.map.sectorTemplate?.id;
  $('floor').value='0';scene.options.level=0;$('sector-x').max=$('sector-y').max=next.block?1:10;$('sector-x').value=$('sector-y').value='1';home();status('Loading modeled scenery and starts…');$('export').disabled=false;
  await scene.open(next);if(ticket!==serial)return;loading=false;tools.reset();status(scene.diagnostics.length?'Some visuals are unavailable. See scene diagnostics.':next.block?'Edit this reusable block, then save it to the library.':'Select a build tool to edit. Right-drag or WASD pans.');dirty=true;
 }
@@ -44,7 +45,7 @@ canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return
 canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const moved=drag.moved;drag=null;if(!moved){const p=coords(e);select(inspect(p.x,p.y));}});canvas.addEventListener('pointercancel',()=>drag=null);
 canvas.addEventListener('wheel',e=>{e.preventDefault();zoom(Math.exp(e.deltaY*.001));},{passive:false});
 document.addEventListener('keydown',e=>{
- if(document.querySelector('#editor-settings')?.open||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||e.target.isContentEditable||e.target.closest?.('input,textarea,select,[role="textbox"]'))return;
+ if(document.querySelector('dialog[open]')||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||e.target.isContentEditable||e.target.closest?.('input,textarea,select,[role="textbox"]'))return;
  if(['q','e'].includes(e.key.toLowerCase())){e.preventDefault();if(!e.repeat&&!drag&&!loading&&!tools.painting){rotateInspectionView(view,e.key.toLowerCase()==='q'?-1:1);$('camera').value=view.preset;dirty=true;}return;}
  const key=({w:'ArrowUp',a:'ArrowLeft',s:'ArrowDown',d:'ArrowRight'})[e.key.toLowerCase()]||e.key;
  if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-','Home'].includes(key))return;
@@ -62,10 +63,15 @@ new ResizeObserver(()=>dirty=true).observe(canvas);window.addEventListener('page
 async function changed(){loading=true;try{const prior=selection,identity=selection?.data?.character?.id;await scene.update(documentModel);select(identity?documentModel.characterSelection(identity):prior?documentModel.inspect(prior.x,prior.y,prior.z,{mode:prior.type==='prop'?'prop':'auto'}):null);$('name').textContent=documentModel.map.name;$('counts').textContent=`${documentModel.size} × ${documentModel.size} · ${documentModel.map.guards.length} placed characters · ${documentModel.map.props.length} objects · ${documentModel.map.canopies?.length||0} decorative roofs`;dirty=true;}finally{loading=false;}}
 async function switchWorkspace(mode){if(loading)return;const next=workspaces[mode]||new EditingDocument().open(JSON.stringify(mode==='block'?extractBlock(blockCanvas('New block')):blankMap('New design')));await open(next);}
 const tools=installEditing({canvas,scene,getDocument:()=>documentModel,getSelection:()=>selection,open,changed,status,isLoading:()=>loading,switchWorkspace,hasUnsaved:()=>Object.values(workspaces).some(d=>d.changed)});
-installSectorSave({getDocument:()=>documentModel,status});
+let currentPreset=null;
+function rememberPreset(preset){currentPreset=preset;history.replaceState(null,'',location.pathname+presetSearch(preset));}
+async function openPreset(preset){const map=await loadPreset(preset);await open(JSON.stringify(map));rememberPreset(preset);$('overview').click();status('Editing '+preset.id+'. Save creates a new variant in this configuration’s folder.');}
+const sectorSave=installSectorSave({getDocument:()=>documentModel,status,getCurrent:()=>currentPreset,isLoading:()=>loading,onSaved:(result,context)=>{if(documentModel!==context.document)return;if(documentModel.revision===context.revision)documentModel.changed=false;rememberPreset({id:result.id,variant:result.variant,orientation:0,source:context.source});}});
+const sectorPresets=installSectorPresets({openPreset,guardReplace:()=>tools.guardReplace(),getCurrent:()=>currentPreset});
+$('quick-save-map').onclick=()=>documentModel?.map.sectorTemplate?.id&&!documentModel.block?sectorSave.show():$('save-map').click();
 window.editor3d={open,select,changed,apply:command=>tools.apply(command),validate:()=>documentModel.validate(),export:()=>documentModel.export(),inspect:(x,y,z,options)=>documentModel.inspect(x,y,z,options),get document(){return documentModel;},get scene(){return scene;},get loading(){return loading;},get selection(){return selection;},view};
 async function initialMap(){
  const params=new URLSearchParams(location.search),id=params.get('sectorTemplate');if(params.get('study')==='strategic-sites'){const {strategicSiteFixture}=await import('./strategic-site-fixture.js');await open(JSON.stringify(strategicSiteFixture()));Object.assign(view,{x:33,y:33,span:40});await changed();return;}if(!id){await open(JSON.stringify(blankMap('New design')));return;}
- try{if(!/^[a-z0-9-]+$/.test(id))throw Error('Invalid template identifier.');const variant=params.get('variant')||'placeholder.json';if(!/^[a-zA-Z0-9_-]+\.json$/.test(variant))throw Error('Invalid variant filename.');status('Opening sector map…');const entry=params.get('library')==='folder'?JSON.parse(await readLibraryFile(id,variant)):await (async()=>{const r=await fetch('./sector-library/'+id+'/'+variant);if(!r.ok)throw Error('Template unavailable: HTTP '+r.status);return r.json();})(),orientation=Number(params.get('orientation')||0);if(entry.kind!=='sector-placeholder'){if(orientation!==0)throw Error('Authored maps open in their saved orientation.');await open(JSON.stringify(entry));$('overview').click();return;}if(!Number.isInteger(orientation)||!entry.allowedTransforms?.[orientation])throw Error('Unsupported orientation.');await open(JSON.stringify(expandPlaceholder(entry,entry.allowedTransforms[orientation])));$('overview').click();status('Placeholder sector. Save an authored variant after editing; campaign assignment is not enabled.');}catch(e){status('Cannot open template: '+e.message);}
+ try{status('Opening sector map…');await openPreset({id,variant:params.get('variant')||'placeholder.json',orientation:Number(params.get('orientation')||0),source:params.get('library')==='folder'?'folder':'bundled'});}catch(e){status('Cannot open template: '+e.message);}
 }
-requestAnimationFrame(render);initialMap();
+requestAnimationFrame(render);initialMap().then(()=>{if(new URLSearchParams(location.search).get('presets')==='1')sectorPresets.show();});
