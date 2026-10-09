@@ -33,7 +33,7 @@ export function cliffLandscapeTiles(layout='plateau',variant=0){
 
 // Clip a fine triangulation to the river's positive (land) field. Welding the
 // entire patch before making skirts removes internal walls and duplicate seams.
-export function cliffTileGeometry(set,tiles){
+export function cliffTileGeometry(set,tiles,{weathered=false,mapSize=240}={}){
  if(![...CLIFF_SETS,'mixed'].includes(set)||!Array.isArray(tiles))throw Error('Invalid cliff terrain');
  const occupied=new Map();for(const t of tiles){validateTile(t);if(!CLIFF_SETS.includes(t.set||set))throw Error('Invalid tile cliff set');const k=`${t.x},${t.z}`;if(occupied.has(k))throw Error('Duplicate cliff tile');occupied.set(k,t);}
  for(const t of tiles)for(const [dx,dz,a,b]of [[1,0,[2,4],[1,8]],[0,1,[8,4],[1,2]]]){const next=occupied.get(`${t.x+dx},${t.z+dz}`);if(next&&a.some((bit,i)=>!!(t.mask&bit)!==!!(next.mask&b[i])))throw Error('Mismatched cliff corner bits');}
@@ -69,11 +69,19 @@ export function cliffTileGeometry(set,tiles){
  }}
  const boundary=new Map();for(const triangle of caps)for(let i=0;i<3;i++){const a=triangle[i],b=triangle[(i+1)%3],k=[a.key,b.key].sort().join('|');if(boundary.has(k))boundary.delete(k);else boundary.set(k,[a,b]);}
  const positions=[[],[]],colors=[[],[]],sandMasks=[[],[]];
- function tri(a,b,c,material=0,sand=[0,0,0]){sandMasks[material].push(...sand);const xyz=[...a,...b,...c],centroid=[(a[0]+b[0]+c[0])/3,(a[2]+b[2]+c[2])/3];positions[material].push(...xyz);const tint=new T.Color(material?0x898459:0xa5997e).multiplyScalar(.86+.18*hash(...centroid));for(let i=0;i<3;i++)colors[material].push(tint.r,tint.g,tint.b);}
+ function tri(a,b,c,material=0,sand=[0,0,0]){sandMasks[material].push(...sand);const xyz=[...a,...b,...c],centroid=[(a[0]+b[0]+c[0])/3,(a[2]+b[2]+c[2])/3];positions[material].push(...xyz);const tint=new T.Color(material?0x898459:0xa5997e).multiplyScalar(.98+.04*hash(...centroid));for(let i=0;i<3;i++)colors[material].push(tint.r,tint.g,tint.b);}
  const p3=p=>[p.x,p.y,p.z];for(const [a,b,c]of caps){tri(p3(a),p3(b),p3(c),1,[a.sand,b.sand,c.sand]);tri([a.x,0,a.z],[c.x,0,c.z],[b.x,0,b.z]);}
  // Shared per-vertex normals preserve a watertight skirt even at curved corners.
  const normals=new Map();for(const [a,b]of boundary.values()){const n=[b.z-a.z,a.x-b.x];for(const p of [a,b]){const q=normals.get(p.key)||[0,0];q[0]+=n[0];q[1]+=n[1];normals.set(p.key,q);}}
  function ring(p,i){const f=i/5,n=normals.get(p.key),length=Math.hypot(...n)||1;
+  const fullLedge=weathered&&[[-1,-1],[0,-1],[-1,0],[0,0]].some(([dx,dz])=>{const t=occupied.get(`${Math.floor(p.x+dx*1e-7)},${Math.floor(p.z+dz*1e-7)}`);return t?.mask===15&&(t.set||set)==='ledge';});
+  if(fullLedge){
+   // Inset the rock strata, keeping the entire cap and base closed and unchanged.
+   // Sector cut planes remain exact so adjoining maps cannot expose a crack.
+   const crop=Math.abs(p.x)<1e-7||Math.abs(p.z)<1e-7||Math.abs(p.x-mapSize)<1e-7||Math.abs(p.z-mapSize)<1e-7;
+   const wave=Math.sin(p.x*1.7+p.z*1.3+i*1.9),recess=crop?0:Math.sin(Math.PI*f)*(.08+.045*wave),lift=crop||i===0||i===5?0:.055*Math.sin(p.x*2.1-p.z*1.4+i*2.3);
+   return [p.x+n[0]/length*recess,p.y*f+lift,p.z+n[1]/length*recess];
+  }
   // At a patch crop, keep its edge on the exact tile plane for neighboring chunks.
   const tileEdge=Math.abs(p.x-Math.round(p.x))<1e-7||Math.abs(p.z-Math.round(p.z))<1e-7;
   const recess=tileEdge?0:Math.sin(Math.PI*f)*(.025+.035*hash(p.x+i,p.z));return [p.x+n[0]/length*recess,p.y*f,p.z+n[1]/length*recess];}
@@ -81,7 +89,7 @@ export function cliffTileGeometry(set,tiles){
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([...positions[0],...positions[1]],3));g.setAttribute('color',new T.Float32BufferAttribute([...colors[0],...colors[1]],3));if(positions[0].length)g.addGroup(0,positions[0].length/3,0);if(positions[1].length)g.addGroup(positions[0].length/3,positions[1].length/3,1);g.setAttribute('sandBlend',new T.Float32BufferAttribute([...sandMasks[0],...sandMasks[1]],1));g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();
  g.userData={set,tiles:tiles.map(t=>({...t})),capTriangles:caps.length,boundarySegments:boundary.size,height:CLIFF_HEIGHT,climbable:set==='ledge',traversal:tiles.filter(t=>t.mask).map(t=>({x:t.x,z:t.z,mask:t.mask,set:t.set||set,climbable:(t.set||set)==='ledge'})),rim:[...boundary.values()].map(([a,b])=>({a:p3(a),b:p3(b),set:(a.crag+b.crag)>.01?'crag':'ledge'}))};addCliffRimAttribute(g,g.userData.rim);return g;
 }
-export function createCliffTiles(set,tiles,{water=false}={}){
- const geometry=cliffTileGeometry(set,tiles),materials=cliffMaterials({sand:true,water}),root=new T.Group(),mesh=new T.Mesh(geometry,materials);mesh.castShadow=mesh.receiveShadow=true;root.add(mesh);let disposed=false;
+export function createCliffTiles(set,tiles,{water=false,grassTexture,weathered=false,mapSize=240}={}){
+ const geometry=cliffTileGeometry(set,tiles,{weathered,mapSize}),materials=cliffMaterials({sand:true,water,grassTexture}),root=new T.Group(),mesh=new T.Mesh(geometry,materials);mesh.castShadow=mesh.receiveShadow=true;root.add(mesh);let disposed=false;
  return {root,mesh,original:materials,dispose(){if(disposed)return;disposed=true;geometry.dispose();materials.forEach(m=>m.dispose());}};
 }

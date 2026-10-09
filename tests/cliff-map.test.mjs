@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import * as T from '../dist/tactics/vendor/three.module.js';
 import {EditingDocument} from '../dist/tactics/editor-3d-controller.js';
 import {blankMap,parseMap,passable,validateMap,setTerrain} from '../dist/tactics/core/maps.js';
 import {blockCanvas,extractBlock,validateBlock} from '../dist/tactics/core/blocks.js';
@@ -46,7 +47,9 @@ test('water accepts cliffs without authorizing walking or ordinary props on wate
 });
 test('shots hit welded rock geometry, pass above it and through empty contour corners',()=>{
  const s=blankMap(),shooter={x:8,y:10,z:0,hp:100};s.units=[shooter,{id:'behind',x:13,y:10,z:0,hp:100}];s.props=[{kind:'cliff-ledge',x:10,y:10,z:0}];
- const hit=traceProjectile(s,shooter,{x:8,y:10,h:1.3},{x:1,y:0,h:0},8);assert.equal(hit.kind,'cover');assert.equal(hit.x,9.5);
+ const hit=traceProjectile(s,shooter,{x:8,y:10,h:1.3},{x:1,y:0,h:0},8);assert.equal(hit.kind,'cover');assert(hit.x>=9.5&&hit.x<9.65);
+ const geometry=cliffTileGeometry('ledge',[{x:10,z:10,mask:15,variant:0}],{weathered:true}),material=new T.MeshBasicMaterial(),mesh=new T.Mesh(geometry,material);mesh.position.set(-.5,0,-.5);mesh.updateMatrixWorld();
+ const visual=new T.Raycaster(new T.Vector3(8,1.3,10),new T.Vector3(1,0,0),0,8).intersectObject(mesh)[0];assert(visual);assert(Math.abs(hit.x-visual.point.x)<1e-7,'shot collision follows the visible weathered rock face');geometry.dispose();material.dispose();
  assert.equal(cliffRayHit(s.props,{x:8,y:10,h:2.1},{x:1,y:0,h:0},8),null);
  assert.equal(cliffSurfaceAt(s.props,10,10).height,2);
  s.props[0].cliffMask=1;

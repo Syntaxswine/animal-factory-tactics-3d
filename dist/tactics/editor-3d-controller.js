@@ -1,3 +1,5 @@
+import {paintFoliage} from './editor-foliage-brush.js';
+import {cleanFoliage} from './foliage-data.js';
 import {paintLand} from './editor-land-brush.js';
 import {breakStructure,finishBreachEdit} from './editor-breaches.js';
 import {cleanBreaches} from './breach-data.js';
@@ -6,7 +8,7 @@ import {STRUCTURE_PRESETS} from './editor-structure-presets.js';
 import {rampStroke} from './editor-ramp-stroke.js';
 import {previewCanopy,canopyCells} from './editor-canopies.js';
 import {bankSet} from './ramp-banks.js';
-import {isRamp} from './cliff-ramps.js';
+import {isRamp,rampInfo} from './cliff-ramps.js';
 import {rampSupportAt} from './cliff-ramps.js';
 import {characters,characterName,characterDiagnostics,copyCharacters,ensureCharacterIdentities} from './character-properties.js';
 import {isCliff,CLIFF_LIMIT} from './cliff-map.js';
@@ -28,20 +30,18 @@ export class EditingDocument extends InspectionDocument {
   this.replace({...this.editor.map,props:this.editor.map.props.map(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(p.z||0)&&q.kind===p.kind?{...q,sabotage:enabled}:q)});
  }
  open(text){super.open(text);if(!this.block)mapStartMinutes(this.map);this.editor=createEditor(this.block?openBlock(this.original):this.map);this.refresh();this.changed=false;this.revision=0;return this;}
- refresh(){if(this.block){const original={...this.original,...extractBlock(this.editor.map)};if(!this.editor.map.blockConnections?.['0,0'])delete original.connections;const display=new InspectionDocument().open(JSON.stringify(original));this.map=display.map;this.original=original;}else{this.map=this.editor.map;this.original=this.map;}this.units=[...this.map.starts.map((p,i)=>({...p,id:'start-'+i,species:p.species||['horse','goat','donkey','sheep'][i],weapon:p.weapon||'rifle',heading:0,role:characterName(p,'Squad start '+(i+1))})),...this.map.guards.map((p,i)=>({...p,id:'guard-'+i,role:characterName(p,(p.character?.category==='npc'?'NPC ':'Guard ')+(i+1))}))];for(const u of this.units){const support=rampSupportAt(this.map,u);if(support)u.cliffSupport=support;}this.changed=true;this.revision++;}
+ refresh(){if(this.block){const original={...this.original,...extractBlock(this.editor.map)};if(!this.editor.map.foliage)delete original.foliage;if(!this.editor.map.blockConnections?.['0,0'])delete original.connections;const display=new InspectionDocument().open(JSON.stringify(original));this.map=display.map;this.original=original;}else{this.map=this.editor.map;this.original=this.map;}this.units=[...this.map.starts.map((p,i)=>({...p,id:'start-'+i,species:p.species||['horse','goat','donkey','sheep'][i],weapon:p.weapon||'rifle',heading:0,role:characterName(p,'Squad start '+(i+1))})),...this.map.guards.map((p,i)=>({...p,id:'guard-'+i,role:characterName(p,(p.character?.category==='npc'?'NPC ':'Guard ')+(i+1))}))];for(const u of this.units){const support=rampSupportAt(this.map,u);if(support)u.cliffSupport=support;}this.changed=true;this.revision++;}
  preview(command){
   let {tool,start,end=start,options={}}=command;const prefab=tool==='prefab'?STRUCTURE_PRESETS[options.preset]:null;if(tool==='prefab'&&!prefab)return {ok:false,error:'Choose a preset structure.'};if(prefab){tool='room';options={...options,width:prefab.width,height:prefab.height};}if(tool!=='land'&&start?.z===3)return previewCanopy(this.editor.map,command,this.size);
   if(!start||![start.x,start.y,start.z??0].every(Number.isInteger))return {ok:false,error:'Choose a map cell.'};
   if(this.block&&(['squad','exit'].includes(tool)||[start,end].some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24)))return {ok:false,error:'Keep block edits inside 24 × 24 tiles; squad and travel markers belong to full maps.'};
   const breaking=['break-wall','break-floor'].includes(tool),foliage=['foliage-cover','clear-foliage'].includes(tool),shapeTool=breaking?(tool==='break-wall'?'wall':'floor'):foliage||['cliff','erase-cliff'].includes(tool)?'woodland':tool;
-  if(foliage&&(start.z||0)!==0)return {ok:false,error:'Foliage cover paints outdoor ground. Select the ground level.'};
   const candidate=createEditor(this.editor.map),points=brushShape(shapeTool)?brushPoints(shapeTool,start,end):[start],cells=[],edges=[];
-  const occupied=foliage?new Set(candidate.map.props.flatMap(p=>propCells(p).map(c=>c.x+','+c.y+','+(c.z||0)))):null;
   if(tool==='cliff'&&points.length>CLIFF_LIMIT)return {ok:false,error:'Paint at most '+CLIFF_LIMIT+' cliff tiles at a time.'};
   if(!points.length)return {ok:false,error:'Choose a cell inside the map.'};
   try{
-   if(tool==='land'){
-    const result=paintLand(candidate.map,command,this.size);cleanBreaches(candidate.map);
+   if(tool==='land'||foliage){
+    const result=foliage?paintFoliage(candidate.map,command,this.size):paintLand(candidate.map,command,this.size);cleanBreaches(candidate.map);cleanFoliage(candidate.map);
     if(this.block)validateBlock(extractBlock(candidate.map));
     const errors=validateMap(candidate.map,{connectivity:false});
     return {...result,ok:!errors.length,error:errors[0]||'',map:candidate.map};
@@ -65,11 +65,6 @@ export class EditingDocument extends InspectionDocument {
      if(tool==='erase-cliff'){cells.push({...p,z:start.z||0});continue;}
      actualTool='prop';actualOptions={propKind:options.cliffKind||'cliff-ledge',rotated:false};
     }
-    if(foliage){const z=start.z||0,terrain=terrainAt(candidate.map,p.x,p.y,z);
-     if(occupied.has(p.x+','+p.y+','+z)||candidate.map.stairs.some(q=>q.x===p.x&&q.y===p.y&&(q.z===z||q.z+1===z))||roofEndpoint(candidate.map,{...p,z}))continue;
-     if(tool==='clear-foliage'){if(terrain!=='woodland')continue;actualTool='texture';actualOptions={groundKind:'ground-grass'};}
-     else {if(!['yard','ground-grass','ground-dirt','ground-gravel','woodland'].includes(terrain)||terrain==='woodland')continue;actualTool='woodland';}
-    }
     const error=applyBrush(candidate,actualTool,p.x,p.y,p.edge,{...actualOptions,level:start.z||0});if(error)return {ok:false,error,cells:points,edges};
     if(tool==='cliff')Object.assign(candidate.map.props.at(-1),{cliffMask:options.cliffMask??15,cliffVariant:options.cliffVariant??0,cliffSand:options.cliffSand??0});
     if(tool==='prop'&&LIGHT_FORMS[options.propKind])candidate.map.props.at(-1).lightMode=['on','off'].includes(options.lightMode)?options.lightMode:'auto';
@@ -79,9 +74,8 @@ export class EditingDocument extends InspectionDocument {
     else cells.push({...p,z:start.z||0});
    }
    if(prefab)for(const object of prefab.objects){const pos=options.rotated?{x:start.x+prefab.height-1-object.y,y:start.y+object.x}:{x:start.x+object.x,y:start.y+object.y};const error=applyBrush(candidate,'prop',pos.x,pos.y,'',{level:start.z||0,propKind:object.kind,rotated:!!options.rotated});if(error)return {ok:false,error,cells,edges};}
-   if(foliage&&!cells.length)return {ok:false,error:tool==='clear-foliage'?'No foliage cover to clear here.':'No uncovered outdoor ground here. Water, structures and props are skipped.',cells,edges};
    if(breaking&&!cells.length)throw Error(tool==='break-wall'?'Drag along an existing brick, concrete or corrugated wall.':'Paint a structural upper floor first. Roof modules, cliff tops and empty cells are skipped.');
-   finishBreachEdit(candidate.map,tool,points,start.z||0);
+   finishBreachEdit(candidate.map,tool,points,start.z||0);cleanFoliage(candidate.map);
    // Connectivity is allowed to be temporarily broken while designing a room.
    if(this.block){if(cells.some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24))return {ok:false,error:'The whole footprint must fit inside the block.',cells,edges};validateBlock(extractBlock(candidate.map));}
    if(candidate.map.edgeLocks)for(const key of Object.keys(candidate.map.edgeLocks))if(!EDGES[candidate.map.edges[key]]?.opensTo)delete candidate.map.edgeLocks[key];

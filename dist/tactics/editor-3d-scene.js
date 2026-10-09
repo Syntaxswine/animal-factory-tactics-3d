@@ -82,7 +82,7 @@ export class InspectionScene {
  }
  rebuild(){
   if(!this.document)return;const started=performance.now(),{roofs,walls}=this.options,level=this.visibleLevel,source=this.document.map;
-  this.sites.rebuild({...source,difficulty:'easy'},this.visibleLevel);this.cliffs.rebuild(source,level,{editor:true,dim:!this.options.showAllLevels});
+  this.sites.rebuild({...source,difficulty:'easy'},this.visibleLevel);this.cliffs.rebuild(source,level,{editor:true,dim:!this.options.showAllLevels,grassTexture:this.material('grass').map});
   const map={...source,canopies:roofs?source.canopies:[],coverOccupiedProps:source.props,props:source.props.filter(p=>!PAINTED_PROP_FORMS[p.kind]&&(roofs||!p.kind.startsWith('roof-')))};
   const world={...this.world,boxes:this.world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood')&&(walls||!b.source.edge)&&(roofs||b.kind!=='roof'))};
   const groups=new Map(),matrix=new T.Matrix4(),q=new T.Quaternion(),yaw=new T.Quaternion(),euler=new T.Euler(),position=new T.Vector3(),scale=new T.Vector3();

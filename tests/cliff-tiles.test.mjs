@@ -20,6 +20,14 @@ function audit(g){
   const keys=v.map(v=>v.toArray().map(n=>n.toFixed(6)).join(','));for(let j=0;j<3;j++){const a=keys[j],b=keys[(j+1)%3],key=[a,b].sort().join('|'),old=edges.get(key)||{count:0,winding:0};old.count++;old.winding+=a<b?1:-1;edges.set(key,old);}}
  assert([...edges.values()].every(e=>e.count===2&&e.winding===0),'closed outward-oriented manifold');if(p.count)assert(volume>0);assert(g.groups.length<=2);return volume;
 }
+test('weathered map ledges stay sealed with unchanged landing caps and sector cut planes',()=>{
+ const tiles=[{x:0,z:3,mask:15,variant:0},{x:1,z:3,mask:15,variant:0},{x:1,z:4,mask:15,variant:0}],plain=cliffTileGeometry('ledge',tiles),rock=cliffTileGeometry('ledge',tiles,{weathered:true});audit(rock);
+ const cap=g=>{const c=g.groups.find(p=>p.materialIndex===1);return g.attributes.position.array.slice(c.start*3,(c.start+c.count)*3);};assert.deepEqual(cap(rock),cap(plain));assert.deepEqual(rock.userData.rim,plain.userData.rim);
+ assert.notDeepEqual(rock.attributes.position.array,plain.attributes.position.array);
+ const cut=g=>{const p=g.attributes.position,values=[];for(let i=0;i<p.count;i++)if(p.getX(i)===0)values.push([p.getY(i),p.getZ(i)]);return values;};assert.deepEqual(cut(rock),cut(plain));
+ for(const g of [plain,rock])g.dispose();
+ for(const layout of ['plateau','gorge','coast'])for(const set of ['ledge','crag']){const g=cliffTileGeometry(set,cliffLandscapeTiles(layout),{weathered:true});audit(g);g.dispose();}
+});
 test('all 16 river patterns in all three variants produce closed wall-height cliff solids',()=>{
  for(const set of ['ledge','crag'])for(let variant=0;variant<3;variant++)for(let mask=0;mask<16;mask++){
   const g=cliffTileGeometry(set,[{x:0,z:0,mask,variant}]);audit(g);if(mask){assert(g.boundingBox.min.y>=0);assert(g.boundingBox.max.y<=2);if(set==='ledge')assert.equal(g.boundingBox.max.y,2);}else assert.equal(g.attributes.position.count,0);g.dispose();

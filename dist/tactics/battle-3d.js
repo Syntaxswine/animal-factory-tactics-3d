@@ -3,7 +3,7 @@ import {PickupOrder,pickupRoute} from './pickup-order.js';
 import {reserve} from './core/inventory.js';
 import {campaignBattle} from './campaign-battle.js';
 import {guardCone,visibleConeGuards,drawGuardCones} from './guard-cones.js';
-import {walkingRoutes,drawWalkingRoutes} from './walking-preview.js';
+import {walkingRoutes,walkingHazards,walkingWarning,drawWalkingRoutes} from './walking-preview.js';
 import {renderShotPlanner} from './shot-planner.js';
 import {intactSite,siteId} from './strategic-site-rules.js';
 import {strategicTarget} from './strategic-site-damage.js';
@@ -184,11 +184,12 @@ function contextChoices(info,merc){
   entries.push(...interactions);
   if(state.queue.length)entries.push(entry('stop','Stop movement','■',{kind:'stop'},free));
  }else{
-  entries.push(entry('move','Move here','↗',{kind:'move',point},free&&canControl(state,u)));
+  const warning=walkingWarning(walkingRoutes({...state,queue:[]},[...selectedIds],u,point));
+  entries.push(entry('move','Move here',warning?'⚠':'↗',{kind:'move',point},free&&canControl(state,u),'',warning));
   entries.push(entry('ground-shot','Shoot at this tile','⊕',{kind:'ground-shot',point},ready&&!!WEAPONS[u.weapon].mag,!WEAPONS[u.weapon].mag?'Equip a firearm or area weapon.':'','Plan with '+WEAPONS[u.weapon].name));
  }
  if(info.loot.length){
-  const picks=info.loot.map((pile,i)=>{const p=pickupRoute(state,u,pile);return entry('pickup-'+i,pile.container?.name||(pile.body===undefined?'Pick up items':'Search body'),'▤',{kind:'pickup',pile},free&&p.ok,p.reason,p.cost?'Approach: '+p.cost+' AP'+(combatCosts(state)&&p.cost>u.ap?' · exceeds current AP':''):'Open nearby inventory');});
+  const picks=info.loot.map((pile,i)=>{const p=pickupRoute(state,u,pile),warning=walkingWarning([{name:u.name,hazards:walkingHazards(state,p.path||[])}]),note=p.cost?'Approach: '+p.cost+' AP'+(combatCosts(state)&&p.cost>u.ap?' · exceeds current AP':''):'Open nearby inventory';return entry('pickup-'+i,pile.container?.name||(pile.body===undefined?'Pick up items':'Search body'),warning?'⚠':'▤',{kind:'pickup',pile},free&&p.ok,p.reason,[warning,note].filter(Boolean).join(' · '));});
   if(picks.length===1)entries.push(picks[0]);else entries.push({id:'items',label:'Items on this tile',icon:'▤',children:picks});
  }
  return entries;
@@ -256,6 +257,7 @@ function updateTargetCursor(now){
  else{const barrel=id===null?renderer.pickScenery(x,y,width,height,level):null;if(barrel)canvas.dataset.targetCursor=(barrel.structure?previewAttack(state,selected(),barrel).ok:barrelSight(state,selected(),barrel))?'red':'grey';else delete canvas.dataset.targetCursor;}
 }
 let walkingCacheKey='',walkingCache=[];
+function showWalkingWarning(text=''){const el=$('movement-warning');if(el.textContent!==text)el.textContent=text;el.hidden=!text;}
 let showGuardCones=true,coneCache=new Map(),coneWorld='',coneCheck=0;
 $('guard-cones').onclick=()=>{showGuardCones=!showGuardCones;$('guard-cones').textContent='Guard cones: '+(showGuardCones?'On':'Off');$('guard-cones').setAttribute('aria-pressed',String(showGuardCones));};
 function showGuardSight(now){
@@ -266,11 +268,12 @@ function showGuardSight(now){
  drawGuardCones(ctx,cones,project);
 }
 function showWalkingRoute(){
- if(overviewMode||shotDialog.open||flamePlanner.open||grenadePlanner.open||drag?.moved){walkingCacheKey='';walkingCache=[];return;}
+ if(overviewMode||shotDialog.open||flamePlanner.open||grenadePlanner.open||characterScreen.open||savePanel.open||drag?.moved){walkingCacheKey='';walkingCache=[];showWalkingWarning();return;}
  let goal=null;
  if(hoverPointer&&!contextMenu.open&&!canvas.dataset.targetCursor){const bounds=canvas.getBoundingClientRect(),p=battleFloorPoint(view,hoverPointer.x-bounds.left,hoverPointer.y-bounds.top,level);goal={x:Math.round(p.x),y:Math.round(p.y),z:level};}
- const key=JSON.stringify([state.revision,state.phase,state.selected,level,[...selectedIds],goal,state.queue,state.units.filter(u=>selectedIds.has(u.id)).map(u=>[u.x,u.y,u.z,u.ap,u.stance,u.running,u.sneaking,u.legWound])]);
+ const key=JSON.stringify([state.revision,state.phase,state.selected,level,[...selectedIds],goal,state.queue,state.fires,state.units.filter(u=>selectedIds.has(u.id)).map(u=>[u.x,u.y,u.z,u.ap,u.stance,u.running,u.sneaking,u.legWound])]);
  if(key!==walkingCacheKey){walkingCacheKey=key;walkingCache=walkingRoutes(state,[...selectedIds],selected(),goal);}
+ showWalkingWarning(walkingWarning(walkingCache));
  drawWalkingRoutes(ctx,walkingCache,project,level,view.zoom,turnBased(state));
 }
 canvas.addEventListener('pointerdown',e=>{if(e.button!==0||drag)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,select:e.shiftKey};canvas.setPointerCapture(e.pointerId);});
