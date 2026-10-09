@@ -6,7 +6,7 @@ const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z),Q=()=>new T.Quaternion();
 const clamp=x=>T.MathUtils.clamp(x,0,1),ease=x=>{x=clamp(x);return x*x*x*(10+x*(-15+6*x));};
 export const HORSE_CHAIR_DURATION=9.2;
 export const HORSE_CHAIR_KEYS=[{time:0,label:'Stand'},{time:.7,label:'Prepare'},{time:1.6,label:'Lower'},{time:3.8,label:'Sit'},{time:6.2,label:'Weight forward'},{time:6.7,label:'Rise'},{time:8.5,label:'Stand again'}];
-export const HORSE_CHAIR_FIT={pelvis:[.18,.65],footForward:.43};
+export const HORSE_CHAIR_FIT={pelvis:[.18,CHAIR_CONTACT.seatHeight+.17],footForward:.43};
 // Monotone Hermite tracks keep velocity continuous without overshooting contact poses.
 function track(rows,t){
  let i=1;while(i<rows.length-1&&t>rows[i][0])i++;const a=rows[i-1],b=rows[i],dt=b[0]-a[0],u=clamp((t-a[0])/dt);
@@ -28,7 +28,7 @@ export function createHorseChairMotion(worker,{contact=CHAIR_CONTACT,fit=HORSE_C
   const foot=worker.parts.find(p=>p.name==='exposed hoof '+side),a=foot.geometry.attributes.position,ids=[];for(let i=0;i<a.count;i++)if(a.getY(i)<.005)ids.push(i);
   const box=new T.Box3();for(const i of ids)box.expandByPoint(V().fromBufferAttribute(a,i));const center=box.getCenter(V()),ankle=rest.get(bones['hoof'+side]);
   feet[side]={mesh:foot,ids,target:V(fit.footForward-center.x+ankle.x,-box.min.y+ankle.y,side*.23-center.z+ankle.z)};
-  const p=trousers.geometry.attributes.position,index=trousers.geometry.index,goal=V(.12,.69,side*.21);let best=Infinity;
+  const p=trousers.geometry.attributes.position,index=trousers.geometry.index,goal=V(.12,.64,side*.21);let best=Infinity;
   for(let k=0;k<index.count;k+=3){const ids=[index.getX(k),index.getX(k+1),index.getX(k+2)],points=ids.map(i=>V().fromBufferAttribute(p,i)),c=points[0].clone().add(points[1]).add(points[2]).divideScalar(3),n=points[1].clone().sub(points[0]).cross(points[2].clone().sub(points[0])).normalize();
    if(n.x<.35||side*c.z<.07)continue;const d=c.distanceToSquared(goal);if(d<best){best=d;patches[side]=ids;}
   }
@@ -43,12 +43,15 @@ export function createHorseChairMotion(worker,{contact=CHAIR_CONTACT,fit=HORSE_C
   for(let i=0;i<p.count;i++){
    const q=surface(trousers,i),next=q.clone();base.push(q);posed.push(next);
    if(p.getY(i)>.90||p.getY(i)<.39)continue;
-   if(Math.abs(q.z)>contact.seatWidth/2+.01||q.x<back-.01||q.x>front+.12||q.y>top)continue;
+   if(Math.abs(q.z)>contact.seatWidth/2+.01||q.x<back-.01||q.x>front+.12||q.y>top+.04)continue;
    if(p.getY(i)>.53){
     // Full support inside the seat, a rounded fold just beyond its nose.
     const w=1-ease((q.x-front-.035)/.075);next.y+=Math.max(0,top-q.y)*w;
-   }else if(q.y>top-.15){
-    next.x=Math.max(next.x,front+.045);
+   }else{
+    // Start folding before the calf reaches the rim; switching the full
+    // offset on at seat height creates a visible pop while settling.
+    const w=ease((top+.04-q.y)/.04)*ease((q.y-top+.18)/.03);
+    next.x+=Math.max(0,front+.045-next.x)*w;
    }
   }
   // Preserve a fold at the seat's nose. A triangle connecting a point on the
@@ -73,9 +76,10 @@ export function createHorseChairMotion(worker,{contact=CHAIR_CONTACT,fit=HORSE_C
   rotate(a,Q().setFromUnitVectors(rb.clone().sub(ra).normalize(),mid.clone().sub(start).normalize()));rotate(b,Q().setFromUnitVectors(rc.clone().sub(rb).normalize(),target.clone().sub(mid).normalize()));
  }
  const rz=a=>Q().setFromAxisAngle(V(0,0,1),-a),rows=[
-  [0,.424,.795,0,0,0],[.7,.40,.775,.05,.30,.65],[1.6,.29,.71,.12,.55,1],[2.7,...fit.pelvis,.07,.42,1],
+  [0,.424,.795,0,0,0],[.7,.40,.775,.05,.30,.65],[1.6,.29,fit.pelvis[1]+.05,.12,.72,1],
+  [1.95,.27,fit.pelvis[1]+.018,.12,.70,1],[2.7,...fit.pelvis,.07,.42,1],
   [3.4,...fit.pelvis,0,.06,1],[5.4,...fit.pelvis,0,.06,1],[6.2,.26,fit.pelvis[1],.13,.66,1],
-  [6.5,.31,.665,.12,.60,1],[7.6,.424,.795,0,.02,.10],[8.5,.424,.795,0,0,0],[9.2,.424,.795,0,0,0]
+  [6.5,.31,fit.pelvis[1]+.015,.12,.60,1],[7.6,.424,.795,0,.02,.10],[8.5,.424,.795,0,0,0],[9.2,.424,.795,0,0,0]
  ];
  function apply(time,{heading=0,position=[0,0,0]}={}){
   if(disposed)throw Error('Horse chair motion is disposed');
@@ -93,7 +97,10 @@ export function createHorseChairMotion(worker,{contact=CHAIR_CONTACT,fit=HORSE_C
    // Lift clear of the thigh on approach/release instead of cutting through it
    // along a straight blend from a resting palm to the hanging arm.
    const handPath=idle.lerp(wrist,hands).addScaledVector(normal,.04*Math.sin(Math.PI*hands));
-   const q=Q().slerp(handQ,hands);limb(bones['upperArm'+s],bones['forearm'+s],bones['hand'+s],handPath,V(1,-.15,s*.25));rotate(bones['hand'+s],q);bones['fingers'+s].rotation.z=-.10*hands;
+   // Fold back with enough outward clearance for the forearms to pass the
+   // waist. The forward knee pole is not an arm pole.
+   const elbowPole=V(-1,-.15,s*1.2).applyQuaternion(bones.spine.getWorldQuaternion(Q()));
+   const q=Q().slerp(handQ,hands);limb(bones['upperArm'+s],bones['forearm'+s],bones['hand'+s],handPath,elbowPole);rotate(bones['hand'+s],q);bones['fingers'+s].rotation.z=-.10*hands;
    handsReport.push({side:s,target:target.toArray(),palm:bones['hand'+s].localToWorld(palm.clone()).toArray(),contact:hands>1-1e-9});
   }
   root.rotation.y=-Math.PI/2+heading;root.position.fromArray(position);root.updateMatrixWorld(true);skeleton.update();
