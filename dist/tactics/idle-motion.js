@@ -200,6 +200,11 @@ export function createIdle(worker,options={}){
  const boneIndex=b=>skeleton.bones.indexOf(b),bi=n=>boneIndex(n==='neck'?neck:bones[n]),boneName=i=>skeleton.bones[i].name;
  const neutral=()=>{worker.pose('neutral');neck.quaternion.identity();root.updateMatrixWorld(true);};
  const savedSkin=worker.parts.map(m=>({m,index:m.geometry.attributes.skinIndex.clone(),weight:m.geometry.attributes.skinWeight.clone()}));
+ // The idle fits the cloth on the neck to its own neck bone (below), from the weights the cloth's names give it, as it was
+ // fitted: the character's own fit of that cloth to the head (horse-light-model.js, docs/tactics/CLOTHING-SKINNING.md) is
+ // set aside while it runs and comes back with the rest of the rig's weights on dispose.
+ for(const m of worker.parts){const fit=m.geometry.userData.layerFit,a=m.geometry.attributes;if(!fit)continue;
+  fit.vertices.forEach((i,k)=>{a.skinIndex.setXYZW(i,...fit.index.subarray(4*k,4*k+4));a.skinWeight.setXYZW(i,...fit.weight.subarray(4*k,4*k+4));});a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;}
  // A vertex's weights as {bone index: weight}, and back into the four slots (the largest four, renormalised).
  const weightsOf=(a,i)=>{const w={};for(let k=0;k<4;k++){const x=a.skinWeight.getComponent(i,k);if(x>0){const b=a.skinIndex.getComponent(i,k);w[b]=(w[b]||0)+x;}}return w;};
  const setWeights=(a,i,w)=>{const top=Object.entries(w).filter(([,x])=>x>1e-6).sort((p,q)=>q[1]-p[1]).slice(0,4),sum=top.reduce((s,[,x])=>s+x,0)||1;while(top.length<4)top.push([0,0]);
