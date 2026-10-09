@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {fileURLToPath} from 'node:url';
@@ -32,7 +33,7 @@ try{
 
  map.guards=[{x:150,y:150,species:'horse',weapon:'rifle'}];
  await page.route('**/default-factory.json',r=>r.fulfill({json:map}));await page.goto(origin+'/tactics/battle-3d.html');await page.waitForFunction(()=>window.battle3d?.state,null,{timeout:60000});
- await page.click('#pause');await page.evaluate(()=>battle3d.renderer.reducedMotion={matches:true});await page.click('#center');
+ await page.click('#pause');await page.evaluate(()=>battle3d.renderer.reducedMotion={matches:true});await clickBattleControl(page,'#center');
  await page.waitForFunction(()=>[0,1,2,3].every(id=>battle3d.renderer.actors.get(id)?.visible),null,{timeout:60000});
  const battleGeometry=()=>page.evaluate(()=>({levels:[...new Set([...battle3d.renderer.chunks.values()].flatMap(m=>m.userData.boxes.map(b=>b.source.z??0)))].sort(),actors:[...battle3d.renderer.actors].filter(([,m])=>m.visible).map(([id])=>id).sort(),level:battle3d.level}));
  const first=await battleGeometry();assert.deepEqual(first.levels,[0,1,2,3]);assert.deepEqual(first.actors,[0,1,2,3]);

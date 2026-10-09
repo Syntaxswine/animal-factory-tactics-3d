@@ -1,0 +1,98 @@
+[
+  {
+    "animal": "horse",
+    "maxFriction": 0.286654442198492,
+    "frictionTime": 1.350000000000001,
+    "worst": -0.014204086947567206,
+    "worstTime": 0.9000000000000006,
+    "minNormal": 3.3789665637728046
+  },
+  {
+    "animal": "goat",
+    "maxFriction": 0.2905799177890568,
+    "frictionTime": 1.350000000000001,
+    "worst": -0.03499670732014359,
+    "worstTime": 1.7100000000000013,
+    "minNormal": 3.479702047172088
+  },
+  {
+    "animal": "bull",
+    "maxFriction": 0.2871361189295707,
+    "frictionTime": 1.350000000000001,
+    "worst": -0.04222309909727964,
+    "worstTime": 3.449999999999992,
+    "minNormal": 3.434291069305166
+  },
+  {
+    "animal": "cow",
+    "maxFriction": 0.2871361189295707,
+    "frictionTime": 1.350000000000001,
+    "worst": -0.04222309909727964,
+    "worstTime": 3.449999999999992,
+    "minNormal": 3.434291069305166
+  },
+  {
+    "animal": "donkey",
+    "maxFriction": 0.2922276242946772,
+    "frictionTime": 1.350000000000001,
+    "worst": -0.06297192128620195,
+    "worstTime": 1.7100000000000013,
+    "minNormal": 3.419108921044371
+  },
+  {
+    "animal": "sheep",
+    "maxFriction": 0.2838175176685897,
+    "frictionTime": 1.8900000000000015,
+    "worst": -0.03656947304317903,
+    "worstTime": 1.7100000000000013,
+    "minNormal": 3.4395132114127964
+  },
+  {
+    "animal": "skunk",
+    "maxFriction": 0.6026986401313525,
+    "frictionTime": 1.8300000000000014,
+    "worst": 0.013303560953361342,
+    "worstTime": 3.8399999999999896,
+    "minNormal": 3.2567119544478924
+  },
+  {
+    "animal": "pig-foreman",
+    "maxFriction": 0.33273314719447894,
+    "frictionTime": 1.8900000000000015,
+    "worst": 0.014968207650407496,
+    "worstTime": 3.8399999999999896,
+    "minNormal": 3.964128833301343
+  },
+  {
+    "animal": "pig-director",
+    "maxFriction": 0.30883573532718706,
+    "frictionTime": 1.8900000000000015,
+    "worst": -0.06059510991853226,
+    "worstTime": 3.8399999999999896,
+    "minNormal": 3.955714000359782
+  },
+  {
+    "animal": "rabbit",
+    "maxFriction": 0.306254914714477,
+    "frictionTime": 1.350000000000001,
+    "worst": 0.01156887575835067,
+    "worstTime": 3.8399999999999896,
+    "minNormal": 3.3119516984491266
+  },
+  {
+    "animal": "dog",
+    "maxFriction": 0.2957015750726381,
+    "frictionTime": 1.350000000000001,
+    "worst": 0.0037703737520353824,
+    "worstTime": 3.8399999999999896,
+    "minNormal": 3.3621216006262262
+  },
+  {
+    "animal": "hen",
+    "maxFriction": 0.3744618490683447,
+    "frictionTime": 1.9500000000000015,
+    "worst": -0.02156795271098205,
+    "worstTime": 1.350000000000001,
+    "minNormal": 7.7959580651608835
+  }
+]

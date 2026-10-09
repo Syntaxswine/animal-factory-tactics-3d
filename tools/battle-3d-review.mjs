@@ -1,3 +1,4 @@
+import {clickBattleControl,selectBattleOption} from './battle-ui-review.mjs';
 import {createRequire} from 'node:module';
 import fs from 'node:fs';
 import {fileURLToPath} from 'node:url';
@@ -26,10 +27,10 @@ try{
  for(const id of initial.picks)assert.ok(id<4||initial.detected.includes(id),'Unseen enemy leaked');
  await page.screenshot({path:fileURLToPath(new URL('easy-desktop.png',output))});
  const canvas=await page.locator('#battle').boundingBox();
- await page.click('#overview');await page.screenshot({path:fileURLToPath(new URL('authored-overview.png',output))});
+ await clickBattleControl(page,'#overview');await page.screenshot({path:fileURLToPath(new URL('authored-overview.png',output))});
  const factory=await page.evaluate(()=>battle3d.project({x:79,y:132,z:0}));
  await page.mouse.click(canvas.x+factory.x,canvas.y+factory.y);await page.screenshot({path:fileURLToPath(new URL('painted-factory.png',output))});
- await page.click('#center');
+ await clickBattleControl(page,'#center');
  const destination=await page.evaluate(()=>battle3d.project({x:4,y:4,z:0}));
  await page.mouse.click(canvas.x+destination.x,canvas.y+destination.y);
  await page.waitForFunction(()=>battle3d.state.units[0].x===4&&battle3d.state.units[0].y===4,{},{timeout:10000});
@@ -48,10 +49,10 @@ try{
  assert.equal(await page.evaluate(()=>battle3d.state.units[0].ammo[battle3d.state.units[0].weapon]),shot.ammo-1);
  await page.click('#end');await page.waitForFunction(()=>battle3d.state.phase!=='enemy',{},{timeout:60000});
  // Inspect both difficulties and repeated renderer teardown while loads may be pending.
- await page.selectOption('#difficulty','standard');await page.click('#restart');
+ await selectBattleOption(page,'#difficulty','standard');await clickBattleControl(page,'#restart');
  await page.waitForFunction(()=>battle3d.state.difficulty==='standard'&&battle3d.renderer.models.size>=4);
  await page.screenshot({path:fileURLToPath(new URL('standard-desktop.png',output))});
- await page.selectOption('#difficulty','easy');await page.click('#restart');await page.click('#restart');
+ await selectBattleOption(page,'#difficulty','easy');await clickBattleControl(page,'#restart');await clickBattleControl(page,'#restart');
  await page.waitForFunction(()=>battle3d.renderer.models.size>=4);
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:fileURLToPath(new URL('easy-mobile.png',output))});
  assert.deepEqual(errors,[]);fs.writeFileSync(new URL('results.json',output),JSON.stringify({initial,afterMove,shot,errors},null,2));

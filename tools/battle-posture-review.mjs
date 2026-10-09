@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import fs from 'node:fs';
@@ -12,15 +13,15 @@ try{
  const before=await page.evaluate(()=>({view:{...battle3d.view},units:battle3d.state.units.filter(u=>u.team==='squad').map(u=>battle3d.project(u))}));
  const a={x:Math.min(...before.units.map(p=>p.x))-20,y:Math.min(...before.units.map(p=>p.y))-20},b={x:Math.max(...before.units.map(p=>p.x))+20,y:Math.max(...before.units.map(p=>p.y))+20};
  for(const [start,end]of [[a,b],[b,a]]){await page.keyboard.down('Shift');await page.mouse.move(box.x+start.x,box.y+start.y);await page.mouse.down();await page.mouse.move(box.x+end.x,box.y+end.y,{steps:6});await page.screenshot({path:fileURLToPath(new URL('selection-rectangle.png',out))});await page.mouse.up();await page.keyboard.up('Shift');assert.deepEqual(await page.evaluate(()=>battle3d.selectedIds),[0,1,2,3]);assert.deepEqual(await page.evaluate(()=>({...battle3d.view})),before.view);assert.equal(await page.evaluate(()=>battle3d.state.queue.length),0);}
- for(const stance of ['kneeling','prone','standing']){await page.click('#stance-'+stance);await page.waitForFunction(stance=>battle3d.state.units.filter(u=>u.team==='squad').every(u=>u.stance===stance),stance);assert.equal(await page.locator('#stance-'+stance).getAttribute('aria-pressed'),'true');assert.equal(await page.evaluate(()=>battle3d.selectedIds.length),4);}
+ for(const stance of ['kneeling','prone','standing']){await clickBattleControl(page,'#stance-'+stance);await page.waitForFunction(stance=>battle3d.state.units.filter(u=>u.team==='squad').every(u=>u.stance===stance),stance);assert.equal(await page.locator('#stance-'+stance).getAttribute('aria-pressed'),'true');assert.equal(await page.evaluate(()=>battle3d.selectedIds.length),4);}
  // Actual canonical group order through a ground click.
  const destination=await page.evaluate(()=>battle3d.project({x:4,y:4,z:0}));await page.mouse.click(box.x+destination.x,box.y+destination.y);
  await page.waitForFunction(()=>battle3d.state.units.filter(u=>u.team==='squad').every(u=>u.steps>0));await page.keyboard.press('Escape');
- await page.click('#restart');await page.waitForFunction(()=>battle3d.renderer.models.size>=4);assert.deepEqual(await page.evaluate(()=>battle3d.selectedIds),[0]);
- await page.click('#stance-kneeling');await page.waitForFunction(()=>battle3d.renderer.motion.sample(battle3d.state.units[0]).pose.kneel===1);
- await page.click('#stance-prone');await page.waitForFunction(()=>battle3d.renderer.motion.sample(battle3d.state.units[0]).pose.prone===1);
+ await clickBattleControl(page,'#restart');await page.waitForFunction(()=>battle3d.renderer.models.size>=4);assert.deepEqual(await page.evaluate(()=>battle3d.selectedIds),[0]);
+ await clickBattleControl(page,'#stance-kneeling');await page.waitForFunction(()=>battle3d.renderer.motion.sample(battle3d.state.units[0]).pose.kneel===1);
+ await clickBattleControl(page,'#stance-prone');await page.waitForFunction(()=>battle3d.renderer.motion.sample(battle3d.state.units[0]).pose.prone===1);
  await page.screenshot({path:fileURLToPath(new URL('gameplay-prone.png',out))});
- await page.emulateMedia({reducedMotion:'reduce'});await page.click('#stance-standing');await page.waitForFunction(()=>battle3d.renderer.motion.sample(battle3d.state.units[0]).pose.prone===0);
+ await page.emulateMedia({reducedMotion:'reduce'});await clickBattleControl(page,'#stance-standing');await page.waitForFunction(()=>battle3d.renderer.motion.sample(battle3d.state.units[0]).pose.prone===0);
  // Controlled casualty fixture: confirms the live renderer, selection pruning and recovery.
  await page.evaluate(()=>{const u=battle3d.state.units[0];u.hp=0;u.casualty='bleeding';u.bleedTurns=3;battle3d.state.revision++;});await page.waitForFunction(()=>!battle3d.selectedIds.includes(0));
  for(const state of ['bleeding','stable','dead']){await page.evaluate(state=>{const u=battle3d.state.units[0];u.casualty=state;battle3d.state.revision++;},state);await page.waitForFunction(state=>battle3d.renderer.motion.sample(battle3d.state.units[0]).posture===state,state);}

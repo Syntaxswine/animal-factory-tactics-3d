@@ -31,7 +31,11 @@ export async function campaignBattle(slot){
   const map=el('button','Campaign map');map.id='campaign-map-button';map.onclick=()=>leave();bar.append(map);
   const finish=el('button','Leave cleared sector');finish.id='campaign-finish';finish.onclick=()=>leave(c=>finishCampaignEncounter(c));bar.append(finish);
   const supplies=el('button','Sector inventory');supplies.id='sector-inventory-button';supplies.onclick=()=>{notice='';inventoryView();inventory.showModal();callbacks.changed();};bar.append(supplies);
-  const retreats=el('div');retreats.id='campaign-retreats';bar.append(retreats);document.querySelector('#phase').after(bar);
+  const retreats=el('div');retreats.id='campaign-retreats';bar.append(retreats);
+  const mount=document.querySelector('#campaign-actions');if(!mount)throw Error('The tactical HUD is missing its campaign controls.');
+  mount.replaceChildren(el('h2','Campaign'),bar);mount.hidden=false;
+  // These controls live in the interactive drawer, never in the map overlay.
+  for(const event of ['pointerdown','click'])bar.addEventListener(event,e=>e.stopPropagation());
   inventory=el('dialog');inventory.className='sector-inventory';inventory.id='sector-inventory';document.body.append(inventory);inventory.addEventListener('close',()=>callbacks.changed());update();
  }
  function update(){

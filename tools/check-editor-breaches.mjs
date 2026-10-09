@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import {createRequire} from 'node:module';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -32,7 +33,7 @@ try{
   const next=createGame(92,m,true,'easy',{statSystem:true});startEncounterClock(next);next.phase='player';next.engaged=true;next.rules.awareness=false;next.rules.social=false;next.units[0].ap=18;
   const s=battle3d.state;for(const k of Object.keys(s))delete s[k];Object.assign(s,next);battle3d.renderer.combat.clear();battle3d.renderer.motion.clear();s.revision++;
  });
- await page.locator('#center').click();await page.waitForFunction(()=>battle3d.renderer.world.boxes.some(b=>b.id==='floor:14,14,1'));
+ await clickBattleControl(page,'#center');await page.waitForFunction(()=>battle3d.renderer.world.boxes.some(b=>b.id==='floor:14,14,1'));
  report.collapse=await page.evaluate(async()=>{
   const {attackGround}=await import('./core/engine.js'),{floorBreachMasks}=await import('./floor-breaches.js'),s=battle3d.state,r=battle3d.renderer,hp=s.units[2].hp,ammo=s.units[0].ammo.grenade;
   const accepted=attackGround(s,s.units[0],{x:14,y:14,z:1});r.captureCombat(s);const active=r.combat.active;

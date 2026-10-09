@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {fileURLToPath} from 'node:url';
@@ -31,7 +32,7 @@ try{
  const windowSeen=await snapshot();assert(windowSeen.hidden<42);await page.mouse.move(10,10);await page.screenshot({path:fileURLToPath(new URL('window-reveals-interior.png',out))});
  await page.evaluate(async()=>{const {refresh}=await import('./core/engine.js');battle3d.state.edges['e:9:11']='door-wood-closed';refresh(battle3d.state);});
  await page.waitForFunction(()=>battle3d.renderer.world.boxes.some(b=>b.id.includes(':door')));assert.equal(await page.evaluate(()=>battle3d.renderer.interiorFog.hidden.has('12,11')),false);
- await page.click('#quicksave');await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('Quicksave saved'));await page.click('#quickload');await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('Encounter loaded'));
+ await clickBattleControl(page,'#quicksave');await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('Quicksave saved'));await clickBattleControl(page,'#quickload');await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('Encounter loaded'));
  await page.waitForFunction(()=>battle3d.renderer.paintedEnvironment.count===1);assert.equal(await page.evaluate(()=>battle3d.renderer.interiorFog.hidden.has('12,11')),false);
  // Start unexplored again, then use the actual door-click movement path.
  if(!(await page.evaluate(()=>battle3d.paused)))await page.click('#pause');

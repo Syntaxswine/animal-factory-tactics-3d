@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import {createRequire} from 'node:module';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -15,7 +16,7 @@ try{
  const ammo=await page.evaluate(()=>battle3d.state.units[0].ammo.grenade);
  await page.screenshot({path:out+'/planned-lob.png'});await page.locator('#grenade-cancel').click();assert.equal(await page.evaluate(()=>battle3d.state.units[0].ammo.grenade),ammo);
  for(let id=0;id<4;id++){
-  await page.locator('#squad button').nth(id).click();await page.locator('#center').click();
+  await page.locator('.merc-select').nth(id).click();await clickBattleControl(page,'#center');
   const before=await page.evaluate(id=>{const s=battle3d.state,a=s.units[id];s.phase='player';a.ap=18;return {ap:a.ap,ammo:a.ammo.grenade,species:a.species,x:a.x,y:a.y};},id);
   await page.locator('#aim-grenade').click();await aim({x:before.x,y:before.y-7,z:0});
   await page.locator('#grenade-throw').click();
@@ -39,8 +40,8 @@ try{
  }
  // Blocked aim remains confirmable under a roof; changing the interaction
  // layer while targeting doesn't move the thrower or spend AP.
- await page.locator('#squad button').first().click();
- await page.evaluate(()=>{const a=battle3d.state.units[0];a.x=29;a.y=20;a.ap=18;battle3d.state.revision++;battle3d.state.seen.add('35,20');});await page.locator('#center').click();await page.locator('#aim-grenade').click();await aim({x:35,y:20,z:0});
+ await page.locator('.merc-select').first().click();
+ await page.evaluate(()=>{const a=battle3d.state.units[0];a.x=29;a.y=20;a.ap=18;battle3d.state.revision++;battle3d.state.seen.add('35,20');});await clickBattleControl(page,'#center');await page.locator('#aim-grenade').click();await aim({x:35,y:20,z:0});
  const blocked=await page.evaluate(()=>({reason:battle3d.grenadePreview.reason,ok:battle3d.grenadePreview.ok,blocked:battle3d.grenadePreview.blocked,kind:battle3d.grenadePreview.trajectory.collisions[0]?.kind}));assert.ok(blocked.ok&&blocked.blocked,JSON.stringify(blocked));assert.equal(await page.locator('#grenade-throw').isEnabled(),true);
  await page.screenshot({path:out+'/blocked-lob.png'});await page.locator('#grenade-cancel').click();
  assert.deepEqual(report.errors,[]);report.blocked=blocked;fs.writeFileSync(out+'/browser-report.json',JSON.stringify(report,null,2));console.log(JSON.stringify({throws:report.throws.map(t=>t.species),blocked,errors:report.errors}));

@@ -1,0 +1,201 @@
+{
+  "errors": [],
+  "equip": "Image clicks: ready2AP/backpack3AP; paused and same-frame reopening clear only cosmetic busy state",
+  "alpha": [
+    {
+      "kind": "assault",
+      "width": 2007,
+      "height": 784,
+      "transparentPixels": 1149037,
+      "solidPixels": 404249,
+      "outside32": 0,
+      "outsideAlphaFraction": 9.606245486780023e-7,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "flamethrower",
+      "width": 1979,
+      "height": 795,
+      "transparentPixels": 1074068,
+      "solidPixels": 478101,
+      "outside32": 0,
+      "outsideAlphaFraction": 7.46088042782678e-8,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "grenade",
+      "width": 1223,
+      "height": 1286,
+      "transparentPixels": 864002,
+      "solidPixels": 692657,
+      "outside32": 0,
+      "outsideAlphaFraction": 1.7132311470904881e-7,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "hands",
+      "width": 1774,
+      "height": 887,
+      "transparentPixels": 850273,
+      "solidPixels": 707910,
+      "outside32": 0,
+      "outsideAlphaFraction": 0.000004054119947880593,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "hmg",
+      "width": 2172,
+      "height": 724,
+      "transparentPixels": 1119104,
+      "solidPixels": 428558,
+      "outside32": 0,
+      "outsideAlphaFraction": 0.0000027470606197011733,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "knife",
+      "width": 2172,
+      "height": 724,
+      "transparentPixels": 1105323,
+      "solidPixels": 454974,
+      "outside32": 0,
+      "outsideAlphaFraction": 0.0000031750133098297683,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "launcher",
+      "width": 1774,
+      "height": 887,
+      "transparentPixels": 1075490,
+      "solidPixels": 483171,
+      "outside32": 0,
+      "outsideAlphaFraction": 4.1798889805095054e-7,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "pistol",
+      "width": 1774,
+      "height": 887,
+      "transparentPixels": 1003529,
+      "solidPixels": 552915,
+      "outside32": 0,
+      "outsideAlphaFraction": 6.017545400105555e-7,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "rifle",
+      "width": 2172,
+      "height": 724,
+      "transparentPixels": 1262077,
+      "solidPixels": 294806,
+      "outside32": 0,
+      "outsideAlphaFraction": 0.0000030611082597454544,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "rpg",
+      "width": 2172,
+      "height": 724,
+      "transparentPixels": 1254458,
+      "solidPixels": 302125,
+      "outside32": 0,
+      "outsideAlphaFraction": 0.0000033307538786366652,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "shotgun",
+      "width": 2172,
+      "height": 724,
+      "transparentPixels": 1234099,
+      "solidPixels": 323193,
+      "outside32": 0,
+      "outsideAlphaFraction": 0.0000016285510417712444,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "smg",
+      "width": 2172,
+      "height": 724,
+      "transparentPixels": 1163099,
+      "solidPixels": 394388,
+      "outside32": 0,
+      "outsideAlphaFraction": 9.9403478720125e-7,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "sniper",
+      "width": 2172,
+      "height": 724,
+      "transparentPixels": 1187838,
+      "solidPixels": 363309,
+      "outside32": 0,
+      "outsideAlphaFraction": 8.291447522435839e-7,
+      "corners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

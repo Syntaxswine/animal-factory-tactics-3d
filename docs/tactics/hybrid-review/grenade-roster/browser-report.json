@@ -1,0 +1,194 @@
+{
+  "source": "packaged .pages-output under /af3d/",
+  "combinations": 25,
+  "samples": 3475,
+  "report": [
+    {
+      "animal": "horse",
+      "outfit": "normal",
+      "maxGrip": 4.996003610813204e-16,
+      "geometries": 17,
+      "textures": 7
+    },
+    {
+      "animal": "horse",
+      "outfit": "red-hats",
+      "maxGrip": 4.996003610813204e-16,
+      "geometries": 35,
+      "textures": 14
+    },
+    {
+      "animal": "goat",
+      "outfit": "normal",
+      "maxGrip": 5.613217783960923e-16,
+      "geometries": 17,
+      "textures": 7
+    },
+    {
+      "animal": "goat",
+      "outfit": "red-hats",
+      "maxGrip": 5.613217783960923e-16,
+      "geometries": 35,
+      "textures": 14
+    },
+    {
+      "animal": "bull",
+      "outfit": "normal",
+      "maxGrip": 5.721958498152797e-16,
+      "geometries": 17,
+      "textures": 7
+    },
+    {
+      "animal": "bull",
+      "outfit": "red-hats",
+      "maxGrip": 5.721958498152797e-16,
+      "geometries": 35,
+      "textures": 14
+    },
+    {
+      "animal": "cow",
+      "outfit": "normal",
+      "maxGrip": 5.721958498152797e-16,
+      "geometries": 21,
+      "textures": 8
+    },
+    {
+      "animal": "cow",
+      "outfit": "red-hats",
+      "maxGrip": 5.721958498152797e-16,
+      "geometries": 39,
+      "textures": 15
+    },
+    {
+      "animal": "donkey",
+      "outfit": "normal",
+      "maxGrip": 4.972820174300706e-16,
+      "geometries": 22,
+      "textures": 7
+    },
+    {
+      "animal": "donkey",
+      "outfit": "red-hats",
+      "maxGrip": 4.972820174300706e-16,
+      "geometries": 40,
+      "textures": 14
+    },
+    {
+      "animal": "donkey",
+      "outfit": "blue-hawaiian",
+      "maxGrip": 4.972820174300706e-16,
+      "geometries": 28,
+      "textures": 7
+    },
+    {
+      "animal": "sheep",
+      "outfit": "normal",
+      "maxGrip": 4.996003610813204e-16,
+      "geometries": 22,
+      "textures": 10
+    },
+    {
+      "animal": "sheep",
+      "outfit": "red-hats",
+      "maxGrip": 4.996003610813204e-16,
+      "geometries": 40,
+      "textures": 17
+    },
+    {
+      "animal": "skunk",
+      "outfit": "normal",
+      "maxGrip": 4.671272446551088e-16,
+      "geometries": 17,
+      "textures": 8
+    },
+    {
+      "animal": "skunk",
+      "outfit": "red-hats",
+      "maxGrip": 4.671272446551088e-16,
+      "geometries": 35,
+      "textures": 15
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "normal",
+      "maxGrip": 6.4796043696850615e-16,
+      "geometries": 18,
+      "textures": 8
+    },
+    {
+      "animal": "pig-foreman",
+      "outfit": "red-hats",
+      "maxGrip": 6.4796043696850615e-16,
+      "geometries": 18,
+      "textures": 8
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "normal",
+      "maxGrip": 5.308884478722699e-16,
+      "geometries": 17,
+      "textures": 7
+    },
+    {
+      "animal": "pig-director",
+      "outfit": "red-hats",
+      "maxGrip": 5.308884478722699e-16,
+      "geometries": 35,
+      "textures": 14
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "normal",
+      "maxGrip": 5.087681048627601e-16,
+      "geometries": 21,
+      "textures": 9
+    },
+    {
+      "animal": "rabbit",
+      "outfit": "red-hats",
+      "maxGrip": 5.087681048627601e-16,
+      "geometries": 39,
+      "textures": 16
+    },
+    {
+      "animal": "dog",
+      "outfit": "normal",
+      "maxGrip": 5.087681048627601e-16,
+      "geometries": 26,
+      "textures": 9
+    },
+    {
+      "animal": "dog",
+      "outfit": "red-hats",
+      "maxGrip": 5.087681048627601e-16,
+      "geometries": 44,
+      "textures": 16
+    },
+    {
+      "animal": "hen",
+      "outfit": "normal",
+      "maxGrip": 5.23691153334427e-16,
+      "geometries": 22,
+      "textures": 13
+    },
+    {
+      "animal": "hen",
+      "outfit": "red-hats",
+      "maxGrip": 5.23691153334427e-16,
+      "geometries": 45,
+      "textures": 20
+    }
+  ],
+  "memory": {
+    "before": [
+      17,
+      7
+    ],
+    "after": [
+      17,
+      7
+    ],
+    "animal": "horse"
+  },
+  "errors": []
+}

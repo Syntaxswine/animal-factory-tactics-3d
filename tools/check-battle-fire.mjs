@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import assert from 'node:assert/strict';import fs from 'node:fs';import {fileURLToPath} from 'node:url';import {createRequire} from 'node:module';
 import {execFileSync} from 'node:child_process';
 import {blankMap,edgeKey} from '../dist/tactics/core/maps.js';
@@ -17,7 +18,7 @@ try{
  await page.goto((process.env.EDITOR_ORIGIN||'http://127.0.0.1:4364')+'/tactics/battle-3d.html');
  await page.waitForFunction(()=>window.battle3d?.state,{},{timeout:90000});
  await page.evaluate(()=>{const s=battle3d.state;s.phase='player';s.rules.awareness=false;for(const u of s.units){u.hp=u.maxHp=1000;u.ap=30;u.heading=u.team==='squad'?0:180;}s.units[6].hp=1;for(const u of s.units.filter(u=>u.team==='guard'))s.detected.add(u.id);s.revision++;});
- await page.click('#center');await page.waitForFunction(()=>[0,4,5,6,7].every(id=>battle3d.renderer.models.has(id))&&!battle3d.renderer.busy,{},{timeout:90000});await page.evaluate(()=>battle3d.renderer.fire.ready);
+ await clickBattleControl(page,'#center');await page.waitForFunction(()=>[0,4,5,6,7].every(id=>battle3d.renderer.models.has(id))&&!battle3d.renderer.busy,{},{timeout:90000});await page.evaluate(()=>battle3d.renderer.fire.ready);
  const aim=await page.evaluate(()=>{const r=document.getElementById('battle').getBoundingClientRect(),p=battle3d.project({x:18,y:10,z:0});return {x:r.x+p.x,y:r.y+p.y};});
  await page.click('#aim-flame');await page.mouse.click(aim.x,aim.y);await page.click('#flame-fire');await page.click('#pause');
  await page.mouse.move(aim.x,aim.y);await page.mouse.wheel(0,-600);await page.mouse.move(10,10);
@@ -35,6 +36,6 @@ try{
  const save=await page.evaluate(async()=>{const {captureEncounter,restoreEncounter}=await import('./encounter-save.js'),s=battle3d.state,b=restoreEncounter(captureEncounter(s));return {live:s.units.map(u=>[u.x,u.y,u.hp]),loaded:b.units.map(u=>[u.x,u.y,u.hp]),events:b.fireAnimations,loot:JSON.stringify(b.loot),ap:s.units[0].ap,fuel:s.units[0].ammo.flamethrower};});
  assert.deepEqual(save.live,save.loaded);assert.equal(save.events,undefined);assert.equal(save.loot,paid.loot);assert.equal(save.ap,paid.ap);assert.equal(save.fuel,paid.fuel);
  await page.evaluate(()=>{const r=battle3d.renderer;r.reducedMotion={matches:true};});await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>battle3d.renderer.fire.busy),false);
- await page.evaluate(()=>window.previousFireRenderer=battle3d.renderer);await page.click('#restart');await page.waitForFunction(()=>battle3d.renderer!==previousFireRenderer&&battle3d.renderer.models.has(0)&&!battle3d.renderer.busy,{},{timeout:90000});assert.equal(await page.evaluate(()=>battle3d.renderer.fire.entries.size),0);
+ await page.evaluate(()=>window.previousFireRenderer=battle3d.renderer);await clickBattleControl(page,'#restart');await page.waitForFunction(()=>battle3d.renderer!==previousFireRenderer&&battle3d.renderer.models.has(0)&&!battle3d.renderer.busy,{},{timeout:90000});assert.equal(await page.evaluate(()=>battle3d.renderer.fire.entries.size),0);
  assert.deepEqual(errors,[]);console.log('Live horse fire: lethal spray, multi-target engulfment, fatal ash, wall protection, saved deaths, reduced motion and restart pass.');
 }finally{await browser.close();fs.writeFileSync(new URL('browser-closed.json',out),JSON.stringify({identity,closedAt:new Date().toISOString()}));}

@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import * as T from '../dist/tactics/vendor/three.module.js';
-import {blankMap,setTerrain} from '../dist/tactics/core/maps.js';
+import {blankMap,setTerrain,terrainAt} from '../dist/tactics/core/maps.js';
 import {createGame,attack,endTurn,stepEnemy,previewAttack} from '../dist/tactics/core/engine.js';
 import {captureEncounter,restoreEncounter} from '../dist/tactics/encounter-save.js';
 import {startEncounterClock} from '../dist/tactics/encounter-clock.js';
@@ -48,8 +48,15 @@ test('real elevated detonations spare mercs underneath and never put tower fire 
   const {s,a,b,fire}=fixture(),below=s.units.slice(1,4).map(u=>u.hp);
   if(level==='roof'){for(let y=10;y<30;y++)for(let x=10;x<30;x++)setTerrain(s,x,y,1,'floor');a.z=b.z=1;}
   else{const tower={x:18,y:18,z:0,kind:'wooden-spotlight-tower'};s.props.push(tower);a.x=19;a.y=19;b.x=21;b.y=19;for(const u of [a,b])u.towerPost=towerPost(tower,u);}
+  const footprint=[];for(let y=b.y-5;y<=b.y+5;y++)for(let x=b.x-5;x<=b.x+5;x++)if(Math.hypot(x-b.x,y-b.y)<=5)footprint.push({x,y,z:1});
   fire();assert.deepEqual(s.units.slice(1,4).map(u=>u.hp),below);assert.ok(s.units.slice(1,4).every(u=>!u.burningTurns&&!u.burnedRemains));
-  assert.equal(s.fires.length,level==='tower'?0:81);assert.ok(s.fires.every(p=>p.z===1));
+  if(level==='tower')assert.equal(s.fires.length,0);
+  else{
+   const supported=footprint.filter(p=>terrainAt(s,p.x,p.y,p.z)==='floor'),key=p=>`${p.x},${p.y},${p.z}`;
+   assert.ok(supported.length>0&&supported.length<footprint.length,'the blast leaves some floor intact and breaks holes in the rest');
+   assert.deepEqual(s.fires.map(key).sort(),supported.map(key).sort(),'fire remains only on the surviving upper floor');
+  }
+  assert.ok(s.fires.every(p=>p.z===1));
   assert.equal(s.fireAnimations.find(e=>e.kind==='tank').route[0].towerPost?.kind,level==='tower'?'wooden-spotlight-tower':undefined);
  }
 });

@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import {createRequire} from 'node:module';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -14,7 +15,7 @@ try{
  await page.keyboard.press('Escape');await menu.waitFor({state:'hidden'});assert.equal(await page.evaluate(()=>battle3d.state.queue.length),0);
  // Merc submenus are real actions, and a right click itself spends nothing.
  const ap=await page.evaluate(()=>battle3d.state.units[0].ap);await clickAt({x:20,y:24,h:1,z:0});await menu.waitFor({state:'visible'});assert.match(await menu.textContent(),/Yakov/);assert.equal(await page.evaluate(()=>battle3d.state.units[0].ap),ap);await page.screenshot({path:out+'/merc-menu.png'});
- await menu.locator('[data-action="stance"]').click();await menu.locator('[data-action="stance-kneeling"]').click();assert.equal(await page.evaluate(()=>battle3d.state.units[0].stance),'kneeling');await page.locator('#stance-standing').click();
+ await menu.locator('[data-action="stance"]').click();await menu.locator('[data-action="stance-kneeling"]').click();assert.equal(await page.evaluate(()=>battle3d.state.units[0].stance),'kneeling');await clickBattleControl(page,'#stance-standing');
  // Choosing a grenade tile hands off to the existing lob planner.
  await clickAt({x:20,y:18,z:0});await menu.locator('[data-action="ground-shot"]').click();assert.equal(await page.locator('#grenade-plan').isVisible(),true);await page.locator('#grenade-cancel').click();
  // Equip the already-carried pistol through the submenu and fire at terrain.

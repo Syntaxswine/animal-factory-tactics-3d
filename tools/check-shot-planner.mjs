@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -13,7 +14,7 @@ try{
  await page.waitForFunction(()=>window.battle3d?.state,{},{timeout:90000});
  await page.click('#pause');
  await page.evaluate(()=>{const s=battle3d.state,a=s.units[0],b=s.units[4];a.heading=0;a.ap=30;a.accuracy=60;a.stats.firearms=60;a.stats.dexterity=60;s.phase='player';s.detected.add(b.id);s.rules.awareness=false;s.revision++;});
- await page.click('#center');
+ await clickBattleControl(page,'#center');
  await page.waitForFunction(()=>battle3d.renderer.models.has(4),{},{timeout:90000});
  // Find an actual pickable point on the target rather than guessing screen scale.
  const pick=await page.evaluate(()=>{const canvas=document.getElementById('battle'),r=canvas.getBoundingClientRect(),p=battle3d.project(battle3d.state.units[4]);for(let y=p.y-65;y<p.y+15;y+=3)for(let x=p.x-25;x<p.x+25;x+=3)if(battle3d.renderer.pick(x,y,r.width,r.height)===4)return {x:r.x+x,y:r.y+y};return null;});

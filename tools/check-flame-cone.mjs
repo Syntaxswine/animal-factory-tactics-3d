@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {fileURLToPath} from 'node:url';
@@ -20,7 +21,7 @@ try{
  await page.goto((process.env.EDITOR_ORIGIN||'http://127.0.0.1:4364')+'/tactics/battle-3d.html');
  await page.waitForFunction(()=>window.battle3d?.state,{},{timeout:90000});
  await page.evaluate(()=>{const s=battle3d.state;s.phase='player';s.rules.awareness=false;for(const u of s.units){u.hp=u.maxHp=1000;u.ap=30;u.heading=u.team==='squad'?0:180;}for(const u of s.units.filter(u=>u.team==='guard'))s.detected.add(u.id);s.revision++;});
- await page.click('#center');await page.waitForFunction(()=>battle3d.renderer.models.has(0)&&battle3d.renderer.models.has(4)&&!battle3d.renderer.busy,{},{timeout:90000});
+ await clickBattleControl(page,'#center');await page.waitForFunction(()=>battle3d.renderer.models.has(0)&&battle3d.renderer.models.has(4)&&!battle3d.renderer.busy,{},{timeout:90000});
  const ground=async(x,y)=>page.evaluate(({x,y})=>{const r=document.getElementById('battle').getBoundingClientRect(),p=battle3d.project({x,y,z:0});return {x:r.x+p.x,y:r.y+p.y};},{x,y});
  const aim=await ground(18,10),north=await ground(10,3);
  await page.click('#aim-flame');assert.equal(await page.evaluate(()=>battle3d.paused),true);
@@ -35,9 +36,9 @@ try{
  await page.click('#flame-place');await page.mouse.click(aim.x,aim.y);assert.doesNotMatch(await page.locator('.flame-targets').textContent(),/Hidden Test Guard/);
  assert.deepEqual(await resources(),before);
  await page.locator('#viewport').screenshot({path:fileURLToPath(new URL('template.png',out))});
- await page.setViewportSize({width:430,height:900});const panelBox=await page.locator('#flame-plan').boundingBox();assert.ok(panelBox.x+panelBox.width<=430);await page.locator('#flame-plan').screenshot({path:fileURLToPath(new URL('mobile-template.png',out))});await page.setViewportSize({width:1500,height:1000});await page.click('#center');
+ await page.setViewportSize({width:430,height:900});const panelBox=await page.locator('#flame-plan').boundingBox();assert.ok(panelBox.x+panelBox.width<=430);await page.locator('#flame-plan').screenshot({path:fileURLToPath(new URL('mobile-template.png',out))});await page.setViewportSize({width:1500,height:1000});await clickBattleControl(page,'#center');
  await page.keyboard.press('Escape');assert.equal(await page.locator('#flame-plan').isVisible(),false);assert.deepEqual(await resources(),before);
- await page.click('#aim-flame');await page.locator('#squad button').nth(1).click();assert.equal(await page.locator('#flame-plan').isVisible(),false);await page.locator('#squad button').nth(0).click();assert.deepEqual(await resources(),before);
+ await page.click('#aim-flame');await page.locator('#squad .merc-select').nth(1).click();assert.equal(await page.locator('#flame-plan').isVisible(),false);await page.locator('#squad .merc-select').nth(0).click();assert.deepEqual(await resources(),before);
  await page.click('#pause');await page.click('#aim-flame');await page.mouse.click(aim.x,aim.y);assert.equal(await page.locator('#flame-fire').isDisabled(),true);assert.match(await page.locator('.flame-instruction').textContent(),/Resume/);await page.click('#pause');assert.equal(await page.locator('#flame-fire').isEnabled(),true);await page.keyboard.press('Escape');
  await page.click('#aim-flame');await page.mouse.click(north.x,north.y);assert.equal(await page.evaluate(()=>battle3d.flamePreview.affected.length),0);
  await page.click('#flame-place');await page.mouse.click(aim.x,aim.y);

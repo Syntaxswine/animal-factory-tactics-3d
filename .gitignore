@@ -10,3 +10,6 @@ node_modules/
 .pages-output/
 artifacts/battle-3d/
 artifacts/grenade-blast/
+artifacts/strategic-sites/
+artifacts/grenade-throw/
+artifacts/idle-study/

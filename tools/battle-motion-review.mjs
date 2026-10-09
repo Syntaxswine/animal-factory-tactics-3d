@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import fs from 'node:fs';
@@ -20,6 +21,6 @@ try{
   else {assert.ok(samples.filter(s=>s.x>3&&s.x<4).length>=4,'Missing intermediate movement frames');assert.ok(new Set(samples.map(s=>s.knee.join(','))).size>4,'Leg pose did not animate');}
   return {frames:samples.length,intermediate:samples.filter(s=>s.x>3&&s.x<4).length,settled:samples.at(-1)};
  }
- const walking=await walk(false);await page.emulateMedia({reducedMotion:'reduce'});await page.click('#restart');await page.waitForFunction(()=>battle3d.renderer.models.size>=4);const reduced=await walk(true);
+ const walking=await walk(false);await page.emulateMedia({reducedMotion:'reduce'});await clickBattleControl(page,'#restart');await page.waitForFunction(()=>battle3d.renderer.models.size>=4);const reduced=await walk(true);
  assert.deepEqual(errors,[]);fs.writeFileSync(new URL('motion-results.json',out),JSON.stringify({walking,reduced,errors},null,2));console.log(JSON.stringify({walking,reduced,errors}));
 }finally{await browser.close();}

@@ -1,0 +1,199 @@
+{
+  "browserConfigurations": 36,
+  "playbackSamples": 363,
+  "errors": [],
+  "stats": {
+    "before": {
+      "time": 0,
+      "phase": "Ready",
+      "released": false,
+      "ball": {
+        "phase": "held",
+        "position": [
+          0.2627294164344398,
+          1.063753882025019,
+          0.05491033514456872
+        ],
+        "quaternion": [
+          -0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "groundClearance": 1.0262838802976764
+      },
+      "ring": {
+        "phase": "pin",
+        "position": [
+          0.21372941643443982,
+          1.0807538820250189,
+          0.028910335144568727
+        ],
+        "groundClearance": 1.0790419807402647
+      },
+      "lever": {
+        "phase": "held",
+        "position": [
+          0.2517294164344398,
+          1.063753882025019,
+          0.03991033514456872
+        ],
+        "groundClearance": 1.0567538818089521
+      },
+      "palm": [
+        0.26272941643444,
+        1.079753882025019,
+        0.0549103351445686
+      ],
+      "gripError": 2.0816681711721685e-16,
+      "feet": {
+        "1": {
+          "target": [
+            -0.035,
+            0.12,
+            0.232
+          ],
+          "ankle": [
+            -0.034999999999999996,
+            0.12000000000000016,
+            0.232
+          ],
+          "contact": "flat",
+          "planted": true,
+          "yaw": 0
+        },
+        "-1": {
+          "target": [
+            -0.035,
+            0.12,
+            -0.232
+          ],
+          "ankle": [
+            -0.034999999999999996,
+            0.12000000000000016,
+            -0.232
+          ],
+          "contact": "flat",
+          "planted": true,
+          "yaw": 0
+        }
+      },
+      "hips": [
+        0,
+        0.8,
+        0
+      ],
+      "chest": [
+        -0.025,
+        1.08,
+        0
+      ],
+      "animal": "horse",
+      "outfit": "normal",
+      "kind": "overhand throw",
+      "playing": false,
+      "mode": "motion",
+      "view": "side",
+      "scale": "close",
+      "triangles": 820,
+      "geometryCount": 23,
+      "textureCount": 7
+    },
+    "after": {
+      "time": 0,
+      "phase": "Ready",
+      "released": false,
+      "ball": {
+        "phase": "held",
+        "position": [
+          0.2627294164344398,
+          1.063753882025019,
+          0.05491033514456872
+        ],
+        "quaternion": [
+          -0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "groundClearance": 1.0262838802976764
+      },
+      "ring": {
+        "phase": "pin",
+        "position": [
+          0.21372941643443982,
+          1.0807538820250189,
+          0.028910335144568727
+        ],
+        "groundClearance": 1.0790419807402647
+      },
+      "lever": {
+        "phase": "held",
+        "position": [
+          0.2517294164344398,
+          1.063753882025019,
+          0.03991033514456872
+        ],
+        "groundClearance": 1.0567538818089521
+      },
+      "palm": [
+        0.26272941643444,
+        1.079753882025019,
+        0.0549103351445686
+      ],
+      "gripError": 2.0816681711721685e-16,
+      "feet": {
+        "1": {
+          "target": [
+            -0.035,
+            0.12,
+            0.232
+          ],
+          "ankle": [
+            -0.034999999999999996,
+            0.12000000000000016,
+            0.232
+          ],
+          "contact": "flat",
+          "planted": true,
+          "yaw": 0
+        },
+        "-1": {
+          "target": [
+            -0.035,
+            0.12,
+            -0.232
+          ],
+          "ankle": [
+            -0.034999999999999996,
+            0.12000000000000016,
+            -0.232
+          ],
+          "contact": "flat",
+          "planted": true,
+          "yaw": 0
+        }
+      },
+      "hips": [
+        0,
+        0.8,
+        0
+      ],
+      "chest": [
+        -0.025,
+        1.08,
+        0
+      ],
+      "animal": "horse",
+      "outfit": "normal",
+      "kind": "overhand throw",
+      "playing": false,
+      "mode": "motion",
+      "view": "side",
+      "scale": "close",
+      "triangles": 820,
+      "geometryCount": 23,
+      "textureCount": 7
+    }
+  }
+}

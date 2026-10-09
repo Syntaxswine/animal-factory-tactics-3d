@@ -1,3 +1,4 @@
+import {clickBattleControl} from './battle-ui-review.mjs';
 import {createRequire} from 'node:module';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -47,7 +48,7 @@ try{
   assert.ok(shot.removed.length>=1,JSON.stringify(shot));assert.equal(shot.ends.length,2);assert.ok(shot.walkable);
   assert.equal(shot.opening.at(-1)-shot.opening[0]+1,shot.opening.length);assert.deepEqual(shot.diagnostics,[]);
   await page.evaluate(()=>{const r=battle3d.renderer;if(r.combat.active){r.combat.active.start=r.presentationNow-801;r.combat.advance(r.presentationNow);}});
-  await page.locator('#center').click();
+  await clickBattleControl(page,'#center');
   await page.waitForFunction(row=>[...battle3d.renderer.chunks.values()].flatMap(m=>m.userData.boxes).filter(b=>b.breachEnds&&b.source.edge.endsWith(':'+row)).length===2,row);
   await page.screenshot({path:out+'/'+material+'-live-breach.png'});report.shots.push(shot);
  }
