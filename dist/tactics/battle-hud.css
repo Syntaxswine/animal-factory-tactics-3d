@@ -1,3 +1,4 @@
+@import url('./mercenary-status.css');
 :root{--rail:44px;--ink:#efe6ce;--muted:#b2b7a5;--line:#6c7057;--gold:#e2bf70}
 #movement-warning{position:absolute;left:12px;bottom:40px;max-width:calc(100% - 24px);padding:9px 12px;border:2px solid #ffd28a;border-radius:3px;background:#60251ff2;color:#fff0cf;font-size:13px;font-weight:700;line-height:1.4;box-shadow:0 3px 12px #0006;pointer-events:none}
 @media(max-width:760px){#movement-warning{bottom:10px;font-size:12px}}
