@@ -57,8 +57,10 @@ export function createHorseChairMotion(worker,{contact=CHAIR_CONTACT,fit=HORSE_C
   // Preserve a fold at the seat's nose. A triangle connecting a point on the
   // cushion to a calf point below it otherwise cuts diagonally through the rim.
   const index=cloth.index,boundary=new Map();
-  for(let k=0;k<index.count;k+=3){const ids=[index.getX(k),index.getX(k+1),index.getX(k+2)];for(const i of ids){const a=posed[i];if(a.y<top-.001||a.x>front+.008||a.x<front-.10)continue;
-   for(const j of ids){const b=posed[j];if(b.x<front||b.x>front+.15||b.y>top-.003||b.y<top-.15)continue;const w=ease((top-.003-b.y)/.012);boundary.set(i,Math.max(boundary.get(i)||0,w));}
+  for(let k=0;k<index.count;k+=3){const ids=[index.getX(k),index.getX(k+1),index.getX(k+2)];for(const i of ids){const a=posed[i],support=ease((a.y-top+.002)/.002)*ease((a.x-front+.14)/.04);if(!support||a.x>=front+.008)continue;
+   // Blend a connected fold as its calf neighbor approaches the rim. A
+   // binary front-edge membership test snaps on shallower chair seats.
+   for(const j of ids){const b=posed[j],w=support*ease((b.x-front+.04)/.04)*(1-ease((b.x-front-.15)/.03))*ease((top+.008-b.y)/.035)*ease((b.y-top+.18)/.03);boundary.set(i,Math.max(boundary.get(i)||0,w));}
   }}
   for(const [i,w]of boundary)posed[i].x+=(front+.008-posed[i].x)*w;
   for(let i=0;i<p.count;i++){
