@@ -2,7 +2,7 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
-for(const file of ['painted-chairs.js','chair-fit-guide.js','painted-chairs-study.js','painted-chairs-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+for(const file of ['painted-chairs.js','chair-fit-guide.js','painted-chairs-study.js','painted-chairs-study.html','horse-chair-motion.js','horse-chair-study.js','horse-chair-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.cpSync(new URL('dist/assets/environment/painted-chairs/',root),new URL('.pages-output/assets/environment/painted-chairs/',root),{recursive:true});
 for(const file of ['guardhouse-machines.js','guardhouse-machines-study.js','guardhouse-machines-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.cpSync(new URL('dist/assets/environment/guardhouse-consoles/',root),new URL('.pages-output/assets/environment/guardhouse-consoles/',root),{recursive:true});
@@ -36,7 +36,7 @@ console.log('Built Animal Factory Tactics 3D landing page.');
 
 fs.cpSync(new URL('dist/tactics/sector-library/',root),new URL('.pages-output/tactics/sector-library/',root),{recursive:true});
 import {checkModuleClosure} from './check-module-closure.mjs';
-checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-chairs-study.js']);
+checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-chairs-study.js','tactics/horse-chair-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/guardhouse-machines-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/rpg-flight-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/floor-breach-study.js','tactics/wall-breach-study.js','tactics/grenade-blast-study.js','tactics/strategic-sites-study.js','tactics/campaign-page.js','tactics/barrel-blast-study.js','tactics/tank-blast-study.js','tactics/painted-fire-study.js','tactics/helicoid-shot-study.js','tactics/battle-3d.js','tactics/editor-3d.js','tactics/title-3d.js','tactics/overmap.js','tactics/roof-mantle-study.js','tactics/ledge-descent-study.js','tactics/idle-study.js','tactics/armed-idle-study.js','tactics/grenade-throw-study.js']);

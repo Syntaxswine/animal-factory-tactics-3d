@@ -41,13 +41,43 @@ There is no shared tail opening. The wingback is closed, including the previousl
 
 The shared animation should use feet, seat and hands-on-thighs support. It must not require armrests, compressible cushions or a rotating seat, because those features differ across the models.
 
-## What still needs a character animation pass
+## Horse sit/stand study
+
+Open `tactics/horse-chair-study.html`. The original horse now uses the same **9.2-second** unarmed sit/rest/stand clip with the wingback, wooden, metal and desk chair, in either finish. Switch chairs without changing the character's pose or root offset. Five camera views, gameplay scale, grey forms, pause/scrub and seven keyframe buttons are available. The collection page links to it.
+
+| Time | Action and support |
+| --- | --- |
+| 0–0.7 s | Bend forward and bring hands toward thighs; both soles stay planted. |
+| 0.7–2.7 s | Lower the hips back onto the cushion. |
+| 2.7–3.4 s | Settle upright while the clothed seat supports the body. |
+| 3.4–5.4 s | Sit and glance to the side. |
+| 5.4–6.2 s | Shift the chest forward over the hooves, keeping the hips down. |
+| 6.2–7.6 s | Rise through the legs; hands lift clear of the thighs. |
+| 7.6–9.2 s | Return the arms to the sides and stand. |
+
+`horse-chair-motion.js` fits the real horse's thigh/shin lengths rather than using the gold mannequin's pelvis marker literally. Two-bone IK keeps both sole surfaces fixed at the shared foot positions, and all bone lengths and character/chair scales remain unchanged. Hands follow actual thigh triangles, with the palm orientation and offset checked against the visible gloves. The release follows a shallow arc so fingers do not cut through the trousers.
+
+A reversible cloth corrective compresses loose overalls against the Y 0.48 seat and forms a fold around its front edge. It changes clothing vertices only, preserving the bind-space paint, original geometry buffers on restoration, skeleton and chair geometry. Maximum vertical cloth compression is about 0.068 tile; the largest combined compression/fold displacement is about 0.102 tile. This is authored contact correction, not a cloth or rigid-body simulation. Existing horse underarm/side paint repairs are reused in the viewer.
+
+```js
+const motion = createHorseChairMotion(horse);
+motion.apply(seconds, {heading: 0, position: [0, 0, 0]});
+// Heading is radians around Y; zero faces chair-local +Z.
+motion.diagnostics(); // Actual soles, joints and clothed seat contact.
+motion.restore();
+motion.dispose(); // Restores original weights, positions, normals and skeleton binding.
+```
+
+The horse mesh has no tail. This study does not establish tail accommodation, other species/outfits, weapons, approach/turning, or gameplay occupancy. In particular, characters with shorter legs or larger bodies still need their own anatomical fit against this same chair contract.
+
+## Remaining character animation work
 
 The design audit measured hip/body widths of approximately 0.527 for the horse, 0.687 for the director, 0.727 for the foreman and 0.714 for the hen, excluding the mammals' neutral arm spread. This informs the 0.84 seat width, but does not establish seated contact or clothing clearance.
 
-- [ ] Author one supported sit/stand sequence in chair-local space: feet planted, torso leans forward, hips lower onto the seat; reverse support transfer before rising.
+- [x] Author the horse's supported sit/stand sequence in chair-local space: feet planted, torso leans forward, hips lower onto the seat; reverse support transfer before rising.
 - [ ] Retarget that common sequence through species-specific limb lengths and IK; do not scale characters or bones to fit. The pelvis marker is not an exact bone target for every species.
-- [ ] Verify the actual skinned butt/thigh surface contacts the seat, with soles planted and hands on the thighs. Check every chair with no chair-specific root offsets.
+- [x] Verify the horse's actual skinned butt/thigh surface contacts the seat, with soles planted and hands on the thighs. Check every chair with no chair-specific root offsets.
+- [ ] Repeat the actual surface-contact and chair-clearance review for each added species and outfit.
 - [ ] Give the shorter-legged foreman an appropriate adapter. The hen's wing/leg rig needs its own adapter rather than the literal mammal bone clip.
 - [ ] Author tail handling once per species that accommodates the closed wingback as well as the lower open-backed chairs. Neither the large hip-weighted skunk plume nor the hen's upright fan has been fitted to a native seated pose.
 - [ ] Check all outfits and any equipped/stowed weapons before claiming complete animation support.
@@ -80,9 +110,15 @@ UVs use the actual 1254-pixel atlas boundaries: columns `[0,315,629,941,1254]`, 
 ```text
 node --test tests/painted-chairs.test.mjs tests/guardhouse-machines.test.mjs tests/tactics-3d-deployment.test.mjs
 node tools/check-painted-chairs.mjs
+node --test tests/horse-chair-motion.test.mjs
+node tools/check-horse-chair.mjs
 ```
 
 The browser checker accepts `PLAYWRIGHT_PATH` and `CHAIR_REVIEW_URL`, reuses the existing preview, and closes its owned browser in `finally`. It writes screenshots, exact helper identities, close receipts and its report under `artifacts/painted-chairs/`.
+
+The horse checker similarly accepts `HORSE_CHAIR_REVIEW_URL` and `PLAYWRIGHT_PATH`. It covers **80 view/finish/scale combinations and 80 motion keyframe configurations**, real playback/loop controls, exact backward scrubbing, mobile layout, repeated chair replacement and idempotent teardown. Its two normal-speed canvas recordings and images are saved under `artifacts/painted-chairs/horse-motion/`. The warmed renderer stays at 50 geometries / 7 textures after switching chairs and finishes; no browser errors occurred. Five motion tests check dense pose continuity, actual sole surfaces, limb lengths, mass transfer before cushion release, triangle interiors against chair solids (ray parity for concave shells), actual glove/trouser penetration and exact rig/mesh restoration. These checks support visual review rather than replacing it.
+
+The completed horse pass passed **59 focused/regression tests**, including the existing animal motion, horse mesh, paint lifecycle, chair and distribution-build suites. [Independent hostile review](../../hybrid-review/painted-chairs/horse-sitting-review.md) scored it **9/10**, with no blockers after the glove-contact and seat-rim corrections. Selected durable evidence: [three-quarter playback](../../hybrid-review/painted-chairs/horse-sit-stand-three.webm), [side playback](../../hybrid-review/painted-chairs/horse-sit-stand-side.webm), [wingback seated](../../hybrid-review/painted-chairs/horse-wingback-seated.png), and [wooden-chair contact](../../hybrid-review/painted-chairs/horse-wood-seat-contact.png).
 
 The height/closed-back revision `2125cc1` passed **14 focused/build tests and 100 browser configurations**. Checks covered both finishes, all angles/scales, each native reference, mobile overflow, repeated model replacement, delayed-reference cancellation and idempotent teardown. Geometry checks also verified real continuous upholstery over the formerly open back and complete lower-chair bounds at cuff height. That revision's warmed renderer held at 46 geometries / 2 textures with no character selected. No console errors were observed. The build packages the atlas and viewer and validates the complete module import graph.
 
