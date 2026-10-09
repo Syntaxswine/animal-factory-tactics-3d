@@ -153,3 +153,9 @@ Source inspection confirms that cosmetic draw settling still excludes combat, tr
 Build backpack weapon display data from the current `u.ammo` value, without mutating the live inventory. Add a regression for fire, stow/backpack, display and re-equip, including zero rounds. This cosmetic follow-up does not reopen the resolved campaign-click, equipment-cost or paused-draw blockers.
 
 The independent review's temporary browser tab and port-60727 server were closed. Exact process identity was verified before graceful shutdown; the stop receipt, process exit and released port were confirmed. Logs and screenshots remain in `artifacts/oct09-hud-integration` in the review checkout.
+
+## October 9 builder follow-up: backpack ammunition display
+
+Resolved the nonblocking follow-up above. Backpack weapon cards now read the authoritative ammunition count, including zero, just as ready-slot cards do. The sheet creates display copies without changing the live inventory; a missing ammunition entry retains the existing carried-item fallback.
+
+Verification: **29 focused Inventory, character-screen and HUD tests pass**. Four new regressions fire a pistol, move it to the backpack either by stowing or replacing its ready slot, inspect it and re-equip it, for both 7 remaining rounds and an empty magazine. They also assert that inspection does not mutate the unit. The browser equipment check confirms the actual backpack and ready cards show 7 and 0, preserves the existing AP/draw restrictions, and reports no browser errors or failed requests. The 3D package build passes. Its temporary review browser closed successfully; the existing user preview retains its previously scheduled expiry.

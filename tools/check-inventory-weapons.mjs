@@ -54,6 +54,27 @@ try{
  await page.evaluate(()=>{battle3d.state.phase='player';battle3d.state.units[0].ap=12;battle3d.state.revision++;});
  report.checks.push('Enemy-turn inspection remains free without permitting equipment changes');
 
+ for(const rounds of [8,1]){
+  const fired=await page.evaluate(async rounds=>{
+   const {equip,attackGround}=await import('./core/engine.js'),s=battle3d.state,u=s.units[0];u.ap=20;
+   if(u.weapon!=='pistol'&&!equip(s,u,'pistol'))throw Error('Pistol equip rejected');u.ammo.pistol=rounds;
+   if(!attackGround(s,u,{x:u.x+3,y:u.y,z:u.z||0}))throw Error('Pistol shot rejected');
+   battle3d.renderer.captureCombat(s);
+   return u.ammo.pistol;
+  },rounds);
+  assert.equal(fired,rounds-1);await page.click('#pause');
+  await page.waitForFunction(()=>!battle3d.renderer.busy);await page.click('#pause');await open();
+  const pistolCard=section=>page.locator(section+' .dossier-item').filter({has:page.locator('[data-weapon="pistol"]')});
+  await pistolCard('.dossier-equipment').getByRole('button',{name:'To backpack',exact:true}).click();
+  const beforeOpening=await page.evaluate(()=>JSON.stringify(battle3d.state.units[0]));await open();
+  assert.match(await pistolCard('.dossier-backpack').innerText(),new RegExp('Loaded: '+(rounds-1)+'\\b'));
+  assert.equal(await page.evaluate(()=>JSON.stringify(battle3d.state.units[0])),beforeOpening);
+  await choice('pistol').click();assert.equal((await state(0)).rounds,rounds-1);await open();
+  assert.match(await pistolCard('.dossier-equipment').innerText(),new RegExp('Loaded: '+(rounds-1)+'\\b'));
+  await page.click('#character-close');
+ }
+ report.checks.push('After firing, Inventory shows 7 or 0 loaded rounds in the backpack and after re-equipping, without mutating inventory on inspection');
+
  await page.locator('#aim-level').dispatchEvent('change');await page.screenshot({path:path.join(out,'hud.png')});
  await open();await page.waitForFunction(()=>[...document.querySelectorAll('#character-screen img')].every(i=>i.complete&&i.naturalWidth));await page.screenshot({path:path.join(out,'inventory.png')});
  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>{const d=document.querySelector('#character-screen');return d.scrollWidth<=d.clientWidth;}),true);await page.screenshot({path:path.join(out,'inventory-mobile.png')});await page.click('#character-close');await page.screenshot({path:path.join(out,'hud-mobile.png')});

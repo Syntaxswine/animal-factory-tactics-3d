@@ -19,7 +19,10 @@ export function characterSheet(u,{equipmentState='carried'}={}){
  const legacy={medical:u.medical,perception:u.perception,sneak:u.stealth},stats=CHARACTER_STATS.map(([key,label])=>({key,label,value:bounded(u.stats?.[key]??legacy[key])}));
  const equipment=(u.slots||[]).filter(Boolean).map(kind=>({type:kind==='wireCutters'?'utility':'weapon',kind,held:kind===u.weapon,stowed:kind===u.weapon&&equipmentState==='stowed',jammed:u.pack?.find(i=>i.type==='weapon'&&i.kind===kind)?.jammed,condition:u.pack?.find(i=>i.type==='weapon'&&i.kind===kind)?.condition??100,drawing:kind===u.weapon&&equipmentState==='drawing',rounds:u.ammo?.[kind]}));
  if(u.weapon==='hands')equipment.unshift({type:'weapon',kind:'hands',held:true});
- const layout=gridLayout(u),backpack=gridEntries(u).map(e=>({...e,cell:layout.entries.find(p=>p.key===e.key)?.cell}));
+ const layout=gridLayout(u),backpack=gridEntries(u).map(e=>({...e,
+  // Firing updates u.ammo; the carried item's rounds may still be cached.
+  item:e.item.type==='weapon'?{...e.item,rounds:u.ammo?.[e.item.kind]??e.item.rounds}:e.item,
+  cell:layout.entries.find(p=>p.key===e.key)?.cell}));
  return {name:u.name,species:u.species,portrait:characterArt(u.species,'hands').src,stats,equipment,backpack,weight:loadWeight(u),hp:u.hp,maxHp:u.maxHp,ap:u.ap,maxAp:u.maxAp,stamina:u.stamina,maxStamina:u.maxStamina,damageResistance:u.damageResistance,carryCapacity:carryCapacity(u),loadMultiplier:loadMultiplier(u,loadWeight(u))};
 }
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
