@@ -1,3 +1,4 @@
+import {breachesOf} from './breach-data.js';
 // Damage history already lives in the encounter: definition keeps the original
 // map while edges keeps surviving structures. Ordinary authoring maps have no
 // definition and therefore never acquire accidental blast damage when edited.
@@ -13,7 +14,8 @@ export function wallEdge(key){
  return {key,axis,x,y,z,id:`${axis}:${x}:${y}:${z}`,ends:axis==='e'?[[2*x+1,2*y-1,z],[2*x+1,2*y+1,z]]:[[2*x-1,2*y+1,z],[2*x+1,2*y+1,z]]};
 }
 export function wallBreachEnds(map){
- const original=map.definition?.edges;if(!original)return new Map();
+ const authored=breachesOf(map)?.edges;if(!map.definition?.edges&&!authored)return new Map();
+ const original={...map.definition?.edges,...authored};
  const current=new Map(),vertices=new Map(),broken=new Set();
  for(const [key,kind]of Object.entries(map.edges||{})){const edge=wallEdge(key);if(!edge)continue;current.set(edge.id,kind);if(!frame(kind))continue;
   for(const [end,p]of edge.ends.entries()){const id=p.join(',');if(!vertices.has(id))vertices.set(id,[]);vertices.get(id).push({edge,end,kind});}

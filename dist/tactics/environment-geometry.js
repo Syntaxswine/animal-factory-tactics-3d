@@ -1,8 +1,9 @@
 import {bankTriangles} from './ramp-banks.js';
 import * as THREE from './vendor/three.module.js';
 import {wallBreachGeometry} from './wall-breach-geometry.js';
+import {floorBreachGeometry} from './floor-breach-geometry.js';
 export function environmentGeometry(cache,shape='box'){
- if(cache[shape])return cache[shape];const geometry=wallBreachGeometry(shape);if(!geometry)throw Error('Unsupported environment geometry: '+shape);cache[shape]=geometry;return geometry;
+ if(cache[shape])return cache[shape];const geometry=wallBreachGeometry(shape)||floorBreachGeometry(shape);if(!geometry)throw Error('Unsupported environment geometry: '+shape);cache[shape]=geometry;return geometry;
 }
 export function environmentGeometries(){
  const g={box:new THREE.BoxGeometry(1,1,1),cylinder:new THREE.CylinderGeometry(.5,.5,1,12),taper:new THREE.CylinderGeometry(.3,.5,1,9),cone:new THREE.ConeGeometry(.5,1,10),crown:new THREE.IcosahedronGeometry(.5,1),cushion:new THREE.SphereGeometry(.5,12,8),leaf:new THREE.OctahedronGeometry(.5),ring:new THREE.TorusGeometry(.35,.15,5,12),wedge:new THREE.BoxGeometry(1,1,1)};

@@ -21,7 +21,7 @@ The visuals come from `7734034` on `work/destroyed-wall-edges` and are integrate
 
 ## Integration
 
-`wall-breaches.js` compares the encounter's original `definition.edges` with its current `edges`. The original map already persists in encounter saves, so there is no new damage field or save version. An editor erasure on an ordinary authoring map does not acquire fake damage.
+`wall-breaches.js` compares the encounter's original `definition.edges` with its current `edges`. It also reads optional authored `breaches.edges` records created by **Walls → Break wall** in the editor. Ordinary erasure does not acquire fake damage. Authored openings survive map/block saving and playtesting; repainting a wall repairs the opening, while Erase boundary removes the damage styling. See `DESTROYED-FLOOR-EDGES.md` for the shared authoring contract.
 
 At each endpoint of a destroyed wall/frame, a lone surviving masonry segment receives a rough end. Two surviving branches meeting at a corner or junction retain their connected joint. Explicit zero-level edge aliases and perimeter coordinates are normalized before comparison. Floors remain independent.
 

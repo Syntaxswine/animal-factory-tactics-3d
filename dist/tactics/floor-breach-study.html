@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Broken upper floors · Animal Factory</title><link rel="icon" href="data:,"><link rel="stylesheet" href="painted-fire-study.css"></head><body>
+<header><div><h1>Broken upper floors</h1><p>Chipped slab edges · splintered planks · connected holes</p></div><a href="wall-breach-study.html">Wall comparison ↗</a></header>
+<main><section class="controls" aria-label="Floor breach controls">
+<label>Surface <select id="material"><option value="concrete">Concrete</option><option value="wood">Wooden planks</option><option value="asphalt">Asphalt</option></select></label>
+<label>Layout <select id="layout"><option value="block">Block</option><option value="strip">Row</option><option value="elbow">L shape</option><option value="separated">Separate → joined</option><option value="island">Surviving island</option><option value="edge">Outer edge</option></select></label>
+<label>Size <select id="size"><option value="0">Intact</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label>
+<button id="widen">Widen hole</button><button id="restore">Restore floor</button>
+<label>Level <select id="level"><option value="1">First upper floor</option><option value="2">Second upper floor</option></select></label>
+<label>View <select id="view"><option value="three">Above · three-quarter</option><option value="below">Below · cutaway</option><option value="top">Top</option><option value="side">Side</option></select></label>
+<label>Scale <select id="scale"><option value="close">Close</option><option value="game" selected>Gameplay</option></select></label><label><input id="grid" type="checkbox" checked>Tile grid</label></section>
+<div id="viewport"><div id="loading">Loading floor study…</div></div><p id="status" role="status"></p><p id="error" role="alert"></p>
+<footer>One square is one tile. Native floor thickness and character size. The small rear-left opening is an undamaged stairwell. The underside view cuts away lower floors for inspection. Drag to orbit.</footer></main>
+<script type="module" src="floor-breach-study.js"></script></body></html>
