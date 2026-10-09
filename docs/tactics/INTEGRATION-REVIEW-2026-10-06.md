@@ -130,3 +130,26 @@ Verification on the combined build:
 - The packaged explosive-barrel regression also passes hover/targeting, the blast and labelled breakup, three panic turns ending in death and visible ash, mid-burn/final-ash save/load, restart and editor placement. Its paused-frame inspection now fires and pauses through the real controls in one browser turn, preventing automation latency from skipping past the burst it intends to inspect.
 
 Reproduce browser coverage with `npm run build:tactics-3d` followed by `node tools/check-packaged-hud-gameplay.mjs` (set `PLAYWRIGHT_PATH` when Playwright is supplied externally). The command serves only `.pages-output`, records temporary server/browser identities and closes them in `finally`. Its `--from=<check-name>` option resumes the remaining checks without replaying already-passed UI routes. Local reports and screenshots are in `artifacts/hud-integration`, with the individual interaction reports in their existing artifact directories.
+
+## October 9 independent integration review: `c1b1103`
+
+**The integration is approved for canonical publication.** The concrete HUD integration defects are resolved. Canonical `84a87d9` is an ancestor of this merge, so publication no longer requires resolving the previous 21 conflicts. The independent full `npm run check` passed all **2,132 tests**, with zero failures, cancellations or skips, followed by successful asset validation. Both deployment dependency checks and the actual 3D package build passed within that run. This closes the earlier integration release hold.
+
+Independent browser checks on the merged source confirmed:
+
+- Quick Fight renders the authored factory with all four squad cards, portraits and weapon artwork.
+- A peaceful ready swap followed immediately by Inventory leaves usable equipment controls and spends no AP. The same sequence works in combat: a 4-AP pistol shot leaves 8 AP, the HUD ready swap leaves 6, an Inventory ready swap leaves 4, and a context-menu backpack swap leaves 1. Inventory then disables the 2-AP and 3-AP weapon choices with the correct shortfall messages.
+- Campaign map and Sector inventory respond to real clicks in the command drawer. Taking the upstairs pistol ammunition preserves it after Campaign map and Resume local encounter: the loose pile stays absent and Yakov has 28 reserve rounds instead of 16.
+- The Supply chest stays excluded from peaceful sector inventory until searched. Its context action approaches it and opens focused Inventory with its name and Search container action; searching reveals the medical chest and rifle ammunition.
+
+A separate smoke test using `.pages-output` confirmed Quick Fight rendering, immediate swap/Inventory, campaign resume, and functional campaign drawer controls. The upstairs pickup and searched chest state survive into that packaged campaign. No console errors or warnings were reported during these checks. The packaged floor study also renders a connected concrete opening and joined wooden openings viewed from below without interior seams or a filled hole.
+
+Source inspection confirms that cosmetic draw settling still excludes combat, traversal and fire presentation; the campaign/container hooks coexist with the canonical equipment controls; the ready-swap, campaign, grenade, structure and breach adapters are combined; and both deployment lists retain their transitive missing-module guards. Generated-core verification passes for 20 modules and grenade preparation/release verification passes for all 12 animals. These independent checks are a bounded sample, not a claim to have repeated every browser scenario in the builder report above.
+
+### Nonblocking follow-up: backpack ammunition display
+
+`characterSheet` uses `u.ammo[kind]` for ready equipment but passes the carried item's cached `rounds` through for backpack weapons. After firing the pistol from 8 to 7 rounds and equipping the backpack shotgun into its ready slot, the stowed pistol displays 8 loaded while its authoritative ammunition remains 7. The same implementation is already present in canonical `84a87d9`; this is not a regression from the merge and does not refill ammunition.
+
+Build backpack weapon display data from the current `u.ammo` value, without mutating the live inventory. Add a regression for fire, stow/backpack, display and re-equip, including zero rounds. This cosmetic follow-up does not reopen the resolved campaign-click, equipment-cost or paused-draw blockers.
+
+The independent review's temporary browser tab and port-60727 server were closed. Exact process identity was verified before graceful shutdown; the stop receipt, process exit and released port were confirmed. Logs and screenshots remain in `artifacts/oct09-hud-integration` in the review checkout.
