@@ -14,8 +14,8 @@ test('all eight chair finishes share exact seat, foot, pelvis and approach conta
  c.root.rotation.y=Math.PI/2;c.root.position.set(3,2,-1);c.root.updateMatrixWorld(true);const world=c.anchors.seat.getWorldPosition(new T.Vector3());near(world.y,2+C.seatHeight);near(world.x,3+C.seatCenter[2]);near(world.z,-1);
 }));
 
-test('low-poly chair meshes stand on the floor and fit within one tile with valid UVs',()=>each(c=>{
- const b=bounds(c.root);near(b.min.y,0);assert.ok(b.min.x>=-.500001&&b.max.x<=.500001&&b.min.z>=-.500001&&b.max.z<=.500001,JSON.stringify({id:c.form.id,b}));let triangles=0;
+test('low-poly chair meshes stand on the floor and respect their declared padding overhang with valid UVs',()=>each(c=>{
+ const b=bounds(c.root),halfWidth=.5+c.root.userData.chair.paddingOverhang;near(b.min.y,0);assert.ok(b.min.x>=-halfWidth-.000001&&b.max.x<=halfWidth+.000001&&b.min.z>=-.500001&&b.max.z<=.500001,JSON.stringify({id:c.form.id,b}));let triangles=0;
  c.root.traverse(p=>{if(p.isMesh){triangles+=(p.geometry.index?.count||p.geometry.attributes.position.count)/3;for(const a of ['position','normal','uv'])assert.ok([...p.geometry.attributes[a].array].every(Number.isFinite));assert.ok([...p.geometry.attributes.uv.array].every(v=>v>=0&&v<=1));}});assert.ok(triangles<500,c.form.id+' '+triangles);
 }));
 

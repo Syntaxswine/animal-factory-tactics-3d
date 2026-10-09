@@ -98,17 +98,19 @@ export function createChairLibrary(atlas){
    panel(root,'Back cushion',[id==='wingback'?.90:.85,height,id==='metal'?.034:.075],[0,y,z],{front:back,top:side,side},[-.10,0,0]);
   }
   if(id==='wingback')for(const s of [-1,1]){
-   // Narrow outer shell leaves the same .88 arm gap and forward torso sweep.
-   const wing=cache('wing:'+side,()=>{
-    const shape=new T.Shape(),outline=[[-.20,.695],[-.19,.82],[-.115,1.28],[-.19,1.36],[-.465,1.34],[-.425,.695]];
+   // A continuous upholstered side runs from the base through the arm into
+   // the wing. Rolls are flush with its inside face: .88 clear across, with
+   // their rounded bulk overhanging the outside by .04 per side.
+   const shell=cache('wingback-side:'+side,()=>{
+    const shape=new T.Shape(),outline=[[.22,.36],[.22,.49],[.15,.57],[.15,.655],[.17,.676],[-.19,.70],[-.18,.83],[-.115,1.25],[-.15,1.32],[-.23,1.36],[-.465,1.34],[-.455,.36]];
     shape.moveTo(-outline[0][0],outline[0][1]);for(const [z,y]of outline.slice(1))shape.lineTo(-z,y);shape.closePath();
     const g=new T.ExtrudeGeometry(shape,{depth:.06,steps:1,bevelEnabled:false,curveSegments:1});g.translate(0,0,-.03);g.rotateY(Math.PI/2);return painted(g,{front:side,top:side,side});
-   });add(root,'Wing',wing,[s*.47,0,0]);
-   panel(root,'Padded arm',[.06,.40,.075],[s*.47,.6825,-.05],{front:side,top:side,side},[-Math.PI/2,0,0]);
-   box(root,'Arm support',[.055,.24,.28],[s*.47,.5525,-.08],side);
+   });add(root,'Upholstered side',shell,[s*.47,0,0]);
+   const roll=cache('wingback-arm-roll:'+side,()=>painted(new T.CylinderGeometry(.05,.05,.55,8,1).rotateX(Math.PI/2),{front:side,top:side,side}));
+   add(root,'Rolled arm',roll,[s*.49,.67,-.085]);
   }
   const anchors={};for(const [name,point]of Object.entries({seat:CHAIR_CONTACT.seatCenter,pelvis:CHAIR_CONTACT.pelvis,back:CHAIR_CONTACT.back,approach:CHAIR_CONTACT.approach,leftFoot:CHAIR_CONTACT.feet[0],rightFoot:CHAIR_CONTACT.feet[1]})){const a=new T.Object3D();a.name='chair-'+name;a.position.fromArray(point);root.add(a);anchors[name]=a;}
-  root.userData.chair={id,finish,footprint:[1,1],contact:CHAIR_CONTACT,backClosed:id==='wingback',tailOutlet:id==='wingback'?null:{width:.62,bottom:.48,top:id==='wood'?.68:.65},gameplayIntegrated:false};
+  root.userData.chair={id,finish,footprint:[1,1],paddingOverhang:id==='wingback'?.04:0,contact:CHAIR_CONTACT,backClosed:id==='wingback',tailOutlet:id==='wingback'?null:{width:.62,bottom:.48,top:id==='wood'?.68:.65},gameplayIntegrated:false};
   return {root,anchors,form,finish,dispose(){root.removeFromParent();roots.delete(root);}};
  }
  function setGrey(value){greyMode=!!value;for(const root of roots)root.traverse(p=>{if(p.isMesh)p.material=greyMode?grey:material;});}
