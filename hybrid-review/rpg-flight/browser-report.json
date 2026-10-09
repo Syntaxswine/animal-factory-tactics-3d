@@ -1,0 +1,108 @@
+{
+  "configurations": 36,
+  "errors": [],
+  "captures": [
+    "three-launch.png",
+    "three-flight.png",
+    "three-dust.png",
+    "side-launch.png",
+    "side-flight.png",
+    "side-dust.png",
+    "top-launch.png",
+    "top-flight.png",
+    "top-dust.png"
+  ],
+  "playback": [
+    {
+      "speed": 1,
+      "wall": 0.13129999995231628,
+      "animation": 0.13319999999999982
+    },
+    {
+      "speed": 0.25,
+      "wall": 0.1355,
+      "animation": 0.033375
+    }
+  ],
+  "rewind": {
+    "before": {
+      "time": 0.25,
+      "range": 16,
+      "view": "three",
+      "scale": "fit",
+      "reduced": false,
+      "flightDuration": 0.5000000000000001,
+      "triangles": 136,
+      "projectile": true,
+      "smoke": 31,
+      "blast": false,
+      "blastAge": -0.2500000000000001,
+      "position": [
+        10.080461000240826,
+        1.3999097203506823,
+        6.318935197662119
+      ],
+      "origin": [
+        2.121049997247979,
+        1.2805185553057896,
+        7.114876297961404
+      ],
+      "impact": [
+        18.039872003233675,
+        1.519300885395575,
+        5.522994097362834
+      ],
+      "geometries": 38,
+      "textures": 9
+    },
+    "after": {
+      "time": 0.25,
+      "range": 16,
+      "view": "three",
+      "scale": "fit",
+      "reduced": false,
+      "flightDuration": 0.5000000000000001,
+      "triangles": 136,
+      "projectile": true,
+      "smoke": 31,
+      "blast": false,
+      "blastAge": -0.2500000000000001,
+      "position": [
+        10.080461000240826,
+        1.3999097203506823,
+        6.318935197662119
+      ],
+      "origin": [
+        2.121049997247979,
+        1.2805185553057896,
+        7.114876297961404
+      ],
+      "impact": [
+        18.039872003233675,
+        1.519300885395575,
+        5.522994097362834
+      ],
+      "geometries": 38,
+      "textures": 9
+    },
+    "loaded": true,
+    "released": true
+  },
+  "smokeToggle": {
+    "off": 0,
+    "on": 31
+  },
+  "reducedMotion": true,
+  "memory": {
+    "before": {
+      "geometries": 38,
+      "textures": 9
+    },
+    "after": {
+      "geometries": 38,
+      "textures": 9
+    }
+  },
+  "failureCleanup": true,
+  "cancelCleanup": true
+}

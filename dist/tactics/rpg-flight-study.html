@@ -1,0 +1,14 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RPG flight · Animal Factory</title><link rel="icon" href="data:,"><link rel="stylesheet" href="painted-fire-study.css"></head><body>
+<header><div><h1>RPG · launch, flight, impact</h1><p>A quick silhouette and a painted smoke wake</p></div><a href="grenade-blast-study.html?weapon=rpg">Explosion study ↗</a></header>
+<main><section class="controls" aria-label="RPG flight controls"><button id="play">Pause</button><button id="restart">Replay</button>
+<label>Range <select id="range"><option value="8">8 tiles</option><option value="16" selected>16 tiles</option><option value="28">28 tiles</option></select></label>
+<label>View <select id="view"><option value="three">Three-quarter</option><option value="side">Side</option><option value="top">Top</option></select></label>
+<label>Speed <select id="speed"><option value="1">Full speed</option><option value="0.25">Quarter speed</option></select></label>
+<label>Scale <select id="scale"><option value="fit">Whole flight</option><option value="game">Gameplay</option></select></label>
+<label><input id="smoke" type="checkbox" checked>Smoke trail</label><label><input id="reduced" type="checkbox">Reduced motion</label>
+<label class="scrub">Time <input id="time" type="range" min="-.15" max="1.5" step=".001" value="-.15"><output id="clock"></output></label></section>
+<div id="viewport"><div id="loading">Loading the flight study…</div></div>
+<nav class="beats"><button data-beat="before">Loaded</button><button data-beat="launch">Launch</button><button data-beat="flight">Mid-flight</button><button data-beat="impact">Impact</button><button data-beat="dust">Dust front</button><button data-beat="clear">Clear</button></nav>
+<p id="status" role="status"></p><p id="error" role="alert"></p>
+<footer>One square is one tile; the worker and launcher retain their original dimensions. Drag to orbit. The smoke stays behind as the round travels. Flight study: the game’s impact timing still needs integration.</footer></main>
+<script type="module" src="rpg-flight-study.js"></script></body></html>
