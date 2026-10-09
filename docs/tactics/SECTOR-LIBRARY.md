@@ -53,6 +53,10 @@ Canonical keys preserve feature type, both offsets and road ports. The eight tra
 
 ## Checks
 
+October 9 integration review of `aaf949c`: 28 focused tests passed across sector presets, authoring, library geometry, the editor workbench and both distribution manifests. A separate browser review of the packaged editor loaded all 80 configurations and all five tutorial sectors, saved an edited map to an isolated copy of the collection, rejected a duplicate name, reopened the saved map after reload, and proposed an unused name for the next variant. Download mode displayed the intended destination and did not register the download in the collection. The browser download event could not be captured in this review, so the downloaded file itself and the native directory picker were not independently verified here. The builder's broader browser script remains listed below.
+
+This improves sector selection and variant authoring. Four-direction ordinary-object rotation, actual model placement previews and Q/E focus handling remain the requested follow-up in `EDITOR-WORKBENCH.md`.
+
 - `node --test tests/sector-library.test.mjs`
 - `node --test tests/sector-presets.test.mjs tests/sector-authoring.test.mjs`
 - `node tools/check-editor-sector-presets.mjs` (Playwright runtime; isolated temporary map collection and server, closed after the check)

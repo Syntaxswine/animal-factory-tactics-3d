@@ -62,6 +62,10 @@ The production build copies the model, study and atlas, and validates the study'
 
 ## Delivery and preview lifetime
 
+October 9 canonical integration review of `bba7416`: approved for the reusable assets and fit study. The painted consoles match the existing furniture and remain readable at gameplay scale. Independent checks passed all six model tests, nine existing furniture tests, both distribution manifest tests, the deployment build/dependency tests, asset validation and the 20-module core synchronization check. The packaged browser study loaded without errors or warnings; window-wall, isolated and guardhouse views, both monitor colors and gameplay scale were inspected.
+
+Two release omissions were corrected during integration: the shared furniture gallery linked to a study missing from the base distribution, and the new atlas was absent from the asset audit. The base build now includes the study and its stylesheet, and the audit validates the actual model atlas path, PNG dimensions and channels. Existing missing-module and unattached-asset protections remain in place. Editor placement, guard-post layout and computer/telephone interactions are still outside this delivery.
+
 Feature branch `work/guardhouse-consoles`, based on `a6e56f5`. Only `main` deploys; gameplay integration and publication remain separate actions.
 
 The already registered preview on **port 4476** is retained for user review with its existing automatic shutdown at **October 9, 2026, 22:30 UTC / 6:30 p.m. Eastern**. Its deadline was not extended. Exact identity, restart record, original source and stop marker are in `artifacts/grenade-blast/server/`; the stop marker is `STOP`. Restart deliberately using `node tools/serve-grenade-blast-study.mjs 4476`, then register the new lifetime with the shared helper-lifecycle utility.
