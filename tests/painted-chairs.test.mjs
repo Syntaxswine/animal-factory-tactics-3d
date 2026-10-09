@@ -17,14 +17,24 @@ test('low-poly chair meshes stand on the floor and fit within one tile with vali
  c.root.traverse(p=>{if(p.isMesh){triangles+=(p.geometry.index?.count||p.geometry.attributes.position.count)/3;for(const a of ['position','normal','uv'])assert.ok([...p.geometry.attributes[a].array].every(Number.isFinite));assert.ok([...p.geometry.attributes.uv.array].every(v=>v>=0&&v<=1));}});assert.ok(triangles<500,c.form.id+' '+triangles);
 }));
 
-test('shared seated torso, forward rise, tail outlet and both heel channels remain unobstructed',()=>each(c=>{
+test('shared seated torso, forward rise and both heel channels remain unobstructed',()=>each(c=>{
  const spaces=[
   ['torso',[-.40,.481,-.30],[.40,1.30,.34]],
   ['forward rise',[-.37,.52,.32],[.37,1.35,.70]],
-  ['tail outlet',[-.31,.49,-.51],[.31,.73,-.28]],
   ...[-1,1].map(side=>['heel '+side,[side*.23-.075,.012,.20],[side*.23+.075,.14,.58]])
  ];
  for(const [name,min,max]of spaces){const space=new T.Box3(new T.Vector3(...min),new T.Vector3(...max));c.root.traverse(p=>{if(!p.isMesh)return;const overlap=bounds(p).intersect(space);if(overlap.isEmpty())return;const size=overlap.getSize(new T.Vector3());assert.ok(Math.min(size.x,size.y,size.z)<1e-6,c.form.id+' '+p.name+' obstructs '+name+' '+size.toArray());});}
+}));
+
+test('wingback has continuous upholstery into its seat; other chair backs end at the horse cuff height',()=>each(c=>{
+ const b=bounds(c.root);
+ if(c.form.id==='wingback'){
+  assert.ok(b.max.y>1.35&&b.max.y<1.37);assert.equal(c.root.userData.chair.backClosed,true);assert.equal(c.root.userData.chair.tailOutlet,null);
+  c.root.updateMatrixWorld(true);for(const x of [-.30,0,.30])for(const y of [.49,.55,.65,.73,.85,1.1,1.25]){
+   const ray=new T.Raycaster(new T.Vector3(x,y,.10),new T.Vector3(0,0,-1));const hit=ray.intersectObject(c.root.getObjectByName('Back cushion'))[0];assert.ok(hit,'upholstery hole at '+x+','+y);
+  }
+  assert.equal(c.root.children.filter(p=>p.name==='Cabriole front leg').length,2);assert.equal(c.root.children.filter(p=>p.name==='Shaped rear leg').length,2);
+ }else{assert.ok(b.max.y>.975&&b.max.y<1.0,c.form.id+' top '+b.max.y);assert.equal(c.root.userData.chair.backClosed,false);}
 }));
 
 test('all four seats have real upward-facing support beneath the pelvis rather than marker-only agreement',()=>each(c=>{

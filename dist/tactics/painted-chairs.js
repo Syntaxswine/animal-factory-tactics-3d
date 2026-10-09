@@ -14,7 +14,6 @@ export const CHAIR_CONTACT=Object.freeze({
  pelvis:Object.freeze([0,.62,-.03]),feet:Object.freeze([Object.freeze([-.23,0,.43]),Object.freeze([.23,0,.43])]),
  approach:Object.freeze([0,0,.80]),back:Object.freeze([0,.91,-.36]),
  armInside:.44,armTop:.72,bodyWidth:.80,bodyFront:.32,bodyRear:-.30,
- tailOpening:Object.freeze({width:.62,bottom:.48,top:.73}),
  needsSpeciesAdapter:true
 });
 const cells={redBack:[0,0],redSeat:[1,0],redSide:[2,0],walnut:[3,0],
@@ -55,6 +54,18 @@ export function createChairLibrary(atlas){
   const g=cache('bar:'+length.toFixed(8)+':'+width+':'+cell+':'+tube,()=>painted(tube?new T.CylinderGeometry(width/2,width/2,length,6,1):new T.BoxGeometry(width,length,width),faces));
   const mesh=add(root,name,g,start.clone().add(end).multiplyScalar(.5).toArray());mesh.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),end.sub(start).normalize());return mesh;
  }
+ function carvedLeg(root,side,front){
+  // Six-sided, connected cabriole profile. A broad knee, slim ankle and small
+  // pad foot give the ornate silhouette; grain and highlights stay in paint.
+  const profile=front?[[0,.360,.285,.039,.043],[.035,.363,.285,.044,.050],[.10,.358,.262,.024,.026],[.23,.343,.240,.023,.030],[.32,.368,.252,.047,.045],[.405,.355,.235,.033,.030]]:
+   [[0,.370,-.300,.032,.035],[.085,.351,-.279,.024,.026],[.27,.347,-.277,.026,.030],[.405,.355,-.275,.030,.030]];
+  const g=cache('cabriole:'+side+':'+front,()=>{
+   const p=[],index=[],segments=6;for(const [y,x,z,rx,rz]of profile)for(let i=0;i<segments;i++){const a=i/segments*Math.PI*2;p.push(side*x+Math.cos(a)*rx,y,z+Math.sin(a)*rz);}
+   for(let j=0;j<profile.length-1;j++)for(let i=0;i<segments;i++){const a=j*segments+i,b=j*segments+(i+1)%segments,c=(j+1)*segments+i,d=(j+1)*segments+(i+1)%segments;index.push(a,c,b,b,c,d);}
+   const top=(profile.length-1)*segments;for(let i=1;i<segments-1;i++){index.push(0,i,i+1);index.push(top,top+i+1,top+i);}
+   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setIndex(index);return painted(g.toNonIndexed(),{front:'walnut',top:'walnut',side:'walnut'});
+  });add(root,front?'Cabriole front leg':'Shaped rear leg',g,[0,0,0]);
+ }
  function build(id,{finish}={}){
   if(disposed)throw Error('Chair library disposed');const form=CHAIR_FORMS.find(f=>f.id===id);if(!form)throw Error('Unknown chair '+id);finish??=form.finishes[0];if(!form.finishes.includes(finish))throw Error('Unknown chair finish '+finish);
   const root=new T.Group();root.name=form.name;roots.add(root);
@@ -71,16 +82,17 @@ export function createChairLibrary(atlas){
     const g=cache('caster',()=>painted(new T.CylinderGeometry(.055,.055,.055,6,1).rotateY(Math.PI/6),{front:'rubber',top:'rubber',side:'rubber'}));add(root,'Caster',g,[x,.055,z],[0,0,Math.PI/2]);
    }
   }else{
-   for(const s of [-1,1])for(const z of [-.275,.235])bar(root,'Leg',[s*.355,0,z],[s*.355,.405,z],id==='metal'?.044:.054,base,id==='metal');
+   if(id==='wingback')for(const s of [-1,1]){carvedLeg(root,s,true);carvedLeg(root,s,false);}
+   else for(const s of [-1,1])for(const z of [-.275,.235])bar(root,'Leg',[s*.355,0,z],[s*.355,.405,z],id==='metal'?.044:.054,base,id==='metal');
    // Side stretchers remain outside the shared foot/heel space. No front rail.
    for(const s of [-1,1])bar(root,'Side stretcher',[s*.35,.18,-.275],[s*.35,.18,.235],.035,base,id==='metal');
   }
-  for(const s of [-1,1])bar(root,'Back support',[s*.355,.40,-.343],[s*.355,id==='wingback'?1.35:1.16,-.45],id==='metal'?.04:.05,base,id==='metal');
+  for(const s of [-1,1])bar(root,'Back support',[s*.355,.40,-.343],[s*.355,id==='wingback'?1.35:.982,-.45],id==='metal'?.04:.05,base,id==='metal');
   if(id==='wood'){
-   for(const y of [.85,1.065])panel(root,'Wooden back slat',[.79,.155,.045],[0,y,-.405-(y-.85)*.08],{front:back,top:base,side:base},[-.08,0,0]);
+   for(const y of [.75,.92])panel(root,'Wooden back slat',[.79,.13,.045],[0,y,-.405-(y-.75)*.08],{front:back,top:base,side:base},[-.08,0,0]);
   }else{
-   const height=id==='wingback'?.61:.39,y=.75+height/2;
-   panel(root,'Back cushion',[id==='wingback'?.90:.85,height,id==='metal'?.034:.075],[0,y,-.424],{front:back,top:side,side},[-.10,0,0]);
+   const height=id==='wingback'?.905:.32,y=id==='wingback'?.9075:.825,z=id==='wingback'?-.398:-.424;
+   panel(root,'Back cushion',[id==='wingback'?.90:.85,height,id==='metal'?.034:.075],[0,y,z],{front:back,top:side,side},[-.10,0,0]);
   }
   if(id==='wingback')for(const s of [-1,1]){
    // Narrow outer shell leaves the same .88 arm gap and forward torso sweep.
@@ -89,12 +101,11 @@ export function createChairLibrary(atlas){
     shape.moveTo(-outline[0][0],outline[0][1]);for(const [z,y]of outline.slice(1))shape.lineTo(-z,y);shape.closePath();
     const g=new T.ExtrudeGeometry(shape,{depth:.06,steps:1,bevelEnabled:false,curveSegments:1});g.translate(0,0,-.03);g.rotateY(Math.PI/2);return painted(g,{front:side,top:side,side});
    });add(root,'Wing',wing,[s*.47,0,0]);
-   box(root,'Lower back surround',[.10,.30,.10],[s*.395,.60,-.36],side);
    panel(root,'Padded arm',[.06,.40,.075],[s*.47,.6825,-.05],{front:side,top:side,side},[-Math.PI/2,0,0]);
    box(root,'Arm support',[.055,.24,.28],[s*.47,.5525,-.08],side);
   }
   const anchors={};for(const [name,point]of Object.entries({seat:CHAIR_CONTACT.seatCenter,pelvis:CHAIR_CONTACT.pelvis,back:CHAIR_CONTACT.back,approach:CHAIR_CONTACT.approach,leftFoot:CHAIR_CONTACT.feet[0],rightFoot:CHAIR_CONTACT.feet[1]})){const a=new T.Object3D();a.name='chair-'+name;a.position.fromArray(point);root.add(a);anchors[name]=a;}
-  root.userData.chair={id,finish,footprint:[1,1],contact:CHAIR_CONTACT,gameplayIntegrated:false};
+  root.userData.chair={id,finish,footprint:[1,1],contact:CHAIR_CONTACT,backClosed:id==='wingback',tailOutlet:id==='wingback'?null:{width:.62,bottom:.48,top:id==='wood'?.68:.65},gameplayIntegrated:false};
   return {root,anchors,form,finish,dispose(){root.removeFromParent();roots.delete(root);}};
  }
  function setGrey(value){greyMode=!!value;for(const root of roots)root.traverse(p=>{if(p.isMesh)p.material=greyMode?grey:material;});}
