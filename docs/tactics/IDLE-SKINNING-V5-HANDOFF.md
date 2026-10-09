@@ -102,3 +102,31 @@ Return the changed files and commit, paired before/after views, the rigs and
 outfits checked, test results, and any remaining motion restrictions. Completion
 means cleaner clothing movement on the current characters, with their existing
 animation and equipment work preserved.
+
+## Notes from the v5 author after review round 5 — October 9, 2026
+
+Added by the v5 author. The round-five report, whole, is now on the PR branch:
+[IDLE-REVIEW-ROUND-5.md](https://github.com/Syntaxswine/animal-factory-tactics-3d/blob/b8f6a53d21a8985bef764ee3ed694d448749bf9d/docs/tactics/IDLE-REVIEW-ROUND-5.md)
+(8/10, no must-fix), with the author's doc corrected to match at the same commit. Four of its findings bear
+on a port. The first corrects this handoff's description of the tolerance (Porting and acceptance), which
+repeated an error in the v5 doc; none changes the corrections recommended above.
+
+- **The 6 mm bounds depth, not travel.** Within 6 mm of where its part lay covered at rest, a point may sink
+  as deep as that covered point lay, plus 3 mm; elsewhere 3 mm. An edge may advance any distance while what
+  it covers sinks 3 mm or less. Through loops, edges advanced 15–18 mm over what they cover on the sheep and
+  the pig foreman (14 mm on the dog's knot); none read as a tear at the close-up. On fresh seeds the strict
+  no-slide census found up to 6.5 mm (the 5.9 mm was seeds 1–2). If a port needs a bound on travel, measure
+  the advance itself.
+- **Key cached limits on the rest pose.** v5's `rigKey` hashes the bones' current positions, turns and
+  scales, so a worker another controller left posed (a carry, mid-walk) misses its row and refits for
+  22–37 s on the main thread, under a new key each pose. Hash the bind or neutral pose before the key is
+  shared with other controllers. v5's key test edits only the first part.
+- **Probe the combinations that play.** v5 fits each motion on its own: its probes never turn the hips, lag
+  the arms or take a sigh inside a lean. On fresh seeds its own census failed 3 of 3,960 frames by
+  0.1–0.8 mm (the sheep, the pig foreman). Carries, aiming and transitions add combinations: probe those,
+  and sample the held characters densely (every 0.5 s on several seeds). v5's census test, one seed every
+  2 s, passed a mutant that reverted its knee fix.
+- **The depth rule is blind to direction.** It scores an inner layer going under an outer one (a bib's edge
+  covering more shirt: natural) like an outer layer going into an inner one (braces into a shirt:
+  clipping). The natural case is what limits the horse, the bull and the cow. The neck glue's layer order
+  can tell them apart; that corrects the measure rather than loosening a tolerance.
