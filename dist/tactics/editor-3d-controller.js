@@ -6,7 +6,7 @@ import {STRUCTURE_PRESETS} from './editor-structure-presets.js';
 import {rampStroke} from './editor-ramp-stroke.js';
 import {previewCanopy,canopyCells} from './editor-canopies.js';
 import {bankSet} from './ramp-banks.js';
-import {isRamp} from './cliff-ramps.js';
+import {isRamp,rampInfo} from './cliff-ramps.js';
 import {rampSupportAt} from './cliff-ramps.js';
 import {characters,characterName,characterDiagnostics,copyCharacters,ensureCharacterIdentities} from './character-properties.js';
 import {isCliff,CLIFF_LIMIT} from './cliff-map.js';
@@ -18,7 +18,7 @@ import {createEditor,applyBrush,brushShape,brushPoints,replaceMap,undo,redo} fro
 import {validateMap,edgeKey,terrainAt,roofEndpoint} from './core/maps.js';
 import {openBlock,extractBlock,validateBlock,placeBlock} from './core/blocks.js';
 import {connectionSet} from './core/connections.js';
-import {EDGES,propCells} from './core/environment.js';
+import {EDGES,propCells,isWoodland} from './core/environment.js';
 export function brushPoint(p){const x=Math.floor(p.x+.5),y=Math.floor(p.y+.5),dx=p.x-x,dy=p.y-y,axis=Math.abs(dx)>Math.abs(dy)?'e':'s';return {x,y,z:p.z,edge:edgeKey(axis,x-(axis==='e'&&dx<0?1:0),y-(axis==='s'&&dy<0?1:0),p.z)};}
 import {isStrategicSite} from './strategic-site-rules.js';
 export class EditingDocument extends InspectionDocument {
@@ -34,9 +34,9 @@ export class EditingDocument extends InspectionDocument {
   if(!start||![start.x,start.y,start.z??0].every(Number.isInteger))return {ok:false,error:'Choose a map cell.'};
   if(this.block&&(['squad','exit'].includes(tool)||[start,end].some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24)))return {ok:false,error:'Keep block edits inside 24 × 24 tiles; squad and travel markers belong to full maps.'};
   const breaking=['break-wall','break-floor'].includes(tool),foliage=['foliage-cover','clear-foliage'].includes(tool),shapeTool=breaking?(tool==='break-wall'?'wall':'floor'):foliage||['cliff','erase-cliff'].includes(tool)?'woodland':tool;
-  if(foliage&&(start.z||0)!==0)return {ok:false,error:'Foliage cover paints outdoor ground. Select the ground level.'};
   const candidate=createEditor(this.editor.map),points=brushShape(shapeTool)?brushPoints(shapeTool,start,end):[start],cells=[],edges=[];
   const occupied=foliage?new Set(candidate.map.props.flatMap(p=>propCells(p).map(c=>c.x+','+c.y+','+(c.z||0)))):null;
+  const denseProtected=foliage?new Set([...candidate.map.starts,...candidate.map.guards,...candidate.map.exits,...candidate.map.props.filter(isRamp).flatMap(p=>{const r=rampInfo(p);return [r.entry,r.exit];})].map(p=>`${p.x},${p.y},${p.z||0}`)):null;
   if(tool==='cliff'&&points.length>CLIFF_LIMIT)return {ok:false,error:'Paint at most '+CLIFF_LIMIT+' cliff tiles at a time.'};
   if(!points.length)return {ok:false,error:'Choose a cell inside the map.'};
   try{
@@ -67,8 +67,13 @@ export class EditingDocument extends InspectionDocument {
     }
     if(foliage){const z=start.z||0,terrain=terrainAt(candidate.map,p.x,p.y,z);
      if(occupied.has(p.x+','+p.y+','+z)||candidate.map.stairs.some(q=>q.x===p.x&&q.y===p.y&&(q.z===z||q.z+1===z))||roofEndpoint(candidate.map,{...p,z}))continue;
-     if(tool==='clear-foliage'){if(terrain!=='woodland')continue;actualTool='texture';actualOptions={groundKind:'ground-grass'};}
-     else {if(!['yard','ground-grass','ground-dirt','ground-gravel','woodland'].includes(terrain)||terrain==='woodland')continue;actualTool='woodland';}
+     if(tool==='clear-foliage'){if(!isWoodland(terrain))continue;actualTool='texture';actualOptions={groundKind:'ground-grass'};}
+     else {
+      const kind=options.foliageKind==='dense'?'woodland-dense':'woodland';
+      if(!['yard','ground-grass','ground-dirt','ground-gravel'].includes(terrain)&&!isWoodland(terrain)||terrain===kind)continue;
+      if(kind==='woodland-dense'&&denseProtected.has(`${p.x},${p.y},${z}`))continue;
+      actualTool=kind;
+     }
     }
     const error=applyBrush(candidate,actualTool,p.x,p.y,p.edge,{...actualOptions,level:start.z||0});if(error)return {ok:false,error,cells:points,edges};
     if(tool==='cliff')Object.assign(candidate.map.props.at(-1),{cliffMask:options.cliffMask??15,cliffVariant:options.cliffVariant??0,cliffSand:options.cliffSand??0});

@@ -33,6 +33,7 @@ export function surfacePixels(kind,size=128){
   else if(kind==='sand')color=[151,139,102];
   else if(kind==='foliage')color=[48,93,48];
   else if(kind==='leaf-light')color=[93,130,55];
+  else if(kind==='leaf-olive')color=[96,109,57];
   else if(kind==='pine')color=[34,70,48];
   else if(kind==='water')color=[47,91,118];
   else if(kind==='linen')color=[193,204,180];
@@ -52,8 +53,8 @@ export function materialKind(box){
  if(box.material==='ground-wood-planks')return 'wood-planks';
  if(diagonalRoad(box.material))return box.material;
  if(box.material==='bark'||box.material==='grass-blade')return box.material;
- if(['steel','leaf-light','pine','foliage','water','linen','screen','dark-metal','rust','red','olive','metal','wood','sand'].includes(box.material))return box.material;
- if(box.material==='woodland')return box.kind==='floor'?'cover-grass':'foliage';
+ if(['steel','leaf-light','leaf-olive','pine','foliage','water','linen','screen','dark-metal','rust','red','olive','metal','wood','sand'].includes(box.material))return box.material;
+ if(['woodland','woodland-dense'].includes(box.material))return box.kind==='floor'?'cover-grass':'foliage';
  if(box.material==='ground-asphalt'||box.material==='bridge')return 'asphalt';
  if(box.material==='ground-dirt'||box.material==='ground-gravel')return 'sand';
  if(box.kind==='stairs')return 'metal';

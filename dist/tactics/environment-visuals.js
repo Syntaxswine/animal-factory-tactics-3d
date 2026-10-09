@@ -4,7 +4,8 @@ import {roofVisualKind} from './climbable-roofs.js';
 import {bankInfo,BANK_YAW} from './ramp-banks.js';
 import {isRamp,rampInfo,woodenRampParts} from './cliff-ramps.js';
 import {isCliff} from './cliff-map.js';
-import {PROPS,propCells} from './environment.js';
+import {PROPS,propCells,isWoodland} from './environment.js';
+import {cliffSupportAt} from './cliff-support.js';
 import {environmentModel} from './environment-models.js';
 import {DIMENSIONS as D} from './hybrid-world.js';
 import {grassTufts,coverUndergrowth} from './foliage-models.js';
@@ -16,6 +17,12 @@ export function environmentVisuals(world,map){map=canopyPresentation(map);
  const result=world.boxes.filter(b=>b.kind!=='prop'&&!b.id.includes(':slope:'));
  const occupied=new Set((map.coverOccupiedProps||map.props||[]).flatMap(p=>(isStrategicSite(p)?Array.from({length:64},(_,i)=>({x:p.x+i%8,y:p.y+Math.floor(i/8)})):isCliff(p)?[p]:propCells(p)).map(c=>`${c.x},${c.y},${p.z||0}`)));
  for(const b of world.boxes)if(!occupied.has(`${b.source.x},${b.source.y},${b.source.z||0}`))result.push(...grassTufts(b),...coverUndergrowth(b));
+ // A ledge cap replaces its floor slab. Keep foliage on that supported surface
+ // even though there is no ordinary floor mesh to seed its visual instances.
+ for(const [layer,tiles]of (map.upper||[]).entries())for(const [key,terrain]of Object.entries(tiles))if(isWoodland(terrain)){
+  const [x,y]=key.split(',').map(Number),z=layer+1,source={x,y,z},support=cliffSupportAt(map,source);
+  if(support&&!occupied.has(`${x},${y},${z}`))result.push(...coverUndergrowth({id:`floor:${x},${y},${z}`,kind:'floor',material:terrain,source,center:[x,support.level*D.floorSpacing+support.height-D.slab/2,y],size:[1,D.slab,1]}));
+ }
  const add=(id,source,kind,material,center,size,shape='box',rotation=[0,0,0])=>result.push({id,source,kind,material,center,size,shape,rotation});
  for(const p of map.props||[]){
   if(isCliff(p))continue;

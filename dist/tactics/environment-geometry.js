@@ -19,9 +19,15 @@ export function environmentGeometries(){
  const tier=new THREE.ConeGeometry(.5,1,12,3),tp=tier.attributes.position;
  for(let i=0;i<tp.count;i++){const x=tp.getX(i),y=tp.getY(i),z=tp.getZ(i),a=Math.atan2(z,x),edge=.5-y,r=1+.055*Math.sin(a*5)+.035*Math.cos(a*3);tp.setXYZ(i,x*r,y-.045*edge*Math.cos(a*5),z*r);}
  tier.computeVertexNormals();g['pine-tier']=tier;
- const scrub=new THREE.IcosahedronGeometry(.5,1),sp=scrub.attributes.position;
+ const scrub=new THREE.IcosahedronGeometry(.5,0),sp=scrub.attributes.position;
  for(let i=0;i<sp.count;i++){const x=sp.getX(i),y=sp.getY(i),z=sp.getZ(i),a=Math.atan2(z,x),r=1+.18*Math.sin(a*5+y*9);sp.setXYZ(i,x*r,y+.065*Math.cos(a*3)*(1-Math.abs(y)*2),z*r);}
  scrub.computeVertexNormals();g['cover-crown']=scrub;
+ const spreading=new THREE.DodecahedronGeometry(.5,0),spread=spreading.attributes.position;
+ for(let i=0;i<spread.count;i++){const x=spread.getX(i),y=spread.getY(i),z=spread.getZ(i);spread.setXYZ(i,x*(1+.15*Math.sin(z*7+y*4)),y+.13*Math.sin(x*5+z*3),z*(1+.13*Math.cos(x*8-y*3)));}
+ spreading.computeVertexNormals();g['cover-spreading']=spreading;
+ const spire=new THREE.ConeGeometry(.5,1,7,2),spr=spire.attributes.position;
+ for(let i=0;i<spr.count;i++){const x=spr.getX(i),y=spr.getY(i),z=spr.getZ(i),a=Math.atan2(z,x),r=1+.15*Math.sin(a*3+.4);spr.setXYZ(i,x*r+.12*(y+.5),y,z*r);}
+ spire.computeVertexNormals();g['cover-spire']=spire;
  const vertices=[];
  for(let i=0;i<7;i++){
   const a=i*2.399,dx=Math.cos(a),dz=Math.sin(a),h=.55+(i%3)*.21,bx=dx*.12,bz=dz*.12;

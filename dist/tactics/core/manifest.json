@@ -4,7 +4,7 @@
   "revision": "e529f4b3d512d32cea522d701d01ebe8488af013",
   "overrides": {
     "blocks.js": {
-      "reason": "Preserve and relocate authored breach markers with reusable blocks. Keep painted-land ownership when extracting, placing and replacing blocks. Preserve builder roof layer through block extraction and placement. Preserve authored door locks across block extraction and placement. Preserve and remap character links on block duplication.",
+      "reason": "Preserve both foliage types on upper layers of reusable blocks. Preserve and relocate authored breach markers with reusable blocks. Keep painted-land ownership when extracting, placing and replacing blocks. Preserve builder roof layer through block extraction and placement. Preserve authored door locks across block extraction and placement. Preserve and remap character links on block duplication.",
       "upstreamSha256": "4c4961c7c9897640dafca906384569f5337bfabbc2a907adb88ca8e64a733bf4"
     },
     "connections.js": {
@@ -12,7 +12,7 @@
       "upstreamSha256": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f"
     },
     "editor-model.js": {
-      "reason": "Preserve the optional trusted sabotage action when placing a strategic site. Preserve donkey guide outfits and allow supported cliff tiles at water edges. Author tagged cliff links using supported adjacent levels. Assign permanent identities at character creation.",
+      "reason": "Paint dense foliage with the same protected occupancy rules as other blocking terrain. Preserve the optional trusted sabotage action when placing a strategic site. Preserve donkey guide outfits and allow supported cliff tiles at water edges. Author tagged cliff links using supported adjacent levels. Assign permanent identities at character creation.",
       "upstreamSha256": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262"
     },
     "engine.js": {
@@ -20,7 +20,7 @@
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
     "environment.js": {
-      "reason": "Register intact/wreck strategic sites with separate reserved footprints and standing passage masks. Register a separate targetable explosive barrel without changing ordinary drums. Register open timber trellis cover. Register visually identical climbable roof modules. Register cardinal cliff ramps. Register traversable diagonal roads and wooden plank flooring. Register authored light and cliff footprints and collision rules.",
+      "reason": "Recognize both foliage surfaces; dense thickets are not walkable floor. Register intact/wreck strategic sites with separate reserved footprints and standing passage masks. Register a separate targetable explosive barrel without changing ordinary drums. Register open timber trellis cover. Register visually identical climbable roof modules. Register cardinal cliff ramps. Register traversable diagonal roads and wooden plank flooring. Register authored light and cliff footprints and collision rules.",
       "upstreamSha256": "424fa8b3f1287ac42a84f24e853ed382dabfd51bae10940fe62caa2b460d123a"
     },
     "explosives.js": {
@@ -32,7 +32,7 @@
       "upstreamSha256": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f"
     },
     "maps.js": {
-      "reason": "Validate authored broken walls and floor holes. Validate ground-only strategic sites and follow their baked continuous passage links. Validate automatic-land ownership on import. Trace trellis gaps and beams with the shared sculpted profile. Validate nonwalkable fourth-level roof decoration. Derive roof climbs from marked roof footprints. Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks.",
+      "reason": "Accept dense foliage on all three terrain layers. Validate authored broken walls and floor holes. Validate ground-only strategic sites and follow their baked continuous passage links. Validate automatic-land ownership on import. Trace trellis gaps and beams with the shared sculpted profile. Validate nonwalkable fourth-level roof decoration. Derive roof climbs from marked roof footprints. Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks.",
       "upstreamSha256": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73"
     },
     "progression.js": {
@@ -47,6 +47,10 @@
       "reason": "Strategic-site geometry shields terrain without making the entire reserved area opaque.",
       "upstreamSha256": "17d3de4a6aca835dc176ac3fcc9f460fb12aae83bf5d2c0154b29a789ed5dc48"
     },
+    "woodland.js": {
+      "reason": "Both undergrowth and dense thickets provide foliage concealment.",
+      "upstreamSha256": "3b9258e58a2cdfb43b855f11b5b0cba4587237f44ce78bd33ddf32f308e4b0e2"
+    },
     "world.js": {
       "reason": "Use the shared clock, one-minute completed rounds, and exploration pacing.",
       "upstreamSha256": "5a63c5210c7d9c5a819fd8213ced2762930a2ccc9a383a25e2016d7a2e85801a"
@@ -54,16 +58,16 @@
   },
   "files": {
     "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
-    "blocks.js": "4e1adae29aaa1d14f21625751ef584fea4fe60e16899a2900432f4eb11a57449",
+    "blocks.js": "4a2476d6e86e6d01bcb76c18426e96b3d35b1ae03484c0720d2c8acff4d08dbe",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
-    "editor-model.js": "de903d031f6258118abd519ad41be42a8fe5e07af7380bfac9e0e9d01aaa5498",
+    "editor-model.js": "73e78cd3808adc401c543ea83b92c01c99bdfdbaf752c566acaca11d442bd191",
     "engine.js": "02bd333d5f7353491b70ed621ad66b8d1a186b35b490806014b48a70c0f4ab07",
-    "environment.js": "90bee382317bb2b135439c386c6c1cf361176bc0066165136d173c94328f4e95",
+    "environment.js": "c74d1e10e7e6151f0785f73410ace1f13d917db5c9fb52b4368aba5c6a131f42",
     "explosives.js": "13615e19ec32c03f8065df1c7de26baf556caa5cd991bcb3c889c1b65fd3b8a0",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "8e63ac2c2783edf5e4884f31c687494dbc4910edbfe620299302911394c539cb",
-    "maps.js": "2dd8fb1a53a4a1917255ade4cf9978e6dfd97ceb9ee46d521ab52cd1700a19fb",
+    "maps.js": "d1a3a45635e3efca908e7eda3bd0a51d8c03e3807ad270ad28004f1e54475c07",
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",
@@ -71,7 +75,7 @@
     "recruits.js": "5e4495962cdad3d0b57f0d1784bddbf54fa785e6e00a9ae932cfb7dbbbeeb81b",
     "sector-rules.js": "d20ee872471a503a60ac706655b19f9ba9857c41882dd6cc6a08d61e3572132a",
     "visibility.js": "f8530edecfdd4007f48ace3cb2ca5241b8a65b9cc21709466bd6e68a87927c33",
-    "woodland.js": "3b9258e58a2cdfb43b855f11b5b0cba4587237f44ce78bd33ddf32f308e4b0e2",
+    "woodland.js": "83d682587f2ee8ff55797f26dccabd718a18da8ba1edeeae4d68b8bab829c9d2",
     "world.js": "f3f516f61b837f5bd3df582d04b5b2d15b54e461ce109e64acdce42cc27de6fe"
   }
 }

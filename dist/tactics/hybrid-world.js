@@ -8,7 +8,7 @@ import {cliffSupportAt} from './cliff-support.js';
 import {isCliff} from './cliff-map.js';
 import {TOWER_HEIGHT} from './tower-geometry.js';
 import {LIGHT_FORMS} from './light-sources.js';
-import {EDGES, PROPS, propCells, GROUNDS} from './environment.js';
+import {EDGES, PROPS, propCells, GROUNDS, isWoodland} from './environment.js';
 import {segmentBox} from './hybrid-geometry.js';
 import {propParts} from './hybrid-props.js';
 
@@ -22,7 +22,7 @@ export function projectWorld([x,y,z],{azimuth,elevation}=GAME_CAMERA){
  return [Math.cos(azimuth)*x-Math.sin(azimuth)*z,-Math.sin(elevation)*(Math.sin(azimuth)*x+Math.cos(azimuth)*z)+Math.cos(elevation)*y];
 }
 const supportedProps=new Set(Object.keys(PROPS));
-const grounds=new Set(['yard','floor','bridge','woodland','water',...GROUNDS]);
+const grounds=new Set(['yard','floor','bridge','woodland','woodland-dense','water',...GROUNDS]);
 const chunk=8, D=DIMENSIONS;
 export function buildWorld(map){map=canopyPresentation(map);
  const boxes=[],diagnostics=[],ids=new Set();
@@ -33,7 +33,7 @@ export function buildWorld(map){map=canopyPresentation(map);
   boxes.push({id,name:id,kind,material,source,center,size,min:center.map((v,i)=>v-size[i]/2),max:center.map((v,i)=>v+size[i]/2),...policies});
  }
  function tile(x,y,z,terrain){
-  if(terrain==='woodland')hasWoodland=true;
+  if(isWoodland(terrain))hasWoodland=true;
   if(terrain==='void')return;
   if(!grounds.has(terrain)&&terrain!=='crate'){diagnostics.push({source:`tile:${x},${y},${z}`,kind:terrain,message:'Unsupported terrain'});return;}
   // Existing stairs leave the upper slab open; movement remains a simulation rule.

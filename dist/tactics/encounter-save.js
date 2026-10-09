@@ -11,7 +11,7 @@ import {validStructureHealth} from './structure-health.js';
 import {breachErrors} from './breach-data.js';
 export const SAVE_VERSION=1;
 const fail=()=>{throw Error('This save is damaged or incomplete. Your current encounter has not been changed.');};
-const terrain=new Set(['yard','floor','crate','void','water','bridge','woodland',...GROUNDS]);
+const terrain=new Set(['yard','floor','crate','void','water','bridge','woodland','woodland-dense',...GROUNDS]);
 const finite=n=>Number.isFinite(n)&&n>=0;
 export function validateSavedState(s,{population=false,unitIds=null}={}){
  if(!s||!s.definition||validateMap(s.definition,{connectivity:false}).length||canopyErrors(s).length)fail();

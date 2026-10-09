@@ -1,4 +1,4 @@
-import {TREE_VARIANTS} from './environment.js';
+import {TREE_VARIANTS,isWoodland} from './environment.js';
 // Presentation geometry only: the existing tree footprints and collision boxes
 // remain the authority for movement, line of sight and cover.
 export function foliageModel(kind){
@@ -28,7 +28,7 @@ export function foliageModel(kind){
 
 // Stable local variation survives editor rebuilds, fog updates and camera moves.
 export function grassTufts(box){
- if(box.kind!=='floor'||!['yard','ground-grass','woodland'].includes(box.material))return [];
+ if(box.kind!=='floor'||!['yard','ground-grass'].includes(box.material))return [];
  const {x,y,z=0}=box.source,seed=(Math.imul(x+91,73856093)^Math.imul(y+37,19349663)^Math.imul(z+7,83492791))>>>0;
  const random=i=>((Math.imul(seed^(i*374761393),1597334677)>>>0)%10000)/10000;
  const count=box.material==='yard'?(seed%3===0?1:0):2,top=box.center[1]+box.size[1]/2;
@@ -38,13 +38,14 @@ export function grassTufts(box){
  });
 }
 
-// Traversable woodland is vegetation cover, not solid tree props. These instances
-// retain the floor source for fog/floor filtering and never enter collision data.
+// Two low-poly, overlapping masses per tile; the painted skin carries leaf detail.
+// Terrain decides walkability. Instances retain their level for fog and picking.
 export function coverUndergrowth(box){
- if(box.kind!=='floor'||box.material!=='woodland')return [];
+ if(box.kind!=='floor'||!isWoodland(box.material))return [];
  const {x,y,z=0}=box.source,seed=(Math.imul(x+17,73856093)^Math.imul(y+61,19349663)^Math.imul(z+3,83492791))>>>0;
  const random=i=>((Math.imul(seed^(i*374761393),1597334677)>>>0)%10000)/10000,top=box.center[1]+box.size[1]/2;
- return Array.from({length:3},(_,i)=>{const h=.55+random(i+3)*.6;
-  return {id:box.id+':cover:'+i,source:box.source,kind:'foliage-cover',material:i===1?'leaf-light':'foliage',shape:'cover-crown',center:[x+(random(i+1)-.5)*.5,top+.12+h/2,y+(random(i+7)-.5)*.5],size:[.58+random(i+5)*.25,h,.55+random(i+11)*.28],rotation:[0,random(i+13)*Math.PI*2,0]};
+ const dense=box.material==='woodland-dense',shapes=['cover-crown','cover-spreading','cover-spire'],colors=['foliage','leaf-light','leaf-olive'];
+ return Array.from({length:2},(_,i)=>{const shape=shapes[Math.floor(random(i+19)*shapes.length)],spire=shape==='cover-spire',h=(dense?.95:.50)+random(i+3)*(dense?.9:.65),width=(dense?.90:.65)+random(i+5)*.35;
+  return {id:box.id+':cover:'+i,source:box.source,kind:'foliage-cover',material:colors[Math.floor(random(i+23)*colors.length)],shape,center:[x+(random(i+1)-.5)*.6,top+h/2-.04,y+(random(i+7)-.5)*.6],size:[width*(spire?.8:1),h,width*(.75+random(i+11)*.3)],rotation:[0,random(i+13)*Math.PI*2,0]};
  });
 }

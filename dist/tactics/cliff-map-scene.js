@@ -18,12 +18,12 @@ export function hideUnknownCliffTriangles(geometry,known){
 }
 export class CliffMapScene {
  constructor(scene){this.group=new T.Group();scene.add(this.group);this.parts=[];}
- rebuild(map,level,{editor=false,dim=true}={}){
-  const props=(map.props||[]).filter(p=>isCliff(p)&&(p.z||0)<=level),known=(x,y,z)=>editor||terrainKnown(map,z?`${x},${y},${z}`:`${x},${y}`);
-  const signature=JSON.stringify([props,level,editor,dim,props.map(p=>[known(p.x,p.y,p.z||0),(map.map||map.terrain)?.[p.y]?.[p.x]==='water'])]);if(signature===this.signature)return;this.signature=signature;this.clear();
+ rebuild(map,level,{editor=false,dim=true,grassTexture}={}){
+  const props=(map.props||[]).filter(p=>isCliff(p)&&(p.z||0)<=level),known=(x,y,z)=>editor||terrainKnown(map,z?`${x},${y},${z}`:`${x},${y}`),mapSize=(map.map||map.terrain)?.length||240;
+  const signature=JSON.stringify([props,level,editor,dim,mapSize,grassTexture?.uuid,props.map(p=>[known(p.x,p.y,p.z||0),(map.map||map.terrain)?.[p.y]?.[p.x]==='water'])]);if(signature===this.signature)return;this.signature=signature;this.clear();
   for(let z=0;z<=level;z++){
    const tiles=cliffTiles(props,z);if(!tiles.length)continue;
-   const wet=props.some(p=>(p.z||0)===z&&(map.map||map.terrain)?.[p.y]?.[p.x]==='water'),part=createCliffTiles('mixed',tiles,{water:wet});
+   const wet=props.some(p=>(p.z||0)===z&&(map.map||map.terrain)?.[p.y]?.[p.x]==='water'),part=createCliffTiles('mixed',tiles,{water:wet,grassTexture,weathered:true,mapSize});
    if(!editor){const visible=new Set(props.filter(p=>(p.z||0)===z&&known(p.x,p.y,z)).map(p=>p.x+','+p.y));hideUnknownCliffTriangles(part.mesh.geometry,(x,y)=>visible.has(x+','+y));}
    part.root.position.set(-.5,z*DIMENSIONS.floorSpacing,-.5);
    if(editor&&dim&&z<level)for(const material of part.original)material.color.multiplyScalar(.38);

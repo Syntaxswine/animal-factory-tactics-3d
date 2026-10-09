@@ -1,17 +1,28 @@
 # Painted foliage cover
 
-In the 3D editor, choose **Foliage cover** under Build and drag a rectangle. Release to paint the eligible ground in one undoable edit. Escape cancels. **Clear foliage** removes woodland cover in a rectangle and restores ordinary grass; it does not recover a previously painted dirt/gravel texture. Undo restores the exact original terrain.
+Choose **Foliage** in the 3D editor, select level **1, 2 or 3**, then choose a single tile or drag rectangle. The brush paints supported yard, grass, dirt and gravel, including plateau tops and their cliff-cap tiles. It never creates a floor over empty space. Level 4 remains the decorative roof layer.
 
-The brush accepts yard, grass, dirt and gravel on the ground floor. It skips existing foliage, water, void, bridges, floors, paving, complete prop footprints, stairs and roof-climb endpoints. Starts and guards can stand inside the painted cover. The preview reports the affected tile count. Canonical woodland remains the saved terrain value, so export/import, saved designs, blocks and playtests retain existing format compatibility.
+The **Foliage type** dropdown offers:
 
-Cover grass uses the approved painted grass atlas with a distinctly darker green tint in both the editor and battle. Deterministic, instanced undergrowth supplies a dense waist-height silhouette. Existing woodland terrain receives the same treatment. Cargo footprints are excluded even when the cargo models are rendered through their separate library. Foliage instances retain their source cells for terrain-knowledge and floor filtering.
+- **Dense thicket · impassable** (the new UI default): saves as `woodland-dense`; blocks walking and provides foliage concealment.
+- **Undergrowth · walkable concealment**: saves as the existing `woodland`; retains the traversal and detection behavior of older maps. Existing foliage is not automatically converted to an obstacle.
 
-This uses the existing shared woodland rules: the exact length of a sightline through foliage reduces identification range and detection chance. Deep patches can hide people beyond them, while nearby people can still be seen. Woodland is traversable; these visual shrubs add no solid collision or bullet protection. Sneak and low stances retain their separate concealment benefits. The shared core is unchanged.
+Changing the type and painting over foliage converts the selected cells. Water, buildings, paving, complete prop footprints, stairs and climb endpoints are skipped. Dense fill also skips character starts, travel markers and ramp approaches. A stroke is one undoable edit; Escape cancels the preview. Clear foliage restores ordinary grass on the selected level. Undo restores the exact previous surface, including dirt or gravel.
+
+Both types survive editor saves, JSON export/import, reusable block extraction and placement, playtest, and encounter save/load. The generated-core adapter records the terrain validation, protected painting, block and concealment changes. The exact length of a sightline through either foliage type reduces identification range and detection chance. Vegetation does not stop bullets or provide ballistic cover.
+
+## Rendering
+
+Bulk foliage uses two instanced masses per tile, selected deterministically from three silhouettes and three leaf tints, with varied size, position and rotation. The painterly atlas supplies leaf detail. This costs at most **72 foliage triangles per tile**, down from **296** for the previous three crowns plus concealed grass tufts: at least **75% fewer**. These are geometry counts, not a frame-rate guarantee. Individual tree objects retain their own models and rules.
+
+Foliage on a cliff cap uses its physical height even when the ledge replaces the ordinary floor slab. Instances retain their source cells and levels for fog and layer filtering. Cargo footprints remain excluded.
+
+In-map cliff caps now use the same grass atlas, tint, scale and world coordinates as ordinary grass in both the editor and game. Sand blends and a narrow soil rim remain supported. Full ledge faces have shallow, irregular strata with softer surface shading. Caps, sector cut planes and closed geometry are preserved; the rendered and tactical rock faces share the weathering geometry. No climb links are added and no authored tutorial or user variant files are rewritten.
 
 ## Validation
 
-All 581 tests, asset validation, the 3D build and the twenty-module shared-core verification passed. Three dedicated tests cover protected cells and full prop footprints, single-stroke undo/redo and canonical round trips, actual traversal/concealment, darker grass and unchanged collision data.
+`tests/foliage-cover.test.mjs` covers upper-layer painting, protected cells, conversion and clearing, undo/redo, map and block round trips, dense path blocking, concealment, encounter saves, cliff-cap vegetation and the geometry budget. Cliff tests check sealed terrain, matching render/collision rays and unchanged landing caps and sector joins.
 
-`tools/foliage-cover-review.mjs` exercises real rectangle painting, reverse-direction clearing, Escape, undo/redo, saving and playtest handoff. Evidence is under `artifacts/foliage-cover/`. A 64×64 patch retained 106 geometries and 34 textures across four clear/repaint cycles. The full editor scene submitted about 1.69 million triangles in 341 calls; measured CPU draw submission was 2.1–2.7 ms locally, not a GPU frame-rate guarantee. Separate browser checks confirmed fog filtering, hidden upper floors and unchanged collision volumes.
+`tools/check-editor-foliage.mjs` uses a disposable browser with the existing preview server. It paints real rectangle strokes on levels 2 and 3, checks undo/redo and import/export, reviews the authored tutorial rim, and opens Quick Fight to verify rendering and blocked movement. Screenshots and results are written under `artifacts/editor-foliage/`; the helper browser closes in `finally`. It does not write to the map library or alter user browser sessions.
 
-The independent hostile review scored this bounded change **9/10**, with no blocking findings. Dense patches show repeated shrub forms; low characters can be visually obscured and remain accessible through squad controls and selection rings. No universal performance claim is made for covering the entire map.
+Run the focused foliage, cliff, land-brush, environment and encounter-save tests, `node tools/sync-tactics-core.mjs --check`, and `node tools/build-tactics-3d.mjs` before delivery. The base build and 3D build retain their missing-module checks.

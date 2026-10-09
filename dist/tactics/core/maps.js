@@ -78,9 +78,9 @@ export function validateMap(raw,{connectivity=true}={}){
  const errors=[],point=p=>p&&inBounds(p.x,p.y,levelOf(p));
  if(!raw||raw.version!==2||raw.width!==W||raw.height!==H||raw.levels!==LEVELS)return ['Expected a version 2 map: 240 × 240 tiles and 3 levels.'];
  if(typeof raw.name!=='string'||raw.name.length<1||raw.name.length>60)errors.push('Map name must contain 1–60 characters.');
- if(!Array.isArray(raw.terrain)||raw.terrain.length!==H||raw.terrain.some(r=>!Array.isArray(r)||r.length!==W||r.some(t=>!['yard','floor','crate','void','water','bridge','woodland',...GROUNDS].includes(t))))return [...errors,'Invalid ground terrain.'];
+ if(!Array.isArray(raw.terrain)||raw.terrain.length!==H||raw.terrain.some(r=>!Array.isArray(r)||r.length!==W||r.some(t=>!['yard','floor','crate','void','water','bridge','woodland','woodland-dense',...GROUNDS].includes(t))))return [...errors,'Invalid ground terrain.'];
  if(!Array.isArray(raw.upper)||raw.upper.length!==2)return [...errors,'Expected two sparse upper levels.'];
- for(const layer of raw.upper){if(!layer||typeof layer!=='object'||Array.isArray(layer))return [...errors,'Invalid upper floor.'];for(const [k,v]of Object.entries(layer)){const [x,y]=k.split(',').map(Number);if(k!==tileKey(x,y)||!inBounds(x,y)||!['yard','floor','crate','bridge','woodland',...GROUNDS].includes(v))return [...errors,'Invalid upper floor tile.'];}}
+ for(const layer of raw.upper){if(!layer||typeof layer!=='object'||Array.isArray(layer))return [...errors,'Invalid upper floor.'];for(const [k,v]of Object.entries(layer)){const [x,y]=k.split(',').map(Number);if(k!==tileKey(x,y)||!inBounds(x,y)||!['yard','floor','crate','bridge','woodland','woodland-dense',...GROUNDS].includes(v))return [...errors,'Invalid upper floor tile.'];}}
  if(raw.edgeLocks!==undefined&&(!raw.edgeLocks||typeof raw.edgeLocks!=='object'||Array.isArray(raw.edgeLocks)))return [...errors,'Invalid door locks.'];
  for(const [key,value]of Object.entries(raw.edgeLocks||{}))if(!EDGES[raw.edges?.[key]]?.opensTo||!Number.isInteger(value)||value<1||value>100)return [...errors,'Door locks require closed doors and difficulty 1-100.'];
  for(const p of raw.props||[])if(p.condition!==undefined&&(!Number.isInteger(p.condition)||p.condition<0||p.condition>100))return [...errors,'Fixture condition must be 0-100.'];
