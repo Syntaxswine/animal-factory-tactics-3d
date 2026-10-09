@@ -1,0 +1,25 @@
+{
+  "configurations": 100,
+  "warm": {
+    "geometries": 44,
+    "textures": 2
+  },
+  "after": {
+    "geometries": 44,
+    "textures": 2
+  },
+  "errors": [],
+  "teardown": {
+    "counts": {
+      "ba06f099-7d51-4801-8458-8c0e7a6b704c": 1,
+      "dbed0782-0e29-4dcd-a97d-56ba217b5d64": 1,
+      "3477686b-5390-468d-bc51-f8bb272ba9fc": 1,
+      "86e9d528-c1c9-42e3-940a-127fd3de4aba": 1,
+      "0808228c-8541-4661-8f68-c1d95fed2fb9": 1
+    },
+    "disposed": true,
+    "ready": false
+  },
+  "slowReferenceCancelled": true,
+  "mobileOverflow": false
+}
