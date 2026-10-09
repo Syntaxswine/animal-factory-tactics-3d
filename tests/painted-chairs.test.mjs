@@ -7,7 +7,9 @@ const bounds=o=>new T.Box3().setFromObject(o);
 const each=fn=>{const t=new T.Texture(),lib=createChairLibrary(t);try{for(const f of CHAIR_FORMS)for(const finish of f.finishes){const c=lib.build(f.id,{finish});fn(c,lib);c.dispose();}}finally{lib.dispose();t.dispose();}};
 
 test('all eight chair finishes share exact seat, foot, pelvis and approach contacts without rescaling',()=>each(c=>{
- const b=bounds(c.root.getObjectByName('Shared seat'));near(b.max.y,C.seatHeight);near(b.min.x,-.42);near(b.max.x,.42);near(b.min.z,-.32);near(b.max.z,.30);
+ const b=bounds(c.root.getObjectByName('Shared seat'));near(b.max.y,C.seatHeight);near(b.max.z,.30);
+ if(c.form.id==='wingback'){assert.ok(b.min.x<=-.42&&b.max.x>=.42&&b.min.z<=-.32,'padding must contain the shared sitting area');}
+ else{near(b.min.x,-.42);near(b.max.x,.42);near(b.min.z,-.32);}
  assert.deepEqual(c.anchors.seat.position.toArray(),C.seatCenter);assert.deepEqual(c.anchors.pelvis.position.toArray(),C.pelvis);assert.deepEqual(c.anchors.approach.position.toArray(),C.approach);assert.deepEqual(c.anchors.leftFoot.position.toArray(),C.feet[0]);assert.deepEqual(c.anchors.rightFoot.position.toArray(),C.feet[1]);assert.deepEqual(c.root.scale.toArray(),[1,1,1]);
  c.root.rotation.y=Math.PI/2;c.root.position.set(3,2,-1);c.root.updateMatrixWorld(true);const world=c.anchors.seat.getWorldPosition(new T.Vector3());near(world.y,2+C.seatHeight);near(world.x,3+C.seatCenter[2]);near(world.z,-1);
 }));

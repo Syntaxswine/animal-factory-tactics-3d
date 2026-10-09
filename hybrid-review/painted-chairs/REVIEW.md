@@ -1,5 +1,15 @@
 # Painted-chair refinement hostile review
 
+## Cushion-gap follow-up
+
+The follow-up to `2125cc1` enlarges the wingback's outer seat padding to X ±0.48, Z −0.46…0.30 and Y 0.36…0.48, and tucks the back cushion's lower bevels into it. The common usable sitting area, seat height and every anchor are unchanged. Other chair geometry is untouched; the wingback remains 448 triangles.
+
+Independent read-only reviewer `strategic_sites_hostile`: **9/10, approved, no blockers**. Final front, three-quarter, side, rear, top, grey, alternate-finish and gameplay renders show the joint closed with proportionate padding beneath the arms. The reviewer cast 2,937 front rays over X −0.44…0.44 and Y 0.375…0.695 against the actual seat/back triangles, finding zero holes. All six chair tests pass independently, including torso, rise and heel clearance. No reviewer helper was launched.
+
+Builder verification: six chair tests, nine fresh rendered views and no browser errors. Both short-lived render browsers closed with exit code 0 and their exact process identities were verified absent. Preview 4476 retains its original deadline. Evidence: `cushion-front.png`, `cushion-three.png`, `cushion-check.json`.
+
+## Height and closed-back revision (`2125cc1`)
+
 October 9, 2026. Independent read-only reviewer: `strategic_sites_hostile`. **9/10 — approved for assets and the shared furniture-contact/fit-study scope. No blocking findings.**
 
 The refinement closes the wingback's back into the seat, replaces its plain legs with faceted cabriole front legs and shaped rear legs, and lowers the other chair backs to the horse's rolled cuffs. Paint continues to carry the surface detail. Triangle counts are 448 wingback, 180 wooden, 248 metal and 284 desk.

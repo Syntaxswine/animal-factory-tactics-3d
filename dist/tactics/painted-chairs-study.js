@@ -51,7 +51,7 @@ function frame(){
  }
  camera.left=-width/(2*ppu);camera.right=width/(2*ppu);camera.top=height/(2*ppu);camera.bottom=-height/(2*ppu);camera.updateProjectionMatrix();camera.updateMatrixWorld(true);renderer.render(scene,camera);
  const forms=selected.map(c=>{let triangles=0;c.root.traverse(p=>{if(p.isMesh)triangles+=(p.geometry.index?.count||p.geometry.attributes.position.count)/3;});return {id:c.form.id,finish:c.finish,triangles};});
- $('status').textContent=forms.map(c=>CHAIR_FORMS.find(f=>f.id===c.id).name+' '+c.triangles+' tris').join(' · ')+' · seat 0.48 high × 0.84 wide · '+Math.round(ppu)+' px/tile';
+ $('status').textContent=forms.map(c=>CHAIR_FORMS.find(f=>f.id===c.id).name+' '+c.triangles+' tris').join(' · ')+' · seat 0.48 high · shared sitting width 0.84 · '+Math.round(ppu)+' px/tile';
  window.paintedChairState={forms,seatHeight:.48,reference:animal?.profile.id||'none',referenceReady:window.chairReferenceReady,grey:$('grey').checked,fit:$('fit').checked,view,ppu,library:library.stats(),resources:{...renderer.info.memory}};return window.paintedChairState;
 }
 function release(){if(released)return;released=true;selected.forEach(c=>c.dispose());fitting.forEach(f=>f.dispose());lineGeometries.forEach(g=>g.dispose());disposeAnimal(animal);animal=null;library?.dispose();atlas?.dispose();lineMaterial.dispose();floor.geometry.dispose();floor.material.dispose();sun.shadow.dispose();renderer.dispose();window.paintedChairsDisposed=true;}
