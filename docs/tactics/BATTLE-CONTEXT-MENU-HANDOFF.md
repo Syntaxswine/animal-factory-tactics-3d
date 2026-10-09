@@ -37,6 +37,25 @@ or insufficient AP cancel the pending inventory popup. The helper only cancels
 movement it owns. The intention is transient UI state: saving/loading preserves
 normal game state without replaying a deferred inventory popup.
 
+## Movement danger warnings · October 9
+
+Hovering a movement destination marks burning cells along the actual route
+with orange footprints, a tile outline and a warning triangle. A **Fire on
+route** banner names the affected mercs; the usual combat AP estimate remains.
+This covers intermediate cells as well as the destination, formation routes,
+and queued orders after the pointer leaves the map. Right-click **Move here**
+and pickup/search actions also show the warning before ordering the approach.
+
+Warnings use live, currently visible fire at the route's exact level. Expired
+fire, fire on other floors and unseen fire do not produce warnings. The preview
+does not change pathfinding, AP, or damage, and deliberate movement remains
+available. Other hazards can be added to the route annotation later.
+
+`tests/walking-preview.test.mjs` covers route parity, visibility, height, expiry,
+groups and queued orders. `tools/check-walking-danger.mjs` checks the live UI,
+context actions and compact layout using a disposable browser; its screenshots
+and report go to `artifacts/movement-danger/`.
+
 ## Shooting at terrain
 
 Grenades and flamethrowers open their existing placement planners. Firearms now
