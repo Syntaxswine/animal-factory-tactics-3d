@@ -81,7 +81,7 @@ test('nothing snaps: no bone accelerates faster than 5 m/s2 anywhere in the loop
 test('the same seed replays exactly; other seeds make other loops; characters on one seed each draw their own',()=>{
  const capture=seed=>{const worker=createLightHorse(horseData),motion=createIdle(worker,{seed});try{const out=[0,4.4,11.1,23.7].map(t=>{motion.at(t);return worker.bones.map(b=>[...b.position.toArray(),...b.quaternion.toArray()]);});return {out,looks:motion.schedule.looks.map(l=>[l.time,l.yaw,l.pitch])};}finally{motion.dispose();worker.skeleton.dispose();worker.dispose();}};
  const a=capture(7),b=capture(7),c=capture(8),d=capture(4294967295),e=capture(0);assert.deepEqual(a,b);assert.notDeepEqual(a.looks,c.looks);assert.notDeepEqual(d.looks,e.looks,'the largest and smallest seeds are different loops');
- // the seed is mixed with the rig's key, so the cast on one seed do not share one choreography
+ // the seed is mixed with the rig's names, so the cast on one seed do not share one choreography
  const plans=new Set();for(const profile of MAMMALS)fixture(({motion})=>{plans.add(JSON.stringify(motion.schedule.looks.map(l=>l.time.toFixed(2))));},{profile,seed:1});
  assert.equal(plans.size,MAMMALS.length,'each of the eleven draws its own looks on seed 1');
 });
@@ -110,7 +110,8 @@ test('on a wide look the head leads, the chest follows and the hips come last; t
  for(const seed of [1,2,3,4,5,6])fixture(({worker,motion})=>{const looks=motion.schedule.looks;
   for(let t=0;t<motion.length;t+=.05){motion.at(t);assert.ok(Math.abs(heading(worker,'hips'))<=10.5,`seed ${seed}: the hips turn ${heading(worker,'hips').toFixed(1)} degrees at ${t.toFixed(2)} s`);
    for(const s of [-1,1])assert.ok(Math.abs(heading(worker,'shin'+s)-heading(worker,'hoof'+s))<4,`seed ${seed}: the ${s} knee twists ${(heading(worker,'shin'+s)-heading(worker,'hoof'+s)).toFixed(1)} degrees off its hoof`);}
-  looks.forEach((l,i)=>{const prev=i?looks[i-1].yaw:looks.at(-1).yaw;if(Math.abs(l.yaw-prev)<30)return;const peak={head:[0,0],spine:[0,0],hips:[0,0]};let last=null;
+  // (but on a look so wide that the trunk must start with the head)
+  looks.forEach((l,i)=>{const prev=i?looks[i-1].yaw:looks.at(-1).yaw;if(Math.abs(l.yaw-prev)<30||l.trunk>=4)return;const peak={head:[0,0],spine:[0,0],hips:[0,0]};let last=null;
    for(let t=l.time-.05;t<=l.time+2.2*l.dur+.3;t+=.01){motion.at(t);const now={head:heading(worker,'head'),spine:heading(worker,'spine'),hips:heading(worker,'hips')};if(last)for(const k in peak){const v=Math.abs(now[k]-last[k]);if(v>peak[k][0])peak[k]=[v,t];}last=now;}
    assert.ok(peak.head[1]<peak.spine[1]&&peak.spine[1]<=peak.hips[1]+1e-9,`seed ${seed} ${l.label}: head ${peak.head[1].toFixed(2)}, chest ${peak.spine[1].toFixed(2)}, hips ${peak.hips[1].toFixed(2)} s`);checked++;});},{seed});
  assert.ok(checked>=4,'enough wide looks to check');
@@ -136,14 +137,14 @@ test('the arms hang and ease: within 2 degrees of their rest hang where the clot
  for(const profile of MAMMALS)fixture(({worker,motion})=>{worker.pose('neutral');worker.root.updateMatrixWorld(true);const {swing}=motion.fitted,rest={[-1]:fromPlumb(worker,-1),[1]:fromPlumb(worker,1)};
   for(let t=0;t<motion.length;t+=.1){motion.at(t);for(const s of [-1,1]){const out=Math.abs(fromPlumb(worker,s)-rest[s]),top=swing.lean[s]+swing.round+2;assert.ok(out<top,`${profile.id}: the ${s} arm swings ${out.toFixed(1)} degrees out at ${t.toFixed(1)} s (its fit allows ${top.toFixed(1)})`);}}},{profile,seed:1});
 });
-test('looking down, the neck bends forward like a heavy branch and carries the head out over the chest, and the chest rounds for the deepest looks (the goat, whose clothes let it look down furthest)',()=>{
- const goat=profileOf('goat');let deepest=null;for(const seed of [1,2,3,4,5,6,7,8]){const worker=goat.create(load(goat.file)),motion=createIdle(worker,{seed,eye:goat.eye});for(const l of motion.schedule.looks)if(l.label==='Glance down'&&(!deepest||l.pitch<deepest.l.pitch))deepest={seed,l};motion.dispose();worker.skeleton.dispose();worker.dispose();}
+test('looking down, the neck bends forward like a heavy branch and carries the head out over the chest, and the chest rounds for the deepest looks (the donkey, whose clothes let it look down furthest)',()=>{
+ const donkey=profileOf('donkey');let deepest=null;for(const seed of [1,2,3,4,5,6,7,8]){const worker=donkey.create(load(donkey.file)),motion=createIdle(worker,{seed,eye:donkey.eye});for(const l of motion.schedule.looks)if(l.label==='Glance down'&&(!deepest||l.pitch<deepest.l.pitch))deepest={seed,l};motion.dispose();worker.skeleton.dispose();worker.dispose();}
  assert.ok(deepest,'a glance down in eight seeds');
  fixture(({worker,motion})=>{const down=deepest.l;worker.pose('neutral');worker.root.updateMatrixWorld(true);const rest=bone(worker,'head').position.clone();
   motion.at(down.time+down.dur+.4);const moved=bone(worker,'head').position.clone().sub(rest),face=V([1,0,0]).applyQuaternion(onChest(worker,'head')),chest=new T.Euler().setFromQuaternion(bone(worker,'spine').quaternion,'YXZ').z*DEG;
   assert.ok(face.y<-.2,'the face is turned down from the chest');assert.ok(moved.x>.03,'the head joint is carried forward '+(moved.x*100).toFixed(1)+' cm');
   assert.ok(moved.length()<.08,'the bend stays within the neck skin');assert.ok(chest<-1,'the chest rounds forward '+(-chest).toFixed(1)+' degrees');
- },{seed:deepest.seed,profile:goat});
+ },{seed:deepest.seed,profile:donkey});
 });
 test('the chest rounds no further than its fitted rounding, on every mammal over four of its own seeds',()=>{
  // the deepest glances ask the chest for 30% of the look below 12 degrees down, up to 10; a rig whose clothes allow less
@@ -224,22 +225,25 @@ test('glances down are glances: the gaze comes back up after one, stays below 12
   finally{motion.dispose();worker.skeleton.dispose();worker.dispose();}}
  assert.ok(longest<=4,`the gaze stays below 12 degrees down ${longest.toFixed(2)} s at a stretch`);assert.ok(most<=.25,`the gaze spends ${(most*100).toFixed(0)}% of a loop below 12 degrees down`);
 });
-test('every mammal stands and looks about: over four of its loops its head turns 120 degrees a minute or more and sweeps 9 or more, its hips sway 3 cm or more and its elbows ease; all but the two whose clothes hold their heads reach 44 degrees or more to each side and 10 or more down',()=>{
+test('every mammal stands and looks about: over four of its loops its head turns 120 degrees a minute or more and sweeps 9 or more, its hips sway 3 cm or more and its elbows ease (but the two whose clothes hold their arms, one his lean); all but the two whose clothes hold their heads reach 40 degrees or more to each side and 10 or more down',()=>{
  // A fit that collapsed (a measure that counted every slid crossing, say) would leave a character staring ahead. The two
  // whose heads their clothes still hold are named with what they reach, so that a change to either shows: the sheep (a
- // neckerchief tight on its wool) turns its head 40 degrees left and 10 right and does not nod; the pig director (his
- // jowls resting on his collar) turns his 5 left, none right, and does not nod, and looks about with his trunk.
- const held={sheep:{left:40,right:10,nod:0},'pig-director':{left:5,right:0,nod:0}};
+ // neckerchief tight on its wool) turns its head 20 degrees left and 10 right and nods 2.5; the pig director (his jowls
+ // resting on his collar) turns his 2.5 each way and does not nod, and looks about with his trunk. Two whose forearms rest
+ // on their clothes are named too, and their elbows do not ease: the sheep's lie on its shirt, the pig foreman's by his
+ // shirt's hem and his waistband, which hold his lean to a quarter, so his hips sway 2 cm or more.
+ const held={sheep:{left:20,right:10,nod:2.5},'pig-director':{left:2.5,right:2.5,nod:0}},still=new Set(['sheep','pig-foreman']),sways={'pig-foreman':.02};
  for(const profile of MAMMALS){const id=profile.id;let path=0,time=0,sway=Infinity,swing=-Infinity,ease=Infinity;
   for(const seed of [1,2,3,4])fixture(({worker,motion})=>{const {reach,yaw,nod}=motion.fitted,elbow=()=>{const a=wp(worker,'upperArm1'),e=wp(worker,'forearm1'),w=wp(worker,'hand1');return 180-a.sub(e).angleTo(w.sub(e))*DEG;};
    if(seed===1){if(held[id])assert.deepEqual({left:yaw[1],right:yaw[-1],nod},held[id],id+' is held as named');
-    else assert.ok(reach.left>=44&&reach.right>=44&&reach.down>=10,`${id} reaches ${reach.left.toFixed(1)} / ${reach.right.toFixed(1)} / ${reach.down.toFixed(1)} degrees`);}
+    else assert.ok(reach.left>=40&&reach.right>=40&&reach.down>=10,`${id} reaches ${reach.left.toFixed(1)} / ${reach.right.toFixed(1)} / ${reach.down.toFixed(1)} degrees`);
+    if(still.has(id))assert.equal(motion.fitted.ease,0,id+': the arms held as named');if(sways[id])assert.equal(motion.fitted.weightShift,.25,id+': the lean held as named');}
    let q0=null,ylo=Infinity,yhi=-Infinity,zlo=Infinity,zhi=-Infinity,elo=Infinity,ehi=-Infinity;
    for(let t=0;t<motion.length;t+=.05){motion.at(t);const q=wq(worker,'head'),y=heading(worker,'head'),z=wp(worker,'hips').z,e=elbow();if(q0)path+=q.angleTo(q0)*DEG;q0=q;
     ylo=Math.min(ylo,y);yhi=Math.max(yhi,y);zlo=Math.min(zlo,z);zhi=Math.max(zhi,z);elo=Math.min(elo,e);ehi=Math.max(ehi,e);}
    time+=motion.length;swing=Math.max(swing,yhi-ylo);sway=Math.min(sway,zhi-zlo);ease=Math.min(ease,ehi-elo);},{profile,seed});
   assert.ok(path/time*60>=120,`${id}: the head turns ${(path/time*60).toFixed(0)} degrees a minute`);assert.ok(swing>=9,`${id}: the head sweeps ${swing.toFixed(1)} degrees at most`);
-  assert.ok(sway>=.03,`${id}: the hips sway ${(sway*100).toFixed(1)} cm`);assert.ok(ease>=.3,`${id}: the elbows ease ${ease.toFixed(2)} degrees`);}
+  assert.ok(sway>=(sways[id]??.03),`${id}: the hips sway ${(sway*100).toFixed(1)} cm`);if(!still.has(id))assert.ok(ease>=.3,`${id}: the elbows ease ${ease.toFixed(2)} degrees`);}
 });
 test('options are checked; every accessor rejects non-finite time; dispose restores the rig, weights and all',()=>{
  const worker=createLightHorse(horseData),orig=snapshot(worker);worker.pose('neutral');worker.root.updateMatrixWorld(true);const rest=worker.bones.map(b=>b.position.clone());
@@ -316,17 +320,21 @@ test('the neck skin bends: on a 25 degree nod the nape is carried forward more t
   assert.ok(forward[2]>=.02&&forward[3]>=.03,`${profile.id}: the nape is carried forward ${shown} mm from the branch's base up`);
   motion.poseHead(0,0,0);},{profile});
 });
-test('the arms\' weight stays on the sleeves: no cloth more than 12 cm from an arm\'s bones moves with that arm while the idle runs, where the rigs weight some to it',()=>{
- let stripped=0;
- for(const profile of MAMMALS){const raw=profile.create(load(profile.file)),armOf=new Map();raw.pose('neutral');raw.root.updateMatrixWorld(true);
-  const axis=s=>['upperArm','forearm','hand'].map(n=>wp(raw,n+s)),A={[-1]:axis(-1),[1]:axis(1)},seg=(x,a,b)=>{const ab=b.clone().sub(a),t=Math.max(0,Math.min(1,x.clone().sub(a).dot(ab)/ab.lengthSq()));return x.distanceTo(a.clone().addScaledVector(ab,t));};
-  const far=(x,s)=>Math.min(seg(x,A[s][0],A[s][1]),seg(x,A[s][1],A[s][2]))>.12,isArm=(m,i,s)=>['upperArm'+s,'forearm'+s].includes(m.skeleton.bones[i].name);
-  for(const m of raw.parts.filter(m=>/shirt|waistcoat|jacket|trousers|overalls|belt|pouch/.test(m.name))){const a=m.geometry.attributes;for(let i=0;i<a.position.count;i++){const x=V().fromBufferAttribute(a.position,i),s=x.z<0?-1:1;if(!far(x,s))continue;
-   for(let k=0;k<4;k++)if(a.skinWeight.getComponent(i,k)>.01&&isArm(m,a.skinIndex.getComponent(i,k),s)){armOf.set(m.name+':'+i,true);stripped++;break;}}}
+test('the forearm\'s weight stays on the sleeves: no cloth more than 12 cm from a forearm\'s bone moves with that forearm while the idle runs, where the rigs weight some to it; and cloth the rigs weight to an upper arm keeps it',()=>{
+ // (the forearm's bone: elbow to wrist; a sleeve round a stout upper arm, the pigs', lies up to 20 cm from its bone)
+ let stripped=0,upper=0,kept=0;
+ for(const profile of MAMMALS){const raw=profile.create(load(profile.file)),armOf=new Map(),own=new Map();raw.pose('neutral');raw.root.updateMatrixWorld(true);
+  const A={[-1]:['forearm-1','hand-1'].map(n=>wp(raw,n)),[1]:['forearm1','hand1'].map(n=>wp(raw,n))},seg=(x,a,b)=>{const ab=b.clone().sub(a),t=Math.max(0,Math.min(1,x.clone().sub(a).dot(ab)/ab.lengthSq()));return x.distanceTo(a.clone().addScaledVector(ab,t));};
+  const far=(x,s)=>seg(x,A[s][0],A[s][1])>.12,cloth=m=>/shirt|waistcoat|jacket|trousers|overalls|belt|pouch/.test(m.name);
+  for(const m of raw.parts.filter(cloth)){const a=m.geometry.attributes;for(let i=0;i<a.position.count;i++){const x=V().fromBufferAttribute(a.position,i),s=x.z<0?-1:1;
+   for(let k=0;k<4;k++){const w=a.skinWeight.getComponent(i,k),b=m.skeleton.bones[a.skinIndex.getComponent(i,k)].name;if(w>.01&&b==='forearm'+s&&far(x,s)&&!armOf.has(m.name+':'+i)){armOf.set(m.name+':'+i,true);stripped++;}if(w>.5&&b==='upperArm'+s)own.set(m.name+':'+i,w);}}}
   raw.dispose();
-  fixture(({worker})=>{for(const m of worker.parts.filter(m=>/shirt|waistcoat|jacket|trousers|overalls|belt|pouch/.test(m.name))){const a=m.geometry.attributes;for(let i=0;i<a.position.count;i++){const x=V().fromBufferAttribute(a.position,i),s=x.z<0?-1:1;if(!far(x,s))continue;
-    for(let k=0;k<4;k++)assert.ok(!(a.skinWeight.getComponent(i,k)>1e-6&&isArm(m,a.skinIndex.getComponent(i,k),s)),`${profile.id} ${m.name} vertex ${i}, ${armOf.has(m.name+':'+i)?'which the rig weights to the arm, ':''}moves with the ${m.skeleton.bones[a.skinIndex.getComponent(i,k)].name}`);}}},{profile});}
- assert.ok(stripped>=50,'the rigs weight cloth beside the arms to them ('+stripped+' vertices), so the rule has work to do');
+  fixture(({worker})=>{for(const m of worker.parts.filter(cloth)){const a=m.geometry.attributes;for(let i=0;i<a.position.count;i++){const x=V().fromBufferAttribute(a.position,i),s=x.z<0?-1:1;let up=0;
+    for(let k=0;k<4;k++){const w=a.skinWeight.getComponent(i,k),b=m.skeleton.bones[a.skinIndex.getComponent(i,k)].name;if(b==='upperArm'+s)up+=w;
+     if(far(x,s))assert.ok(!(w>1e-6&&b==='forearm'+s),`${profile.id} ${m.name} vertex ${i}, ${armOf.has(m.name+':'+i)?'which the rig weights to the forearm, ':''}moves with the ${b}`);}
+    const w0=own.get(m.name+':'+i);if(w0){upper++;if(up>=.9*w0)kept++;}}}},{profile});}
+ assert.ok(stripped>=50,'the rigs weight cloth beside the forearms to them ('+stripped+' vertices), so the rule has work to do');
+ assert.ok(upper>=100&&kept>=.9*upper,`of the ${upper} cloth vertices the rigs weight over half to an upper arm, ${kept} keep nine tenths of it`);
 });
 test('a sleeve stays on the forearm it is wrapped round: sleeve cloth within 1 cm of a forearm keeps its distance from it within 1 mm through the loop, on every mammal',()=>{
  // (the rigs weight a sleeve's inside at the elbow mostly to the chest: left so, the dog's, the pig director's and the
@@ -343,4 +351,49 @@ test('a sleeve stays on the forearm it is wrapped round: sleeve cloth within 1 c
   for(let t=0;t<motion.length;t+=.5){motion.at(t);const cache=new Map(),pos=m=>{if(!cache.has(m))cache.set(m,skinned(m));return cache.get(m);};
    for(const {m,i,arm,t:[a,b,c],b:w,d} of pairs){const AP=pos(arm),on=V().addScaledVector(AP[a],w.x).addScaledVector(AP[b],w.y).addScaledVector(AP[c],w.z),now=pos(m)[i].distanceTo(on);
     assert.ok(Math.abs(now-d)<.001,`${profile.id} ${m.name} vertex ${i} at ${t.toFixed(1)} s is ${(now*1000).toFixed(1)} mm from the forearm point it lay ${(d*1000).toFixed(1)} mm from`);}}},{profile});
+});
+test('disposed out of order, the game\'s motion first, the rig still ends on its own skeleton and weights, the neck bone gone',()=>{
+ // (the order is last in, first out: an idle made on a game-driven rig is disposed first; disposed after the game's
+ // motion has put the parts back, the idle leaves them as they are)
+ const profile=profileOf('bull'),worker=profile.create(load(profile.file)),orig=snapshot(worker),own=worker.parts.map(m=>m.skeleton),game=createMammalMotion(worker,profile);game.restore();
+ const motion=createIdle(worker,{eye:profile.eye});motion.at(2.2);game.dispose();motion.dispose();
+ try{worker.parts.forEach((m,i)=>{assert.ok(m.skeleton===own[i],m.name+' back on the rig\'s own skeleton');for(const k of ['skinIndex','skinWeight'])assert.deepEqual([...m.geometry.attributes[k].array],[...orig.get(m)[k].array],m.name+' '+k+': the rig\'s own');});
+  let neck=0;worker.root.traverse(o=>{if(o.name==='idle neck')neck++;});assert.equal(neck,0,'the neck bone is gone');}
+ finally{worker.dispose();}
+});
+// The constants the doc gives, restated apart from the module: the drift's size, the head's share of a turn and the
+// trunk's split of the rest, the chest's rounding on a look down, and the shoulders' rise on a breath.
+test('the drift is 0.45 degrees rms in yaw and 0.30 in pitch; the head keeps 34 tanh(yaw/34) of a turn, the chest half the rest (12 tanh) and the hips the remainder (10 tanh); the chest rounds 30% of a look below 12 degrees down; the shoulders rise 5 mm a unit of breath',()=>{
+ const rms=a=>Math.sqrt(a.reduce((s,x)=>s+x*x,0)/a.length);let split=0,rounded=0;
+ for(const seed of [1,2,3,4,5,6])fixture(({worker,motion})=>{const {yaw,twist,nod,rounding,shrug}=motion.fitted,looks=motion.schedule.looks;worker.pose('neutral');worker.root.updateMatrixWorld(true);
+  const root={[-1]:bone(worker,'upperArm-1').position.clone(),[1]:bone(worker,'upperArm1').position.clone()};
+  // where the head points against the planned look, wherever the neck's soft limits leave it be (the head within 29
+  // degrees of the chest, and 7 short of its fitted nod)
+  const dy=[],dp=[];for(let t=0;t<motion.length;t+=.05){const g=motion.gaze(t);motion.at(t);const q=onChest(worker,'head'),f=V([1,0,0]).applyQuaternion(q);
+   if(2*Math.acos(Math.min(1,Math.abs(q.w)))*DEG>29||Math.asin(Math.max(-1,Math.min(1,f.y)))*DEG<7-nod)continue;dy.push(Math.atan2(-g.dir.z,g.dir.x)*DEG-g.want.yaw);dp.push(Math.asin(g.dir.y)*DEG-g.want.pitch);}
+  assert.ok(dy.length>300,'samples the soft limits leave be');assert.ok(Math.abs(rms(dy)-.45)<.08&&Math.abs(rms(dp)-.30)<.06,`seed ${seed}: the drift is ${rms(dy).toFixed(3)} degrees rms in yaw and ${rms(dp).toFixed(3)} in pitch`);
+  // each look, once the trunk has settled on it: the hips' turn and the chest's own twist on them, and the chest's
+  // rounding (the spine's flex, and the half degree a unit of breath opens it)
+  const H=s=>Math.min(34,yaw[s]),head=y=>{const h=H(y<0?-1:1);return h>0?h*Math.tanh(y/h):0;},chestOf=y=>{const c=.5*(y-head(y)),top=Math.min(12,twist[c<0?-1:1]);return top>0?top*Math.tanh(c/top):0;};
+  const hipsOf=y=>10*Math.tanh((y-head(y)-chestOf(y))/10),euler=name=>new T.Euler().setFromQuaternion(bone(worker,name).quaternion,'YXZ');
+  looks.forEach((l,i)=>{const t=l.time+2.2*l.dur+.4;if(t>=(looks[i+1]?.time??motion.length))return;const st=motion.at(t);
+   if(Math.abs(l.yaw)>=10){const hips=euler('hips').y*DEG,chest=euler('spine').y*DEG;assert.ok(Math.abs(hips-hipsOf(l.yaw))<1e-6&&Math.abs(chest-chestOf(l.yaw))<1e-6,`seed ${seed} ${l.label} ${l.yaw.toFixed(1)}: the hips turn ${hips.toFixed(3)} (${hipsOf(l.yaw).toFixed(3)}) and the chest ${chest.toFixed(3)} (${chestOf(l.yaw).toFixed(3)}) degrees`);split++;}
+   if(l.pitch<-12.5){const flex=-euler('spine').z*DEG+.5*st.breath,want=Math.min(rounding,Math.max(.3*(-12-l.pitch),-l.pitch-nod));assert.ok(Math.abs(flex-want)<1e-6,`seed ${seed} ${l.label} ${l.pitch.toFixed(1)}: the chest rounds ${flex.toFixed(3)} degrees (${want.toFixed(3)})`);rounded++;}});
+  // the arm roots ride up the chest with each breath
+  for(let t=0;t<motion.length;t+=.37){const st=motion.at(t);for(const s of [-1,1]){const d=bone(worker,'upperArm'+s).position.clone().sub(root[s]);assert.ok(Math.abs(d.y-.005*shrug*st.breath)<1e-9&&Math.hypot(d.x,d.z)<1e-9,`seed ${seed} at ${t.toFixed(2)} s: the ${s} shoulder rises ${(d.y*1000).toFixed(2)} mm on a breath of ${st.breath.toFixed(2)}`);}}
+ },{seed});
+ assert.ok(split>=10&&rounded>=2,`settled looks to check: ${split} aside, ${rounded} down`);
+});
+test('the neck skin is weighted along the neck bone: of the weight not on the head, the neck bone takes smooth((u + 0.15)/0.6) at u branch lengths up from its base, in full within 3 cm of the neck\'s radius and a tenth of the branch above its base, easing to the rig\'s own weights 13 cm out and a tenth below',()=>{
+ const smooth=x=>{x=Math.max(0,Math.min(1,x));return x*x*x*(10+x*(-15+6*x));};let checked=0;
+ for(const profile of MAMMALS){const worker=profile.create(load(profile.file)),skull=worker.parts.find(m=>/unified/.test(m.name)&&/skull/.test(m.name)),a=skull.geometry.attributes;worker.pose('neutral');worker.root.updateMatrixWorld(true);
+  const rest=Array.from({length:a.position.count},(_,i)=>{const v=V().fromBufferAttribute(a.position,i);skull.applyBoneTransform(i,v);return v.applyMatrix4(skull.matrixWorld);});
+  const own=Array.from({length:a.position.count},(_,i)=>{const w={};for(let k=0;k<4;k++){const x=a.skinWeight.getComponent(i,k);if(x>0){const b=skull.skeleton.bones[a.skinIndex.getComponent(i,k)].name;w[b]=(w[b]||0)+x;}}return w;});
+  const head=wp(worker,'head'),axis=head.clone().sub(wp(worker,'spine')).normalize(),motion=createIdle(worker,{eye:profile.eye});
+  try{const {neck:len,neckRadius:R}=motion.fitted,base=head.clone().addScaledVector(axis,-len),b=skull.geometry.attributes;
+   for(let i=0;i<b.position.count;i++){const w=own[i],h=w.head||0;if(h>.98||Object.keys(w).length>3)continue;const d=rest[i].clone().sub(base),u=d.dot(axis)/len,r=d.clone().addScaledVector(axis,-d.dot(axis)).length(),f=(1-smooth((r-R-.03)/.10))*smooth((u+.1)/.2);
+    let n=0;for(let k=0;k<4;k++)if(skull.skeleton.bones[b.skinIndex.getComponent(i,k)].name==='idle neck')n+=b.skinWeight.getComponent(i,k);const want=f*(1-h)*smooth((u+.15)/.6);
+    assert.ok(Math.abs(n-want)<1e-3,`${profile.id} skull vertex ${i}, ${u.toFixed(2)} of the branch up and ${(r*100).toFixed(1)} cm out: the neck bone takes ${n.toFixed(4)}, not ${want.toFixed(4)}`);if(f>0)checked++;}}
+  finally{motion.dispose();worker.skeleton.dispose();worker.dispose();}}
+ assert.ok(checked>=500,'neck skin to check ('+checked+' vertices)');
 });

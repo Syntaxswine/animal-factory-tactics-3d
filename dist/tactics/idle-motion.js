@@ -55,7 +55,7 @@ function draftLooks(r,L,reach){
   if(kind==='side'&&narrow||kind==='ground'&&level)kind='drift';
   let next,hold;
   if(kind==='side'){const s=r()<.62?-lastSide:lastSide,top=Math.min(50,sideMax(s)-2);next={yaw:s*between(r,Math.min(28,top-6),top),pitch:below(between(r,-7,Math.min(3,reach.up))),roll:r()<.25?-s*Math.min(reach.tilt,between(r,1.5,4)):0};lastSide=s;hold=between(r,1.5,3.5);}
-  else if(kind==='ground'){const deep=Math.min(26,reach.down-1);next={yaw:between(r,-15,15),pitch:-between(r,Math.min(14,deep-4),deep),roll:0};hold=between(r,1.0,2.2);}
+  else if(kind==='ground'){const deep=Math.min(26,reach.down-1),aside=s=>Math.min(15,Math.max(0,sideMax(s)-3));next={yaw:between(r,-aside(-1),aside(1)),pitch:-between(r,Math.min(14,deep-4),deep),roll:0};hold=between(r,1.0,2.2);}
   else if(kind==='home'){next={yaw:between(r,-4,4),pitch:below(shallow?between(r,-5,-1):between(r,-9,-3)),roll:0};hold=r()<.15?between(r,9,13):between(r,4,9);}
   else{const dir=Math.abs(cur.yaw)>18&&r()<.75?-Math.sign(cur.yaw):r()<.5?-1:1,yaw=cur.yaw+dir*between(r,6,12),pitch=last==='ground'?Math.max(low,cur.pitch+between(r,6,10)):cur.pitch+between(r,-4,4);
    next={yaw:Math.max(-Math.max(0,sideMax(-1)-3),Math.min(Math.max(0,sideMax(1)-3),yaw)),pitch:Math.max(low,Math.max(-Math.max(0,reach.down-1),Math.min(Math.min(4,reach.up),pitch))),roll:0};hold=between(r,2,4.5);}
@@ -142,20 +142,28 @@ function closest(p,A,B,C){const ab=[B[0]-A[0],B[1]-A[1],B[2]-A[2]],ac=[C[0]-A[0]
       if(va<=0&&d4-d3>=0&&d5-d6>=0){const t=(d4-d3)/((d4-d3)+(d5-d6));b=[0,1-t,t];feat=1;}else{const den=1/(va+vb+vc),v=vb*den,w=vc*den;b=[1-v-w,v,w];feat=-1;}}}}}}
  const e=[0,1,2].map(k=>p[k]-(b[0]*A[k]+b[1]*B[k]+b[2]*C[k]));return {b,e,d2:dot(e,e),feat};}
 
-// The fitted limits depend only on the rig, not the seed: one fit per rig shape (1.4-6 s), kept for every later loop. The
+// The fitted limits depend only on the rig, not the seed: one fit per rig shape (9-55 s), kept for every later loop. The
 // catalog rigs' fits ship in idle-fits.js, keyed by rigKey (tools/fit-idle-rigs.mjs writes it; tests/idle-fits.test.mjs
 // refits every rig against it); a rig not in it is fitted when its first idle is made, and `refit: true` fits afresh.
 // (LIVE: each worker with an idle running, and its rig's key as read before the idle weighted it afresh)
 const FITS=new Map(),LIVE=new WeakMap();
-const sum=(a,k)=>{let s=0;for(let i=0;i<a.length;i++)s+=a[i]*(1+i%k);return s;};
-// each vertex's bones and weights, whatever slots they sit in
-const skinSum=a=>{let s=0,t=0;for(let i=0;i<a.skinIndex.count;i++)for(let k=0;k<4;k++){const b=a.skinIndex.getComponent(i,k)+1,w=a.skinWeight.getComponent(i,k);s+=b*w*(1+i%7);t+=b*b*w;}return s.toFixed(3)+','+t.toFixed(3);};
-const fingerprint=worker=>worker.bones.map(b=>b.name+[...b.position.toArray(),...b.quaternion.toArray(),...b.scale.toArray()].map(x=>x.toFixed(4)).join(',')).join(';')+'|'+worker.parts.map(p=>{const g=p.geometry,a=g.attributes;
- return [p.name,a.position.count,sum(a.position.array,3).toFixed(3),g.index?sum(g.index.array,3):'-',skinSum(a),p.skeleton.bones.map(b=>b.name).join(',')].join(':');}).join(';');
-// A rig's key: its bones' rest places, turns and scales, and its parts' names, sizes, vertex sums, triangles, skin weights
-// and the bones those name (the fingerprint), hashed (FNV-1a). While an idle runs on the worker (and weights it afresh),
-// the key is the one read before it started.
-export const rigKey=worker=>{if(LIVE.has(worker))return LIVE.get(worker);const f=fingerprint(worker);let h=0x811c9dc5;for(let i=0;i<f.length;i++){h^=f.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return 'k'+h.toString(16).padStart(8,'0');};
+// FNV-1a, a word at a time, and a number to a word (to a ten-thousandth: 0.1 mm, or a weight to 0.0001)
+const hasher=()=>{let h=0x811c9dc5;const word=x=>{h=Math.imul(h^(x|0),0x01000193)>>>0;};return {word,text:t=>{word(t.length);for(let i=0;i<t.length;i++)word(t.charCodeAt(i));},key:()=>'k'+h.toString(16).padStart(8,'0')};};
+const tenth=x=>Math.round(x*1e4);
+// A rig's key: a hash of its bones' names and rest places, turns and scales, and of its parts' names, every vertex in
+// order, the triangles, each vertex's skin weights (its bones and weights, whatever slots they sit in) and the bones
+// those name. While an idle runs on the worker (and weights it afresh), the key is the one read before it started.
+export const rigKey=worker=>{if(LIVE.has(worker))return LIVE.get(worker);const f=hasher();
+ for(const b of worker.bones){f.text(b.name);for(const x of [...b.position.toArray(),...b.quaternion.toArray(),...b.scale.toArray()])f.word(tenth(x));}
+ for(const p of worker.parts){const g=p.geometry,a=g.attributes;f.text(p.name);f.word(a.position.count);for(const x of a.position.array)f.word(tenth(x));
+  if(g.index)for(const i of g.index.array)f.word(i);else f.word(-1);
+  for(let i=0;i<a.skinIndex.count;i++){const w=new Map();for(let k=0;k<4;k++){const x=a.skinWeight.getComponent(i,k);if(x>0){const b=a.skinIndex.getComponent(i,k);w.set(b,(w.get(b)||0)+x);}}
+   for(const b of [...w.keys()].sort((x,y)=>x-y)){f.word(b);f.word(tenth(w.get(b)));}f.word(-2);}
+  for(const b of p.skeleton.bones)f.text(b.name);}
+ return f.key();};
+// A rig's name, for its loops: its parts' and bones' names hashed. Each character's differ, so each draws its own loop
+// from a seed, and a fix to its meshes or weights keeps its loops.
+const rigName=worker=>{const f=hasher();for(const b of worker.bones)f.text(b.name);for(const p of worker.parts)f.text(p.name);return parseInt(f.key().slice(1),16);};
 
 export function createIdle(worker,options={}){
  if(options===null||typeof options!=='object'||Array.isArray(options))throw Error('Idle options must be an object: {seed, length, eye, refit}');
@@ -211,11 +219,12 @@ export function createIdle(worker,options={}){
  // a belt moves with the cloth behind it. Trousers more than 10-18 cm in front of the hip joints are round a belly, not a
  // leg, and stay with the hips; below the knee the trousers keep the rig's own weights (the cuffs ride the hooves).
  const hipY=at0('hips').y,kneeY=at0('shin1').y,thighX=at0('thigh1').x,waistAt=y=>smooth((y-(hipY+.08))/.16);
- // The rigs weight some cloth beside the arms to them (a shirt's side at the waist, beside a hanging hand, moves with
- // the forearm), so the hip tears it as the weight shifts: the arm's weight stays on the sleeve, fading out from 10 to
- // 12 cm from the arm's bones (shoulder to elbow to wrist), and goes to the cloth's own blend beyond.
- const fromArm=(x,s)=>{const seg=(a,b)=>{const ab=b.clone().sub(a),t=clamp(x.clone().sub(a).dot(ab)/ab.lengthSq());return x.distanceTo(a.clone().addScaledVector(ab,t));};return Math.min(seg(at0('upperArm'+s),at0('forearm'+s)),seg(at0('forearm'+s),at0('hand'+s)));};
- const sleeves=(a,i,side)=>{const w=weightsOf(a,i),k=1-smooth((fromArm(V([a.position.getX(i),a.position.getY(i),a.position.getZ(i)]),side)-.10)/.02);return [k*(w[bi('upperArm'+side)]||0),k*(w[bi('forearm'+side)]||0)];};
+ // The rigs weight some cloth beside the forearms to them (a shirt's side at the waist, beside a hanging hand, moves 35-75%
+ // with the forearm), so the hip tears it as the weight shifts: the forearm's weight stays on cloth within 10 cm of the
+ // forearm's bone (elbow to wrist), fading out by 12 cm, and goes to the cloth's own blend beyond. The upper arm keeps
+ // what the rig gave it: a sleeve round a stout upper arm (the pigs') lies up to 20 cm from its bone.
+ const fromForearm=(x,s)=>{const a=at0('forearm'+s),ab=at0('hand'+s).sub(a),t=clamp(x.clone().sub(a).dot(ab)/ab.lengthSq());return x.distanceTo(a.addScaledVector(ab,t));};
+ const sleeves=(a,i,side)=>{const w=weightsOf(a,i),k=1-smooth((fromForearm(V([a.position.getX(i),a.position.getY(i),a.position.getZ(i)]),side)-.10)/.02);return [w[bi('upperArm'+side)]||0,k*(w[bi('forearm'+side)]||0)];};
  for(const mesh of worker.parts.filter(m=>/shirt|waistcoat|jacket|belt|pouch/.test(m.name)&&!/trousers/.test(m.name))){const a=mesh.geometry.attributes,p=a.position;
   for(let i=0;i<p.count;i++){const side=p.getZ(i)<0?-1:1,[upper,lower]=sleeves(a,i,side),torso=1-upper-lower,waist=waistAt(p.getY(i));
    setWeights(a,i,{[bi('hips')]:torso*(1-waist),[bi('spine')]:torso*waist,[bi('upperArm'+side)]:upper,[bi('forearm'+side)]:lower});}
@@ -232,18 +241,18 @@ export function createIdle(worker,options={}){
  const skull=worker.parts.find(m=>/unified/.test(m.name)&&/skull/.test(m.name))??worker.parts.find(m=>/skull/.test(m.name)),hi=bi('head'),si=bi('spine'),ni=bi('neck'),B=at0('spine').add(NECK_BASE);
  const restAt=(m,i)=>{const v=V().fromBufferAttribute(m.geometry.attributes.position,i);m.applyBoneTransform(i,v);return v.applyMatrix4(m.matrixWorld);};
  const heightOf=v=>v.clone().sub(B).dot(NECK_AXIS)/NECK,radiusOf=v=>{const d=v.clone().sub(B);return d.addScaledVector(NECK_AXIS,-d.dot(NECK_AXIS)).length();};
- const field=v=>(1-smooth((radiusOf(v)-NECK_RADIUS-.03)/.10))*smooth((heightOf(v)+.5)/.3);
+ const field=v=>(1-smooth((radiusOf(v)-NECK_RADIUS-.03)/.10))*smooth((heightOf(v)+.1)/.2);
  const mix=(own,target,f)=>{const w={};for(const [b,x] of Object.entries(own))w[b]=(w[b]||0)+(1-f)*x;for(const [b,x] of Object.entries(target))w[b]=(w[b]||0)+f*x;return w;};
  // A part's surface at rest, for the cloth that lies on it: its triangles in 4 cm cells, searched in growing shells for
- // the nearest point to v (only on triangles with a corner no higher than `top` by height(), if that is given, and only
- // within `far`), whose weights (the corners', in proportion) and squared distance it returns.
+ // the nearest point to v (only a point no higher than `top` by height(), if that is given, and only within `far`),
+ // whose weights (the corners', in proportion) and squared distance it returns.
  const surfaceOf=(m,height)=>{const a=m.geometry.attributes,ix=m.geometry.index?.array,corner=(t,k)=>ix?ix[3*t+k]:3*t+k,faces=(ix?ix.length:a.position.count)/3,P=Array.from({length:a.position.count},(_,i)=>restAt(m,i)),H=height?P.map(height):null,SIDE=.04,cells=new Map(),cellKey=(x,y,z)=>((x+2048)*4096+y+2048)*4096+z+2048,stamp=new Int32Array(faces).fill(-1);let query=0;
   for(let t=0;t<faces;t++){const c=[0,1,2].map(k=>P[corner(t,k)].toArray()),lo=[0,1,2].map(k=>Math.floor(Math.min(c[0][k],c[1][k],c[2][k])/SIDE)),up=[0,1,2].map(k=>Math.floor(Math.max(c[0][k],c[1][k],c[2][k])/SIDE));
    for(let x=lo[0];x<=up[0];x++)for(let y=lo[1];y<=up[1];y++)for(let z=lo[2];z<=up[2];z++){const k=cellKey(x,y,z);if(!cells.has(k))cells.set(k,[]);cells.get(k).push(t);}}
   const Q=P.map(v=>v.toArray());
   return (v,top=Infinity,far=Infinity)=>{const p=v.toArray(),c=p.map(x=>Math.floor(x/SIDE));let best=null,near=null;query++;
    for(let r=0;r<=8&&(r-1)*SIDE<=far&&!(best&&Math.sqrt(best.d2)<=(r-1)*SIDE);r++)for(let x=-r;x<=r;x++)for(let y=-r;y<=r;y++)for(let z=-r;z<=r;z++){if(Math.max(Math.abs(x),Math.abs(y),Math.abs(z))<r)continue;
-    for(const t of cells.get(cellKey(c[0]+x,c[1]+y,c[2]+z))||[]){if(stamp[t]===query)continue;stamp[t]=query;const k=[0,1,2].map(j=>corner(t,j));if(H&&Math.min(H[k[0]],H[k[1]],H[k[2]])>top)continue;const q=closest(p,Q[k[0]],Q[k[1]],Q[k[2]]);if(!best||q.d2<best.d2){best=q;near=k;}}}
+    for(const t of cells.get(cellKey(c[0]+x,c[1]+y,c[2]+z))||[]){if(stamp[t]===query)continue;stamp[t]=query;const k=[0,1,2].map(j=>corner(t,j)),q=closest(p,Q[k[0]],Q[k[1]],Q[k[2]]);if(H&&q.b[0]*H[k[0]]+q.b[1]*H[k[1]]+q.b[2]*H[k[2]]>top)continue;if(!best||q.d2<best.d2){best=q;near=k;}}}
    if(!best||best.d2>far*far)return null;const w={};near.forEach((i,j)=>{for(const [b,x] of Object.entries(weightsOf(a,i)))w[b]=(w[b]||0)+best.b[j]*x;});return {w,d2:best.d2};};};
  let NECK_RADIUS=0;
  if(skull){const a=skull.geometry.attributes,radii=[],at=Array.from({length:a.position.count},(_,i)=>restAt(skull,i));
@@ -252,15 +261,22 @@ export function createIdle(worker,options={}){
   a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;
   // Every layer on the neck (a collar, a neckerchief with its knot and ends, the tops of a shirt, waistcoat, bib or braces)
   // takes the weights of the skin under it, in full within 3 cm of the neck's median radius and easing to its own weights
-  // 13 cm out: one smooth field, so that the layers and the skin they lie on move as one and nothing on the neck slides
-  // through anything as the head turns, nods or tilts. The skin under a layer is the nearest point of the skull's surface
-  // no higher up the neck than the layer is (with 1 cm, about a triangle, to spare): the nearest point outright would put
-  // a collar's top edge on the jaw above it, and the band would fold as the jaw turned. Hair, which nothing lies on (a
-  // mane, a beard), takes in full the weights of the skin it grows from, at the nearest point.
+  // 13 cm out, from the neck's base up (fading in from a tenth of the branch below the base to a tenth above it): one smooth
+  // field, so that the layers and the skin they lie on move as one and nothing on the neck slides through anything as the
+  // head turns, nods or tilts, while cloth on the chest below keeps the chest's weights (or the shirt and a bib over it
+  // would take different skin, and slide). The skin under a layer is the nearest point of the skull's surface no higher
+  // up the neck than the layer is (with 1 cm, about a triangle, to spare): the nearest point outright would put a collar's
+  // top edge on the jaw above it, and the band would fold as the jaw turned. Cloth with no skin that low under it keeps
+  // its own weights. Hair, which nothing lies on (a mane, a beard), takes in full the weights of the skin it grows from,
+  // at the nearest point.
   const skin=surfaceOf(skull,v=>v.clone().sub(B).dot(NECK_AXIS));
-  for(const mesh of worker.parts.filter(m=>m!==skull&&!/forearm and hand|hoof|boot|foot|tail/.test(m.name))){const b=mesh.geometry.attributes,hair=/mane|beard/.test(mesh.name);
-   for(let i=0;i<b.position.count;i++){const v=restAt(mesh,i),f=hair?1:field(v);if(f<=0)continue;const r=hair?skin(v):skin(v,v.clone().sub(B).dot(NECK_AXIS)+.01)??skin(v);if(r)setWeights(b,i,mix(weightsOf(b,i),r.w,f));}
-   b.skinIndex.needsUpdate=b.skinWeight.needsUpdate=true;}}
+  const rank=m=>/mane|beard/.test(m.name)?0:/shirt/.test(m.name)?1:/trousers|overalls/.test(m.name)?2:/waistcoat|jacket/.test(m.name)?3:/collar|belt|pouch|cap/.test(m.name)?4:/neckerchief wrap/.test(m.name)?5:/neckerchief knot/.test(m.name)?6:/neckerchief/.test(m.name)?7:8;
+  const layers=worker.parts.filter(m=>m!==skull&&!/forearm and hand|hoof|boot|foot|tail/.test(m.name)).sort((x,y)=>rank(x)-rank(y)),under=[];
+  for(const mesh of layers){const b=mesh.geometry.attributes,hair=/mane|beard/.test(mesh.name);
+   for(let i=0;i<b.position.count;i++){const v=restAt(mesh,i),f=hair?1:field(v);if(f<=0)continue;
+    if(!hair){let best=null;for(const u of under){const r=u(v,Infinity,.015);if(r&&(!best||r.d2<best.d2))best=r;}if(best){setWeights(b,i,best.w);continue;}}
+    const r=hair?skin(v):skin(v,v.clone().sub(B).dot(NECK_AXIS)+.01);if(r)setWeights(b,i,mix(weightsOf(b,i),r.w,f));}
+   b.skinIndex.needsUpdate=b.skinWeight.needsUpdate=true;if(!hair)under.push(surfaceOf(mesh));}}
  // A sleeve's end round a forearm takes the weights of the skin under it, in full within 1 cm of it and easing to its own
  // 3 cm away, so the forearm does not slide out through the cloth wrapped round it (the rigs weight a sleeve's inside at
  // the elbow mostly to the chest).
@@ -269,8 +285,12 @@ export function createIdle(worker,options={}){
    for(let i=0;i<b.position.count;i++){if((b.position.getZ(i)<0?-1:1)!==s)continue;const own=weightsOf(b,i);if((own[bi('upperArm'+s)]||0)+(own[bi('forearm'+s)]||0)<.01)continue;
     const r=under(restAt(mesh,i),Infinity,.03),g=r?1-smooth((Math.sqrt(r.d2)-.01)/.02):0;if(g>0)setWeights(b,i,mix(own,r.w,g));}
    b.skinIndex.needsUpdate=b.skinWeight.needsUpdate=true;}}
- const restoreSkin=()=>{for(const {m,index,weight} of savedSkin){m.geometry.attributes.skinIndex.copy(index);m.geometry.attributes.skinWeight.copy(weight);m.geometry.attributes.skinIndex.needsUpdate=m.geometry.attributes.skinWeight.needsUpdate=true;}
-  for(const [m,sk,bm] of savedBind)m.bind(sk,bm);neck.removeFromParent();skeleton.dispose();};
+ // Undone last in, first out: an idle made on a game-driven rig is disposed before the game's motion. A part no longer
+ // bound to the idle's skeleton has been put back by whatever bound it since (the game's motion disposed first restores
+ // the rig's own weights and skeleton), and is left as it is.
+ const restoreSkin=()=>{const ours=new Set(worker.parts.filter(m=>m.skeleton===skeleton));
+  for(const {m,index,weight} of savedSkin)if(ours.has(m)){m.geometry.attributes.skinIndex.copy(index);m.geometry.attributes.skinWeight.copy(weight);m.geometry.attributes.skinIndex.needsUpdate=m.geometry.attributes.skinWeight.needsUpdate=true;}
+  for(const [m,sk,bm] of savedBind)if(ours.has(m))m.bind(sk,bm);neck.removeFromParent();skeleton.dispose();};
 
  let built=false;try{
  let time=0,state,disposed=false;
@@ -294,25 +314,35 @@ export function createIdle(worker,options={}){
  const hangAt=(s,yaw)=>{const q=turn([0,1,0],yaw),sh=bones['upperArm'+s].getWorldPosition(V());limb(bones['upperArm'+s],bones['forearm'+s],bones['hand'+s],sh.add(HANG[s].clone().applyQuaternion(q)),BEND[s].arm.clone().applyQuaternion(q));};
 
  // ---- fitted to this rig: how far the head can turn, nod and look up, the chest twist, and the arms' swing ----
- // Two tests, on every part of the rig as skinned. Sinking: a vertex of any part that shows in the rest pose (outside
- // every other part, or less than 0.5 mm into one) may go no more than 3 mm into another part, a pixel at the study's
- // close-up scale (280-400 px a metre as the window allows; the game draws at 130). Every part is a closed surface (each
- // edge, its corners welded to 0.1 mm, shared by two triangles), so a point is inside a part where a ray from it crosses
- // the part an odd number of times, and as deep as it is far from the part's surface. A vertex the rest pose already
- // hides (neck skin under a collar, a shirt under the trousers' waist, a forearm up its sleeve) is hidden however deep it
- // goes: what shows of any sinking is a vertex beside it, which showed, going under. Crossings: a part may not pass
- // through itself (a sleeve into its own shirt, a mane folding, an ear into its skull). Two of its triangles that share
- // no corner cross where an edge of either passes through the other, and a crossing is new unless the rest pose has it,
- // or one within two triangles of it on both sides (the same crossing slid along), or it goes 3 mm deep or less: as deep
- // as the shallower of the two triangles pokes through the other's plane, so two that meet nearly flat read the sliver
- // they cross in, not their size. Two triangles held rigidly by one bone cannot cross anew and are not tested.
+ // Two tests, on every part of the rig as skinned and drawn. Sinking. The points are every vertex, and on every triangle
+ // that meets another part's surface or has a corner inside one, points 4 mm apart across it (i/m and j/m of the way
+ // along two of its edges, m its longest edge at rest over 4 mm, rounded up), carried between its skinned corners as the
+ // GPU draws them: the meshes' edges run 1-11 cm, so a triangle's middle can go under while its corners stay out. (A
+ // triangle that neither meets a part's surface nor has a corner inside it lies wholly outside it.) A point that shows at
+ // rest (outside every other part, or less than half a millimetre into one) may go no more than 3 mm deeper into another
+ // part than it lay at rest: a pixel at the study's close-up, which draws 280-400 px a metre as the window allows (the
+ // game draws at 130). But where an edge of that part slid over it, it may go as deep as its own part lay hidden there
+ // (to 2 cm), and 3 mm more. Slid: within 6 mm of it at rest (on its own triangle or one sharing a corner with it) its
+ // part lay hidden in the other (half a millimetre or more inside), under the same stretch of the other's surface, which
+ // is to say that the point of that surface nearest the point now, taken back to where it rests, lies within 1 cm of the
+ // point of it nearest the hidden one at rest. So an edge may slide two pixels over what it covers, and no further, and a
+ // part that comes in over another from anywhere else sinks it (a shirt's hem over a forearm that lay in the sleeve). A
+ // point hidden at rest is not followed: what shows of it going deeper is the surface beside it, which showed. Every part
+ // is a closed surface (each edge, its corners welded to 0.1 mm, shared by two triangles), so a point is inside a part
+ // where a ray from it crosses the part an odd number of times, and as deep as it is far from the part's surface.
+ // Crossings: a part may not pass through itself (a sleeve into its own shirt, a mane folding, an ear into its skull).
+ // Two of its triangles that share no corner cross where an edge of either passes through the other, and a crossing is
+ // new unless the rest pose has it, or one within two triangles of it on both sides (the same crossing slid along), or
+ // it goes 3 mm deep or less: as deep as the shallower of the two triangles pokes through the other's plane, so two that
+ // meet nearly flat read the sliver they cross in, not their size. Two triangles held rigidly by one bone cannot cross
+ // anew and are not tested.
  const fits=(!refit&&(FITS.get(key)??IDLE_FITS[key]))||(()=>{
-  const parts=worker.parts.map(mesh=>({mesh,skin:skinner(mesh),names:null,tris:[]})),tri=[];
+  const parts=worker.parts.map(mesh=>({mesh,skin:skinner(mesh),names:null,tris:[],at:null,rest:null})),tri=[];
   parts.forEach((part,p)=>{const a=part.mesh.geometry.attributes,ix=part.mesh.geometry.index?.array,n=ix?ix.length:a.position.count,keyOf=i=>p+':'+[0,1,2].map(k=>Math.round(a.position.getComponent(i,k)*1e4)).join(',');
-   part.names=Array.from({length:a.position.count},(_,i)=>[...new Set(Object.keys(weightsOf(a,i)).map(b=>boneName(+b)))]);
+   part.names=Array.from({length:a.position.count},(_,i)=>[...new Set(Object.keys(weightsOf(a,i)).map(b=>boneName(+b)))]);part.at=Array.from({length:a.position.count},()=>[]);
    for(let t=0;t<n;t+=3){const v=ix?[ix[t],ix[t+1],ix[t+2]]:[t,t+1,t+2],w=v.map(i=>weightsOf(a,i)),names=[...new Set(v.flatMap(i=>part.names[i]))];
-    const solo=w.every(x=>Object.keys(x).length===1)&&new Set(w.map(x=>Object.keys(x)[0])).size===1?+Object.keys(w[0])[0]:-1;
-    part.tris.push(tri.push({p,v,names,solo,keys:v.map(keyOf)})-1);}});
+    const solo=w.every(x=>Object.keys(x).length===1)&&new Set(w.map(x=>Object.keys(x)[0])).size===1?+Object.keys(w[0])[0]:-1,id=tri.push({p,v,names,solo,keys:v.map(keyOf)})-1;
+    part.tris.push(id);for(const i of v)part.at[i].push(id);}});
   const byCorner=new Map();tri.forEach((t,n)=>{for(const k of t.keys){let l=byCorner.get(k);if(!l)byCorner.set(k,l=[]);l.push(n);}});
   const one=n=>new Set(tri[n].keys.flatMap(k=>byCorner.get(k))),memo=new Map(),ring=n=>{let r=memo.get(n);if(!r){r=new Set();for(const m of one(n))for(const x of one(m))r.add(x);memo.set(n,r);}return r;};
   const ids=new Map(),cid=Int32Array.from(tri.flatMap(t=>t.keys.map(k=>{let i=ids.get(k);if(i===undefined)ids.set(k,i=ids.size);return i;})));
@@ -330,73 +360,120 @@ export function createIdle(worker,options={}){
    const lo=[B[o],B[o+1],B[o+2]],hi=[B[o+3],B[o+4],B[o+5]];span(lo,hi,f);
    for(let x=Math.floor((lo[0]-.004)/COL);x<=Math.floor((hi[0]+.004)/COL);x++)for(let z=Math.floor((lo[2]-.004)/COL);z<=Math.floor((hi[2]+.004)/COL);z++)f(-1-((x+2048)*4096+z+2048));};
   const columnOf=x=>-1-((Math.floor(x[0]/COL)+2048)*4096+Math.floor(x[2]/COL)+2048);
-  // does the ray up from x pass through triangle n (Moller-Trumbore), and how near is x to it (squared; Ericson)?
-  const rises=(x,n)=>{const t=tri[n],P=parts[t.p].skin.out,a=3*t.v[0],b=3*t.v[1],c=3*t.v[2],e1x=P[b]-P[a],e1y=P[b+1]-P[a+1],e1z=P[b+2]-P[a+2],e2x=P[c]-P[a],e2y=P[c+1]-P[a+1],e2z=P[c+2]-P[a+2];
+  // does the ray up from x pass through triangle n (Moller-Trumbore), and how near is x to it (squared; Ericson)? Over the
+  // triangle's corners in P: where they are now (a part's skin.out) or at rest (its rest).
+  const rises=(x,n,P)=>{const t=tri[n],a=3*t.v[0],b=3*t.v[1],c=3*t.v[2],e1x=P[b]-P[a],e1y=P[b+1]-P[a+1],e1z=P[b+2]-P[a+2],e2x=P[c]-P[a],e2y=P[c+1]-P[a+1],e2z=P[c+2]-P[a+2];
    const px=RAY[1]*e2z-RAY[2]*e2y,py=RAY[2]*e2x-RAY[0]*e2z,pz=RAY[0]*e2y-RAY[1]*e2x,det=e1x*px+e1y*py+e1z*pz;if(Math.abs(det)<1e-14)return false;
    const inv=1/det,sx=x[0]-P[a],sy=x[1]-P[a+1],sz=x[2]-P[a+2],u=(sx*px+sy*py+sz*pz)*inv;if(u<0||u>1)return false;
    const qx=sy*e1z-sz*e1y,qy=sz*e1x-sx*e1z,qz=sx*e1y-sy*e1x,v=(RAY[0]*qx+RAY[1]*qy+RAY[2]*qz)*inv;if(v<0||u+v>1)return false;return (e2x*qx+e2y*qy+e2z*qz)*inv>0;};
-  const gap=(x,n)=>{const t=tri[n],P=parts[t.p].skin.out,i=3*t.v[0],j=3*t.v[1],k=3*t.v[2];return closest(x,[P[i],P[i+1],P[i+2]],[P[j],P[j+1],P[j+2]],[P[k],P[k+1],P[k+2]]).d2;};
+  const gap=(x,n,P)=>{const t=tri[n],i=3*t.v[0],j=3*t.v[1],k=3*t.v[2];return closest(x,[P[i],P[i+1],P[i+2]],[P[j],P[j+1],P[j+2]],[P[k],P[k+1],P[k+2]]).d2;};
   const bounds=P=>{const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];for(let i=0;i<P.length;i+=3)for(let k=0;k<3;k++){lo[k]=Math.min(lo[k],P[i+k]);hi[k]=Math.max(hi[k],P[i+k]);}return [lo,hi];};
   const inBox=(x,[lo,hi],pad=0)=>x[0]>=lo[0]-pad&&x[0]<=hi[0]+pad&&x[1]>=lo[1]-pad&&x[1]<=hi[1]+pad&&x[2]>=lo[2]-pad&&x[2]<=hi[2]+pad;
-  // The rest pose, once: each part's cells and bounds, and which vertices show.
-  neutral();for(const part of parts)part.skin.update();
-  const restCells=parts.map(part=>{const map=new Map();for(const n of part.tris)cells(n,restB,k=>into(map,k,n));return map;}),restBox=parts.map(part=>bounds(part.skin.out));
+  const crosses=(A,B)=>{for(const [i,j] of [[0,1],[1,2],[2,0]])if(meets(A[i],A[j],B[0],B[1],B[2])||meets(B[i],B[j],A[0],A[1],A[2]))return true;return false;};
+  // The rest pose, once: each part's cells, bounds and rest positions; every triangle's cells in one map; and where each
+  // vertex lies.
+  neutral();for(const part of parts){part.skin.update();part.rest=Float64Array.from(part.skin.out);}
+  const restCells=parts.map(part=>{const map=new Map();for(const n of part.tris)cells(n,restB,k=>into(map,k,n));return map;}),restBox=parts.map(part=>bounds(part.rest));
+  const restAll=new Map();tri.forEach((t,n)=>span([restB[6*n],restB[6*n+1],restB[6*n+2]],[restB[6*n+3],restB[6*n+4],restB[6*n+5]],k=>into(restAll,k,n)));
+  const rst=n=>parts[tri[n].p].rest,cur=n=>parts[tri[n].p].skin.out;
   // Whether x is inside part q, and whether part q has a triangle within r of x: over the triangles of the part that a
   // probe holds still (moved[n] 0: where they rest) and those it moves (in `now`, the cells they are in now).
-  const inside=(x,q,moved,now)=>{const k=columnOf(x);let hits=0;if(!now?.whole)for(const n of restCells[q].get(k)||[])if(!moved[n]&&rises(x,n))hits++;if(now)for(const n of now.cells.get(k)||[])if(rises(x,n))hits++;return hits%2===1;};
-  const near=(x,q,r,moved,now)=>{let hit=false;span([x[0]-r,x[1]-r,x[2]-r],[x[0]+r,x[1]+r,x[2]+r],k=>{if(hit)return;if(!now?.whole)for(const n of restCells[q].get(k)||[])if(!moved[n]&&gap(x,n)<r*r){hit=true;return;}if(now)for(const n of now.cells.get(k)||[])if(gap(x,n)<r*r){hit=true;return;}});return hit;};
-  const still=new Uint8Array(tri.length);
-  const shows=parts.map((part,p)=>{const P=part.skin.out,out=new Uint8Array(P.length/3).fill(1);
-   for(let i=0;i<out.length;i++){const x=[P[3*i],P[3*i+1],P[3*i+2]];for(let q=0;q<parts.length;q++)if(q!==p&&inBox(x,restBox[q])&&inside(x,q,still)&&!near(x,q,.0005,still)){out[i]=0;break;}}return out;});
+  const inside=(x,q,moved,now)=>{const k=columnOf(x);let hits=0;if(!now?.whole)for(const n of restCells[q].get(k)||[])if(!moved[n]&&rises(x,n,rst(n)))hits++;if(now)for(const n of now.cells.get(k)||[])if(rises(x,n,cur(n)))hits++;return hits%2===1;};
+  const near=(x,q,r,moved,now)=>{let hit=false;span([x[0]-r,x[1]-r,x[2]-r],[x[0]+r,x[1]+r,x[2]+r],k=>{if(hit)return;if(!now?.whole)for(const n of restCells[q].get(k)||[])if(!moved[n]&&gap(x,n,rst(n))<r*r){hit=true;return;}if(now)for(const n of now.cells.get(k)||[])if(gap(x,n,cur(n))<r*r){hit=true;return;}});return hit;};
+  // Where a point lies at rest: null if half a millimetre or more inside another part (hidden), else the parts it lies in
+  // and how deep, [q, depth, ...] (empty where it lies outside them all).
+  const SHOW=.0005,still=new Uint8Array(tri.length);
+  const restDepth=(x,q)=>{let d2=SHOW*SHOW;span([x[0]-SHOW,x[1]-SHOW,x[2]-SHOW],[x[0]+SHOW,x[1]+SHOW,x[2]+SHOW],k=>{for(const n of restCells[q].get(k)||[]){const g=gap(x,n,rst(n));if(g<d2)d2=g;}});return d2<SHOW*SHOW?Math.sqrt(d2):Infinity;};
+  const lies=(x,p)=>{const out=[];for(let q=0;q<parts.length;q++){if(q===p||!inBox(x,restBox[q])||!inside(x,q,still))continue;const d=restDepth(x,q);if(d===Infinity)return null;out.push(q,d);}return out;};
+  // Where part A lies hidden in part q at rest, triangle by triangle: its points (corners and 4 mm points) half a
+  // millimetre or more inside q, each with how deep (to DEEP) and the point of q's surface nearest it (none further than
+  // DEEP: no covering), [x, y, z, depth, cx, cy, cz, ...], made when first needed.
+  const DEEP=.02,SLIDE=0.006,COVER=0.01,hid=new Map();
+  // the point of triangle n nearest x over corners P: how near (squared), its weights of the corners and where it is
+  const ptOn=(x,n,P)=>{const t=tri[n],i=3*t.v[0],j=3*t.v[1],k=3*t.v[2],c=closest(x,[P[i],P[i+1],P[i+2]],[P[j],P[j+1],P[j+2]],[P[k],P[k+1],P[k+2]]);return {d2:c.d2,n,b:c.b,y:[0,1,2].map(e=>c.b[0]*P[i+e]+c.b[1]*P[j+e]+c.b[2]*P[k+e])};};
+  const hiddenIn=(m,q)=>{const key=m*64+q;let h=hid.get(key);if(h)return h;h=[];const P=rst(m),t=tri[m],C=t.v.map(i=>[P[3*i],P[3*i+1],P[3*i+2]]),edge=Math.max(...[0,1,2].map(k=>Math.hypot(C[k][0]-C[(k+1)%3][0],C[k][1]-C[(k+1)%3][1],C[k][2]-C[(k+1)%3][2]))),mm=Math.max(1,Math.ceil(edge/.004));
+   for(let i=0;i<=mm;i++)for(let j=0;i+j<=mm;j++){const b0=i/mm,b1=j/mm,b2=1-b0-b1,x=[0,1,2].map(k=>b0*C[0][k]+b1*C[1][k]+b2*C[2][k]);if(!inBox(x,restBox[q])||!inside(x,q,still))continue;
+    let best=null;span([x[0]-DEEP,x[1]-DEEP,x[2]-DEEP],[x[0]+DEEP,x[1]+DEEP,x[2]+DEEP],k=>{for(const n of restCells[q].get(k)||[]){const g=ptOn(x,n,rst(n));if(!best||g.d2<best.d2)best=g;}});
+    const d=best?Math.min(DEEP,Math.sqrt(best.d2)):DEEP;if(d>=.0005)h.push(x[0],x[1],x[2],d,...(best&&best.d2<=DEEP*DEEP?best.y:[Infinity,Infinity,Infinity]));}
+   hid.set(key,h);return h;};
+  // How deep the part of triangle n lay hidden in q within SLIDE of x0 at rest (on n or a triangle sharing a corner with it)
+  // under the stretch of q that rests at y now over the point (0 where it did not).
+  const underAt=(n,q,x0,y)=>{let d=0;for(const m of one(n)){if(tri[m].p!==tri[n].p)continue;const h=hiddenIn(m,q);for(let k=0;k<h.length;k+=7)if(h[k+3]>d&&Math.hypot(h[k]-x0[0],h[k+1]-x0[1],h[k+2]-x0[2])<=SLIDE&&Math.hypot(h[k+4]-y[0],h[k+5]-y[1],h[k+6]-y[2])<=COVER)d=h[k+3];}return d;};
+  const vertexLies=parts.map((part,p)=>{const P=part.rest,out=new Array(P.length/3);for(let i=0;i<out.length;i++)out[i]=lies([P[3*i],P[3*i+1],P[3*i+2]],p);return out;});
+  // A triangle's points, 4 mm apart across it at rest (its corners aside), as weights of its corners (b0, b1; the third
+  // 1 - b0 - b1), with where each lies at rest; only those that do not lie hidden. Made when first needed, and kept.
+  const H=.004,sampled=new Map();
+  const pointsOf=n=>{let s=sampled.get(n);if(s)return s;const P=rst(n),t=tri[n],C=t.v.map(i=>[P[3*i],P[3*i+1],P[3*i+2]]),edge=Math.max(...[0,1,2].map(k=>Math.hypot(C[k][0]-C[(k+1)%3][0],C[k][1]-C[(k+1)%3][1],C[k][2]-C[(k+1)%3][2]))),m=Math.ceil(edge/H),b=[],at=[];
+   for(let i=0;i<=m;i++)for(let j=0;i+j<=m;j++){if(i===m||j===m||i+j===0)continue;const b0=i/m,b1=j/m,b2=1-b0-b1,x=[0,1,2].map(k=>b0*C[0][k]+b1*C[1][k]+b2*C[2][k]),l=lies(x,t.p);if(l){b.push(b0,b1);at.push(l);}}
+   s={b,at};sampled.set(n,s);return s;};
   // How far a crossing goes: the shallower of the two triangles' pokes through the other's plane, each the less of its
   // reaches either side of that plane (their overlap along each one's normal).
   const overlap=(A,B)=>{const reach=(P,Q)=>{const o=Q[0],e1=[Q[1][0]-o[0],Q[1][1]-o[1],Q[1][2]-o[2]],e2=[Q[2][0]-o[0],Q[2][1]-o[1],Q[2][2]-o[2]],n=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]],l=Math.hypot(...n)||1;
     let hi=0,lo=0;for(const p of P){const d=((p[0]-o[0])*n[0]+(p[1]-o[1])*n[1]+(p[2]-o[2])*n[2])/l;hi=Math.max(hi,d);lo=Math.min(lo,d);}return Math.min(hi,-lo);};return Math.min(reach(A,B),reach(B,A));};
-  const pairOf=(A,B)=>{for(const [i,j] of [[0,1],[1,2],[2,0]])if(meets(A[i],A[j],B[0],B[1],B[2])||meets(B[i],B[j],A[0],A[1],A[2]))return overlap(A,B);return -1;};
+  const pairOf=(A,B)=>crosses(A,B)?overlap(A,B):-1;
   // Each part's crossings of itself in the rest pose, and for each triangle the rest crossings it is within two
   // triangles of (with the other side's triangle), so that a crossing near one is known slid along.
   const restPairs=[],seen=new Int32Array(tri.length).fill(-1);
   for(const part of parts)for(const a of part.tris){const ta=tri[a];let A=null;cells(a,restB,k=>{if(k<0)return;for(const b of restCells[ta.p].get(k)||[]){if(b<=a||seen[b]===a)continue;seen[b]=a;if(apart(a,restB,b,restB))continue;const tb=tri[b];if(ta.solo>=0&&ta.solo===tb.solo||touching(a,b))continue;if(pairOf(A??=corners(a),corners(b))>=0)restPairs.push([a,b]);}});}
   const slid=new Map();for(const [a,b] of restPairs)for(const [x,y] of [[a,b],[b,a]])for(const t of ring(x))into(slid,t,y);
   const fresh=(a,b)=>{for(const y of slid.get(a)||[])if(ring(y).has(b))return false;return true;};
-  // The triangles and vertices a probe's bones move (the vertices only those that show at rest), for clear().
-  const probe=moves=>{const moved=new Uint8Array(tri.length),byPart=parts.map(()=>[]);tri.forEach((t,n)=>{if(t.names.some(moves)){moved[n]=1;byPart[t.p].push(n);}});
-   const verts=parts.map((part,p)=>{const moving=[],held=[];part.names.forEach((names,i)=>{if(shows[p][i])(names.some(moves)?moving:held).push(i);});return {moving,held};});
-   return {moved,byPart,verts};};
-  // Whether the current pose clears: no vertex that shows at rest more than 3 mm into another part (a moving vertex
-  // against every part round it; a still one against the parts moving within 3 cm of it, all that one of a probe's steps
-  // can bring), and no new crossing of a part through itself (less hand on each: see the arms).
-  const clear=({moved,byPart,verts},hand=0)=>{root.updateMatrixWorld(true);for(const part of parts)part.skin.update();const lim=.003-hand;
-   const now=byPart.map((list,q)=>{if(!list.length)return null;const map=new Map();for(const n of list)cells(n,nowB,k=>into(map,k,n));const P=parts[q].skin.out,box=[[Infinity,Infinity,Infinity],[-Infinity,-Infinity,-Infinity]];
+  // The triangles and vertices a probe's bones move (the vertices only those not hidden at rest), for clear().
+  const probe=moves=>{const moved=new Uint8Array(tri.length),byPart=parts.map(()=>[]);let all=true;tri.forEach((t,n)=>{if(t.names.some(moves)){moved[n]=1;byPart[t.p].push(n);}else all=false;});
+   const verts=parts.map((part,p)=>{const moving=[],held=[];part.names.forEach((names,i)=>{if(vertexLies[p][i])(names.some(moves)?moving:held).push(i);});return {moving,held};});
+   return {moved,byPart,verts,all};};
+  // Whether the current pose clears (less hand on each limit: see the arms). First the vertices: none deeper into a part
+  // than it lay at rest by more than 3 mm, but under an edge slid over it (a moving one against every part round it; a
+  // still one against the parts moving within 3 cm of it, all that one of a probe's steps can bring). Then the triangles the moving ones meet: none new of a
+  // part through itself; and every triangle that meets another part, or has a corner inside one, has its points tested
+  // against that part as the vertices are.
+  const clear=({moved,byPart,verts,all},hand=0)=>{root.updateMatrixWorld(true);for(const part of parts)part.skin.update();const lim=.003-hand,nowAll=new Map();
+   const now=byPart.map((list,q)=>{if(!list.length)return null;const map=new Map();for(const n of list)cells(n,nowB,k=>{into(map,k,n);if(k>=0)into(nowAll,k,n);});const P=parts[q].skin.out,box=[[Infinity,Infinity,Infinity],[-Infinity,-Infinity,-Infinity]];
     for(const n of list)for(const i of tri[n].v)for(let k=0;k<3;k++){box[0][k]=Math.min(box[0][k],P[3*i+k]);box[1][k]=Math.max(box[1][k],P[3*i+k]);}return {list,cells:map,box,whole:list.length===parts[q].tris.length};});
-   const bound=parts.map((part,q)=>now[q]?bounds(part.skin.out):restBox[q]),sinks=(x,q)=>inside(x,q,moved,now[q])&&!near(x,q,lim,moved,now[q]);
-   for(let p=0;p<parts.length;p++){const P=parts[p].skin.out,{moving,held}=verts[p];
-    for(const i of moving){const x=[P[3*i],P[3*i+1],P[3*i+2]];for(let q=0;q<parts.length;q++)if(q!==p&&inBox(x,bound[q])&&sinks(x,q))return false;}
-    for(const i of held){const x=[P[3*i],P[3*i+1],P[3*i+2]];for(let q=0;q<parts.length;q++)if(q!==p&&now[q]&&inBox(x,now[q].box,.03)&&sinks(x,q))return false;}}
+   const bound=parts.map((part,q)=>now[q]?bounds(part.skin.out):restBox[q]),mask=new Uint32Array(tri.length),marked=[];
+   const mark=(n,q)=>{if(!mask[n])marked.push(n);mask[n]|=1<<q;};
+   // a point x lying at rest as `l` says, against part q: inside it (and so its triangles to be tested), and deeper than
+   // it lay by more than lim (or, where an edge of q slid over it, than its part lay hidden there): its triangle n, at rest
+   // at x0
+   const deeper=(x,l,q,n,x0)=>{let r=0;for(let k=0;k<l.length;k+=2)if(l[k]===q)r=l[k+1];if(near(x,q,r+lim,moved,now[q]))return false;const R=DEEP+lim;let best=null;
+    span([x[0]-R,x[1]-R,x[2]-R],[x[0]+R,x[1]+R,x[2]+R],k=>{if(!now[q]?.whole)for(const m of restCells[q].get(k)||[])if(!moved[m]){const g=ptOn(x,m,rst(m));if(!best||g.d2<best.d2)best=g;}if(now[q])for(const m of now[q].cells.get(k)||[]){const g=ptOn(x,m,cur(m));if(!best||g.d2<best.d2)best=g;}});
+    if(!best||best.d2>=R*R)return true;const P=rst(best.n),t=tri[best.n],y=[0,1,2].map(e=>best.b[0]*P[3*t.v[0]+e]+best.b[1]*P[3*t.v[1]+e]+best.b[2]*P[3*t.v[2]+e]);
+    return Math.sqrt(best.d2)>Math.max(r,underAt(n,q,x0,y))+lim;};
+   for(let p=0;p<parts.length;p++){const P=parts[p].skin.out,{moving,held}=verts[p],at=parts[p].at,L=vertexLies[p];
+    for(const i of moving){const x=[P[3*i],P[3*i+1],P[3*i+2]];for(let q=0;q<parts.length;q++)if(q!==p&&inBox(x,bound[q])&&inside(x,q,moved,now[q])){if(deeper(x,L[i],q,at[i][0],[parts[p].rest[3*i],parts[p].rest[3*i+1],parts[p].rest[3*i+2]]))return false;for(const n of at[i])mark(n,q);}}
+    for(const i of held){const x=[P[3*i],P[3*i+1],P[3*i+2]];for(let q=0;q<parts.length;q++)if(q!==p&&now[q]&&inBox(x,now[q].box,.03)&&inside(x,q,moved,now[q])){if(deeper(x,L[i],q,at[i][0],[parts[p].rest[3*i],parts[p].rest[3*i+1],parts[p].rest[3*i+2]]))return false;for(const n of at[i])mark(n,q);}}}
    const stamp=new Int32Array(tri.length).fill(-1);
    for(let q=0;q<parts.length;q++){const l=now[q];if(!l)continue;
     for(const a of l.list){const ta=tri[a];let A=null,bad=false;
      const test=(b,moving)=>{if(bad||b===a||stamp[b]===a||(moving?b<a:moved[b]))return;stamp[b]=a;if(apart(a,nowB,b,moving?nowB:restB))return;const tb=tri[b];
-      if(ta.solo>=0&&ta.solo===tb.solo||touching(a,b))return;if(pairOf(A??=corners(a),corners(b))>lim&&fresh(a,b))bad=true;};
-     span([nowB[6*a],nowB[6*a+1],nowB[6*a+2]],[nowB[6*a+3],nowB[6*a+4],nowB[6*a+5]],k=>{if(bad)return;for(const b of l.cells.get(k)||[])test(b,true);if(!l.whole)for(const b of restCells[q].get(k)||[])test(b,false);});
+      if(tb.p===ta.p){if(ta.solo>=0&&ta.solo===tb.solo||touching(a,b))return;if(pairOf(A??=corners(a),corners(b))>lim&&fresh(a,b))bad=true;}
+      else if(crosses(A??=corners(a),corners(b))){mark(a,tb.p);mark(b,ta.p);}};
+     span([nowB[6*a],nowB[6*a+1],nowB[6*a+2]],[nowB[6*a+3],nowB[6*a+4],nowB[6*a+5]],k=>{if(bad)return;for(const b of nowAll.get(k)||[])test(b,true);if(!all)for(const b of restAll.get(k)||[])test(b,false);});
      if(bad)return false;}}
+   for(const n of marked){const {b,at}=pointsOf(n);if(!b.length)continue;const t=tri[n],P=cur(n),i0=3*t.v[0],i1=3*t.v[1],i2=3*t.v[2],m=mask[n];
+    for(let k=0,j=0;k<b.length;k+=2,j++){const b0=b[k],b1=b[k+1],b2=1-b0-b1,x=[b0*P[i0]+b1*P[i1]+b2*P[i2],b0*P[i0+1]+b1*P[i1+1]+b2*P[i2+1],b0*P[i0+2]+b1*P[i1+2]+b2*P[i2+2]];
+     for(let q=0;q<parts.length;q++)if(m&(1<<q)&&inBox(x,bound[q])&&inside(x,q,moved,now[q])&&deeper(x,at[j],q,n,(()=>{const R0=rst(n);return [0,1,2].map(c=>b0*R0[i0+c]+b1*R0[i1+c]+b2*R0[i2+c]);})()))return false;}}
    return true;};
   const everything=probe(()=>true);
-  // The largest angle, in 5 degree steps, at which a pose makes no new crossing, less 5 degrees kept in hand for the idle's
-  // other motions (a lean, a breath or a tilt the probe does not make); the probe runs 5 degrees past its top for that.
-  const fit=(moves,pose,top)=>{const family=probe(moves);let ok=0;for(let deg=5;deg<=top+5;deg+=5){neutral();pose(deg*DEG);if(!clear(family))break;ok=deg;}neutral();return Math.min(top,Math.max(0,ok-5));};
+  // The largest angle, in steps of 2.5 degrees up to top, at which a pose clears in each of its ways (a turn level or
+  // tilted, say), both there and 2.5 degrees past it: those 2.5 degrees kept in hand for the idle's other motions (a lean,
+  // a breath or a tilt the probe does not make). Each way is bisected (5 degree steps, then the half step before the
+  // first that fails, or past the top), and the least of them confirmed in every way, at it and past it, a step lower
+  // each time one does not clear.
+  const fit=(moves,poses,top)=>{const family=probe(moves),clears=(pose,deg)=>{neutral();pose(deg*DEG);return clear(family);};
+   const most=pose=>{let ok=0,deg=5;for(;deg<=top;deg+=5){if(!clears(pose,deg))break;ok=deg;}const half=deg>top?top+2.5:deg-2.5;return clears(pose,half)?half:ok;};
+   let lim=Math.max(0,Math.min(...poses.map(most))-2.5);while(lim>0&&!poses.every(pose=>clears(pose,lim)&&clears(pose,lim+2.5)))lim-=2.5;neutral();return lim;};
   const headBones=b=>b==='head'||b==='idle neck',moveHead=(yaw,nod,roll)=>placeHead(turn([0,1,0],yaw).multiply(turn([0,0,1],-nod)).multiply(turn([1,0,0],roll)));
   // The head tilting each way, up to the 5 degrees a side look tilts it (the look plan tilts no further than this); turning
   // on the chest each way, level or tilted that far either way, up to the 40 degrees the neck seam allows; then nodding
   // (the neck bent as in at()), straight, turned as far as 24 degrees either way, or tilted either way; and looking up the
   // same ways (the back of the skull drops toward the back of a collar).
-  const tilt=Math.min(...[1,-1].map(s=>fit(headBones,a=>moveHead(0,0,s*a),5))),rolls=tilt?[0,tilt,-tilt]:[0];
-  const yaw=Object.fromEntries([1,-1].map(s=>[s,Math.min(...rolls.map(roll=>fit(headBones,a=>moveHead(s*a,0,roll*DEG),IDLE.neck)))]));
+  const tilt=fit(headBones,[1,-1].map(s=>a=>moveHead(0,0,s*a)),5),rolls=tilt?[0,tilt,-tilt]:[0];
+  const yaw=Object.fromEntries([1,-1].map(s=>[s,fit(headBones,rolls.map(roll=>a=>moveHead(s*a,0,roll*DEG)),IDLE.neck)]));
   const ways=[[0,0],[Math.min(24,yaw[1]),0],[-Math.min(24,yaw[-1]),0],...rolls.slice(1).map(roll=>[0,roll])];
-  const nod=Math.min(...ways.map(([y,roll])=>fit(headBones,a=>moveHead(y*DEG,a,roll*DEG),45))),up=Math.min(...ways.map(([y,roll])=>fit(headBones,a=>moveHead(y*DEG,-a,roll*DEG),10)));
+  const nod=fit(headBones,ways.map(([y,roll])=>a=>moveHead(y*DEG,a,roll*DEG)),45),up=fit(headBones,ways.map(([y,roll])=>a=>moveHead(y*DEG,-a,roll*DEG)),10);
   // The chest twisting on the hips each way, the arms hanging as in at(): a pot belly or a thick coat twists less, and the
   // hips and head take the rest of a wide look.
-  const twist=Object.fromEntries([1,-1].map(dir=>[dir,fit(b=>b!=='hips'&&!/^(thigh|shin|hoof)/.test(b),a=>{bones.spine.quaternion.copy(turn([0,1,0],dir*a));root.updateMatrixWorld(true);for(const s of [-1,1])hangAt(s,dir*a*.5);},30)]));
+  const twist=Object.fromEntries([1,-1].map(dir=>[dir,fit(b=>b!=='hips'&&!/^(thigh|shin|hoof)/.test(b),[a=>{bones.spine.quaternion.copy(turn([0,1,0],dir*a));root.updateMatrixWorld(true);for(const s of [-1,1])hangAt(s,dir*a*.5);}],30)]));
   // The arms against the clothes. A probe poses the trunk (leaning w of a full lean toward a hoof, the hips carried about
   // 7 cm over and hiked at a full lean, as the balance will carry them; the chest rounded flex degrees), a breath [amp,
   // share] amp units deep (the chest opened as the motion opens it, in full, and the shoulders risen by the shrug share
@@ -407,6 +484,7 @@ export function createIdle(worker,options={}){
   const EXTREMES=[[3.5,9,.14],[3.5,-9,-.14],[-.5,0,0]],SIGH=2.8,BREATHE=1.15,none={[-1]:0,[1]:0};
   const posture=(w,flex,out,k,[amp,share],[elbow,wrist,curl])=>{neutral();const shrug=BREATH.shrug*share*amp;bones.hips.position.copy(restHips).add(V([0,-POSTURE.sink*w*w,.072*w]));bones.hips.quaternion.copy(trunkQ(0,0,POSTURE.roll*DEG*w));
    bones.spine.quaternion.copy(trunkQ(0,(flex-BREATH.chest*amp)*DEG,-POSTURE.lean*DEG*w));for(const s of [-1,1])bones['upperArm'+s].position.copy(ARM_ROOT[s]).add(V([0,shrug,0]));root.updateMatrixWorld(true);
+   for(const s of [-1,1]){limb(bones['thigh'+s],bones['shin'+s],bones['hoof'+s],ANKLE[s].clone(),BEND[s].leg.clone());rotate(bones['hoof'+s],Q());}
    for(const s of [-1,1]){const q=turn([1,0,0],-s*out[s]*DEG),sh=bones['upperArm'+s].getWorldPosition(V());limb(bones['upperArm'+s],bones['forearm'+s],bones['hand'+s],sh.add(HANG[s].clone().multiplyScalar(reachAt(s,elbow*k)).applyQuaternion(q)),BEND[s].arm.clone().applyQuaternion(q));
     bones['hand'+s].quaternion.multiply(turn([0,0,1],wrist*k*DEG));bones['fingers'+s].rotation.z=-.08+curl*k;}root.updateMatrixWorld(true);};
   const clears=(w,flex,out,k,breath=[0,0])=>{const ok=EXTREMES.every(x=>{posture(w,flex,out,k,breath,x);return clear(everything,.001);});neutral();return ok;};
@@ -440,8 +518,9 @@ export function createIdle(worker,options={}){
  // turn) from the chest either way, down by its fitted nod and the chest's 10 degrees, and up by its fitted look up.
  const neckTop=s=>Math.min(35,yawLimit[s]),reachYaw=s=>{let lo=0,hi=90;for(let i=0;i<30;i++){const m=(lo+hi)/2;if(m-chestTwist(s*m)*s-hipsTwist(s*m)*s<=neckTop(s)+.5)lo=m;else hi=m;}return lo;};
  const reach={left:reachYaw(1),right:reachYaw(-1),down:nodLimit+ROUND,up:upLimit,tilt:tiltLimit};
- // each rig draws its own loops (the seed is mixed with the rig's key), so the cast on one seed do not share a choreography
- const r=random((seed^parseInt(key.slice(1),16))>>>0),looks=lookPlan(r,L,reach),stances=SHIFTED?stancePlan(r,L):[],breaths=breathPlan(r,L);
+ // each rig draws its own loops (the seed is mixed with the rig's names), so the cast on one seed do not share a
+ // choreography
+ const r=random((seed^rigName(worker))>>>0),looks=lookPlan(r,L,reach),stances=SHIFTED?stancePlan(r,L):[],breaths=breathPlan(r,L);
  const ch=(key,fn,part)=>steps(fn(looks.home[key]),looks.list.map(l=>{const [cd,cs,hd,hs]=TIMINGS[l.trunk||0],[d,k]=part==='chest'?[cd,cs]:part==='hips'?[hd,hs]:[0,1];return [l.time+d,l.dur*k,fn(l[key])];}));
  let gazeYaw,gazePitch,gazeRoll,chestYaw,hipsYaw,chestFlex;
  const build=()=>{gazeYaw=ch('yaw',y=>y);gazePitch=ch('pitch',p=>p);gazeRoll=ch('roll',x=>x);chestYaw=ch('yaw',chestTwist,'chest');hipsYaw=ch('yaw',hipsTwist,'hips');chestFlex=ch('pitch',chestPitch);};
