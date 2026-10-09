@@ -27,9 +27,10 @@ controller and are undone when it is disposed. Other animations do not
 automatically inherit them.
 
 The supplied final-review message reports **8/10, no must-fix, after round five**;
-the target was 9/10. The complete round-five report was not present in the PR's
-comments or reviews when checked. The findings below come from the committed
-code, documentation and renders, not an independently repeated v5 animation audit.
+the target was 9/10. The complete round-five report was missing at the initial
+handoff, and has since been committed; see the author's notes below. The findings
+here come from committed code, documentation and renders, not an independently
+repeated v5 animation audit.
 
 ## Corrections worth carrying forward
 
@@ -75,12 +76,13 @@ give two controllers ownership of the pose. If corrections become shared rig
 preparation, make their lifetime and restoration explicit and verify transitions
 to the current walk, aim/fire, throw and traversal controllers.
 
-V5 permits a previously covered edge to slide up to **6 mm**, within the same
-local surface region, in addition to its **3 mm** penetration allowance for
-otherwise exposed points. This is a scoped tolerance, not permission for every
-surface to clip by 6 mm. Its author reports a strict no-slide census still found
-depths up to **5.9 mm**. Keep tolerance assumptions visible; improve weighting or
-clearance before increasing them to buy more motion.
+V5 uses a **6 mm neighborhood** around previously covered points to choose a
+depth allowance; it does not limit how far the covering edge travels. Within
+that neighborhood a point may sink to the prior covered depth plus **3 mm**;
+elsewhere the allowance is **3 mm**. Round five measured edge advances of
+**15–18 mm** and strict sinking up to **6.5 mm** on fresh seeds. Keep depth and
+travel measurements separate, and improve weighting or clearance before
+increasing tolerances to buy more motion.
 
 For each changed character, compare rest, left/right turn, downward glance,
 breath, lean and arm movement from front, side, rear and three-quarter views.
@@ -108,8 +110,8 @@ animation and equipment work preserved.
 Added by the v5 author. The round-five report, whole, is now on the PR branch:
 [IDLE-REVIEW-ROUND-5.md](https://github.com/Syntaxswine/animal-factory-tactics-3d/blob/b8f6a53d21a8985bef764ee3ed694d448749bf9d/docs/tactics/IDLE-REVIEW-ROUND-5.md)
 (8/10, no must-fix), with the author's doc corrected to match at the same commit. Four of its findings bear
-on a port. The first corrects this handoff's description of the tolerance (Porting and acceptance), which
-repeated an error in the v5 doc; none changes the corrections recommended above.
+on a port. The first corrected an error in this handoff's original tolerance description, repeated from
+the v5 doc; the text above now incorporates that correction. The weighting recommendations still apply.
 
 - **The 6 mm bounds depth, not travel.** Within 6 mm of where its part lay covered at rest, a point may sink
   as deep as that covered point lay, plus 3 mm; elsewhere 3 mm. An edge may advance any distance while what

@@ -11,6 +11,7 @@ import {TRELLIS_KIND,TRELLIS_ARCH_KIND} from '../dist/tactics/bridge-trellis.js'
 import {CARGO_ATLAS} from '../dist/tactics/painted-cargo.js';
 import {PAINTED_ATLAS} from '../dist/tactics/painted-environment-scene.js';
 import {GUARDHOUSE_MACHINE_PAINT} from '../dist/tactics/guardhouse-machines.js';
+import {CHAIR_PAINT} from '../dist/tactics/painted-chairs.js';
 import {STRATEGIC_SITE_ATLAS} from '../dist/tactics/strategic-sites.js';
 import {FOLIAGE_ATLAS,FOLIAGE_MATERIALS} from '../dist/tactics/foliage-materials.js';
 import {PROPS,EDGES,GROUNDS} from '../dist/tactics/environment.js';
@@ -90,6 +91,7 @@ for(const file of active)await readFile(new URL('assets/environment/'+file,root)
 const cargoAtlas=CARGO_ATLAS.replace('../assets/environment/','');active.add(cargoAtlas);await checkPNG('assets/environment/'+cargoAtlas,1536,1024,2);
 const studyAtlas=PAINTED_ATLAS.replace('../assets/environment/','');active.add(studyAtlas);await checkPNG('assets/environment/'+studyAtlas,1254,1254,2);
 const consoleAtlas=GUARDHOUSE_MACHINE_PAINT.replace('../assets/environment/','');active.add(consoleAtlas);await checkPNG('assets/environment/'+consoleAtlas,1254,1254,2);
+const chairAtlas=CHAIR_PAINT.replace('../assets/environment/','');active.add(chairAtlas);await checkPNG('assets/environment/'+chairAtlas,1254,1254,2);
 const foliageAtlas=FOLIAGE_ATLAS.replace('../assets/environment/','');active.add(foliageAtlas);await checkPNG('assets/environment/'+foliageAtlas,1254,1254,2);
 const siteManifest=JSON.parse(await readFile(new URL('assets/environment/strategic-sites/manifest.json',root)));
 assert.equal(STRATEGIC_SITE_ATLAS,'../assets/environment/strategic-sites/'+siteManifest.atlas);

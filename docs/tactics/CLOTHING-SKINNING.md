@@ -137,3 +137,17 @@ horse's head rolls 49 degrees to the stock). These are poses, not weights.
   focus on part of the body).
 - `tools/clothing-sweep.mjs`: the census through the game's motions on one character, and `--compare` for two
   runs (`--root` reads another checkout, main before a change).
+
+## Canonical integration review, 9 October 2026
+
+The older `createMammalMotion` and `createDogMotion` adapters also repartition garment weights, in addition to
+the battle posture and ladder adapters covered above. Installing them erased the fitted head share (the
+horse's 203 affected garment vertices became zero); the horse sitting study inherits the same problem.
+`clothing-weights.js` now retains that head share while redistributing the remaining weight. Vertices with
+no fitted head share keep the adapter's original result, and disposal restores the original attributes exactly.
+
+`tests/clothing-motion-adapters.test.mjs` reproduces the failure without this correction and passes with it
+for all eleven mammals and the horse chair study. It samples playback, normalized weights and exact disposal.
+The affected motion/prone/paint/chair/build regressions pass, as does the idle adapter's separate lifecycle
+test. See [the integration review](INTEGRATION-REVIEW-2026-10-09.md) for the full verification scope and remaining
+paint/pose limitations.

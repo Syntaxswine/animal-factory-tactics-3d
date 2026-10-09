@@ -134,6 +134,13 @@ Independent hostile subagent review of the refinement: **9/10**, no blocking fin
 
 ## Branch and local preview
 
+Canonical integration on 9 October includes the seven chair commits through `5bd0e47`, with the atlas
+registered in the release asset check and both study viewers included in the base and 3D Pages builds.
+It also preserves the new fitted neck weights when the horse's motion adapter is installed. Fresh packaged
+browser checks covered the wingback and wooden seated poses and side lowering/rising poses with no console
+errors. This approves the collection and horse study; the gameplay and species checklist above remains open.
+See [the integration review](INTEGRATION-REVIEW-2026-10-09.md) for checks and evidence limits.
+
 `work/painted-chairs` starts at the preceding guardhouse-console commit `bba7416`. The feature branch does not deploy; Pages publishes `main`.
 
 The registered port **4476** preview is reused for user review. Its unchanged automatic shutdown is **October 9, 2026, 22:30 UTC / 6:30 p.m. Eastern**. Exact process identity, source, restart information and the `STOP` marker remain in `artifacts/grenade-blast/server/`. Restart deliberately with `node tools/serve-grenade-blast-study.mjs 4476` and register the new process lifetime with the helper-lifecycle utility.
