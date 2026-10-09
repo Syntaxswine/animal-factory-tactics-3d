@@ -4,12 +4,14 @@ Four low-poly chair models use one painterly atlas for eight finishes. The seat 
 
 | Chair | Finishes | Triangles |
 | --- | --- | ---: |
-| Wingback | Russet leather / teal upholstery | 296 |
+| Wingback | Russet leather / teal upholstery | 448 |
 | Simple wooden chair | Honey / walnut | 180 |
 | Metal chair | Sage enamel / dark iron | 248 |
 | Desk chair | Teal / russet upholstery | 284 |
 
-Seams, buttons, cushion channels, wood grain, stamped ribs, fasteners and wear are painted. Geometry supplies the major silhouette, seat, back, supports, wingback arms and five simple desk-chair casters. All models fit within one native 1×1 tile; the characters are not rescaled.
+Seams, buttons, cushion channels, wood grain, stamped ribs, fasteners and wear are painted. Geometry supplies the major silhouette, seat, back, supports, wingback arms and five simple desk-chair casters. The wingback has a continuous upholstered back extending into the seat and faceted cabriole front legs with shaped rear legs. All models fit within one native 1×1 tile; the characters are not rescaled.
+
+The wingback remains about 1.36 high. The wooden, metal and desk chairs end at approximately 0.99, level with the original horse's rolled cuffs (the cuff sculpt runs around Y 0.99–1.035). Only their backs/supports were lowered; the shared seat remains at 0.48.
 
 Open `tactics/painted-chairs-study.html`. Select the collection or an individual chair, either finish, grey forms, five views and 58 px/tile gameplay scale. Horse, pig director and pig foreman are standing references. The optional gold fitting mannequin is identical across all four models; it is a furniture-space check, not an animated or species-fitted character.
 
@@ -28,9 +30,10 @@ Open `tactics/painted-chairs-study.html`. Select the collection or an individual
 | Back reference | `[0, 0.91, -0.36]` |
 | Minimum arm inside gap | 0.88 |
 | Wingback arm top | Y 0.72 |
-| Lower-back outlet | Width 0.62; Y 0.48…0.73 |
 
 Geometry checks reserve the same seated torso volume, forward rise volume and both heel channels across the collection. There is no front stretcher. The desk base has its forward spoke between the feet, keeping both heel channels open. Casters and swivel stay fixed in this study.
+
+There is no shared tail opening. The wingback is closed, including the previously open space above the seat. Per-model metadata records `backClosed: true` and `tailOutlet: null` for that model. The open-backed styles retain smaller outlets (0.62 wide, from Y 0.48 to 0.65 or 0.68), which a chair-independent animation must not rely on.
 
 The shared animation should use feet, seat and hands-on-thighs support. It must not require armrests, compressible cushions or a rotating seat, because those features differ across the models.
 
@@ -42,7 +45,7 @@ The design audit measured hip/body widths of approximately 0.527 for the horse, 
 - [ ] Retarget that common sequence through species-specific limb lengths and IK; do not scale characters or bones to fit. The pelvis marker is not an exact bone target for every species.
 - [ ] Verify the actual skinned butt/thigh surface contacts the seat, with soles planted and hands on the thighs. Check every chair with no chair-specific root offsets.
 - [ ] Give the shorter-legged foreman an appropriate adapter. The hen's wing/leg rig needs its own adapter rather than the literal mammal bone clip.
-- [ ] Author tail handling once per species. The outlet helps curled/short tails and articulated thin tails; it does **not** certify the large hip-weighted skunk plume or the hen's upright fan against a high back.
+- [ ] Author tail handling once per species that accommodates the closed wingback as well as the lower open-backed chairs. Neither the large hip-weighted skunk plume nor the hen's upright fan has been fitted to a native seated pose.
 - [ ] Check all outfits and any equipped/stowed weapons before claiming complete animation support.
 - [ ] Add editor/gameplay placement, occupied tiles, an adjacent approach/interaction cell and chair occupancy rules when integrating. A one-tile object bound alone is not a complete interaction footprint.
 
@@ -77,9 +80,9 @@ node tools/check-painted-chairs.mjs
 
 The browser checker accepts `PLAYWRIGHT_PATH` and `CHAIR_REVIEW_URL`, reuses the existing preview, and closes its owned browser in `finally`. It writes screenshots, exact helper identities, close receipts and its report under `artifacts/painted-chairs/`.
 
-Current verification: **13 focused/build tests passed** and **100 browser configurations passed**. Checks cover both finishes, all angles/scales, each native reference, mobile overflow, repeated model replacement, delayed-reference cancellation and idempotent teardown. After warming the variants, the renderer remains at 44 geometries / 2 textures with no character selected. No console errors were observed. The build packages the atlas and viewer and validates the complete module import graph.
+Current verification: **14 focused/build tests passed** and **100 browser configurations passed**. Checks cover both finishes, all angles/scales, each native reference, mobile overflow, repeated model replacement, delayed-reference cancellation and idempotent teardown. Geometry checks also verify real continuous upholstery over the formerly open back and complete lower-chair bounds at cuff height. After warming the variants, the renderer remains at 46 geometries / 2 textures with no character selected. No console errors were observed. The build packages the atlas and viewer and validates the complete module import graph.
 
-Independent hostile subagent review: **9/10**, no blocking findings. The reviewer checked 28 additional live configurations, repeated switching, concurrent reference loading and texture teardown. Hostile review and selected evidence are recorded in `hybrid-review/painted-chairs/`. These results certify assets and the shared furniture contract, not a completed sit/stand animation or playable chair integration.
+Independent hostile subagent review of the refinement: **9/10**, no blocking findings. The reviewer inspected nine fresh views, including the closed wingback from front/rear/side, grey forms, alternate finishes, gameplay scale and a front comparison against the unscaled horse. Complete lower-chair heights measure 0.986–0.988; all shared anchors are unchanged. Six chair tests passed independently with no browser errors. The initial asset review also covered 28 live configurations and resource ownership. Current review and selected evidence are recorded in `hybrid-review/painted-chairs/`. These results certify assets and the shared furniture contract, not a completed sit/stand animation or playable chair integration.
 
 ## Branch and local preview
 
