@@ -39,9 +39,10 @@ export class InspectionScene {
    const p=surfacePixels(kind),map=new T.DataTexture(p.data,p.width,p.height);map.colorSpace=T.SRGBColorSpace;map.wrapS=map.wrapT=T.RepeatWrapping;map.needsUpdate=true;
    const material=new T.MeshStandardMaterial({map,roughness:1,vertexColors:kind.startsWith('breach-')});
    material.onBeforeCompile=shader=>{shader.vertexShader=shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n#ifdef USE_MAP\n vec3 surfaceWorld=(instanceMatrix*vec4(position,1.0)).xyz; vMapUv=abs(normal.y)>.5?surfaceWorld.xz:abs(normal.x)>.5?surfaceWorld.zy:surfaceWorld.xy;\n#endif');};
-   if(FOLIAGE_MATERIALS.has(kind)){
+   const paintKind=kind.replace(/^breach-/,'');
+   if(FOLIAGE_MATERIALS.has(paintKind)){
     if(!this.foliageTexture){this.foliageTexture=this.loader.load(FOLIAGE_ATLAS,texture=>{if(this.disposed){texture.dispose();return;}this.foliageReady=true;this.changed();},undefined,()=>{this.diagnostics.push('Failed asset: '+FOLIAGE_ATLAS);this.changed();});this.foliageTexture.colorSpace=T.SRGBColorSpace;this.foliageTexture.anisotropy=Math.min(8,this.renderer.capabilities.getMaxAnisotropy());}
-    paintFoliageMaterial(material,kind,this.foliageTexture);
+    paintFoliageMaterial(material,paintKind,this.foliageTexture);
    }
    this.materials.set(kind,material);
   }return this.materials.get(kind);
