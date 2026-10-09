@@ -43,16 +43,25 @@ test('actual clothed seat rests on the cushion and mass moves onto the planted f
   for(let i=0;i<=184;i++){const t=i/20;s.motion.apply(t);const d=s.motion.diagnostics(),com=centerOfMass(d.joints),feet=d.feet.flatMap(f=>f.points),front=Math.max(...feet.map(p=>p[2])),rear=Math.min(...feet.map(p=>p[2]));
    assert.ok(Math.abs(com.x)<.1);assert.ok(com.z<=front+.01,'mass beyond toes');if(!d.seatSupport)assert.ok(com.z>=rear-.01,'unsupported mass behind heels at '+t);
    assert.ok(d.cloth.maxCompression<.075,'seat compresses the garment excessively');assert.ok(d.cloth.maxCorrection<.11,'seat-nose fold moves beyond the loose trouser volume');
-   if(t>=3.4&&t<=5.4){assert.ok(d.seatSupport);const points=d.cloth.contacts;assert.ok(points.length>30);assert.ok(Math.max(...points.map(p=>p[0]))-Math.min(...points.map(p=>p[0]))>.28,'seat contact too narrow');assert.ok(Math.min(...points.map(p=>p[2]))<.13,'perched only on front rim');for(const p of points)assert.ok(Math.abs(p[1]-.483)<1e-5);}
+   if(t>=3.4&&t<=5.4){assert.ok(d.seatSupport);const points=d.cloth.contacts;assert.ok(points.length>30);assert.ok(Math.max(...points.map(p=>p[0]))-Math.min(...points.map(p=>p[0]))>.28,'seat contact too narrow');assert.ok(Math.min(...points.map(p=>p[2]))<.13,'perched only on front rim');for(const p of points)assert.ok(Math.abs(p[1]-CHAIR_CONTACT.seatHeight-.003)<1e-5);}
    if(t>5.4&&!d.seatSupport&&!firstRelease){firstRelease={t,d,com};assert.ok(com.z>=rear+.02,'hips lifted before mass reached soles');}
   }
   assert.ok(firstRelease.t>6.2&&firstRelease.t<7);s.motion.apply(5.4);const resting=s.motion.diagnostics();s.motion.apply(6.2);const leaning=s.motion.diagnostics();assert.ok(leaning.joints.head[2]>resting.joints.head[2]+.20,'no forward chest transfer');assert.ok(Math.abs(leaning.joints.hips[1]-resting.joints.hips[1])<.001,'hips rose before forward lean');
  }finally{s.dispose();}
 });
 
+test('the visible elbow hinge folds toward the back of the torso through lowering and rising',()=>{
+ const s=setup();try{for(const heading of [0,Math.PI/2,-.63])for(let i=0;i<=92;i++){
+  s.motion.apply(i/10,{heading});const d=s.motion.diagnostics(),spine=s.worker.bones.find(b=>b.name==='spine'),forward=new T.Vector3(1,0,0).applyQuaternion(spine.getWorldQuaternion(new T.Quaternion()));
+  // Measure hinge direction independently of how straight the arm is during
+  // release; a nearly extended elbow still has to fold behind the torso.
+  for(const side of [-1,1]){const shoulder=V(d.joints['upperArm'+side]),elbow=V(d.joints['forearm'+side]),hand=V(d.joints['hand'+side]),axis=hand.sub(shoulder).normalize(),offset=elbow.sub(shoulder),hingeForward=forward.clone().addScaledVector(axis,-forward.dot(axis)).normalize();offset.addScaledVector(axis,-offset.dot(axis));assert.ok(offset.normalize().dot(hingeForward)<-.40,'elbow bends forward at '+i/10+' side '+side);}
+ }}finally{s.dispose();}
+});
+
 test('one unchanged horse clip clears the solid parts of all four native chairs',()=>{
  const s=setup(),atlas=new T.Texture(),lib=createChairLibrary(atlas),chairs=CHAIR_FORMS.map(f=>lib.build(f.id)),parts=chairs.map(c=>({id:c.form.id,parts:chairParts(c.root)}));
- try{for(const c of parts)assert.ok(c.parts.find(p=>p.name==='Shared seat').inside(new T.Vector3(0,.445,0)),'invalid collision probe');
+ try{for(const c of parts)assert.ok(c.parts.find(p=>p.name==='Shared seat').inside(new T.Vector3(0,CHAIR_CONTACT.seatHeight-.035,0)),'invalid collision probe');
   for(let i=0;i<=46;i++){const t=i*.2;s.motion.apply(t);for(const mesh of s.worker.parts){const pts=surface(mesh),ix=mesh.geometry.index;
    // Include triangle interiors; vertex-only checks can miss the cushion edge.
    for(let j=0;j<ix.count;j+=3){const a=pts[ix.getX(j)],b=pts[ix.getX(j+1)],c=pts[ix.getX(j+2)];pts.push(a.clone().add(b).add(c).divideScalar(3));}
@@ -69,6 +78,24 @@ test('actual gloves stay outside the trousers while settling, resting and releas
     if(d.hands.find(h=>h.side===side).contact)assert.ok(gap<.014,'visible glove floats above thigh');
    }
   }
+ }finally{s.dispose();}
+});
+
+test('whole forearms clear the waist, not just the glove contact patches',()=>{
+ const s=setup();try{const trousers=s.worker.parts.find(p=>p.name.includes('overalls'));
+  for(let i=0;i<=62;i++){const t=i*HORSE_CHAIR_DURATION/62;s.motion.apply(t);const solid=triangleSolid(surface(trousers),trousers.geometry.index);
+   for(const side of [-1,1]){const arm=s.worker.parts.find(p=>p.name==='forearm and hand '+side),bind=arm.geometry.attributes.paintPosition,points=surface(arm);
+    for(let j=0;j<points.length;j++){if(bind.getY(j)>.93||!solid.box.containsPoint(points[j]))continue;const result=solid.measure(points[j]);assert.ok(!result.inside||result.distance<.0025,'forearm sinks into waist at '+t+' side '+side+' depth '+result.distance);}
+   }
+  }
+ }finally{s.dispose();}
+});
+
+test('trouser folds settle continuously through seat-height contact and release',()=>{
+ const s=setup();try{const trousers=s.worker.parts.find(p=>p.name.includes('overalls'));let previous;
+  for(let i=0;i<=1104;i++){const t=i/120;s.motion.apply(t);const points=surface(trousers);if(previous)for(let j=0;j<points.length;j++)assert.ok(points[j].distanceTo(previous[j])<.005,'cloth jumps at '+t+' vertex '+j);previous=points;}
+  // Previously a calf vertex snapped forward a centimetre at this crossing.
+  const t=2.62539538796;s.motion.apply(t-.000001);const before=surface(trousers);s.motion.apply(t+.000001);const after=surface(trousers);for(let i=0;i<before.length;i++)assert.ok(before[i].distanceTo(after[i])<.00001,'discontinuous seat-rim fold');
  }finally{s.dispose();}
 });
 

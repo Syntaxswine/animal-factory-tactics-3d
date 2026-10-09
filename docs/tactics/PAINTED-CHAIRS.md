@@ -11,11 +11,11 @@ Four low-poly chair models use one painterly atlas for eight finishes. The usabl
 
 Seams, buttons, cushion channels, wood grain, stamped ribs, fasteners and wear are painted. Geometry supplies the major silhouette, seat, back, supports, wingback arms and five simple desk-chair casters. The wingback has a continuous upholstered back extending into the seat, solid upholstered sides joining the base to the wings, cylindrical padded armrests, and faceted cabriole front legs with shaped rear legs. Every base fits within one native 1×1 tile; the wingback's padded armrests overhang by 0.04 on each side (1.08 total visible width). `paddingOverhang` records that visual extent separately from the base footprint. The characters are not rescaled.
 
-The wingback remains about 1.36 high. The wooden, metal and desk chairs end at approximately 0.99, level with the original horse's rolled cuffs (the cuff sculpt runs around Y 0.99–1.035). Only their backs/supports were lowered; the shared seat remains at 0.48.
+The wingback remains about 1.36 high. The wooden, metal and desk chairs end at approximately 0.99, level with the original horse's rolled cuffs (the cuff sculpt runs around Y 0.99–1.035). Following the horse sitting test, all seat tops are now **0.42 high**, down from 0.48. Legs and the desk column are shorter; the wingback's lower upholstery and rolled arms move down with the seat. Back-top heights, widths, footprints and character scale are preserved.
 
-The wingback's outer seat padding is 0.96 wide × 0.76 deep × 0.12 thick. It extends under both arm supports and farther beneath the back; the back cushion's lower bevels tuck into it to close the corner gaps. This extra padding surrounds the common 0.84 × 0.62 sitting area. Its top is still Y 0.48, with the same pelvis, foot and approach targets and no additional triangles. Other chairs keep their original seat dimensions.
+The wingback's outer seat padding is 0.96 wide × 0.76 deep × 0.12 thick. It extends under both arm supports and farther beneath the back; the back cushion's lower bevels tuck into it to close the corner gaps. This extra padding surrounds the common 0.84 × 0.62 sitting area. Its top is Y 0.42, with the shared pelvis target lowered to 0.56 and the same foot and approach targets. Other chairs keep their original seat dimensions. Triangle counts are unchanged.
 
-Following the user's classic-chair reference, each side is a single low-poly upholstered shell. The separate eight-sided armrest cylinder is 0.10 in diameter. Its inside edge is flush with the inner flat side at X ±0.44, and its rounded bulk projects outward to X ±0.54. Its top remains Y 0.72. Flat sides and rolls both leave 0.88 across; `armInside` remains 0.44. Seat, pelvis, back, foot and approach targets are unchanged.
+Following the user's classic-chair reference, each side is a single low-poly upholstered shell. The separate eight-sided armrest cylinder is 0.10 in diameter. Its inside edge is flush with the inner flat side at X ±0.44, and its rounded bulk projects outward to X ±0.54. Its top is now Y 0.66, preserving its height relative to the lower seat. Flat sides and rolls both leave 0.88 across; `armInside` remains 0.44.
 
 Open `tactics/painted-chairs-study.html`. Select the collection or an individual chair, either finish, grey forms, five views and 58 px/tile gameplay scale. Horse, pig director and pig foreman are standing references. The optional gold fitting mannequin is identical across all four models; it is a furniture-space check, not an animated or species-fitted character.
 
@@ -25,19 +25,19 @@ Open `tactics/painted-chairs-study.html`. Select the collection or an individual
 
 | Target | Chair-local value |
 | --- | --- |
-| Seat top | Y 0.48 |
+| Seat top | Y 0.42 |
 | Usable seat | X −0.42…0.42; Z −0.32…0.30 |
-| Seat center | `[0, 0.48, -0.01]` |
-| Mannequin pelvis | `[0, 0.62, -0.03]` |
+| Seat center | `[0, 0.42, -0.01]` |
+| Mannequin pelvis | `[0, 0.56, -0.03]` |
 | Left / right sole | `[−0.23, 0, 0.43]` / `[0.23, 0, 0.43]` |
 | Forward approach | `[0, 0, 0.80]` |
 | Back reference | `[0, 0.91, -0.36]` |
 | Minimum arm inside gap | 0.88 (rolls flush with the flat inside panels) |
-| Wingback arm top | Y 0.72 |
+| Wingback arm top | Y 0.66 |
 
 Geometry checks reserve the same seated torso volume, forward rise volume and both heel channels across the collection. There is no front stretcher. The desk base has its forward spoke between the feet, keeping both heel channels open. Casters and swivel stay fixed in this study.
 
-There is no shared tail opening. The wingback is closed, including the previously open space above the seat. Per-model metadata records `backClosed: true` and `tailOutlet: null` for that model. The open-backed styles retain smaller outlets (0.62 wide, from Y 0.48 to 0.65 or 0.68), which a chair-independent animation must not rely on.
+There is no shared tail opening. The wingback is closed, including the previously open space above the seat. Per-model metadata records `backClosed: true` and `tailOutlet: null` for that model. The open-backed styles retain smaller outlets (0.62 wide, from Y 0.42 to 0.65 or 0.68), which a chair-independent animation must not rely on.
 
 The shared animation should use feet, seat and hands-on-thighs support. It must not require armrests, compressible cushions or a rotating seat, because those features differ across the models.
 
@@ -55,9 +55,9 @@ Open `tactics/horse-chair-study.html`. The original horse now uses the same **9.
 | 6.2–7.6 s | Rise through the legs; hands lift clear of the thighs. |
 | 7.6–9.2 s | Return the arms to the sides and stand. |
 
-`horse-chair-motion.js` fits the real horse's thigh/shin lengths rather than using the gold mannequin's pelvis marker literally. Two-bone IK keeps both sole surfaces fixed at the shared foot positions, and all bone lengths and character/chair scales remain unchanged. Hands follow actual thigh triangles, with the palm orientation and offset checked against the visible gloves. The release follows a shallow arc so fingers do not cut through the trousers.
+`horse-chair-motion.js` fits the real horse's thigh/shin lengths rather than using the gold mannequin's pelvis marker literally. Two-bone IK keeps both sole surfaces fixed at the shared foot positions, and all bone lengths and character/chair scales remain unchanged. The elbow hinges now fold toward the **back of the torso**, including during the forward lean; their pole direction follows the torso rather than using the forward-bending knee pole. Outward clearance keeps the forearms outside the waist. Hands follow actual thigh triangles farther down the lap, with the palm orientation and offset checked against the visible gloves. The release follows a shallow arc so fingers do not cut through the trousers. Descent timing keeps the body over the hooves until the lower cushion receives its weight.
 
-A reversible cloth corrective compresses loose overalls against the Y 0.48 seat and forms a fold around its front edge. It changes clothing vertices only, preserving the bind-space paint, original geometry buffers on restoration, skeleton and chair geometry. Maximum vertical cloth compression is about 0.068 tile; the largest combined compression/fold displacement is about 0.102 tile. This is authored contact correction, not a cloth or rigid-body simulation. Existing horse underarm/side paint repairs are reused in the viewer.
+A reversible cloth corrective compresses loose overalls against the Y 0.42 seat and forms a fold around its front edge. The front fold begins smoothly above the rim, avoiding a sudden displacement when fabric crosses seat height. It changes clothing vertices only, preserving the bind-space paint, original geometry buffers on restoration, skeleton and chair geometry. The lower seat reduces maximum vertical cloth compression to about 0.038 tile and combined compression/fold displacement to about 0.072 tile. This is authored contact correction, not a cloth or rigid-body simulation. Existing horse underarm/side paint repairs are reused in the viewer.
 
 ```js
 const motion = createHorseChairMotion(horse);
@@ -116,9 +116,11 @@ node tools/check-horse-chair.mjs
 
 The browser checker accepts `PLAYWRIGHT_PATH` and `CHAIR_REVIEW_URL`, reuses the existing preview, and closes its owned browser in `finally`. It writes screenshots, exact helper identities, close receipts and its report under `artifacts/painted-chairs/`.
 
-The horse checker similarly accepts `HORSE_CHAIR_REVIEW_URL` and `PLAYWRIGHT_PATH`. It covers **80 view/finish/scale combinations and 80 motion keyframe configurations**, real playback/loop controls, exact backward scrubbing, mobile layout, repeated chair replacement and idempotent teardown. Its two normal-speed canvas recordings and images are saved under `artifacts/painted-chairs/horse-motion/`. The warmed renderer stays at 50 geometries / 7 textures after switching chairs and finishes; no browser errors occurred. Five motion tests check dense pose continuity, actual sole surfaces, limb lengths, mass transfer before cushion release, triangle interiors against chair solids (ray parity for concave shells), actual glove/trouser penetration and exact rig/mesh restoration. These checks support visual review rather than replacing it.
+The horse checker similarly accepts `HORSE_CHAIR_REVIEW_URL` and `PLAYWRIGHT_PATH`. It covers **80 view/finish/scale combinations and 80 motion keyframe configurations**, real playback/loop controls, exact backward scrubbing, mobile layout, repeated chair replacement and idempotent teardown. Its two normal-speed canvas recordings and images are saved under `artifacts/painted-chairs/horse-motion/`. The warmed renderer stays at 50 geometries / 7 textures after switching chairs and finishes; no browser errors occurred. Eight motion tests check dense joint and cloth continuity, actual sole surfaces, limb lengths, mass transfer before cushion release, backward elbow hinges across the complete clip and multiple headings, triangle interiors against chair solids (ray parity for concave shells), actual glove and whole-forearm/trouser penetration, and exact rig/mesh restoration. These checks support visual review rather than replacing it.
 
-The completed horse pass passed **59 focused/regression tests**, including the existing animal motion, horse mesh, paint lifecycle, chair and distribution-build suites. [Independent hostile review](../../hybrid-review/painted-chairs/horse-sitting-review.md) scored it **9/10**, with no blockers after the glove-contact and seat-rim corrections. Selected durable evidence: [three-quarter playback](../../hybrid-review/painted-chairs/horse-sit-stand-three.webm), [side playback](../../hybrid-review/painted-chairs/horse-sit-stand-side.webm), [wingback seated](../../hybrid-review/painted-chairs/horse-wingback-seated.png), and [wooden-chair contact](../../hybrid-review/painted-chairs/horse-wood-seat-contact.png).
+The initial horse pass passed **59 focused/regression tests**, including the existing animal motion, horse mesh, paint lifecycle, chair and distribution-build suites. Its [initial review](../../hybrid-review/painted-chairs/horse-sitting-review.md) did not catch the reversed elbow anatomy subsequently identified by the user. The elbow/seat-height correction adds explicit hinge-direction, whole-forearm clearance and cloth-continuity regressions. Its **16 focused chair/motion/build tests**, **100 chair configurations**, and **80 view/finish/scale plus 80 motion keyframe configurations** pass. Selected durable evidence is refreshed with the correction: [three-quarter playback](../../hybrid-review/painted-chairs/horse-sit-stand-three.webm), [side playback](../../hybrid-review/painted-chairs/horse-sit-stand-side.webm), [wingback seated](../../hybrid-review/painted-chairs/horse-wingback-seated.png), and [wooden-chair contact](../../hybrid-review/painted-chairs/horse-wood-seat-contact.png).
+
+Independent [elbow and lower-seat review](../../hybrid-review/painted-chairs/horse-sitting-elbows-review.md): **9/10**. The reviewer checked fresh views of all four chairs, dense elbow directions at multiple headings, and 137,466 forearm vertex/triangle-centroid samples with no waist penetration. The initial correction's forearm overlap and seat-rim cloth pop were fixed before approval.
 
 The height/closed-back revision `2125cc1` passed **14 focused/build tests and 100 browser configurations**. Checks covered both finishes, all angles/scales, each native reference, mobile overflow, repeated model replacement, delayed-reference cancellation and idempotent teardown. Geometry checks also verified real continuous upholstery over the formerly open back and complete lower-chair bounds at cuff height. That revision's warmed renderer held at 46 geometries / 2 textures with no character selected. No console errors were observed. The build packages the atlas and viewer and validates the complete module import graph.
 

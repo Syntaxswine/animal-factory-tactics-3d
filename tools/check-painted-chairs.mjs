@@ -11,7 +11,7 @@ try{
  await page.goto(url+'?reference=none');await page.waitForFunction(()=>window.paintedChairsReady);
  for(const chair of ['all','wingback','wood','metal','desk'])for(const finish of ['original','alternate'])for(const view of ['three','front','side','top','rear'])for(const scale of ['close','game']){
   const state=await page.evaluate(o=>paintedChairsStudy.set(o),{chair,finish,view,scale});records.push(state);
-  assert.equal(state.forms.length,chair==='all'?4:1);assert.equal(state.seatHeight,.48);assert.ok(state.forms.every(f=>f.triangles<500));assert.ok(state.ppu>0);if(scale==='game')assert.equal(state.ppu,58);
+  assert.equal(state.forms.length,chair==='all'?4:1);assert.equal(state.seatHeight,.42);assert.ok(state.forms.every(f=>f.triangles<500));assert.ok(state.ppu>0);if(scale==='game')assert.equal(state.ppu,58);
   const visible=await page.evaluate(()=>{const s=paintedChairsStudy;return s.selected.every(c=>{c.root.updateMatrixWorld(true);return c.anchors.seat.getWorldPosition(c.root.position.clone()).project(s.camera).toArray().every(n=>Number.isFinite(n)&&Math.abs(n)<=1);});});assert.ok(visible,JSON.stringify({chair,finish,view,scale}));
  }
  const set=options=>page.evaluate(o=>paintedChairsStudy.set(o),options);
