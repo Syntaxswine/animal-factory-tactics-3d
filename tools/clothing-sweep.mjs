@@ -27,7 +27,7 @@ if(args[0]==='--summary'){
     if(!known){t.unknown=true;continue;}t.pb+=n0;t.pa+=n1;if(kd==='crossing'){t.xb+=n0;t.xa+=n1;}if(kd==='fold'){t.fb+=n0;t.fa+=n1;t.ff0+=f0;t.ff1+=f1;}}
    if(f1-f0>=10||(f1&&d1-d0>=.001)||(known&&n1>=1.25*n0&&n1-n0>=50))worse.push({sp,m,k,f0,f1,d0:x[k]?.max,d1:y[k]?.max,n0:known?n0:null,n1:known?n1:null,kd});}}}
  const pct=(p,q)=>p?((q-p)/p*100).toFixed(0)+'%':'-',big=v=>v>=1e6?(v/1e6).toFixed(2)+' M':v>=1e4?(v/1e3).toFixed(0)+' k':String(v),pair=(p,q)=>big(p)+' -> '+big(q)+' ('+pct(p,q)+')';
- const row=(n,t)=>'| '+n+' | '+pair(t.before,t.after)+' | -'+t.gone+' +'+t.came+' | '+(t.unknown?'?':pair(t.pb,t.pa)+' | '+pair(t.xb,t.xa)+' | '+t.ff0+' -> '+t.ff1+' fr, '+pair(t.fb,t.fa))+' |';
+ const whole=(p,q)=>p+' -> '+q+' ('+pct(p,q)+')',row=(n,t)=>'| '+n+' | '+whole(t.before,t.after)+' | -'+t.gone+' +'+t.came+' | '+(t.unknown?'?':pair(t.pb,t.pa)+' | '+pair(t.xb,t.xa)+' | '+t.ff0+' -> '+t.ff1+' fr, '+pair(t.fb,t.fa))+' |';
  const HEAD=n=>'| '+n+' | pair-frames | went, came | points | crossings, points | folds |\n|---|---|---|---|---|---|';
  console.log(HEAD('motion'));for(const [m,t] of Object.entries(byM))console.log(row(m,t));
  console.log('\n'+HEAD('character'));for(const [c,t] of Object.entries(byC))console.log(row(c,t));
