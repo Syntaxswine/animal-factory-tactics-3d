@@ -7,6 +7,7 @@ import {createBattlePosture} from '../dist/tactics/battle-posture.js';
 import {createLadderMotion,LADDER_PRESETS} from '../dist/tactics/ladder-motion.js';
 import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {createWeaponModel} from '../dist/tactics/weapon-models.js';
+import {createRifleFiring} from '../dist/tactics/rifle-firing.js';
 import {createGrenadeThrow,GRENADE_THROW} from '../dist/tactics/grenade-throw-motion.js';
 import {createGrenadeModel} from '../dist/tactics/grenade-model.js';
 import {createRoofMantle} from '../dist/tactics/roof-mantle.js';
@@ -169,4 +170,19 @@ test('hair follows the skin it grows from through the mantle, the descent and th
    ['the throw',null,(w,m)=>{const g=createGrenadeModel(),mo=createGrenadeThrow(w,g,{animal:p.id});try{for(let t=0;t<=GRENADE_THROW.duration+1e-9;t+=.2){mo.at(t);m('t '+t.toFixed(1));}}finally{mo.dispose();}},.008]]){
    const w=make(weapon);try{const now=census(w,{focus});run(w,label=>{const fold=now().found.filter(f=>f.kind==='self'&&/mane|beard/.test(f.part));
     assert.ok(fold.every(f=>f.depth<=most),`${p.id} in ${motion} at ${label}: ${fold[0]?.part} folds through itself ${(Math.max(...fold.map(f=>f.depth))*1000).toFixed(1)} mm`);});}finally{w.dispose();}}}
+});
+
+test('a neckerchief keeps its shape in the prone aim, where the neck bends furthest',()=>{
+ // The census round each neckerchief (rest points within 3 cm of it) in the prone aim at five bearings, recoil off and
+ // on. Measured: it folds through itself at most 8.8 mm (the dog; the sheep 8.1, the cow 5.5). With a 3 cm reach for
+ // a layer on a layer the sheep's folded 15.6 mm: a neckerchief then follows the shirt, the waistcoat or bib and the
+ // skin at once (CLOTHING-SKINNING.md, "Tried and dropped").
+ for(const p of MAMMALS){const w=load(p);try{const kerchief=w.parts.filter(m=>/neckerchief/.test(m.name));if(!kerchief.length)continue;
+  const posture=createBattlePosture(w,p);createWorkerLocomotion(w,p);w.equipWeapon(createWeaponModel('rifle'));w.pose('neutral');w.root.updateMatrixWorld(true);
+  const box=new T.Box3();for(const m of kerchief){const a=m.geometry.attributes.position;for(let i=0;i<a.count;i++)box.expandByPoint(V().fromBufferAttribute(a,i));}box.expandByScalar(.03);
+  const now=census(w,{focus:r=>box.containsPoint(V().set(...r))}),aim=createRifleFiring(w,p,posture);
+  for(const bearing of [-60,-30,0,30,60])for(const recoil of [0,1]){const a=bearing*Math.PI/180;aim.apply({aim:1,recoil,target:V().set(8*Math.cos(a),.48,8*Math.sin(a)),sample:{pose:{prone:1},heading:0,distance:0,blend:0}});
+   const fold=now().found.filter(f=>f.kind==='self'&&/neckerchief/.test(f.part)),deepest=Math.max(0,...fold.map(f=>f.depth));
+   assert.ok(deepest<=.01,`${p.id} prone at ${bearing}, recoil ${recoil}: its ${fold[0]?.part} folds through itself ${(deepest*1000).toFixed(1)} mm`);}
+ }finally{w.dispose();}}
 });
