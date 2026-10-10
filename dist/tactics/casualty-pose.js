@@ -1,7 +1,5 @@
 import * as T from './vendor/three.module.js';
-// the weights the parts' names give them: the character's fit of the cloth on the neck keeps them for the vertices it
-// moved (horse-light-model.js, userData.layerFit)
-const named=g=>{const a=g.attributes,f=g.userData.layerFit,si=a.skinIndex.array.slice(),sw=a.skinWeight.array.slice();if(f)f.vertices.forEach((v,k)=>{si.set(f.index.subarray(4*k,4*k+4),4*v);sw.set(f.weight.subarray(4*k,4*k+4),4*v);});return {si,sw};};
+import {namedWeights} from './clothing-weights.js';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z),Q=()=>new T.Quaternion();
 // Authored resting poses on the approved skeleton. This layer owns no health,
 // inventory or loot state, and always blends from a freshly evaluated live pose.
@@ -50,10 +48,10 @@ export function createCasualtyPose(worker,profile,tailSources){
  // Surface contact corrections use only rigid bone rotations. Cache the three
  // endpoints once per rig; transitions interpolate those endpoints, not a
  // frame-dependent search. Keep the approved mesh and bind-space paint intact.
- // (Which vertices belong to a limb is read from the weights their parts' names give them: see named, below.)
+ // (Which vertices belong to a limb is read from the weights their parts' names give them: namedWeights.)
  function samples(names){
   const indices=new Set(names.map(n=>rigBones.indexOf(bones[n])).filter(i=>i>=0)),out=[];
-  for(const part of worker.parts){if(/tail|apron/.test(part.name))continue;const {si,sw}=named(part.geometry),n=part.geometry.attributes.position.count;
+  for(const part of worker.parts){if(/tail|apron/.test(part.name))continue;const {si,sw}=namedWeights(part.geometry),n=part.geometry.attributes.position.count;
    for(let i=0;i<n;i++){let weight=0;for(let j=0;j<4;j++)if(indices.has(si[4*i+j]))weight+=sw[4*i+j];if(weight>.8)out.push([part,i]);}
   }return out;
  }

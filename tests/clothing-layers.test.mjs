@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import * as T from '../dist/tactics/vendor/three.module.js';
 import {ANIMAL_MOTION_CATALOG} from '../dist/tactics/animal-motion-catalog.js';
 import {createBattlePosture} from '../dist/tactics/battle-posture.js';
-import {createLadderMotion,LADDER_PRESETS} from '../dist/tactics/ladder-motion.js';
+import {createLadderMotion,LADDER_PRESETS,WIDE_LADDER_EXIT} from '../dist/tactics/ladder-motion.js';
 import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {createWeaponModel} from '../dist/tactics/weapon-models.js';
 import {createRifleFiring} from '../dist/tactics/rifle-firing.js';
@@ -132,12 +132,22 @@ test('a layer on the neck moves with the layer under it',()=>{
  }finally{w.dispose();}}
 });
 
-test('a character made from mesh data already fitted copies the fit: the same weights and the same record',()=>{
- for(const p of MAMMALS){const data=JSON.parse(fs.readFileSync(new URL('../dist/tactics/'+p.file,import.meta.url))),a=p.create(data),b=p.create(data),c=load(p);
-  try{for(let j=0;j<c.parts.length;j++)for(const w of [a,b]){const x=w.parts[j].geometry,y=c.parts[j].geometry;
-    assert.ok(x.attributes.skinIndex.array.every((v,i)=>v===y.attributes.skinIndex.array[i])&&x.attributes.skinWeight.array.every((v,i)=>v===y.attributes.skinWeight.array[i]),p.id+': '+c.parts[j].name+' weights differ from a fresh fit');
-    const f=x.userData.layerFit,g=y.userData.layerFit;assert.equal(!!f,!!g,p.id+': '+c.parts[j].name+' record');if(f)assert.ok(f.vertices.length===g.vertices.length&&f.vertices.every((v,i)=>v===g.vertices[i])&&f.weight.every((v,i)=>v===g.weight[i])&&f.index.every((v,i)=>v===g.index[i]),p.id+': '+c.parts[j].name+' record differs');}}
-  finally{[a,b,c].forEach(w=>w.dispose());}}
+test('a character made from mesh data already fitted copies the fit, whatever the characters made before it did since',()=>{
+ // The battle renderer builds every unit of a species from one parsed file. The first goes on to the battle posture
+ // (whose hem tuck rewrites its shirt) and a ladder (which swaps weights in while it plays) before the next is made;
+ // the next must still be a fresh fit. And a later character's weights and record are its own: scribbled on, they
+ // leave the one after it a fresh fit too.
+ const same=(x,y,what)=>{for(let j=0;j<y.parts.length;j++){const g=x.parts[j].geometry,h=y.parts[j].geometry;
+  assert.ok(g.attributes.skinIndex.array.every((v,i)=>v===h.attributes.skinIndex.array[i])&&g.attributes.skinWeight.array.every((v,i)=>v===h.attributes.skinWeight.array[i]),what+': '+y.parts[j].name+' weights differ from a fresh fit');
+  const f=g.userData.layerFit,r=h.userData.layerFit;assert.equal(!!f,!!r,what+': '+y.parts[j].name+' record');
+  if(f)assert.ok(f.vertices.length===r.vertices.length&&f.vertices.every((v,i)=>v===r.vertices[i])&&f.weight.every((v,i)=>v===r.weight[i])&&f.index.every((v,i)=>v===r.index[i]),what+': '+y.parts[j].name+' record differs');}};
+ for(const p of MAMMALS){const data=JSON.parse(fs.readFileSync(new URL('../dist/tactics/'+p.file,import.meta.url))),fresh=load(p),made=[];
+  try{const a=p.create(data);made.push(a);same(a,fresh,p.id+', the first');
+   createBattlePosture(a,p);const ladder=createLadderMotion(a,p,{...LADDER_PRESETS.floor,...(p.id.startsWith('pig')?{exitWidth:WIDE_LADDER_EXIT}:{})});ladder.apply(.5);
+   const b=p.create(data);made.push(b);ladder.dispose();same(b,fresh,p.id+', made after the first went on');
+   for(const m of b.parts){m.geometry.attributes.skinWeight.array.fill(.25);m.geometry.attributes.skinIndex.array.fill(0);const f=m.geometry.userData.layerFit;if(f){f.weight.fill(.5);f.index.fill(0);f.vertices.fill(0);}}
+   const c=p.create(data);made.push(c);same(c,fresh,p.id+', made after one was scribbled on');}
+  finally{[...made,fresh].forEach(w=>w.dispose());}}
 });
 
 test('through the throw, the cloth at the arms lies where the name rules put it',()=>{

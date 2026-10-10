@@ -11,24 +11,31 @@
 import fs from 'node:fs';import {pathToFileURL,fileURLToPath} from 'node:url';
 const args=process.argv.slice(2),opt=k=>args.includes(k)?args[args.indexOf(k)+1]:null;
 if(args[0]==='--summary'){
- // every character before and after: per motion and per character the pair-frames that went away, that came, and the
- // net; then every pair that got worse by 10 frames or more, or 1 mm or more deeper
+ // every character before and after (<dir>/<species>-before.json and -after.json): per motion, character and region the
+ // pair-frames that went and came, and the census points (each pair's n, a point found in a frame): all of them, the
+ // crossings between parts, and the folds of a part through itself. Covering, an inner part going under an outer one (by
+ // the fit's layer order: the skin innermost, hair outermost), is natural and in neither. Then every pair that got worse:
+ // by 10 frames or more, 1 mm or more deeper, or a quarter more points (50 or more).
  const dir=args[1],R=args[2],SP=['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog'],mm=x=>x===null?'>23':(x*1000).toFixed(1),depth=v=>v===null?1:v;
- const byM={},byC={},byR={},worse=[];
- // the layer order (the fit's, horse-light-model.js), the skin innermost and hair outermost; any other body part (an arm, a
- // hoof, a tail) is no layer
  const order=n=>/skull/.test(n)?-1:/mane|beard/.test(n)?9:/forearm|hoof|boot|foot|tail/.test(n)?null:/shirt/.test(n)?1:/trousers|overalls/.test(n)?2:/waistcoat|jacket/.test(n)?3:/collar|belt|pouch|cap/.test(n)?4:/neckerchief wrap/.test(n)?5:/neckerchief knot/.test(n)?6:/neckerchief/.test(n)?7:8;
- const covering=k=>{const [a,b]=k.replace(/ @[a-z]+$/,'').split(' into ');if(!b)return false;const p=order(a),q=order(b);return p!==null&&q!==null&&p<q;};
+ const kind=k=>{if(/ through itself @/.test(k))return 'fold';const [p,q]=k.replace(/ @[a-z]+$/,'').split(' into '),i=order(p),j=order(q);return i!==null&&j!==null&&i<j?'covering':'crossing';};
+ const T=()=>({before:0,after:0,gone:0,came:0,pb:0,pa:0,xb:0,xa:0,fb:0,fa:0,ff0:0,ff1:0,unknown:false}),byM={},byC={},byR={},worse=[];
  for(const sp of SP){let a,b;try{a=JSON.parse(fs.readFileSync(dir+'/'+sp+'-before.json','utf8'));b=JSON.parse(fs.readFileSync(dir+'/'+sp+'-after.json','utf8'));}catch{console.log('(no runs for '+sp+')');continue;}
-  for(const m of Object.keys(b.motions)){const x=a.motions[m]?.pairs||{},y=b.motions[m].pairs;for(const k of new Set([...Object.keys(x),...Object.keys(y)])){if(R&&!k.endsWith('@'+R))continue;const f0=x[k]?.frames||0,f1=y[k]?.frames||0,d0=x[k]?depth(x[k].max):0,d1=y[k]?depth(y[k].max):0;
-   const cov=covering(k);for(const t of [byM[m]??={gone:0,came:0,before:0,after:0,xb:0,xa:0},byC[sp]??={gone:0,came:0,before:0,after:0,xb:0,xa:0},byR[k.split('@').pop()]??={gone:0,came:0,before:0,after:0,xb:0,xa:0}]){t.before+=f0;t.after+=f1;if(f1<f0)t.gone+=f0-f1;else t.came+=f1-f0;if(!cov){t.xb+=f0;t.xa+=f1;}}
-   if(f1-f0>=10||(f1&&d1-d0>=.001))worse.push({sp,m,k,f0,f1,d0:x[k]?.max,d1:y[k]?.max,cov});}}}
- const pct=(a,b)=>a?((b-a)/a*100).toFixed(0)+'%':'-',row=(n,t)=>`| ${n} | ${t.before} | ${t.after} | -${t.gone} | +${t.came} | ${pct(t.before,t.after)} | ${t.xb} -> ${t.xa} (${pct(t.xb,t.xa)}) |`,HEAD=n=>`| ${n} | before | after | went | came | net | crossings alone |\n|---|---|---|---|---|---|---|`;
+  for(const m of Object.keys(b.motions)){const x=a.motions[m]?.pairs||{},y=b.motions[m].pairs;for(const k of new Set([...Object.keys(x),...Object.keys(y)])){if(R&&!k.endsWith('@'+R))continue;
+   const f0=x[k]?.frames||0,f1=y[k]?.frames||0,d0=x[k]?depth(x[k].max):0,d1=y[k]?depth(y[k].max):0,known=!(x[k]&&x[k].n===undefined)&&!(y[k]&&y[k].n===undefined),n0=x[k]?.n||0,n1=y[k]?.n||0,kd=kind(k);
+   for(const t of [byM[m]??=T(),byC[sp]??=T(),byR[k.split('@').pop()]??=T()]){t.before+=f0;t.after+=f1;if(f1<f0)t.gone+=f0-f1;else t.came+=f1-f0;
+    if(!known){t.unknown=true;continue;}t.pb+=n0;t.pa+=n1;if(kd==='crossing'){t.xb+=n0;t.xa+=n1;}if(kd==='fold'){t.fb+=n0;t.fa+=n1;t.ff0+=f0;t.ff1+=f1;}}
+   if(f1-f0>=10||(f1&&d1-d0>=.001)||(known&&n1>=1.25*n0&&n1-n0>=50))worse.push({sp,m,k,f0,f1,d0:x[k]?.max,d1:y[k]?.max,n0:known?n0:null,n1:known?n1:null,kd});}}}
+ const pct=(p,q)=>p?((q-p)/p*100).toFixed(0)+'%':'-',big=v=>v>=1e6?(v/1e6).toFixed(2)+' M':v>=1e4?(v/1e3).toFixed(0)+' k':String(v),pair=(p,q)=>big(p)+' -> '+big(q)+' ('+pct(p,q)+')';
+ const row=(n,t)=>'| '+n+' | '+pair(t.before,t.after)+' | -'+t.gone+' +'+t.came+' | '+(t.unknown?'?':pair(t.pb,t.pa)+' | '+pair(t.xb,t.xa)+' | '+t.ff0+' -> '+t.ff1+' fr, '+pair(t.fb,t.fa))+' |';
+ const HEAD=n=>'| '+n+' | pair-frames | went, came | points | crossings, points | folds |\n|---|---|---|---|---|---|';
  console.log(HEAD('motion'));for(const [m,t] of Object.entries(byM))console.log(row(m,t));
  console.log('\n'+HEAD('character'));for(const [c,t] of Object.entries(byC))console.log(row(c,t));
  console.log('\n'+HEAD('region'));for(const r of ['neck','arm','torso','legs'])if(byR[r])console.log(row(r,byR[r]));
- console.log('\n(crossings alone: without the pairs where an inner part goes under an outer one, which is covering, not crossing)');
- console.log('\nworse by 10 frames or more, or 1 mm deeper ('+worse.length+'; '+worse.filter(w=>!w.cov).length+' of them crossings, '+worse.filter(w=>w.cov).length+' covering, marked ~):');for(const w of worse.sort((p,q)=>(q.f1-q.f0)-(p.f1-p.f0)))console.log(`  ${w.cov?'~':' '}${w.sp} ${w.m}: ${w.k}: ${w.f0} fr (${w.f0?mm(w.d0):'-'} mm) -> ${w.f1} fr (${mm(w.d1)} mm)`);
+ console.log('\n(points: a census point found in a frame, summed over the frames. crossings: between two parts, an outer one into an inner one or into the body. folds: a part through itself. Covering, an inner part going under an outer one, is in neither.)');
+ const tag={crossing:' ',covering:'~',fold:'*'};
+ console.log('\nworse by 10 frames or more, 1 mm or more deeper, or a quarter more points ('+worse.length+': '+worse.filter(w=>w.kd==='crossing').length+' crossings, '+worse.filter(w=>w.kd==='fold').length+' folds, marked *, '+worse.filter(w=>w.kd==='covering').length+' covering, marked ~):');
+ for(const w of worse.sort((p,q)=>(q.f1-q.f0)-(p.f1-p.f0)||((q.n1??0)-(q.n0??0))-((p.n1??0)-(p.n0??0))))console.log('  '+tag[w.kd]+w.sp+' '+w.m+': '+w.k+': '+w.f0+' fr ('+(w.f0?mm(w.d0):'-')+' mm) -> '+w.f1+' fr ('+mm(w.d1)+' mm)'+(w.n0===null?'':', '+w.n0+' -> '+w.n1+' points'));
  process.exit(0);}
 if(args[0]==='--compare'){
  // each part pair (and region), before and after: frames with a finding and the deepest ("inf": past the census's reach)
@@ -57,7 +64,7 @@ function build(weapon='rifle'){const w=p.create(JSON.parse(fs.readFileSync(ROOT+
  return {w,posture,loc,gun,now,region,dispose(){loc.dispose?.();gun?.dispose?.();w.skeleton?.dispose?.();w.dispose();}};}
 const report={species,root:ROOT,focus:FOCUS,motions:{}};
 function measure(rec,label,b){rec.frames++;const r=b.now();if(!r.found.length)return;rec.bad++;
- for(const f of r.found){const k=(f.kind==='self'?f.part+' through itself':f.part+' into '+f.into)+' @'+b.region(f.rest),e=rec.pairs[k]??={frames:new Set(),max:0,at:null};e.frames.add(label);if(f.depth>e.max){e.max=f.depth;e.at=label;}if(f.depth>rec.max){rec.max=f.depth;rec.at=label;rec.what=k;}}}
+ for(const f of r.found){const k=(f.kind==='self'?f.part+' through itself':f.part+' into '+f.into)+' @'+b.region(f.rest),e=rec.pairs[k]??={n:0,frames:new Set(),max:0,at:null,where:null};e.n++;e.frames.add(label);if(f.depth>e.max){e.max=f.depth;e.at=label;e.where=f.rest.map(v=>+v.toFixed(3));}if(f.depth>rec.max){rec.max=f.depth;rec.at=label;rec.what=k;}}}
 function run(name,weapon,drive){const rec={frames:0,bad:0,max:0,at:null,what:null,pairs:{},error:null},t0=performance.now();let b;
  try{b=build(weapon);drive(b,label=>measure(rec,label,b));}catch(e){rec.error=String(e.stack||e).split('\n').slice(0,3).join(' | ');}finally{try{b?.dispose();}catch{}}
  for(const e of Object.values(rec.pairs))e.frames=e.frames.size;rec.seconds=+((performance.now()-t0)/1000).toFixed(1);report.motions[name]=rec;

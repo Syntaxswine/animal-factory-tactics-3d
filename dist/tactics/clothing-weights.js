@@ -20,3 +20,8 @@ export function preserveClothingHeadWeights(saved,head){
   }
  }
 }
+
+// The weights a part's names give it, as copies of its skin index and weight arrays: the character's fit of the cloth on
+// the neck (horse-light-model.js) keeps them in userData.layerFit for the vertices it moved. For what reads the rig by its
+// names: the idle's rig key, the casualty's contact sets, the fire's cards.
+export function namedWeights(g){const a=g.attributes,f=g.userData.layerFit,si=a.skinIndex.array.slice(),sw=a.skinWeight.array.slice();if(f)f.vertices.forEach((v,k)=>{si.set(f.index.subarray(4*k,4*k+4),4*v);sw.set(f.weight.subarray(4*k,4*k+4),4*v);});return {si,sw};}

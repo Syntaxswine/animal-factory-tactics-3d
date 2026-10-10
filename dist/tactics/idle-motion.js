@@ -1,5 +1,6 @@
 import * as T from './vendor/three.module.js';
 import {IDLE_FITS} from './idle-fits.js';
+import {namedWeights} from './clothing-weights.js';
 // Idle: a worker standing and looking around, on any of the eleven mammal rigs (the hen has wings, not arms). Seeded
 // and seamless: at(t) repeats every `length` seconds, and each seed draws its own looks, breaths and weight shifts.
 // Both hooves stay planted.
@@ -148,12 +149,9 @@ function closest(p,A,B,C){const ab=[B[0]-A[0],B[1]-A[1],B[2]-A[2]],ac=[C[0]-A[0]
 // (LIVE: each worker with an idle running, and its rig's key as read before the idle weighted it afresh)
 const FITS=new Map(),LIVE=new WeakMap();
 const sum=(a,k)=>{let s=0;for(let i=0;i<a.length;i++)s+=a[i]*(1+i%k);return s;};
-// the weights the parts' names give them: the character's fit of the cloth on the neck keeps them for the vertices it
-// moved (horse-light-model.js, userData.layerFit)
-const named=g=>{const a=g.attributes,f=g.userData.layerFit,si=a.skinIndex.array.slice(),sw=a.skinWeight.array.slice();if(f)f.vertices.forEach((v,k)=>{si.set(f.index.subarray(4*k,4*k+4),4*v);sw.set(f.weight.subarray(4*k,4*k+4),4*v);});return {si,sw};};
 // each vertex's bones and weights, whatever slots they sit in, as its name gave them (so the character's fit keeps every
 // rig's key, its fitted limits and its loops)
-const skinSum=g=>{const {si,sw}=named(g);let s=0,t=0;for(let i=0;i<si.length/4;i++)for(let k=0;k<4;k++){const b=si[4*i+k]+1,w=sw[4*i+k];s+=b*w*(1+i%7);t+=b*b*w;}return s.toFixed(3)+','+t.toFixed(3);};
+const skinSum=g=>{const {si,sw}=namedWeights(g);let s=0,t=0;for(let i=0;i<si.length/4;i++)for(let k=0;k<4;k++){const b=si[4*i+k]+1,w=sw[4*i+k];s+=b*w*(1+i%7);t+=b*b*w;}return s.toFixed(3)+','+t.toFixed(3);};
 const fingerprint=worker=>worker.bones.map(b=>b.name+[...b.position.toArray(),...b.quaternion.toArray(),...b.scale.toArray()].map(x=>x.toFixed(4)).join(',')).join(';')+'|'+worker.parts.map(p=>{const g=p.geometry,a=g.attributes;
  return [p.name,a.position.count,sum(a.position.array,3).toFixed(3),g.index?sum(g.index.array,3):'-',skinSum(g),p.skeleton.bones.map(b=>b.name).join(',')].join(':');}).join(';');
 // A rig's key: its bones' rest places, turns and scales, and its parts' names, sizes, vertex sums, triangles, skin weights

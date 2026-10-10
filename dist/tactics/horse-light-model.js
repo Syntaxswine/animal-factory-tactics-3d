@@ -148,7 +148,11 @@ export function createLightHorse(data,texture=null){
   const offset=rest[head].clone().sub(rest[spine]),NECK=clamp(.75*offset.length(),.15,.22),AXIS=offset.clone().normalize(),B=rest[head].clone().addScaledVector(AXIS,-NECK);
   const heightOf=v=>v.clone().sub(B).dot(AXIS),radiusOf=v=>{const d=v.clone().sub(B);return d.addScaledVector(AXIS,-d.dot(AXIS)).length();};
   const radii=[];for(let i=0;i<skull.geometry.attributes.position.count;i++){const v=at(skull,i),u=heightOf(v)/NECK;if(u>.2&&u<.8)radii.push(radiusOf(v));}radii.sort((x,y)=>x-y);const R=radii[radii.length>>1]||.06;
-  const SH=Math.min(...limbs.map(l=>radiusOf(rest[l.sh]))),field=v=>(1-smooth(R+.03,Math.min(R+.13,SH),radiusOf(v)))*smooth(-.1,.1,heightOf(v)/NECK),skin=surfaceOf(skull,heightOf);
+  // the field eases out between 3 cm past the neck and 13 cm past it or the shoulder joints: a mesh whose shoulder joints
+  // lay within 3 cm of the neck would turn the easing inside out, so it is refused (none of the eleven comes near: the
+  // horse's are 4.7 cm clear of it)
+  const SH=Math.min(...limbs.map(l=>radiusOf(rest[l.sh]))),OUT=Math.min(R+.13,SH);if(!(OUT>R+.03))throw Error('the shoulder joints lie within 3 cm of the neck: the cloth fit has no room to ease out');
+  const field=v=>(1-smooth(R+.03,OUT,radiusOf(v)))*smooth(-.1,.1,heightOf(v)/NECK),skin=surfaceOf(skull,heightOf);
   const rank=m=>/mane|beard/.test(m.name)?0:/shirt/.test(m.name)?1:/trousers|overalls/.test(m.name)?2:/waistcoat|jacket/.test(m.name)?3:/collar|belt|pouch|cap/.test(m.name)?4:/neckerchief wrap/.test(m.name)?5:/neckerchief knot/.test(m.name)?6:/neckerchief/.test(m.name)?7:8;
   const layers=parts.filter(m=>m!==skull&&!/forearm and hand|hoof|boot|foot|tail/.test(m.name)).sort((x,y)=>rank(x)-rank(y)),under=[];
   for(const mesh of layers){const a=mesh.geometry.attributes,hair=/mane|beard/.test(mesh.name),plain=[];
@@ -162,9 +166,11 @@ export function createLightHorse(data,texture=null){
    a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;if(!hair)under.push(surfaceOf(mesh));}
  }
  // The fit depends only on the mesh file: the first character made from it fits, the rest copy (a battle makes one per unit).
- const fitted=FITTED.get(data);
- if(fitted)parts.forEach((m,k)=>{const a=m.geometry.attributes,f=fitted[k];a.skinIndex.array.set(f.index);a.skinWeight.array.set(f.weight);a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;if(f.layerFit)m.geometry.userData.layerFit=f.layerFit;});
- else{fitLayers();FITTED.set(data,parts.map(m=>({index:m.geometry.attributes.skinIndex.array.slice(),weight:m.geometry.attributes.skinWeight.array.slice(),layerFit:m.geometry.userData.layerFit||null})));}
+ // The cache holds copies, and each character gets its own copy of the weights and of the record, so nothing one character
+ // does to them reaches another.
+ const copyFit=f=>f&&{vertices:f.vertices.slice(),index:f.index.slice(),weight:f.weight.slice()},fitted=FITTED.get(data);
+ if(fitted)parts.forEach((m,k)=>{const a=m.geometry.attributes,f=fitted[k];a.skinIndex.array.set(f.index);a.skinWeight.array.set(f.weight);a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;if(f.layerFit)m.geometry.userData.layerFit=copyFit(f.layerFit);});
+ else{fitLayers();FITTED.set(data,parts.map(m=>({index:m.geometry.attributes.skinIndex.array.slice(),weight:m.geometry.attributes.skinWeight.array.slice(),layerFit:copyFit(m.geometry.userData.layerFit)||null})));}
  // HMG-only grasp corrective; neutral/other equipment restore the approved mesh.
  const gripHand=createGripHand(),supportLimb=limbs.find(l=>l.side===-1),supportArm=parts.find(p=>p.name==='forearm and hand -1');bones[supportLimb.wr].add(gripHand);const supportIndex=supportArm.geometry.index.clone(),trimmedIndex=[];for(let k=0;k<supportIndex.count;k+=3){const ids=[supportIndex.getX(k),supportIndex.getX(k+1),supportIndex.getX(k+2)];if(ids.every(i=>supportArm.geometry.attributes.position.getY(i)>.77))trimmedIndex.push(...ids);}const trimmedAttribute=new THREE.Uint16BufferAttribute(trimmedIndex,1),gripCuff=createGripCuff(supportArm,trimmedIndex,gripHand);
  const supportPosition=supportArm.geometry.attributes.position,gripPosition=supportPosition.clone();for(let i=0;i<gripPosition.count;i++){const y=gripPosition.getY(i),t=clamp((y-.77)/.13,0,1),factor=.64+.36*t*t*(3-2*t),cx=.061-(y-.79)*.19,cz=-.355+(y-.79)*.055;gripPosition.setXYZ(i,cx+(gripPosition.getX(i)-cx)*factor,y,cz+(gripPosition.getZ(i)-cz)*factor);}
