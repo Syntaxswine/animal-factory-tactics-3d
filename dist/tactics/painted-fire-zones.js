@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.js';
+import {namedWeights} from './clothing-weights.js';
 const V=()=>new T.Vector3();
 // Fit the painted envelope to the approved mesh, including horns, long ears,
 // hats, wings and tails. No character is resized to fit the horse's fire cards.
@@ -8,7 +9,7 @@ export function fireBodyZones(worker){
  function add(bone,p){const key=name(bone);let g=groups.get(key);if(!g){g={bone:bones.find(b=>b.name===key)||bone,box:new T.Box3()};groups.set(key,g);}g.box.expandByPoint(p);}
  for(const part of worker.parts){const a=part.geometry.attributes;
   if(/tail/.test(part.name)){const box=new T.Box3();for(let i=0;i<a.position.count;i++)box.expandByPoint(part.getVertexPosition(i,V()).applyMatrix4(part.matrixWorld));zones.push({part,box});continue;}
-  for(let i=0;i<a.position.count;i++){let index=0,weight=-1;for(let k=0;k<4;k++)if(a.skinWeight.getComponent(i,k)>weight){weight=a.skinWeight.getComponent(i,k);index=a.skinIndex.getComponent(i,k);}add(bones[index],part.getVertexPosition(i,V()).applyMatrix4(part.matrixWorld));}
+  const {si,sw}=namedWeights(part.geometry);for(let i=0;i<a.position.count;i++){let index=0,weight=-1;for(let k=0;k<4;k++)if(sw[4*i+k]>weight){weight=sw[4*i+k];index=si[4*i+k];}add(bones[index],part.getVertexPosition(i,V()).applyMatrix4(part.matrixWorld));}
  }
  const head=bones.find(b=>b.name==='head');head.traverse(o=>{if(!o.isMesh||o.isSkinnedMesh)return;const a=o.geometry.attributes.position;for(let i=0;i<a.count;i++)add(head,V().fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld));});
  zones.push(...groups.values());

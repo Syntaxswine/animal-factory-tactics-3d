@@ -4,8 +4,16 @@ import fs from 'node:fs';
 import * as T from '../dist/tactics/vendor/three.module.js';
 import {ANIMAL_MOTION_CATALOG} from '../dist/tactics/animal-motion-catalog.js';
 import {createBattlePosture} from '../dist/tactics/battle-posture.js';
-import {createLadderMotion,LADDER_PRESETS} from '../dist/tactics/ladder-motion.js';
+import {createLadderMotion,LADDER_PRESETS,WIDE_LADDER_EXIT} from '../dist/tactics/ladder-motion.js';
+import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
+import {createWeaponModel} from '../dist/tactics/weapon-models.js';
+import {createRifleFiring} from '../dist/tactics/rifle-firing.js';
+import {createGrenadeThrow,GRENADE_THROW} from '../dist/tactics/grenade-throw-motion.js';
+import {createGrenadeModel} from '../dist/tactics/grenade-model.js';
+import {createRoofMantle} from '../dist/tactics/roof-mantle.js';
+import {createLedgeDescent} from '../dist/tactics/ledge-descent.js';
 import {census} from '../tools/clothing-census.mjs';
+import {snapshot} from '../tools/clothing-main-fixture.mjs';
 // The characters' clothes follow what they lie on (docs/tactics/CLOTHING-SKINNING.md). Written apart from the builder's
 // own fit: these use skull vertices, not its surface search, and judge what the skinning does, not how it was set.
 const MAMMALS=ANIMAL_MOTION_CATALOG.filter(p=>!p.unarmed),V=()=>new T.Vector3();
@@ -32,12 +40,11 @@ const POSES=[[30,0,0],[-30,0,0],[0,20,0],[0,-15,0],[0,0,20]],posed=(w,[yaw,nod,r
 const layer=name=>!/skull|forearm|hoof|boot|foot|tail|mane|beard/.test(name);
 
 test('collars, neckerchiefs, bib and shirt tops and hair move with the neck skin under them as the head turns, nods and tilts',()=>{
- // Measured with the fit: 2-10 mm (95th percentile) on nine mammals for a 30 degree turn; without it, 19-66 mm. The
- // sheep's neckerchief lies under its wool ruff and the pig director's collar under his jowls: the skin under them is
- // the head's own overhang, which the fit leaves alone (a collar is not glued to the jaw above it), so they are held only
- // to sliding no more than they would on the chest's weights (turned 30 degrees, 68.5 mm against 75 mm on the director,
- // 40 against 63 mm on the sheep; nodding 20 degrees, 40.8 against 41.7 mm on the director). An asset change, not a
- // weight, would free them.
+ // Measured, the worst of the five poses: 3.8-9.6 mm (95th percentile) on nine mammals; on the name rules' weights
+ // (main), 19-66 mm. The sheep's neckerchief lies under its wool ruff and the pig director's collar under his jowls: the
+ // skin under them is the head's own overhang, which the fit leaves alone (a collar is not glued to the jaw above it), so
+ // they are held only to sliding no more than they would on the chest's weights (68.5 mm against 75.0 on the director,
+ // 40.2 against 63.2 on the sheep). An asset change, not a weight, would free them.
  const held=new Set(['sheep','pig-director']);
  for(const p of MAMMALS){const w=load(p);try{const on=onTheNeck(w);assert.ok(on.pairs.length>=6,p.id+': layers on the neck found');
   for(const pose of [[30,0,0],[-30,0,0],[0,20,0],[0,-15,0],[0,0,20]]){const moved=slide(w,on,pose),worst=p95(moved);
@@ -47,25 +54,64 @@ test('collars, neckerchiefs, bib and shirt tops and hair move with the neck skin
  }finally{w.dispose();}}
 });
 
-test('the battle posture and the ladder keep the head weight the fit gives a collar, and tuck every other hem vertex as before',()=>{
+test('the battle posture and the ladder keep the head weight the fit gives a collar, and tuck and corridor every vertex as main did',()=>{
  const smooth=(lo,hi,x)=>T.MathUtils.smoothstep(x,lo,hi);
- for(const p of MAMMALS){const w=load(p);try{const bone=n=>w.bones.findIndex(b=>b.name===n),head=bone('head'),cloth=w.parts.filter(m=>m.name.includes('shirt')),before=cloth.map(m=>{const a=m.geometry.attributes;return Array.from({length:a.position.count},(_,i)=>weights(a,i));});
+ // four slots from a weight list: the largest four, renormalised (what the posture and the ladder write)
+ const slots=list=>{const top=list.filter(([,x])=>x>1e-6).sort((p,q)=>q[1]-p[1]).slice(0,4),sum=top.reduce((s,[,x])=>s+x,0)||1,m=new Map();for(const [b,x] of top)m.set(b,(m.get(b)||0)+x/sum);return m;};
+ const same=(now,want,label)=>{for(const b of new Set([...now.keys(),...want.keys()]))assert.ok(Math.abs((now.get(b)||0)-(want.get(b)||0))<1e-6,`${label}: bone ${b} ${want.get(b)||0} -> ${now.get(b)||0}`);};
+ for(const p of MAMMALS){const w=load(p);try{const bone=n=>w.bones.findIndex(b=>b.name===n),head=bone('head'),cloth=w.parts.filter(m=>m.name.includes('shirt')),read=()=>cloth.map(m=>{const a=m.geometry.attributes;return Array.from({length:a.position.count},(_,i)=>weights(a,i));}),before=read();
   const collared=before.flat().filter(x=>(x.get(head)||0)>.01).length;assert.ok(collared>=5,p.id+': the shirt collar takes head weight from the skin under it ('+collared+')');
-  createBattlePosture(w,p);cloth.forEach((m,k)=>{const a=m.geometry.attributes;for(let i=0;i<a.position.count;i++){const now=weights(a,i),was=before[k][i],h=was.get(head)||0;
-   assert.ok(Math.abs((now.get(head)||0)-h)<1e-6,`${p.id}: posture changed vertex ${i}'s head weight ${h} -> ${now.get(head)||0}`);let sum=0;for(let n=0;n<4;n++)sum+=a.skinWeight.getComponent(i,n);assert.ok(Math.abs(sum-1)<1e-6);
-   // main's hem tuck, restated: the arm's weights kept above the hem or out at the sides, the rest of the torso blended
-   // from the hips to the spine over 0.90-1.04 m
-   if(!p.proneAim?.tuckHem||h>0)continue;const y=a.position.getY(i),z=a.position.getZ(i),side=z<0?-1:1,keep=1-(1-smooth(1,1.12,y))*(1-smooth(.20,.26,Math.abs(z))),u=(was.get(bone('upperArm'+side))||0)*keep,l=(was.get(bone('forearm'+side))||0)*keep,waist=smooth(.90,1.04,y),torso=Math.max(0,1-u-l);
-   for(const [b,x] of [[bone('hips'),torso*(1-waist)],[bone('spine'),torso*waist],[bone('upperArm'+side),u],[bone('forearm'+side),l]])assert.ok(Math.abs((now.get(b)||0)-x)<1e-6,`${p.id}: the hem tuck changed vertex ${i} (bone ${b}: ${x} -> ${now.get(b)||0})`);}});
-  // the ladder swaps its own weights in while it plays
-  if(['dog','rabbit'].includes(p.id)){const m=createLadderMotion(w,p,LADDER_PRESETS.floor);try{for(const u of [.2,.5,.8]){m.apply(u);cloth.forEach((c,k)=>{const a=c.geometry.attributes;for(let i=0;i<a.position.count;i++)assert.ok(Math.abs((weights(a,i).get(head)||0)-(before[k][i].get(head)||0))<1e-6,p.id+': the ladder dropped a collar\'s head weight at '+u);});}}finally{m.dispose();}}
+  createBattlePosture(w,p);const tucked=read();
+  // main's hem tuck, restated: the arm's weights kept above the hem or out at the sides, any other bone's (a collar's head)
+  // kept as it is, and the rest of the torso blended from the hips to the spine over 0.90-1.04 m
+  cloth.forEach((m,k)=>{const a=m.geometry.attributes;for(let i=0;i<a.position.count;i++){const was=before[k][i],now=tucked[k][i];let sum=0;for(let n=0;n<4;n++)sum+=a.skinWeight.getComponent(i,n);assert.ok(Math.abs(sum-1)<1e-6);
+   if(!p.proneAim?.tuckHem){same(now,was,p.id+' vertex '+i+' without a hem tuck');continue;}
+   const y=a.position.getY(i),z=a.position.getZ(i),side=z<0?-1:1,up=bone('upperArm'+side),lo=bone('forearm'+side),keep=1-(1-smooth(1,1.12,y))*(1-smooth(.20,.26,Math.abs(z))),u=(was.get(up)||0)*keep,l=(was.get(lo)||0)*keep;
+   const other=[...was].filter(([b])=>![up,lo,bone('hips'),bone('spine')].includes(b)),held=other.reduce((s,[,x])=>s+x,0),waist=smooth(.90,1.04,y),torso=Math.max(0,1-u-l-held);
+   same(now,slots([[bone('hips'),torso*(1-waist)],[bone('spine'),torso*waist],[up,u],[lo,l],...other]),`${p.id}: the hem tuck at vertex ${i}`);}});
+  // the dog's and rabbit's inner sleeve corridor on the ladder (ladder-motion.js), restated: the arm's share is the larger
+  // of what the cloth had (outside the rabbit's medial band) and a corridor round the upper arm, split at the elbow, the
+  // rest the spine's, any other bone's kept; swapped in while the ladder plays
+  if(['dog','rabbit'].includes(p.id)){w.pose('neutral');w.root.position.set(0,0,0);w.root.rotation.set(0,0,0);w.root.updateMatrixWorld(true);const REST=new Map(w.bones.map(b=>[b.name,b.getWorldPosition(V())])),rest=n=>REST.get(n).clone();
+   const m=createLadderMotion(w,p,LADDER_PRESETS.floor);try{for(const t of [.2,.5,.8]){m.apply(t);const now=read();
+    cloth.forEach((c,k)=>{const a=c.geometry.attributes;for(let i=0;i<a.position.count;i++){const q=V().fromBufferAttribute(a.position,i),side=q.z<0?-1:1,up=bone('upperArm'+side),lo=bone('forearm'+side),U=rest('upperArm'+side),axis=rest('forearm'+side).sub(U),s=T.MathUtils.clamp(q.clone().sub(U).dot(axis)/axis.lengthSq(),0,1.2),distance=q.distanceTo(U.clone().addScaledVector(axis,s));
+     const corridor=(1-smooth(.095,.13,distance))*smooth(p.id==='dog'?.215:.24,p.id==='dog'?.235:.27,Math.abs(q.z)),was=tucked[k][i],arm=(was.get(up)||0)+(was.get(lo)||0),medial=p.id==='rabbit'?smooth(.21,.25,Math.abs(q.z)):1,total=Math.max(arm*medial,corridor),elbow=1-smooth(.98,1.06,q.y);
+     const other=[...was].filter(([b])=>![up,lo,bone('hips'),bone('spine')].includes(b)),k1=1-other.reduce((s,[,x])=>s+x,0);
+     same(now[k][i],other.length?slots([[bone('spine'),(1-total)*k1],[up,total*(1-elbow)*k1],[lo,total*elbow*k1],...other]):slots([[bone('spine'),1-total],[up,total*(1-elbow)],[lo,total*elbow]]),`${p.id}: the ladder's corridor at vertex ${i}, ${t}`);}});}}finally{m.dispose();}}
+ }finally{w.dispose();}}
+});
+
+test('the fit leaves everything that reads the rig by its names as main had it: the weights, the arms, the falls, the fire and the idle',async()=>{
+ // tests/fixtures/clothing-main.json is tools/clothing-main-fixture.mjs run on main (b546dfb). The weights read as the
+ // parts' names give them (the fitted vertices from what the fit kept) and every arm weight as drawn hash alike, so the
+ // fit moved nothing else and no arm; the casualty's four fallen poses, the burning fire's cards and the idle's seed-1
+ // looks are main's (the idle's key, which seeds its loops and keys its fitted limits, reads the names' weights).
+ const main=JSON.parse(fs.readFileSync(new URL('./fixtures/clothing-main.json',import.meta.url))),now=await snapshot();
+ for(const p of MAMMALS){const a=main[p.id],b=now[p.id];assert.ok(a&&b,p.id+' in the fixture');
+  assert.deepEqual(b.named,a.named,p.id+': a weight the fit did not record changed, or a recorded one is not what the name gave');
+  assert.deepEqual(b.arms,a.arms,p.id+': an arm weight changed');
+  let fall=0;a.fallen.forEach((pose,i)=>pose.forEach((v,j)=>v.forEach((x,k)=>fall=Math.max(fall,Math.abs(x-b.fallen[i][j][k])))));assert.ok(fall<2e-5,`${p.id}: a fallen pose moved ${(fall*1000).toFixed(3)} mm`);
+  assert.deepEqual(b.fire,a.fire,p.id+': the fire\'s cards changed');assert.deepEqual(b.looks,a.looks,p.id+': the idle\'s seed-1 looks changed');}
+});
+
+test('the fit moves only hair and the cloth in the field round the neck, inside the shoulder joints',()=>{
+ // Restated apart from the builder: the neck's base and axis as above, the skull's median radius R round the axis (over
+ // the middle of the branch), and the shoulder joints' distance from it; a recorded vertex of a layer lies no lower than
+ // a tenth of the branch below the base and no further out than R + 13 cm or the shoulder joints.
+ for(const p of MAMMALS){const w=load(p);try{const neck=neckOf(w),skull=skullOf(w),at=n=>w.bones.find(b=>b.name===n).getWorldPosition(V()),H=at('head'),S=at('spine'),NECK=Math.min(.22,Math.max(.15,.75*H.distanceTo(S)));
+  const radius=v=>{const d=v.clone().sub(neck.base);return d.addScaledVector(neck.axis,-d.dot(neck.axis)).length();},sk=skull.geometry.attributes.position,r=[];for(let i=0;i<sk.count;i++){const v=V().fromBufferAttribute(sk,i),u=neck.up(v)/NECK;if(u>.2&&u<.8)r.push(radius(v));}r.sort((x,y)=>x-y);
+  const out=Math.min(r[r.length>>1]+.13,radius(at('upperArm-1')),radius(at('upperArm1')));let moved=0;
+  for(const m of w.parts){const f=m.geometry.userData.layerFit;if(!f)continue;assert.ok(!/skull|forearm|hoof|boot|foot|tail/.test(m.name),p.id+': the fit moved '+m.name);if(/mane|beard/.test(m.name))continue;
+   for(const i of f.vertices){const v=V().fromBufferAttribute(m.geometry.attributes.position,i);moved++;assert.ok(neck.up(v)>=-.1*NECK-1e-6&&radius(v)<out+1e-6,`${p.id}: ${m.name} vertex ${i} moved outside the field (${(neck.up(v)*100).toFixed(1)} cm up, ${(radius(v)*100).toFixed(1)} cm out)`);}}
+  assert.ok(moved>0,p.id+': the fit moved some cloth');
  }finally{w.dispose();}}
 });
 
 test('with the head turned, nodded and tilted, no layer on the neck sinks into another or folds through itself, and the skin stays out of them',()=>{
  // The census (tools/clothing-census.mjs) above the shoulders. Measured: no layer into a layer on any mammal; the skin
- // into a layer at most 39 points and 6 mm (the goat nodding, the horse tilted), against hundreds of points and 11-16 mm
- // on the name rules' weights. The sheep's ruff and the director's jowls over their collars are the asset's (above).
+ // and a layer crossing at most at 39 points and 5.7 mm (the goat; the horse 18 points), against 219-4,095 points at
+ // 10.6-16.0 mm on the name rules' weights (the donkey at none either way). The sheep's ruff and the director's jowls
+ // over their collars are the asset's (above).
  const held=new Set(['sheep','pig-director']);
  for(const p of MAMMALS){const w=load(p);try{w.pose('neutral');w.root.updateMatrixWorld(true);const at=n=>w.bones.find(b=>b.name===n).getWorldPosition(V()),sh=(at('upperArm-1').y+at('upperArm1').y)/2,sz=Math.min(Math.abs(at('upperArm-1').z),Math.abs(at('upperArm1').z)),now=census(w,{focus:r=>r[1]>sh-.08&&Math.abs(r[2])<sz-.02});
   for(const pose of POSES){posed(w,pose);const found=now().found,cloth=found.filter(f=>layer(f.part)&&layer(f.into)),skin=found.filter(f=>!(layer(f.part)&&layer(f.into))&&(layer(f.part)||layer(f.into)));
@@ -83,5 +129,70 @@ test('a layer on the neck moves with the layer under it',()=>{
   if(!pairs.length)continue;
   for(const pose of [[30,0,0],[-30,0,0],[0,20,0]]){posed(w,pose);const d=pairs.map(({m,i,o,j,off})=>m.getVertexPosition(i,V()).applyMatrix4(m.matrixWorld).sub(o.getVertexPosition(j,V()).applyMatrix4(o.matrixWorld)).sub(off).length()).sort((x,y)=>x-y);
    assert.ok(p95(d)<.004,`${p.id} at ${pose}: the layers on its neck slide ${(p95(d)*1000).toFixed(1)} mm (95th percentile) against the layers under them`);}
+ }finally{w.dispose();}}
+});
+
+test('a character made from mesh data already fitted copies the fit, whatever the characters made before it did since',()=>{
+ // The battle renderer builds every unit of a species from one parsed file. The first goes on to the battle posture
+ // (whose hem tuck rewrites its shirt) and a ladder (which swaps weights in while it plays) before the next is made;
+ // the next must still be a fresh fit. And a later character's weights and record are its own: scribbled on, they
+ // leave the one after it a fresh fit too.
+ const same=(x,y,what)=>{for(let j=0;j<y.parts.length;j++){const g=x.parts[j].geometry,h=y.parts[j].geometry;
+  assert.ok(g.attributes.skinIndex.array.every((v,i)=>v===h.attributes.skinIndex.array[i])&&g.attributes.skinWeight.array.every((v,i)=>v===h.attributes.skinWeight.array[i]),what+': '+y.parts[j].name+' weights differ from a fresh fit');
+  const f=g.userData.layerFit,r=h.userData.layerFit;assert.equal(!!f,!!r,what+': '+y.parts[j].name+' record');
+  if(f)assert.ok(f.vertices.length===r.vertices.length&&f.vertices.every((v,i)=>v===r.vertices[i])&&f.weight.every((v,i)=>v===r.weight[i])&&f.index.every((v,i)=>v===r.index[i]),what+': '+y.parts[j].name+' record differs');}};
+ for(const p of MAMMALS){const data=JSON.parse(fs.readFileSync(new URL('../dist/tactics/'+p.file,import.meta.url))),fresh=load(p),made=[];
+  try{const a=p.create(data);made.push(a);same(a,fresh,p.id+', the first');
+   createBattlePosture(a,p);const ladder=createLadderMotion(a,p,{...LADDER_PRESETS.floor,...(p.id.startsWith('pig')?{exitWidth:WIDE_LADDER_EXIT}:{})});ladder.apply(.5);
+   const b=p.create(data);made.push(b);ladder.dispose();same(b,fresh,p.id+', made after the first went on');
+   for(const m of b.parts){m.geometry.attributes.skinWeight.array.fill(.25);m.geometry.attributes.skinIndex.array.fill(0);const f=m.geometry.userData.layerFit;if(f){f.weight.fill(.5);f.index.fill(0);f.vertices.fill(0);}}
+   const c=p.create(data);made.push(c);same(c,fresh,p.id+', made after one was scribbled on');}
+  finally{[...made,fresh].forEach(w=>w.dispose());}}
+});
+
+test('through the throw, the cloth at the arms lies where the name rules put it',()=>{
+ // The census reads the arms as everything within 7 cm of their bones at rest; the fit changes three vertices there, the
+ // tops of the horse's overall straps beside his shoulders, moving them at most 0.6 mm through the throw from where their name
+ // rules' weights (the fit's record) would put them, so what the census sees at the arms is main's.
+ const seg=(q,a,b)=>{const ab=b.clone().sub(a),t=Math.max(0,Math.min(1,q.clone().sub(a).dot(ab)/ab.lengthSq()));return q.distanceTo(a.clone().addScaledVector(ab,t));};
+ for(const p of MAMMALS){const w=load(p);try{w.pose('neutral');w.root.updateMatrixWorld(true);const at=n=>w.bones.find(b=>b.name===n).getWorldPosition(V()),arms=[-1,1].map(k=>['upperArm','forearm','hand','fingers'].map(n=>at(n+k)));
+  const near=[];for(const m of w.parts){const f=m.geometry.userData.layerFit;if(!f)continue;f.vertices.forEach((v,k)=>{const q=V().fromBufferAttribute(m.geometry.attributes.position,v);if(Math.min(...arms.map(([u,e,h,g])=>Math.min(seg(q,u,e),seg(q,e,h),seg(q,h,g))))<.07)near.push({m,v,k});});}
+  if(!near.length)continue;const g=createGrenadeModel(),mo=createGrenadeThrow(w,g,{animal:p.id});let far=0;
+  try{for(let i=0;i<=Math.round(GRENADE_THROW.duration*30);i+=2){mo.at(i/30);w.root.updateMatrixWorld(true);
+   for(const {m,v,k} of near){const a=m.geometry.attributes,f=m.geometry.userData.layerFit,si=[0,1,2,3].map(j=>a.skinIndex.getComponent(v,j)),sw=[0,1,2,3].map(j=>a.skinWeight.getComponent(v,j)),now=m.getVertexPosition(v,V());
+    a.skinIndex.setXYZW(v,...f.index.subarray(4*k,4*k+4));a.skinWeight.setXYZW(v,...f.weight.subarray(4*k,4*k+4));far=Math.max(far,now.distanceTo(m.getVertexPosition(v,V())));a.skinIndex.setXYZW(v,...si);a.skinWeight.setXYZW(v,...sw);}}}
+  finally{mo.dispose();g.dispose?.();}
+  assert.ok(far<.001,`${p.id}: the fit moves the cloth at its arms ${(far*1000).toFixed(1)} mm in the throw (${near.length} vertices)`);
+ }finally{w.dispose();}}
+});
+
+test('hair follows the skin it grows from through the mantle, the descent and the throw without folding through itself',()=>{
+ // The census round the hair (rest points within 3 cm of it), the roof mantle and the ledge descent in 11 frames each and
+ // the throw every 0.2 s. Measured: no fold in the mantle or the descent; the throw folds the horse's mane 5.8 mm at most
+ // (the inside of the crest as it bends). A mane eased off the skin back to the head's weights (in full within 1 cm, its
+ // own 4 cm out) sheared through itself instead: 10.8 mm in the mantle, 5.1 in the descent, 14.3 in the throw; eased
+ // to 8 cm, 4.0 mm in the mantle. Where the skin folds the mane folds with it (the prone aim: CLOTHING-SKINNING.md).
+ for(const p of MAMMALS){const make=weapon=>{const w=load(p);createBattlePosture(w,p);createWorkerLocomotion(w,p);if(weapon)w.equipWeapon(createWeaponModel(weapon));w.pose('neutral');w.root.updateMatrixWorld(true);return w;};
+  const first=make(null),hair=first.parts.filter(m=>/mane|beard/.test(m.name)),box=new T.Box3();for(const m of hair){const a=m.geometry.attributes.position;for(let i=0;i<a.count;i++)box.expandByPoint(V().fromBufferAttribute(a,i));}first.dispose();
+  if(!hair.length)continue;box.expandByScalar(.03);const focus=r=>box.containsPoint(V().set(...r));
+  for(const [motion,weapon,run,most] of [['the mantle','rifle',(w,m)=>{const mo=createRoofMantle(w,p);try{for(let i=0;i<=10;i++){mo.apply(i/10);m('u '+i/10);}}finally{mo.dispose();}},0],
+   ['the descent','rifle',(w,m)=>{const mo=createLedgeDescent(w,p);try{for(let i=0;i<=10;i++){mo.apply(i/10);m('u '+i/10);}}finally{mo.dispose();}},0],
+   ['the throw',null,(w,m)=>{const g=createGrenadeModel(),mo=createGrenadeThrow(w,g,{animal:p.id});try{for(let t=0;t<=GRENADE_THROW.duration+1e-9;t+=.2){mo.at(t);m('t '+t.toFixed(1));}}finally{mo.dispose();}},.008]]){
+   const w=make(weapon);try{const now=census(w,{focus});run(w,label=>{const fold=now().found.filter(f=>f.kind==='self'&&/mane|beard/.test(f.part));
+    assert.ok(fold.every(f=>f.depth<=most),`${p.id} in ${motion} at ${label}: ${fold[0]?.part} folds through itself ${(Math.max(...fold.map(f=>f.depth))*1000).toFixed(1)} mm`);});}finally{w.dispose();}}}
+});
+
+test('a neckerchief keeps its shape in the prone aim, where the neck bends furthest',()=>{
+ // The census round each neckerchief (rest points within 3 cm of it) in the prone aim at five bearings, recoil off and
+ // on. Measured: it folds through itself at most 8.8 mm (the dog; the sheep 8.1, the cow 5.5). With a 3 cm reach for
+ // a layer on a layer the sheep's folded 15.6 mm: a neckerchief then follows the shirt, the waistcoat or bib and the
+ // skin at once (CLOTHING-SKINNING.md, "Tried and dropped").
+ for(const p of MAMMALS){const w=load(p);try{const kerchief=w.parts.filter(m=>/neckerchief/.test(m.name));if(!kerchief.length)continue;
+  const posture=createBattlePosture(w,p);createWorkerLocomotion(w,p);w.equipWeapon(createWeaponModel('rifle'));w.pose('neutral');w.root.updateMatrixWorld(true);
+  const box=new T.Box3();for(const m of kerchief){const a=m.geometry.attributes.position;for(let i=0;i<a.count;i++)box.expandByPoint(V().fromBufferAttribute(a,i));}box.expandByScalar(.03);
+  const now=census(w,{focus:r=>box.containsPoint(V().set(...r))}),aim=createRifleFiring(w,p,posture);
+  for(const bearing of [-60,-30,0,30,60])for(const recoil of [0,1]){const a=bearing*Math.PI/180;aim.apply({aim:1,recoil,target:V().set(8*Math.cos(a),.48,8*Math.sin(a)),sample:{pose:{prone:1},heading:0,distance:0,blend:0}});
+   const fold=now().found.filter(f=>f.kind==='self'&&/neckerchief/.test(f.part)),deepest=Math.max(0,...fold.map(f=>f.depth));
+   assert.ok(deepest<=.01,`${p.id} prone at ${bearing}, recoil ${recoil}: its ${fold[0]?.part} folds through itself ${(deepest*1000).toFixed(1)} mm`);}
  }finally{w.dispose();}}
 });

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import {ANIMAL_MOTION_CATALOG} from '../dist/tactics/animal-motion-catalog.js';
 import {createMammalMotion} from '../dist/tactics/animal-motion.js';
 import {createHorseChairMotion} from '../dist/tactics/horse-chair-motion.js';
+import {createProneMotion} from '../dist/tactics/animal-prone-motion.js';
 
 const load=p=>p.create(JSON.parse(fs.readFileSync(new URL('../dist/tactics/'+p.file,import.meta.url))));
 const weight=(a,i,bone)=>[0,1,2,3].reduce((sum,k)=>sum+(a.skinIndex.getComponent(i,k)===bone?a.skinWeight.getComponent(i,k):0),0);
@@ -33,4 +34,7 @@ test('existing mammal motion adapters retain fitted collar and bib head weights 
 });
 test('horse sitting inherits the fitted neck attachments and restores them when the study releases the rig',()=>{
  const p=ANIMAL_MOTION_CATALOG.find(p=>p.id==='horse');verifyAdapter(p,w=>createHorseChairMotion(w),(m,t)=>m.apply(t));
+});
+test('the horse prone study keeps the fitted collar head weights through its own hem tuck, and restores them',()=>{
+ const p=ANIMAL_MOTION_CATALOG.find(p=>p.id==='horse');verifyAdapter(p,w=>createProneMotion(w,p),(m,t)=>m.apply(t));
 });
