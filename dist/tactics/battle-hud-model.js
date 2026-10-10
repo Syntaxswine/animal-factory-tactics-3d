@@ -3,6 +3,7 @@ import {reserve} from './core/inventory.js';
 import {unitArt} from './red-hats-art.js';
 import {inventoryArt} from './loot-art.js';
 import {weaponIcon} from './weapon-icons.js';
+import {isDeceased} from './mercenary-status.js';
 const bounded=(v,max)=>Math.max(0,Math.min(Number.isFinite(max)&&max>0?max:1,Number.isFinite(v)?v:0));
 export function resource(value,max){const limit=Number.isFinite(max)&&max>0?max:1,current=bounded(value,limit);return {value:Math.floor(current),max:limit,percent:100*current/limit};}
 export function readyWeapons(u){
@@ -23,5 +24,5 @@ export function weaponReadout(state,u,kind,{blocked=false}={}){
   reloadLabel:jammed?'Clear jam':'Reload'};
 }
 export function squadReadout(state,u,options={}){
- return {id:u.id,name:u.name,portrait:hudPortrait(u),hp:resource(u.hp,u.maxHp),stamina:resource(u.stamina,u.maxStamina),ap:resource(u.ap,u.maxAp),stance:stanceOf(u),movement:movementModeOf(u),status:u.away?'Away':u.casualty==='captured'?'Captured':u.casualty==='quit'?'Left squad':u.hp<=0?(u.casualty==='bleeding'?'Bleeding · '+u.bleedTurns+' turns':u.casualty==='stable'?'Stabilized':'Dead'):u.pinned?'Pinned':u.burningTurns?'Burning':'',weapons:readyWeapons(u).map(k=>weaponReadout(state,u,k,options))};
+ return {id:u.id,name:u.name,portrait:hudPortrait(u),deceased:isDeceased(u),hp:resource(u.hp,u.maxHp),stamina:resource(u.stamina,u.maxStamina),ap:resource(u.ap,u.maxAp),stance:stanceOf(u),movement:movementModeOf(u),status:isDeceased(u)?'Deceased':u.away?'Away':u.casualty==='captured'?'Captured':u.casualty==='quit'?'Left squad':u.hp<=0?(u.casualty==='bleeding'?'Bleeding · '+u.bleedTurns+' turns':'Stabilized'):u.pinned?'Pinned':u.burningTurns?'Burning':'',weapons:readyWeapons(u).map(k=>weaponReadout(state,u,k,options))};
 }

@@ -40,3 +40,6 @@ test('resources stay finite and casualty cards retain an honest status',()=>{
  assert.deepEqual(resource(-5,100),{value:0,max:100,percent:0});assert.deepEqual(resource(120,100),{value:100,max:100,percent:100});assert.ok(Number.isFinite(resource(undefined,undefined).percent));
  const {s,u}=fixture();u.hp=0;u.casualty='bleeding';u.bleedTurns=2;const v=squadReadout(s,u);assert.equal(v.hp.value,0);assert.equal(v.status,'Bleeding · 2 turns');assert.ok(v.weapons.every(w=>!w.canEquip&&!w.canReload));
 });
+test('HUD deceased flag follows permanent death, not unconsciousness or capture',()=>{
+ const {s,u}=fixture();u.hp=0;for(const casualty of ['bleeding','stable','captured','quit','dead']){u.casualty=casualty;const v=squadReadout(s,u);assert.equal(v.deceased,casualty==='dead');if(v.deceased)assert.equal(v.status,'Deceased');}
+});

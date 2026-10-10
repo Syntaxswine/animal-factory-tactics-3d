@@ -8,6 +8,9 @@ import {planRoute,groupPace,travelPreview,travelEdges} from './overmap-travel.js
 import {advanceGroups} from './overmap-groups.js';
 import {OPPOSITE,STEP} from './overmap-model.js';
 import {bindSectorInventory} from './sector-inventory.js';
+import {settleContracts} from './core/world.js';
+import {onContract} from './core/happiness.js';
+import {defeatSummary} from './mercenary-status.js';
 
 export const CAMPAIGN_VERSION=1;
 export const activeState=c=>c.active?c.sectors[c.active.sector].state:null;
@@ -31,6 +34,7 @@ function register(c,u,id,location){
  if(location.kind==='sector')sectorRecord(c,location.sector).population.push(id);
  return u;
 }
+export {register as registerCampaignCharacter};
 export function initializeSector(c,index){
  const sector=sectorRecord(c,index);if(sector.initialized)return sector;
  const assignment=c.assignments[index];if(!assignment)fail('No local map is assigned to this sector yet.');
@@ -165,6 +169,10 @@ export function splitCampaignGroup(c,id,ids){
  if(!ids.length||chosen.size!==ids.length||ids.some(i=>!g.memberIds.includes(i))||ids.length===g.memberIds.length)fail('Choose some mercs, leaving others in the original group.');
  const number=c.nextGroup++,next={...structuredClone(g),id:'group-'+number,name:'Group '+number,memberIds:ids};g.memberIds=g.memberIds.filter(i=>!chosen.has(i));c.groups.push(next);c.selectedGroup=next.id;c.revision++;return next;
 }
+function settleSectorContracts(c,s){
+ // Revisit already-expired contracts too: the fight may have just ended.
+ if(s.units.some(u=>u.contract&&onContract(u)&&c.clock.minutes>=u.contract.until))for(const text of settleContracts(c,s))c.log.push({time:c.clock.minutes,text});
+}
 export function advanceCampaign(c,minutes,{duringEncounter=false}={}){
  if(!Number.isFinite(minutes)||minutes<=0||minutes>43200)fail('Choose a positive interval of up to 30 days.');
  if(c.active&&!duringEncounter)fail('Resume the local encounter before advancing strategic time.');
@@ -204,7 +212,10 @@ export function advanceCampaign(c,minutes,{duringEncounter=false}={}){
   // opponents share an encounter instead of passing through one another.
   for(const run of runs)if(run.arrival)arrive(c,run.g,run.arrival);
   for(const run of runs){const g=run.g;if(run.arrival){const people=sectorRecord(c,g.travel.position).population;if(people.some(id=>mobile(c.characters[id].unit))&&hostilePopulation(c,g.travel.position)){g.travel.route=[];g.travel.progress=0;}}if(g.travel.route.length)depart(c,g);}
-  for(const [index,s]of Object.entries(c.sectors))if(s.state&&c.active?.sector!==+index)s.state.clock.minutes=c.clock.minutes;
+  for(const [index,s]of Object.entries(c.sectors))if(s.state&&c.active?.sector!==+index){
+   s.state.clock.minutes=c.clock.minutes;
+   settleSectorContracts(c,s.state);
+  }
   reconcileCampaign(c);
   if(!duringEncounter&&c.incidents.some(i=>i.status==='pending'))break;
  }
@@ -221,12 +232,13 @@ export function openCampaignSector(c,index){
 export function syncCampaignEncounter(c){
  const s=activeState(c);if(!s)return;
  settleEncounterRounds(s);const delta=s.clock.minutes-c.clock.minutes;if(delta< -1e-7)fail('Encounter clock precedes campaign clock.');
- if(delta>1e-8)advanceCampaign(c,delta,{duringEncounter:true});reconcileCampaign(c);
+ if(delta>1e-8)advanceCampaign(c,delta,{duringEncounter:true});settleSectorContracts(c,s);reconcileCampaign(c);
 }
 function resolveActive(c,outcome){
  const a=c.active;if(!a)return;const sector=c.sectors[a.sector],s=sector.state;
  if(outcome==='victory'){if(s.phase!=='won'||hostilePopulation(c,a.sector))fail('The sector has not been cleared.');sector.owner='player';c.overmap.sectors[a.sector].owner='player';}
  if(outcome==='defeat'&&s.phase!=='lost')fail('The encounter has not ended in defeat.');
+ if(outcome==='defeat'){const summary=defeatSummary(s);c.log.push({time:c.clock.minutes,text:summary.title+' at '+s.definition.name+'. '+summary.text});}
  if(['defeat','retreat'].includes(outcome)&&hostilePopulation(c,a.sector)){sector.owner='red-hats';c.overmap.sectors[a.sector].owner='red-hats';}
  if(a.incident){const incident=c.incidents.find(i=>i.id===a.incident);incident.status='resolved';incident.outcome=outcome;incident.resolvedAt=c.clock.minutes;}
  for(const u of s.units)if(retired(u))u.corpseOmitted=true;

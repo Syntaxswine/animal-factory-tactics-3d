@@ -49,5 +49,7 @@ export async function campaignBattle(slot){
    const button=el('button','Retreat '+g.name+' to '+c.assignments[index].map.name);button.dataset.retreat=index;try{retreatPreview(c,g.id,index);}catch(e){button.disabled=true;button.title=e.message;}if(session.busy)button.disabled=true;button.onclick=()=>leave(c=>retreatCampaign(c,g.id,index));retreats.append(button);
   }
  }
- return {get state(){return s;},get campaign(){return session.campaign;},get paused(){return paused||session.busy||!!inventory?.open;},saveOptions,mount,update,save,async load(id){session=await loadCampaignSession(id);s=activeState(session.campaign);if(!s){location.href='campaign.html';return null;}last='';return s;}};
+ return {get state(){return s;},get campaign(){return session.campaign;},get busy(){return session.busy;},get paused(){return paused||session.busy||!!inventory?.open;},saveOptions,mount,update,save,
+  async finishDefeat(){if(s.phase!=='lost')throw Error('The encounter is still in progress.');await session.transition(c=>finishCampaignEncounter(c));paused=true;},
+  async load(id){session=await loadCampaignSession(id);s=activeState(session.campaign);if(!s){location.href='campaign.html';return null;}paused=false;last='';return s;}};
 }

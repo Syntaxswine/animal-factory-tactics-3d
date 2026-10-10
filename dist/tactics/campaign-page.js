@@ -7,8 +7,12 @@ import {formatClock} from './game-clock.js';
 import {groupPace,travelPreview} from './overmap-travel.js';
 import {drawSector,svg} from './overmap-symbols.js';
 import {readSettings} from './settings-3d.js';
+import {hireCampaignMerc,renewCampaignContract} from './campaign-hiring.js';
+import {createCampaignRoster} from './campaign-roster.js';
 const $=id=>document.getElementById(id),el=(tag,text)=>{const e=document.createElement(tag);e.textContent=text;return e;};let session,busy=false,proposed=null;
-const say=text=>$('campaign-message').textContent=text;
+const say=text=>{$('campaign-message').textContent=text;$('hire-message').textContent=text;};
+const roster=createCampaignRoster({getCampaign:()=>session?.campaign,change:request=>run(async()=>{await session.transition(c=>request.id?renewCampaignContract(c,request.id,request.term):hireCampaignMerc(c,request.key,request.term,request.sector));say(request.id?'Contract renewed and saved. Time is paused.':'Mercenary hired and arrival saved. Time is paused.');})});
+$('hire-open').onclick=()=>roster.show();
 const saves=createSavePanel({slots:CAMPAIGN_SLOTS,list:listCampaignSaves,title:'Campaign save / load',onSave:async id=>{if(!session)throw Error('Start a campaign first.');await session.save(id);},onLoad:async id=>{session=await loadCampaignSession(id);render();say('Campaign loaded. Time is paused.');}});
 $('campaign-saves').onclick=()=>saves.show();
 async function run(fn){if(busy)return;busy=true;render();try{await fn();}catch(e){say(e.message);}finally{busy=false;render();}}
@@ -25,6 +29,7 @@ function render(){
  for(const i of c?.incidents.filter(i=>i.status!=='resolved')||[]){const row=el('p',formatClock({minutes:i.time})+' · Encounter at '+c.assignments[i.sector]?.map.name+' '),b=el('button',i.status==='active'?'Resume':'Enter encounter');b.disabled=busy||!!c.active&&c.active.sector!==i.sector;b.onclick=()=>run(()=>enter(i.sector));row.append(b);$('incidents').append(row);}
  for(const l of (c?.log||[]).slice(-8).reverse())$('campaign-log').append(el('li',formatClock({minutes:l.time})+' · '+l.text));
  $('new-campaign').disabled=busy;
+ $('hire-open').disabled=busy||!c||!!c.active;roster.memorial();roster.refresh();
  if(!c){$('campaign-map').replaceChildren(el('p','Start a new campaign, or load a saved one.'));return;}
  const root=svg('svg',{viewBox:'-15 -15 3030 1530',role:'img','aria-label':'Overmap with two playable sectors'});
  c.overmap.sectors.forEach((s,index)=>{const tile=svg('g',{transform:`translate(${index%30*100} ${Math.floor(index/30)*100})`,'data-sector':index,class:c.assignments[index]?'assigned':'unassigned'});tile.append(drawSector(s,{overlay:'ownership'}));if(c.assignments[index]){tile.append(svg('rect',{x:3,y:3,width:94,height:94,class:'assigned-outline'}));tile.append(svg('title',{},[document.createTextNode(s.name)]));}tile.onclick=()=>chooseDestination(index);root.append(tile);});
@@ -45,4 +50,5 @@ $('split-group').onclick=()=>run(async()=>{const ids=[...$('group-detail').query
 for(const b of document.querySelectorAll('[data-minutes]'))b.onclick=()=>run(async()=>{await session.transition(c=>advanceCampaign(c,+b.dataset.minutes));say(session.campaign.incidents.some(i=>i.status==='pending')?'Contact. Enter the encounter to resolve it.':'Time advanced and checkpoint saved.');});
 $('new-campaign').onclick=()=>run(async()=>{const c=createCampaign(await loadOpeningContent(),{difficulty:readSettings().difficulty});await putCampaignSave('continue',captureCampaign(c));session=new CampaignSession(c);say('Campaign started. Enter the safehouse to equip and search supplies, or select the checkpoint to order travel.');});
 try{const slot=new URLSearchParams(location.search).get('load')||'continue';if(await getCampaignSave(slot))session=await loadCampaignSession(slot);}catch(e){say(e.message);}render();
+if(session&&new URLSearchParams(location.search).has('defeat'))say('Squad defeated. Time is paused. Other groups can continue, and new mercenaries can be hired with the remaining funds.');
 window.campaignView={get state(){return session?.campaign;}};
