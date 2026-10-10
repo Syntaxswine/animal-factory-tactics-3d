@@ -4,9 +4,10 @@ For transferable corrections from the later draft v5, see the
 [clothing and skinning handoff](IDLE-SKINNING-V5-HANDOFF.md). That handoff does
 not change the v4 implementation documented here.
 Since October 9 the characters fit the cloth on their necks themselves
-([clothing and skinning](CLOTHING-SKINNING.md)); the idle sets that fit aside while it runs and fits
-the cloth to its own neck bone as described here, so its limits are unchanged (the fits table is
-re-keyed, the key hashing the weights).
+([clothing and skinning](CLOTHING-SKINNING.md)). The idle sets that fit aside while it runs and fits
+the cloth to its own neck bone as described here, and its rig key reads the weights the cloth's names
+give it (the character keeps them for the vertices it fitted), so every rig's key, fitted limits and
+loops are as verified below.
 
 **Direction (the boss, 2026-10-08):** "great job on this. the next step will be idle animations.
 just standing and looking around."
