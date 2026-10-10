@@ -1,0 +1,11 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Horse sitting study · Animal Factory</title><link rel="icon" href="data:,"><link rel="stylesheet" href="painted-fire-study.css"></head><body>
+<header><div><h1>Sit down. Rest. Stand up.</h1><p>Horse worker · one movement across four chairs</p></div><a href="painted-chairs-study.html">Chair collection →</a></header>
+<main><section class="controls" aria-label="Horse sitting study">
+<button id="play">Pause</button><button id="restart">Restart</button><label>Time <input id="time" type="range" min="0" max="9.2" step="0.01" value="0"></label><span id="clock"></span>
+<label>Chair <select id="chair"><option value="wingback">Wingback</option><option value="wood">Wooden</option><option value="metal">Metal</option><option value="desk">Desk chair</option></select></label>
+<label>Finish <select id="finish"><option value="original">Original</option><option value="alternate">Alternate</option></select></label>
+<label>View <select id="view"><option value="three">Three-quarter</option><option value="side">Side</option><option value="front">Front</option><option value="rear">Rear</option><option value="top">Top</option></select></label>
+<label>Scale <select id="scale"><option value="close">Close</option><option value="game">Gameplay</option></select></label>
+<label><input id="grey" type="checkbox">Grey forms</label><button id="reset">Reset view</button></section>
+<section class="controls" id="keys" aria-label="Motion keyframes"></section><div id="viewport"><div id="loading">Loading horse and chair…</div></div><p id="status" role="status"></p><p id="error" role="alert"></p>
+<footer>Drag to orbit. This is an unarmed motion study; the same horse motion is used for every chair. All four seats are now 0.42 high, with the horse at his original scale. Other species, weapons and gameplay integration are still to come.</footer></main><script type="module" src="horse-chair-study.js"></script></body></html>

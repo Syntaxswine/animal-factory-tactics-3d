@@ -49,7 +49,7 @@ export class BattleRenderer extends HybridRenderer {
   map={...map,concealedInteriors:this.interiorFog.hidden};
   const scenery={...world,boxes:world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood'))};
   super.rebuild(scenery,map.difficulty==='easy'?null:seen,level,{...map,coverOccupiedProps:map.props,props:map.props.filter(p=>!PAINTED_PROP_FORMS[p.kind])});
-  this.sites.rebuild(map,level);this.paintedEnvironment.rebuild(map,level);this.cliffs.rebuild(map,level);
+  this.sites.rebuild(map,level);this.paintedEnvironment.rebuild(map,level);this.cliffs.rebuild(map,level,{grassTexture:this.material('grass').map});
  }
  async loadModel(unit){
   this.pending.add(unit.id);const generation=this.generation;

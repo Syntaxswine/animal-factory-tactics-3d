@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.js';
+import {preserveClothingHeadWeights} from './clothing-weights.js';
 export const DOG_MOTION_DURATION=11, DOG_SHOT_TIME=6.6;
 const clamp=T.MathUtils.clamp, V=(x,y,z)=>new T.Vector3(x,y,z);
 const ease=x=>{x=clamp(x,0,1);return x*x*x*(x*(x*6-15)+10);};
@@ -64,6 +65,7 @@ export function createDogMotion(worker){
   const center=ease((Math.abs(z)-.03)/.12),leg=(1-ease((y-.69)/.14))*(1-(1-center)*ease((y-.52)/.12)),knee=1-ease((y-.42)/.11);
   trousers.geometry.attributes.skinIndex.setXYZW(i,0,bones.indexOf(named['thigh'+side]),bones.indexOf(named['shin'+side]),0);trousers.geometry.attributes.skinWeight.setXYZW(i,1-leg,leg*(1-knee),leg*knee,0);
  }
+ preserveClothingHeadWeights(saved,bones.indexOf(named.head));
  for(const m of worker.parts){m.bind(skeleton);m.geometry.attributes.skinIndex.needsUpdate=m.geometry.attributes.skinWeight.needsUpdate=true;}
  const limbs=[-1,1].map(side=>({side,shoulder:named['upperArm'+side],elbow:named['forearm'+side],hand:named['hand'+side],finger:named['fingers'+side],hip:named['thigh'+side],knee:named['shin'+side],ankle:named['hoof'+side]}));
  const palm=V(.052,-.010,0),rifle=worker.rifle,carryAxis=V(.20,.38,-.90).normalize(),carryQ=new T.Quaternion().setFromUnitVectors(V(1,0,0),carryAxis);

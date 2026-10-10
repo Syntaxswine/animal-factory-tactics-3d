@@ -1,4 +1,6 @@
 :root{--rail:44px;--ink:#efe6ce;--muted:#b2b7a5;--line:#6c7057;--gold:#e2bf70}
+#movement-warning{position:absolute;left:12px;bottom:40px;max-width:calc(100% - 24px);padding:9px 12px;border:2px solid #ffd28a;border-radius:3px;background:#60251ff2;color:#fff0cf;font-size:13px;font-weight:700;line-height:1.4;box-shadow:0 3px 12px #0006;pointer-events:none}
+@media(max-width:760px){#movement-warning{bottom:10px;font-size:12px}}
 body{height:100dvh;overflow:hidden;background:#17241e;color:var(--ink)}button,select{border-radius:3px}button{touch-action:manipulation}button:focus-visible,a:focus-visible{outline:2px solid #ffe8a2;outline-offset:2px}[hidden]{display:none!important}
 #command-rail{position:fixed;inset:0 auto 0 0;width:var(--rail);z-index:30;background:#1b2923;border-right:1px solid var(--line);display:flex;align-items:center;flex-direction:column;padding:6px 3px;gap:20px;box-shadow:2px 0 10px #0003}
 #command-rail button{width:36px;height:40px;padding:0;font-size:24px;background:none;border-color:transparent;color:var(--gold)}#command-rail button:hover{background:#47513c;border-color:var(--line)}#command-rail #drawer-toggle{font-size:36px;border:1px solid #606750;line-height:1}.rail-mark{font:700 13px Georgia,serif;letter-spacing:1px;color:#b3a981;writing-mode:vertical-rl}.rail-bottom{margin-top:auto;display:grid;gap:6px}

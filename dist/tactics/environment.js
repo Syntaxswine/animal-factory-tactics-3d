@@ -3,6 +3,8 @@ import {BANK_PROPS} from './ramp-banks.js';
 import {RAMP_PROPS} from './cliff-ramps.js';
 import {DIAGONAL_ROADS} from './diagonal-roads.js';
 // Explicit game rules for the supplied environment art. Manifest prose is not executable.
+export const FOLIAGE_TERRAINS=['woodland','woodland-dense'];
+export const isWoodland=t=>FOLIAGE_TERRAINS.includes(t);
 export const GROUNDS=['ground-dirt','ground-gravel','ground-grass','ground-concrete','ground-asphalt','ground-tiles','ground-wood-planks',...DIAGONAL_ROADS];
 export const PROPS={
  'barrel-explosive':{w:1,h:1,cover:25,solid:true,explosive:true},

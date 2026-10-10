@@ -1,3 +1,5 @@
+export const FOLIAGE_TERRAINS=['woodland','woodland-dense'];
+export const isWoodland=t=>FOLIAGE_TERRAINS.includes(t);
 import {SITE_PROPS,isStrategicSite,siteBlocked} from '../strategic-site-rules.js';
 import {EXPLOSIVE_BARREL,EXPLOSIVE_BARREL_RULE} from '../explosive-barrels.js';
 import {ROOF_KINDS,GAP_ROOF_KINDS,climbableRoofKind} from '../climbable-roofs.js';

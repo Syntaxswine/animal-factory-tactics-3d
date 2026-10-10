@@ -2,6 +2,7 @@ import * as T from './vendor/three.module.js';
 import {DIMENSIONS} from './hybrid-world.js';
 import {createPaintedGrass} from './painted-grass.js';
 import {addCliffRimAttribute} from './cliff-rim.js';
+import {paintFoliageMaterial} from './foliage-materials.js';
 
 // Presentation kit: dimensions are authoritative; map activation is a separate adapter.
 export const CLIFF_HEIGHT=DIMENSIONS.wall;
@@ -75,9 +76,9 @@ export function cliffGeometry(set='ledge',shape='straight',seed=1){
  g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();g.userData.layout=layout;addCliffRimAttribute(g,boundary.map(([a,b])=>({a:top(a),b:top(b)})));return g;
 }
 
-export function cliffMaterials({sand=false,water=false}={}){
+export function cliffMaterials({sand=false,water=false,grassTexture}={}){
  return [false,true].map(turf=>{
-  if(turf)return createPaintedGrass({rim:true,sand});
+  if(turf){const cap=createPaintedGrass({rim:true,sand});if(grassTexture)paintFoliageMaterial(cap,'grass',grassTexture,{cliff:true});return cap;}
   const m=new T.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
   m.onBeforeCompile=s=>{
    s.vertexShader='varying vec3 vCliff;\n'+s.vertexShader;
@@ -87,13 +88,12 @@ export function cliffMaterials({sand=false,water=false}={}){
     float cn(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(ch(i),ch(i+vec3(1,0,0)),f.x),mix(ch(i+vec3(0,1,0)),ch(i+vec3(1,1,0)),f.x),f.y),mix(mix(ch(i+vec3(0,0,1)),ch(i+vec3(1,0,1)),f.x),mix(ch(i+vec3(0,1,1)),ch(i+vec3(1,1,1)),f.x),f.y),f.z);}
    `+s.fragmentShader;
    s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
-    float broad=cn(vCliff*vec3(3.,5.,3.));float chips=cn(vCliff*24.);
-    float fleck=step(.63,chips)-step(chips,.28);
-    diffuseColor.rgb*=.72+floor(broad*5.)*.11+fleck*.10;
+    float broad=cn(vCliff*vec3(.9,2.,.9));float chips=cn(vCliff*vec3(12.,18.,12.));
+    diffuseColor.rgb*=.77+broad*.34+(chips-.5)*.09;
     ${turf?'diffuseColor.rgb*=mix(vec3(.65,.68,.40),vec3(1.20,1.05,.77),smoothstep(.30,.66,cn(vCliff*2.6)));':`float seam=abs(sin(vCliff.y*16.+cn(vCliff*vec3(2.,.4,2.))*4.));diffuseColor.rgb*=1.-(1.-smoothstep(.02,.12,seam))*.17;diffuseColor.rgb*=mix(vec3(.68,.66,.57),vec3(1.),smoothstep(0.,.40,vCliff.y));`}
     ${water?'float wet=(1.-smoothstep(.04,.23+cn(vCliff*15.)*.06,vCliff.y));diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.52,.61,.58),wet*.75);':''}
    `);
-  };m.customProgramCacheKey=()=>`cliff-painted-v2-${turf}-${water}`;return m;
+  };m.customProgramCacheKey=()=>`cliff-painted-v3-${turf}-${water}`;return m;
  });
 }
 export function createCliff(set='ledge',shape='straight',seed=1,{water=false}={}){

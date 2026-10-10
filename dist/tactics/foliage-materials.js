@@ -3,27 +3,32 @@ import {SAND_GLSL} from './painted-sand.js';
 import {DIAGONAL_ROADS,diagonalRoad} from './diagonal-roads.js';
 import * as T from './vendor/three.module.js';
 export const FOLIAGE_ATLAS='../assets/environment/painted/foliage-atlas-v1.png';
-export const FOLIAGE_MATERIALS=new Set([...DIAGONAL_ROADS,'cover-grass','grass','grass-blade','foliage','leaf-light','pine','bark']);
+export const FOLIAGE_MATERIALS=new Set([...DIAGONAL_ROADS,'cover-grass','grass','grass-blade','foliage','leaf-light','leaf-dry','leaf-sage','leaf-olive','pine','bark']);
 // Mirrored repetition makes both sides of every texture boundary meet, even
 // where hand-painted source edges differ. Insets keep mip filtering in a panel.
 export function mirroredPaintUV(u,v,panel){
  const mirror=n=>1-Math.abs(((n%2)+2)%2-1),o=[[0,.5],[.5,.5],[0,0],[.5,0]][panel];
  return [o[0]+.004+mirror(u)*.492,o[1]+.004+mirror(v)*.492];
 }
-export function paintFoliageMaterial(material,kind,texture){
+export function paintFoliageMaterial(material,kind,texture,{cliff=false}={}){
  const road=diagonalRoad(kind),cacheKind=kind;if(road)kind=road.grass==='cover-grass'?'cover-grass':'grass';
  const panel=kind==='pine'?2:kind==='bark'?3:kind==='cover-grass'||kind==='grass'||kind==='grass-blade'?0:1;
  const offset=[[0,.5],[.5,.5],[0,0],[.5,0]][panel];
- material.map.dispose();material.map=texture;material.roughness=1;
- material.color.setHex(kind==='cover-grass'?0x77956e:kind==='leaf-light'?0xe5edb8:kind==='grass-blade'?0xbcca83:0xd4ddbf);
- material.customProgramCacheKey=()=> 'painted-foliage-v2-'+cacheKind;
+ if(material.map!==texture)material.map?.dispose();material.map=texture;material.roughness=1;
+ material.color.setHex(kind==='cover-grass'?0x77956e:kind==='leaf-light'?0xe5edb8:kind==='leaf-dry'?0xdbbc7b:kind==='leaf-sage'?0xacb18c:kind==='leaf-olive'?0xb7ba8a:kind==='grass-blade'?0xbcca83:0xd4ddbf);
+ material.customProgramCacheKey=()=> 'painted-foliage-v3-'+cacheKind+'-'+cliff;
  material.onBeforeCompile=shader=>{
-  shader.vertexShader='varying vec3 vNaturePosition,vNatureNormal,vNatureLocal;\n'+shader.vertexShader;
+  shader.vertexShader='varying vec3 vNaturePosition,vNatureNormal,vNatureLocal;\n'+(cliff?'attribute float cliffRim,sandBlend;varying float vNatureRim,vNatureSand;\n':'')+shader.vertexShader;
   shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
-   vNaturePosition=(instanceMatrix*vec4(position,1.)).xyz;vNatureLocal=position;
-   mat3 basis=mat3(instanceMatrix);vec3 scaled=normal/vec3(dot(basis[0],basis[0]),dot(basis[1],basis[1]),dot(basis[2],basis[2]));vNatureNormal=normalize(basis*scaled);
+   mat4 natureTransform=modelMatrix;
+   #ifdef USE_INSTANCING
+    natureTransform*=instanceMatrix;
+   #endif
+   vNaturePosition=(natureTransform*vec4(position,1.)).xyz;vNatureLocal=position;
+   mat3 basis=mat3(natureTransform);vec3 scaled=normal/vec3(dot(basis[0],basis[0]),dot(basis[1],basis[1]),dot(basis[2],basis[2]));vNatureNormal=normalize(basis*scaled);
+   ${cliff?'vNatureRim=cliffRim;vNatureSand=sandBlend;':''}
   `);
-  shader.fragmentShader='varying vec3 vNaturePosition,vNatureNormal,vNatureLocal;\n'+shader.fragmentShader;
+  shader.fragmentShader='varying vec3 vNaturePosition,vNatureNormal,vNatureLocal;\n'+(cliff?'varying float vNatureRim,vNatureSand;\n'+SAND_GLSL:'')+shader.fragmentShader;
   const sample=(uv)=>`texture2D(map,vec2(${offset[0].toFixed(1)},${offset[1].toFixed(1)})+.004+(1.-abs(mod(${uv},2.)-1.))*.492).rgb`;
   shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`
    vec3 weights=pow(abs(normalize(vNatureNormal)),vec3(4.));weights/=max(.001,weights.x+weights.y+weights.z);
@@ -35,6 +40,10 @@ export function paintFoliageMaterial(material,kind,texture){
    ${kind==='grass'?`paint=mix(vec3(.20,.27,.105),paint,.40);`:''}
    ${kind==='grass-blade'?`paint=mix(vec3(.12,.23,.055),vec3(.35,.46,.15),clamp(vNatureLocal.y+.5,0.,1.));`:''}
    diffuseColor.rgb*=paint;
+   ${cliff?`float sandWeight=sandCoverage(vNaturePosition.xz,vNatureSand);
+    diffuseColor.rgb=mix(diffuseColor.rgb,sandSurface(vNaturePosition,vNatureNormal),sandWeight);
+    float soilEdge=1.-smoothstep(.015,.07,vNatureRim/max(.08,abs(vNatureNormal.y)));
+    diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.105,.082,.042),soilEdge*.65*(1.-sandWeight));`:''}
   `);
   if(road&&road.grass!=='grass'&&road.grass!=='cover-grass'){
    shader.fragmentShader=GRASS_GLSL+SAND_GLSL+shader.fragmentShader;
