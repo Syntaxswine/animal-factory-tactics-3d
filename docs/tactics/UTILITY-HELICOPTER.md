@@ -23,6 +23,14 @@ The positive-Z sliding door is absent and the bench beside it is folded away. Th
 
 The opening suggests a crouched exit followed by a step down. A standing walk-through or evacuation animation has not been implemented. A future cinematic can connect the SAM strike, forced landing and squad emergence without needing to substitute the destroyed wreck.
 
+### Residual smoke
+
+The survivable site now has a light animated plume from the actual engine exhaust. Seven overlapping painted cards (14 triangles) rise slowly and drift aft, fading before they spread over the cabin or exit. The effect borrows the existing `assets/effects/painted-fire/smoke-atlas-v1.png` and its painted material. It adds no new airframe geometry or textures and does not imply an active explosion.
+
+Smoke is on by default for the survivable variant, including the crash comparison. Use **Smoke** to hide it or **Pause smoke** to inspect a still. Grey forms hide it. Reduced-motion preferences start it paused; hidden pages, disabled smoke and other variants stop the animation loop. The camera fits a fixed plume envelope, so its framing does not pulse with individual wisps. For reproducible captures, use `?mode=survivable&time=3&paused=`, or `&smoke=0` for the clear view.
+
+`utility-helicopter-smoke.js` exports `createHelicopterSmoke(texture, aircraft)` and `HELICOPTER_SMOKE`. The effect owns its geometry/materials and borrows the texture. Call `update(elapsedSeconds, camera, visible)`, use `bounds()` for framing, and call its idempotent `dispose()` before disposing the aircraft and caller-owned texture. Its world-space source follows the transformed exhaust. The effect remains separate from collision and body bounds.
+
 ## Paint and source assets
 
 Most detail is in one shared 4×2 painted atlas: olive panels, vents, blue-grey glazing, dark steel, scorched paint, torn metal, upholstery and ash. Geometry supplies the silhouette, framing and major wreck deformation. Meshes use inset atlas UV regions, with smaller glass/metal crops to avoid inappropriate painted borders.
@@ -56,6 +64,7 @@ These are static art assets and a comparison study. SAM gameplay, the intro cine
 - Actual controls, mobile layout, repeated toggling without resource growth, double teardown and a missing-atlas failure are checked.
 - [Visual evidence](../../hybrid-review/utility-helicopter/) includes the scale comparisons, all three forms from four angles, and grey views. The [original independent review](../../hybrid-review/utility-helicopter/REVIEW.md) approved the intact and destroyed assets at **9/10**.
 - The [survivable crash review](../../hybrid-review/utility-helicopter/SURVIVABLE-REVIEW.md) also approved the result at **9/10**, after correcting a separated tail-rotor tip. It includes thirteen fresh views, forty configuration changes and independent ground/exit checks.
+- Smoke follow-up checks cover real toggle/pause controls, reduced motion, stopped animation after teardown and stable resources (358 geometries, 12 textures). The [independent smoke review](../../hybrid-review/utility-helicopter/SMOKE-REVIEW.md) approved the effect at **9/10**. [Smoke captures](../../hybrid-review/utility-helicopter/smoke-three.png) and [browser results](../../hybrid-review/utility-helicopter/smoke-browser-checks.json) are retained separately from the clear-airframe evidence.
 
 Run:
 
@@ -64,6 +73,7 @@ node --test tests/utility-helicopter.test.mjs tests/tactics-3d-deployment.test.m
 node tools/check-utility-helicopter.mjs
 node tools/capture-utility-helicopter.mjs
 node tools/capture-utility-helicopter.mjs --survivable
+node tools/capture-utility-helicopter.mjs --smoke
 ```
 
 The viewer and painting folder are included by `tools/build-tactics-3d.mjs`. A feature-branch push makes the work available for integration; it does not deploy Pages.

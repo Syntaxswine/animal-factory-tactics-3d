@@ -1,0 +1,32 @@
+{
+  "configurations": 100,
+  "errors": [],
+  "warm": {
+    "geometries": 358,
+    "textures": 12
+  },
+  "after": {
+    "geometries": 358,
+    "textures": 12
+  },
+  "disposed": {
+    "ready": false,
+    "disposed": true,
+    "counts": {
+      "41bd9f56-fb50-4f3a-9ef2-c4c62d7a810a": 1,
+      "e282e4b1-c931-4168-8537-7839ac91d6e4": 1,
+      "bb31da9a-96cb-4c94-b84a-131cdc2c7f53": 1,
+      "7724682d-90aa-4daf-b20e-dbc596384d3e": 1,
+      "2a58247b-1671-47d8-85cd-f276c9e7ba32": 1,
+      "940850ea-9e35-4dfb-b9e9-2cc0d93178f4": 1,
+      "a3972054-0a0c-4123-a571-70bd47f54c97": 1,
+      "40aa4909-6176-417a-9ce9-ac500e539f83": 1,
+      "e2e2e0d3-cf1b-4dc0-a334-b37a150dcfe1": 1
+    },
+    "stopped": true
+  },
+  "mobileOverflow": false,
+  "missingAtlasHandled": true,
+  "smokeControls": true,
+  "reducedMotion": true
+}
