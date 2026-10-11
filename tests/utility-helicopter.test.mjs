@@ -22,11 +22,11 @@ test('native aircraft scale is based on the existing truck, with recognizable ca
  }finally{truck.dispose();}
 }));
 
-test('both forms remain low polygon, use only finite geometry and sample their own inset atlas cells',()=>{
- for(const state of ['intact','crashed'])withModel(state,(a,atlas)=>{
+test('all forms remain low polygon, use only finite geometry and sample valid paint regions',()=>{
+ for(const state of ['intact','crashed','survivable'])withModel(state,(a,atlas)=>{
   const d=a.diagnostics();assert.ok(d.triangles<3000);assert.equal(d.gameplayIntegrated,false);assert.ok(box(a.root).min.y>=-1e-6);
   for(const p of a.parts){
-   assert.equal(p.material.map,atlas);const [u,v,w,h]=helicopterPaintRect(p.userData.paint),uv=p.geometry.attributes.uv;
+   const soil=p.userData.paint==='soil';assert.equal(p.material.map,soil?null:atlas);const [u,v,w,h]=soil?[0,0,1,1]:helicopterPaintRect(p.userData.paint),uv=p.geometry.attributes.uv;
    for(const name of ['position','normal','uv'])assert.ok([...p.geometry.attributes[name].array].every(Number.isFinite),p.name+' '+name);
    for(let i=0;i<uv.count;i++){assert.ok(uv.getX(i)>=u-1e-6&&uv.getX(i)<=u+w+1e-6,p.name);assert.ok(uv.getY(i)>=v-1e-6&&uv.getY(i)<=v+h+1e-6,p.name);}
   }
@@ -53,6 +53,45 @@ test('actual wreck vertices provide ground contacts for separate components and 
  // accidental grounding on rotated bounding-box corners.
  for(const p of a.parts){const pos=p.geometry.attributes.position;for(let i=0;i<pos.count;i++){const q=vec().fromBufferAttribute(pos,i).applyMatrix4(p.matrixWorld);assert.ok(q.y>=-1e-6,p.name+' penetrates floor');}}
 }));
+
+test('survivable site keeps a rigid cabin and attached tail with localized damage',()=>withModel('survivable',a=>withModel('intact',original=>{
+ const cabin=a.root.getObjectByName('Cabin assembly'),tail=a.root.getObjectByName('Tail assembly'),airframe=a.root.getObjectByName('Survivable airframe');
+ assert.equal(cabin.parent,airframe);assert.equal(tail.parent,airframe);assert.deepEqual(cabin.scale.toArray(),[1,1,1]);assert.deepEqual(airframe.scale.toArray(),[1,1,1]);
+ assert.deepEqual([...a.root.getObjectByName('Fuselage shell').geometry.attributes.position.array],[...original.root.getObjectByName('Fuselage shell').geometry.attributes.position.array]);
+ assert.equal(a.root.getObjectByName('Fuselage shell').userData.paint,'olive');assert.equal(a.root.getObjectByName('Single turbine cowling').userData.paint,'engine');assert.equal(a.root.getObjectByName('Cabin deck').userData.paint,'metal');
+ assert.ok(a.root.getObjectByName('SAM puncture interior'));assert.ok(a.root.getObjectByName('Damaged tail rotor stub'));assert.ok(a.root.getObjectByName('Snapped main rotor root'));assert.ok(a.root.getObjectByName('Shed main rotor blade'));
+ const stub=a.root.getObjectByName('Damaged tail rotor stub'),tip=a.root.getObjectByName('Bent tail rotor tip');
+ near(stub.localToWorld(vec(0,stub.geometry.boundingBox.max.y,0)).distanceTo(tip.localToWorld(vec(0,tip.geometry.boundingBox.min.y,0))),0);
+ assert.equal(a.parts.filter(p=>p.userData.paint==='burn').length,1);assert.ok(a.parts.filter(p=>p.name.startsWith('Windscreen')).length>0);
+ const b=box(a.root.getObjectByName('Fuselage shell'));assert.ok(b.min.y>.20&&b.min.y<.40,'cabin should rest above collapsed skids');assert.ok(Math.abs(airframe.rotation.x)<.15&&Math.abs(airframe.rotation.z)<.08,'hard landing, not rollover');
+})));
+
+test('survivable airframe has two grounded landing rails and grounded shed parts',()=>withModel('survivable',a=>{
+ const skids=[-1,1].map(s=>a.root.getObjectByName('Collapsed landing skid '+s));assert.ok(skids.every(Boolean));
+ for(const p of [...skids,a.root.getObjectByName('Jettisoned cabin door'),...a.parts.filter(p=>p.userData.role==='debris')]){const b=box(p);assert.ok(b.min.y>=0&&b.min.y<.006,p.name+' floats');}
+ const left=box(skids[0]),right=box(skids[1]);assert.ok(left.max.z<-.80&&right.min.z>.80);
+ for(const p of a.parts)assert.ok(box(p).min.y>=-1e-6,p.name+' penetrates floor');
+}));
+
+test('survivable cabin opening and reserved exterior exit lane are unobstructed',()=>withModel('survivable',a=>{
+ const cabin=a.root.getObjectByName('Cabin assembly');a.root.updateMatrixWorld(true);
+ for(const x of [-1.15,-.85,-.50,-.25])for(const y of [1.13,1.4,1.65]){
+  const origin=cabin.localToWorld(vec(x,y,2)),direction=vec(0,0,-1).transformDirection(cabin.matrixWorld),hits=new T.Raycaster(origin,direction).intersectObjects(a.parts);
+  assert.ok(hits.length);assert.ok(hits[0].distance>1.55,'cabin opening obstructed at '+x+','+y+' by '+hits[0].object.name);
+ }
+ const lane=a.diagnostics().exitLane,space=new T.Box3(vec(...lane.min),vec(...lane.max));assert.equal(lane.gameplayIntegrated,false);assert.equal(lane.space,'model-local');
+ for(const p of a.parts)assert.ok(!box(p).intersectsBox(space),p.name+' blocks the exterior gathering/exit space');
+ assert.ok(box(a.root.getObjectByName('Jettisoned cabin door')).max.z<0,'loose door must be on the opposite side');
+}));
+
+test('ground marks feather at their perimeter and borrow the caller-owned dirt texture',()=>{
+ const atlas=new T.Texture(),soil=new T.Texture(),a=createUtilityHelicopter(atlas,{state:'survivable',groundTexture:soil}),marks=a.parts.filter(p=>p.userData.role==='ground');let released=0;soil.addEventListener('dispose',()=>released++);
+ try{
+  assert.equal(marks.length,3);
+  for(const p of marks){assert.equal(p.material.map,soil);assert.equal(p.material.depthWrite,false);assert.equal(p.castShadow,false);const color=p.geometry.attributes.color;assert.equal(color.itemSize,4);for(let i=0;i<color.count;i+=4){near(color.getW(i),0);near(color.getW(i+3),0);}assert.ok([...color.array].every(Number.isFinite));}
+  a.setGrey(true);a.setGrey(false);assert.ok(marks.every(p=>p.material.map===soil));a.dispose();a.dispose();assert.equal(released,0);
+ }finally{a.dispose();atlas.dispose();soil.dispose();}
+});
 
 test('intact side windows stay in front of the hull; missing wreck glazing exposes the cabin',()=>{
  withModel('intact',a=>{

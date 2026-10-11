@@ -13,6 +13,7 @@ test('3D distribution includes the entire encounter, editor, title and overmap m
   fs.readFileSync(new URL('../.pages-output/assets/environment/utility-helicopter/'+name,import.meta.url)),
   fs.readFileSync(new URL('../dist/assets/environment/utility-helicopter/'+name,import.meta.url))
  );
+ assert.deepEqual(fs.readFileSync(new URL('../.pages-output/assets/environment/ground-dirt.png',import.meta.url)),fs.readFileSync(new URL('../dist/assets/environment/ground-dirt.png',import.meta.url)));
 });
 test('deployment validation catches missing transitive and worker imports while handling cycles',()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'tactics-module-check-')),root=pathToFileURL(dir+path.sep);
