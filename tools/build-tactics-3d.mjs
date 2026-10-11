@@ -2,7 +2,7 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
-for(const file of ['editor-breaches.js','floor-breach-fixture.js','floor-breach-study.js','floor-breach-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+for(const file of ['editor-character-menu.js','editor-character-menu.css','context-menu.css','editor-breaches.js','floor-breach-fixture.js','floor-breach-study.js','floor-breach-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['wall-breach-fixture.js','wall-breach-study.js','wall-breach-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['campaign-hiring.js','campaign-roster.js','campaign.html','campaign.css','campaign-page.js','campaign-opening.js','campaign-model.js','campaign-save.js','campaign-store.js','campaign-battle.js','sector-inventory.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['mercenary-status.js','mercenary-status.css','battle-defeat.js','weapon-icons.js','battle-hud.js','battle-hud-model.js','battle-hud.css','interior-fog.js','interior-fog-scene.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));

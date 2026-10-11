@@ -1,3 +1,4 @@
+import {EditorCharacterMenu} from './editor-character-menu.js';
 import {installSectorSave} from './editor-sector-save.js';
 import {installSectorPresets} from './editor-sector-presets.js';
 import {loadPreset,presetSearch} from './sector-presets.js';
@@ -9,17 +10,17 @@ import {installEditing} from './editor-3d-tools.js';
 import {InspectionScene} from './editor-3d-scene.js';
 import {rotateInspectionView} from './editor-3d-camera.js';
 const $=id=>document.getElementById(id),canvas=$('scene');
-let documentModel,dirty=true,loading=false,serial=0,selection=null,drag=null;
+let documentModel,dirty=true,loading=false,serial=0,selection=null,drag=null,tools,characterMenu;
 const workspaces={};
 const view={x:11.5,y:11.5,span:24,preset:'0'};
 const scene=new InspectionScene(canvas,()=>{dirty=true;diagnostics();});
 const status=text=>$('status').textContent=text;
 function diagnostics(){$('diagnostics').textContent=scene.diagnostics.join('\n')||'No missing scene assets reported.';$('metrics').textContent=`${scene.models.length} modeled starts · load ${Math.round(scene.loadMs||0)} ms · scenery ${Math.round(scene.rebuildMs||0)} ms · ${scene.renderer.info.memory.geometries} geometries / ${scene.renderer.info.memory.textures} textures`;}
-function render(){if(dirty||scene.lights?.animated){scene.draw(view,canvas.clientWidth,canvas.clientHeight);dirty=false;diagnostics();}requestAnimationFrame(render);}
+function render(){if(dirty||scene.lights?.animated){scene.draw(view,canvas.clientWidth,canvas.clientHeight);dirty=false;diagnostics();}characterMenu?.draw();requestAnimationFrame(render);}
 function focus(x,y,span=24){view.x=x;view.y=y;view.span=span;dirty=true;}
 function home(){view.preset='0';view.topTurn=0;$('camera').value='0';const p=documentModel?.map.starts[0];focus(p?.x??11.5,p?.y??11.5,22);}
 async function open(text){
- const next=text instanceof EditingDocument?text:new EditingDocument().open(text),ticket=++serial;documentModel=next;workspaces[next.block?'block':'map']=next;loading=true;selection=null;scene.preview(null);$('properties').textContent='';$('selected').textContent='Choose a cell or object.';$('visual-note').textContent='';
+ const next=text instanceof EditingDocument?text:new EditingDocument().open(text),ticket=++serial;characterMenu?.reset();documentModel=next;workspaces[next.block?'block':'map']=next;loading=true;selection=null;scene.preview(null);$('properties').textContent='';$('selected').textContent='Choose a cell or object.';$('visual-note').textContent='';
  $('name').textContent=next.map.name;$('counts').textContent=`${next.size} × ${next.size} · ${next.block?'Block':next.map.guards.length+' placed characters'} · ${next.map.props.length} objects · ${next.map.canopies?.length||0} decorative roofs`;
  $('quick-save-map').title=next.map.sectorTemplate?.id&&!next.block?'Save as a new sector variant':'Save this design';$('save-sector-variant').disabled=next.block||!next.map.sectorTemplate?.id;
  $('floor').value='0';scene.options.level=0;$('sector-x').max=$('sector-y').max=next.block?1:10;$('sector-x').value=$('sector-y').value='1';home();status('Loading modeled scenery and starts…');$('export').disabled=false;
@@ -27,7 +28,7 @@ async function open(text){
 }
 async function factory(){try{status('Opening authored factory…');const r=await fetch('./default-factory.json',{cache:'no-store'});if(!r.ok)throw Error('Factory could not load: HTTP '+r.status);await open(await r.text());}catch(e){status(e.message);}}
 function inspect(x,y){const p=scene.pick(x,y,canvas.clientWidth,canvas.clientHeight);if(!p||!documentModel)return null;return documentModel.inspect(p.x,p.y,scene.options.level,{...scene.options,mode:$('pick-mode').value});}
-function select(value){selection=value;scene.select(value);$('selected').textContent=value?`${value.label} · ${value.x}, ${value.y} · floor ${value.z+1}`:'Choose a cell or object.';$('properties').textContent=value&&value.type!=='unit'?JSON.stringify(value.data,null,2):'';tools.selectionChanged();
+function select(value){selection=value;scene.select(value);$('selected').textContent=value?`${value.label} · ${value.x}, ${value.y} · floor ${value.z+1}`:'Choose a cell or object.';$('properties').textContent=value&&value.type!=='unit'?JSON.stringify(value.data,null,2):'';tools.selectionChanged();characterMenu?.selectionChanged();
  const notes=[];if(value?.type==='unit'){if(value.data.species==='hen'&&value.data.weapon!=='hands')notes.push('Saved weapon: '+value.data.weapon+'. The hen model currently has no armed pose.');if(value.data.id.startsWith('start'))notes.push('Squad start marker. Species and rifle are illustrative.');}$('visual-note').textContent=notes.join(' ');
 }
 $('factory').onclick=()=>{if(tools.guardReplace())factory();};$('home').onclick=home;$('overview').onclick=()=>{const size=documentModel?.size||240;focus((size-1)/2,(size-1)/2,size*1.55);};
@@ -40,9 +41,9 @@ const zoom=factor=>{view.span=Math.max(6,Math.min(450,view.span*factor));dirty=t
 $('import').onchange=async()=>{try{const file=$('import').files[0];if(!file||!tools.guardReplace())return;if(file.size>4*1024*1024)throw Error('Choose a JSON file under 4 MB.');await open(await file.text());}catch(e){status('Import rejected: '+e.message);}finally{$('import').value='';}};
 $('export').onclick=()=>{if(!documentModel)return;const url=URL.createObjectURL(new Blob([documentModel.export()],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(documentModel.map.name.replace(/[^a-z0-9_-]/gi,'-')||'design')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 const coords=e=>{const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};};
-canvas.addEventListener('pointerdown',e=>{if(![0,2].includes(e.button))return;const p=coords(e);drag={id:e.pointerId,...p,last:p,moved:e.button===2};canvas.setPointerCapture(e.pointerId);canvas.focus();});
+canvas.addEventListener('pointerdown',e=>{if(![0,2].includes(e.button))return;const p=coords(e);drag={id:e.pointerId,button:e.button,...p,last:p,moved:false};canvas.setPointerCapture(e.pointerId);canvas.focus();});
 canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const p=coords(e);if(Math.hypot(p.x-drag.x,p.y-drag.y)>5)drag.moved=true;if(drag.moved){const a=scene.pick(drag.last.x,drag.last.y,canvas.clientWidth,canvas.clientHeight),b=scene.pick(p.x,p.y,canvas.clientWidth,canvas.clientHeight);if(a&&b){view.x+=a.x-b.x;view.y+=a.y-b.y;dirty=true;}}drag.last=p;});
-canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const moved=drag.moved;drag=null;if(!moved){const p=coords(e);select(inspect(p.x,p.y));}});canvas.addEventListener('pointercancel',()=>drag=null);
+canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const {moved,button}=drag;drag=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);if(!moved){const p=coords(e);if(button===2){const picked=scene.pickCharacter(p.x,p.y,canvas.clientWidth,canvas.clientHeight),fallback=inspect(p.x,p.y);characterMenu.show(picked||(fallback?.type==='unit'?fallback.data:null),e.clientX,e.clientY);}else select(inspect(p.x,p.y));}});canvas.addEventListener('pointercancel',()=>drag=null);
 canvas.addEventListener('wheel',e=>{e.preventDefault();zoom(Math.exp(e.deltaY*.001));},{passive:false});
 document.addEventListener('keydown',e=>{
  if(document.querySelector('dialog[open]')||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||e.target.isContentEditable||e.target.closest?.('input,textarea,select,[role="textbox"]'))return;
@@ -62,7 +63,9 @@ new ResizeObserver(()=>dirty=true).observe(canvas);window.addEventListener('page
 // Programmatic inspection shares the same opening and picking paths as the UI.
 async function changed(){loading=true;try{const prior=selection,identity=selection?.data?.character?.id;await scene.update(documentModel);select(identity?documentModel.characterSelection(identity):prior?documentModel.inspect(prior.x,prior.y,prior.z,{mode:prior.type==='prop'?'prop':'auto'}):null);$('name').textContent=documentModel.map.name;$('counts').textContent=`${documentModel.size} × ${documentModel.size} · ${documentModel.map.guards.length} placed characters · ${documentModel.map.props.length} objects · ${documentModel.map.canopies?.length||0} decorative roofs`;dirty=true;}finally{loading=false;}}
 async function switchWorkspace(mode){if(loading)return;const next=workspaces[mode]||new EditingDocument().open(JSON.stringify(mode==='block'?extractBlock(blockCanvas('New block')):blankMap('New design')));await open(next);}
-const tools=installEditing({canvas,scene,getDocument:()=>documentModel,getSelection:()=>selection,open,changed,status,isLoading:()=>loading,switchWorkspace,hasUnsaved:()=>Object.values(workspaces).some(d=>d.changed)});
+characterMenu=new EditorCharacterMenu({canvas,scene,getDocument:()=>documentModel,getSelection:()=>selection,select,isBusy:()=>loading||tools?.busy,onEdit:()=>tools.sync(),onPropertyEdit:(id,patch)=>tools.run(()=>documentModel.updateCharacter(id,patch),'Character capability updated.'),status});
+tools=installEditing({canvas,scene,getDocument:()=>documentModel,getSelection:()=>selection,open,changed,status,isLoading:()=>loading,switchWorkspace,hasUnsaved:()=>Object.values(workspaces).some(d=>d.changed)});
+characterMenu.bindTools();
 let currentPreset=null;
 function rememberPreset(preset){currentPreset=preset;history.replaceState(null,'',location.pathname+presetSearch(preset));}
 async function openPreset(preset){const map=await loadPreset(preset);await open(JSON.stringify(map));rememberPreset(preset);$('overview').click();status('Editing '+preset.id+'. Save creates a new variant in this configuration’s folder.');}

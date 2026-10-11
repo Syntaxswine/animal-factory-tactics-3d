@@ -1,3 +1,4 @@
+import {patrolDestination} from '../character-patrol.js';
 import {projectileStructureDamage,commitStructureDamage} from '../structure-damage.js';
 import {planFlameStructureDamage} from '../structure-flame.js';
 import {settleStructureCollapse} from '../structure-collapse.js';
@@ -704,7 +705,12 @@ function realtimeStep(s,g,dest,quota,goals=fixGoals(s,dest)){
 export function stepInvestigation(s){if(['explore','won'].includes(s.phase)&&!s.engaged&&!s.fires?.length&&!guards(s).some(g=>playerThreat(s,g)&&active(g)))for(const g of guards(s))if(g.npcFrightened)g.npcFearTicks=Math.max(0,(g.npcFearTicks||0)-1);settleCivilianFear(s);
  if(!['explore','won'].includes(s.phase))return false;let acted=false;const quota={left:REALTIME_SEARCHES};
  for(const g of guards(s)){
-  if(g.burningTurns)continue;if(combatBehavior(g)!=='fight'){acted=civilianStep(s,g,false)||acted;continue;}if(!playerThreat(s,g))continue;const st=stateOf(g);if(st==='rest')continue;
+  if(g.burningTurns)continue;
+  if(stateOf(g)==='rest'&&!g.npcFrightened&&g.patrol?.length){
+   const dest=patrolDestination(s,g),p=dest?realtimeStep(s,g,dest,quota,new Set([key(dest.x,dest.y,levelOf(dest))])):null;
+   if(p){stepTo(s,g,p);patrolDestination(s,g);acted=true;}continue;
+  }
+  if(combatBehavior(g)!=='fight'){acted=civilianStep(s,g,false)||acted;continue;}if(!playerThreat(s,g))continue;const st=stateOf(g);if(st==='rest')continue;
   if(st==='broken'){const p=fleeStep(s,g);if(p)stepTo(s,g,p);else{const seen=squad(s).find(q=>notices(s,g,q));if(seen){setState(s,g,'alert',{x:seen.x,y:seen.y,z:levelOf(seen)},{quiet:true});identified(s,g,seen);bark(s,g,g.name+' is cornered and turns to fight.','alert');acted=true;continue;}}
    acted=true;if(++g.brokenTicks>=brokenRoundsOf(g)*REALTIME_ROUND_TICKS)setState(s,g,g.lastKnown?'alert':'standdown');continue;}
   const dest=st==='suspicious'?g.lastHeard:st==='alert'?g.lastKnown:st==='searching'?searchGoal(g):g.post;

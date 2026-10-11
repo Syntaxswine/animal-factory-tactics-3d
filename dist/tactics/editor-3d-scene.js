@@ -117,6 +117,13 @@ export class InspectionScene {
  }
  draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.lights.update(this.document?.map,this.visibleLevel,this.previewMinutes??mapStartMinutes(this.document?.map),this.reducedMotion?.matches?null:performance.now()/1000,true);this.daylight.update(this.previewMinutes??mapStartMinutes(this.document?.map),this.camera,0,true);this.lights.render(this.renderer,this.camera);}
  pick(x,y,width,height){return floorPoint(this.camera,x,y,width,height,this.options.level);}
+ projectTile(p,width,height){const v=new T.Vector3(p.x,(p.z||0)*D.floorSpacing+.08,p.y).project(this.camera);return {x:(v.x+1)*width/2,y:(1-v.y)*height/2,visible:v.z>=-1&&v.z<=1};}
+ pickCharacter(x,y,width,height){
+  const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
+  const models=this.models.filter(m=>m.root.visible&&(m.unit.z||0)===this.options.level);
+  const hit=ray.intersectObjects(models.map(m=>m.root),true)[0];if(!hit)return null;
+  let root=hit.object;while(root){const model=models.find(m=>m.root===root);if(model)return model.unit;root=root.parent;}return null;
+ }
  pickCliff(x,y,width,height){
   const raycaster=new T.Raycaster();raycaster.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
   let nearest=null,distance=Infinity;

@@ -1,3 +1,4 @@
+import {shiftPatrol,patrolError} from './character-patrol.js';
 import {paintFoliage} from './editor-foliage-brush.js';
 import {cleanFoliage} from './foliage-data.js';
 import {paintLand} from './editor-land-brush.js';
@@ -94,12 +95,18 @@ export class EditingDocument extends InspectionDocument {
   for(const key of allowed)if(Object.hasOwn(patch.character||{},key))p.character[key]=structuredClone(patch.character[key]);
   p.character.id=id;this.replace(map);return this.characterSelection(id);
  }
+ setPatrol(id,points){
+  const row=this.character(id);if(!row||row.field!=='guards')throw Error('Select a placed guard or NPC.');
+  const error=patrolError(points,this.size);if(error)throw Error(error);
+  const map=structuredClone(this.editor.map);if(points.length)map.guards[row.index].patrol=structuredClone(points);else delete map.guards[row.index].patrol;
+  this.replace(map);return this.characterSelection(id);
+ }
  duplicateCharacter(id,point){
   const row=this.character(id);if(!row)throw Error('This character no longer exists.');
   if(row.field==='starts')throw Error('Squad slots are fixed. Duplicate a placed guard or NPC.');
   if(!point||![point.x,point.y,point.z??0].every(Number.isInteger))throw Error('Choose a destination tile.');
   if(point.x<0||point.y<0||point.x>=this.size||point.y>=this.size||(point.z||0)<0||(point.z||0)>2)throw Error('Keep the duplicate inside the current map or block.');
-  const [copy]=copyCharacters([row.p],this.editor.map);Object.assign(copy,{x:point.x,y:point.y,z:point.z||0});delete copy.towerPost;
+  const [copy]=copyCharacters([row.p],this.editor.map);if(copy.patrol)copy.patrol=shiftPatrol(copy.patrol,point.x-copy.x,point.y-copy.y,(point.z||0)-(copy.z||0));Object.assign(copy,{x:point.x,y:point.y,z:point.z||0});delete copy.towerPost;
   this.replace({...this.editor.map,guards:[...this.editor.map.guards,copy]});return copy.character.id;
  }
  characterResources(resources){this.replace({...this.editor.map,characterResources:structuredClone(resources)});}
