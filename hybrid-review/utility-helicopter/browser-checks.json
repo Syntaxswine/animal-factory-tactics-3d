@@ -1,0 +1,27 @@
+{
+  "configurations": 60,
+  "errors": [],
+  "warm": {
+    "geometries": 240,
+    "textures": 10
+  },
+  "after": {
+    "geometries": 240,
+    "textures": 10
+  },
+  "disposed": {
+    "ready": false,
+    "disposed": true,
+    "counts": {
+      "26305674-28bb-4d41-94e9-dc3e6f790be9": 1,
+      "73f683d7-40f5-46f0-b531-ac3f03c60e2f": 1,
+      "12134feb-ead0-4304-b607-068fd7ce3c17": 1,
+      "acf986d6-c73e-4588-8be3-b6c9c5abfd6c": 1,
+      "c24cf7a3-aafe-4892-b0ae-334d1efef387": 1,
+      "ed75262d-8ce6-4a03-8355-e4cf8555ce05": 1,
+      "a52a5b4a-354b-4d6d-918b-f1d5801be295": 1
+    }
+  },
+  "mobileOverflow": false,
+  "missingAtlasHandled": true
+}

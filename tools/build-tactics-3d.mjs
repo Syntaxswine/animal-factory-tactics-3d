@@ -2,6 +2,8 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
+for(const file of ['utility-helicopter.js','utility-helicopter-study.js','utility-helicopter-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+fs.cpSync(new URL('dist/assets/environment/utility-helicopter/',root),new URL('.pages-output/assets/environment/utility-helicopter/',root),{recursive:true});
 for(const file of ['painted-chairs.js','chair-fit-guide.js','painted-chairs-study.js','painted-chairs-study.html','horse-chair-motion.js','horse-chair-study.js','horse-chair-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.cpSync(new URL('dist/assets/environment/painted-chairs/',root),new URL('.pages-output/assets/environment/painted-chairs/',root),{recursive:true});
 for(const file of ['guardhouse-machines.js','guardhouse-machines-study.js','guardhouse-machines-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
@@ -37,6 +39,7 @@ console.log('Built Animal Factory Tactics 3D landing page.');
 
 fs.cpSync(new URL('dist/tactics/sector-library/',root),new URL('.pages-output/tactics/sector-library/',root),{recursive:true});
 import {checkModuleClosure} from './check-module-closure.mjs';
+checkModuleClosure(new URL('.pages-output/',root),['tactics/utility-helicopter-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-chairs-study.js','tactics/horse-chair-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/guardhouse-machines-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/rpg-flight-study.js']);
