@@ -9,6 +9,10 @@ import {checkModuleClosure} from '../tools/check-module-closure.mjs';
 
 test('3D distribution includes the entire encounter, editor, title and overmap module graphs',()=>{
  execFileSync(process.execPath,['tools/build-tactics-3d.mjs'],{cwd:new URL('../',import.meta.url),stdio:'pipe'});
+ for(const name of ['reference-v1.png','paint-atlas-v1.png','PROMPTS.json'])assert.deepEqual(
+  fs.readFileSync(new URL('../.pages-output/assets/environment/utility-helicopter/'+name,import.meta.url)),
+  fs.readFileSync(new URL('../dist/assets/environment/utility-helicopter/'+name,import.meta.url))
+ );
 });
 test('deployment validation catches missing transitive and worker imports while handling cycles',()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'tactics-module-check-')),root=pathToFileURL(dir+path.sep);
