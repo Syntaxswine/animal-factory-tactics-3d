@@ -4,7 +4,7 @@
   "revision": "e529f4b3d512d32cea522d701d01ebe8488af013",
   "overrides": {
     "blocks.js": {
-      "reason": "Translate and validate reusable character patrol routes. Preserve and relocate foliage overlays with reusable blocks, including legacy foliage terrain. Preserve and relocate authored breach markers with reusable blocks. Keep painted-land ownership when extracting, placing and replacing blocks. Preserve builder roof layer through block extraction and placement. Preserve authored door locks across block extraction and placement. Preserve and remap character links on block duplication.",
+      "reason": "Preserve and validate relative spotlight routes in reusable blocks. Translate and validate reusable character patrol routes. Preserve and relocate foliage overlays with reusable blocks, including legacy foliage terrain. Preserve and relocate authored breach markers with reusable blocks. Keep painted-land ownership when extracting, placing and replacing blocks. Preserve builder roof layer through block extraction and placement. Preserve authored door locks across block extraction and placement. Preserve and remap character links on block duplication.",
       "upstreamSha256": "4c4961c7c9897640dafca906384569f5337bfabbc2a907adb88ca8e64a733bf4"
     },
     "connections.js": {
@@ -32,7 +32,7 @@
       "upstreamSha256": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f"
     },
     "maps.js": {
-      "reason": "Use baked helicopter movement clearance and validate authored squad facing. Validate authored patrol waypoints. Validate ground-preserving foliage overlays on all three levels and honor independent walking restrictions. Validate authored broken walls and floor holes. Validate ground-only strategic sites and follow their baked continuous passage links. Validate automatic-land ownership on import. Trace trellis gaps and beams with the shared sculpted profile. Validate nonwalkable fourth-level roof decoration. Derive roof climbs from marked roof footprints. Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks.",
+      "reason": "Validate spotlight aim points and game-clock waits. Use baked helicopter movement clearance and validate authored squad facing. Validate authored patrol waypoints. Validate ground-preserving foliage overlays on all three levels and honor independent walking restrictions. Validate authored broken walls and floor holes. Validate ground-only strategic sites and follow their baked continuous passage links. Validate automatic-land ownership on import. Trace trellis gaps and beams with the shared sculpted profile. Validate nonwalkable fourth-level roof decoration. Derive roof climbs from marked roof footprints. Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks.",
       "upstreamSha256": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73"
     },
     "progression.js": {
@@ -58,7 +58,7 @@
   },
   "files": {
     "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
-    "blocks.js": "d22b30b94cac9a1bc05935db24f3b1605ee70d68f3b2ccc2fdff17af4750c0b5",
+    "blocks.js": "7ffca06b0c1ec5a8d71c13b448bfd27d34ebb6e7a11591dcf5d46bc5e61edc59",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
     "editor-model.js": "73e78cd3808adc401c543ea83b92c01c99bdfdbaf752c566acaca11d442bd191",
     "engine.js": "f2392da770ef9d39f410c6b4bc9532b292767323941bf67195db337be136de46",
@@ -67,7 +67,7 @@
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "8e63ac2c2783edf5e4884f31c687494dbc4910edbfe620299302911394c539cb",
-    "maps.js": "1f19d3bdc5878fdd3a5d894fa0115723299dec31a159fb7b7407ac461841ff13",
+    "maps.js": "2957d33cfbe4b1baed42ff637f1a52b59271be70631acb0438688cedf54c4480",
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",

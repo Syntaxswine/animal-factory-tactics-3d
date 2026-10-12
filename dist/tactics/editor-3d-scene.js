@@ -5,6 +5,7 @@ import {CliffMapScene} from './cliff-map-scene.js';
 import {unitBaseHeight} from './tower-geometry.js';
 import {motionPreference} from './settings-3d.js';
 import {LightingScene} from './lighting-scene.js';
+import {LIGHT_FORMS} from './light-sources.js';
 import {DaylightRig} from './daylight-rig.js';
 import {mapStartMinutes} from './game-clock.js';
 import {FOLIAGE_ATLAS,FOLIAGE_MATERIALS,paintFoliageMaterial} from './foliage-materials.js';
@@ -124,6 +125,12 @@ export class InspectionScene {
   const models=this.models.filter(m=>m.root.visible&&(m.unit.z||0)===this.options.level);
   const hit=ray.intersectObjects(models.map(m=>m.root),true)[0];if(!hit)return null;
   let root=hit.object;while(root){const model=models.find(m=>m.root===root);if(model)return model.unit;root=root.parent;}return null;
+ }
+ pickSpotlight(x,y,width,height){
+  const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
+  const models=this.lights.models.filter(m=>m.root.visible&&LIGHT_FORMS[m.prop.kind]?.spot&&(m.prop.z||0)===this.options.level);
+  const hit=ray.intersectObjects(models.map(m=>m.root),true)[0];if(!hit)return null;
+  let root=hit.object;while(root){const model=models.find(m=>m.root===root);if(model)return model.prop;root=root.parent;}return null;
  }
  pickCliff(x,y,width,height){
   const raycaster=new T.Raycaster();raycaster.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);

@@ -66,7 +66,7 @@ test('spotlight editor targets survive save, undo, rotation and block placement'
  const targets=structuredClone(d.map.props[0].lightTargets);assert.deepEqual(targets,[{x:0,y:8,z:0},{x:8,y:0,z:0}]);d.undo();assert.equal(d.map.props[0].lightTargets,undefined);d.redo();assert.ok(d.rotate(d.inspect(10,10,0,{mode:'prop'})).ok);
  const reopened=new EditingDocument().open(d.export());assert.deepEqual(reopened.map.props[0].lightTargets,targets);
  const block=d.capture(0,0),other=new EditingDocument().open(JSON.stringify(blankMap()));other.place(block,1,1);const placed=other.map.props.find(p=>p.kind==='spotlight');assert.deepEqual(placed.lightTargets,targets);assert.equal(spotlightTarget(placed,0).x,34);
- assert.throws(()=>d.lightTargets(selection,[]));assert.throws(()=>d.lightTargets(selection,Array(4).fill({x:10,y:10,z:0})));
+ d.lightTargets(selection,[]);assert.equal(d.map.props[0].lightTargets,undefined);d.undo();assert.deepEqual(d.map.props[0].lightTargets,targets);assert.throws(()=>d.lightTargets(selection,Array(4).fill({x:10,y:10,z:0})));
 });
 test('spotlight cone sweeps illumination without leaking behind the fixture or through walls',()=>{
  const map=blankMap();map.time={startMinutes:1260};map.props=[{kind:'spotlight',x:7,y:4,z:0,lightMode:'on',lightTargets:[{x:-4,y:0,z:0},{x:4,y:0,z:0}]}];
