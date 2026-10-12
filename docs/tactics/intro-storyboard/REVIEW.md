@@ -1,5 +1,26 @@
 # Independent intro storyboard review
 
+## Current revision: overseas handler and wooded cliff clearing
+
+**9/10 — approved as a storyboard. No blocking changes.**
+
+Reviewed October 12, 2026 by the independent hostile-review subagent after inspecting both current PNGs, the revised shot/audio plan and exact prompts.
+
+The overseas handler is unmistakable. Radar detection precedes SAM activation, and the cliffside drop leads clearly into a densely wooded clearing. The nose-up flare, skid collapse and rotor strike form a readable damage sequence. The final cabin remains recognizable and upright, with an open doorway and clear ground beside it. Trees surround the helicopter while leaving the cliff and relay visible.
+
+Two nonblocking animatic follow-ups are recorded in the shot plan: distinguish the impacting missile from the other missile in shot 07; treat shot 09's airborne dust as rotor wash and keep the ground-impact beat in shot 10. Resolve the drawn curved rotor into a definite bend/fracture during animation. This approval covers the storyboard, not implemented flight or crash playback.
+
+| Current sheet | Size | SHA-256 |
+| --- | --- | --- |
+| 01-approach-and-ambush-v2.png | 1536 × 1024 | `9cc8cdc2fbc204140f44d2dd0463c896f752851b880730bf9aa5619282201807` |
+| 02-hit-and-landing-v3.png | 1536 × 1024 | `04d7b7e052da811fa34531a647d0c1f188bc9e2f37d36fee327ddf7fd106bb62` |
+
+PNG signatures, dimensions, local documentation links and Git whitespace checks passed. The changes contain only storyboard images and documentation; gameplay tests were not rerun. Neither the builder nor reviewer started a helper. The previous preview's shutdown receipt was rechecked, PID 42392 was absent and port 4476 was released.
+
+## Historical first-pass review — superseded sheets
+
+The following review applies only to the earlier image pair listed below; it predates the overseas-handler, radar, cliff-descent and tree-density corrections.
+
 **9/10 — approved as a storyboard. No actionable blockers.**
 
 Reviewed October 12, 2026 by the independent hostile-review subagent. Both final PNGs were inspected alongside the shot/audio plan, exact prompts and existing design references.

@@ -19,7 +19,7 @@ The wreck retains a visibly related cabin and tail rather than substituting an u
 
 The user proposes a SAM strike bringing down the squad's helicopter at the start of the game. The new variant tells that story through localized tail-boom damage and a rough forced landing: peeled metal around a puncture, a damaged tail rotor, crushed skids, a snapped main blade and a bent surviving blade. The cabin remains rigid, mostly upright and recognizable. This is visual storytelling, not a simulation or a claim about real aircraft survivability.
 
-The [twelve-shot intro storyboard](intro-storyboard/README.md) develops the approach, hen's mission briefing, SAM volley and separate tail/skid/rotor damage beats. It includes two painted sheets and a proposed 37-second shot/audio plan; it is not implemented cinematic playback.
+The [twelve-shot intro storyboard](intro-storyboard/README.md) develops the approach, the hen's overseas radio briefing, radar detection, SAM volley and rapid drop past the cliffs into a wooded clearing at their base. Its two painted sheets and proposed 35-second shot/audio plan distinguish tail damage from the later skid/rotor failures. Cinematic playback is not yet implemented.
 
 The positive-Z sliding door is absent and the bench beside it is folded away. The jettisoned door, shed blade and small fragments rest on the opposite side, leaving exterior gathering space by the opening. Two feathered skid furrows and a belly scrape lead into the aircraft. The intact and destroyed variants retain their previous geometry, UVs and transforms.
 
@@ -82,6 +82,6 @@ The viewer and painting folder are included by `tools/build-tactics-3d.mjs`. A f
 
 ## Preview and helper lifetime
 
-`tools/serve-utility-helicopter.mjs 4476` serves only read-only GET/HEAD requests from `dist`. The current preview has a real 24-hour shutdown timer, expiring **October 11, 2026 at 10:28 p.m. Eastern**. Its local PID, creation time, expiry, restart inputs and stop-file method are registered with the shared helper lifecycle utility. Local records are in `artifacts/utility-helicopter/server/`.
+`tools/serve-utility-helicopter.mjs 4476` serves only read-only GET/HEAD requests from `dist`. The previous preview stopped through its real 24-hour shutdown timer on **October 11, 2026 at 10:28 p.m. Eastern**; its process was absent and port 4476 was released when checked for the storyboard pass. Its local PID, creation time, expiry, restart inputs and stop-file method were registered with the shared helper lifecycle utility. Local records are in `artifacts/utility-helicopter/server/`.
 
 Create `artifacts/utility-helicopter/server/STOP` to finish the preview early. Preserve the ready/stopped receipts before deliberately restarting, clear that private stop marker, and register the new process lifetime. Review browsers close through their owner API in `finally`; their close receipts are under `artifacts/utility-helicopter/helpers/`.
