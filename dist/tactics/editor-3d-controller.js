@@ -1,3 +1,4 @@
+import {shiftPatrol,patrolError} from './character-patrol.js';
 import {paintFoliage} from './editor-foliage-brush.js';
 import {cleanFoliage} from './foliage-data.js';
 import {paintLand} from './editor-land-brush.js';
@@ -22,15 +23,17 @@ import {openBlock,extractBlock,validateBlock,placeBlock} from './core/blocks.js'
 import {connectionSet} from './core/connections.js';
 import {EDGES,propCells} from './core/environment.js';
 export function brushPoint(p){const x=Math.floor(p.x+.5),y=Math.floor(p.y+.5),dx=p.x-x,dy=p.y-y,axis=Math.abs(dx)>Math.abs(dy)?'e':'s';return {x,y,z:p.z,edge:edgeKey(axis,x-(axis==='e'&&dx<0?1:0),y-(axis==='s'&&dy<0?1:0),p.z)};}
+import {helicopterStart} from './helicopter-start.js';
 import {isStrategicSite} from './strategic-site-rules.js';
 export class EditingDocument extends InspectionDocument {
+ crashStart(selection){if(selection?.type!=='prop')throw Error('Select the crashed helicopter.');this.replace(helicopterStart(this.editor.map,selection.data));}
  siteSabotage(selection,enabled){
   const p=selection?.data;if(selection?.type!=='prop'||!isStrategicSite(p))throw Error('Select a radio tower, radar tower or SAM site.');
   if(typeof enabled!=='boolean')throw Error('Choose whether sabotage is allowed.');
   this.replace({...this.editor.map,props:this.editor.map.props.map(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(p.z||0)&&q.kind===p.kind?{...q,sabotage:enabled}:q)});
  }
  open(text){super.open(text);if(!this.block)mapStartMinutes(this.map);this.editor=createEditor(this.block?openBlock(this.original):this.map);this.refresh();this.changed=false;this.revision=0;return this;}
- refresh(){if(this.block){const original={...this.original,...extractBlock(this.editor.map)};if(!this.editor.map.foliage)delete original.foliage;if(!this.editor.map.blockConnections?.['0,0'])delete original.connections;const display=new InspectionDocument().open(JSON.stringify(original));this.map=display.map;this.original=original;}else{this.map=this.editor.map;this.original=this.map;}this.units=[...this.map.starts.map((p,i)=>({...p,id:'start-'+i,species:p.species||['horse','goat','donkey','sheep'][i],weapon:p.weapon||'rifle',heading:0,role:characterName(p,'Squad start '+(i+1))})),...this.map.guards.map((p,i)=>({...p,id:'guard-'+i,role:characterName(p,(p.character?.category==='npc'?'NPC ':'Guard ')+(i+1))}))];for(const u of this.units){const support=rampSupportAt(this.map,u);if(support)u.cliffSupport=support;}this.changed=true;this.revision++;}
+ refresh(){if(this.block){const original={...this.original,...extractBlock(this.editor.map)};if(!this.editor.map.foliage)delete original.foliage;if(!this.editor.map.blockConnections?.['0,0'])delete original.connections;const display=new InspectionDocument().open(JSON.stringify(original));this.map=display.map;this.original=original;}else{this.map=this.editor.map;this.original=this.map;}this.units=[...this.map.starts.map((p,i)=>({...p,id:'start-'+i,species:p.species||['horse','goat','donkey','sheep'][i],weapon:p.weapon||'rifle',heading:p.heading??0,role:characterName(p,'Squad start '+(i+1))})),...this.map.guards.map((p,i)=>({...p,id:'guard-'+i,role:characterName(p,(p.character?.category==='npc'?'NPC ':'Guard ')+(i+1))}))];for(const u of this.units){const support=rampSupportAt(this.map,u);if(support)u.cliffSupport=support;}this.changed=true;this.revision++;}
  preview(command){
   let {tool,start,end=start,options={}}=command;const prefab=tool==='prefab'?STRUCTURE_PRESETS[options.preset]:null;if(tool==='prefab'&&!prefab)return {ok:false,error:'Choose a preset structure.'};if(prefab){tool='room';options={...options,width:prefab.width,height:prefab.height};}if(tool!=='land'&&start?.z===3)return previewCanopy(this.editor.map,command,this.size);
   if(!start||![start.x,start.y,start.z??0].every(Number.isInteger))return {ok:false,error:'Choose a map cell.'};
@@ -94,12 +97,18 @@ export class EditingDocument extends InspectionDocument {
   for(const key of allowed)if(Object.hasOwn(patch.character||{},key))p.character[key]=structuredClone(patch.character[key]);
   p.character.id=id;this.replace(map);return this.characterSelection(id);
  }
+ setPatrol(id,points){
+  const row=this.character(id);if(!row||row.field!=='guards')throw Error('Select a placed guard or NPC.');
+  const error=patrolError(points,this.size);if(error)throw Error(error);
+  const map=structuredClone(this.editor.map);if(points.length)map.guards[row.index].patrol=structuredClone(points);else delete map.guards[row.index].patrol;
+  this.replace(map);return this.characterSelection(id);
+ }
  duplicateCharacter(id,point){
   const row=this.character(id);if(!row)throw Error('This character no longer exists.');
   if(row.field==='starts')throw Error('Squad slots are fixed. Duplicate a placed guard or NPC.');
   if(!point||![point.x,point.y,point.z??0].every(Number.isInteger))throw Error('Choose a destination tile.');
   if(point.x<0||point.y<0||point.x>=this.size||point.y>=this.size||(point.z||0)<0||(point.z||0)>2)throw Error('Keep the duplicate inside the current map or block.');
-  const [copy]=copyCharacters([row.p],this.editor.map);Object.assign(copy,{x:point.x,y:point.y,z:point.z||0});delete copy.towerPost;
+  const [copy]=copyCharacters([row.p],this.editor.map);if(copy.patrol)copy.patrol=shiftPatrol(copy.patrol,point.x-copy.x,point.y-copy.y,(point.z||0)-(copy.z||0));Object.assign(copy,{x:point.x,y:point.y,z:point.z||0});delete copy.towerPost;
   this.replace({...this.editor.map,guards:[...this.editor.map.guards,copy]});return copy.character.id;
  }
  characterResources(resources){this.replace({...this.editor.map,characterResources:structuredClone(resources)});}

@@ -81,7 +81,8 @@ The design audit measured hip/body widths of approximately 0.527 for the horse, 
 - [ ] Give the shorter-legged foreman an appropriate adapter. The hen's wing/leg rig needs its own adapter rather than the literal mammal bone clip.
 - [ ] Author tail handling once per species that accommodates the closed wingback as well as the lower open-backed chairs. Neither the large hip-weighted skunk plume nor the hen's upright fan has been fitted to a native seated pose.
 - [ ] Check all outfits and any equipped/stowed weapons before claiming complete animation support.
-- [ ] Add editor/gameplay placement, occupied tiles, an adjacent approach/interaction cell and chair occupancy rules when integrating. A one-tile object bound alone is not a complete interaction footprint.
+- [x] Add editor/gameplay placement and occupied tiles: supplied by the [October 11 scenery integration](SCENERY-INTEGRATION-2026-10-11.md), with one-tile blocking and low cover.
+- [ ] Add an adjacent approach/interaction cell and seated-character occupancy rules. A one-tile object bound alone is not a complete sitting interaction footprint.
 
 ## Library and texture ownership
 

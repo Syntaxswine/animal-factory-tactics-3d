@@ -1,3 +1,4 @@
+import {shiftPatrol,patrolMapErrors} from '../character-patrol.js';
 import {foliageErrors,extractFoliage,placeFoliage} from '../foliage-data.js';
 import {breachErrors,extractBreaches,placeBreaches,clearBlockBreaches} from '../breach-data.js';
 import {extractLand,placeLand,landErrors} from '../land-paint.js';
@@ -8,7 +9,7 @@ import {blankMap,validateMap,terrainAt,setTerrain,edgeKey,edgeCells,tileKey,roof
 import {propCells,GROUNDS} from './environment.js';
 export const isBlock=d=>d?.kind==='red-shift-block';
 const inside=(p,x,y)=>p.x>=x&&p.x<x+24&&p.y>=y&&p.y<y+24;
-const shift=(p,x,y)=>({...p,x:p.x+x,y:p.y+y});
+const shift=(p,x,y)=>({...p,x:p.x+x,y:p.y+y,...p.patrol&&{patrol:shiftPatrol(p.patrol,x,y)}});
 export function blockCanvas(name='Untitled block'){const m=blankMap(name);m.starts=[{x:230,y:230,z:0},{x:231,y:230,z:0},{x:230,y:231,z:0},{x:231,y:231,z:0}];m.exits=[{x:232,y:230,z:0}];return m;}
 export function extractBlock(m,sx=0,sy=0){if(!Number.isInteger(sx)||!Number.isInteger(sy)||sx<0||sx>9||sy<0||sy>9)throw Error('Choose a sector from1 to10.');const x=sx*24,y=sy*24;
  for(const p of m.canopies||[])if(canopyCells(p).some(q=>inside(q,x,y))&&!canopyCells(p).every(q=>inside(q,x,y)))throw Error('A decorative roof crosses this block boundary.');for(const p of m.props||[]){const cells=propCells(p);if(cells.some(q=>inside(q,x,y))&&!cells.every(q=>inside(q,x,y)))throw Error('A prop crosses this sector boundary. Move it fully inside or outside first.');}
@@ -24,7 +25,7 @@ export function validateBlock(d){if(!isBlock(d)||d.version!==1||d.size!==24||d.l
  for(const layer of d.upper)for(const k of Object.keys(layer)){if(!['yard','floor','crate','bridge','woodland','woodland-dense',...GROUNDS].includes(layer[k]))throw Error('Invalid upper floor terrain.');const [x,y]=k.split(',').map(Number);if(k!==tileKey(x,y)||!Number.isInteger(x)||!Number.isInteger(y)||!inside({x,y},0,0))throw Error('Upper floor extends beyond block.');}
  for(const k of Object.keys(d.edges)){const [axis,x,y,z]=k.split(':');if(k!==edgeKey(axis,Number(x),Number(y),Number(z||0)))throw Error('Noncanonical block edge.');if(!/^(e|s):(-?\d+):(-?\d+)(?::[12])?$/.test(k)||!edgeCells(k).some(p=>inside(p,0,0)))throw Error('Edge extends beyond block.');}
  if(d.props.some(p=>!propCells(p).every(q=>inside(q,0,0)))||d.climbs.some(p=>!inside(roofTop(p),0,0)))throw Error('An object crosses the block boundary.');
- const foliageIssues=foliageErrors(d,24);if(foliageIssues.length)throw Error(foliageIssues[0]);const breachIssues=breachErrors(d,24);if(breachIssues.length)throw Error(breachIssues[0]);const landIssues=landErrors(d,24,GROUNDS);if(landIssues.length)throw Error(landIssues[0]);const roofErrors=canopyErrors(d,24);if(roofErrors.length)throw Error(roofErrors[0]);const m=blockCanvas(d.name);applyData(m,d,0,0);if(d.connections!==undefined)connectionSet(m,0,0,d.connections);const errors=validateMap(m,{connectivity:false});if(errors.length)throw Error(errors[0]);return d;
+ const patrolIssues=patrolMapErrors(d,24);if(patrolIssues.length)throw Error(patrolIssues[0]);const foliageIssues=foliageErrors(d,24);if(foliageIssues.length)throw Error(foliageIssues[0]);const breachIssues=breachErrors(d,24);if(breachIssues.length)throw Error(breachIssues[0]);const landIssues=landErrors(d,24,GROUNDS);if(landIssues.length)throw Error(landIssues[0]);const roofErrors=canopyErrors(d,24);if(roofErrors.length)throw Error(roofErrors[0]);const m=blockCanvas(d.name);applyData(m,d,0,0);if(d.connections!==undefined)connectionSet(m,0,0,d.connections);const errors=validateMap(m,{connectivity:false});if(errors.length)throw Error(errors[0]);return d;
 }
 export function openBlock(d){validateBlock(d);const m=blockCanvas(d.name);applyData(m,d,0,0);if(d.connections)m.blockConnections={'0,0':structuredClone(d.connections)};return m;}
 export function placeBlock(m,d,sx,sy){validateBlock(d);if(!Number.isInteger(sx)||!Number.isInteger(sy)||sx<0||sx>9||sy<0||sy>9)throw Error('Choose a sector from1 to10.');const x=sx*24,y=sy*24;

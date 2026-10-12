@@ -46,7 +46,7 @@ export function copyCharacters(rows,destination){
 }
 export function copyBlockCharacters(block,destination){const d=structuredClone(block);ensureCharacterIdentities(d);d.guards=copyCharacters(d.guards,destination);return d;}
 export function mergeCharacterResources(map,source){if(!source.characterResources)return;map.characterResources??={};for(const type of RESOURCE_TYPES)map.characterResources[type]=[...new Set([...(map.characterResources[type]||[]),...(source.characterResources[type]||[])])];}
-export function applyRuntimeCharacter(unit,source){if(!source?.character)return;unit.character=structuredClone(source.character);unit.characterId=source.character.id;if(source.character.displayName)unit.name=source.character.displayName;}
+export function applyRuntimeCharacter(unit,source){if(source?.patrol?.length)unit.patrol=structuredClone(source.patrol);if(!source?.character)return;unit.character=structuredClone(source.character);unit.characterId=source.character.id;if(source.character.displayName)unit.name=source.character.displayName;}
 
 // Allegiance does not change controller ownership: NPCs remain autonomous.
 export const combatBehavior=u=>u.character?.combatBehavior||(u.character?.category==='npc'?'cower':'fight');

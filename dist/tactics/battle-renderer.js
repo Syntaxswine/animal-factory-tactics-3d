@@ -1,3 +1,4 @@
+import {SceneryScene} from './scenery-scene.js';
 import {StrategicSiteScene} from './strategic-site-scene.js';
 import {strategicTarget} from './strategic-site-damage.js';
 import {WallXray,pickWallDoor} from './wall-xray.js';
@@ -35,7 +36,7 @@ import {barrelTarget,presentBarrel} from './explosive-barrels.js';
 export class BattleRenderer extends HybridRenderer {
  constructor(onReady=()=>{}){
   super(onReady);this.wallXray=new WallXray();this.daylight=new DaylightRig(this.scene,this.renderer);this.models=new Map();this.meshData=new Map();this.pending=new Set();this.generation=0;
-  this.sites=new StrategicSiteScene(this.scene,this.loader,()=>{this.world=null;onReady();},e=>this.diagnostics.push('Strategic sites: '+e.message));this.cliffs=new CliffMapScene(this.scene);this.interiorFog=new InteriorFogScene(this.scene,this.wallXray);this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
+  this.sceneryAssets=new SceneryScene(this.scene,this.loader,()=>{this.world=null;onReady();},e=>this.diagnostics.push('Scenery: '+e.message));this.sites=new StrategicSiteScene(this.scene,this.loader,()=>{this.world=null;onReady();},e=>this.diagnostics.push('Strategic sites: '+e.message));this.cliffs=new CliffMapScene(this.scene);this.interiorFog=new InteriorFogScene(this.scene,this.wallXray);this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
   this.loot=new BattleLoot(this.scene);this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.flameEffects=new BattleFlameEffects(this.scene);
@@ -49,7 +50,7 @@ export class BattleRenderer extends HybridRenderer {
   map={...map,concealedInteriors:this.interiorFog.hidden};
   const scenery={...world,boxes:world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood'))};
   super.rebuild(scenery,map.difficulty==='easy'?null:seen,level,{...map,coverOccupiedProps:map.props,props:map.props.filter(p=>!PAINTED_PROP_FORMS[p.kind])});
-  this.sites.rebuild(map,level);this.paintedEnvironment.rebuild(map,level);this.cliffs.rebuild(map,level,{grassTexture:this.material('grass').map});
+  this.sceneryAssets.rebuild(map,level);this.sites.rebuild(map,level);this.paintedEnvironment.rebuild(map,level);this.cliffs.rebuild(map,level,{grassTexture:this.material('grass').map});
  }
  async loadModel(unit){
   this.pending.add(unit.id);const generation=this.generation;
@@ -135,7 +136,7 @@ export class BattleRenderer extends HybridRenderer {
   if(model.aimWarning){const i=this.diagnostics.indexOf(model.aimWarning);if(i>=0)this.diagnostics.splice(i,1);model.aimWarning=null;}
   if(result&&!result.supported){model.aimWarning=`${unit.name||unit.species}: firing animation unavailable (${result.reason}); shot outcome unchanged.`;this.diagnostics.push(model.aimWarning);}
  }
- prune(){this.grenades.update(this.combat.active,this.state,this.camera);this.tankEffects.draw(this.camera);} // Runs after posing, before rendering.
+ prune(){this.sceneryAssets.update((this.presentationNow??performance.now())/1000,this.camera,{reducedMotion:!!this.reducedMotion?.matches});this.grenades.update(this.combat.active,this.state,this.camera);this.tankEffects.draw(this.camera);} // Runs after posing, before rendering.
  pick(x,y,width,height,level=this.presentationLevel??this.level){
   const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
   const barrel=[this.paintedEnvironment.barrelHit(ray,level),this.sites.hit(ray,level)].filter(Boolean).sort((a,b)=>a.distance-b.distance)[0],onLevel=id=>(this.state.units.find(u=>u.id===id)?.z||0)===level;
@@ -193,7 +194,7 @@ export class BattleRenderer extends HybridRenderer {
  displayUnit(unit){if(this.traversal?.active?.event.unitId===unit.id)return this.traversal.display(unit);if(this.fire.entries.has(unit.id))return this.fire.display(unit);const shot=this.combat.active;if(shot?.event.shooter===unit.id&&!(shot.phase.discharged&&shot.event.falls?.some(f=>f.id===unit.id)))return {...unit,x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0};return this.motion.sample(this.combat.display(unit));}
  dispose(){
   this.generation++;this.wallXray.dispose();
-  this.sites.dispose();this.loot.dispose();this.cliffs.dispose();this.interiorFog.dispose();this.lights.dispose();this.daylight.dispose();
+  this.sceneryAssets.dispose();this.sites.dispose();this.loot.dispose();this.cliffs.dispose();this.interiorFog.dispose();this.lights.dispose();this.daylight.dispose();
   this.motion.clear();
   this.grenades.dispose();this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();this.fire.dispose();this.tankEffects.dispose();
   this.paintedEnvironment.dispose();

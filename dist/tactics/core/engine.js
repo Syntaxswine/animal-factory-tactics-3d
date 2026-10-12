@@ -1,3 +1,4 @@
+import {patrolDestination} from '../character-patrol.js';
 import {projectileStructureDamage,commitStructureDamage} from '../structure-damage.js';
 import {planFlameStructureDamage} from '../structure-flame.js';
 import {settleStructureCollapse} from '../structure-collapse.js';
@@ -103,7 +104,7 @@ export function createGame(seed=1947,definition=factoryMap(),detect=true,difficu
  const s={difficulty:difficulty==='easy'?'easy':'standard',map:structuredClone(definition.terrain),upper:structuredClone(definition.upper),stairs:structuredClone(definition.stairs),climbs:structuredClone(definition.climbs||[]),props:structuredClone(definition.props||[]),canopies:structuredClone(definition.canopies||[]),sectors:structuredClone(definition.sectors),edges:{...definition.edges},...(definition.foliage?{foliage:structuredClone(definition.foliage)}:{}),...(definition.breaches?{breaches:structuredClone(definition.breaches)}:{}),edgeLocks:structuredClone(definition.edgeLocks||{}),definition:structuredClone(definition),units:[],phase:'explore',round:0,selected:0,visible:new Set(),seen:new Set(),detected:new Set(),glimpses:{},log:[],seed,perceptionSeed:seed,revision:0,queue:[],enemyIndex:0,contacts:{},effect:null};
  const add=(team,name,species,x,y,weapon,z=0)=>spawnUnit(s,{team,name,species,x,y,z,weapon,medical:team==='squad'?[0,25,50,100][s.units.length]:0});
  const cast=options.cast?options.cast.map(c=>[c.name,c.species,c.weapon]):DEFAULT_CAST;
- definition.starts.forEach((p,i)=>{if(cast[i]){add('squad',cast[i][0],p.species||cast[i][1],p.x,p.y,p.weapon||cast[i][2],levelOf(p));if(p.outfit)s.units.at(-1).outfit=p.outfit;applyRuntimeCharacter(s.units.at(-1),p);}});
+ definition.starts.forEach((p,i)=>{if(cast[i]){add('squad',cast[i][0],p.species||cast[i][1],p.x,p.y,p.weapon||cast[i][2],levelOf(p));if(p.heading!==undefined){const u=s.units.at(-1);u.heading=p.heading;const angle=p.heading*Math.PI/180;u.facing=Math.cos(angle)-Math.sin(angle)>=0?1:-1;}if(p.outfit)s.units.at(-1).outfit=p.outfit;applyRuntimeCharacter(s.units.at(-1),p);}});
  const names=['Boris','Lev','Grigori','Oleg','Pavel','Igor','Anton','Vadim','Yuri','Sasha','Pyotr','Nikolai'];
  definition.guards.forEach((g,i)=>{add('guard',names[i]||`Guard ${i+1}`,g.species,g.x,g.y,g.weapon,levelOf(g));applyRuntimeCharacter(s.units.at(-1),g);if(g.outfit)s.units.at(-1).outfit=g.outfit;if(Number.isFinite(g.heading))s.units.at(-1).heading=g.heading;});
  for(const g of guards(s))g.post={x:g.x,y:g.y,z:levelOf(g),heading:g.heading}; // a guard's start tile and heading are its post
@@ -704,7 +705,12 @@ function realtimeStep(s,g,dest,quota,goals=fixGoals(s,dest)){
 export function stepInvestigation(s){if(['explore','won'].includes(s.phase)&&!s.engaged&&!s.fires?.length&&!guards(s).some(g=>playerThreat(s,g)&&active(g)))for(const g of guards(s))if(g.npcFrightened)g.npcFearTicks=Math.max(0,(g.npcFearTicks||0)-1);settleCivilianFear(s);
  if(!['explore','won'].includes(s.phase))return false;let acted=false;const quota={left:REALTIME_SEARCHES};
  for(const g of guards(s)){
-  if(g.burningTurns)continue;if(combatBehavior(g)!=='fight'){acted=civilianStep(s,g,false)||acted;continue;}if(!playerThreat(s,g))continue;const st=stateOf(g);if(st==='rest')continue;
+  if(g.burningTurns)continue;
+  if(stateOf(g)==='rest'&&!g.npcFrightened&&g.patrol?.length){
+   const dest=patrolDestination(s,g),p=dest?realtimeStep(s,g,dest,quota,new Set([key(dest.x,dest.y,levelOf(dest))])):null;
+   if(p){stepTo(s,g,p);patrolDestination(s,g);acted=true;}continue;
+  }
+  if(combatBehavior(g)!=='fight'){acted=civilianStep(s,g,false)||acted;continue;}if(!playerThreat(s,g))continue;const st=stateOf(g);if(st==='rest')continue;
   if(st==='broken'){const p=fleeStep(s,g);if(p)stepTo(s,g,p);else{const seen=squad(s).find(q=>notices(s,g,q));if(seen){setState(s,g,'alert',{x:seen.x,y:seen.y,z:levelOf(seen)},{quiet:true});identified(s,g,seen);bark(s,g,g.name+' is cornered and turns to fight.','alert');acted=true;continue;}}
    acted=true;if(++g.brokenTicks>=brokenRoundsOf(g)*REALTIME_ROUND_TICKS)setState(s,g,g.lastKnown?'alert':'standdown');continue;}
   const dest=st==='suspicious'?g.lastHeard:st==='alert'?g.lastKnown:st==='searching'?searchGoal(g):g.post;

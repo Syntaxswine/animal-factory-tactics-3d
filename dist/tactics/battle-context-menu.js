@@ -17,11 +17,11 @@ export function inspectBattleTile(s,p){
 // A small keyboard-accessible popup with drill-in submenus. Labels come from
 // map data, so use text nodes throughout; never interpret names as markup.
 export class BattleContextMenu {
- constructor({onChange,onAction}){
+ constructor({onChange,onAction,surfaceId='battle',label='Battlefield actions'}){
   this.onChange=onChange;this.onAction=onAction;this.stack=[];
-  this.element=document.createElement('section');this.element.id='battle-context';this.element.hidden=true;this.element.setAttribute('aria-label','Battlefield actions');document.body.append(this.element);
+  this.element=document.createElement('section');this.element.id='battle-context';this.element.hidden=true;this.element.setAttribute('aria-label',label);document.body.append(this.element);
   this.element.addEventListener('contextmenu',e=>e.preventDefault());
-  document.addEventListener('pointerdown',e=>{if(!this.open||this.element.contains(e.target)||e.button!==0)return;this.close();if(e.target.id==='battle'){e.preventDefault();e.stopImmediatePropagation();}},true);
+  document.addEventListener('pointerdown',e=>{if(!this.open||this.element.contains(e.target)||e.button!==0)return;this.close();if(e.target.id===surfaceId){e.preventDefault();e.stopImmediatePropagation();}},true);
   document.addEventListener('keydown',e=>{
    if(!this.open)return;
    if(['Escape','ArrowLeft'].includes(e.key)){e.preventDefault();e.stopImmediatePropagation();if(e.key==='ArrowLeft'&&this.stack.length>1){this.stack.pop();this.render();}else this.close(true);return;}
@@ -45,7 +45,7 @@ export class BattleContextMenu {
   const list=document.createElement('div');list.setAttribute('role','menu');list.setAttribute('aria-label',page.title);el.append(list);
   if(this.stack.length>1){const back=document.createElement('button');back.setAttribute('role','menuitem');back.textContent='← Back';back.onclick=()=>{this.stack.pop();this.render();};list.append(back);}
   for(const entry of page.entries){
-   const b=document.createElement('button');b.setAttribute('role','menuitem');b.dataset.action=entry.id;b.disabled=!!entry.disabled;b.title=entry.reason||'';
+   const b=document.createElement('button');b.setAttribute('role',entry.checked===undefined?'menuitem':'menuitemcheckbox');if(entry.checked!==undefined)b.setAttribute('aria-checked',String(entry.checked));b.dataset.action=entry.id;b.disabled=!!entry.disabled;b.title=entry.reason||'';
    const icon=document.createElement('span');icon.className='context-icon';icon.textContent=entry.icon||'·';icon.setAttribute('aria-hidden','true');
    const text=document.createElement('span'),name=document.createElement('span');name.textContent=entry.label;text.append(name);
    if(entry.reason||entry.note){const note=document.createElement('small');note.textContent=entry.reason||entry.note;text.append(note);}b.append(icon,text);
