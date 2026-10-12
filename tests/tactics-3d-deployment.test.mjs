@@ -15,6 +15,7 @@ test('3D distribution includes the entire encounter, editor, title and overmap m
  );
  assert.deepEqual(fs.readFileSync(new URL('../.pages-output/assets/environment/ground-dirt.png',import.meta.url)),fs.readFileSync(new URL('../dist/assets/environment/ground-dirt.png',import.meta.url)));
  assert.deepEqual(fs.readFileSync(new URL('../.pages-output/assets/effects/painted-fire/smoke-atlas-v1.png',import.meta.url)),fs.readFileSync(new URL('../dist/assets/effects/painted-fire/smoke-atlas-v1.png',import.meta.url)));
+ for(const file of ['tactics/intro-study.html','tactics/intro-study.css','tactics/intro-study.js','tactics/hen-10k-data.json','assets/characters/lowpoly-proof/hen-underlay-paint-v1.png','assets/characters/lowpoly-proof/hen-tail-paint-v1.png'])assert.deepEqual(fs.readFileSync(new URL('../.pages-output/'+file,import.meta.url)),fs.readFileSync(new URL('../dist/'+file,import.meta.url)));
 });
 test('deployment validation catches missing transitive and worker imports while handling cycles',()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'tactics-module-check-')),root=pathToFileURL(dir+path.sep);

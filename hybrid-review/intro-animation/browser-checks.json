@@ -1,0 +1,858 @@
+{
+  "errors": [],
+  "states": [
+    {
+      "module": "missile",
+      "time": 0,
+      "playing": false,
+      "shot": 0,
+      "view": "three",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -30,
+          23,
+          3
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        true,
+        true
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 23,
+        "textures": 6
+      },
+      "trees": 73
+    },
+    {
+      "module": "missile",
+      "time": 0,
+      "playing": false,
+      "shot": 0,
+      "view": "nose",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -30,
+          23,
+          3
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        true,
+        true
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 23,
+        "textures": 6
+      },
+      "trees": 73
+    },
+    {
+      "module": "missile",
+      "time": 0,
+      "playing": false,
+      "shot": 0,
+      "view": "three",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -30,
+          23,
+          3
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        true,
+        true
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 24,
+        "textures": 6
+      },
+      "trees": 73
+    },
+    {
+      "module": "missile",
+      "time": 0,
+      "playing": false,
+      "shot": 0,
+      "view": "tail",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -30,
+          23,
+          3
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        true,
+        true
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 24,
+        "textures": 6
+      },
+      "trees": 73
+    },
+    {
+      "module": "sequence",
+      "time": 1,
+      "playing": false,
+      "shot": 0,
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -28.753819444444446,
+          23,
+          3
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        true,
+        true
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 218,
+        "textures": 9
+      },
+      "trees": 73
+    },
+    {
+      "module": "sequence",
+      "time": 6,
+      "playing": false,
+      "shot": 1,
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -22.575,
+          23,
+          3
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        true,
+        true
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 235,
+        "textures": 17
+      },
+      "trees": 73
+    },
+    {
+      "module": "sequence",
+      "time": 10,
+      "playing": false,
+      "shot": 2,
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -17.569444444444446,
+          23,
+          3
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        true,
+        true
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 235,
+        "textures": 17
+      },
+      "trees": 73
+    },
+    {
+      "module": "sequence",
+      "time": 13.2,
+      "playing": false,
+      "shot": 3,
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -13.4718072053735,
+          23.094729900264607,
+          2.985450519031142
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        true,
+        true
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 235,
+        "textures": 17
+      },
+      "trees": 73
+    },
+    {
+      "module": "sequence",
+      "time": 16,
+      "playing": false,
+      "shot": 4,
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -10.022104620394872,
+          23.614858538571138,
+          2.9003460207612455
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        true,
+        true
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 235,
+        "textures": 17
+      },
+      "trees": 73
+    },
+    {
+      "module": "sequence",
+      "time": 18.5,
+      "playing": false,
+      "shot": 5,
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -6.826908202727457,
+          23.591654793405255,
+          2.883044982698962
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        true,
+        true
+      ],
+      "resources": {
+        "geometries": 252,
+        "textures": 19
+      },
+      "trees": 73
+    },
+    {
+      "module": "sequence",
+      "time": 20.55,
+      "playing": false,
+      "shot": 6,
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -3.92499074074074,
+          22.559288888888894,
+          3.005162962962963
+        ],
+        "damage": true,
+        "settled": false
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        false,
+        true
+      ],
+      "resources": {
+        "geometries": 267,
+        "textures": 19
+      },
+      "trees": 73
+    },
+    {
+      "module": "sequence",
+      "time": 23,
+      "playing": false,
+      "shot": 7,
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          0.628,
+          13.728000000000002,
+          3.3416
+        ],
+        "damage": true,
+        "settled": false
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 267,
+        "textures": 19
+      },
+      "trees": 73
+    },
+    {
+      "module": "sequence",
+      "time": 25.6,
+      "playing": false,
+      "shot": 8,
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          6.215644444444447,
+          0.6018747805031291,
+          3.5
+        ],
+        "damage": true,
+        "settled": false
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 267,
+        "textures": 19
+      },
+      "trees": 73
+    },
+    {
+      "module": "sequence",
+      "time": 26.9,
+      "playing": false,
+      "shot": 9,
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          8.314,
+          0.0009770646734781866,
+          3.5
+        ],
+        "damage": true,
+        "settled": false
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 270,
+        "textures": 20
+      },
+      "trees": 73
+    },
+    {
+      "module": "sequence",
+      "time": 28.4,
+      "playing": false,
+      "shot": 10,
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          8.9712,
+          0,
+          3.5
+        ],
+        "damage": true,
+        "settled": false
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 270,
+        "textures": 20
+      },
+      "trees": 73
+    },
+    {
+      "module": "sequence",
+      "time": 34.7,
+      "playing": false,
+      "shot": 11,
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          9,
+          0,
+          3.5
+        ],
+        "damage": true,
+        "settled": true
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 270,
+        "textures": 20
+      },
+      "trees": 73
+    },
+    {
+      "module": "crash",
+      "time": 26.1,
+      "playing": false,
+      "shot": 9,
+      "view": "side",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          7.194000000000002,
+          0.25770142552183095,
+          3.4999999999999996
+        ],
+        "damage": true,
+        "settled": false
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 270,
+        "textures": 20
+      },
+      "trees": 73
+    },
+    {
+      "module": "crash",
+      "time": 28.25,
+      "playing": false,
+      "shot": 10,
+      "view": "three",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          8.95078125,
+          0,
+          3.5
+        ],
+        "damage": true,
+        "settled": false
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 270,
+        "textures": 20
+      },
+      "trees": 73
+    },
+    {
+      "module": "crash",
+      "time": 33,
+      "playing": false,
+      "shot": 11,
+      "view": "three",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          9,
+          0,
+          3.5
+        ],
+        "damage": true,
+        "settled": true
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 270,
+        "textures": 20
+      },
+      "trees": 73
+    },
+    {
+      "module": "crash",
+      "time": 33,
+      "playing": false,
+      "shot": 11,
+      "view": "side",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          9,
+          0,
+          3.5
+        ],
+        "damage": true,
+        "settled": true
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 270,
+        "textures": 20
+      },
+      "trees": 73
+    },
+    {
+      "module": "handler",
+      "time": 6,
+      "playing": false,
+      "shot": 1,
+      "view": "side",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -22.575,
+          23,
+          3
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        true,
+        true
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 270,
+        "textures": 20
+      },
+      "trees": 73
+    }
+  ],
+  "initial": {
+    "geometries": 270,
+    "textures": 20
+  },
+  "final": {
+    "geometries": 270,
+    "textures": 20
+  },
+  "controls": true,
+  "replay": true,
+  "disposed": true,
+  "reducedMotion": true,
+  "failedLoadCleanup": true
+}

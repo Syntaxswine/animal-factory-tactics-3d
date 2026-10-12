@@ -21,8 +21,8 @@ The helicopter approaches the plateau while a hen in an overseas radio room guid
 | 03 · Closing in | 9–12 s | Return to an exterior tracking view with the same aircraft travel direction. The relay, dishes and equipment hut become clearer. | Full exterior rotor sound returns after the line. |
 | 04 · Radar contact | 12–14 s | Close view of a radar sweep meeting a bright new aircraft return. This detection precedes launcher activation. | One contact ping over a low equipment hum. |
 | 05 · SAM wakes | 14–17 s | Cut to the grounded SAM site. Its control lamp lights; the twin loaded rails turn and elevate. | Relay click, then a rising mechanical whirr. |
-| 06 · Missile volley | 17–20 s | Two missiles leave in a quick stagger. Both rails are empty after the second launch; trails have different lengths. | Two distinct ignition impulses and overlapping launch whooshes. |
-| 07 · Hit & drop | 20–21.5 s | Localized impact damages the attached tail/control surfaces near the plateau rim. The aircraft begins dropping nose down. Its central cabin holds together. | Sharp crack and metal tearing; rotor beat becomes uneven. |
+| 06 · Missile volley | 17–20.5 s | Two missiles leave in a quick stagger. Both rails are empty after the second launch; trails have different lengths. | Two distinct ignition impulses and overlapping launch whooshes. |
+| 07 · Hit & drop | 20.5–21.5 s | Localized impact damages the attached tail/control surfaces near the plateau rim. The aircraft begins dropping nose down. Its central cabin holds together. | Sharp crack and metal tearing; rotor beat becomes uneven. |
 | 08 · Down the cliffs | 21.5–24.5 s | Wide view along the nearby cliff face. The rim and relay are high above; the helicopter falls rapidly toward a small clearing in the trees below. Track downward to preserve a clear altitude reference. | Airframe rattle, uneven rotor and rising wind. |
 | 09 · Last-second flare | 24.5–26 s | Near the cliff foot, the pilot pulls the nose up briefly to check the fall. Both skids remain intact and airborne; their rear ends are closest to the soil. | Rotor strains immediately before contact. |
 | 10 · Crash in the clearing | 26–28 s | Skids bear the impact, buckle, and drag through soil as the aircraft slides forward. Trees border the clearing; the cliff rises directly behind it. | Heavy thump, metal crunch and sustained ground scrape. |
@@ -59,6 +59,6 @@ Use the existing **survivable** helicopter at rest, with a clear near-side doorw
 - [Review record](REVIEW.md)
 - [Existing helicopter model and effect documentation](../UTILITY-HELICOPTER.md)
 
-Created with the built-in image-generation tool. Earlier delivered sheets remain in this folder as historical versions. This pass changes storyboard art and documentation only; cinematic playback, voice/audio production and world-space flight/crash animation remain to be built.
+Created with the built-in image-generation tool. Earlier delivered sheets remain in this folder as historical versions. The subsequent [modular animation study](../INTRO-ANIMATION.md) now implements the twelve-shot sequence in `tactics/intro-study.html`, with a separate missile design view and close launcher/crash inspection. The first missile hits at 20.5 seconds. Voice/audio production, squad emergence and gameplay integration remain separate work.
 
-No browser, test server or background helper was started. The previous local preview expired on schedule and was not restarted.
+The storyboard itself required no running helper. The later animation preview's bounded lifetime and stop method are recorded in its [documentation](../INTRO-ANIMATION.md#preview-lifetime).

@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The plateau ambush — animation workshop</title><link rel="icon" href="data:,"><link rel="stylesheet" href="intro-study.css"></head>
+<body><header><div><p class="eyebrow">ANIMAL FACTORY TACTICS</p><h1>The plateau ambush</h1><p>A modular animation study</p></div><a href="utility-helicopter-study.html?mode=survivable">Helicopter design ↗</a></header>
+<main><nav aria-label="Animation controls">
+<label>Study <select id="module"><option value="sequence">Full sequence</option><option value="missile">Missile design</option><option value="launch">SAM launch</option><option value="flight">Helicopter flight</option><option value="crash">Descent &amp; crash</option><option value="handler">Overseas handler</option><option value="radar">Radar contact</option></select></label>
+<label>Camera <select id="view"><option value="shot">Directed</option><option value="three">Three-quarter</option><option value="side">Side</option><option value="nose">Nose-on</option><option value="tail">Tail-on</option><option value="top">Above</option></select></label>
+<button id="play">Play</button><button id="restart">Restart</button><label><input id="effects" type="checkbox" checked>Smoke &amp; dust</label><label><input id="trees" type="checkbox" checked>Trees</label><label><input id="grey" type="checkbox">Grey forms</label>
+<span id="missile-controls" hidden><label><input id="section" type="checkbox">See through body</label><label>Roll <input id="roll" type="range" min="0" max="90" step="1" value="0"><output id="roll-label">0°</output></label></span>
+</nav>
+<div id="viewport"><div id="loading">Preparing the painted scene…</div><div id="error" role="alert"></div><canvas id="radar" hidden aria-label="Radar contact display"></canvas><div id="caption"><span id="shot-number"></span><strong id="shot-title"></strong><p id="dialogue"></p></div></div>
+<div class="transport"><label class="timeline">Time <input id="time" type="range" min="0" max="35" value="0" step=".01"><output id="time-label">0.00 s</output></label><label>Speed <select id="speed"><option value="1">1×</option><option value=".5">½×</option><option value=".25">¼×</option></select></label></div>
+<div id="shots" aria-label="Jump to a shot"></div><p id="status"></p><footer>Inspect the missile from either end, then reveal the two plates inside its body. They cross at 90°; rolling the whole missile changes the end-on silhouette. Drag a paused view to orbit. The sequence is a silent animation study; gameplay and the final sound edit are separate.</footer></main>
+<script type="module" src="intro-study.js"></script></body></html>

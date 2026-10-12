@@ -19,7 +19,7 @@ The wreck retains a visibly related cabin and tail rather than substituting an u
 
 The user proposes a SAM strike bringing down the squad's helicopter at the start of the game. The new variant tells that story through localized tail-boom damage and a rough forced landing: peeled metal around a puncture, a damaged tail rotor, crushed skids, a snapped main blade and a bent surviving blade. The cabin remains rigid, mostly upright and recognizable. This is visual storytelling, not a simulation or a claim about real aircraft survivability.
 
-The [twelve-shot intro storyboard](intro-storyboard/README.md) develops the approach, the hen's overseas radio briefing, radar detection, SAM volley and rapid drop past the cliffs into a wooded clearing at their base. Its two painted sheets and proposed 35-second shot/audio plan distinguish tail damage from the later skid/rotor failures. Cinematic playback is not yet implemented.
+The [twelve-shot intro storyboard](intro-storyboard/README.md) develops the approach, the hen's overseas radio briefing, radar detection, SAM volley and rapid drop past the cliffs into a wooded clearing at their base. Its two painted sheets and 35-second shot/audio plan distinguish tail damage from the later skid/rotor failures. The separate [modular animation study](INTRO-ANIMATION.md) now provides silent playback with inspectable missile, launcher, aircraft and crash modules.
 
 The positive-Z sliding door is absent and the bench beside it is folded away. The jettisoned door, shed blade and small fragments rest on the opposite side, leaving exterior gathering space by the opening. Two feathered skid furrows and a belly scrape lead into the aircraft. The intact and destroyed variants retain their previous geometry, UVs and transforms.
 
@@ -55,7 +55,7 @@ Diagnostics measure actual transformed vertices. This matters for the tilted wre
 
 Survivable diagnostics also report `exitLane`, a model-local box from `[-1.20, 0, 1.35]` to `[-0.20, 2.20, 3.35]`. It marks clear exterior space beside the opening, with `gameplayIntegrated: false`. It is not navigation, a character spawn volume or a complete passage test. `bodyBounds` excludes both overhead rotor parts and ground paint. The viewer offsets the horse beside this exit while retaining native character scale.
 
-These are static art assets and a comparison study. SAM gameplay, the intro cinematic, flight, rotor animation, boarding, squad spawning, destruction transitions, editor placement, ground occupancy and cover rules have not been added. For later placement, reserve the cabin/skids/tail or individual wreck components, not the entire rotor span. The wreck's separated pieces need individual occupancy/cover review.
+These assets and their comparison viewer remain static. Flight, rotor motion and a survivable crash are developed by an adapter in the separate intro study. SAM gameplay, campaign cinematic integration, boarding, squad spawning, editor placement, ground occupancy and cover rules have not been added. For later placement, reserve the cabin/skids/tail or individual wreck components, not the entire rotor span. The wreck's separated pieces need individual occupancy/cover review.
 
 ## Validation and review
 

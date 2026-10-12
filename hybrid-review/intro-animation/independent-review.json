@@ -1,0 +1,246 @@
+{
+  "date": "2026-10-12",
+  "reviewer": "Independent strategic-sites reviewer",
+  "verdict": {
+    "score": 9,
+    "scope": "Modular animation study",
+    "blockingFindings": [],
+    "sourceUnchanged": true
+  },
+  "errors": [],
+  "checks": {
+    "treesControl": true,
+    "reverseExact": true,
+    "rafVisibility": true,
+    "disposal": true,
+    "playback": {
+      "elapsedMs": 35371,
+      "end": 35
+    },
+    "reducedMotion": true
+  },
+  "frames": [
+    {
+      "label": "missile-plus",
+      "time": 0,
+      "module": "missile",
+      "view": "nose"
+    },
+    {
+      "label": "missile-x",
+      "time": 0,
+      "module": "missile",
+      "view": "tail"
+    },
+    {
+      "label": "missile-cutaway",
+      "time": 0,
+      "module": "missile",
+      "view": "three"
+    },
+    {
+      "label": "missile-grey",
+      "time": 0,
+      "module": "missile",
+      "view": "three"
+    },
+    {
+      "label": "handler-side",
+      "time": 6,
+      "module": "handler",
+      "view": "side"
+    },
+    {
+      "label": "sequence-01",
+      "time": 1,
+      "module": "sequence",
+      "view": "shot"
+    },
+    {
+      "label": "sequence-02",
+      "time": 6,
+      "module": "sequence",
+      "view": "shot"
+    },
+    {
+      "label": "sequence-03",
+      "time": 10,
+      "module": "sequence",
+      "view": "shot"
+    },
+    {
+      "label": "sequence-04",
+      "time": 13.2,
+      "module": "sequence",
+      "view": "shot"
+    },
+    {
+      "label": "sequence-05",
+      "time": 16,
+      "module": "sequence",
+      "view": "shot"
+    },
+    {
+      "label": "sequence-06",
+      "time": 18.7,
+      "module": "sequence",
+      "view": "shot"
+    },
+    {
+      "label": "sequence-07",
+      "time": 20.55,
+      "module": "sequence",
+      "view": "shot"
+    },
+    {
+      "label": "sequence-08",
+      "time": 23,
+      "module": "sequence",
+      "view": "shot"
+    },
+    {
+      "label": "sequence-09",
+      "time": 25.6,
+      "module": "sequence",
+      "view": "shot"
+    },
+    {
+      "label": "sequence-10",
+      "time": 26.5,
+      "module": "sequence",
+      "view": "shot"
+    },
+    {
+      "label": "sequence-11",
+      "time": 28.4,
+      "module": "sequence",
+      "view": "shot"
+    },
+    {
+      "label": "sequence-12",
+      "time": 35,
+      "module": "sequence",
+      "view": "shot"
+    },
+    {
+      "label": "close-approach",
+      "time": 25.8,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "close-contact",
+      "time": 26,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "close-compression",
+      "time": 26.5,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "close-compressed",
+      "time": 27,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "close-strike-approach",
+      "time": 28.1,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "close-strike-before",
+      "time": 28.2499,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "close-strike-after",
+      "time": 28.2501,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "close-fragment-fall",
+      "time": 28.6,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "close-fragment-rest",
+      "time": 29.2,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "close-door-start",
+      "time": 30.6,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "close-door-mid",
+      "time": 31.1,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "close-door-open",
+      "time": 31.6,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "close-settled",
+      "time": 35,
+      "module": "crash",
+      "view": "side"
+    },
+    {
+      "label": "crash-grey",
+      "time": 28.4,
+      "module": "crash",
+      "view": "three"
+    },
+    {
+      "label": "door-three",
+      "time": 35,
+      "module": "crash",
+      "view": "three"
+    },
+    {
+      "label": "door-top",
+      "time": 35,
+      "module": "crash",
+      "view": "top"
+    }
+  ],
+  "resourcesStart": {
+    "geometries": 270,
+    "textures": 20
+  },
+  "resourcesEnd": {
+    "geometries": 270,
+    "textures": 20
+  },
+  "sourceHashes": {
+    "intro-effects.js": "c790eeb60a90a9b5c015ed3e70f0de78c6323fd17001e0a00999ac603deea5af",
+    "intro-environment.js": "e8159f9b5eba575905365fbca8574a3a4b709852dab998324c9b29701156811e",
+    "intro-ground-contact.js": "fb39871173cee2eb63088f354ff587d83f27344e7bb125eabe4c5a786e224263",
+    "intro-helicopter.js": "8bbd48189618916ceadf5cf43a10497c865eefd1bb832df7213fee35cb10ba0f",
+    "intro-launcher.js": "d48edc18265bf63658e81e99d7d6a0c7e8537c09bae2f64ca0f41c1baf18ff21",
+    "intro-paint.js": "6253f4aa1d6940d4332ef040fc17b83797f2c49364fc6387d95f5d5f7b21353d",
+    "intro-radar.js": "11d1a2054e2ed577e02936c6aeed9fc888ba929d7787181ffaf8dd535fe00cd9",
+    "intro-radio-room.js": "03dc056067e4a9cc754a835b18fb14c7b3e1bb7592772d16b62f538204a22e3f",
+    "intro-study.css": "4a435bebbd7ee122adb0d4cc7acebbfa0df2de72a9e48d4c7d2c35dc99e8c521",
+    "intro-study.html": "0b4924e7c0907e836c09fe5c647422c45ac3e5510879a50d562ecc3499fbcd72",
+    "intro-study.js": "047d86c8e49472c37b14640f384345024eb735d874dc9a2d2a45674c5d025031",
+    "intro-timeline.js": "4c34a5f7f5cfaf3a8362b707c26183406ab94179f35d89c39e61871ddee10852",
+    "sam-missile.js": "40f38c93ec5034a012c619829414996455670639938f72a2b5c0e4ce8b9b06fa"
+  },
+  "reviewBrowsersClosed": true
+}
