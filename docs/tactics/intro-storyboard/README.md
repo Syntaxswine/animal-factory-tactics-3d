@@ -1,10 +1,12 @@
 # Intro storyboard: the plateau ambush
 
+**Next pass:** The latest 3D composition remains unaccepted by the user, who is considering animated sprites. These are the existing flattened storyboard sheets; a new three-keyframe sprite proof has been proposed but not created. See the [Claude handoff](../INTRO-CLAUDE-HANDOFF.md).
+
 The helicopter approaches the plateau while a hen in an overseas radio room guides the mercenaries toward the central relay station. Enemy radar detects the aircraft; a SAM site activates and fires a volley. The hit helicopter drops rapidly past the cliffs and crashes in a wooded clearing at their base.
 
 **Two sheets, twelve shots, approximately 35 seconds.** Timing is a first animatic target. The helicopter, hen, launcher and relay use the existing game designs.
 
-**Geography correction (October 12, 2026):** The crash, SAM and central relay belong to three separate map sectors. The crash is in the user's marked lower grassy clearing beneath a curved two-tier plateau, surrounded by woodland. The raster sheets below predate this correction: any relay or SAM shown above the crash is superseded. Use the revised shot plan and [current animation study](../INTRO-ANIMATION.md#sector-geography) for placement.
+**Geography correction (October 12, 2026):** The crash, SAM and central relay belong to three separate map sectors. The crash is in the user's marked lower grassy clearing beneath a curved two-tier plateau, surrounded by woodland. The raster sheets below predate this correction: any relay or SAM shown above the crash is superseded. Use the marked map and corrected sector constraints for placement. The [current animation study](../INTRO-ANIMATION.md) remains a motion reference; its composition was not accepted.
 
 [User's crash-sector reference, with the clearing circled](crash-sector-reference.png). The marked relationship guides the cinematic set; this does not place a wreck in the playable tutorial map.
 

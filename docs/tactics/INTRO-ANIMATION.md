@@ -1,6 +1,8 @@
 # The plateau ambush — modular animation study
 
-Open `tactics/intro-study.html` and press **Play**. This is a 35-second silent study built from the [approved twelve-shot storyboard](intro-storyboard/README.md). It covers the overseas hen's briefing, radar contact, two SAM launches, a tail strike, the rapid cliff descent and a survivable landing in a wooded clearing. It is packaged for the 3D project, with no changes to gameplay, campaign state or the existing static helicopter assets.
+**User review update, October 12, 2026:** The latest composition still misses the user's target. Animated sprites are being considered for another pass. Technical review results below are preserved as evidence, not final visual acceptance. See the [Claude handoff](INTRO-CLAUDE-HANDOFF.md) for the current brief, storyboard and marked map.
+
+Open `tactics/intro-study.html` and press **Play**. This is a 35-second silent study built from the [earlier twelve-shot storyboard](intro-storyboard/README.md). It covers the overseas hen's briefing, radar contact, two SAM launches, a tail strike, the rapid cliff descent and a survivable landing in a wooded clearing. It is packaged for the 3D project, with no changes to gameplay, campaign state or the existing static helicopter assets.
 
 ## Sector geography
 

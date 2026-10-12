@@ -2,6 +2,8 @@
 
 **October 12, 2026 · 9/10 · Approved as a modular animation study. No blockers.**
 
+**Subsequent user review:** The user said this still misses the mark and is considering animated sprites. The score below remains a historical technical/art-study assessment; the composition has not received user approval. The [Claude handoff](../../docs/tactics/INTRO-CLAUDE-HANDOFF.md) carries that unresolved direction forward.
+
 This supersedes the nearby-site staging in `386de27`. The crash, SAM and relay belong to separate sectors. The user's [marked map reference](../../docs/tactics/intro-storyboard/crash-sector-reference.png) places the wreck in a lower grassy pocket beneath a curved two-tier plateau, with woodland around it. The current scene and [full recorded sequence](sequence-playback.webm) use that relationship. The relay remains an offscreen briefing objective.
 
 ## Independent evidence
