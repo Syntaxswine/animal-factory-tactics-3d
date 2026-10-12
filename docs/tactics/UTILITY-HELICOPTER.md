@@ -19,6 +19,8 @@ The wreck retains a visibly related cabin and tail rather than substituting an u
 
 The user proposes a SAM strike bringing down the squad's helicopter at the start of the game. The new variant tells that story through localized tail-boom damage and a rough forced landing: peeled metal around a puncture, a damaged tail rotor, crushed skids, a snapped main blade and a bent surviving blade. The cabin remains rigid, mostly upright and recognizable. This is visual storytelling, not a simulation or a claim about real aircraft survivability.
 
+The [twelve-shot intro storyboard](intro-storyboard/README.md) develops the approach, hen's mission briefing, SAM volley and separate tail/skid/rotor damage beats. It includes two painted sheets and a proposed 37-second shot/audio plan; it is not implemented cinematic playback.
+
 The positive-Z sliding door is absent and the bench beside it is folded away. The jettisoned door, shed blade and small fragments rest on the opposite side, leaving exterior gathering space by the opening. Two feathered skid furrows and a belly scrape lead into the aircraft. The intact and destroyed variants retain their previous geometry, UVs and transforms.
 
 The opening suggests a crouched exit followed by a step down. A standing walk-through or evacuation animation has not been implemented. A future cinematic can connect the SAM strike, forced landing and squad emergence without needing to substitute the destroyed wreck.
