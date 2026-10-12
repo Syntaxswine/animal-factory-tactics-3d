@@ -1,3 +1,4 @@
+import {spotlightPathError} from './spotlight-path.js';
 import {shiftPatrol,patrolError} from './character-patrol.js';
 import {paintFoliage} from './editor-foliage-brush.js';
 import {cleanFoliage} from './foliage-data.js';
@@ -143,9 +144,11 @@ export class EditingDocument extends InspectionDocument {
  }
  lightTargets(selection,points){
   if(selection?.type!=='prop'||!LIGHT_FORMS[selection.data.kind]?.spot)throw Error('Select a spotlight first.');
-  if(!Array.isArray(points)||points.length<1||points.length>3||points.some(p=>!p||![p.x,p.y,p.z??0].every(Number.isInteger)||p.x<0||p.y<0||p.x>=this.size||p.y>=this.size||p.z<0||p.z>2))throw Error('Choose one to three map tiles.');
-  const p=selection.data,targets=points.map(q=>({x:q.x-p.x,y:q.y-p.y,z:(q.z||0)-(p.z||0)}));
-  this.replace({...this.editor.map,props:this.editor.map.props.map(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(p.z||0)&&q.kind===p.kind?{...q,lightTargets:targets}:q)});
+  const normalized=Array.isArray(points)?points.map(p=>p&&({...p,waitSeconds:p.waitSeconds===undefined?0:p.waitSeconds})):points,error=spotlightPathError(normalized,this.size);if(error)throw Error(error);
+  const p=selection.data,same=q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(p.z||0)&&q.kind===p.kind;
+  if(!this.editor.map.props.some(same))throw Error('This spotlight no longer exists.');
+  const targets=normalized.map(q=>({x:q.x-p.x,y:q.y-p.y,z:(q.z||0)-(p.z||0),...q.waitSeconds?{waitSeconds:q.waitSeconds}:{}}));
+  this.replace({...this.editor.map,props:this.editor.map.props.map(q=>{if(!same(q))return q;const next={...q};if(targets.length)next.lightTargets=targets;else delete next.lightTargets;return next;})});
  }
  addRampBanks(selection,surface='dirt'){if(selection?.type!=='prop'||!isRamp(selection.data))throw Error('Select a ramp first.');if(!['dirt','grass','sand'].includes(surface))throw Error('Choose a bank surface.');const candidate=createEditor(this.editor.map);for(const p of bankSet(selection.data,surface)){if(this.block&&(p.x<0||p.y<0||p.x>=24||p.y>=24))throw Error('Banks must fit inside the block.');const error=applyBrush(candidate,'prop',p.x,p.y,'',{level:p.z,propKind:p.kind,rotated:false});if(error)throw Error(error);}this.replace(candidate.map);}
  lightMode(selection,mode){if(selection?.type!=='prop'||!LIGHT_FORMS[selection.data.kind])throw Error('Select a lamp or fire first.');if(!['auto','on','off'].includes(mode))throw Error('Choose a light schedule.');const p=selection.data;this.replace({...this.editor.map,props:this.editor.map.props.map(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(p.z||0)&&q.kind===p.kind?{...q,lightMode:mode}:q)});}
