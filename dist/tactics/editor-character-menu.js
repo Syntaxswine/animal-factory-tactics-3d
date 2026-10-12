@@ -32,7 +32,7 @@ export class EditorCharacterMenu {
   $('edit-tool').addEventListener('change',()=>{if($('edit-tool').value!=='inspect')this.finish();});
   $('floor').addEventListener('change',()=>{this.menu.close();this.sync();});
  }
- row(){return this.editing?.document===this.getDocument()?this.getDocument().character(this.editing.id):null;}
+ row(){const document=this.getDocument();return this.editing&&document&&this.editing.document===document?document.character(this.editing.id):null;}
  show(unit,x,y){
   if(this.isBusy()||!unit?.character?.id)return;
   const d=this.getDocument(),id=unit.character.id,row=d.character(id);if(!row)return;

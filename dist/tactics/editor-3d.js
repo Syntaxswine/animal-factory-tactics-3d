@@ -16,7 +16,7 @@ const view={x:11.5,y:11.5,span:24,preset:'0'};
 const scene=new InspectionScene(canvas,()=>{dirty=true;diagnostics();});
 const status=text=>$('status').textContent=text;
 function diagnostics(){$('diagnostics').textContent=scene.diagnostics.join('\n')||'No missing scene assets reported.';$('metrics').textContent=`${scene.models.length} modeled starts · load ${Math.round(scene.loadMs||0)} ms · scenery ${Math.round(scene.rebuildMs||0)} ms · ${scene.renderer.info.memory.geometries} geometries / ${scene.renderer.info.memory.textures} textures`;}
-function render(){if(dirty||scene.lights?.animated){scene.draw(view,canvas.clientWidth,canvas.clientHeight);dirty=false;diagnostics();}characterMenu?.draw();requestAnimationFrame(render);}
+function render(){if(dirty||scene.lights?.animated||(scene.sceneryAssets?.animated&&!scene.reducedMotion?.matches)){scene.draw(view,canvas.clientWidth,canvas.clientHeight);dirty=false;diagnostics();}characterMenu?.draw();requestAnimationFrame(render);}
 function focus(x,y,span=24){view.x=x;view.y=y;view.span=span;dirty=true;}
 function home(){view.preset='0';view.topTurn=0;$('camera').value='0';const p=documentModel?.map.starts[0];focus(p?.x??11.5,p?.y??11.5,22);}
 async function open(text){
@@ -74,7 +74,7 @@ const sectorPresets=installSectorPresets({openPreset,guardReplace:()=>tools.guar
 $('quick-save-map').onclick=()=>documentModel?.map.sectorTemplate?.id&&!documentModel.block?sectorSave.show():$('save-map').click();
 window.editor3d={open,select,changed,apply:command=>tools.apply(command),validate:()=>documentModel.validate(),export:()=>documentModel.export(),inspect:(x,y,z,options)=>documentModel.inspect(x,y,z,options),get document(){return documentModel;},get scene(){return scene;},get loading(){return loading;},get selection(){return selection;},view};
 async function initialMap(){
- const params=new URLSearchParams(location.search),id=params.get('sectorTemplate');if(params.get('study')==='strategic-sites'){const {strategicSiteFixture}=await import('./strategic-site-fixture.js');await open(JSON.stringify(strategicSiteFixture()));Object.assign(view,{x:33,y:33,span:40});await changed();return;}if(!id){await open(JSON.stringify(blankMap('New design')));return;}
+ const params=new URLSearchParams(location.search),id=params.get('sectorTemplate');if(params.get('study')==='scenery'){const {sceneryFixture}=await import('./scenery-fixture.js');await open(JSON.stringify(sceneryFixture()));Object.assign(view,{x:26,y:28,span:25});await changed();return;}if(params.get('study')==='strategic-sites'){const {strategicSiteFixture}=await import('./strategic-site-fixture.js');await open(JSON.stringify(strategicSiteFixture()));Object.assign(view,{x:33,y:33,span:40});await changed();return;}if(!id){await open(JSON.stringify(blankMap('New design')));return;}
  try{status('Opening sector map…');await openPreset({id,variant:params.get('variant')||'placeholder.json',orientation:Number(params.get('orientation')||0),source:params.get('library')==='folder'?'folder':'bundled'});}catch(e){status('Cannot open template: '+e.message);}
 }
 requestAnimationFrame(render);initialMap().then(()=>{if(new URLSearchParams(location.search).get('presets')==='1')sectorPresets.show();});

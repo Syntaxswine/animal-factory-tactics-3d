@@ -1,3 +1,5 @@
+import {SCENERY_PROPS,isHelicopter} from '../scenery-catalog.js';
+import {helicopterBlocked} from '../scenery-rules.js';
 export const FOLIAGE_TERRAINS=['woodland','woodland-dense'];
 export const isWoodland=t=>FOLIAGE_TERRAINS.includes(t);
 import {SITE_PROPS,isStrategicSite,siteBlocked} from '../strategic-site-rules.js';
@@ -46,7 +48,7 @@ Object.assign(PROPS,RAMP_PROPS,BANK_PROPS);
 export function propCells(p){const rule=PROPS[p.kind];if(!rule)return [];const w=p.rotated?rule.h:rule.w,h=p.rotated?rule.w:rule.h;return Array.from({length:w*h},(_,i)=>({x:p.x+i%w,y:p.y+Math.floor(i/w),z:p.z??0}));}
 const indexes=new WeakMap();
 export function propAt(m,x,y,z=0){const props=m.props;if(!props)return undefined;let index=indexes.get(props);if(!index){index=new Map();for(const p of props)for(const q of propCells(p))index.set(`${q.x},${q.y},${q.z}`,p);indexes.set(props,index);}return index.get(`${x},${y},${z}`);}
-export const propBlocks=(m,x,y,z=0)=>isStrategicSite(propAt(m,x,y,z))?siteBlocked(propAt(m,x,y,z),{x,y,z}):!!PROPS[propAt(m,x,y,z)?.kind]?.solid;
+export const propBlocks=(m,x,y,z=0)=>isHelicopter(propAt(m,x,y,z))?helicopterBlocked(propAt(m,x,y,z),{x,y,z}):isStrategicSite(propAt(m,x,y,z))?siteBlocked(propAt(m,x,y,z),{x,y,z}):!!PROPS[propAt(m,x,y,z)?.kind]?.solid;
 export const propTall=(m,x,y,z=0)=>!!PROPS[propAt(m,x,y,z)?.kind]?.tall;
 
 // Unlocked doors stay solid to shots until a character opens them while crossing.
@@ -60,3 +62,5 @@ EDGES['wall-wood-trellis-arch']={solid:false,opaque:false,cover:0,art:'wall-wood
 PROPS[EXPLOSIVE_BARREL]={...EXPLOSIVE_BARREL_RULE};
 
 Object.assign(PROPS,SITE_PROPS);
+
+Object.assign(PROPS,SCENERY_PROPS);

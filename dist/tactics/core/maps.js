@@ -1,3 +1,4 @@
+import {helicopterMoveAllowed} from '../scenery-rules.js';
 import {patrolMapErrors} from '../character-patrol.js';
 import {foliageErrors,foliageBlocks,foliageGround,foliageKey} from '../foliage-data.js';
 import {breachErrors} from '../breach-data.js';
@@ -36,7 +37,7 @@ export function neighbors(m,p,stairs=stairSet(m),includeDiagonals=true){
  const z=levelOf(p),out=[];
  for(const b of [{x:p.x+1,y:p.y,z},{x:p.x-1,y:p.y,z},{x:p.x,y:p.y+1,z},{x:p.x,y:p.y-1,z}])if(passable(m,b)&&!parapetBlocks(m,p,b)&&(!blockedEdge(m,p,b)||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo&&!m.edgeLocks?.[edgeBetween(p,b)]))out.push({...b,cost:1});
  if(includeDiagonals)for(const dx of [-1,1])for(const dy of [-1,1]){const a={x:p.x+dx,y:p.y,z},b={x:p.x,y:p.y+dy,z},q={x:p.x+dx,y:p.y+dy,z};if(passable(m,a)&&passable(m,b)&&passable(m,q)&&!blockedEdge(m,p,a)&&!blockedEdge(m,p,b)&&!blockedEdge(m,a,q)&&!blockedEdge(m,b,q))out.push({...q,cost:1.5});}
- for(const dz of [-1,1])if(stairs.has(stairKey(p.x,p.y,Math.min(z,z+dz)))&&passable(m,{x:p.x,y:p.y,z:z+dz}))out.push({x:p.x,y:p.y,z:z+dz,cost:stairs.get(stairKey(p.x,p.y,Math.min(z,z+dz)))});for(const link of roofNeighbors(m,p))out.push(link);return out.filter(b=>rampMoveAllowed(m,p,b)&&siteMoveAllowed(m,p,b)).concat(rampLinks(m,p).filter(b=>passable(m,b)&&!blockedEdge(m,{...p,z:Math.max(levelOf(p),levelOf(b))},{...b,z:Math.max(levelOf(p),levelOf(b))})));
+ for(const dz of [-1,1])if(stairs.has(stairKey(p.x,p.y,Math.min(z,z+dz)))&&passable(m,{x:p.x,y:p.y,z:z+dz}))out.push({x:p.x,y:p.y,z:z+dz,cost:stairs.get(stairKey(p.x,p.y,Math.min(z,z+dz)))});for(const link of roofNeighbors(m,p))out.push(link);return out.filter(b=>rampMoveAllowed(m,p,b)&&siteMoveAllowed(m,p,b)&&helicopterMoveAllowed(m,p,b)).concat(rampLinks(m,p).filter(b=>passable(m,b)&&!blockedEdge(m,{...p,z:Math.max(levelOf(p),levelOf(b))},{...b,z:Math.max(levelOf(p),levelOf(b))})));
 }
 
 // Marked roof edges connect an outdoor foothold to the adjacent upper platform.
@@ -89,6 +90,7 @@ export function validateMap(raw,{connectivity=true}={}){
  if(!raw.edges||typeof raw.edges!=='object'||Array.isArray(raw.edges))return [...errors,'Missing edge barriers.'];
  for(const [k,v]of Object.entries(raw.edges)){const p=/^(e|s):(-?\d+):(-?\d+)(?::([12]))?$/.exec(k);if(!p)return [...errors,'Invalid edge key.'];const x=Number(p[2]),y=Number(p[3]),z=Number(p[4]||0);if(!Object.hasOwn(EDGES,v)||k!==edgeKey(p[1],x,y,z)||(p[1]==='e'?(x< -1||x>=W||y<0||y>=H):(x<0||x>=W||y< -1||y>=H)))return [...errors,'Invalid edge location or type.'];}
  if(!Array.isArray(raw.starts)||raw.starts.length!==4||raw.starts.some(p=>!point(p)))return [...errors,'Place exactly four valid squad starts.'];
+ for(const p of raw.starts)if(p.heading!==undefined&&(!Number.isFinite(p.heading)||p.heading<0||p.heading>=360))errors.push('Squad facing must be between 0 and 359 degrees.');
  if(!Array.isArray(raw.guards)||raw.guards.length>MAX_GUARDS||raw.guards.some(g=>!point(g)||!SPECIES.includes(g.species)||!WEAPON_IDS.includes(g.weapon)||(g.outfit!==undefined&&!['normal','red-hats'].includes(g.outfit)&&!(g.species==='donkey'&&g.outfit==='blue-hawaiian'))))return [...errors,'Use at most 46 guards (50 characters including the squad).'];
  if(raw.guards.some(g=>g.heading!==undefined&&(!Number.isFinite(g.heading)||g.heading<0||g.heading>=360)))return [...errors,'Guard facing must be between 0 and 359 degrees.'];
  if(!Array.isArray(raw.exits)||raw.exits.length!==1||!point(raw.exits[0]))return [...errors,'Place one valid travel marker.'];

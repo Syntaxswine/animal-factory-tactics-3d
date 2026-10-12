@@ -1,3 +1,5 @@
+import {helicopterData} from './scenery-rules.js';
+import {sceneryRule,sceneryId,sceneryPoint} from './scenery-catalog.js';
 import * as T from './vendor/three.module.js';
 import {buildWorld,DIMENSIONS} from './hybrid-world.js';
 import {cliffGeometry} from './cliff-map-geometry.js';
@@ -46,6 +48,9 @@ export function grenadeWorld(s){
    const ps=[[-1,0,0],[1,0,0],[-1,r.run,2],[1,r.run,2],[-1,r.run,0],[1,r.run,0]].map(([side,along,h])=>[c[0]+side*across[0]+r.dx*along,c[1]+h,c[2]+side*across[2]+r.dy*along]);
    for(const ids of [[0,1,3],[0,3,2],[0,2,4],[1,5,3],[2,3,5],[2,5,4]])tri(...ids.map(i=>ps[i]),{kind:'ramp'});
   }
+  const helicopter=helicopterData(p),furnishing=sceneryRule(p);
+  if(helicopter){const ps=helicopter.triangles;for(let i=0;i<ps.length;i+=9){const vs=[];for(let j=0;j<9;j+=3){const q=sceneryPoint(p,ps.slice(i+j,i+j+3));vs.push([q.x,q.h+(p.z||0)*(GRENADE_FLOOR-3),q.y]);}tri(...vs,{kind:'helicopter',propId:sceneryId(p)});}}
+  else if(furnishing)add(oriented({center:[p.x,(p.z||0)*GRENADE_FLOOR+.4,p.y],size:[1,.8,1]},{kind:'cover',propId:sceneryId(p)}));
   const data=siteData(p);if(data){const ps=data.triangles;for(let i=0;i<ps.length;i+=9){const vs=[];for(let j=0;j<9;j+=3){const [x,y,h]=ps.slice(i+j,i+j+3);vs.push([p.x+(p.rotated?7-y:x),(p.z||0)*GRENADE_FLOOR+h,p.y+(p.rotated?x:y)]);}tri(...vs,{kind:'site',propId:siteId(p)});}}
  }
  old={signature,index,items,width:key[0].length,height:key.length};cache.set(key,old);return old;
