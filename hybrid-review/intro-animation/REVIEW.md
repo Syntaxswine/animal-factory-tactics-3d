@@ -1,30 +1,21 @@
-# Independent review — modular intro animation
+# Independent review — intro sector geography
 
-**October 12, 2026 · 9/10 · Approved as a modular animation study.**
+**October 12, 2026 · 9/10 · Approved as a modular animation study. No blockers.**
 
-The independent reviewer performed code/geometry inspection, 33 fresh rendered states and uninterrupted playback. The approved source hashes and compact results are preserved in [independent-review.json](independent-review.json). The complete silent [recorded sequence](sequence-playback.webm) includes the radar insert and mission caption.
+This supersedes the nearby-site staging in `386de27`. The crash, SAM and relay belong to separate sectors. The user's [marked map reference](../../docs/tactics/intro-storyboard/crash-sector-reference.png) places the wreck in a lower grassy pocket beneath a curved two-tier plateau, with woodland around it. The current scene and [full recorded sequence](sequence-playback.webm) use that relationship. The relay remains an offscreen briefing objective.
 
-> 9/10 — approved as a modular animation study. No remaining blockers.
+## Independent evidence
 
-## Findings resolved before approval
+The reviewer inspected fresh renders, uninterrupted playback and source/geometry. The launcher is owned by its own scene; neither it nor a relay model appears in the crash scene under camera changes or seeking. The sequence cuts from the remote launcher back to the helicopter at 19.4 seconds. The same continuous missile track spans that cut.
 
-- The two continuous missile fin plates cross through the cylinder at **90 degrees**. Plus and X silhouettes are different roll angles of that same construction. Released missiles now retain the full mounted orientation, removing a 29.49-degree roll jump.
-- Both additional hen input textures are disposed by their owner. The radio desk was moved clear of the hen's body while retaining microphone reach.
-- Damage smoke samples the full aircraft/airframe transform at emission; emitted puffs remain in world space.
-- Skid compression uses the actual intact/collapsed support vertices, keeping the lowest rail in contact rather than merely avoiding ground penetration.
-- The rotor splits continuously at measured ground contact; its detached section settles visibly instead of disappearing.
-- The complete bench, including its back, stows against the rear bulkhead. The sliding door and bench leave the central near-side opening clear.
-- A Trees checkbox enables side inspection without removing the woodland from the sequence's default staging. The directed crash camera and final pullback remain clear.
+- Two curved cliff tiers each retain the ordinary 2-tile wall height. Forest patches surround the landing clearing and leave the exit and rotor sweep open.
+- The missile, helicopter and support-sampler source hashes are unchanged from the previous approved mechanics. Fin layout, grounded skid compression, rotor separation and the open doorway remain intact.
+- **14 focused tests passed independently.** The builder's delivery run adds static helicopter and distribution validation: **27 passing tests**.
+- A 60 Hz terrain audit sampled **7,522,468 visible actor vertices**. Minimum terrain clearance was approximately **0.002 tile**. The incoming missile nose first contacted the tail boom; no cabin interception was found.
+- Real-time playback reached 35 seconds in **35.06 seconds**, with no errors. Rewinds and sector-cut transforms were checked.
+- The builder captured **24 desktop states plus mobile**, verified actual scene submission for **60 time/camera combinations**, and tested real controls, replay, reduced motion, missing-atlas cleanup and double disposal. Resources held at **258 geometries / 21 textures** across replay.
+- Disposable review and capture browsers closed through their owner APIs. Exact process identity checks and closure receipts confirm exit. The retained preview's original expiry remains October 13, 2026, 1:37 p.m. Eastern.
 
-## Verification
+The [current compact review record](independent-review.json) preserves checks and refreshed source hashes. [Browser checks](browser-checks.json) and the current PNGs accompany it. The [previous review data](independent-review-386de27.json) is historical and applies to the earlier scenery.
 
-- Eleven focused intro tests pass independently. The delivery run adds the eleven unchanged static helicopter tests and two distribution tests: **24 passing tests**.
-- The reviewer checked all twelve shots, missile reveal/roll, no-effects crash views, doorway, grey forms and mobile controls.
-- Exact rewind, reduced motion, visibility suspension and texture disposal pass. Renderer resources remain **270 geometries / 20 textures** after repeated replay.
-- Real-time playback reaches the 35-second end without errors (35.371 seconds measured wall time in the review harness).
-- The builder's [browser check record](browser-checks.json) adds 21 desktop samples, mobile, real controls, deliberate missing-atlas cleanup and double teardown.
-- Review/capture browsers close through their owner API; exact process identities and successful exit receipts remain in the local task's helper records. The retained preview keeps its existing fixed expiry.
-
-The review harness needed two corrections: the initially selected recording path required an unavailable ffmpeg binary, and a subsequent wait used the wrong timeout argument. Browser MediaRecorder with a corrected wait completed the recording. Neither was a product defect.
-
-Approval covers the silent animation study and component inspection. Final audio, populated cabin, squad evacuation and gameplay/campaign integration remain outside this gate. The existing static helicopter assets are unchanged.
+Approval covers the silent animation study and corrected cinematic geography. This is a visual interpretation of the rough map, not an exact map import or gameplay placement. Final audio, squad evacuation and campaign integration remain separate work.

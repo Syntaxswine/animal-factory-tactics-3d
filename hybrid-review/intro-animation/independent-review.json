@@ -1,246 +1,280 @@
 {
   "date": "2026-10-12",
   "reviewer": "Independent strategic-sites reviewer",
+  "revisionScope": "Separate intro sectors and marked lower crash clearing",
   "verdict": {
     "score": 9,
-    "scope": "Modular animation study",
+    "scope": "Revised geography in modular animation study",
     "blockingFindings": [],
-    "sourceUnchanged": true
+    "focusedTests": 14,
+    "sceneSeparation": "Separate crash and remote SAM rendered scenes; central relay remains an off-screen briefing objective.",
+    "visualReference": "Lower grassy woodland clearing beneath two curved two-unit tiers."
   },
   "errors": [],
   "checks": {
+    "approvedMechanicsUnchanged": true,
+    "sceneOwnership": true,
+    "cutTransforms": true,
     "treesControl": true,
-    "reverseExact": true,
-    "rafVisibility": true,
     "disposal": true,
     "playback": {
-      "elapsedMs": 35371,
-      "end": 35
-    },
-    "reducedMotion": true
-  },
-  "frames": [
-    {
-      "label": "missile-plus",
-      "time": 0,
-      "module": "missile",
-      "view": "nose"
-    },
-    {
-      "label": "missile-x",
-      "time": 0,
-      "module": "missile",
-      "view": "tail"
-    },
-    {
-      "label": "missile-cutaway",
-      "time": 0,
-      "module": "missile",
-      "view": "three"
-    },
-    {
-      "label": "missile-grey",
-      "time": 0,
-      "module": "missile",
-      "view": "three"
-    },
-    {
-      "label": "handler-side",
-      "time": 6,
-      "module": "handler",
-      "view": "side"
-    },
-    {
-      "label": "sequence-01",
-      "time": 1,
-      "module": "sequence",
-      "view": "shot"
-    },
-    {
-      "label": "sequence-02",
-      "time": 6,
-      "module": "sequence",
-      "view": "shot"
-    },
-    {
-      "label": "sequence-03",
-      "time": 10,
-      "module": "sequence",
-      "view": "shot"
-    },
-    {
-      "label": "sequence-04",
-      "time": 13.2,
-      "module": "sequence",
-      "view": "shot"
-    },
-    {
-      "label": "sequence-05",
-      "time": 16,
-      "module": "sequence",
-      "view": "shot"
-    },
-    {
-      "label": "sequence-06",
-      "time": 18.7,
-      "module": "sequence",
-      "view": "shot"
-    },
-    {
-      "label": "sequence-07",
-      "time": 20.55,
-      "module": "sequence",
-      "view": "shot"
-    },
-    {
-      "label": "sequence-08",
-      "time": 23,
-      "module": "sequence",
-      "view": "shot"
-    },
-    {
-      "label": "sequence-09",
-      "time": 25.6,
-      "module": "sequence",
-      "view": "shot"
-    },
-    {
-      "label": "sequence-10",
-      "time": 26.5,
-      "module": "sequence",
-      "view": "shot"
-    },
-    {
-      "label": "sequence-11",
-      "time": 28.4,
-      "module": "sequence",
-      "view": "shot"
-    },
-    {
-      "label": "sequence-12",
-      "time": 35,
-      "module": "sequence",
-      "view": "shot"
-    },
-    {
-      "label": "close-approach",
-      "time": 25.8,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "close-contact",
-      "time": 26,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "close-compression",
-      "time": 26.5,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "close-compressed",
-      "time": 27,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "close-strike-approach",
-      "time": 28.1,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "close-strike-before",
-      "time": 28.2499,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "close-strike-after",
-      "time": 28.2501,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "close-fragment-fall",
-      "time": 28.6,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "close-fragment-rest",
-      "time": 29.2,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "close-door-start",
-      "time": 30.6,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "close-door-mid",
-      "time": 31.1,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "close-door-open",
-      "time": 31.6,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "close-settled",
-      "time": 35,
-      "module": "crash",
-      "view": "side"
-    },
-    {
-      "label": "crash-grey",
-      "time": 28.4,
-      "module": "crash",
-      "view": "three"
-    },
-    {
-      "label": "door-three",
-      "time": 35,
-      "module": "crash",
-      "view": "three"
-    },
-    {
-      "label": "door-top",
-      "time": 35,
-      "module": "crash",
-      "view": "top"
+      "end": 35,
+      "elapsedMs": 35060
     }
-  ],
+  },
+  "geometryAudit": {
+    "lowestAboveTerrain": 0.0019999914056673673,
+    "vertexSamples": 7522468,
+    "noseCrossings": [
+      {
+        "time": 20.47100000000033,
+        "name": "Tapered tail boom",
+        "point": [
+          -6.918520864145388,
+          24.25844326468221,
+          2.6871247113730763
+        ]
+      }
+    ],
+    "lowestSample": {
+      "time": 26.066666666666666,
+      "name": "Landing skid -1",
+      "point": [
+        5.712260742780146,
+        0.0019999914056673673,
+        2.45935887719133
+      ]
+    }
+  },
   "resourcesStart": {
-    "geometries": 270,
+    "geometries": 247,
     "textures": 20
   },
   "resourcesEnd": {
-    "geometries": 270,
+    "geometries": 247,
     "textures": 20
   },
+  "frames": [
+    {
+      "label": "approach",
+      "module": "sequence",
+      "time": 1,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "closing",
+      "module": "sequence",
+      "time": 10,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "sam-wake",
+      "module": "sequence",
+      "time": 16,
+      "view": "shot",
+      "sector": "sam"
+    },
+    {
+      "label": "release",
+      "module": "sequence",
+      "time": 17.4,
+      "view": "shot",
+      "sector": "sam"
+    },
+    {
+      "label": "leaving-rails",
+      "module": "sequence",
+      "time": 17.68,
+      "view": "shot",
+      "sector": "sam"
+    },
+    {
+      "label": "volley",
+      "module": "sequence",
+      "time": 18.2,
+      "view": "shot",
+      "sector": "sam"
+    },
+    {
+      "label": "cut-before",
+      "module": "sequence",
+      "time": 19.399,
+      "view": "shot",
+      "sector": "sam"
+    },
+    {
+      "label": "cut-after",
+      "module": "sequence",
+      "time": 19.4,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "incoming",
+      "module": "sequence",
+      "time": 20.25,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "pre-hit",
+      "module": "sequence",
+      "time": 20.48,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "tail-hit",
+      "module": "sequence",
+      "time": 20.55,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "fall-start",
+      "module": "sequence",
+      "time": 22,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "fall",
+      "module": "sequence",
+      "time": 23,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "low-descent",
+      "module": "sequence",
+      "time": 24.5,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "flare",
+      "module": "sequence",
+      "time": 25.6,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "contact",
+      "module": "sequence",
+      "time": 26,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "compression",
+      "module": "sequence",
+      "time": 26.5,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "rotor-contact",
+      "module": "sequence",
+      "time": 28.25,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "opening",
+      "module": "sequence",
+      "time": 31.6,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "overview",
+      "module": "sequence",
+      "time": 35,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "label": "overview-top",
+      "module": "sequence",
+      "time": 35,
+      "view": "top",
+      "sector": "crash"
+    },
+    {
+      "label": "rim-no-trees",
+      "module": "sequence",
+      "time": 35,
+      "view": "three",
+      "sector": "crash"
+    },
+    {
+      "label": "exit-close",
+      "module": "crash",
+      "time": 35,
+      "view": "three",
+      "sector": "crash"
+    },
+    {
+      "label": "contact-side",
+      "module": "crash",
+      "time": 26.5,
+      "view": "side",
+      "sector": "crash"
+    },
+    {
+      "label": "rotor-side",
+      "module": "crash",
+      "time": 28.25,
+      "view": "side",
+      "sector": "crash"
+    },
+    {
+      "label": "door-side",
+      "module": "crash",
+      "time": 35,
+      "view": "side",
+      "sector": "crash"
+    }
+  ],
   "sourceHashes": {
     "intro-effects.js": "c790eeb60a90a9b5c015ed3e70f0de78c6323fd17001e0a00999ac603deea5af",
-    "intro-environment.js": "e8159f9b5eba575905365fbca8574a3a4b709852dab998324c9b29701156811e",
+    "intro-environment.js": "fc5c3ce700a2045a6c9a93a064fff00ea35a1de2e8c03f0526f68c8d3fa1ae3b",
+    "intro-geography.js": "36d7b6961d8a28028835c48d93142a9a6c6c94812fed4c63128638dafd830576",
     "intro-ground-contact.js": "fb39871173cee2eb63088f354ff587d83f27344e7bb125eabe4c5a786e224263",
     "intro-helicopter.js": "8bbd48189618916ceadf5cf43a10497c865eefd1bb832df7213fee35cb10ba0f",
     "intro-launcher.js": "d48edc18265bf63658e81e99d7d6a0c7e8537c09bae2f64ca0f41c1baf18ff21",
     "intro-paint.js": "6253f4aa1d6940d4332ef040fc17b83797f2c49364fc6387d95f5d5f7b21353d",
     "intro-radar.js": "11d1a2054e2ed577e02936c6aeed9fc888ba929d7787181ffaf8dd535fe00cd9",
     "intro-radio-room.js": "03dc056067e4a9cc754a835b18fb14c7b3e1bb7592772d16b62f538204a22e3f",
-    "intro-study.css": "4a435bebbd7ee122adb0d4cc7acebbfa0df2de72a9e48d4c7d2c35dc99e8c521",
-    "intro-study.html": "0b4924e7c0907e836c09fe5c647422c45ac3e5510879a50d562ecc3499fbcd72",
-    "intro-study.js": "047d86c8e49472c37b14640f384345024eb735d874dc9a2d2a45674c5d025031",
-    "intro-timeline.js": "4c34a5f7f5cfaf3a8362b707c26183406ab94179f35d89c39e61871ddee10852",
+    "intro-study.css": "3d4a19ee138a8e8998bb922dd0ff1c00d55f8de2661a4a2e39d33d84483047ba",
+    "intro-study.html": "7e99726fb4349e8ffee1d6ce2c19ae7d57936221a890013c69380f1cc6b7b672",
+    "intro-study.js": "d8340876632d191eacc0c9ef58d5727673521a8a3adcfdf42a5d31f27816243b",
+    "intro-timeline.js": "99a3cbd1260f1486073b444c79c9244d5865f0eddf718d06e1639fcb128e30c0",
     "sam-missile.js": "40f38c93ec5034a012c619829414996455670639938f72a2b5c0e4ce8b9b06fa"
   },
-  "reviewBrowsersClosed": true
+  "helperVerification": {
+    "receipt": "intro-geography-review-1791831894367-closed.json",
+    "pid": 47320,
+    "expectedCreation": "134363054943768151",
+    "currentCreation": null,
+    "exited": true,
+    "exitCode": 0,
+    "verifiedAt": "2026-10-12T19:09:54.9558428Z"
+  },
+  "formattingRefresh": [
+    {
+      "file": "intro-environment.js",
+      "previous": "9de1fdb5892ac90e10f1baf57d020181b5a188daabfdcb0df46b1f87daef6db9",
+      "current": "fc5c3ce700a2045a6c9a93a064fff00ea35a1de2e8c03f0526f68c8d3fa1ae3b",
+      "note": "Builder reported trailing-whitespace cleanup; current file re-read and no semantic change found. Original capture hashes retained above."
+    },
+    {
+      "file": "intro-study.html",
+      "previous": "f4febd1dfd34ac15a6498967509bc7ddd645937269bc46fa30147e8263e1473e",
+      "current": "7e99726fb4349e8ffee1d6ce2c19ae7d57936221a890013c69380f1cc6b7b672",
+      "note": "Builder reported trailing-whitespace cleanup; current file re-read and no semantic change found. Original capture hashes retained above."
+    }
+  ]
 }

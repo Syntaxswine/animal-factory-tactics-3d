@@ -6,6 +6,7 @@
       "time": 0,
       "playing": false,
       "shot": 0,
+      "sector": "workshop",
       "view": "three",
       "missile": {
         "triangles": 360,
@@ -39,13 +40,14 @@
         "geometries": 23,
         "textures": 6
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "missile",
       "time": 0,
       "playing": false,
       "shot": 0,
+      "sector": "workshop",
       "view": "nose",
       "missile": {
         "triangles": 360,
@@ -79,13 +81,14 @@
         "geometries": 23,
         "textures": 6
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "missile",
       "time": 0,
       "playing": false,
       "shot": 0,
+      "sector": "workshop",
       "view": "three",
       "missile": {
         "triangles": 360,
@@ -119,13 +122,14 @@
         "geometries": 24,
         "textures": 6
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "missile",
       "time": 0,
       "playing": false,
       "shot": 0,
+      "sector": "workshop",
       "view": "tail",
       "missile": {
         "triangles": 360,
@@ -159,13 +163,14 @@
         "geometries": 24,
         "textures": 6
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "sequence",
       "time": 1,
       "playing": false,
       "shot": 0,
+      "sector": "crash",
       "view": "shot",
       "missile": {
         "triangles": 360,
@@ -196,16 +201,17 @@
         false
       ],
       "resources": {
-        "geometries": 218,
+        "geometries": 146,
         "textures": 9
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "sequence",
       "time": 6,
       "playing": false,
       "shot": 1,
+      "sector": "overseas",
       "view": "shot",
       "missile": {
         "triangles": 360,
@@ -236,16 +242,17 @@
         false
       ],
       "resources": {
-        "geometries": 235,
+        "geometries": 163,
         "textures": 17
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "sequence",
       "time": 10,
       "playing": false,
       "shot": 2,
+      "sector": "crash",
       "view": "shot",
       "missile": {
         "triangles": 360,
@@ -276,16 +283,17 @@
         false
       ],
       "resources": {
-        "geometries": 235,
+        "geometries": 163,
         "textures": 17
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "sequence",
       "time": 13.2,
       "playing": false,
       "shot": 3,
+      "sector": "sam",
       "view": "shot",
       "missile": {
         "triangles": 360,
@@ -316,16 +324,17 @@
         false
       ],
       "resources": {
-        "geometries": 235,
+        "geometries": 163,
         "textures": 17
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "sequence",
       "time": 16,
       "playing": false,
       "shot": 4,
+      "sector": "sam",
       "view": "shot",
       "missile": {
         "triangles": 360,
@@ -356,16 +365,17 @@
         false
       ],
       "resources": {
-        "geometries": 235,
-        "textures": 17
+        "geometries": 223,
+        "textures": 18
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "sequence",
       "time": 18.5,
       "playing": false,
       "shot": 5,
+      "sector": "sam",
       "view": "shot",
       "missile": {
         "triangles": 360,
@@ -396,16 +406,17 @@
         true
       ],
       "resources": {
-        "geometries": 252,
-        "textures": 19
+        "geometries": 240,
+        "textures": 20
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "sequence",
       "time": 20.55,
       "playing": false,
       "shot": 6,
+      "sector": "crash",
       "view": "shot",
       "missile": {
         "triangles": 360,
@@ -436,16 +447,17 @@
         true
       ],
       "resources": {
-        "geometries": 267,
-        "textures": 19
+        "geometries": 255,
+        "textures": 20
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "sequence",
       "time": 23,
       "playing": false,
       "shot": 7,
+      "sector": "crash",
       "view": "shot",
       "missile": {
         "triangles": 360,
@@ -476,16 +488,17 @@
         false
       ],
       "resources": {
-        "geometries": 267,
-        "textures": 19
+        "geometries": 255,
+        "textures": 20
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "sequence",
       "time": 25.6,
       "playing": false,
       "shot": 8,
+      "sector": "crash",
       "view": "shot",
       "missile": {
         "triangles": 360,
@@ -516,16 +529,17 @@
         false
       ],
       "resources": {
-        "geometries": 267,
-        "textures": 19
+        "geometries": 255,
+        "textures": 20
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "sequence",
       "time": 26.9,
       "playing": false,
       "shot": 9,
+      "sector": "crash",
       "view": "shot",
       "missile": {
         "triangles": 360,
@@ -556,16 +570,17 @@
         false
       ],
       "resources": {
-        "geometries": 270,
-        "textures": 20
+        "geometries": 258,
+        "textures": 21
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "sequence",
       "time": 28.4,
       "playing": false,
       "shot": 10,
+      "sector": "crash",
       "view": "shot",
       "missile": {
         "triangles": 360,
@@ -596,16 +611,17 @@
         false
       ],
       "resources": {
-        "geometries": 270,
-        "textures": 20
+        "geometries": 258,
+        "textures": 21
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "sequence",
       "time": 34.7,
       "playing": false,
       "shot": 11,
+      "sector": "crash",
       "view": "shot",
       "missile": {
         "triangles": 360,
@@ -636,16 +652,17 @@
         false
       ],
       "resources": {
-        "geometries": 270,
-        "textures": 20
+        "geometries": 258,
+        "textures": 21
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "crash",
       "time": 26.1,
       "playing": false,
       "shot": 9,
+      "sector": "crash",
       "view": "side",
       "missile": {
         "triangles": 360,
@@ -676,16 +693,17 @@
         false
       ],
       "resources": {
-        "geometries": 270,
-        "textures": 20
+        "geometries": 258,
+        "textures": 21
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "crash",
       "time": 28.25,
       "playing": false,
       "shot": 10,
+      "sector": "crash",
       "view": "three",
       "missile": {
         "triangles": 360,
@@ -716,16 +734,17 @@
         false
       ],
       "resources": {
-        "geometries": 270,
-        "textures": 20
+        "geometries": 258,
+        "textures": 21
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "crash",
       "time": 33,
       "playing": false,
       "shot": 11,
+      "sector": "crash",
       "view": "three",
       "missile": {
         "triangles": 360,
@@ -756,16 +775,17 @@
         false
       ],
       "resources": {
-        "geometries": 270,
-        "textures": 20
+        "geometries": 258,
+        "textures": 21
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "crash",
       "time": 33,
       "playing": false,
       "shot": 11,
+      "sector": "crash",
       "view": "side",
       "missile": {
         "triangles": 360,
@@ -796,16 +816,17 @@
         false
       ],
       "resources": {
-        "geometries": 270,
-        "textures": 20
+        "geometries": 258,
+        "textures": 21
       },
-      "trees": 73
+      "trees": 1049
     },
     {
       "module": "handler",
       "time": 6,
       "playing": false,
       "shot": 1,
+      "sector": "overseas",
       "view": "side",
       "missile": {
         "triangles": 360,
@@ -836,19 +857,444 @@
         false
       ],
       "resources": {
-        "geometries": 270,
-        "textures": 20
+        "geometries": 258,
+        "textures": 21
       },
-      "trees": 73
+      "trees": 1049
+    },
+    {
+      "module": "sequence",
+      "time": 17.68,
+      "playing": false,
+      "shot": 5,
+      "sector": "sam",
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -7.904989151068595,
+          23.710258738856098,
+          2.8740761688581316
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        false,
+        true
+      ],
+      "activeMissiles": [
+        true,
+        false
+      ],
+      "resources": {
+        "geometries": 258,
+        "textures": 21
+      },
+      "trees": 1049
+    },
+    {
+      "module": "sequence",
+      "time": 20.25,
+      "playing": false,
+      "shot": 6,
+      "sector": "crash",
+      "view": "shot",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          -4.371974862609404,
+          22.789426012619582,
+          2.976448961937716
+        ],
+        "damage": false,
+        "settled": false
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        true,
+        true
+      ],
+      "resources": {
+        "geometries": 258,
+        "textures": 21
+      },
+      "trees": 1049
+    },
+    {
+      "module": "sequence",
+      "time": 35,
+      "playing": false,
+      "shot": 11,
+      "sector": "crash",
+      "view": "top",
+      "missile": {
+        "triangles": 360,
+        "finPlates": 2,
+        "planeAngleDegrees": 90,
+        "span": 1.08,
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "aircraft": {
+        "position": [
+          9,
+          0,
+          3.5
+        ],
+        "damage": true,
+        "settled": true
+      },
+      "loaded": [
+        false,
+        false
+      ],
+      "activeMissiles": [
+        false,
+        false
+      ],
+      "resources": {
+        "geometries": 258,
+        "textures": 21
+      },
+      "trees": 1049
+    }
+  ],
+  "sectors": [
+    {
+      "time": 0,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "time": 0,
+      "view": "three",
+      "sector": "crash"
+    },
+    {
+      "time": 0,
+      "view": "side",
+      "sector": "crash"
+    },
+    {
+      "time": 0,
+      "view": "nose",
+      "sector": "crash"
+    },
+    {
+      "time": 0,
+      "view": "tail",
+      "sector": "crash"
+    },
+    {
+      "time": 0,
+      "view": "top",
+      "sector": "crash"
+    },
+    {
+      "time": 10,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "time": 10,
+      "view": "three",
+      "sector": "crash"
+    },
+    {
+      "time": 10,
+      "view": "side",
+      "sector": "crash"
+    },
+    {
+      "time": 10,
+      "view": "nose",
+      "sector": "crash"
+    },
+    {
+      "time": 10,
+      "view": "tail",
+      "sector": "crash"
+    },
+    {
+      "time": 10,
+      "view": "top",
+      "sector": "crash"
+    },
+    {
+      "time": 16,
+      "view": "shot",
+      "sector": "sam"
+    },
+    {
+      "time": 16,
+      "view": "three",
+      "sector": "sam"
+    },
+    {
+      "time": 16,
+      "view": "side",
+      "sector": "sam"
+    },
+    {
+      "time": 16,
+      "view": "nose",
+      "sector": "sam"
+    },
+    {
+      "time": 16,
+      "view": "tail",
+      "sector": "sam"
+    },
+    {
+      "time": 16,
+      "view": "top",
+      "sector": "sam"
+    },
+    {
+      "time": 17.68,
+      "view": "shot",
+      "sector": "sam"
+    },
+    {
+      "time": 17.68,
+      "view": "three",
+      "sector": "sam"
+    },
+    {
+      "time": 17.68,
+      "view": "side",
+      "sector": "sam"
+    },
+    {
+      "time": 17.68,
+      "view": "nose",
+      "sector": "sam"
+    },
+    {
+      "time": 17.68,
+      "view": "tail",
+      "sector": "sam"
+    },
+    {
+      "time": 17.68,
+      "view": "top",
+      "sector": "sam"
+    },
+    {
+      "time": 19.399,
+      "view": "shot",
+      "sector": "sam"
+    },
+    {
+      "time": 19.399,
+      "view": "three",
+      "sector": "sam"
+    },
+    {
+      "time": 19.399,
+      "view": "side",
+      "sector": "sam"
+    },
+    {
+      "time": 19.399,
+      "view": "nose",
+      "sector": "sam"
+    },
+    {
+      "time": 19.399,
+      "view": "tail",
+      "sector": "sam"
+    },
+    {
+      "time": 19.399,
+      "view": "top",
+      "sector": "sam"
+    },
+    {
+      "time": 19.4,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "time": 19.4,
+      "view": "three",
+      "sector": "crash"
+    },
+    {
+      "time": 19.4,
+      "view": "side",
+      "sector": "crash"
+    },
+    {
+      "time": 19.4,
+      "view": "nose",
+      "sector": "crash"
+    },
+    {
+      "time": 19.4,
+      "view": "tail",
+      "sector": "crash"
+    },
+    {
+      "time": 19.4,
+      "view": "top",
+      "sector": "crash"
+    },
+    {
+      "time": 20.5,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "time": 20.5,
+      "view": "three",
+      "sector": "crash"
+    },
+    {
+      "time": 20.5,
+      "view": "side",
+      "sector": "crash"
+    },
+    {
+      "time": 20.5,
+      "view": "nose",
+      "sector": "crash"
+    },
+    {
+      "time": 20.5,
+      "view": "tail",
+      "sector": "crash"
+    },
+    {
+      "time": 20.5,
+      "view": "top",
+      "sector": "crash"
+    },
+    {
+      "time": 23,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "time": 23,
+      "view": "three",
+      "sector": "crash"
+    },
+    {
+      "time": 23,
+      "view": "side",
+      "sector": "crash"
+    },
+    {
+      "time": 23,
+      "view": "nose",
+      "sector": "crash"
+    },
+    {
+      "time": 23,
+      "view": "tail",
+      "sector": "crash"
+    },
+    {
+      "time": 23,
+      "view": "top",
+      "sector": "crash"
+    },
+    {
+      "time": 26,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "time": 26,
+      "view": "three",
+      "sector": "crash"
+    },
+    {
+      "time": 26,
+      "view": "side",
+      "sector": "crash"
+    },
+    {
+      "time": 26,
+      "view": "nose",
+      "sector": "crash"
+    },
+    {
+      "time": 26,
+      "view": "tail",
+      "sector": "crash"
+    },
+    {
+      "time": 26,
+      "view": "top",
+      "sector": "crash"
+    },
+    {
+      "time": 35,
+      "view": "shot",
+      "sector": "crash"
+    },
+    {
+      "time": 35,
+      "view": "three",
+      "sector": "crash"
+    },
+    {
+      "time": 35,
+      "view": "side",
+      "sector": "crash"
+    },
+    {
+      "time": 35,
+      "view": "nose",
+      "sector": "crash"
+    },
+    {
+      "time": 35,
+      "view": "tail",
+      "sector": "crash"
+    },
+    {
+      "time": 35,
+      "view": "top",
+      "sector": "crash"
     }
   ],
   "initial": {
-    "geometries": 270,
-    "textures": 20
+    "geometries": 258,
+    "textures": 21
   },
   "final": {
-    "geometries": 270,
-    "textures": 20
+    "geometries": 258,
+    "textures": 21
   },
   "controls": true,
   "replay": true,

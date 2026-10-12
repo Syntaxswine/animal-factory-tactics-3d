@@ -2,6 +2,14 @@
 
 Open `tactics/intro-study.html` and press **Play**. This is a 35-second silent study built from the [approved twelve-shot storyboard](intro-storyboard/README.md). It covers the overseas hen's briefing, radar contact, two SAM launches, a tail strike, the rapid cliff descent and a survivable landing in a wooded clearing. It is packaged for the 3D project, with no changes to gameplay, campaign state or the existing static helicopter assets.
 
+## Sector geography
+
+The crash sector, SAM sector and central relay objective are separate places. The crash set follows the user's marked Tutorial 1 example: a grassy pocket on lower ground, surrounded by woodland, beneath a broad curved plateau with **two ordinary 2-tile cliff tiers**. Forest patches leave a clear approach, landing/rotor sweep, cabin exit and winding open paths. This is a cinematic interpretation of the rough example, not an edit or exact import of the 240 × 240 gameplay map.
+
+The launcher and its own terrain belong to a separate Three.js scene, over 300 native tile units from the crash coordinates. The sequence cuts to that sector for radar and launch, then returns to the helicopter at 19.4 seconds. Projectiles follow one continuous authored path between the spaces. No SAM or relay object exists in the crash scene, even when orbiting or seeking. The relay remains a remote objective named in the overseas briefing; its sector is not shown in this study.
+
+The final pullback reveals the lower clearing and surrounding forest. The older painted storyboard sheets predate this correction and remain action references only.
+
 ## Inspect the pieces
 
 The **Study** menu isolates the missile, launcher, helicopter flight, descent/crash, radio room and radar. **Camera** selects directed, three-quarter, side, nose, tail or top views; drag a paused scene to orbit. Playback supports normal, half and quarter speed, arbitrary seeking, restart and twelve shot buttons. Smoke/dust and surrounding trees have separate toggles for unobstructed component inspection. Grey forms apply to the missile, helicopter and launcher.
@@ -26,19 +34,20 @@ The missile has **two solid fin plates meeting at 90 degrees**, giving four equa
 | 4–9 s | Overseas hen at a stationary desk, headphones and microphone. Caption: “Your mission is to take out the central relay station.” |
 | 9–12 s | Return to the approaching aircraft. |
 | 12–14 s | Radar sweep reveals the aircraft. |
-| 14–17 s | SAM rails turn and elevate. |
-| 17–20.5 s | Missiles leave at 17.4 and 17.95 s. The first strikes the tail at 20.5 s; the second follows a distinct miss path and leaves the scene. |
+| 14–17 s | Cut to the separate SAM sector; rails turn and elevate. |
+| 17–19.4 s | Missiles leave the remote SAM at 17.4 and 17.95 s. Both rails empty after the second launch. |
+| 19.4–20.5 s | Cut back to the helicopter in the crash sector; the first missile arrives and strikes the tail at 20.5 s. The second follows a distinct miss path. |
 | 20.5–24.5 s | Localized damage, attached tail and smoke, then rapid descent past the cliff face. |
 | 24.5–26 s | Brief nose-up flare; skids approach the ground. |
 | 26–28 s | Ground contact, skid buckling, forward slide and soil disturbance. |
 | 28–30 s | Short rock, rotor-tip contact, fractured blade section settles on the ground. |
-| 30–35 s | Cushion folds and the complete bench stows against the rear bulkhead; near-side door slides aft. Camera pulls back to show the wooded clearing, cliff and relay above. |
+| 30–35 s | Cushion folds and the complete bench stows against the rear bulkhead; near-side door slides aft. Camera pulls back to show the lower wooded clearing and two-tier curved plateau. |
 
 The same rigid cabin stays visible throughout. Skid tubes deform between the intact and collapsed shapes; the aircraft's contact height is calculated from their actual vertices, so compression begins with support on the ground. The rotor slows continuously, reaches a measured tip contact and loses a separate blade section with continuous position/orientation. The section lands instead of disappearing. Rewinding restores every component.
 
 The near-side door slides open rather than becoming the static asset's detached far-side door. This deliberate staging difference makes the exit action visible and avoids a hidden door teleport. The bench cushion folds first; the cushion and back then stow together against the rear bulkhead. The static reference remains unchanged. A clear opening is demonstrated, but squad emergence and character passage are still separate work.
 
-Smoke particles sample the full aircraft/airframe transform at their birth and then move in world space. The source transitions from tail damage toward the engine as the wreck settles. A brief tail flash and skid dust support the action; there is no cabin fireball. The clearing has surrounding trees and a clear camera/aircraft corridor. The nine wall-height cliff strata are cinematic scenery, not changes to cliff traversal or map heights.
+Smoke particles sample the full aircraft/airframe transform at their birth and then move in world space. The source transitions from tail damage toward the engine as the wreck settles. A brief tail flash and skid dust support the action; there is no cabin fireball. The clearing has surrounding trees and a clear camera/aircraft corridor. The two cliff tiers retain ordinary wall height; their scene placement does not change gameplay traversal or map heights.
 
 ## Module contracts
 
@@ -50,7 +59,8 @@ Smoke particles sample the full aircraft/airframe transform at their birth and t
 | `intro-ground-contact.js` | Pure support-height calculation from actual approved rail vertices; temporary extraction assets are immediately disposed. |
 | `intro-timeline.js` | Shot boundaries, deterministic flight/launch samples and shared emitter transforms. |
 | `intro-effects.js` | Bounded painted smoke, ignition/impact flash and dust pools, sampled from birth times. |
-| `intro-environment.js` | Wooded plateau, cliff, clearing and relay. |
+| `intro-geography.js` | Sector routing, native-height plateau contours, ground-height samples and crown-aware forest placement. |
+| `intro-environment.js` | Independent crash and SAM terrain/forest sets; no relay model. |
 | `intro-radio-room.js` / `intro-radar.js` | Overseas handler insert and radar display. |
 | `intro-paint.js` | Owned low-poly geometry/material kit over an existing atlas. |
 | `intro-study.js` | Playback, scene/camera selection, controls, loading and teardown. |
@@ -76,7 +86,7 @@ node tools/capture-intro-study.mjs
 
 The focused tests cover perpendicular through-body plates, mounted fin clearance, launch position and roll continuity, tail-hit alignment, deterministic samples, continuous rotor deceleration, actual skid support during compression, clear central doorway rays, blade-fragment contact and rewind, and transformed smoke emitters. The existing static-model tests remain applicable. Distribution validation checks the module graph and dynamically loaded hen assets.
 
-All **24 focused, existing helicopter and distribution tests pass**. The browser pass captures 21 desktop states plus mobile, exercises real controls, six seek/replay cycles, reduced-motion startup, missing-atlas cleanup and double disposal. It reports no unexpected browser errors and stable resources at 270 geometries / 20 textures across replay. These checks establish the listed contacts and playback behavior; the visual review remains separate evidence.
+All **27 focused, existing helicopter and distribution tests pass**, including native cliff heights, actual terrain ray hits, low-ground landing/exit clearance, remote missile continuity and owned terrain disposal. The browser pass captures 24 desktop states plus mobile and checks actual scene submission in 60 combinations of time and camera angle. It exercises real controls, six seek/replay cycles, reduced-motion startup, missing-atlas cleanup and double disposal. It reports no unexpected browser errors and stable resources at 258 geometries / 21 textures across replay. These checks establish the listed contacts and playback behavior; the visual review remains separate evidence.
 
 Screenshots and browser results are in [the review folder](../../hybrid-review/intro-animation/). The independent [review record](../../hybrid-review/intro-animation/REVIEW.md) records the final gate and its limits.
 

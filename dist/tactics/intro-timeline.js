@@ -1,11 +1,12 @@
 import * as T from './vendor/three.module.js';
 import {landingSupportHeight} from './intro-ground-contact.js';
+import {SAM_POSITION} from './intro-geography.js';
+export {SAM_POSITION} from './intro-geography.js';
 export const INTRO_DURATION=35;
 export const INTRO_SHOTS=Object.freeze([
- [0,4,'Approach'],[4,9,'Overseas handler'],[9,12,'Closing in'],[12,14,'Radar contact'],[14,17,'SAM wakes'],[17,20.5,'Missile volley'],[20.5,21.5,'Hit & drop'],[21.5,24.5,'Down the cliffs'],[24.5,26,'Last-second flare'],[26,28,'Crash in the clearing'],[28,30,'Rotor strike'],[30,35,'At the cliff base']
+ [0,4,'Approach'],[4,9,'Overseas handler'],[9,12,'Closing in'],[12,14,'Radar contact'],[14,17,'SAM wakes'],[17,19.4,'Missile volley'],[19.4,21.5,'Incoming · hit & drop'],[21.5,24.5,'Down the cliffs'],[24.5,26,'Last-second flare'],[26,28,'Crash in the clearing'],[28,30,'Rotor strike'],[30,35,'At the cliff base']
 ]);
 export const INTRO_EVENTS=Object.freeze({launches:[17.4,17.95],hit:20.5,contact:26,rotorStrike:28.25,settled:30,door:30.6});
-export const SAM_POSITION=[10,18,-16];
 export const smooth=(a,b,t)=>T.MathUtils.smoothstep(t,a,b);
 const V=(a)=>new T.Vector3(...a),mix=T.MathUtils.lerp;
 export function boundedTime(time){if(!Number.isFinite(time))throw Error('Non-finite intro time');return T.MathUtils.clamp(time,0,INTRO_DURATION);}

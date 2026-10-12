@@ -1,6 +1,8 @@
 # Independent intro storyboard review
 
-## Current revision: overseas handler and wooded cliff clearing
+The reviews below predate the user's separate-sector correction. They remain historical action approvals; the current placement is documented in [the animation geography](../INTRO-ANIMATION.md#sector-geography).
+
+## Historical revision: overseas handler and wooded cliff clearing
 
 **9/10 — approved as a storyboard. No blocking changes.**
 

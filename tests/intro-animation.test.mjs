@@ -4,6 +4,9 @@ import * as T from '../dist/tactics/vendor/three.module.js';
 import {createSAMMissile,SAM_MISSILE} from '../dist/tactics/sam-missile.js';
 import {createIntroLauncher} from '../dist/tactics/intro-launcher.js';
 import {createIntroHelicopter} from '../dist/tactics/intro-helicopter.js';
+import {createIntroEnvironment} from '../dist/tactics/intro-environment.js';
+import {CRASH_CLEARING,PLATEAU,SAM_POSITION,crashGroundHeight,crashForest,introSector} from '../dist/tactics/intro-geography.js';
+import {DIMENSIONS} from '../dist/tactics/hybrid-world.js';
 import {aircraftState,aircraftPoint,missileState,missileTrail,missileSocket,tailHitPoint,shotAt,INTRO_SHOTS} from '../dist/tactics/intro-timeline.js';
 const near=(a,b,e=1e-5)=>assert.ok(Math.abs(a-b)<e,`${a} != ${b}`);
 const withModel=(factory,fn)=>{const t=new T.Texture(),m=factory(t);try{fn(m,t);}finally{m.dispose();t.dispose();}};
@@ -58,3 +61,26 @@ test('rotor fragment separates continuously, settles on the ground, and rewinds 
 test('smoke emission uses the same full airframe transform as the visible damaged tail',()=>withModel(createIntroHelicopter,m=>{
  for(const t of [20.5,22,23,24,26.4,28.2,31]){m.update(t);const point=m.airframe.localToWorld(new T.Vector3(-3.35,1.70,.3));near(point.distanceTo(aircraftPoint(t,[-3.35,1.70,.3])),0);}
 }));
+
+test('the crash clearing and entire contact footprint are below two ordinary wall-height tiers',()=>{
+ near(PLATEAU.tierHeight,DIMENSIONS.wall);near(crashGroundHeight(...PLATEAU.center),2*DIMENSIONS.wall);
+ const [x,,z]=CRASH_CLEARING.center;near(crashGroundHeight(x,z),0);
+ // Includes cabin, full rotor sweep, skid slide and near-side exit.
+ for(let x=-3;x<=18;x+=.5)for(let z=-4;z<=12;z+=.5)near(crashGroundHeight(x,z),0);
+ const trees=crashForest();assert.ok(trees.length>200);assert.ok(trees.some(t=>t.y===4));assert.ok(trees.some(t=>t.y===0));
+ for(const t of trees){near(t.y,crashGroundHeight(t.x,t.z));assert.ok(Math.hypot(t.x-9,t.z-3.5)-t.scale*.9>12,'Crown intrudes into landing / exit patch');}
+});
+test('terrain surfaces agree with height samples and own no remote installation',()=>withModel(createIntroEnvironment,(m,t)=>{
+ assert.equal(m.tiers.length,2);m.root.updateMatrixWorld(true);
+ for(const [x,z]of [[9,3.5],PLATEAU.center,[-20,-50]]){const hit=new T.Raycaster(new T.Vector3(x,30,z),new T.Vector3(0,-1,0)).intersectObjects(m.root.children,false)[0];near(hit.point.y,crashGroundHeight(x,z),.013);}
+ assert.equal(m.relay,undefined);assert.equal(m.root.userData.sector,'crash');
+ const resources=new Set();m.root.traverse(o=>{if(o.geometry)resources.add(o.geometry);if(o.material){resources.add(o.material);if(o.material.map)resources.add(o.material.map);}});let released=0;for(const r of resources)r.addEventListener('dispose',()=>released++);m.dispose();m.dispose();assert.equal(released,resources.size);
+}));
+test('SAM cutaways are a remote sector and the missile connects both spaces',()=>{
+ assert.ok(new T.Vector3(...SAM_POSITION).distanceTo(new T.Vector3(...CRASH_CLEARING.center))>300);
+ for(const t of [0,10,19.4,20.5,23,26,35])assert.equal(introSector('sequence',t),'crash');
+ for(const t of [12,14,17.4,19.399])assert.equal(introSector('sequence',t),'sam');
+ assert.equal(introSector('sequence',6),'overseas');assert.equal(introSector('crash',20.5),'crash');assert.equal(introSector('launch',20.5),'sam');
+ const start=missileState(17.4).position,finish=missileState(20.5).position;assert.ok(start.distanceTo(finish)>300);
+ let last=0;for(let time=17.4;time<=20.5;time+=.01){const d=missileState(time).position.distanceTo(start);assert.ok(d>=last,'Missile reverses along its remote intercept');last=d;}
+});

@@ -2,7 +2,7 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
-for(const file of ['intro-study.html','intro-study.css','intro-study.js','intro-paint.js','sam-missile.js','intro-launcher.js','intro-helicopter.js','intro-timeline.js','intro-ground-contact.js','intro-effects.js','intro-environment.js','intro-radio-room.js','intro-radar.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+for(const file of ['intro-study.html','intro-study.css','intro-study.js','intro-paint.js','sam-missile.js','intro-launcher.js','intro-helicopter.js','intro-timeline.js','intro-ground-contact.js','intro-effects.js','intro-environment.js','intro-geography.js','intro-radio-room.js','intro-radar.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['utility-helicopter.js','utility-helicopter-smoke.js','utility-helicopter-study.js','utility-helicopter-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.cpSync(new URL('dist/assets/environment/utility-helicopter/',root),new URL('.pages-output/assets/environment/utility-helicopter/',root),{recursive:true});
 for(const file of ['painted-chairs.js','chair-fit-guide.js','painted-chairs-study.js','painted-chairs-study.html','horse-chair-motion.js','horse-chair-study.js','horse-chair-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
