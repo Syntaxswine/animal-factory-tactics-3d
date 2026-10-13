@@ -110,3 +110,24 @@ function trail(o,view,smoke,shot,H,k){
  for(let i=n-1;i>=0;i--){const {t,p}=pts[i],size=(2.6+t*7.5)*view.w/Math.SQRT2*(.85+r()*.3),next=pts[Math.max(0,i-1)].p,ang=Math.atan2(p[0]-next[0],-(p[1]-next[1]));
   plume(o,smoke,{cell:Math.floor(r()*4),x:p[0],y:p[1],angle:ang+(r()-.5)*.5,length:size*1.3,width:size,alpha:(.72-t*.45)*(.8+r()*.2),tint:t<.2?'rgb(70,66,60)':'rgb(150,144,134)',flip:r()<.5});}
 }
+
+// --- shared with the animated proof ----------------------------------------
+// The static world on one canvas: terrain, flora shadows, then flora far to
+// near. Nothing that moves: the aircraft, decals and effects draw over it.
+export function paintPlate(assets,view,{seed=3}={}){
+ const {sector}=assets,c=document.createElement('canvas');c.width=view.width;c.height=view.height;const g=c.getContext('2d');
+ paintTerrain(g,sector,view);
+ const corners=[[0,0],[view.width,0],[0,view.height],[view.width,view.height]].flatMap(([sx,sy])=>[view.unproject(sx,sy,0),view.unproject(sx,sy,LEVEL_HEIGHT*2),view.unproject(sx,sy+view.hv*10,0)]);
+ const xs=corners.map(p=>p[0]),ys=corners.map(p=>p[1]),bounds=[Math.min(...xs)-3,Math.min(...ys)-3,Math.max(...xs)+3,Math.max(...ys)+3];
+ const kc=keepClear(),flora=[...planFlora(sector,bounds,{keepClear:kc,seed}),...planRocks(sector,bounds,{keepClear:kc,seed:9})];
+ const sh=document.createElement('canvas');sh.width=view.width;sh.height=view.height;const s=sh.getContext('2d');for(const t of flora)drawFloraShadow(s,t,view);
+ g.save();g.globalCompositeOperation='multiply';g.globalAlpha=.9;g.drawImage(sh,0,0);g.restore();
+ flora.map(t=>({t,d:view.depth(t.x,t.y,t.base+(t.kind==='rock'?.2:t.height*.45))})).sort((a,b)=>a.d-b.d).forEach(({t})=>drawFlora(g,t,view));
+ return {canvas:c,flora:flora.length};
+}
+// Screen-space finish: the light grade, depth haze and vignette of the stills.
+export function finishFrame(c,width,height){
+ c.save();c.globalCompositeOperation='soft-light';const grade=c.createLinearGradient(0,0,width,height);grade.addColorStop(0,'rgba(255,214,150,.55)');grade.addColorStop(.55,'rgba(250,226,180,.25)');grade.addColorStop(1,'rgba(110,130,150,.45)');c.fillStyle=grade;c.fillRect(0,0,width,height);c.restore();
+ const haze=c.createLinearGradient(0,0,0,height);haze.addColorStop(0,'rgba(206,214,196,.30)');haze.addColorStop(.38,'rgba(206,214,196,.08)');haze.addColorStop(1,'rgba(206,214,196,0)');c.fillStyle=haze;c.fillRect(0,0,width,height);
+ const vig=c.createRadialGradient(width/2,height*.55,height*.35,width/2,height*.55,height*1.05);vig.addColorStop(0,'rgba(20,18,10,0)');vig.addColorStop(1,'rgba(20,18,10,.42)');c.fillStyle=vig;c.fillRect(0,0,width,height);
+}

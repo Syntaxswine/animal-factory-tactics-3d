@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Intro sprite proof</title>
+<link rel="icon" href="data:,">
+<style>
+ :root{--bg:#1d2620;--ink:#e9e2cc;--muted:#a9ad98;--line:#3a4a3e;--accent:#d8b46a}
+ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Georgia,serif}
+ header{padding:18px 24px 4px}
+ h1{margin:0;font-size:22px;font-weight:normal}
+ .sub{color:var(--muted);margin:2px 0 0}
+ main{padding:10px 24px 24px;max-width:1600px}
+ canvas{display:block;width:100%;height:auto;border:1px solid var(--line);background:#2c3524}
+ .bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
+ button,select{font:inherit;color:var(--ink);background:#26302a;border:1px solid var(--line);border-radius:3px;padding:3px 10px}
+ button[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}
+ input[type=range]{flex:1 1 300px;accent-color:var(--accent)}
+ output{font:13px/1 ui-monospace,monospace;color:var(--muted);min-width:7ch}
+ #status{color:var(--muted);font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<header><h1>Intro sprite proof — the drop and the crash</h1><p class="sub">Keyframes A → B → C as sprites over one painted plate of the Tutorial 1 crash sector.</p></header>
+<main>
+ <canvas id="view" width="1600" height="900"></canvas>
+ <div class="bar">
+  <button id="play" aria-pressed="false">Play</button>
+  <button id="restart">Restart</button>
+  <input id="time" type="range" step="0.01" aria-label="Time">
+  <output id="clock">—</output>
+  <select id="speed" aria-label="Speed"><option value="1">1×</option><option value="0.5">0.5×</option><option value="0.25">0.25×</option></select>
+  <button data-key="A">A</button><button data-key="B">B</button><button data-key="C">C</button>
+ </div>
+ <p id="status">Loading…</p>
+</main>
+<script type="module">
+import {loadProofAssets,createProof,PROOF_START,PROOF_END,KEYFRAME_TIMES,plateGeometry} from './proof.js';
+const q=new URLSearchParams(location.search),$=id=>document.getElementById(id),status=$('status');
+try{
+ const t0=performance.now(),paintOnly=q.has('paintPlate'),assets=await loadProofAssets({paint:paintOnly});
+ if(paintOnly){window.introProofPlate={canvas:assets.plate,geometry:assets.geometry};status.textContent=`Plate painted ${assets.plate.width}×${assets.plate.height} in ${Math.round(performance.now()-t0)} ms`;}
+ const proof=createProof($('view'),assets),slider=$('time');slider.min=PROOF_START;slider.max=PROOF_END;
+ let t=Number(q.get('t')??KEYFRAME_TIMES.A),playing=false,last=0;
+ const draw=()=>{const r=proof.render(t);slider.value=t;$('clock').textContent=t.toFixed(2)+' s';return r;};
+ const frame=now=>{if(!playing)return;const dt=Math.min(.1,(now-last)/1000)*Number($('speed').value);last=now;t+=dt;if(t>=PROOF_END){t=PROOF_END;setPlaying(false);}draw();if(playing)requestAnimationFrame(frame);};
+ const setPlaying=v=>{playing=v;$('play').textContent=v?'Pause':'Play';$('play').setAttribute('aria-pressed',v);if(v){if(t>=PROOF_END)t=PROOF_START;last=performance.now();requestAnimationFrame(frame);}};
+ $('play').onclick=()=>setPlaying(!playing);$('restart').onclick=()=>{t=PROOF_START;draw();setPlaying(true);};
+ slider.oninput=()=>{t=Number(slider.value);setPlaying(false);draw();};
+ for(const b of document.querySelectorAll('[data-key]'))b.onclick=()=>{t=KEYFRAME_TIMES[b.dataset.key];setPlaying(false);draw();};
+ addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();setPlaying(!playing);}});
+ draw();
+ status.textContent+=(paintOnly?' · ':'')+`Plate: ${assets.plateSource} · ${assets.seq.frames.length} aircraft frames at ${assets.seq.fps} fps · ${proof.fx.puffs.length} puffs, ${proof.fx.clods.length} clods · ready in ${Math.round(performance.now()-t0)} ms`;
+ if(status.textContent.startsWith('Loading…'))status.textContent=status.textContent.slice(8);
+ window.introProof={render:x=>{t=x;return draw();},ready:true,start:PROOF_START,end:PROOF_END,keyframes:KEYFRAME_TIMES,canvas:$('view')};
+ if(q.has('play'))setPlaying(true);
+}catch(e){status.textContent='Failed: '+e.message;window.introProof={error:e.message};throw e;}
+</script>
+</body>
+</html>
