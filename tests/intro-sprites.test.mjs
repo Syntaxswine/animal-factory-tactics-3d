@@ -7,7 +7,8 @@ import {heliPath,artPitch,cameraAt,PROOF_START,PROOF_END,EVENTS,REST,TOUCHDOWN} 
 import {plateGeometry,WIDTH,HEIGHT,PLATE_TILE} from '../dist/tactics/intro-sprites/proof.js';
 import {buildSector} from '../dist/tactics/intro-sprites/crash-sector.js';
 import {planFlora} from '../dist/tactics/intro-sprites/painted-trees.js';
-import {keepClear} from '../dist/tactics/intro-sprites/keyframes.js';
+import {keepClear} from '../dist/tactics/intro-sprites/plate.js';
+import {splitTone,SPLIT} from '../dist/tactics/intro-sprites/grade.js';
 
 const dir=new URL('../dist/tactics/intro-sprites/',import.meta.url),read=p=>JSON.parse(readFileSync(new URL(p,dir)));
 const map=JSON.parse(readFileSync(new URL('../dist/tactics/sector-library/tutorial-step-1/rough-plateau.json',import.meta.url))),woodland=read('crash-sector-woodland.json');
@@ -81,4 +82,16 @@ test('trees keep off the rim: a scree apron at each cliff foot, a setback at eac
  const s=S(),flora=planFlora(s,[160,80,215,125],{keepClear:keepClear(),seed:3}).filter(t=>t.kind!=='shrub');
  assert.ok(flora.length>200);
  for(const t of flora){assert.ok(s.distUp(t.x,t.y)>=1.7,'apron');assert.ok(s.distDown(t.x,t.y)>=1.1,'lip');assert.ok(t.height<=4.3*1.0001,'game scale');}
+});
+
+test('the split tone cools and greys the shade, warms the light, and leaves rock alone', ()=>{
+ const hsv=([r,g,b])=>{r/=255;g/=255;b/=255;const M=Math.max(r,g,b),m=Math.min(r,g,b),c=M-m;const h=c===0?0:M===r?60*(((g-b)/c+6)%6):M===g?60*((b-r)/c+2):60*((r-g)/c+4);return [h,M?c/M:0,M];};
+ const px=[70,64,30,255, 210,190,110,255, 100,100,95,255, 90,130,190,255, 100,96,85,255];
+ const at=[0,4,8,12,16],before=at.map(i=>hsv(px.slice(i,i+3))),out=splitTone(Uint8ClampedArray.from(px)),after=at.map(i=>hsv(Array.from(out.slice(i,i+3))));
+ assert.ok(after[0][0]>before[0][0]+15,'dark olive shade turns toward green');
+ assert.ok(after[0][1]<before[0][1]*.6,'and loses saturation');
+ assert.ok(Math.abs(after[1][0]-SPLIT.warmHue)<Math.abs(before[1][0]-SPLIT.warmHue),'sunlit grass warms toward the key hue');
+ assert.deepEqual(Array.from(out.slice(8,11)),[100,100,95],'shaded grey rock (saturation .05) is untouched');
+ assert.deepEqual(Array.from(out.slice(12,15)),[90,130,190],'sky blue is outside the vegetation band');
+ assert.ok(Math.abs(after[4][0]-before[4][0])<8,'ochre-grey rock in shade (saturation .15) keeps its hue, not foliage green');
 });

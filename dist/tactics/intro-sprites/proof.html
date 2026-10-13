@@ -50,8 +50,11 @@ try{
  slider.oninput=()=>{t=Number(slider.value);setPlaying(false);draw();};
  for(const b of document.querySelectorAll('[data-key]'))b.onclick=()=>{t=KEYFRAME_TIMES[b.dataset.key];setPlaying(false);draw();};
  addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();setPlaying(!playing);}});
+ // One quick pass over the timeline before reporting ready: the first draw of
+ // each sheet and puff texture costs an upload, which stuttered first playback.
+ const w0=performance.now();for(let x=PROOF_START;x<=PROOF_END;x+=.1)proof.render(x);const warm=Math.round(performance.now()-w0);
  draw();
- status.textContent+=(paintOnly?' · ':'')+`Plate: ${assets.plateSource} · ${assets.seq.frames.length} aircraft frames at ${assets.seq.fps} fps · ${proof.fx.puffs.length} puffs, ${proof.fx.clods.length} clods · ready in ${Math.round(performance.now()-t0)} ms`;
+ status.textContent+=(paintOnly?' · ':'')+`Plate: ${assets.plateSource} · ${assets.seq.frames.length} aircraft frames at ${assets.seq.fps} fps · ${proof.fx.puffs.length} puffs, ${proof.fx.clods.length} clods · warmed in ${warm} ms · ready in ${Math.round(performance.now()-t0)} ms`;
  if(status.textContent.startsWith('Loading…'))status.textContent=status.textContent.slice(8);
  window.introProof={render:x=>{t=x;return draw();},ready:true,start:PROOF_START,end:PROOF_END,keyframes:KEYFRAME_TIMES,canvas:$('view')};
  if(q.has('play'))setPlaying(true);

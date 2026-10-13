@@ -5,7 +5,7 @@
 // 28.25 s, settled 30 s, door 30.6 s.
 export const PROOF_START=20.2,PROOF_END=35;
 export const EVENTS=Object.freeze({hit:20.5,contact:26,rotorStrike:28.25,settled:30,door:30.6});
-export const KEYFRAME_TIMES=Object.freeze({A:23.4,B:26.6,C:34.7});
+export const KEYFRAME_TIMES=Object.freeze({A:23.0,B:26.6,C:34.7});
 // The user's circled clearing; the wreck comes to rest at its centre.
 export const REST=Object.freeze([205.5,104]);
 

@@ -31,7 +31,7 @@ export function planFlora(sector,bounds,{keepClear=[],spacing=1.32,seed=1}={}){
   if(wood>.55||(wood>.3&&roll<(wood-.3)/.25))kind=r()<.66?'pine':'broadleaf';
   else if(copse>.5&&roll<.8*smooth01((copse-.5)/.09)){kind=r()<.55?'pine':'broadleaf';lone=true;}
   else if(roll<.045){kind=r()<.5?'pine':'broadleaf';lone=true;}
-  else if(roll<.05){kind='shrub';lone=true;}
+  else if(roll<.11){kind='shrub';lone=true;}
   else if(wood>.12&&roll<.4)kind='shrub';
   if(!kind)continue;
   // Younger, lower growth on the talus just beyond the apron.
@@ -46,17 +46,24 @@ export function planFlora(sector,bounds,{keepClear=[],spacing=1.32,seed=1}={}){
 export function planRocks(sector,bounds,{keepClear=[],seed=5}={}){
  const out=[];const [x0,y0,x1,y1]=bounds;
  for(let gy=Math.floor(y0);gy<=y1;gy+=1)for(let gx=Math.floor(x0);gx<=x1;gx+=1){
-  const r=rng(hash(gx,gy,seed)*4294967296),x=gx+r(),y=gy+r(),lev=sector.levelAt(x,y),up=sector.distUp(x,y);
-  if(up>1.6||up<.15)continue; // scree at the foot of a face
-  if(r()>.22+.3*(1-up/1.6))continue;if(keepClear.some(k=>k.test(x,y,.5)))continue;
+  const r=rng(hash(gx,gy,seed)*4294967296),x=gx+r(),y=gy+r(),lev=sector.levelAt(x,y),up=sector.distUp(x,y),down=sector.distDown(x,y);
+  // A few weathered boulders out in the grass, as in the storyboard meadows.
+  if(up>1.4&&down>1.2&&sector.woodAt(x,y)<.3){if(r()<.012&&!keepClear.some(k=>k.test(x,y,1.2,true)))out.push({kind:'rock',x,y,base:lev*LEVEL_HEIGHT,height:.25+r()*.4,radius:.35+r()*.5,seed:Math.floor(r()*1e9)});continue;}
+  if(up>1.4||up<.15)continue; // scree at the foot of a face
+  if(r()>.1+.2*(1-up/1.4))continue;if(keepClear.some(k=>k.test(x,y,.5)))continue;
   out.push({kind:'rock',x,y,base:lev*LEVEL_HEIGHT,height:.18+r()*.35,radius:.22+r()*.4,seed:Math.floor(r()*1e9)});
  }
  return out;
 }
 
 // Ground shadow (an ellipse cast back along the sun) drawn before the sprites.
-export function drawFloraShadow(ctx,t,view){
+export function drawFloraShadow(ctx,t,view,sprites=null){
  if(t.kind==='rock')return;
+ const S=sprites?.[t.kind];
+ if(S){// The sprite's own silhouette sheared along the sun onto the ground.
+  const sil=S.silhouettes[(t.seed>>1)%S.silhouettes.length],H=(t.kind==='shrub'?t.height*1.25:t.height)*view.hv,W=H*S.aspect,k=H/(sil.height-8),[bx,by]=view.project(t.x,t.y,t.base);
+  const sx=-(SUN[0]-SUN[2])/SUN[1]*view.w/2/view.hv,sy=-(SUN[0]+SUN[2])/SUN[1]*view.w/4/view.hv; // screen shift per px of sprite height
+  ctx.save();ctx.globalAlpha=.42;ctx.setTransform(...(()=>{const m=ctx.getTransform();return [m.a,m.b,m.c,m.d,m.e,m.f];})());ctx.transform(1,0,-sx,-sy,bx,by);ctx.drawImage(sil,-S.foot*W-4*k,-H-4*k,sil.width*k,sil.height*k);ctx.restore();return;}
  const hc=t.kind==='shrub'?t.height*.45:t.height*.6,dx=-SUN[0]/SUN[1]*hc,dy=-SUN[2]/SUN[1]*hc;
  const [sx,sy]=view.project(t.x+dx,t.y+dy,t.base),ppu=view.w/Math.SQRT2,r=t.radius*ppu*(t.kind==='pine'?.95:1.05);
  const [bx,by]=view.project(t.x,t.y,t.base);
@@ -67,7 +74,46 @@ export function drawFloraShadow(ctx,t,view){
  ctx.restore();
 }
 
-export function drawFlora(ctx,t,view){
+// The game's own painted foliage (dist/assets/environment/foliage, the sprites
+// the 2D game draws). Each is cropped to its alpha, then pre-scaled once with a
+// stepwise high-quality downscale into flipped and tinted variants, so a
+// forest of thousands repeats three paintings without reading as a pattern.
+const FLORA_FILES={pine:'tree-pine.png',broadleaf:'tree-broadleaf.png',shrub:'bush.png'};
+const TINTS=['brightness(1.12) saturate(1.1) hue-rotate(-4deg)','brightness(1.0) saturate(1.18) hue-rotate(-8deg)','brightness(1.2) saturate(1.04)','brightness(.92) saturate(1.16)','brightness(1.1) saturate(1.0) sepia(.12)'];
+export async function loadFloraSprites(base='../../assets/environment/foliage/',height=200){
+ const load=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(Error('Missing '+src));i.src=src;});
+ const out={};
+ for(const [kind,file]of Object.entries(FLORA_FILES)){
+  const img=await load(base+file),c=document.createElement('canvas');c.width=img.width;c.height=img.height;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(img,0,0);
+  const d=g.getImageData(0,0,c.width,c.height).data;let x0=c.width,y0=c.height,x1=0,y1=0;
+  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++)if(d[(y*c.width+x)*4+3]>40){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
+  // Trunk foot: the weighted centre of the opaque pixels in the lowest 4 %.
+  let sx=0,n=0;for(let y=Math.round(y1-(y1-y0)*.04);y<=y1;y++)for(let x=x0;x<=x1;x++){const a=d[(y*c.width+x)*4+3];if(a>40){sx+=x*a;n+=a;}}
+  const cw=x1-x0+1,ch=y1-y0+1,foot=(n?sx/n:(x0+x1)/2)-x0;
+  // Stepwise halving keeps the leaf texture from aliasing at sprite size.
+  let src=document.createElement('canvas');src.width=cw;src.height=ch;src.getContext('2d').drawImage(img,x0,y0,cw,ch,0,0,cw,ch);
+  while(src.height>height*2){const h=document.createElement('canvas');h.width=Math.round(src.width/2);h.height=Math.round(src.height/2);const hg=h.getContext('2d');hg.imageSmoothingQuality='high';hg.drawImage(src,0,0,h.width,h.height);src=h;}
+  const W=Math.round(height*cw/ch),variants=[];
+  // Ink contour (as on the game's character sprites) and a soft silhouette
+  // for the cast shadow, both made once per variant.
+  const P=3,silhouettes=[];
+  for(const tint of TINTS)for(const flip of [false,true]){
+   const body=document.createElement('canvas');body.width=W;body.height=height;const bg=body.getContext('2d');bg.imageSmoothingQuality='high';bg.filter=tint;if(flip){bg.translate(W,0);bg.scale(-1,1);}bg.drawImage(src,0,0,W,height);
+   const mask=document.createElement('canvas');mask.width=W;mask.height=height;const mg=mask.getContext('2d');mg.drawImage(body,0,0);mg.globalCompositeOperation='source-in';mg.fillStyle='rgb(40,34,22)';mg.fillRect(0,0,W,height);
+   const v=document.createElement('canvas');v.width=W+2*P;v.height=height+2*P;const vg=v.getContext('2d');vg.globalAlpha=.85;for(let k=0;k<12;k++){const a=k/12*Math.PI*2;vg.drawImage(mask,P+Math.cos(a)*1.6,P+Math.sin(a)*1.6);}vg.globalAlpha=1;vg.drawImage(body,P,P);
+   variants.push(v);
+   if(!flip){const sh=document.createElement('canvas');sh.width=W+8;sh.height=height+8;const sg=sh.getContext('2d');sg.filter='blur(2px)';sg.drawImage(mask,4,4);silhouettes.push(sh);}
+  }
+  out[kind]={variants,silhouettes,aspect:cw/ch,foot:foot/cw,flipFoot:1-foot/cw,pad:P};
+ }
+ return out;
+}
+export function drawFlora(ctx,t,view,sprites=null){
+ const S=sprites?.[t.kind];
+ if(S){const i=t.seed%S.variants.length,v=S.variants[i],flipped=i%2===1,[bx,by]=view.project(t.x,t.y,t.base);
+  // Shrubs are drawn a little taller than their mass so the leaves overhang.
+  const H=(t.kind==='shrub'?t.height*1.25:t.height)*view.hv,W=H*S.aspect,fx=(flipped?S.flipFoot:S.foot)*W,k=H/(v.height-2*S.pad);
+  ctx.drawImage(v,bx-fx-S.pad*k,by-H*.985-S.pad*k,v.width*k,v.height*k);return;}
  if(t.kind==='pine')return pine(ctx,t,view);
  if(t.kind==='broadleaf')return broadleaf(ctx,t,view);
  if(t.kind==='shrub')return shrub(ctx,t,view);
@@ -139,10 +185,17 @@ function shrub(ctx,t,view){
 }
 
 function rock(ctx,t,view){
- const r=rng(t.seed),ppu=view.w/Math.SQRT2,[bx,by]=view.project(t.x,t.y,t.base),R=t.radius*ppu,Hh=t.height*view.hv;
- const pts=[];const n=7;for(let k=0;k<n;k++){const a=Math.PI+k/(n-1)*Math.PI,rr=R*(.75+r()*.35);pts.push([bx+Math.cos(a)*rr,by+Math.sin(a)*Hh*(.9+r()*.3)*(k===0||k===n-1?.1:1)]);}
- ctx.fillStyle='rgba(30,26,18,.35)';ctx.beginPath();ctx.ellipse(bx+R*.2,by,R*1.05,R*.35,0,0,Math.PI*2);ctx.fill();
- ctx.beginPath();ctx.moveTo(bx-R,by+R*.12);for(const p of pts)ctx.lineTo(p[0],p[1]);ctx.lineTo(bx+R,by+R*.12);ctx.closePath();
- const g=ctx.createLinearGradient(bx-R,by-Hh,bx+R,by);g.addColorStop(0,'rgb(196,184,156)');g.addColorStop(.55,'rgb(140,128,104)');g.addColorStop(1,'rgb(82,74,60)');ctx.fillStyle=g;ctx.fill();
- ctx.strokeStyle='rgba(50,44,34,.5)';ctx.lineWidth=1;ctx.stroke();
+ // A weathered grey boulder: irregular crown, lit left, shaded right flank,
+ // ink contour, a crack, and grass growing over its foot.
+ const r=rng(t.seed),ppu=view.w/Math.SQRT2,[bx,by]=view.project(t.x,t.y,t.base),R=t.radius*ppu,Hh=Math.max(R*.42,t.height*view.hv);
+ const n=13,pts=[];for(let k=0;k<n;k++){const a=Math.PI+k/(n-1)*Math.PI,rr=R*(.72+r()*.4),lift=Math.pow(Math.abs(Math.sin(a)),.7)*Hh*(.7+r()*.45);pts.push([bx+Math.cos(a)*rr,by-lift]);}
+ const outline=()=>{ctx.beginPath();ctx.moveTo(bx-R*.95,by+R*.08);for(const p of pts)ctx.lineTo(p[0],p[1]);ctx.lineTo(bx+R*.95,by+R*.08);ctx.quadraticCurveTo(bx,by+R*.42,bx-R*.95,by+R*.08);ctx.closePath();};
+ ctx.fillStyle='rgba(28,26,18,.34)';ctx.beginPath();ctx.ellipse(bx+R*.4,by+R*.12,R*1.15,R*.36,0,0,Math.PI*2);ctx.fill();
+ outline();const g=ctx.createLinearGradient(bx-R,by-Hh,bx+R*.8,by+R*.2);g.addColorStop(0,'rgb(190,186,172)');g.addColorStop(.45,'rgb(150,146,134)');g.addColorStop(1,'rgb(86,86,82)');ctx.fillStyle=g;ctx.fill();
+ // Shaded right flank.
+ ctx.save();outline();ctx.clip();ctx.fillStyle='rgba(60,64,76,.38)';ctx.beginPath();ctx.moveTo(bx+R*(.05+r()*.2),by-Hh*1.2);ctx.lineTo(bx+R*1.2,by-Hh*.4);ctx.lineTo(bx+R*1.2,by+R);ctx.lineTo(bx+R*(r()*.2-.1),by+R);ctx.closePath();ctx.fill();ctx.restore();
+ ctx.strokeStyle='rgba(42,36,28,.9)';ctx.lineWidth=Math.max(1,ppu*.028);ctx.lineJoin='round';outline();ctx.stroke();
+ if(r()<.75){ctx.lineWidth=Math.max(.7,ppu*.016);ctx.beginPath();const cx=bx+(r()-.6)*R*.7;ctx.moveTo(cx,by-Hh*(.55+r()*.3));ctx.lineTo(cx+(r()-.5)*R*.35,by-Hh*(.2+r()*.2));ctx.stroke();}
+ // Grass over the foot.
+ ctx.lineWidth=Math.max(1,ppu*.022);for(let k=0;k<9;k++){const gx=bx+(r()-.5)*R*2.1,gy=by+R*(.05+r()*.2),len=ppu*(.12+r()*.16),an=(r()-.5)*.8;ctx.strokeStyle=r()<.5?'rgba(120,118,52,.9)':'rgba(176,160,84,.9)';ctx.beginPath();ctx.moveTo(gx,gy);ctx.lineTo(gx+Math.sin(an)*len,gy-Math.cos(an)*len);ctx.stroke();}
 }

@@ -24,7 +24,7 @@ page.on('pageerror',e=>console.error('page:',e.message));
 await page.goto(base+'/tactics/intro-study.html?time=0',{waitUntil:'load'});
 await page.waitForFunction(()=>window.introReady===true,null,{timeout:60000});
 await page.evaluate(async({PPU,SHEET})=>{
- const T=await import('./vendor/three.module.js'),{aircraftState}=await import('./intro-timeline.js'),{landingSupportHeight}=await import('./intro-ground-contact.js'),{artPitch}=await import('./intro-sprites/trajectory.js');
+ const T=await import('./vendor/three.module.js'),{aircraftState}=await import('./intro-timeline.js'),{landingSupportHeight}=await import('./intro-ground-contact.js'),{artPitch}=await import('./intro-sprites/trajectory.js'),{inkSprite,renderPasses}=await import('./intro-sprites/ink.js'),{splitToneCanvas,SPLIT_AIRCRAFT}=await import('./intro-sprites/grade.js');
  const {renderer,scene,helicopter}=window.introStudy,root=helicopter.root,rotor=helicopter.rotor;
  const W=900,H=640,el=Math.PI/6,cam=new T.OrthographicCamera(-W/2/PPU,W/2/PPU,H/2/PPU,-H/2/PPU,.1,400);
  const target=new T.Vector3(0,1.2,0);cam.position.copy(target).addScaledVector(new T.Vector3(Math.cos(el)/Math.SQRT2,Math.sin(el),Math.cos(el)/Math.SQRT2),150);cam.up.set(-Math.sin(el)/Math.SQRT2,Math.cos(el),-Math.sin(el)/Math.SQRT2);cam.lookAt(target);cam.updateMatrixWorld(true);
@@ -33,7 +33,7 @@ await page.evaluate(async({PPU,SHEET})=>{
  const grab=document.createElement('canvas');grab.width=W;grab.height=H;const gctx=grab.getContext('2d',{willReadFrequently:true});
  const packer=()=>{const sheets=[];let c=null,x=0,y=0,row=0;const fresh=()=>{c=document.createElement('canvas');c.width=c.height=SHEET;sheets.push(c);x=0;y=0;row=0;};
   return {sheets,place(img,w,h){if(!c)fresh();if(x+w>SHEET){x=0;y+=row;row=0;}if(y+h>SHEET)fresh();const at=[sheets.length-1,x,y];c.getContext('2d').drawImage(img,0,0,w,h,x,y,w,h);x+=w+2;row=Math.max(row,h+2);return at;}};};
- window.__bake={T,aircraftState,landingSupportHeight,artPitch,renderer,scene,root,rotor,helicopter,cam,px,flat,black,grab,gctx,W,H,sprites:packer(),shadows:packer(),frames:[]};
+ window.__bake={T,aircraftState,landingSupportHeight,artPitch,inkSprite,renderPasses,splitToneCanvas,SPLIT_AIRCRAFT,renderer,scene,root,rotor,helicopter,cam,px,flat,black,grab,gctx,W,H,sprites:packer(),shadows:packer(),frames:[]};
 },{PPU,SHEET});
 for(const t of times){
  const r=await page.evaluate(({t})=>{
@@ -51,9 +51,12 @@ for(const t of times){
   const bg=scene.background,fog=scene.fog;scene.background=null;scene.fog=null;
   const size=renderer.getSize(new T.Vector2()),ratio=renderer.getPixelRatio(),clear=renderer.getClearColor(new T.Color()),alpha=renderer.getClearAlpha();
   renderer.setPixelRatio(1);renderer.setSize(W,H,false);renderer.setClearColor(0x000000,0);
-  const crop=()=>{gctx.clearRect(0,0,W,H);gctx.drawImage(renderer.domElement,0,0);const d=gctx.getImageData(0,0,W,H).data;let x0=W,y0=H,x1=-1,y1=-1;for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(d[(y*W+x)*4+3]>2){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
-   if(x1<0)return null;x0=Math.max(0,x0-1);y0=Math.max(0,y0-1);x1=Math.min(W-1,x1+1);y1=Math.min(H-1,y1+1);const w=x1-x0+1,h=y1-y0+1,c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(grab,x0,y0,w,h,0,0,w,h);return {c,x0,y0,w,h};};
-  renderer.render(scene,cam);const body=crop();
+  // Crop any canvas to its alpha; offsets are reported in the source's pixels.
+  const crop=(src=renderer.domElement,shift=0)=>{const SW=src.width,SH=src.height,cv=document.createElement('canvas');cv.width=SW;cv.height=SH;const cg=cv.getContext('2d',{willReadFrequently:true});cg.drawImage(src,0,0);const d=cg.getImageData(0,0,SW,SH).data;let x0=SW,y0=SH,x1=-1,y1=-1;for(let y=0;y<SH;y++)for(let x=0;x<SW;x++)if(d[(y*SW+x)*4+3]>2){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
+   if(x1<0)return null;x0=Math.max(0,x0-1);y0=Math.max(0,y0-1);x1=Math.min(SW-1,x1+1);y1=Math.min(SH-1,y1+1);const w=x1-x0+1,h=y1-y0+1,c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(cv,x0,y0,w,h,0,0,w,h);return {c,x0:x0-shift,y0:y0-shift,w,h};};
+  // Ink the airframe in the sprites' manner (silhouette, creases, overlaps).
+  const passes=B.renderPasses(T,renderer,scene,cam,W,H),inked=B.inkSprite(passes.color,passes.normal,passes.depth,{near:passes.near,far:passes.far});
+  B.splitToneCanvas(inked.canvas,B.SPLIT_AIRCRAFT);const body=crop(inked.canvas,inked.pad);
   // Shadow: the visible airframe flattened onto the ground along the study's sun.
   const proxy=new T.Group();root.traverse(o=>{if(o.isMesh&&o.userData?.paint!=='soil'){for(let p=o;p;p=p.parent)if(!p.visible)return;const m=new T.Mesh(o.geometry,B.black);m.matrixAutoUpdate=false;m.matrix.copy(B.flat).multiply(o.matrixWorld);proxy.add(m);}});
   root.visible=false;scene.add(proxy);proxy.updateMatrixWorld(true);renderer.render(scene,cam);const shadow=crop();scene.remove(proxy);root.visible=true;

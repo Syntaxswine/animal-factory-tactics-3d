@@ -2,11 +2,18 @@
 // crash in the user's clearing, as sprites over one painted plate.
 //   proof.html[?t=26.6][&play]
 // Everything is a pure function of time t, so scrubbing and recording agree.
-import {buildSector,makeView,LEVEL_HEIGHT,SUN,COS_EL,rng} from './crash-sector.js';
-import {rotorDisc,gouge,puff,missile,flash} from './effects.js';
-import {paintPlate,finishFrame} from './keyframes.js';
+import {buildSector,makeView,loadGroundTextures,LEVEL_HEIGHT,SUN,COS_EL,rng} from './crash-sector.js';
+import {loadFloraSprites} from './painted-trees.js';
+import {rotorDisc,gouge,puff,puffSprite,missile,flash} from './effects.js';
+import {paintPlate,finishFrame} from './plate.js';
 import {heliPath,cameraAt,EVENTS,PROOF_START,PROOF_END,TOUCHDOWN,KEYFRAME_TIMES,smooth} from './trajectory.js';
 export {PROOF_START,PROOF_END,KEYFRAME_TIMES};
+// The three stills shown to the user are frames of this player.
+export const KEYFRAMES=Object.freeze({
+ A:{title:'Descent past the plateau',caption:'The hit aircraft drops off the curved plateau rim toward the wooded pocket below; its shadow and the smoke trail give the altitude.'},
+ B:{title:'Impact in the marked clearing',caption:'Skids plant and buckle first; rotor wash and soil burst outward, the blades still turning. Same rim and screen direction.'},
+ C:{title:'Settled survivable wreck',caption:'Upright cabin, attached damaged tail, crushed skids, broken rotor and an open starboard door with clear ground for the squad. Thin engine smoke.'},
+});
 
 export const WIDTH=1600,HEIGHT=900,PLATE_TILE=52;
 const HV=PLATE_TILE/Math.SQRT2*COS_EL,GRAVITY=18;
@@ -25,11 +32,14 @@ const load=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);
 const json=async p=>{const r=await fetch(p);if(!r.ok)throw Error('Missing '+p);return r.json();};
 export async function loadProofAssets({paint=false}={}){
  const [map,woodland,seq,smoke]=await Promise.all([json('../sector-library/tutorial-step-1/rough-plateau.json'),json('crash-sector-woodland.json'),json('heli-seq/sequence.json'),load('../../assets/effects/painted-fire/smoke-atlas-v1.png')]);
- const [sheets,shadowSheets]=await Promise.all([Promise.all(seq.sheets.map(s=>load('heli-seq/'+s))),Promise.all(seq.shadowSheets.map(s=>load('heli-seq/'+s)))]);
+ // Decode every sheet up front: the browser otherwise decodes a 2048 px WebP on
+ // its first draw, which stalled playback 35-92 ms at each new sheet.
+ const bitmap=async src=>createImageBitmap(await load(src));
+ const [sheets,shadowSheets]=await Promise.all([Promise.all(seq.sheets.map(s=>bitmap('heli-seq/'+s))),Promise.all(seq.shadowSheets.map(s=>bitmap('heli-seq/'+s)))]);
  const sector=buildSector(map,woodland),geometry=plateGeometry(),view=plateView(geometry);
  let plate=null,plateSource='painted live';
- if(!paint){try{const meta=await json('plate/crash-plate.json');if(['width','height','ox','oy'].every(k=>meta.geometry[k]===geometry[k])){plate=await load('plate/crash-plate.webp');plateSource='plate/crash-plate.webp';}else plateSource='painted live (stored plate is for another camera path)';}catch{}}
- if(!plate)plate=paintPlate({sector},view).canvas;
+ if(!paint){try{const meta=await json('plate/crash-plate.json');if(['width','height','ox','oy'].every(k=>meta.geometry[k]===geometry[k])){plate=await bitmap('plate/crash-plate.webp');plateSource='plate/crash-plate.webp';}else plateSource='painted live (stored plate is for another camera path)';}catch{}}
+ if(!plate){const [textures,flora]=await Promise.all([loadGroundTextures(),loadFloraSprites()]);plate=paintPlate({sector,textures,flora},view).canvas;}
  return {sector,view,geometry,plate,plateSource,seq,sheets,shadowSheets,smoke};
 }
 
@@ -39,6 +49,9 @@ export function createProof(canvas,A){
  const at=(t,key)=>{const p=heliPath(t),o=frameAt(t)[key];return [p.x+o[0],p.y+o[1],p.h+o[2]];};
  const ground=(x,y)=>sector.heightAt(x,y);
  const fx=buildEffects(at,ground);
+ // Build every tinted puff sprite now: building them on first use stalled the
+ // first playback by up to 90 ms a frame (0 frames over 33 ms once warm).
+ for(const p of fx.puffs)puffSprite(A.smoke,p.cell,p.tint);
  function render(t){
   t=Math.max(PROOF_START,Math.min(PROOF_END,t));
   const c=cameraAt(t),s=c.w/PLATE_TILE,[fpx,fpy]=view.project(...c.F);
@@ -117,6 +130,6 @@ function clodAt(k,t){
 }
 function drawClod(ctx,view,k,s){
  const [x,y]=view.project(s.x,s.y,s.h),r=k.size*view.w/Math.SQRT2;
- ctx.fillStyle=k.shard?(k.tone<.5?'rgb(96,96,58)':'rgb(58,56,48)'):(k.tone<.4?'rgb(92,118,46)':k.tone<.75?'rgb(84,62,38)':'rgb(128,104,70)');
+ ctx.fillStyle=k.shard?(k.tone<.5?'rgb(96,96,58)':'rgb(58,56,48)'):(k.tone<.4?'rgb(124,116,54)':k.tone<.75?'rgb(84,62,38)':'rgb(128,104,70)');
  ctx.beginPath();if(k.shard){ctx.save();ctx.translate(x,y);ctx.rotate(k.rot);ctx.rect(-r*1.2,-r*.35,r*2.4,r*.7);ctx.restore();}else ctx.ellipse(x,y,r,r*.72,k.rot,0,Math.PI*2);ctx.fill();
 }

@@ -10,7 +10,7 @@
  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Georgia,serif}
  header{padding:18px 24px 6px}
  h1{margin:0;font-size:22px;font-weight:normal}
- nav{display:flex;gap:8px;padding:8px 24px}
+ nav{display:flex;flex-wrap:wrap;gap:8px;padding:8px 24px}
  nav a{color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:3px}
  nav a[aria-current]{border-color:var(--accent);color:var(--accent)}
  figure{margin:8px 24px 24px}
@@ -23,18 +23,21 @@
 <header><h1>Intro sprite proof — descent and crash keyframes</h1></header>
 <nav id="nav"></nav>
 <p id="status">Painting…</p>
-<figure><div id="stage"></div><figcaption id="caption"></figcaption></figure>
+<figure><canvas id="keyframe" width="1600" height="900"></canvas><figcaption id="caption"></figcaption></figure>
 <script type="module">
-import {SHOTS,loadAssets,renderShot} from './keyframes.js';
-const q=new URLSearchParams(location.search),id=(q.get('shot')||'A').toUpperCase();
-document.getElementById('nav').innerHTML=Object.entries(SHOTS).map(([k,s])=>`<a href="?shot=${k}"${k===id?' aria-current="page"':''}>${k} · ${s.title}</a>`).join('');
+// The stills are frames of the animated proof (proof.html) at fixed times, so
+// what the user approves is exactly what plays.
+import {KEYFRAMES,KEYFRAME_TIMES,loadProofAssets,createProof} from './proof.js';
+const q=new URLSearchParams(location.search),id=(q.get('shot')||'A').toUpperCase(),$=x=>document.getElementById(x);
+$('nav').innerHTML=Object.entries(KEYFRAMES).map(([k,s])=>`<a href="?shot=${k}"${k===id?' aria-current="page"':''}>${k} · ${s.title}</a>`).join('')+'<a href="proof.html">Play the proof</a>';
 try{
- const t0=performance.now(),assets=await loadAssets(),r=renderShot(assets,id);
- r.canvas.id='keyframe';document.getElementById('stage').append(r.canvas);
- document.getElementById('caption').textContent=SHOTS[id].caption;
- document.getElementById('status').textContent=`${id} · ${SHOTS[id].title} · ${r.flora} trees/shrubs/rocks · ${Math.round(performance.now()-t0)} ms`;
- window.keyframe={id,layers:Object.fromEntries(Object.entries(r.layers).map(([k,c])=>[k,c])),canvas:r.canvas,ready:true};
-}catch(e){document.getElementById('status').textContent='Failed: '+e.message;window.keyframe={error:e.message};throw e;}
+ if(!KEYFRAMES[id])throw Error('Unknown shot '+id);
+ const t0=performance.now(),assets=await loadProofAssets(),proof=createProof($('keyframe'),assets),t=KEYFRAME_TIMES[id];
+ proof.render(t);
+ $('caption').textContent=KEYFRAMES[id].caption;
+ $('status').textContent=`${id} · ${KEYFRAMES[id].title} · t = ${t} s · plate: ${assets.plateSource} · ${Math.round(performance.now()-t0)} ms`;
+ window.keyframe={id,t,canvas:$('keyframe'),ready:true};
+}catch(e){$('status').textContent='Failed: '+e.message;window.keyframe={error:e.message};throw e;}
 </script>
 </body>
 </html>
