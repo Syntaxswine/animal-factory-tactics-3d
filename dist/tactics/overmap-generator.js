@@ -1,7 +1,8 @@
 import {WIDTH as W,HEIGHT as H,SIDES,STEP,OPPOSITE,blank,route,validate,warnings,placeTutorial,tutorialCells} from './overmap-model.js';
+import {generateEnvironments,environmentCoverageErrors} from './environment-regions.js';
 
-export const GENERATOR_VERSION='strategic-plan-10';
-export const STAGES=['Tutorial','Rivers','Cliffs','Difficulty zoning','Settlements and fortresses','Roads','Bridges and gates','Validation'];
+export const GENERATOR_VERSION='strategic-plan-11';
+export const STAGES=['Tutorial','Rivers','Cliffs','Environments','Difficulty zoning','Settlements and fortresses','Roads','Bridges and gates','Validation'];
 export const DEFAULTS={villages:3,towns:4,cities:5,maxAttempts:40};
 export const SETTLEMENT_ZONES={easy:{towns:2,villages:1,cities:[[3,3]]},medium:{towns:1,villages:2,cities:[[3,4],[4,4]]},hard:{towns:1,villages:0,cities:[[3,4],[5,5]]}};
 export const isSettlement=s=>['city','town','village'].includes(s.role);
@@ -117,6 +118,7 @@ function gates(m,crossings,r){for(const i of crossings){const river=m.sectors[i]
 
 export function validateGenerated(m){
  const errors=[];try{validate(m);}catch(e){return {valid:false,errors:[e.message],counts:{}};}
+ errors.push(...environmentCoverageErrors(m.environments));
  const count=predicate=>m.sectors.filter(predicate).length,counts={easy:count(s=>s.difficulty==='easy'),medium:count(s=>s.difficulty==='medium'),hard:count(s=>s.difficulty==='hard'),bridges:count(s=>s.gate==='bridge'&&!isSettlement(s)),settlementCrossings:count(s=>s.gate==='bridge'&&isSettlement(s)),passages:count(s=>s.gate==='passage')};
  const check=(condition,message)=>{if(!condition)errors.push(message);};
  for(const z of ['easy','medium','hard'])check(counts[z]===150,`${z}: expected 150 sectors, found ${counts[z]}.`);
@@ -172,12 +174,13 @@ export function generateWorld(seed,options={},onProgress=()=>{}){
    const p=pick(placements,r);m=placeTutorial(m,p.x,p.y,p.rotation);const tutorial=tutorialCells(p.x,p.y,p.rotation),reserved=new Set(tutorial.map(c=>c.index));
    report(1);const endpoints=sampleBoundaryEndpoints(r);const features=[feature(m,'river',endpoints[0],endpoints[1],reserved,r,'river-1'),feature(m,'river',endpoints[2],endpoints[3],reserved,r,'river-2')];
    report(2);features.push(feature(m,'cliff',endpoints[4],endpoints[5],reserved,r,'cliff-1'));
-   report(3);zones(m,tutorial,r);for(const i of all())if(!reserved.has(i)&&!m.sectors[i].routes.length)m.sectors[i].terrain=r()<.23?'forest':'plain';
-   report(4);const groups=settlements(m,tutorial,o,r);
-   report(5);const crossings=roads(m,features,groups,r);
-   report(6);gates(m,crossings,r);
+   report(3);m.environments=generateEnvironments(m,seed);
+   report(4);zones(m,tutorial,r);for(const i of all())if(!reserved.has(i)&&!m.sectors[i].routes.length)m.sectors[i].terrain=r()<.23?'forest':'plain';
+   report(5);const groups=settlements(m,tutorial,o,r);
+   report(6);const crossings=roads(m,features,groups,r);
+   report(7);gates(m,crossings,r);
    m.name=`Generated world · ${seed}`;m.generation={seed,version:GENERATOR_VERSION,contentLibraryVersion:'schematic-symbols-1',attempt:attempt+1,options:o,stages:STAGES,features,settlements:groups,scope:'strategic-plan',boundaryPositionWeights:{...BOUNDARY_POSITION_WEIGHTS}};
-   report(7);const result=validateGenerated(m);if(!result.valid)fail(result.errors.slice(0,4).join(' '));m.generation.counts=result.counts;return m;
+   report(8);const result=validateGenerated(m);if(!result.valid)fail(result.errors.slice(0,4).join(' '));m.generation.counts=result.counts;return m;
   }catch(e){const reason=`${STAGES[stage]}: ${e.message}`;failures[reason]=(failures[reason]||0)+1;}
  }
  const reasons=Object.entries(failures).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([reason,n])=>`${n} attempt(s): ${reason}`).join('\n');fail(`Seed ${seed} failed after ${o.maxAttempts} deterministic attempts. Current map was preserved.\n${reasons}`);

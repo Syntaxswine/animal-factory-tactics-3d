@@ -1,4 +1,5 @@
 import {validateSavedState} from './encounter-save.js';
+import {environmentErrors} from './environment-regions.js';
 import {observeRoundTime} from './game-clock.js';
 import {validateTravel} from './overmap-travel.js';
 import {bindCampaign,validateAssignments,CAMPAIGN_VERSION,groupMembers,travelState} from './campaign-model.js';
@@ -11,6 +12,7 @@ const fail=()=>{throw Error('This campaign save is damaged or inconsistent. The 
 const transient=['effect','queue','fireAnimations','fireAnimationSequence','towerTraversal','cliffTraversals','cliffTraversalSequence','roofTraversals','roofTraversalSequence','shouting','sealed'];
 export function validateCampaign(c,{assignments=true}={}){
  if(!plain(c)||c.version!==CAMPAIGN_VERSION||typeof c.id!=='string'||!c.id||!integer(c.seed)||c.seed>4294967295||typeof c.contentVersion!=='string'||!['easy','standard'].includes(c.difficulty)||!integer(c.revision)||!finite(c.clock?.minutes)||!finite(c.money)||!integer(c.nextUnitId)||!integer(c.nextGroup)||!integer(c.nextIncident)||!plain(c.characters)||!plain(c.sectors)||!plain(c.assignments)||!Array.isArray(c.groups)||!Array.isArray(c.incidents)||c.overmap?.width!==30||c.overmap?.height!==15||c.overmap.sectors?.length!==450)fail();
+ if(environmentErrors(c.overmap.environments).length)fail();
  if(assignments)validateAssignments(c);
  const numeric=new Set(),physical=new Set(),members=new Set(),groupIds=new Set(c.groups.map(g=>g.id));
  if(groupIds.size!==c.groups.length||c.groups.length>64||c.incidents.length>10000||Object.keys(c.characters).length>10000)fail();
