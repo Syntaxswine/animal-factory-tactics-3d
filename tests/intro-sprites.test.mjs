@@ -7,7 +7,7 @@ import {heliPath,artPitch,cameraAt,PROOF_START,PROOF_END,EVENTS,REST,TOUCHDOWN,C
 import {plateGeometry,plateSpec,WIDTH,HEIGHT,PLATE_TILE} from '../dist/tactics/intro-sprites/proof.js';
 import {buildSector,HEIGHT_SCALE,ROCK_DETAIL} from '../dist/tactics/intro-sprites/crash-sector.js';
 import {closeupView,closeupSpec,traceRay,CLOSEUP_CAMERA} from '../dist/tactics/intro-sprites/closeup.js';
-import {planFlora} from '../dist/tactics/intro-sprites/painted-trees.js';
+import {planFlora,planLedges} from '../dist/tactics/intro-sprites/painted-trees.js';
 import {keepClear} from '../dist/tactics/intro-sprites/plate.js';
 import {splitTone,SPLIT} from '../dist/tactics/intro-sprites/grade.js';
 
@@ -36,7 +36,11 @@ test('the flight is continuous, lands at contact and slides forward only', ()=>{
 test('the hit happens over the plateau and the drop crosses the rim', ()=>{
  const s=S(),hit=heliPath(EVENTS.hit);
  assert.equal(s.levelAt(hit.x,hit.y),2,'hit over the summit');
- assert.ok(hit.h>2*s.LH+10,'well above the (stretched) summit');
+ // In open air over the (stretched) summit: the skids clear the tallest tree
+ // the plateau can grow (4.3, the game-scale bound below) by 2 units or more,
+ // the whole way to the rim.
+ let over=0;for(let t=PROOF_START;t<CLOSEUP.end;t+=.01){const p=heliPath(t);if(s.levelAt(p.x,p.y)!==2)continue;over++;assert.ok(p.h>2*s.LH+4.3+2,`skids among the plateau's crowns at ${t.toFixed(2)} s`);}
+ assert.ok(over>50);
  assert.equal(s.levelAt(TOUCHDOWN[0],TOUCHDOWN[1]),0,'touchdown on the lower ground');
 });
 
@@ -89,6 +93,50 @@ test('in the close-up the aircraft is in front of the rock, never inside or behi
  assert.ok(checked>=20);
 });
 
+test('the close-up tracer stops at the first rock a fine march finds', ()=>{
+ // A ray running alongside the cliff just beyond the safe distance once took
+ // ever shorter steps and ran out of iterations short of the rock: 3.8% of the
+ // close-up's rock pixels came back empty. Every ray over the wall here must
+ // stop within half a tile of the first solid a 0.02-tile march meets.
+ const s=SC(),V=closeupView(undefined,.25);let n=0,bad=0;
+ for(let py=Math.round(V.H*.3);py<V.H*.92;py+=5)for(let px=0;px<V.W*.86;px+=7){
+  const d=V.ray(px+.5,py+.5),hit=traceRay(s,V.C,d);let first=null;
+  for(let t=.5;t<260;t+=.02){const x=V.C[0]+d[0]*t,y=V.C[1]+d[1]*t,h=V.C[2]+d[2]*t;if(h<0||s.solidAt(x,y,h)){first=t;break;}}
+  if(first===null)continue;n++;if(!hit||Math.abs(hit.t-first)>.5)bad++;}
+ assert.ok(n>800,`rays over the wall (${n})`);assert.ok(bad<=n*.002,`${bad} of ${n} rays stop away from the first rock`);
+});
+
+test('across the cut out of the close-up, the cliff behind the aircraft is the same tier, height and size', ()=>{
+ // The architect, 2026-10-13: "The towering close-up becomes a considerably
+ // smaller cliff in the wide view. ... the helicopter's position against
+ // recognizable ledges should help those shots feel like the same place."
+ // Behind the cabin on screen: which tier, how far up it, and how many
+ // aircraft heights (3.3 units, skids to rotor head) the cliff stands there.
+ const AIR=3.3,cu=SC(),wi=S(),V=closeupView(),t=CLOSEUP.end-.05,p=heliPath(t),c=[p.x,p.y,p.h+1.2];
+ const d0=c.map((v,k)=>v-V.C[k]),L=Math.hypot(...d0),dir=d0.map(v=>v/L),hit=traceRay(cu,c.map((v,k)=>v+dir[k]*.01),dir);
+ assert.ok(hit&&hit.kind==='face','the close-up shows a cliff face behind the cabin');
+ const tierC=hit.h<=cu.LH?1:2,fracC=(hit.h-(tierC-1)*cu.LH)/cu.LH,sizeC=(2*cu.LH/(L+hit.t))/(AIR/L);
+ // The wide shot: the game camera's eye ray through the cabin, marched away
+ // from the camera (one unit down the screen point moves x and y each back by
+ // sqrt2 cos 30 deg, crash-sector.js makeView).
+ const q=heliPath(CLOSEUP.end),cw=[q.x,q.y,q.h+1.2],back=Math.SQRT2*Math.cos(Math.PI/6);let tierW=0,fracW=0;
+ for(let h=cw[2];h>0;h-=.01){const x=cw[0]-(cw[2]-h)*back,y=cw[1]-(cw[2]-h)*back;
+  if(wi.solidAt(x,y,h)){tierW=h<=wi.LH?1:2;fracW=(h-(tierW-1)*wi.LH)/wi.LH;break;}}
+ const sizeW=2*wi.LH/AIR;
+ assert.equal(tierW,tierC,'same tier behind the cabin');
+ assert.ok(Math.abs(fracW-fracC)<.15,`height up the tier: close-up ${fracC.toFixed(2)}, wide ${fracW.toFixed(2)}`);
+ assert.ok(Math.abs(sizeC/sizeW-1)<.2,`cliff in aircraft heights: close-up ${sizeC.toFixed(2)}, wide ${sizeW.toFixed(2)}`);
+});
+
+test('the relief never reaches past its bounds (the tracer\'s safe steps and the cutoff rely on them)', ()=>{
+ // ROUT and RIN are sums of their terms' maxima; a term left out, or a term
+ // made stronger, must show here (the cutoff test below only sees gross misses).
+ for(const s of [S(),SC()]){let out=0,inn=0;
+  for(let i=0;i<120000;i++){const x=120+((i*7919)%10000)/100,y=40+((i*104729)%10000)/100,lev=1+(i%2),h=(lev-1)*s.LH+((i*31)%997)/997*s.LH,d=s.rock(x,y,h).disp;if(d>out)out=d;if(-d>inn)inn=-d;}
+  assert.ok(out>1&&inn>2,'the sample reaches well into the relief');
+  assert.ok(out<=s.ROUT,`out ${out.toFixed(2)} past ROUT ${s.ROUT.toFixed(2)}`);assert.ok(inn<=s.RIN,`in ${inn.toFixed(2)} past RIN ${s.RIN.toFixed(2)}`);}
+});
+
 test('the rock function\'s cutoff never changes the answer (the tracer\'s safe steps rely on it)', ()=>{
  // Past ROUT outside and RIN inside the outline, rockG answers from the outline
  // alone. That is only right if no relief term can reach that far: sample just
@@ -127,6 +175,15 @@ test('trees keep off the rim: a scree apron at each cliff foot, a setback at eac
  const s=S(),flora=planFlora(s,[160,80,215,125],{keepClear:keepClear(),seed:3}).filter(t=>t.kind!=='shrub');
  assert.ok(flora.length>200);
  for(const t of flora){assert.ok(s.distUp(t.x,t.y)>=1.7,'apron');assert.ok(s.distDown(t.x,t.y)>=1.1,'lip');assert.ok(t.height<=4.3*1.0001,'game scale');}
+});
+
+test('the cliff plants stand on ledges, never stuck to a bare face', ()=>{
+ // Round 3 put 62% of them on vertical rock with nothing under their roots.
+ for(const s of [S(),SC()]){const L=planLedges(s,[150,70,200,130],{seed:13,density:.7});
+  assert.ok(L.length>30,`cliff plants (${L.length})`);
+  for(const t of L){assert.ok(!s.solidAt(t.x,t.y,t.base+.05),`plant inside rock at ${t.x.toFixed(1)},${t.y.toFixed(1)}`);
+   let under=false;for(let d=.02;d<=.12;d+=.02)if(s.solidAt(t.x,t.y,t.base-d)){under=true;break;}
+   assert.ok(under,`plant on a bare face at ${t.x.toFixed(1)},${t.y.toFixed(1)},${t.base.toFixed(2)}`);}}
 });
 
 test('the split tone cools and greys the shade, warms the light, and leaves rock alone', ()=>{

@@ -1,6 +1,6 @@
 # Intro sprite proof: descent and crash
 
-**Status (October 12, 2026): composition and pacing accepted; round 3 (a close-up of the drop, realistic rock, a taller butte, haze) is waiting for the user.** Nothing here changes the 3D study.
+**Status (October 13, 2026): composition and pacing accepted; round 4, the architect's cliff-painting pass (fractured rock, the cliff kept the same size across the cut), is waiting for the user.** Nothing here changes the 3D study.
 
 > **Direction (the user, 2026-10-12), on the round 1 keyframes:** "this version of the crash resolves a lot of my conflicts with it."
 >
@@ -13,23 +13,120 @@
 > **Direction (the user, 2026-10-12), on the cliff's height in the game (two tiers of 2.12 units):** "mostly taller up close, but i dont mind if you stretch the truth in the intro shot too. its basically a butte, so it should feel tall."
 >
 > **Direction (the user, 2026-10-12), on the first close-up preview:** "scale is looking good, but it looks fairly low poly with the thick block shapes on a flat plane. this should look fairly realistic"
+>
+> **Review (the architect, 2026-10-13), on round 3 (9f40d75), passed on by the user:** "The rock still needs a more natural surface. The rounded columns, smooth highlights and repeated horizontal joints resemble constructed stonework. Broader fractured masses, uneven ledges and less regular shading would bring it closer to the painted reference. Adding finer texture alone won't solve that." And: "Watch the scale across the camera cut. The towering close-up becomes a considerably smaller cliff in the wide view. Exaggerating its height works, but the helicopter's position against recognizable ledges should help those shots feel like the same place." Keep the shot sequence, the landing timing and the final wreck composition: "This needs a concentrated cliff-painting pass, not another wholesale revision."
 
-![Round 3 contact sheet: the storyboard's panel 08 beside the new close-up and keyframes A and C](intro-sprites/contact-sheet-round-3.jpg)
+![Round 4 contact sheet: the storyboard's panel 08 beside the close-up and keyframes A and C](intro-sprites/contact-sheet-round-4.jpg)
 
 | Keyframe | What it has to establish |
 | --- | --- |
-| [0 · Down the cliff face](intro-sprites/keyframe-0.jpg), t = 22.4 s (close-up) | The scale and detail of the butte: the aircraft drops past a towering columnar wall, trailing smoke, nose toward screen right, with the plateau forest along the rim and the valley hazing into distant hills. |
+| [0 · Down the cliff face](intro-sprites/keyframe-0.jpg), t = 22.4 s (close-up) | The scale and detail of the butte: the aircraft drops past a towering wall of fractured limestone, trailing smoke, nose toward screen right, with the plateau forest along the rim and the valley hazing into distant hills. |
 | [A · Descent past the plateau rim](intro-sprites/keyframe-A.jpg), t = 23.75 s | The curved two-tier rim, plateau woods above it, the lower woods and the open clearing below it. The hit aircraft drops off the rim, nose down, trailing smoke back to the hit. |
 | [B · Impact in the marked clearing](intro-sprites/keyframe-B.jpg), t = 26.6 s | The rim stays visible behind the clearing. The skids plant and gouge with the rotor still turning, and rotor-wash dust and soil burst outward. |
 | [C · Settled survivable wreck](intro-sprites/keyframe-C.jpg), t = 34.7 s | Same camera as B. The wreck is in the user's circle: upright cabin, damaged tail still attached, crushed skids, broken rotor, an open starboard door facing the camera, thin engine smoke, and skid gouges back to touchdown. |
 
 The stills are frames of the animated proof at those times. Comparisons:
 
+- [The rock, round 3 beside round 4](intro-sprites/rock-before-after.jpg)
+- [The cut out of the close-up, round 3 beside round 4](intro-sprites/cut-before-after.jpg)
+- [Round 3 contact sheet](intro-sprites/contact-sheet-round-3.jpg)
 - [The wide cliff, round 2 beside round 3](intro-sprites/cliff-before-after.jpg)
 - [Round 1 beside round 2](intro-sprites/aesthetic-before-after.jpg)
 - [Round 2 contact sheet](intro-sprites/contact-sheet-round-2.jpg)
 - [The 3D shot 12 beside round 1](intro-sprites/before-after-closing-frame.jpg)
 - [Round 1 contact sheet](intro-sprites/contact-sheet-round-1.jpg)
+
+## Round 4: the cliff-painting pass
+
+The shot sequence, the cameras, the aircraft's path, the landing and the wreck are unchanged. Three things changed: the rock itself, the wide shots' cliff height, and where the cliff plants grow.
+
+### The rock: from stonework to fractured limestone
+
+Round 3's relief was a field of narrow columns, Voronoi cells 1.2 tiles apart, each rounded like a pillar. It had bedding grooves every 1.55 tiles of height and two or three fracture grooves per column. That is a wall's rhythm. Round 4 builds the face the way a jointed limestone cliff breaks (`crash-sector.js`: `masses`, `block`, `relief`):
+
+- **Masses.** The plan is split by a warped power diagram, each seed with its own weight. Joints are about 4 tiles apart and unevenly spaced, and six in ten open into clefts.
+- **Breaks.** A mass breaks across only now and then, in beds 4–11 tiles thick (thicker in the wide shots) with each break tilted. Ledges and overhangs are therefore uneven and never line up into courses.
+- **Faces.** Between breaks, each mass is the smooth lower envelope of three planes, each with its own set-back, yaw and lean, so it breaks into angular facets. Part of the set-back is shared with the neighbours, and broad lumps swell and sink across the face.
+- **Cracks and tops.** Most masses carry one or two long cracks, nearly vertical, and some an oblique fracture. Weathered tops dome down toward the clefts, and some masses stop short of the tier top.
+- **Shading.**
+  - Close up, the faces carry a fine relief in the shading only: a bump on rotated noise, faded out below 16 px per tile. As geometry it would alias into speckle farther off.
+  - Colour comes in patches that run across the joints, since a tone per block reads as one stone after another.
+  - Ink goes only in the open clefts, with a faint broken line along the tight joints.
+
+Measured on the geometry along the crash sector's rim, both tiers at mid-height:
+
+| | Round 3 | Round 4 |
+| --- | --- | --- |
+| Width between joints, mean (p10–p90) | 0.92 tiles (0.30–1.46) | 3.56 tiles (0.73–5.67) |
+| Grooves across the face per 10 tiles of height, close-up | 1.99 | 0.92 |
+| Grooves across the face per 10 tiles of height, wide shots | 1.51 | 0.25 |
+
+A screen-space measure, the autocorrelation of luminance edges inside the rock, separated round 3 from round 4 too weakly to rely on (peaks 0.014 and 0.003). The comparison is therefore the geometry above and the frames: [round 3 beside round 4](intro-sprites/rock-before-after.jpg). The wide shots now carry 0.8 of the close-up's detail (round 3: half), since broad masses no longer turn into a sawtooth at that scale.
+
+### The cut: the same place, the same size
+
+A probe found the rock directly behind the cabin on screen as the close-up cuts out at 23.6 s, in both shots:
+
+| | Close-up (4×) | Wide, round 3 (1.6×) | Wide, round 4 (2.4×) |
+| --- | --- | --- | --- |
+| Rock behind the cabin | lower tier, 0.48 of the way up | lower tier, 0.74 | lower tier, 0.49 |
+| Cliff height there, in aircraft heights | 3.07 | 2.06 | 3.08 |
+
+In the close-up, the wall behind the aircraft stands 65 tiles from the lens and the aircraft 39. The wall therefore looks smaller beside the aircraft than its 17 units suggest. Raising the wide stretch from 1.6 to **2.4** (`HEIGHT_SCALE.wide`) matches both readings: the same tier, the same height on it, and the same size in aircraft heights. In both shots the aircraft drops just below the shelf, the long planted ledge between the tiers. That ledge is the recognisable one across the cut. A test pins all three readings.
+
+The taller wide cliff affects the shots as follows:
+
+- The opening and A framings show a taller band.
+- B and C, the wreck, are unchanged: the frame top cuts the cliff just above the shelf, as before.
+- Over the summit the aircraft's skids clear the tallest tree the plateau can grow by at least 3.9 units. A test checks this along the whole flight.
+
+Both shots now share one key light from the front left, raking along the wall (`ROCK_KEY`), so the cut keeps one sun.
+
+### Plants on ledges
+
+Round 3 put 62% of its cliff plants on bare vertical faces. Each now drops onto the first ledge below it, and only onto rock at least 0.12 tiles deep, not onto the sharp edge of a step. The close-up's stretch has 58 cliff plants, all on rock.
+
+### What the measurements caught
+
+- **A tracer stall, latent since round 3.** At full size there were white dots ringed with ink: rays that found no rock at all. Stepping one ray through the tracer showed the cause. It ran alongside the cliff just beyond the safe distance, took coarse steps that shrank toward zero, and spent all 4,000 iterations short of the rock. In one crop, 3.8% of the rock pixels came back empty. The coarse step is now at least 0.1 tile, which is safe within the 0.3 margin. Misses fell from 749 to 0 in that crop, and to 2 in 776,000 pixels over the wall. In round 3 the fill passes had hidden most of them.
+- **Speckle in half-size previews** was not a bug. It came from fracture grooves and rounded edges narrower than a pixel, so rock is judged at full size.
+- **A plant on a sliver of rock.** The new ledge test caught the first version of the planner accepting 0.015 tiles of rock as a ledge.
+- **A weak bound test.** Round 3's cutoff test samples only just beyond the cutoff, where the relief rarely reaches, and a bound set below the real reach passed it. A new test compares the relief's sampled reach with `ROUT` and `RIN` directly. Measured over 120,000 samples:
+
+  | Rock | Out (measured / bound) | In (measured / bound) |
+  | --- | --- | --- |
+  | Wide | 1.70 / 3.99 | 4.49 / 9.70 |
+  | Close-up | 2.09 / 4.87 | 4.62 / 10.49 |
+
+### Tests and costs
+
+`tests/intro-sprites.test.mjs` now has 18 tests, all passing. Four are new, and one is restated:
+
+- the close-up tracer stops within half a tile of the first rock a 0.02-tile march finds;
+- across the cut out of the close-up, the rock behind the aircraft is the same tier, at the same height (within 0.15) and the same size (within 20%);
+- every cliff plant stands on rock, never on a bare face;
+- the relief never reaches past its bounds;
+- restated: over the summit, the skids clear the tallest possible tree by 2 units or more along the whole flight. The old check, 10 units above the summit at the hit instant, assumed the 1.6× cliff.
+
+Mutation checks ran in a sandbox copy. Each mutant should fail a test:
+
+| Mutant | Result |
+| --- | --- |
+| The tracer without its minimum coarse step | caught: 42 of 1,700 rays stop away from the first rock |
+| Wide stretch back to 1.6 | caught: 0.48 up the tier in the close-up, 0.74 in the wide |
+| Wide stretch 3.2 | caught: 3.07 against 4.11 aircraft heights; skids among the crowns |
+| Wide stretch 4 | caught: 0.48 against 0.29; skids among the crowns |
+| Cliff plants hang where they settle (round 3's rule) | caught |
+| Cliff plants accepted on a sliver | caught |
+| `RIN` 3.5, `ROUT` 1.2 (below the real reach) | caught by the reach test; the cutoff test missed both |
+| `RIN` without the worn tops or the clefts; `ROUT` without the buttresses | survived. These are equivalent mutants: the bounds keep about 2× slack (the table above), so dropping one term still leaves a valid bound. |
+
+Costs:
+
+- **Painting.** The close-up plate takes 3.7 minutes and the wide plate 1.2 (its tool no longer repaints the close-up plate as well) minutes. The relief costs more per sample, and the wide plate samples a taller cliff.
+- **Playback.** First playback in the preview browser: 445 frames, median 0.9 ms per frame, worst 3 ms, none over 33 ms; the close-up's median is 0.7 ms. The recording went 0 of 445 frames over budget (video 9.4 MB).
+
+`tools/preview-intro-rock.mjs` paints either shot's rock in seconds on every core, with no browser and no flora, for trying rock rules before a plate paint.
 
 ## Round 3: the close-up, the butte, realistic rock and haze
 
@@ -50,7 +147,7 @@ A new shot cuts in after the hit, from **21.2 to 23.6 s**, and cuts back to the 
 | Close-up | 4× | 17 units, about 5 aircraft heights |
 | Wide shots | 1.6× | 6.8 units |
 
-The map's outline, the clearing and every tree stay at game scale; only the rock grows. The wide stretch is kept moderate so the cut into gameplay is not a jump.
+The map's outline, the clearing and every tree stay at game scale; only the rock grows. The wide stretch is kept moderate so the cut into gameplay is not a jump. (Round 4 raised it to 2.4×, matched to the close-up at the cut; see Round 4.)
 
 ### Realistic rock
 
@@ -213,7 +310,7 @@ The game's trees are 2.3 units tall (pine, `foliage-models.js`), or 1.8× that f
 
 `tools/record-intro-proof.mjs` writes stills (`--frames`) and the WebM (`--video`). The video is paced frame by frame through `MediaRecorder`.
 
-`tests/intro-sprites.test.mjs` has 14 tests: the 10 below, plus the four round 3 added (see Round 3).
+`tests/intro-sprites.test.mjs` has 18 tests: the 10 below, plus four from round 3 and four from round 4 (see those sections).
 
 - the wreck rests in the circle;
 - the flight is continuous, lands at contact and only slides forward;
@@ -244,10 +341,10 @@ Not done yet:
 
 ## Questions for the user
 
-1. Does the close-up read as the storyboard's cliff: the scale, the rock and the haze into the valley?
-2. Is the wide shots' 1.6× stretch enough, now that the close-up carries the butte's full height?
-3. The close-up's rock is grey with ochre patches. Should it be warmer, closer to the storyboard's pink-ochre?
-4. Are the copses in the open ground welcome, or should the open ground stay exactly as the map paints it?
+1. Does the rock now read as the painted reference's broken limestone rather than stonework?
+2. Does the cut out of the close-up feel like the same place? The wide cliff is now 2.4×, matched to the close-up at the cut.
+3. Still open from round 3: the rock is grey with ochre patches. Should it be warmer, closer to the storyboard's pink-ochre?
+4. Still open: are the copses in the open ground welcome, or should the open ground stay exactly as the map paints it?
 
 ## Reproduce
 
@@ -257,6 +354,7 @@ node tools/bake-intro-heli-sequence.mjs           # 233 inked aircraft frames ->
 node tools/bake-intro-heli-closeup.mjs            # 51 close-up aircraft frames -> dist/tactics/intro-sprites/heli-closeup/
 node tools/render-intro-plate.mjs                 # wide plate -> dist/tactics/intro-sprites/plate/crash-plate.*
 node tools/render-intro-closeup.mjs               # close-up plate -> dist/tactics/intro-sprites/plate/cliff-plate.*
+node tools/preview-intro-rock.mjs closeup --scale 1 --out rock.png   # quick rock preview, no browser
 node tools/render-intro-keyframes.mjs 0,A,B,C     # stills (player frames) -> docs/tactics/intro-sprites/keyframe-*.png
 node tools/record-intro-proof.mjs --video         # WebM -> docs/tactics/intro-sprites/proof-playback.webm
 node --test tests/intro-sprites.test.mjs

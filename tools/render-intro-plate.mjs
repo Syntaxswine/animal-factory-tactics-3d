@@ -15,7 +15,7 @@ const page=await browser.newPage({viewport:{width:1700,height:1100}});
 page.on('pageerror',e=>console.error('page:',e.message));
 const t0=Date.now();
 await page.goto(base+'/tactics/intro-sprites/proof.html?paintPlate',{waitUntil:'load'});
-await page.waitForFunction(()=>window.introProof?.ready||window.introProof?.error,null,{timeout:300000});
+await page.waitForFunction(()=>window.introProof?.ready||window.introProof?.error,null,{timeout:900000,polling:1000});
 const r=await page.evaluate(()=>{const p=window.introProofPlate;return {data:p.canvas.toDataURL('image/webp',.93).split(',')[1],geometry:p.geometry,spec:p.spec,status:document.getElementById('status').textContent};});
 await mkdir(out,{recursive:true});
 const buf=Buffer.from(r.data,'base64');await writeFile(out+'crash-plate.webp',buf);

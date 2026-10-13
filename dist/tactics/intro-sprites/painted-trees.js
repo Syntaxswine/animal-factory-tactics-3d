@@ -58,23 +58,30 @@ export function planRocks(sector,bounds,{keepClear=[],seed=5}={}){
  return out;
 }
 
-// Shrubs and small pines clinging to the cliff faces, as on the storyboard's
-// cliffs: points on each tier's contour, raised to a random height on the
-// face and pushed out until they stand just clear of the displaced rock.
+// Shrubs and small pines on the cliff's ledges, as on the storyboard's cliffs:
+// points on each tier's contour, raised to a random height on the face, pushed
+// out until they stand just clear of the displaced rock, then dropped onto the
+// first ledge below. A point with no ledge within reach grows nothing: a plant
+// on a bare vertical face reads as a sticker.
 export function planLedges(sector,bounds,{seed=7,density=.5}={}){
- const out=[],[x0,y0,x1,y1]=bounds,LH=sector.LH,S=.45;
+ const out=[],[x0,y0,x1,y1]=bounds,LH=sector.LH,S=.36,REACH=1.4;
  for(let gy=Math.floor(y0/S);gy<=y1/S;gy++)for(let gx=Math.floor(x0/S);gx<=x1/S;gx++){
   const r=rng(hash(gx,gy,seed)*4294967296),x=(gx+r())*S,y=(gy+r())*S;
   if(!sector.extend&&(x<0||y<0||x>sector.W-1||y>sector.H-1))continue;
   for(const lev of [1,2]){
    if(Math.abs(sector.field(x,y)-(lev-.5))>.04||r()>density)continue;
-   const h=(lev-1)*LH+(.22+r()*.66)*LH,[gx2,gy2]=sector.grad(x,y),gl=Math.hypot(gx2,gy2)||1,ox=-gx2/gl,oy=-gy2/gl;
+   const h=(lev-1)*LH+(.15+r()*.8)*LH,[gx2,gy2]=sector.grad(x,y),gl=Math.hypot(gx2,gy2)||1,ox=-gx2/gl,oy=-gy2/gl;
    // Settle onto the relief: step along the outward normal by the rock
    // function (a plan distance) until the point sits just outside the face.
    let px=x,py=y;for(let k=0;k<6;k++){const g=sector.rockG?sector.rockG(lev,px,py,h):(sector.solidAt(px,py,h)?.1:0);if(Math.abs(g)<.03)break;px+=ox*g;py+=oy*g;}
    if(sector.solidAt(px+ox*.06,py+oy*.06,h)||!sector.solidAt(px-ox*.15,py-oy*.15,h))continue;
+   // Down the face to the first rock under the plant's foot that is a ledge,
+   // not the sharp edge of a step (solid 0.12 deep).
+   const fx=px+ox*.05,fy=py+oy*.05;let base=null;
+   for(let d=.03;d<=REACH;d+=.03){const hb=h-d;if(hb<=(lev-1)*LH+.15)break;if(sector.solidAt(fx,fy,hb)&&sector.solidAt(fx,fy,hb-.12)){base=hb+.03;break;}}
+   if(base===null)continue;
    const pine=r()<.28;
-   out.push({kind:pine?'pine':'shrub',ledge:true,x:px+ox*.04,y:py+oy*.04,base:h-.08,height:pine?1.1+r()*.9:.45+r()*.35,radius:pine?.45+r()*.2:.3+r()*.2,seed:Math.floor(r()*1e9),tint:r()});
+   out.push({kind:pine?'pine':'shrub',ledge:true,x:fx,y:fy,base,height:pine?1.1+r()*.9:.45+r()*.35,radius:pine?.45+r()*.2:.3+r()*.2,seed:Math.floor(r()*1e9),tint:r()});
   }
  }
  return out;

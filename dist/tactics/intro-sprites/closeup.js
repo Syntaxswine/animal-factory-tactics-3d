@@ -5,7 +5,7 @@
 // detail of the cliff." The camera floats out over the lowland looking along
 // the wall, so the cliff recedes to the right and the aircraft's nose (+x)
 // stays toward screen right, as in every other shot.
-import {buildSector,shadeTop,shadeFace,setGroundTextures,groundLod,HEIGHT_SCALE,ROCK_DETAIL,fbm,vnoise,hash,rng} from './crash-sector.js';
+import {buildSector,shadeTop,shadeFace,setGroundTextures,groundLod,HEIGHT_SCALE,ROCK_DETAIL,ROCK_KEY,fbm,vnoise,hash,rng} from './crash-sector.js';
 import {planFlora,planRocks,planLedges,floraVariant} from './painted-trees.js';
 import {keepClear,HAZE_COLOR} from './plate.js';
 import {splitToneCanvas} from './grade.js';
@@ -17,11 +17,10 @@ export {CLOSEUP};
 export const CLOSEUP_CAMERA=Object.freeze({pos:[180.5,139.5,19],target:[180.5,98,11.5],hfov:50,plate:[1760,990],window:[1600,900]});
 // Atmospheric perspective: clear to t0 tiles, then a veil that thickens with distance.
 export const CLOSEUP_HAZE=Object.freeze({t0:28,k:.009,max:.85});
-// Light raking across the rock from the front left (x, up, y): a painter's key
-// for relief; the wide shots keep their own (crash-sector.js ROCK_KEY).
-// Raking along the wall from its near end: it lights the main face obliquely
-// and the facets turned toward the near end brightest.
-const KEY=(()=>{const v=[-.24,.5,.83],n=Math.hypot(...v);return v.map(c=>c/n);})();
+// Light raking along the wall from its near end (crash-sector.js ROCK_KEY, the
+// wide shots' key too): it lights the main face obliquely and the facets turned
+// toward the near end brightest.
+const KEY=ROCK_KEY;
 const INK=[40,34,26],TMAX=1200;
 const clamp=(v,a=0,b=1)=>v<a?a:v>b?b:v,smooth=(a,b,t)=>{t=clamp((t-a)/(b-a));return t*t*(3-2*t);};
 const mixc=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
@@ -65,9 +64,12 @@ export function traceRay(S,o,d,tMax=TMAX){
   if(d[2]<-1e-9){tExit=((k-1)*LH-o[2])/d[2];down=true;}else if(d[2]>1e-9&&k<3)tExit=(k*LH-o[2])/d[2];
   if(k<3){
    // Coarse: the signed distance to this band's tier outline, less the
-   // largest relief, is a safe step toward the rock.
+   // largest relief, is a safe step toward the rock. At least 0.1 tile: a ray
+   // running alongside the outline just beyond M otherwise takes ever shorter
+   // steps and runs out of iterations short of the rock (measured: 3.8% of the
+   // close-up's rock pixels missed). M keeps 0.3 of margin, so 0.1 is safe.
    const M=S.ROUT+.3,D=-S.sdAt(k,x,y);
-   if(D>M){const step=hz>1e-9?(D-M)/hz:Infinity;if(t+step<tExit){t+=step;continue;}t=tExit;}
+   if(D>M){const step=hz>1e-9?Math.max(.1,D-M)/hz:Infinity;if(t+step<tExit){t+=step;continue;}t=tExit;}
    else{
     // Fine: step on the rock function (a plan distance, relief included);
     // leave as soon as the ray is clear of the outline again. The relief is

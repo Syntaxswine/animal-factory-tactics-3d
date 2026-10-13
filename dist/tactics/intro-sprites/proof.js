@@ -49,9 +49,10 @@ export async function loadProofAssets({paint=false}={}){
  if(!paint){try{const meta=await json('plate/crash-plate.json');if(JSON.stringify(meta.spec)===JSON.stringify(spec)){plate=await bitmap('plate/crash-plate.webp');plateSource='plate/crash-plate.webp';}else plateSource='painted live (the stored plate was painted for another camera, height or haze)';}catch{}}
  if(!plate){const [textures,flora]=await Promise.all([loadGroundTextures(),loadFloraSprites()]);plate=paintPlate({sector,textures,flora},view,{haze:PLATE_HAZE}).canvas;}
  // The close-up: its own plate (painted through the lens) and aircraft frames.
+ // (paint repaints the wide plate only; the close-up has its own tool.)
  const cuSeq=await json('heli-closeup/sequence.json'),cuSheets=await Promise.all(cuSeq.sheets.map(s=>bitmap('heli-closeup/'+s))),cuSpec=closeupSpec();
  let cuPlate=null,cuPlateSource='painted live';
- if(!paint){try{const meta=await json('plate/cliff-plate.json');if(JSON.stringify(meta.spec)===JSON.stringify(cuSpec)){cuPlate=await bitmap('plate/cliff-plate.webp');cuPlateSource='plate/cliff-plate.webp';}else cuPlateSource='painted live (the stored close-up plate is stale)';}catch{}}
+ {try{const meta=await json('plate/cliff-plate.json');if(JSON.stringify(meta.spec)===JSON.stringify(cuSpec)){cuPlate=await bitmap('plate/cliff-plate.webp');cuPlateSource='plate/cliff-plate.webp';}else cuPlateSource='painted live (the stored close-up plate is stale)';}catch{}}
  if(!cuPlate){const [textures,flora]=await Promise.all([loadGroundTextures(),loadFloraSprites()]);cuPlate=paintCloseupPlate({sector:buildSector(map,woodland,{heightScale:HEIGHT_SCALE.closeup,extend:true,detail:ROCK_DETAIL.closeup}),textures,flora},closeupView()).canvas;}
  const closeup={view:closeupView(),plate:cuPlate,plateSource:cuPlateSource,seq:cuSeq,sheets:cuSheets};
  return {sector,view,geometry,spec,plate,plateSource,seq,sheets,shadowSheets,smoke,closeup};

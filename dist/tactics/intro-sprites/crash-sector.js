@@ -6,10 +6,14 @@
 export const LEVEL_HEIGHT=2.12; // DIMENSIONS.floorSpacing in hybrid-world.js
 // The user, 2026-10-12: "its basically a butte, so it should feel tall." The
 // cutscene stretches the two tiers; the map's outline and the clearing stay exact.
-export const HEIGHT_SCALE=Object.freeze({wide:1.6,closeup:4});
+// The wide stretch is matched to the close-up at the cut (the architect,
+// 2026-10-13: "The towering close-up becomes a considerably smaller cliff in the
+// wide view"): at 2.4 the wall behind the cabin as the close-up cuts out is the
+// same tier at the same height, and as many aircraft heights tall, in both shots.
+export const HEIGHT_SCALE=Object.freeze({wide:2.4,closeup:4});
 // How much small-scale breakage the rock carries: the close-up shows every
-// fracture and worn top; at wide scale that much detail reads as a sawtooth.
-export const ROCK_DETAIL=Object.freeze({wide:.5,closeup:1});
+// fracture and worn top; the wide shots a little less.
+export const ROCK_DETAIL=Object.freeze({wide:.8,closeup:1});
 export const SUN=Object.freeze((()=>{const v=[12,35,20],n=Math.hypot(...v);return v.map(c=>c/n);})()); // study's sun (x, up, y)
 export const COS_EL=Math.cos(Math.PI/6),SIN_EL=Math.sin(Math.PI/6);
 
@@ -29,6 +33,8 @@ export function fbm3(x,y,z,seed=0,oct=3){let s=0,a=.5,f=1,n=0;for(let i=0;i<oct;
 export const rng=seed=>{let s=seed>>>0||1;return ()=>{s=Math.imul(s^(s>>>15),2246822507)^Math.imul(s^(s>>>13),3266489909);s^=s>>>16;return (s>>>0)/4294967296;};};
 const mix=(a,b,t)=>a+(b-a)*t,clamp=(v,a=0,b=1)=>v<a?a:v>b?b:v,smooth=(a,b,t)=>{t=clamp((t-a)/(b-a));return t*t*(3-2*t);};
 const mixc=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t),mix(a[2],b[2],t)];
+// Rotated coordinates for rock noise: a lattice aligned with the map prints rows.
+const rot3=(x,y,h)=>[.36*x+.48*y-.8*h,-.8*x+.6*y,.48*x+.64*y+.6*h];
 
 // --- distance transforms ---------------------------------------------------
 // Exact squared Euclidean distance transform (Felzenszwalb and Huttenlocher),
@@ -98,16 +104,18 @@ export function buildSector(map,woodland,{heightScale=1,extend=false,detail=1}={
  const rawWood=(x,y)=>{x=Math.round(x);y=Math.round(y);return x>=0&&y>=0&&x<W&&y<H&&wood[y*W+x]===1;};
  const grad=(x,y)=>{const e=.35;return [(field(x+e,y)-field(x-e,y))/(2*e),(field(x,y+e)-field(x,y-e))/(2*e)];};
 
- // --- the rock: jointed limestone with real relief ----------------------------
+ // --- the rock: fractured limestone in broad masses -----------------------------
  // The user, 2026-10-12, on the first close-up: "it looks fairly low poly with
  // the thick block shapes on a flat plane. this should look fairly realistic."
- // So the face is no longer a field contour nudged a fraction of a tile. Each
- // tier gets a true signed distance (tiles, + inside rock) to its smooth
+ // So each tier gets a true signed distance (tiles, + inside rock) to its smooth
  // outline, and the rock surface is where that distance plus a relief in tiles
- // reaches zero: buttresses and bays that scale with the cliff's height,
- // jointed columns that stand forward or sit back, each rounded like a pillar,
- // dark slots at the joints, fracture ledges and overhangs at each column's own
- // heights, worn column tops, lumps and hollows.
+ // reaches zero. The architect, 2026-10-13, on that relief (9f40d75): "The
+ // rounded columns, smooth highlights and repeated horizontal joints resemble
+ // constructed stonework. Broader fractured masses, uneven ledges and less
+ // regular shading would bring it closer to the painted reference." So the
+ // relief breaks the way a jointed limestone cliff does (masses() and block()
+ // below): broad masses between wandering joints, each broken at its own tilted
+ // heights, each block a face of its own.
  const sdf=[null,signedDistance(1),signedDistance(2)];
  function signedDistance(k){
   const N=W4*H4,inside=new Uint8Array(N),a=new Float64Array(N),b=new Float64Array(N),INF=1e12;
@@ -123,39 +131,79 @@ export function buildSector(map,woodland,{heightScale=1,extend=false,detail=1}={
   return sd;}
  const sdAt=(k,x,y)=>{x=Math.max(0,Math.min(W-1.001,wx(x)))*R;y=Math.max(0,Math.min(H-1.001,wy(y)))*R;const ix=x|0,iy=y|0,fx=x-ix,fy=y-iy,i=iy*W4+ix,S=sdf[k];
   return S[i]*(1-fx)*(1-fy)+S[i+1]*fx*(1-fy)+S[i+W4]*(1-fx)*fy+S[i+W4+1]*fx*fy;};
- // Bounds on the relief, term by term below: ROUT how far rock can reach out
- // past the outline (the tracer's safe step), RIN how deep a notch can cut in
- // (worn tops reach 2.4). Past them the outline alone decides.
- const COL=1.2,BUTTRESS=.19*LH,NB=Math.floor(2.4*detail+detail*.6);
- const ROUT=BUTTRESS+.55+.5+NB*.45*detail+.34+.25,RIN=BUTTRESS+.55+.32+NB*(.45*detail+.28)+(detail>0?2.4:0)+.34+.3+.1,RMAX=ROUT;
- const columns=(x0,y0)=>{
-  // Warped in plan only, so column widths vary but the columns stay vertical.
-  const x=x0+(vnoise(x0*.29,y0*.29,301)-.5)*1.3,y=y0+(vnoise(x0*.29,y0*.29,302)-.5)*1.3;
-  const gx=Math.floor(x/COL),gy=Math.floor(y/COL);let d1=1e9,d2=1e9,id=0;
-  for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const cx=gx+i,cy=gy+j,px=(cx+.1+hash(cx,cy,201)*.8)*COL,py=(cy+.1+hash(cx,cy,202)*.8)*COL,dd=(x-px)*(x-px)+(y-py)*(y-py);
-   if(dd<d1){d2=d1;d1=dd;id=(cx*92821+cy*68917)|0;}else if(dd<d2)d2=dd;}
-  return {edge:(Math.sqrt(d2)-Math.sqrt(d1))*.5,id};};
- const relief=(x,y,h,lev,col=columns(x,y))=>{
-  const z=h-(lev-1)*LH,top=LH-z,r1=hash(col.id,lev,203),r2=hash(col.id,lev,204),r3=hash(col.id,lev,205);
-  // Buttresses and bays, nearly vertical, as deep as the cliff is tall.
+ // The relief's terms, in tiles (detail scales the small-scale breakage):
+ //  - buttresses and bays, nearly vertical, as deep as 0.19 of the tier;
+ //  - masses: a warped power diagram in plan, joints about MASS tiles apart and
+ //    unevenly spaced, so masses come broad and narrow; most joints open into
+ //    clefts, the rest stay tight;
+ //  - breaks: a mass breaks across only now and then (beds 4-11 tiles thick,
+ //    tilted), opening into a ledge or an overhang where it does;
+ //  - the face of a mass between its breaks: the smooth lower envelope of three
+ //    planes (set-back, yaw, lean of their own), part of the set-back shared
+ //    with the neighbours, swelling and sinking in broad lumps;
+ //  - one or two long cracks down most masses, an oblique fracture across some;
+ //  - weathered tops, domed toward the clefts, some stopping short of the top;
+ //  - a little roughness on rotated noise (a lattice aligned with the map prints rows).
+ // ROUT bounds how far rock can reach out past the outline (the tracer's safe
+ // step), RIN how deep a notch can cut in: each the sum of its terms' maxima.
+ // Past them the outline alone decides.
+ const MASS=4.2,BUTTRESS=.19*LH,SPAN_U=2.4,SPAN_Z=2.4,SMIN=.3;
+ const OFF_SHARED=.55,OFF_OWN=.45,FACET=.45*detail,YAW=.2*detail+.06,LEAN=.22;
+ const LUMP=.24,ARRIS=.3,CLEFT=1.1,BREAK_ROUND=.3,CRACK=.16,FRACTURE=.22*detail,GROOVE=.1,ROUGH=.14+.06*detail,WORN=2.4,DOME=1.1;
+ const SPREAD=YAW*SPAN_U+LEAN*SPAN_Z;
+ const ROUT=BUTTRESS+OFF_SHARED+OFF_OWN+FACET+SPREAD+LUMP+FRACTURE+ROUGH;
+ const RIN=BUTTRESS+OFF_SHARED+OFF_OWN+SPREAD+SMIN/2+LUMP+ARRIS+CLEFT+BREAK_ROUND+CRACK*2+FRACTURE+GROOVE+ROUGH+WORN+DOME+.3,RMAX=ROUT;
+ const smin=(a,b,k)=>{const q=Math.max(k-Math.abs(a-b),0)/k;return Math.min(a,b)-q*q*k*.25;};
+ // Plan partition into masses. A power diagram (each seed with its own weight)
+ // so masses come broad and narrow; edge = exact distance to the nearest joint.
+ const masses=(x0,y0)=>{
+  const x=x0+(vnoise(x0*.17,y0*.17,301)-.5)*2.4,y=y0+(vnoise(x0*.17,y0*.17,302)-.5)*2.4;
+  const gx=Math.floor(x/MASS),gy=Math.floor(y/MASS);let d1=1e9,d2=1e9,id=0,id2=0,ax=0,ay=0,bx=0,by=0;
+  for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const cx=gx+i,cy=gy+j,px=(cx+.1+hash(cx,cy,201)*.8)*MASS,py=(cy+.1+hash(cx,cy,202)*.8)*MASS,w=hash(cx,cy,203)*(.6*MASS)*(.6*MASS);
+   const dd=(x-px)*(x-px)+(y-py)*(y-py)-w;
+   if(dd<d1){d2=d1;id2=id;bx=ax;by=ay;d1=dd;id=(cx*92821+cy*68917)|0;ax=px;ay=py;}else if(dd<d2){d2=dd;id2=(cx*92821+cy*68917)|0;bx=px;by=py;}}
+  const o=hash(Math.min(id,id2),Math.max(id,id2),230);
+  return {id,id2,edge:(d2-d1)/(2*(Math.hypot(ax-bx,ay-by)||1)),open:o>.4?(o-.4)/.6:0,cx:ax,cy:ay};};
+ // Where a point sits in its mass: the breaks below and above it (lo, hi) bound
+ // its face; toBreak is the way up to the next break (or the tier top).
+ const block=(x,y,h,lev,m=masses(x,y))=>{
+  const z=h-(lev-1)*LH,thick=1/Math.max(.35,detail);let lo=0,hi=LH,s=0;
+  for(let k=0,zb=0;k<5;k++){zb+=(4+hash(m.id,lev*8+k,211)*7)*thick;if(zb>LH-1)break;
+   const a=hash(m.id,lev*8+k,212)*6.2832,zk=zb+(hash(m.id,lev*8+k,213)-.5)*.5*((x-m.cx)*Math.cos(a)+(y-m.cy)*Math.sin(a));
+   if(z>=zk){lo=zk;s++;}else{hi=zk;break;}}
+  return {m,z,lo,hi,toBreak:hi-z,sid:(m.id*31+s*7919+lev*104729)|0};};
+ const relief=(x,y,h,lev,B=block(x,y,h,lev))=>{
+  const {m,z,lo,hi,sid}=B,top=LH-z,e=m.edge,[p,q,r]=rot3(x,y,h);
+  // Buttresses and bays.
   let d=(fbm3(x*.1,y*.1,h*.03,311,3)-.5)*2*BUTTRESS;
-  // The column: its own set-back, a face rounded unevenly (not a pipe), a
-  // dark slot at its joints.
-  const e=Math.min(col.edge,.5),bulge=(.35+.65*r2)*(.75+.5*vnoise3(x*.8,y*.8,h*.35,217));
-  d+=(r1-.5)*1.1+Math.sqrt(Math.max(0,.25-(.5-e)*(.5-e)))*.8*bulge-.32*smooth(.06,0,col.edge);
-  // Fractures at the column's own heights: a groove, and above it the column
-  // steps back (an overhang below) or juts forward (a ledge below).
-  const nb=Math.floor(r2*2.4*detail+detail*.6);
-  for(let k=0;k<nb;k++){const q=hash(col.id,lev*16+k,207),bz=(.12+q*.76)*LH,step=(hash(col.id,lev*16+k,208)-.5)*.9*detail;
-   d+=step*smooth(bz-.05,bz+.05,z)-.28*smooth(.11,0,Math.abs(z-bz));}
-  // Worn tops: some columns stop short of the tier top, broken unevenly.
-  if(r3<.32*detail){const tz=LH-.4-r3*7+(vnoise(x*2.3,y*2.3,218)-.5)*1.1;d-=2.4*smooth(tz-.25,tz+.25,z);}
-  // Bedding: horizontal layering shared by every column, gently undulating.
-  const bed=z/1.55+(vnoise(x*.12,y*.12,219)-.5)*1.4,bf=bed-Math.floor(bed);
-  d-=.1*smooth(.09,0,Math.abs(bf-.5)-.41)*smooth(.35,.7,vnoise(x*.45,y*.45,220));
-  // Lumps and small hollows; a slightly proud cap with a rounded lip.
-  d+=(vnoise3(x*1.2,y*1.2,h*.5,215)-.5)*.5+(vnoise3(x*3.4,y*3.4,h*1.7,216)-.5)*.16;
-  d+=.25*smooth(.7,.05,top)-.3*smooth(.05,0,top);
+  // The face: a set-back partly shared with the neighbours, the lower envelope
+  // of three planes, and broad lumps and hollows.
+  d+=(fbm(m.cx*.11,m.cy*.11,401,2)-.5)*2*OFF_SHARED+(hash(sid,lev,221)-.5)*2*OFF_OWN;
+  const v=Math.max(-SPAN_Z,Math.min(SPAN_Z,z-(lo+hi)/2));let f=0;
+  for(let i=0;i<3;i++){const k=lev*4+i,a=hash(sid,k,222)*6.2832,u=Math.max(-SPAN_U,Math.min(SPAN_U,(x-m.cx)*Math.cos(a)+(y-m.cy)*Math.sin(a)));
+   const pl=hash(sid,k,223)*FACET+(hash(sid,k,224)-.5)*2*YAW*u-LEAN*(hash(sid,k,225)*1.3-.3)*v;f=i?smin(f,pl,SMIN):pl;}
+  d+=f+(fbm3(p*.24,q*.24,r*.18,240,2)-.5)*2*LUMP;
+  // Arrises rounded; the clefts between masses.
+  const rr=.1+.2*hash(m.id,lev,232);if(e<rr)d-=rr-Math.sqrt(Math.max(0,rr*rr-(rr-e)*(rr-e)));
+  if(m.open>0)d-=CLEFT*m.open*smooth(.1+.22*m.open,0,e);
+  // The breaks above and below: their edges rounded.
+  const rb=.12+.18*hash(sid,lev,226),ez=Math.min(z-lo+(lo===0?9:0),hi-z+(hi===LH?9:0));if(ez<rb)d-=rb-Math.sqrt(Math.max(0,rb*rb-(rb-ez)*(rb-ez)));
+  // Long cracks down the mass: nearly vertical planes, each running part of the height.
+  for(let i=0;i<2;i++){const k=lev*4+i;if(hash(m.id,k,241)>.75)continue;
+   const a=hash(m.id,k,242)*6.2832,s=(x-m.cx)*Math.cos(a)+(y-m.cy)*Math.sin(a)+(z-LH/2)*(hash(m.id,k,243)-.5)*.3+(hash(m.id,k,244)-.5)*2.4;
+   const z0=hash(m.id,k,245)*LH*.6,z1=z0+LH*(.3+.7*hash(m.id,k,246));
+   d-=CRACK*smooth(.07,0,Math.abs(s))*smooth(z0-.4,z0+.4,z)*smooth(z1+.4,z1-.4,z);}
+  // An oblique fracture across some faces: a fine groove, the face stepped.
+  if(hash(sid,lev,231)<.4*detail){const fa=hash(sid,lev,227)*6.2832,fe=(hash(sid,lev,228)-.5)*1.4,nx=Math.cos(fa)*Math.cos(fe),ny=Math.sin(fa)*Math.cos(fe),nz=Math.sin(fe);
+   const s=(x-m.cx)*nx+(y-m.cy)*ny+(z-(lo+hi)/2)*nz+(hash(sid,lev,229)-.5)*1.6;
+   d+=(hash(sid,lev,221)-.5)*2*FRACTURE*smooth(-.04,.04,s)-GROOVE*smooth(.06,0,Math.abs(s));}
+  // Weathered tops: domed toward the joints (most toward the clefts); some
+  // masses stop short of the tier top.
+  if(hi===LH){const drop=hash(sid,lev,233)<.4*detail?.4+hash(sid,lev,234)*2.6:0,tz=LH-drop-DOME*(.15+.85*m.open)*(1-smooth(0,1.8,e))+(vnoise(x*1.3,y*1.3,218)-.5)*.6*detail;
+   d-=WORN*smooth(tz-.3,tz+.3,z);}
+  d-=.3*smooth(.05,0,top);
+  // A little roughness.
+  d+=(vnoise3(p*1.3,q*1.3,r*1.3,216)-.5)*(.16+.06*detail)+(vnoise3(p*3.4,q*3.4,r*3.4,217)-.5)*.06*detail;
   return d;};
  // Signed plan distance into the rock of tier lev at (x, y, h), relief included
  // (>= 0 is rock). Far from the outline the relief cannot matter.
@@ -164,11 +212,11 @@ export function buildSector(map,woodland,{heightScale=1,extend=false,detail=1}={
   if(h<=0)return true;
   const lev=h<=LH?1:h<=2*LH?2:0;if(!lev)return false;
   return rockG(lev,x,y,h)>=0;};
- // Everything a face shader needs at a hit: tier, column, relief and the
+ // Everything a face shader needs at a hit: tier, block, joint, relief and the
  // outward normal (x, y, h) from the gradient of the rock function.
- const rock=(x,y,h)=>{const lev=h<=LH?1:2,col=columns(x,y),rel=relief(x,y,h,lev,col),z=h-(lev-1)*LH,e=.035,Gf=(a,b,c)=>rockG(lev,a,b,c);
+ const rock=(x,y,h)=>{const lev=h<=LH?1:2,B=block(x,y,h,lev),rel=relief(x,y,h,lev,B),e=.035,Gf=(a,b,c)=>rockG(lev,a,b,c);
   const gx=(Gf(x+e,y,h)-Gf(x-e,y,h))/(2*e),gy=(Gf(x,y+e,h)-Gf(x,y-e,h))/(2*e),gh=(Gf(x,y,h+e)-Gf(x,y,h-e))/(2*e),l=Math.hypot(gx,gy,gh)||1;
-  return {lev,id:col.id,edge:col.edge,disp:rel,z,top:LH-z,N:[-gx/l,-gy/l,-gh/l]};};
+  return {lev,id:B.sid,mass:B.m.id,edge:B.m.edge,open:B.m.open,toBreak:B.toBreak,disp:rel,z:B.z,top:LH-B.z,N:[-gx/l,-gy/l,-gh/l]};};
  // Light reaching a rock point: soft shadow toward the key (x, y, h), and
  // ambient occlusion along the normal.
  const softShadow=(x,y,h,L,maxT=5)=>{let res=1,t=.12;
@@ -256,7 +304,7 @@ export function paintTerrain(ctx,sector,view,opts={}){
   let a=hs[i],b=hs[i-1];
   for(let k=0;k<10;k++){const m=(a+b)/2;if(inside(sx,sy,m))a=m;else b=m;}
   const [x,y]=view.unproject(sx,sy,a),k=Math.min(2,Math.round(a/LH)),face=Math.abs(a-k*LH)>TOL;
-  const c=face?shadeFace(sector,x,y,a,ppt):shadeTop(sector,x,y,k,sx,sy);
+  const c=face?shadeFace(sector,x,y,a,ppt,opts.key):shadeTop(sector,x,y,k,sx,sy);
   const p=py*width+px,o=p*4;d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=255;if(face)faces[p]=1;depth[p]=view.depth(x,y,a);
  }
  // Ink: a firm line along every lip (top surface directly above a face) and
@@ -339,30 +387,49 @@ export function shadeTop(sector,x,y,lev,sx=0,sy=0,lod=0){
 // the eye cannot resolve and keeps the joint ink 1-2 px wide.
 const SUN_WARM=[1.08,.92,.76],SKY_COOL=[.56,.61,.72],ROCK_INK=[34,30,28];
 // A painter rakes the light across rock: the faces take a key from the front
-// left (the side the cast shadows already imply) instead of the frontal sun.
-const ROCK_KEY=(()=>{const v=[.15,.55,.85],n=Math.hypot(...v);return v.map(c=>c/n);})(); // (x, up, y)
+// left (the side the cast shadows already imply) instead of the frontal sun,
+// low enough to model every facet. The same key in every shot, so the cut
+// between them keeps one sun.
+export const ROCK_KEY=(()=>{const v=[-.24,.5,.83],n=Math.hypot(...v);return v.map(c=>c/n);})(); // (x, up, y)
 export function shadeFace(sector,x,y,h,pxPerTile=37,key=ROCK_KEY){
- const R=sector.rock(x,y,h),N=R.N,L=[key[0],key[2],key[1]]; // N and L in (x, y, h)
+ const R=sector.rock(x,y,h),L=[key[0],key[2],key[1]]; // N and L in (x, y, h)
+ const near=smooth(12,36,pxPerTile),[p,q,r]=rot3(x,y,h);
+ // Up close a face carries a fine relief of its own, in the shading only: as
+ // geometry it would alias into speckle farther off.
+ let N=R.N;const bump=.55*smooth(16,60,pxPerTile);
+ if(bump>0){const e=.05,n=(a,b,c)=>fbm3(a*2.2,b*2.2,c*2.2,98,3),g=[(n(p+e,q,r)-n(p-e,q,r))/(2*e),(n(p,q+e,r)-n(p,q-e,r))/(2*e),(n(p,q,r+e)-n(p,q,r-e))/(2*e)];
+  // Back from the rotated frame (the transpose) to (x, y, h).
+  const G=[.36*g[0]-.8*g[1]+.48*g[2],.48*g[0]+.6*g[1]+.64*g[2],-.8*g[0]+.6*g[2]],gn=G[0]*N[0]+G[1]*N[1]+G[2]*N[2];
+  const M=[N[0]-bump*(G[0]-gn*N[0]),N[1]-bump*(G[1]-gn*N[1]),N[2]-bump*(G[2]-gn*N[2])],l=Math.hypot(...M);N=M.map(v=>v/l);}
  const ndl=Math.max(0,N[0]*L[0]+N[1]*L[1]+N[2]*L[2]),sky=.5+.5*N[2];
- const shadow=ndl>0?sector.softShadow(x+N[0]*.03,y+N[1]*.03,h+N[2]*.03,L):0,ao=sector.occlusion(x,y,h,N,R.lev);
- const tone=hash(R.id,R.lev,93),tone2=hash(R.id,R.lev,94),near=smooth(12,36,pxPerTile);
- let base=mixc([156,153,147],[202,197,188],tone);
- base=mixc(base,[206,152,100],smooth(.53,.77,fbm3(x*.5,y*.5,h*.16,95)+tone2*.12)*.78);       // ochre staining, in patches
+ const shadow=ndl>0?sector.softShadow(x+R.N[0]*.03,y+R.N[1]*.03,h+R.N[2]*.03,L):0,ao=sector.occlusion(x,y,h,R.N,R.lev);
+ // Colour comes in patches that run across the joints: a tone per block reads
+ // as one stone after another, a wall. Blocks keep only a small shift of their own.
+ const tone=clamp(.5+(fbm3(x*.16,y*.16,h*.1,91,3)-.5)*1.9+(hash(R.id,R.lev,93)-.5)*.14);
+ let base=mixc([150,148,142],[206,200,190],tone);
+ base=mixc(base,[206,152,100],smooth(.53,.77,fbm3(x*.5,y*.5,h*.16,95)+(fbm3(x*.07,y*.07,h*.05,94,2)-.5)*.3)*.78); // ochre staining, in patches
  base=mixc(base,[150,156,140],smooth(.6,.78,fbm3(x*1.2,y*1.2,h*.5,96))*.5);                   // lichen
- const grain=(vnoise3(x*3,y*3,h*3,13)-.5)*14*smooth(3,12,pxPerTile)+(vnoise3(x*9,y*9,h*9,14)-.5)*10*near;
+ // Fresh breaks: the undersides of overhangs and steps are paler, cleaner stone.
+ base=mixc(base,[222,214,200],smooth(-.12,-.5,R.N[2])*.4);
+ // Mottling where it can be seen, finer the nearer the stone.
+ const grain=(fbm3(p*.9,q*.9,r*.9,13,3)-.5)*26*smooth(5,24,pxPerTile)+(vnoise3(p*4,q*4,r*4,14)-.5)*7*near;
  // Shade keeps the sky's cool light (the storyboard's shadowed rock is a light
  // blue-grey, not black); the warm key adds on top where it reaches.
  let c=[0,1,2].map(k=>(base[k]+grain)*(SKY_COOL[k]*(.62+.38*sky)*.78*(.35+.65*ao)+SUN_WARM[k]*Math.pow(ndl,1.15)*.6*shadow*(.7+.3*ao)));
  c=mixc(c,[90,100,58],smooth(.45,0,R.top)*smooth(.35,.7,fbm3(x*.8,y*.8,h,29))*.6);         // moss under the lip
  // Rock that faces the sky holds soil: moss and grass on ledges and worn tops.
  // (Faded with distance: far off, each ledge is a few green pixels, a speck.)
- c=mixc(c,mixc([86,98,52],[128,128,70],vnoise3(x*2,y*2,h*2,30)),smooth(.45,.8,N[2])*.85*smooth(5,16,pxPerTile));
+ c=mixc(c,mixc([86,98,52],[128,128,70],vnoise3(x*2,y*2,h*2,30)),smooth(.45,.8,R.N[2])*.85*smooth(5,16,pxPerTile));
  c=mixc(c,[62,60,56],smooth(.6,0,R.z)*.35);                                                    // damp foot
- // Water streaks: dark vertical runs, strongest just below the lip and fractures.
- const run=vnoise3(x*2.6,y*2.6,h*.05,59);c=mixc(c,[64,64,62],smooth(.66,.86,run)*smooth(0,1.2,R.top)*.32);
+ // Water streaks: narrow dark runs that start at each break and at the top
+ // and fade on the way down; a fainter varnish runs the whole height.
+ const run=vnoise3(x*4.2,y*4.2,h*.06,59),fall=smooth(0,.35,R.toBreak);
+ c=mixc(c,[64,64,62],smooth(.6,.8,run)*fall*(.12+.3*smooth(5.5,.6,R.toBreak)));
  // A few long cracks, only where they can be resolved.
  if(near>0){const cr=Math.abs(vnoise3(x*1.4,y*1.4,h*.12,321)-.5);c=mixc(c,ROCK_INK,smooth(.018,0,cr)*.55*near*smooth(.45,.65,vnoise3(x*.4,y*.4,h*.2,322)));}
- // Ink in the joints, 1-2 px wide whatever the zoom.
- c=mixc(c,ROCK_INK,smooth(1.5,.35,R.edge*pxPerTile)*.8);
+ // Ink, 1-2 px wide whatever the zoom: firm in the open clefts, a faint broken
+ // line along the tight joints (a ruled line round every block is masonry).
+ const jw=smooth(1.5,.35,R.edge*pxPerTile);
+ if(jw>0)c=mixc(c,ROCK_INK,jw*(R.open>0?.45+.4*R.open:.24*smooth(.38,.62,vnoise3(x*1.3,y*1.3,h*.7,331))));
  return c;
 }
