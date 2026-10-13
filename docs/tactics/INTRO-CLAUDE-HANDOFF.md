@@ -56,10 +56,10 @@ The painted storyboards are useful for palette, character, story and action. The
 
 ## Proposed sprite proof — check off as it progresses
 
-- [ ] Inspect the marked map, the two painted sheets and current recording together.
-- [ ] **Keyframe A — descent:** establish the curved plateau edge, upper/lower ground and wooded landing pocket; show the damaged helicopter rapidly descending toward that pocket.
-- [ ] **Keyframe B — impact:** use the same landmarks and screen direction; plant/buckle the skids before the rotor strike, with dust reinforcing contact.
-- [ ] **Keyframe C — settled wreck:** preserve that exact location, readable damage, open exit and surrounding forest; keep a modest landing pocket instead of a large empty pasture.
+- [x] Inspect the marked map, the two painted sheets and current recording together.
+- [ ] **Keyframe A — descent:** establish the curved plateau edge, upper/lower ground and wooded landing pocket; show the damaged helicopter rapidly descending toward that pocket. *Round 1 drafted 2026-10-12, awaiting the user: [INTRO-SPRITE-PROOF.md](INTRO-SPRITE-PROOF.md).*
+- [ ] **Keyframe B — impact:** use the same landmarks and screen direction; plant/buckle the skids before the rotor strike, with dust reinforcing contact. *Round 1 drafted 2026-10-12, awaiting the user: [INTRO-SPRITE-PROOF.md](INTRO-SPRITE-PROOF.md).*
+- [ ] **Keyframe C — settled wreck:** preserve that exact location, readable damage, open exit and surrounding forest; keep a modest landing pocket instead of a large empty pasture. *Round 1 drafted 2026-10-12, awaiting the user: [INTRO-SPRITE-PROOF.md](INTRO-SPRITE-PROOF.md).*
 - [ ] Check the three compositions with the user before producing a full sprite sequence.
 - [ ] If that direction is accepted, split terrain/trees into useful depth layers and separate the fuselage, main/tail rotors, damaged parts, missile, smoke, flash, dust and debris. Keep pivots and occlusion order consistent.
 - [ ] Animate a short A → B → C proof. Use modest parallax/camera movement, readable downward acceleration, a brief flare, compression/slide and supported settling.
