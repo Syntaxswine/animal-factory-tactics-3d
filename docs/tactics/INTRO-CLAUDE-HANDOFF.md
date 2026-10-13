@@ -56,14 +56,14 @@ The painted storyboards are useful for palette, character, story and action. The
 
 ## Proposed sprite proof — check off as it progresses
 
-- [ ] Inspect the marked map, the two painted sheets and current recording together.
-- [ ] **Keyframe A — descent:** establish the curved plateau edge, upper/lower ground and wooded landing pocket; show the damaged helicopter rapidly descending toward that pocket.
-- [ ] **Keyframe B — impact:** use the same landmarks and screen direction; plant/buckle the skids before the rotor strike, with dust reinforcing contact.
-- [ ] **Keyframe C — settled wreck:** preserve that exact location, readable damage, open exit and surrounding forest; keep a modest landing pocket instead of a large empty pasture.
-- [ ] Check the three compositions with the user before producing a full sprite sequence.
-- [ ] If that direction is accepted, split terrain/trees into useful depth layers and separate the fuselage, main/tail rotors, damaged parts, missile, smoke, flash, dust and debris. Keep pivots and occlusion order consistent.
-- [ ] Animate a short A → B → C proof. Use modest parallax/camera movement, readable downward acceleration, a brief flare, compression/slide and supported settling.
-- [ ] Review normal-speed playback as well as keyframes. Confirm the trees reveal rather than obscure the crucial impact/exit action.
+- [x] Inspect the marked map, the two painted sheets and current recording together.
+- [ ] **Keyframe A — descent:** establish the curved plateau edge, upper/lower ground and wooded landing pocket; show the damaged helicopter rapidly descending toward that pocket. *Round 1 drafted 2026-10-12, awaiting the user: [INTRO-SPRITE-PROOF.md](INTRO-SPRITE-PROOF.md).*
+- [ ] **Keyframe B — impact:** use the same landmarks and screen direction; plant/buckle the skids before the rotor strike, with dust reinforcing contact. *Round 1 drafted 2026-10-12, awaiting the user: [INTRO-SPRITE-PROOF.md](INTRO-SPRITE-PROOF.md).*
+- [ ] **Keyframe C — settled wreck:** preserve that exact location, readable damage, open exit and surrounding forest; keep a modest landing pocket instead of a large empty pasture. *Round 1 drafted 2026-10-12, awaiting the user: [INTRO-SPRITE-PROOF.md](INTRO-SPRITE-PROOF.md).*
+- [x] Check the three compositions with the user before producing a full sprite sequence. *2026-10-12, the user: "this version of the crash resolves a lot of my conflicts with it."*
+- [ ] If that direction is accepted, split terrain/trees into useful depth layers and separate the fuselage, main/tail rotors, damaged parts, missile, smoke, flash, dust and debris. Keep pivots and occlusion order consistent. *Partly: one static plate, whole-aircraft frames from the rig and 2D effects. Depth bands and per-part aircraft sprites are not done yet.*
+- [x] Animate a short A → B → C proof. Use modest parallax/camera movement, readable downward acceleration, a brief flare, compression/slide and supported settling. *Round 1 built 2026-10-12, playback awaiting the user: [proof.html](../../dist/tactics/intro-sprites/proof.html), [recording](intro-sprites/proof-playback.webm), [INTRO-SPRITE-PROOF.md](INTRO-SPRITE-PROOF.md#animated-proof).* *Round 2 aesthetics 2026-10-12, after the user's direction to speak the sprites' visual language and point at the storyboard's painterly realism: the game's own foliage and ground paintings, inked forms, and a warm/cool split tone measured against the storyboard. Awaiting the user.* *Round 3 2026-10-12, after the user's notes on round 2 (oversimplified, small cliffs; a zoomed-in prior shot; haze to push the cliff behind the aircraft; the aircraft lost against the trees) and on the first close-up ("low poly ... should look fairly realistic"): a perspective close-up of the drop past a butte (cliff stretched 4× there and 1.6× in the wide shots, at the user's direction), realistic rock from a signed-distance relief with soft shadows and occlusion, atmospheric haze. Awaiting the user.*
+- [ ] Review normal-speed playback as well as keyframes. Confirm the trees reveal rather than obscure the crucial impact/exit action. *Recorded at 1×. Trees ring the clearing and never cross the aircraft (tests/intro-sprites.test.mjs). The user's review is pending.*
 - [ ] Apply the accepted treatment to approach, overseas briefing, radar and the remote SAM cutaway.
 - [ ] Add the sound pass and decide the eventual gameplay handoff separately.
 
