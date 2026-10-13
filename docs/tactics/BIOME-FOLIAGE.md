@@ -116,6 +116,10 @@ Browser tools use the retained preview by default. Set `BIOME_REVIEW_URL` to use
 
 The first command checks all plant arrangements/growth, elevated placement, real PNG borders, shared-resource ownership, existing foliage/grass behavior and the complete 3D distribution package. The browser check covers controls, desktop/mobile views, resource stability, exact-once disposal and failed texture loads. It also captures the actual gallery.
 
-Current result: **32 focused/related tests pass**; browser captures have **zero errors or failed requests**, steady **19 geometries / 9 textures** after repeated controls, and **76 owned resources disposed exactly once**. The independent review scored **9/10 for study and handoff readiness**, with 17 further renders, 120 grounding/placement cases and 102 watched resource releases. This is review readiness, not user art approval or gameplay integration approval. See [the review](../../hybrid-review/biome-foliage/REVIEW.md).
+Initial foliage-set result: **32 focused/related tests pass**; browser captures have **zero errors or failed requests**, steady **19 geometries / 9 textures** after repeated controls, and **76 owned resources disposed exactly once**. The independent review scored **9/10 for study and handoff readiness**, with 17 further renders, 120 grounding/placement cases and 102 watched resource releases. This is review readiness, not user art approval or gameplay integration approval. See [the review](../../hybrid-review/biome-foliage/REVIEW.md).
 
 Nonblocking future polish: mirrored motifs remain visible in repeated top-down ground, particularly jungle and snow. More asymmetric interior patterns could soften the repetition over large open fields; the exported edge matches already pass.
+
+## Continuous impassable regions
+
+The follow-up art pass adds five connected obstruction families and a 240 × 240 tutorial landscape study. See [IMPASSABLE-BIOMES.md](IMPASSABLE-BIOMES.md) for footprint, adjacency, elevation, rendering and integration contracts. The shared atlas renderer now filters distant views using each panel’s own linear-light average. Close paint and the 24 exported ground images are retained.

@@ -3,7 +3,7 @@ import path from 'node:path';
 import {createRequire} from 'node:module';
 import {launchSiteReview} from './site-review-browser.mjs';
 const require=createRequire(import.meta.url),{chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/baals/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
-const output=path.resolve(import.meta.dirname,'../hybrid-review/biome-foliage');fs.mkdirSync(output,{recursive:true});
+const output=path.resolve(process.env.BIOME_REVIEW_OUTPUT||path.join(import.meta.dirname,'../hybrid-review/biome-foliage'));fs.mkdirSync(output,{recursive:true});
 const owner=await launchSiteReview(chromium,'biome-review-'+Date.now(),'biome-foliage');
 const base=process.env.BIOME_REVIEW_URL||'http://127.0.0.1:4476/tactics/biome-foliage-study.html';
 try{

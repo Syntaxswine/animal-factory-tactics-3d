@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="data:,"><title>Tutorial foliage regions</title><link rel="stylesheet" href="biome-foliage-study.css"></head>
+<body><main>
+<header><div><p class="eyebrow">Animal Factory Tactics · landscape study</p><h1>Tutorial foliage regions</h1><p>Five environments · continuous blocked regions · clear routes</p></div><a href="biome-foliage-study.html?display=barriers">Close-up foliage pieces ↗</a></header>
+<div class="controls">
+<label>Environment <select id="biome"><option value="temperate">Temperate</option><option value="jungle">Jungle</option><option value="snow">Snow</option><option value="dry">Dry grassland</option><option value="wetlands">Wetlands</option></select></label>
+<label>Frame <select id="frame"><option value="overview">Whole map</option><option value="corridor">Corridor</option><option value="cliff">Cliff edge</option><option value="clearing">Clearing</option></select></label>
+<label>View <select id="view"><option value="three">Three-quarter</option><option value="top">Top</option><option value="low">Low</option></select></label>
+<label><input type="checkbox" id="trees" checked>Trees</label>
+<label><input type="checkbox" id="blocked">Blocked overlay</label>
+<label><input type="checkbox" id="grey">Grey forms</label>
+<button id="reset">Reset view</button>
+</div>
+<div id="scene" aria-label="Interactive 3D tutorial landscape"></div><p id="error" role="alert"></p><p id="status">Loading the tutorial landscape…</p>
+<footer><p id="description"></p><p>The plateau uses the saved tutorial terrain. Foliage regions follow your screenshot as a layout study; the saved map is unchanged. Every environment uses the same blocked mask. Gameplay integration is a separate step.</p><p>Drag to orbit. Use Frame to compare the whole map with the horse at route scale. <a href="../assets/environment/biome-obstacles/reference-v1.png">Paint and detail reference ↗</a></p></footer>
+</main><script type="module" src="biome-terrain-study.js"></script></body></html>
