@@ -1,0 +1,1486 @@
+{
+  "date": "2026-10-13T22:14:30.862Z",
+  "hashes": {
+    "biome-ground-sprite-layout.js": "a8d8adc54d97d3fe9764654f6bcbd02c3c0fcaf0656bfa6bfd5ce0afb7733469",
+    "biome-ground-sprites.js": "7cf0fef63b66ae3e915efb2df59fc0dc3d4327a4bb8d9e4bada4d7eb4ebc650a",
+    "biome-terrain.js": "1210b2561c785e4109a94a5d9e675e311b1d4729a3907d76eb4240caf982f89a",
+    "biome-terrain-study.js": "acdda0b37922470e1530b4c81c5374974625bffffd4b43c5ae77c2eb39b9f99d"
+  },
+  "errors": [],
+  "requests": [],
+  "captures": [
+    {
+      "name": "temperate-ground",
+      "state": {
+        "biome": "temperate",
+        "frame": "ground",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 2223651,
+          "batches": 1033,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 6,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 36078,
+          "visibleBatches": 34
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 7,
+          "calls": 84,
+          "triangles": 84011,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 68,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 27,
+          "textures": 9
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "temperate-top",
+      "state": {
+        "biome": "temperate",
+        "frame": "ground",
+        "view": "top",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 2223651,
+          "batches": 1033,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 2,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 21216,
+          "visibleBatches": 21
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 8,
+          "calls": 71,
+          "triangles": 69149,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 7.799999952316284,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 27,
+          "textures": 9
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "jungle-ground",
+      "state": {
+        "biome": "jungle",
+        "frame": "ground",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1463,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 1393139,
+          "batches": 930,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 6,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 30078,
+          "visibleBatches": 31
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 9,
+          "calls": 74,
+          "triangles": 66347,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 870.7000000476837,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 28,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "jungle-top",
+      "state": {
+        "biome": "jungle",
+        "frame": "ground",
+        "view": "top",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1463,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 1393139,
+          "batches": 930,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 2,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 18096,
+          "visibleBatches": 19
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 10,
+          "calls": 62,
+          "triangles": 54365,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 5.5,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 28,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "snow-ground",
+      "state": {
+        "biome": "snow",
+        "frame": "ground",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "clusters": 0,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 2496027,
+          "batches": 532,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 6,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 12654,
+          "visibleBatches": 12
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 11,
+          "calls": 21,
+          "triangles": 21083,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 428.2999999523163,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 27,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "snow-top",
+      "state": {
+        "biome": "snow",
+        "frame": "ground",
+        "view": "top",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "clusters": 0,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 2496027,
+          "batches": 532,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 2,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 8880,
+          "visibleBatches": 8
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 12,
+          "calls": 17,
+          "triangles": 17309,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 4.299999952316284,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 27,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "dry-ground",
+      "state": {
+        "biome": "dry",
+        "frame": "ground",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 643,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 1068443,
+          "batches": 760,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 6,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 40038,
+          "visibleBatches": 34
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 13,
+          "calls": 87,
+          "triangles": 93923,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 828.9000000953674,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 28,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "dry-top",
+      "state": {
+        "biome": "dry",
+        "frame": "ground",
+        "view": "top",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 643,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 1068443,
+          "batches": 760,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 2,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 22272,
+          "visibleBatches": 20
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 14,
+          "calls": 73,
+          "triangles": 76157,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 4.299999952316284,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 28,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "wetlands-ground",
+      "state": {
+        "biome": "wetlands",
+        "frame": "ground",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "clusters": 217,
+          "logs": 0,
+          "reeds": 1924,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 529967,
+          "batches": 892,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 4,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 13710,
+          "visibleBatches": 19
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 15,
+          "calls": 51,
+          "triangles": 27463,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 802.3999998569489,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 30,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "wetlands-top",
+      "state": {
+        "biome": "wetlands",
+        "frame": "ground",
+        "view": "top",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "clusters": 217,
+          "logs": 0,
+          "reeds": 1924,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 529967,
+          "batches": 892,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 2,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 9408,
+          "visibleBatches": 12
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 16,
+          "calls": 44,
+          "triangles": 23161,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 2.299999952316284,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 30,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "temperate-low",
+      "state": {
+        "biome": "temperate",
+        "frame": "ground",
+        "view": "low",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 2223651,
+          "batches": 1033,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 78837,
+          "visibleBatches": 74
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 17,
+          "calls": 124,
+          "triangles": 126770,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 70.30000019073486,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 47,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "temperate-route",
+      "state": {
+        "biome": "temperate",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 2223651,
+          "batches": 1033,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 218982,
+          "visibleBatches": 79
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 18,
+          "calls": 184,
+          "triangles": 538143,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 461,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 53,
+          "textures": 13
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "snow-route",
+      "state": {
+        "biome": "snow",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "clusters": 0,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 2496027,
+          "batches": 532,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 7,
+          "detailedChunks": 7,
+          "shadowChunks": 10,
+          "visibleTriangles": 273162,
+          "visibleBatches": 53
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 19,
+          "calls": 117,
+          "triangles": 613075,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 367.2999999523163,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 36,
+          "textures": 13
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "wetlands-route",
+      "state": {
+        "biome": "wetlands",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "clusters": 217,
+          "logs": 0,
+          "reeds": 1924,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 529967,
+          "batches": 892,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 7,
+          "detailedChunks": 7,
+          "shadowChunks": 10,
+          "visibleTriangles": 35370,
+          "visibleBatches": 42
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 20,
+          "calls": 110,
+          "triangles": 96987,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 210.70000004768372,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 39,
+          "textures": 13
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "wetlands-map",
+      "state": {
+        "biome": "wetlands",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "clusters": 217,
+          "logs": 0,
+          "reeds": 1924,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 529967,
+          "batches": 892,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 336239,
+          "visibleBatches": 884
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 21,
+          "calls": 901,
+          "triangles": 336239,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 295.60000014305115,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 246,
+          "textures": 13
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "temperate-before",
+      "state": {
+        "biome": "temperate",
+        "frame": "ground",
+        "view": "top",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": false,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 2223651,
+          "batches": 1033,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 2,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 21216,
+          "visibleBatches": 21
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 22,
+          "calls": 71,
+          "triangles": 69149,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 69.59999990463257,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 31,
+          "textures": 13
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "temperate-after",
+      "state": {
+        "biome": "temperate",
+        "frame": "ground",
+        "view": "top",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 2223651,
+          "batches": 1033,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 2,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 21216,
+          "visibleBatches": 21
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 23,
+          "calls": 71,
+          "triangles": 69149,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 5.5,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 31,
+          "textures": 13
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "temperate-pattern-b",
+      "state": {
+        "biome": "temperate",
+        "frame": "ground",
+        "view": "top",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 829,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2544,
+            "paintedLogs": 162,
+            "addedTriangles": 0,
+            "seed": 829,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 2223651,
+          "batches": 1033,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 2,
+          "detailedChunks": 0,
+          "shadowChunks": 9,
+          "visibleTriangles": 18838,
+          "visibleBatches": 18
+        },
+        "focus": [
+          89.5,
+          4.239999771118164,
+          88.5
+        ],
+        "render": {
+          "frame": 24,
+          "calls": 55,
+          "triangles": 52126,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 64.90000009536743,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 30,
+          "textures": 13
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "temperate-pattern-c",
+      "state": {
+        "biome": "temperate",
+        "frame": "ground",
+        "view": "top",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 1409,
+        "ppu": 86.22222222222223,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 215,
+            "litter": 2550,
+            "paintedLogs": 160,
+            "addedTriangles": 0,
+            "seed": 1409,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 2223651,
+          "batches": 1033,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 2,
+          "detailedChunks": 0,
+          "shadowChunks": 9,
+          "visibleTriangles": 18838,
+          "visibleBatches": 18
+        },
+        "focus": [
+          89.5,
+          4.239999771118164,
+          88.5
+        ],
+        "render": {
+          "frame": 25,
+          "calls": 55,
+          "triangles": 52126,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 58,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 30,
+          "textures": 13
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "mobile-ground",
+      "state": {
+        "biome": "temperate",
+        "frame": "ground",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "paint": true,
+        "seed": 173,
+        "ppu": 24.266666666666666,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 0,
+          "reeds": 0,
+          "groundSprites": {
+            "large": 218,
+            "litter": 2545,
+            "paintedLogs": 163,
+            "addedTriangles": 0,
+            "seed": 173,
+            "atlasSize": [
+              2048,
+              1024
+            ],
+            "textureBytes": 11214899
+          },
+          "baseTriangles": 198183,
+          "storedTriangles": 2223651,
+          "batches": 1033,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 7,
+          "detailedChunks": 0,
+          "shadowChunks": 11,
+          "visibleTriangles": 48079,
+          "visibleBatches": 46
+        },
+        "focus": [
+          97.5,
+          4.239999771118164,
+          80.5
+        ],
+        "render": {
+          "frame": 40,
+          "calls": 96,
+          "triangles": 96012,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 71.79999995231628,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 39,
+          "textures": 13
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    }
+  ],
+  "controls": {
+    "a": 2235161173,
+    "b": 2157544090,
+    "restored": 2235161173,
+    "geometrySame": true,
+    "focusSame": true,
+    "textureKinds": [
+      {
+        "name": "Procedural temperate ground sprites",
+        "width": 2048,
+        "height": 1024
+      },
+      {
+        "name": "Seeded large ground layout",
+        "width": 31,
+        "height": 31
+      },
+      {
+        "name": "Seeded litter ground layout",
+        "width": 81,
+        "height": 81
+      }
+    ],
+    "stats": {
+      "large": 218,
+      "litter": 2545,
+      "paintedLogs": 163,
+      "addedTriangles": 0,
+      "seed": 173,
+      "atlasSize": [
+        2048,
+        1024
+      ],
+      "textureBytes": 11214899
+    }
+  },
+  "helper": "independent-ground-sprites-1791929670865",
+  "memories": [
+    {
+      "geometries": 39,
+      "textures": 13
+    },
+    {
+      "geometries": 39,
+      "textures": 13
+    }
+  ],
+  "mobile": {
+    "scrollWidth": 390,
+    "innerWidth": 390
+  },
+  "disposal": {
+    "textures": [
+      {
+        "name": "Procedural temperate ground sprites",
+        "count": 1
+      },
+      {
+        "name": "Seeded large ground layout",
+        "count": 1
+      },
+      {
+        "name": "Seeded litter ground layout",
+        "count": 1
+      }
+    ],
+    "atlasAfter": [
+      1,
+      1
+    ],
+    "canvasRemaining": 0,
+    "disposed": true
+  }
+}

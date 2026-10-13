@@ -68,10 +68,12 @@ Orthographic detail selection uses projected scale. Close views retain full tree
 The continuous fill uses global fields for heights, normals, color and placement, so neither tiles nor render blocks introduce seams:
 
 - Temperate/jungle/dry: broad overlapping patches with uneven heights, painted litter and thorn cover, leafy clusters, grass or leaf fans, and scattered fallen wood.
-- Snow: one continuous drift surface, with hundreds of irregular partially embedded logs across the sector. There is no snow crown per tile.
+- Snow: one continuous drift surface, with partially buried deadfall painted across several tiles. There is no snow crown per tile.
 - Wetlands: varied dark-water and shallow-bank color, sparse reed beds and marsh leaves. Shared shoreline vertices and broad convex-corner cuts replace the repeated scallops; short/narrow shapes cap the cuts to avoid self-crossing.
 
 The old close-piece layer is no longer added on top of this landscape: its omitted support crowns left several twigs floating. The local-piece gallery remains available separately. All trees and added clusters conservatively fit within blocked cells at one elevation. No foliage triangle bridges a clear one-cell corridor in the regression fixtures.
+
+The subsequent [procedural ground-sprite pass](PROCEDURAL-GROUND-SPRITES.md) replaces the small cylindrical landscape logs with seeded paint over the existing fill. It adds five reusable transparent sheets, multi-tile deadfall and separate litter layouts. The study has Ground paint, Painted debris and Pattern controls. The original base atlases and broad geometry remain in use; the paint itself adds no geometry. The measurements below are the pre-sprite refinement baseline; fresh sprite evidence and measurements are recorded separately in `hybrid-review/biome-ground-sprites/`.
 
 Large views retain safe atlas filtering through `biome-atlas-lod.js`: close views use the painted panel; footprints above the safe mip range fade toward that panel’s linear-light average. The approved painted atlases and original plant sources are unchanged in this refinement.
 

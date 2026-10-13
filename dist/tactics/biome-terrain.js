@@ -2,6 +2,7 @@ import * as T from './vendor/three.module.js';
 import {BIOME_FAMILIES} from './biome-foliage-data.js';
 import {BIOME_OBSTACLES,CELL_EDGES} from './biome-obstacle-data.js';
 import {random,field,createTerrainFill} from './biome-terrain-fill.js';
+import {createGroundSpriteSkin} from './biome-ground-sprites.js';
 
 export const BIOME_CHUNK_SIZE=24;
 const quad=(a,b,c,d,out)=>out.push(...a,...c,...b,...a,...d,...c);
@@ -24,12 +25,13 @@ export function terrainCellOutline(plan,x,z){
 }
 function geometry(positions,colors,normals){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));if(colors)g.setAttribute('color',new T.Float32BufferAttribute(colors,3));if(normals)g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));else g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();return g;}
 
-export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obstacleMaterials,plantFactory,grey=false}){
+export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obstacleMaterials,plantFactory,grey=false,groundSprites=true,paintSeed}){
  if(!BIOME_OBSTACLES[family])throw Error('Unknown terrain biome');
  const root=new T.Group(),owned=new Set(),instances=[],treeInstances=[],chunks=[],denseMeshes=[],groundMeshes=[],trees=[],fill=createTerrainFill(plan,family),bog=family==='wetlands',snow=family==='snow';root.name='Spatial biome terrain';
  const own=g=>(owned.add(g),g),crown=own(new T.SphereGeometry(.5,8,4)),proxyCrown=own(new T.IcosahedronGeometry(.5,0)),trunk=own(new T.CylinderGeometry(.5,.5,1,5)),cone=own(new T.ConeGeometry(.5,1,6)),rimMaterial=new T.LineBasicMaterial({color:0x5f513c});
  const original=grey?plantMaterials.grey:snow?plantMaterials.snow:obstacleMaterials[BIOME_OBSTACLES[family].paint],fillMaterial=original.clone();fillMaterial.onBeforeCompile=original.onBeforeCompile;fillMaterial.customProgramCacheKey=original.customProgramCacheKey;fillMaterial.vertexColors=true;
- const leaf=family==='jungle'?'jungle':family==='temperate'?'leaves':snow?'snow':'dry',paint=id=>grey?plantMaterials.grey:(plantMaterials[id]||obstacleMaterials[id]),object=new T.Object3D(),up=new T.Vector3(0,1,0),a=new T.Vector3(),b=new T.Vector3();
+ const groundSkin=createGroundSpriteSkin(plan,family,{seed:paintSeed,canvas:grey?null:undefined});groundSkin.attach(fillMaterial);groundSkin.setEnabled(groundSprites);
+ const leaf=family==='jungle'?'jungle':family==='temperate'?'leaves':snow?'snow':'dry',paint=id=>grey?plantMaterials.grey:(plantMaterials[id]||obstacleMaterials[id]),object=new T.Object3D();
  const cols=Math.ceil(plan.width/BIOME_CHUNK_SIZE);
  for(let z=0;z<plan.depth;z+=BIOME_CHUNK_SIZE)for(let x=0;x<plan.width;x+=BIOME_CHUNK_SIZE){
   const group=new T.Group(),near=new T.Group(),far=new T.Group();group.name=`Biome block ${x},${z}`;near.name='Detailed trees';far.name='Distant tree silhouettes';group.add(near,far);root.add(group);
@@ -61,8 +63,8 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
   if(edges.length){const g=own(new T.BufferGeometry().setAttribute('position',new T.Float32BufferAttribute(edges,3)));g.computeBoundingSphere();const rims=new T.LineSegments(g,rimMaterial);rims.userData.chunk=chunk.index;chunk.group.add(rims);}
  }
  let clusters=0,logs=0,reeds=0;const lowPlants=BIOME_FAMILIES[family].low.map(id=>plantFactory.create(id,{grey}));
- // Sparse *multi-tile* islands of canopy and deadfall, instead of a mound in
- // every cell. Broad continuous drifts do all of the snow's volume work.
+ // Sparse multi-tile canopy islands. Fallen wood now lives in the base paint;
+ // broad continuous drifts do all of the snow's volume work.
  const step=bog?2.7:snow?5.7:3.7;
  for(let z=1;z<plan.depth-1;z+=step)for(let x=1;x<plan.width-1;x+=step){
   const n=Math.round(x*191+z*631),cx=x+(random(n)-.5)*step,cz=z+(random(n+1)-.5)*step,ix=Math.floor(cx+.5),iz=Math.floor(cz+.5),h=plan.heightAt(ix,iz);if(!plan.blockedAt(ix,iz))continue;
@@ -81,12 +83,6 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
   if(!snow&&patch>.26){
    const sx=1.9+random(n+19)*3.4,sz=1.1+random(n+30)*2.2,yaw=random(n+37)*Math.PI,rx=(Math.abs(Math.cos(yaw))*sx+Math.abs(Math.sin(yaw))*sz)/2,rz=(Math.abs(Math.sin(yaw))*sx+Math.abs(Math.cos(yaw))*sz)/2;
    if(safe(cx,cz,rx,rz,h)){const sy=(family==='jungle'?1.2:.75)+random(n+50)*.9,material=paint(patch>.44?leaf:BIOME_OBSTACLES[family].paint);part(chunk,'base',crown,material,cx,h+fill.height(cx,cz)+sy*.13,cz,sx,sy,sz,yaw);clusters++;}
-  }
-  if((snow?random(n+81)<.50:patch>.65&&random(n+81)<.28)){
-   const length=1.6+random(n+88)*3.3,yaw=random(n+90)*Math.PI,radius=.12+random(n+93)*.10,dx=Math.cos(yaw)*length/2,dz=Math.sin(yaw)*length/2;
-   if(safe(cx,cz,Math.abs(dx)+radius,Math.abs(dz)+radius,h)){
-    a.set(cx-dx,h+fill.height(cx-dx,cz-dz)+radius*.2,cz-dz);b.set(cx+dx,h+fill.height(cx+dx,cz+dz)+radius*.65,cz+dz);object.position.copy(a).add(b).multiplyScalar(.5);object.quaternion.setFromUnitVectors(up,b.clone().sub(a).normalize());object.scale.set(radius*2,a.distanceTo(b),radius*2);object.updateMatrix();batch(chunk,'base',trunk,paint('brokenWood'),object.matrix);logs++;
-   }
   }
  }
  // Crown-safe placement is unchanged: complete projected bounds lie inside
@@ -115,7 +111,7 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
   chunk.bounds=new T.Box3().setFromObject(chunk.group);chunk.baseBatches.clear();chunk.nearBatches.clear();chunk.farBatches.clear();
  }
  let fullTriangles=0,baseTriangles=0;root.traverse(o=>{if(o.isMesh){fullTriangles+=triangles(o);if(!o.isInstancedMesh)baseTriangles+=triangles(o);}});
- const stats={terrainCells:plan.width*plan.depth,blockedCells:plan.cells.length,trees:trees.length,clusters,logs,reeds,baseTriangles,storedTriangles:fullTriangles,batches:instances.length,chunks:chunks.length,chunkSize:BIOME_CHUNK_SIZE};
+ const stats={terrainCells:plan.width*plan.depth,blockedCells:plan.cells.length,trees:trees.length,clusters,logs,reeds,groundSprites:groundSkin?.stats??null,baseTriangles,storedTriangles:fullTriangles,batches:instances.length,chunks:chunks.length,chunkSize:BIOME_CHUNK_SIZE};
  const frustum=new T.Frustum(),projection=new T.Matrix4(),worldBounds=new T.Box3();let disposed=false;
  function update(camera,{focus,ppu=1,trees:showTrees=true}={}){
   if(disposed)return;camera.updateMatrixWorld();frustum.setFromProjectionMatrix(projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));let visible=0,detailed=0,shadowed=0;
@@ -133,5 +129,5 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
   root.updateMatrixWorld(true);let visibleTriangles=0,visibleBatches=0;root.traverseVisible(o=>{if(o.isMesh&&frustum.intersectsObject(o)){visibleTriangles+=triangles(o);visibleBatches++;}});
   Object.assign(stats,{visibleChunks:visible,detailedChunks:detailed,shadowChunks:shadowed,visibleTriangles,visibleBatches});return stats;
  }
- return {root,chunks,denseMeshes,groundMeshes,trees,treeInstances,fill,stats,update,dispose(){if(disposed)return;disposed=true;root.removeFromParent();instances.forEach(m=>m.dispose());owned.forEach(g=>g.dispose());fillMaterial.dispose();rimMaterial.dispose();}};
+ return {root,chunks,denseMeshes,groundMeshes,trees,treeInstances,fill,groundSkin,stats,update,dispose(){if(disposed)return;disposed=true;root.removeFromParent();instances.forEach(m=>m.dispose());owned.forEach(g=>g.dispose());fillMaterial.dispose();groundSkin?.dispose();rimMaterial.dispose();}};
 }
