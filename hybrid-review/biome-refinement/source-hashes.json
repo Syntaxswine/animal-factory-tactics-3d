@@ -1,0 +1,11 @@
+{
+  "capturedAt": "2026-10-13T21:43:28.982Z",
+  "normalization": "LF",
+  "sources": {
+    "dist/tactics/biome-terrain.js": "865928d90fc374b7d1c1e41a51549b85bb939ef64f87d2d34f9a6b270585c543",
+    "dist/tactics/biome-terrain-fill.js": "394c52b8dffead4c04ef18031d006ced6e98dbd57e7fc72a5da286dc9a141056",
+    "dist/tactics/biome-terrain-study.js": "31921f0d02b4cbc5aa9299121da3f6c8c716534876fa0fb752f96aaffa43fd8f",
+    "tests/biome-terrain.test.mjs": "e6b348bc294a04d3c2151eb37c9b98ec4544bf406ed7c9d261e4ac8082720c4d",
+    "tools/benchmark-biome-terrain.mjs": "648d912d03f52971a3e40f0c89f643e4e2ff63534f895a785897307acddf541c"
+  }
+}

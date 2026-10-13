@@ -3,7 +3,7 @@ import path from 'node:path';
 import {createRequire} from 'node:module';
 import {launchSiteReview} from './site-review-browser.mjs';
 const {chromium}=createRequire(import.meta.url)(process.env.PLAYWRIGHT_PATH||'C:/Users/baals/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
-const output=path.resolve(import.meta.dirname,'../hybrid-review/biome-obstacles');fs.mkdirSync(output,{recursive:true});
+const output=path.resolve(process.env.BIOME_REVIEW_OUTPUT||path.join(import.meta.dirname,'../hybrid-review/biome-obstacles'));fs.mkdirSync(output,{recursive:true});
 const base=process.env.BIOME_TERRAIN_URL||'http://127.0.0.1:4476/tactics/biome-terrain-study.html';
 const owner=await launchSiteReview(chromium,'region-check-'+Date.now(),'biome-obstacles');
 try{
@@ -21,7 +21,7 @@ try{
   const s=biomeTerrainStudy,items=new Map(),watch=(key,r)=>{if(!r||items.has(r))return;const item={key,count:0};items.set(r,item);r.addEventListener('dispose',()=>item.count++);};
   for(const [key,t]of Object.entries(s.textures))watch('texture:'+key,t);
   for(const key of ['plantMaterials','obstacleMaterials','grounds'])for(const [id,m]of Object.entries(s[key]))watch(key+':'+id,m);
-  for(const key of ['plantFactory','obstacleFactory'])for(const [id,g]of Object.entries(s[key].geometries))watch(key+':'+id,g);
+  for(const key of ['plantFactory'])for(const [id,g]of Object.entries(s[key].geometries))watch(key+':'+id,g);
   s.scene.traverse(o=>{if(o.geometry)watch('scene-geometry:'+o.geometry.uuid,o.geometry);if(o.material)for(const m of [].concat(o.material))watch('scene-material:'+m.uuid,m);if(o.isInstancedMesh)watch('instance:'+o.uuid,o);if(o.isDirectionalLight){watch('shadow',o.shadow.map);watch('shadow-pass',o.shadow.mapPass);}});
   s.dispose();s.dispose();return [...items.values()];
  });

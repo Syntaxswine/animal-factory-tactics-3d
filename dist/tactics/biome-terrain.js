@@ -1,75 +1,137 @@
 import * as T from './vendor/three.module.js';
 import {BIOME_FAMILIES} from './biome-foliage-data.js';
 import {BIOME_OBSTACLES,CELL_EDGES} from './biome-obstacle-data.js';
+import {random,field,createTerrainFill} from './biome-terrain-fill.js';
 
-const noise=n=>{const p=Math.sin(n*173.71+19.3)*44758.12;return p-Math.floor(p);};
+export const BIOME_CHUNK_SIZE=24;
 const quad=(a,b,c,d,out)=>out.push(...a,...c,...b,...a,...d,...c);
-// Round only exposed corners inward. The occupied tile and neighboring tile
-// seams remain authoritative; no bank or foliage extends into the clear route.
+const triangles=o=>(o.geometry.index?.count??o.geometry.attributes.position.count)/3*(o.isInstancedMesh?o.count:1);
+// Exposed edges stay inside the authoritative mask. Bank offsets vary along the
+// region, rather than repeating three identical scallops on every tile.
 export function terrainCellOutline(plan,x,z){
  const h=plan.heightAt(x,z),outside=CELL_EDGES.map(e=>!plan.blockedAt(x+e.dx,z+e.dz)||plan.heightAt(x+e.dx,z+e.dz)!==h),corners=[[-.5,-.5],[.5,-.5],[.5,.5],[-.5,.5]],points=[];
  for(let i=0;i<4;i++){
-  const p=corners[i],before=corners[(i+3)%4],next=corners[(i+1)%4],clip=outside[i]&&outside[(i+3)%4];
-  if(clip){points.push([x+p[0]+(before[0]-p[0])*.19,z+p[1]+(before[1]-p[1])*.19]);points.push([x+p[0]+(next[0]-p[0])*.19,z+p[1]+(next[1]-p[1])*.19]);}else points.push([x+p[0],z+p[1]]);
-  if(outside[i])points.push([x+(p[0]+next[0])*.5-CELL_EDGES[i].dx*.045,z+(p[1]+next[1])*.5-CELL_EDGES[i].dz*.045]);
+  const p=corners[i],before=corners[(i+3)%4],next=corners[(i+1)%4],clip=outside[i]&&outside[(i+3)%4],adjacentClip=outside[(i+2)%4]||outside[(i+1)%4],cut=adjacentClip?.38+.07*field(x+p[0],z+p[1],3.1,56):.90+.09*field(x+p[0],z+p[1],3.1,56);
+  if(clip){points.push([x+p[0]+(before[0]-p[0])*cut,z+p[1]+(before[1]-p[1])*cut]);points.push([x+p[0]+(next[0]-p[0])*cut,z+p[1]+(next[1]-p[1])*cut]);}else {
+   // Shared shoreline vertices use the same global four-cell neighborhood.
+   // A straight shore gets a broad bend, never a notch in every tile.
+   const u=x+p[0],v=z+p[1],occupied=[];for(const dz of [-.5,.5])for(const dx of [-.5,.5])if(plan.blockedAt(u+dx,v+dz)&&plan.heightAt(u+dx,v+dz)===h)occupied.push([dx,dz]);
+   const sx=occupied.reduce((n,a)=>n+a[0],0),sz=occupied.reduce((n,a)=>n+a[1],0),amount=.035+.17*field(u,v,3.8,94);
+   points.push(occupied.length===2?[u+sx*amount,v+sz*amount]:[u,v]);
+  }
  }
  return {points,outside};
 }
-function makeGeometry(positions,color){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));if(color){const colors=[];for(let i=0;i<positions.length/3;i++)colors.push(...color);g.setAttribute('color',new T.Float32BufferAttribute(colors,3));}g.computeVertexNormals();g.computeBoundingSphere();return g;}
+function geometry(positions,colors,normals){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));if(colors)g.setAttribute('color',new T.Float32BufferAttribute(colors,3));if(normals)g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));else g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();return g;}
 
 export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obstacleMaterials,plantFactory,grey=false}){
  if(!BIOME_OBSTACLES[family])throw Error('Unknown terrain biome');
- const root=new T.Group(),owned=[],instances=[],treeInstances=[],groundPositions=[],wallPositions=[],densePositions=[],edgePositions=[];
- const bog=family==='wetlands',bed=bog?.018:family==='snow'?.12:.14;
- const point=(x,z,h)=>[x,h,z];
- for(let z=0;z<plan.depth;z++)for(let x=0;x<plan.width;x++){
-  const h=plan.heightAt(x,z),corners=[[x-.5,z-.5],[x+.5,z-.5],[x+.5,z+.5],[x-.5,z+.5]],base=corners.map(([u,v])=>point(u,v,h));quad(...base,groundPositions);
-  for(let i=0;i<4;i++){
-   const {dx,dz}=CELL_EDGES[i],nh=plan.heightAt(x+dx,z+dz),a=corners[i],b=corners[(i+1)%4];
-   if(nh!==null&&nh<h){quad(point(a[0],a[1],nh),point(b[0],b[1],nh),point(b[0],b[1],h),point(a[0],a[1],h),wallPositions);edgePositions.push(a[0],h+.012,a[1],b[0],h+.012,b[1]);}
-  }
-  if(!plan.blockedAt(x,z))continue;
-  const outline=terrainCellOutline(plan,x,z);
-  if(!outline.outside.some(Boolean)){const top=corners.map(([u,v])=>point(u,v,h+bed));quad(...top,densePositions);}else{
-   const p=outline.points;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];densePositions.push(x,h+bed,z,...point(b[0],b[1],h+bed),...point(a[0],a[1],h+bed));quad(point(a[0],a[1],h),point(b[0],b[1],h),point(b[0],b[1],h+bed),point(a[0],a[1],h+bed),densePositions);}
-  }
+ const root=new T.Group(),owned=new Set(),instances=[],treeInstances=[],chunks=[],denseMeshes=[],groundMeshes=[],trees=[],fill=createTerrainFill(plan,family),bog=family==='wetlands',snow=family==='snow';root.name='Spatial biome terrain';
+ const own=g=>(owned.add(g),g),crown=own(new T.SphereGeometry(.5,8,4)),proxyCrown=own(new T.IcosahedronGeometry(.5,0)),trunk=own(new T.CylinderGeometry(.5,.5,1,5)),cone=own(new T.ConeGeometry(.5,1,6)),rimMaterial=new T.LineBasicMaterial({color:0x5f513c});
+ const original=grey?plantMaterials.grey:snow?plantMaterials.snow:obstacleMaterials[BIOME_OBSTACLES[family].paint],fillMaterial=original.clone();fillMaterial.onBeforeCompile=original.onBeforeCompile;fillMaterial.customProgramCacheKey=original.customProgramCacheKey;fillMaterial.vertexColors=true;
+ const leaf=family==='jungle'?'jungle':family==='temperate'?'leaves':snow?'snow':'dry',paint=id=>grey?plantMaterials.grey:(plantMaterials[id]||obstacleMaterials[id]),object=new T.Object3D(),up=new T.Vector3(0,1,0),a=new T.Vector3(),b=new T.Vector3();
+ const cols=Math.ceil(plan.width/BIOME_CHUNK_SIZE);
+ for(let z=0;z<plan.depth;z+=BIOME_CHUNK_SIZE)for(let x=0;x<plan.width;x+=BIOME_CHUNK_SIZE){
+  const group=new T.Group(),near=new T.Group(),far=new T.Group();group.name=`Biome block ${x},${z}`;near.name='Detailed trees';far.name='Distant tree silhouettes';group.add(near,far);root.add(group);
+  chunks.push({x,z,index:chunks.length,group,near,far,baseBatches:new Map(),nearBatches:new Map(),farBatches:new Map(),meshes:[],dense:null,nearActive:false});near.visible=false;
  }
- const add=(p,m,name,color)=>{const g=makeGeometry(p,color),mesh=new T.Mesh(g,m);mesh.name=name;mesh.receiveShadow=true;root.add(mesh);owned.push(g);return mesh;};
- const groundMesh=add(groundPositions,ground,'Saved tutorial terrain');add(wallPositions,cliff,'Two plateau tiers',[.63,.58,.46]);
- const dense=add(densePositions,grey?plantMaterials.grey:(family==='snow'?plantMaterials.snow:obstacleMaterials[BIOME_OBSTACLES[family].paint]),'Continuous impassable ground');
- const rimG=new T.BufferGeometry().setAttribute('position',new T.Float32BufferAttribute(edgePositions,3)),rimM=new T.LineBasicMaterial({color:0x5f513c});owned.push(rimG);const rims=new T.LineSegments(rimG,rimM);root.add(rims);
- // A cheap, dense canopy of rounded undergrowth supplies the landscape mass.
- // It is independent of the much more detailed near-camera roots and branches.
- const shrubGeometry=new T.IcosahedronGeometry(.5,0);owned.push(shrubGeometry);
- const shrubGroups=new Map(),reedMatrices=[],o=new T.Object3D();let shrubs=0;
- const shrub=(material,x,y,z,sx,sy,sz)=>{if(!shrubGroups.has(material))shrubGroups.set(material,[]);o.position.set(x,y,z);o.rotation.set(0,0,0);o.scale.set(sx,sy,sz);o.updateMatrix();shrubGroups.get(material).push(o.matrix.clone());shrubs++;};
- for(const [x,z]of plan.cells){const h=plan.heightAt(x,z),n=z*plan.width+x;
-  if(bog){
-   for(const e of CELL_EDGES)if(!plan.blockedAt(x+e.dx,z+e.dz)||plan.heightAt(x+e.dx,z+e.dz)!==h){
-    for(const s of [-.27,0,.27])shrub(grey?plantMaterials.grey:obstacleMaterials.peat,x+e.dx*.39+(e.dx?0:s),h+.045,z+e.dz*.39+(e.dz?0:s),e.dx?.16:.32,.10,e.dz?.16:.32);
-    if(noise(n+e.bit)>.4)for(let j=0;j<3;j++){const ry=.45+.55*noise(n+j*31+e.bit),along=(j-1)*.065;o.position.set(x+e.dx*.30+(e.dx?0:along),h+ry/2,z+e.dz*.30+(e.dz?0:along));o.rotation.set(0,0,0);o.scale.set(.023,ry,.023);o.updateMatrix();reedMatrices.push(o.matrix.clone());}
+ const chunkAt=(x,z)=>chunks[Math.floor(z/BIOME_CHUNK_SIZE)*cols+Math.floor(x/BIOME_CHUNK_SIZE)];
+ function mesh(positions,material,name,chunk,colors,normals){if(!positions.length)return null;const m=new T.Mesh(own(geometry(positions,colors,normals)),material);m.name=name;m.receiveShadow=true;m.userData.chunk=chunk.index;chunk.group.add(m);chunk.meshes.push(m);return m;}
+ function batch(chunk,level,g,m,matrix){const map=chunk[level+'Batches'],key=g.uuid+':'+m.uuid;if(!map.has(key))map.set(key,{g,m,matrices:[]});map.get(key).matrices.push(matrix.clone());}
+ function part(chunk,level,g,m,x,y,z,sx,sy,sz,yaw=0){object.position.set(x,y,z);object.rotation.set(0,yaw,0);object.scale.set(sx,sy,sz);object.updateMatrix();batch(chunk,level,g,m,object.matrix);}
+ function safe(cx,cz,rx,rz,h){for(let z=Math.floor(cz-rz+.5);z<=Math.floor(cz+rz+.5);z++)for(let x=Math.floor(cx-rx+.5);x<=Math.floor(cx+rx+.5);x++)if(!plan.blockedAt(x,z)||plan.heightAt(x,z)!==h)return false;return true;}
+ // Per-chunk ground, cliff and continuous fill. Surface normals are sampled in
+ // world coordinates so snow remains smooth across both tiles and render blocks.
+ for(const chunk of chunks){
+  const groundPositions=[],walls=[],wallColors=[],dense=[],normals=[],colors=[],edges=[];
+  function surface(points,h){for(const [u,v]of points){dense.push(u,h+fill.height(u,v),v);normals.push(...fill.normal(u,v));colors.push(...(grey?[1,1,1]:fill.color(u,v)));}}
+  for(let z=chunk.z;z<Math.min(chunk.z+BIOME_CHUNK_SIZE,plan.depth);z++)for(let x=chunk.x;x<Math.min(chunk.x+BIOME_CHUNK_SIZE,plan.width);x++){
+   const h=plan.heightAt(x,z),corners=[[x-.5,z-.5],[x+.5,z-.5],[x+.5,z+.5],[x-.5,z+.5]];quad(...corners.map(([u,v])=>[u,h,v]),groundPositions);
+   for(let i=0;i<4;i++){const e=CELL_EDGES[i],nh=plan.heightAt(x+e.dx,z+e.dz),a=corners[i],b=corners[(i+1)%4];if(nh!==null&&nh<h){quad([a[0],nh,a[1]],[b[0],nh,b[1]],[b[0],h,b[1]],[a[0],h,a[1]],walls);for(let j=0;j<6;j++)wallColors.push(.63,.58,.46);edges.push(a[0],h+.012,a[1],b[0],h+.012,b[1]);}}
+   if(!plan.blockedAt(x,z))continue;const outline=terrainCellOutline(plan,x,z),p=outline.points;
+   if(!outline.outside.some(Boolean)){surface([p[0],p[2],p[1],p[0],p[3],p[2]],h);}else{
+    for(let i=0;i<p.length;i++)surface([[x,z],p[(i+1)%p.length],p[i]],h);
+    // Only exposed edges need skirts; shared seams must not acquire vertical walls.
+    for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length],mid=[(a[0]+b[0])/2,(a[1]+b[1])/2],exposed=!((a[0]===b[0]&&((a[0]===x-.5&&!outline.outside[3])||(a[0]===x+.5&&!outline.outside[1])))||(a[1]===b[1]&&((a[1]===z-.5&&!outline.outside[0])||(a[1]===z+.5&&!outline.outside[2]))));if(!exposed)continue;
+     const side=[];quad([a[0],h,a[1]],[b[0],h,b[1]],[b[0],h+fill.height(...b),b[1]],[a[0],h+fill.height(...a),a[1]],side);dense.push(...side);const nx=b[1]-a[1],nz=a[0]-b[0],len=Math.hypot(nx,nz);for(let j=0;j<6;j++){normals.push(nx/len,0,nz/len);colors.push(...(grey?[1,1,1]:fill.color(...mid)));}
+    }
    }
-  }else{
-   const tall=family==='snow'?.32+.25*noise(n):.72+.42*noise(n),leaf=family==='jungle'?'jungle':family==='temperate'?'leaves':family==='snow'?'snow':'dry';
-   const m=grey?plantMaterials.grey:noise(n+7)<.64?plantMaterials[leaf]:family==='snow'?plantMaterials.snow:obstacleMaterials[BIOME_OBSTACLES[family].paint];
-   shrub(m,x,h+bed+tall*.36,z,.99,tall,1.01);
+  }
+  groundMeshes.push(mesh(groundPositions,ground,'Saved tutorial terrain',chunk));mesh(walls,cliff,'Two plateau tiers',chunk,wallColors);chunk.dense=mesh(dense,fillMaterial,'Continuous impassable ground',chunk,colors,normals);if(chunk.dense)denseMeshes.push(chunk.dense);
+  if(edges.length){const g=own(new T.BufferGeometry().setAttribute('position',new T.Float32BufferAttribute(edges,3)));g.computeBoundingSphere();const rims=new T.LineSegments(g,rimMaterial);rims.userData.chunk=chunk.index;chunk.group.add(rims);}
+ }
+ let clusters=0,logs=0,reeds=0;const lowPlants=BIOME_FAMILIES[family].low.map(id=>plantFactory.create(id,{grey}));
+ // Sparse *multi-tile* islands of canopy and deadfall, instead of a mound in
+ // every cell. Broad continuous drifts do all of the snow's volume work.
+ const step=bog?2.7:snow?5.7:3.7;
+ for(let z=1;z<plan.depth-1;z+=step)for(let x=1;x<plan.width-1;x+=step){
+  const n=Math.round(x*191+z*631),cx=x+(random(n)-.5)*step,cz=z+(random(n+1)-.5)*step,ix=Math.floor(cx+.5),iz=Math.floor(cz+.5),h=plan.heightAt(ix,iz);if(!plan.blockedAt(ix,iz))continue;
+  const chunk=chunkAt(ix,iz),d=fill.distance(cx,cz),patch=field(cx,cz,9,306);
+  if(!snow&&random(n+120)<.43){const plant=lowPlants[Math.floor(random(n+123)*lowPlants.length)],pb=plant.userData.bounds,scale=1.35;
+   if(safe(cx,cz,Math.max(Math.abs(pb.min[0]),pb.max[0])*scale,Math.max(Math.abs(pb.min[2]),pb.max[2])*scale,h)&&(!bog||d<2)){
+    plant.updateMatrixWorld(true);const transform=new T.Matrix4().makeTranslation(cx,h+fill.height(cx,cz)-.025,cz).scale(new T.Vector3(scale,scale,scale));plant.traverse(m=>{if(m.isMesh)batch(chunk,'base',m.geometry,m.material,new T.Matrix4().multiplyMatrices(transform,m.matrixWorld));});
+   }
+  }
+  if(bog){
+   // Reeds grow in a few uneven beds, leaving long lengths of open water bank.
+   if(d>1.5||patch<.53||!safe(cx,cz,.42,.42,h))continue;
+   part(chunk,'base',crown,paint('peat'),cx,h+.035,cz,.80,.10,.72);
+   for(let j=0;j<5+Math.floor(random(n+9)*8);j++){const u=cx+(random(n+j*9)-.5)*.58,v=cz+(random(n+j*11)-.5)*.58,height=.40+random(n+j*17)*.8;part(chunk,'base',trunk,paint(j%3?'moss':'straw'),u,h+height/2,v,.027,height,.027);reeds++;}clusters++;continue;
+  }
+  if(!snow&&patch>.26){
+   const sx=1.9+random(n+19)*3.4,sz=1.1+random(n+30)*2.2,yaw=random(n+37)*Math.PI,rx=(Math.abs(Math.cos(yaw))*sx+Math.abs(Math.sin(yaw))*sz)/2,rz=(Math.abs(Math.sin(yaw))*sx+Math.abs(Math.cos(yaw))*sz)/2;
+   if(safe(cx,cz,rx,rz,h)){const sy=(family==='jungle'?1.2:.75)+random(n+50)*.9,material=paint(patch>.44?leaf:BIOME_OBSTACLES[family].paint);part(chunk,'base',crown,material,cx,h+fill.height(cx,cz)+sy*.13,cz,sx,sy,sz,yaw);clusters++;}
+  }
+  if((snow?random(n+81)<.50:patch>.65&&random(n+81)<.28)){
+   const length=1.6+random(n+88)*3.3,yaw=random(n+90)*Math.PI,radius=.12+random(n+93)*.10,dx=Math.cos(yaw)*length/2,dz=Math.sin(yaw)*length/2;
+   if(safe(cx,cz,Math.abs(dx)+radius,Math.abs(dz)+radius,h)){
+    a.set(cx-dx,h+fill.height(cx-dx,cz-dz)+radius*.2,cz-dz);b.set(cx+dx,h+fill.height(cx+dx,cz+dz)+radius*.65,cz+dz);object.position.copy(a).add(b).multiplyScalar(.5);object.quaternion.setFromUnitVectors(up,b.clone().sub(a).normalize());object.scale.set(radius*2,a.distanceTo(b),radius*2);object.updateMatrix();batch(chunk,'base',trunk,paint('brokenWood'),object.matrix);logs++;
+   }
   }
  }
- for(const [material,matrices]of shrubGroups){const mesh=new T.InstancedMesh(shrubGeometry,material,matrices.length);matrices.forEach((m,i)=>mesh.setMatrixAt(i,m));mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=mesh.receiveShadow=true;mesh.computeBoundingBox();mesh.computeBoundingSphere();mesh.name='Continuous undergrowth';root.add(mesh);instances.push(mesh);}
- if(reedMatrices.length){const geometry=new T.CylinderGeometry(.5,.5,1,5,1),mesh=new T.InstancedMesh(geometry,grey?plantMaterials.grey:plantMaterials.moss,reedMatrices.length);owned.push(geometry);reedMatrices.forEach((m,i)=>mesh.setMatrixAt(i,m));mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=mesh.receiveShadow=true;mesh.computeBoundingBox();mesh.computeBoundingSphere();mesh.name='Bog margin reeds';root.add(mesh);instances.push(mesh);}
- // Crown-safe placement: the entire conservative footprint must lie in blocked
- // cells at one elevation. Trees cannot bridge cliffs or conceal clear paths.
- const prototypes=[],batches=new Map(),trees=[],world=new T.Matrix4(),translation=new T.Matrix4();
+ // Crown-safe placement is unchanged: complete projected bounds lie inside
+ // blocked cells at one height. A cheap second representation serves overview.
+ const prototypes=[],world=new T.Matrix4(),translation=new T.Matrix4();
  for(const id of BIOME_FAMILIES[family].trees)for(let variant=0;variant<3;variant++)prototypes.push(plantFactory.create(id,{variant,mature:true,grey}));
- {const step=bog?10:family==='dry'?5:3.6;for(let z=3;z<plan.depth-3;z+=step)for(let x=3;x<plan.width-3;x+=step){
-  const n=Math.round(z*plan.width+x),p=prototypes[Math.floor(noise(n)*prototypes.length)],b=p.userData.bounds,cx=x+(noise(n+3)-.5)*2.2,cz=z+(noise(n+7)-.5)*2.2,h=plan.heightAt(Math.floor(cx+.5),Math.floor(cz+.5));
-  if(noise(n+17)<(bog?.40:family==='dry'?.28:.08))continue;
-  const x0=Math.floor(cx+b.min[0]+.5),x1=Math.floor(cx+b.max[0]+.5),z0=Math.floor(cz+b.min[2]+.5),z1=Math.floor(cz+b.max[2]+.5);let safe=true;
-  for(let iz=z0;iz<=z1&&safe;iz++)for(let ix=x0;ix<=x1;ix++)if(!plan.blockedAt(ix,iz)||plan.heightAt(ix,iz)!==h){safe=false;break;}
-  if(!safe)continue;trees.push({id:p.userData.id,x:cx,y:h,z:cz,bounds:{min:[cx+b.min[0],h,cz+b.min[2]],max:[cx+b.max[0],h+b.max[1],cz+b.max[2]]}});p.updateMatrixWorld(true);translation.makeTranslation(cx,h,cz);
-  p.traverse(mesh=>{if(!mesh.isMesh)return;const id=mesh.geometry.uuid+':'+mesh.material.uuid;if(!batches.has(id))batches.set(id,{geometry:mesh.geometry,material:mesh.material,matrices:[]});world.multiplyMatrices(translation,mesh.matrixWorld);batches.get(id).matrices.push(world.clone());});
- }}
- for(const b of batches.values()){const mesh=new T.InstancedMesh(b.geometry,b.material,b.matrices.length);b.matrices.forEach((m,i)=>mesh.setMatrixAt(i,m));mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=mesh.receiveShadow=true;mesh.computeBoundingBox();mesh.computeBoundingSphere();mesh.name='Trees';root.add(mesh);instances.push(mesh);treeInstances.push(mesh);}
- let disposed=false;
- return {root,groundMesh,dense,trees,treeInstances,stats:{terrainCells:plan.width*plan.depth,blockedCells:plan.cells.length,trees:trees.length,shrubs,baseTriangles:(groundPositions.length+wallPositions.length+densePositions.length)/9,batches:instances.length},dispose(){if(disposed)return;disposed=true;root.removeFromParent();instances.forEach(m=>m.dispose());owned.forEach(g=>g.dispose());rimM.dispose();}};
+ const treeStep=bog?10:family==='dry'?5:3.6;
+ for(let z=3;z<plan.depth-3;z+=treeStep)for(let x=3;x<plan.width-3;x+=treeStep){
+  const n=Math.round(z*plan.width+x),p=prototypes[Math.floor(random(n)*prototypes.length)],bounds=p.userData.bounds,cx=x+(random(n+3)-.5)*2.2,cz=z+(random(n+7)-.5)*2.2,h=plan.heightAt(Math.floor(cx+.5),Math.floor(cz+.5));
+  if(random(n+17)<(bog?.40:family==='dry'?.28:.08))continue;
+  const min=[cx+bounds.min[0],h,cz+bounds.min[2]],max=[cx+bounds.max[0],h+bounds.max[1],cz+bounds.max[2]];
+  if(!safe((min[0]+max[0])/2,(min[2]+max[2])/2,(max[0]-min[0])/2,(max[2]-min[2])/2,h))continue;
+  trees.push({id:p.userData.id,x:cx,y:h,z:cz,bounds:{min,max}});const chunk=chunkAt(Math.floor(cx+.5),Math.floor(cz+.5));p.updateMatrixWorld(true);translation.makeTranslation(cx,h,cz);
+  p.traverse(m=>{if(!m.isMesh)return;world.multiplyMatrices(translation,m.matrixWorld);batch(chunk,'near',m.geometry,m.material,world);});
+  const width=max[0]-min[0],depth=max[2]-min[2],height=max[1]-min[1],px=(min[0]+max[0])/2,pz=(min[2]+max[2])/2,pine=/pine|spruce|cypress/.test(p.userData.id),flat=/acacia|palm/.test(p.userData.id);
+  part(chunk,'far',trunk,paint('bark'),cx,h+height*.33,cz,.16,height*.66,.16);
+  if(pine){for(let i=0;i<3;i++){const s=1-i*.25;part(chunk,'far',cone,paint(snow?'snowPine':bog?'cypress':'pine'),px,h+height*(.36+i*.20),pz,width*s,height*.47,depth*s);}}
+  else {part(chunk,'far',proxyCrown,paint(bog?'wet':leaf),px,h+height*(flat?.82:.65),pz,width,height*(flat?.30:.69),depth);part(chunk,'far',proxyCrown,paint(leaf==='dry'?'dry':bog?'wet':leaf),px-width*.16,h+height*(flat?.82:.80),pz,width*.61,height*(flat?.27:.37),depth*.68);}
+ }
+ for(const chunk of chunks){
+  for(const level of ['base','near','far'])for(const spec of chunk[level+'Batches'].values()){
+   const m=new T.InstancedMesh(spec.g,spec.m,spec.matrices.length);spec.matrices.forEach((matrix,i)=>m.setMatrixAt(i,matrix));m.instanceMatrix.needsUpdate=true;m.computeBoundingBox();m.computeBoundingSphere();m.name=level==='base'?'Grouped ground cover':level==='near'?'Trees':'Distant trees';m.receiveShadow=true;m.userData.chunk=chunk.index;(level==='base'?chunk.group:chunk[level]).add(m);instances.push(m);if(level!=='base')treeInstances.push(m);chunk.meshes.push(m);
+  }
+  // Include crown height/overhang in bounds; culling a ground square alone can
+  // incorrectly hide a visible treetop at a screen edge.
+  chunk.bounds=new T.Box3().setFromObject(chunk.group);chunk.baseBatches.clear();chunk.nearBatches.clear();chunk.farBatches.clear();
+ }
+ let fullTriangles=0,baseTriangles=0;root.traverse(o=>{if(o.isMesh){fullTriangles+=triangles(o);if(!o.isInstancedMesh)baseTriangles+=triangles(o);}});
+ const stats={terrainCells:plan.width*plan.depth,blockedCells:plan.cells.length,trees:trees.length,clusters,logs,reeds,baseTriangles,storedTriangles:fullTriangles,batches:instances.length,chunks:chunks.length,chunkSize:BIOME_CHUNK_SIZE};
+ const frustum=new T.Frustum(),projection=new T.Matrix4(),worldBounds=new T.Box3();let disposed=false;
+ function update(camera,{focus,ppu=1,trees:showTrees=true}={}){
+  if(disposed)return;camera.updateMatrixWorld();frustum.setFromProjectionMatrix(projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));let visible=0,detailed=0,shadowed=0;
+  root.updateMatrixWorld(true);const localFocus=root.worldToLocal(focus?.clone()??new T.Vector3()),fx=localFocus.x,fz=localFocus.z;
+  for(const c of chunks){
+   const dx=Math.max(c.x-.5-fx,0,fx-(c.x+BIOME_CHUNK_SIZE-.5)),dz=Math.max(c.z-.5-fz,0,fz-(c.z+BIOME_CHUNK_SIZE-.5)),distance=Math.hypot(dx,dz);
+   const inView=frustum.intersectsBox(worldBounds.copy(c.bounds).applyMatrix4(root.matrixWorld));
+   // Orthographic distance does not shrink a visible tree. Keep every visible
+   // block detailed at close scale, including the far edge of a low-angle view.
+   c.nearActive=ppu>(c.nearActive?12:16)&&(inView||distance<(c.nearActive?52:44));const shadows=ppu>12&&distance<28;
+   c.near.visible=showTrees&&c.nearActive;c.far.visible=showTrees&&!c.nearActive;
+   for(const m of c.meshes){m.castShadow=shadows&&m.name!=='Saved tutorial terrain'&&m.name!=='Distant trees';m.userData.noShadow=!m.castShadow;}
+   if(inView){visible++;if(c.near.visible)detailed++;}if(shadows)shadowed++;
+  }
+  root.updateMatrixWorld(true);let visibleTriangles=0,visibleBatches=0;root.traverseVisible(o=>{if(o.isMesh&&frustum.intersectsObject(o)){visibleTriangles+=triangles(o);visibleBatches++;}});
+  Object.assign(stats,{visibleChunks:visible,detailedChunks:detailed,shadowChunks:shadowed,visibleTriangles,visibleBatches});return stats;
+ }
+ return {root,chunks,denseMeshes,groundMeshes,trees,treeInstances,fill,stats,update,dispose(){if(disposed)return;disposed=true;root.removeFromParent();instances.forEach(m=>m.dispose());owned.forEach(g=>g.dispose());fillMaterial.dispose();rimMaterial.dispose();}};
 }

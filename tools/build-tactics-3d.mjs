@@ -2,7 +2,7 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
-for(const file of ['biome-atlas-lod.js','biome-obstacle-data.js','biome-obstacle-paint.js','biome-obstacles.js','biome-terrain-plan.js','biome-terrain.js','biome-terrain-study.js','biome-terrain-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+for(const file of ['biome-atlas-lod.js','biome-obstacle-data.js','biome-obstacle-paint.js','biome-obstacles.js','biome-terrain-plan.js','biome-terrain.js','biome-terrain-fill.js','biome-terrain-study.js','biome-terrain-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.cpSync(new URL('dist/assets/environment/biome-obstacles/',root),new URL('.pages-output/assets/environment/biome-obstacles/',root),{recursive:true});
 for(const file of ['biome-foliage-data.js','biome-foliage-models.js','biome-foliage-paint.js','biome-foliage-study.js','biome-foliage-study.html','biome-foliage-study.css'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.cpSync(new URL('dist/assets/environment/biome-foliage/',root),new URL('.pages-output/assets/environment/biome-foliage/',root),{recursive:true});

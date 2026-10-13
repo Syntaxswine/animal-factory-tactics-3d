@@ -1,0 +1,31 @@
+{
+  "verifiedAt": "2026-10-13T21:47:54.875Z",
+  "baseline": "a7a5aa45ea344a7e6813eb48783d45eb11943785",
+  "command": "node --test tests/biome-obstacles.test.mjs tests/biome-terrain.test.mjs tests/biome-foliage.test.mjs tests/foliage.test.mjs tests/painted-grass.test.mjs tests/tactics-3d-deployment.test.mjs",
+  "tests": 56,
+  "passed": 56,
+  "failed": 0,
+  "distributionBuild": "passed via deployment tests",
+  "browser": {
+    "configurations": 17,
+    "errors": 0,
+    "failedRequests": 0,
+    "disposalResources": 1503,
+    "allDisposedExactlyOnce": true,
+    "failedLoadCleanup": true
+  },
+  "independentReview": {
+    "score": "9/10",
+    "scope": "Art-study readiness, not gameplay integration approval",
+    "record": "independent/FINAL-REVIEW.md"
+  },
+  "benchmark": "performance.json",
+  "helpers": {
+    "reviewBrowsers": "Closed with exit receipts; exact matching process lifetimes absent",
+    "retainedPreview": {
+      "port": 4476,
+      "registration": "80a05bd8c35e4cfdb1bb807d91fb1bd6",
+      "expiresAt": "2026-10-14T21:19:11.813Z"
+    }
+  }
+}
