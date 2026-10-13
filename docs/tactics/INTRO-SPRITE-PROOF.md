@@ -1,6 +1,6 @@
 # Intro sprite proof: descent and crash
 
-**Status (October 13, 2026): composition and pacing accepted; round 4, the architect's cliff-painting pass (fractured rock, the cliff kept the same size across the cut), is waiting for the user.** Nothing here changes the 3D study.
+**Status (October 13, 2026): approved. The architect accepted round 4 (`2152bd0`) as the working crash sequence. It reaches `main` without the helicopter art branch it was built on (see [On main](#on-main)).** Nothing here changes the 3D study.
 
 > **Direction (the user, 2026-10-12), on the round 1 keyframes:** "this version of the crash resolves a lot of my conflicts with it."
 >
@@ -15,6 +15,8 @@
 > **Direction (the user, 2026-10-12), on the first close-up preview:** "scale is looking good, but it looks fairly low poly with the thick block shapes on a flat plane. this should look fairly realistic"
 >
 > **Review (the architect, 2026-10-13), on round 3 (9f40d75), passed on by the user:** "The rock still needs a more natural surface. The rounded columns, smooth highlights and repeated horizontal joints resemble constructed stonework. Broader fractured masses, uneven ledges and less regular shading would bring it closer to the painted reference. Adding finer texture alone won't solve that." And: "Watch the scale across the camera cut. The towering close-up becomes a considerably smaller cliff in the wide view. Exaggerating its height works, but the helicopter's position against recognizable ledges should help those shots feel like the same place." Keep the shot sequence, the landing timing and the final wreck composition: "This needs a concentrated cliff-painting pass, not another wholesale revision."
+>
+> **Review (the architect, 2026-10-13), on round 4 (2152bd0), passed on by the user:** "`2152bd0` gets my approval as the working crash sequence." On the cliffs: "broader fractures and uneven ledges look substantially more natural. The repeated stonework appearance is much reduced." On the cut: "the cliff now retains a convincing scale behind the helicopter when switching to the wide shot." On the landing: "the descent, skid contact, dust and settled wreck still communicate a hard but survivable crash clearly." Polish, not a blocker: "The rock remains slightly busy and cool compared with the painted reference, but I consider that polish. I wouldn't hold up further work over it." On rendering: the backgrounds are pre-rendered images with the aircraft frames and effects composited over them, so the cliff's detail never becomes live 3D geometry. All 18 tests passed, and playback ran without browser errors. On release: "A direct merge into canonical conflicts with existing gameplay and build changes, so I haven't merged it. The approved intro work needs to be separated from those older branch changes for integration."
 
 ![Round 4 contact sheet: the storyboard's panel 08 beside the close-up and keyframes A and C](intro-sprites/contact-sheet-round-4.jpg)
 
@@ -35,6 +37,19 @@ The stills are frames of the animated proof at those times. Comparisons:
 - [Round 2 contact sheet](intro-sprites/contact-sheet-round-2.jpg)
 - [The 3D shot 12 beside round 1](intro-sprites/before-after-closing-frame.jpg)
 - [Round 1 contact sheet](intro-sprites/contact-sheet-round-1.jpg)
+
+## On main
+
+Round 4 was approved on `intro/sprite-keyframes` (PR #8), a branch built on the helicopter art branch `work/utility-helicopter`. That base carries older art and gameplay work whose files `main` has since changed: grenade blasts, wall breaches, floor rims, RPG flight, guardhouse consoles, the chair collection and horse sitting. Merged whole, `2152bd0` conflicts with `main` in 26 files, none of them an intro sprite file. The branch `intro/sprite-crash-sequence` therefore starts from `main` (`1dbbc3f`) and carries only the 52 intro sprite files, byte-identical to `2152bd0`. All 52 are new on `main`.
+
+- **Run time.** Everything the proof reads is already on `main`, blob-identical to the helicopter branch: the map (`sector-library/tutorial-step-1/rough-plateau.json`), `ground-grass.png` and `ground-dirt.png`, the three foliage paintings and the smoke atlas. The strip's 15 moments render byte-identical from both branches.
+- **Checks.** `npm run check` passes on this branch: 2,290 of 2,290 tests, which is `main`'s 2,272 plus the 18 here, and the asset check. The 15 strip moments that `tools/record-intro-proof.mjs --frames` writes are byte-identical PNGs from both branches (two runs from `2152bd0` agree, and the two servers serve different trees). Playback records 445 frames, none over budget, with no page errors.
+- **Left behind.** Codex's 3D intro study (`intro-study.html`, the `intro-*.js` modules, `sam-missile.js`), the storyboard sheets and `INTRO-CLAUDE-HANDOFF.md` stay on `work/utility-helicopter`. Two tools need the study: `tools/bake-intro-heli-sequence.mjs` and `tools/bake-intro-heli-closeup.mjs` photograph its rig. The aircraft sheets they made are committed, so playing, testing and repainting the proof need neither tool. Re-baking the aircraft needs a checkout that has the study.
+- **History.** PR #8's five round commits carry 71.1 MB of blobs, every superseded plate, sheet and recording among them. The final files are 23.6 MB. The rounds stay on `intro/sprite-keyframes`.
+- **The handoff's checklist.** `INTRO-CLAUDE-HANDOFF.md`, still on the helicopter branch, stands as follows:
+  - done and approved: keyframes A, B and C, the animated A → B → C proof, and the normal-speed review;
+  - partly done: depth layers (one static plate, whole-aircraft frames and 2D effects; see [Layers](#layers-and-animation-readiness));
+  - not started: the approach, briefing, radar and SAM cutaway, and sound.
 
 ## Round 4: the cliff-painting pass
 
@@ -341,10 +356,10 @@ Not done yet:
 
 ## Questions for the user
 
-1. Does the rock now read as the painted reference's broken limestone rather than stonework?
-2. Does the cut out of the close-up feel like the same place? The wide cliff is now 2.4×, matched to the close-up at the cut.
-3. Still open from round 3: the rock is grey with ochre patches. Should it be warmer, closer to the storyboard's pink-ochre?
-4. Still open: are the copses in the open ground welcome, or should the open ground stay exactly as the map paints it?
+The architect's approval answered round 4's first two questions: the rock reads as broken limestone, and the cut keeps the cliff's scale. Still open:
+
+1. **Colour and calm.** The architect says the rock "remains slightly busy and cool compared with the painted reference". That is polish, and it should not hold up other work. It meets round 3's question: should the rock be warmer, closer to the storyboard's pink-ochre? A quieter, warmer rock needs new rock rules, then a repaint of both plates (3.7 and 1.2 minutes).
+2. **Copses.** Are the copses in the open ground welcome, or should the open ground stay exactly as the map paints it?
 
 ## Reproduce
 
@@ -361,3 +376,5 @@ node --test tests/intro-sprites.test.mjs
 ```
 
 The stills page is `tactics/intro-sprites/keyframes.html?shot=0|A|B|C`. The committed review images are JPEG conversions of the tool's PNGs.
+
+The two bake tools load Codex's 3D intro study (`tactics/intro-study.html` and its `intro-*.js` modules). That study is on `work/utility-helicopter`, not on `main`, so serve a checkout that has it to re-bake the aircraft. The other tools and the tests run on `main`.
