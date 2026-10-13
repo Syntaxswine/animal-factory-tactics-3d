@@ -1,8 +1,8 @@
 // The static half of the intro sprite proof: the painted plate (terrain, the
 // game's flora sprites, their shadows) and the frame finish (split tone is
 // applied to the plate here; the tone grade runs on every finished frame).
-import {paintTerrain,LEVEL_HEIGHT} from './crash-sector.js';
-import {planFlora,planRocks,drawFlora,drawFloraShadow} from './painted-trees.js';
+import {paintTerrain} from './crash-sector.js';
+import {planFlora,planRocks,planLedges,drawFlora,drawFloraShadow} from './painted-trees.js';
 import {splitToneCanvas} from './grade.js';
 
 // The user's circled clearing (crash-sector-woodland.json, markedClearing).
@@ -22,17 +22,30 @@ export function keepClear(){
  ];
 }
 
+// Atmospheric perspective: a cool veil that thickens with distance behind a
+// reference depth (view.depth: larger = nearer the camera). The user,
+// 2026-10-12: "perhaps we need some atmospheric perspective to push them back
+// behind the helicopter." Everything nearer than the reference stays clear;
+// the aircraft and effects are drawn over the plate unveiled.
+export const HAZE_COLOR='176,190,202';
+export const hazeAt=(haze,depth)=>!haze?0:haze.max*(1-Math.exp(-haze.k*Math.max(0,haze.ref-depth)));
+
 // The static world on one canvas: terrain, flora shadows, then flora far to
 // near. Nothing that moves: the aircraft, decals and effects draw over it.
-export function paintPlate(assets,view,{seed=3}={}){
+export function paintPlate(assets,view,{seed=3,haze=null}={}){
  const {sector}=assets,c=document.createElement('canvas');c.width=view.width;c.height=view.height;const g=c.getContext('2d');
- paintTerrain(g,sector,view,{textures:assets.textures});
- const corners=[[0,0],[view.width,0],[0,view.height],[view.width,view.height]].flatMap(([sx,sy])=>[view.unproject(sx,sy,0),view.unproject(sx,sy,LEVEL_HEIGHT*2),view.unproject(sx,sy+view.hv*10,0)]);
+ const terrain=paintTerrain(g,sector,view,{textures:assets.textures});
+ const corners=[[0,0],[view.width,0],[0,view.height],[view.width,view.height]].flatMap(([sx,sy])=>[view.unproject(sx,sy,0),view.unproject(sx,sy,sector.LH*2),view.unproject(sx,sy+view.hv*10,0)]);
  const xs=corners.map(p=>p[0]),ys=corners.map(p=>p[1]),bounds=[Math.min(...xs)-3,Math.min(...ys)-3,Math.max(...xs)+3,Math.max(...ys)+3];
- const kc=keepClear(),flora=[...planFlora(sector,bounds,{keepClear:kc,seed}),...planRocks(sector,bounds,{keepClear:kc,seed:9})];
+ const kc=keepClear(),flora=[...planFlora(sector,bounds,{keepClear:kc,seed}),...planRocks(sector,bounds,{keepClear:kc,seed:9}),...planLedges(sector,bounds,{seed:13})];
  const sh=document.createElement('canvas');sh.width=view.width;sh.height=view.height;const s=sh.getContext('2d');for(const t of flora)drawFloraShadow(s,t,view,assets.flora);
  g.save();g.globalCompositeOperation='multiply';g.globalAlpha=.9;g.drawImage(sh,0,0);g.restore();
- flora.map(t=>({t,d:view.depth(t.x,t.y,t.base+(t.kind==='rock'?.2:t.height*.45))})).sort((a,b)=>a.d-b.d).forEach(({t})=>drawFlora(g,t,view,assets.flora));
+ // Veil the ground (shadows included) per pixel, from the painter's depth buffer.
+ if(haze){const img=g.getImageData(0,0,view.width,view.height),d=img.data,col=HAZE_COLOR.split(',').map(Number);
+  for(let i=0;i<terrain.depth.length;i++){const a=hazeAt(haze,terrain.depth[i]);if(a<=0)continue;const o=i*4;d[o]+=(col[0]-d[o])*a;d[o+1]+=(col[1]-d[o+1])*a;d[o+2]+=(col[2]-d[o+2])*a;}
+  g.putImageData(img,0,0);}
+ flora.map(t=>({t,d:view.depth(t.x,t.y,t.base+(t.kind==='rock'?.2:t.height*.45))})).sort((a,b)=>a.d-b.d)
+  .forEach(({t,d})=>drawFlora(g,t,view,assets.flora,hazeAt(haze,d),haze?HAZE_COLOR:null));
  splitToneCanvas(c);
  return {canvas:c,flora:flora.length};
 }

@@ -1,7 +1,7 @@
 // Procedural painted trees, shrubs and rocks for the intro keyframes.
 // Each is a flat sprite standing on a ground point; the light comes from the
 // upper left / front like the study's sun, shadows fall back and to the right.
-import {rng,hash,fbm,LEVEL_HEIGHT,SUN} from './crash-sector.js';
+import {rng,hash,fbm,SUN} from './crash-sector.js';
 const clamp=(v,a=0,b=1)=>v<a?a:v>b?b:v,smooth01=t=>{t=clamp(t);return t*t*(3-2*t);};
 const rgb=(c,k=1,a=1)=>`rgba(${Math.round(clamp(c[0]*k,0,255))},${Math.round(clamp(c[1]*k,0,255))},${Math.round(clamp(c[2]*k,0,255))},${a})`;
 const mixc=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
@@ -10,19 +10,21 @@ const mixc=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
 // the keep-clear shapes (landing pocket, exit lane, descent corridor).
 export function planFlora(sector,bounds,{keepClear=[],spacing=1.32,seed=1}={}){
  // Game scale (environment.js TREE_VARIANTS / foliage-models.js): a pine is
- // about 2.3 units tall, the large variant 1.8x. The two-tier rim is 4.24
- // units, so the canopy must not out-top it or the plateau edge disappears.
+ // about 2.3 units tall, the large variant 1.8x. Trees keep game scale when the
+ // cutscene stretches the tiers (sector.LH), so the butte towers over them.
  const out=[];const [x0,y0,x1,y1]=bounds;
  const blocked=(x,y,r,lone)=>keepClear.some(k=>k.test(x,y,r,lone));
  for(let gy=Math.floor(y0/spacing);gy<=y1/spacing;gy++)for(let gx=Math.floor(x0/spacing);gx<=x1/spacing;gx++){
   const r=rng(hash(gx,gy,seed)*4294967296);
   const x=(gx+.12+r()*.76)*spacing,y=(gy+.12+r()*.76)*spacing;
-  if(x<0||y<0||x>sector.W-1||y>sector.H-1)continue;
+  if(!sector.extend&&(x<0||y<0||x>sector.W-1||y>sector.H-1))continue;
   const wood=sector.woodAt(x,y),lev=sector.levelAt(x,y);
   // Keep the lip and a scree apron at each cliff foot open, so the rim reads.
-  const up=sector.distUp(x,y),down=sector.distDown(x,y);
+  // Distances to the foot above and the lip below, relief included where the
+  // rock function reaches (a bay can undercut a lip, a buttress can reach out).
+  const up=sector.footDist?Math.min(sector.distUp(x,y),sector.footDist(x,y,lev)):sector.distUp(x,y),down=sector.lipDist?Math.min(sector.distDown(x,y),sector.lipDist(x,y,lev)):sector.distDown(x,y);
   // Narrow shelf between the tiers: grass tufts and low shrubs only.
-  if(lev===1&&up>.45&&down>.45){if(r()<.42){const rr=.32+r()*.28;if(!blocked(x,y,rr,true))out.push({kind:'shrub',x,y,base:LEVEL_HEIGHT,height:.5+r()*.3,radius:rr,seed:Math.floor(r()*1e9),tint:r()});}continue;}
+  if(lev===1&&up>.45&&down>.45){if(r()<.42){const rr=.32+r()*.28;if(!blocked(x,y,rr,true))out.push({kind:'shrub',x,y,base:sector.LH,height:.5+r()*.3,radius:rr,seed:Math.floor(r()*1e9),tint:r()});}continue;}
   if(down<1.1||up<1.7)continue;
   const roll=r();let kind=null,lone=false;
   // Copses and lone trees break up the open ground (the user asked for more
@@ -39,7 +41,7 @@ export function planFlora(sector,bounds,{keepClear=[],spacing=1.32,seed=1}={}){
   const height=(kind==='pine'?(large?3.6+r()*.7:2.3+r()*.7):kind==='broadleaf'?(large?3.5+r()*.8:2.4+r()*.7):.55+r()*.45)*talus;
   const radius=(kind==='pine'?(large?1.05+r()*.25:.72+r()*.2):kind==='broadleaf'?(large?1.3+r()*.3:.9+r()*.25):.38+r()*.3)*talus;
   if(blocked(x,y,kind==='shrub'?radius*.6:radius*.85,lone))continue;
-  out.push({kind,x,y,base:lev*LEVEL_HEIGHT,height,radius,seed:Math.floor(r()*1e9),tint:r()});
+  out.push({kind,x,y,base:lev*sector.LH,height,radius,seed:Math.floor(r()*1e9),tint:r()});
  }
  return out;
 }
@@ -48,17 +50,39 @@ export function planRocks(sector,bounds,{keepClear=[],seed=5}={}){
  for(let gy=Math.floor(y0);gy<=y1;gy+=1)for(let gx=Math.floor(x0);gx<=x1;gx+=1){
   const r=rng(hash(gx,gy,seed)*4294967296),x=gx+r(),y=gy+r(),lev=sector.levelAt(x,y),up=sector.distUp(x,y),down=sector.distDown(x,y);
   // A few weathered boulders out in the grass, as in the storyboard meadows.
-  if(up>1.4&&down>1.2&&sector.woodAt(x,y)<.3){if(r()<.012&&!keepClear.some(k=>k.test(x,y,1.2,true)))out.push({kind:'rock',x,y,base:lev*LEVEL_HEIGHT,height:.25+r()*.4,radius:.35+r()*.5,seed:Math.floor(r()*1e9)});continue;}
+  if(up>1.4&&down>1.2&&sector.woodAt(x,y)<.3){if(r()<.012&&!keepClear.some(k=>k.test(x,y,1.2,true)))out.push({kind:'rock',x,y,base:lev*sector.LH,height:.25+r()*.4,radius:.35+r()*.5,seed:Math.floor(r()*1e9)});continue;}
   if(up>1.4||up<.15)continue; // scree at the foot of a face
   if(r()>.1+.2*(1-up/1.4))continue;if(keepClear.some(k=>k.test(x,y,.5)))continue;
-  out.push({kind:'rock',x,y,base:lev*LEVEL_HEIGHT,height:.18+r()*.35,radius:.22+r()*.4,seed:Math.floor(r()*1e9)});
+  out.push({kind:'rock',x,y,base:lev*sector.LH,height:.18+r()*.35,radius:.22+r()*.4,seed:Math.floor(r()*1e9)});
+ }
+ return out;
+}
+
+// Shrubs and small pines clinging to the cliff faces, as on the storyboard's
+// cliffs: points on each tier's contour, raised to a random height on the
+// face and pushed out until they stand just clear of the displaced rock.
+export function planLedges(sector,bounds,{seed=7,density=.5}={}){
+ const out=[],[x0,y0,x1,y1]=bounds,LH=sector.LH,S=.45;
+ for(let gy=Math.floor(y0/S);gy<=y1/S;gy++)for(let gx=Math.floor(x0/S);gx<=x1/S;gx++){
+  const r=rng(hash(gx,gy,seed)*4294967296),x=(gx+r())*S,y=(gy+r())*S;
+  if(!sector.extend&&(x<0||y<0||x>sector.W-1||y>sector.H-1))continue;
+  for(const lev of [1,2]){
+   if(Math.abs(sector.field(x,y)-(lev-.5))>.04||r()>density)continue;
+   const h=(lev-1)*LH+(.22+r()*.66)*LH,[gx2,gy2]=sector.grad(x,y),gl=Math.hypot(gx2,gy2)||1,ox=-gx2/gl,oy=-gy2/gl;
+   // Settle onto the relief: step along the outward normal by the rock
+   // function (a plan distance) until the point sits just outside the face.
+   let px=x,py=y;for(let k=0;k<6;k++){const g=sector.rockG?sector.rockG(lev,px,py,h):(sector.solidAt(px,py,h)?.1:0);if(Math.abs(g)<.03)break;px+=ox*g;py+=oy*g;}
+   if(sector.solidAt(px+ox*.06,py+oy*.06,h)||!sector.solidAt(px-ox*.15,py-oy*.15,h))continue;
+   const pine=r()<.28;
+   out.push({kind:pine?'pine':'shrub',ledge:true,x:px+ox*.04,y:py+oy*.04,base:h-.08,height:pine?1.1+r()*.9:.45+r()*.35,radius:pine?.45+r()*.2:.3+r()*.2,seed:Math.floor(r()*1e9),tint:r()});
+  }
  }
  return out;
 }
 
 // Ground shadow (an ellipse cast back along the sun) drawn before the sprites.
 export function drawFloraShadow(ctx,t,view,sprites=null){
- if(t.kind==='rock')return;
+ if(t.kind==='rock'||t.ledge)return;
  const S=sprites?.[t.kind];
  if(S){// The sprite's own silhouette sheared along the sun onto the ground.
   const sil=S.silhouettes[(t.seed>>1)%S.silhouettes.length],H=(t.kind==='shrub'?t.height*1.25:t.height)*view.hv,W=H*S.aspect,k=H/(sil.height-8),[bx,by]=view.project(t.x,t.y,t.base);
@@ -108,16 +132,26 @@ export async function loadFloraSprites(base='../../assets/environment/foliage/',
  }
  return out;
 }
-export function drawFlora(ctx,t,view,sprites=null){
+// A sprite variant washed toward the haze colour (atmospheric perspective),
+// quantized to 1/16 steps and cached, so a forest of thousands costs a few
+// hundred small canvases.
+export function floraVariant(S,t,haze=0,color=null){
+ const i=t.seed%S.variants.length,q=color?Math.round(Math.min(1,haze)*16):0;
+ if(!q)return S.variants[i];
+ S.hazed||=new Map();const key=i+'|'+q+'|'+color;let c=S.hazed.get(key);
+ if(!c){const v=S.variants[i];c=document.createElement('canvas');c.width=v.width;c.height=v.height;const g=c.getContext('2d');g.drawImage(v,0,0);g.globalCompositeOperation='source-atop';g.fillStyle=`rgba(${color},${q/16})`;g.fillRect(0,0,c.width,c.height);S.hazed.set(key,c);}
+ return c;
+}
+export function drawFlora(ctx,t,view,sprites=null,haze=0,hazeColor=null){
  const S=sprites?.[t.kind];
- if(S){const i=t.seed%S.variants.length,v=S.variants[i],flipped=i%2===1,[bx,by]=view.project(t.x,t.y,t.base);
+ if(S){const i=t.seed%S.variants.length,v=floraVariant(S,t,haze,hazeColor),flipped=i%2===1,[bx,by]=view.project(t.x,t.y,t.base);
   // Shrubs are drawn a little taller than their mass so the leaves overhang.
   const H=(t.kind==='shrub'?t.height*1.25:t.height)*view.hv,W=H*S.aspect,fx=(flipped?S.flipFoot:S.foot)*W,k=H/(v.height-2*S.pad);
   ctx.drawImage(v,bx-fx-S.pad*k,by-H*.985-S.pad*k,v.width*k,v.height*k);return;}
  if(t.kind==='pine')return pine(ctx,t,view);
  if(t.kind==='broadleaf')return broadleaf(ctx,t,view);
  if(t.kind==='shrub')return shrub(ctx,t,view);
- return rock(ctx,t,view);
+ return rock(ctx,t,view,haze,hazeColor);
 }
 
 function pine(ctx,t,view){
@@ -184,9 +218,16 @@ function shrub(ctx,t,view){
   ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,rr,rr*.8,0,0,Math.PI*2);ctx.fill();}
 }
 
-function rock(ctx,t,view){
+function rock(ctx,t,view,haze=0,hazeColor=null){
  // A weathered grey boulder: irregular crown, lit left, shaded right flank,
  // ink contour, a crack, and grass growing over its foot.
+ if(haze>0&&hazeColor){
+  // Drawn on a scratch canvas around its footprint, washed toward the haze.
+  const [bx,by]=view.project(t.x,t.y,t.base),R=t.radius*view.w/Math.SQRT2,Hh=Math.max(R*.42,t.height*view.hv),pad=4;
+  const x0=Math.floor(bx-R*1.3-pad),y0=Math.floor(by-Hh*1.4-pad),w=Math.ceil(R*2.6+2*pad),hgt=Math.ceil(Hh*1.4+R*.6+2*pad);
+  const c=document.createElement('canvas');c.width=Math.max(1,w);c.height=Math.max(1,hgt);const g=c.getContext('2d');
+  g.translate(-x0,-y0);rock(g,t,view);g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='source-atop';g.fillStyle=`rgba(${hazeColor},${Math.min(1,haze)})`;g.fillRect(0,0,c.width,c.height);
+  ctx.drawImage(c,x0,y0);return;}
  const r=rng(t.seed),ppu=view.w/Math.SQRT2,[bx,by]=view.project(t.x,t.y,t.base),R=t.radius*ppu,Hh=Math.max(R*.42,t.height*view.hv);
  const n=13,pts=[];for(let k=0;k<n;k++){const a=Math.PI+k/(n-1)*Math.PI,rr=R*(.72+r()*.4),lift=Math.pow(Math.abs(Math.sin(a)),.7)*Hh*(.7+r()*.45);pts.push([bx+Math.cos(a)*rr,by-lift]);}
  const outline=()=>{ctx.beginPath();ctx.moveTo(bx-R*.95,by+R*.08);for(const p of pts)ctx.lineTo(p[0],p[1]);ctx.lineTo(bx+R*.95,by+R*.08);ctx.quadraticCurveTo(bx,by+R*.42,bx-R*.95,by+R*.08);ctx.closePath();};

@@ -1,0 +1,33 @@
+{
+ "spec": {
+  "camera": {
+   "pos": [
+    180.5,
+    139.5,
+    19
+   ],
+   "target": [
+    180.5,
+    98,
+    11.5
+   ],
+   "hfov": 50,
+   "plate": [
+    1760,
+    990
+   ],
+   "window": [
+    1600,
+    900
+   ]
+  },
+  "heightScale": 4,
+  "detail": 1,
+  "haze": {
+   "t0": 28,
+   "k": 0.009,
+   "max": 0.85
+  }
+ },
+ "note": "Static plate for the close-up in proof.html. Re-render with tools/render-intro-closeup.mjs whenever the close-up camera, height scale, haze, map, woodland, flora or rock rules change; proof.js paints it live (slowly) if the spec no longer matches."
+}

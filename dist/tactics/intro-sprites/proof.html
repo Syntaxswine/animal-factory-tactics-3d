@@ -40,7 +40,7 @@ import {loadProofAssets,createProof,PROOF_START,PROOF_END,KEYFRAME_TIMES,plateGe
 const q=new URLSearchParams(location.search),$=id=>document.getElementById(id),status=$('status');
 try{
  const t0=performance.now(),paintOnly=q.has('paintPlate'),assets=await loadProofAssets({paint:paintOnly});
- if(paintOnly){window.introProofPlate={canvas:assets.plate,geometry:assets.geometry};status.textContent=`Plate painted ${assets.plate.width}×${assets.plate.height} in ${Math.round(performance.now()-t0)} ms`;}
+ if(paintOnly){window.introProofPlate={canvas:assets.plate,geometry:assets.geometry,spec:assets.spec};status.textContent=`Plate painted ${assets.plate.width}×${assets.plate.height} in ${Math.round(performance.now()-t0)} ms`;}
  const proof=createProof($('view'),assets),slider=$('time');slider.min=PROOF_START;slider.max=PROOF_END;
  let t=Number(q.get('t')??KEYFRAME_TIMES.A),playing=false,last=0;
  const draw=()=>{const r=proof.render(t);slider.value=t;$('clock').textContent=t.toFixed(2)+' s';return r;};
@@ -54,7 +54,7 @@ try{
  // each sheet and puff texture costs an upload, which stuttered first playback.
  const w0=performance.now();for(let x=PROOF_START;x<=PROOF_END;x+=.1)proof.render(x);const warm=Math.round(performance.now()-w0);
  draw();
- status.textContent+=(paintOnly?' · ':'')+`Plate: ${assets.plateSource} · ${assets.seq.frames.length} aircraft frames at ${assets.seq.fps} fps · ${proof.fx.puffs.length} puffs, ${proof.fx.clods.length} clods · warmed in ${warm} ms · ready in ${Math.round(performance.now()-t0)} ms`;
+ status.textContent+=(paintOnly?' · ':'')+`Plate: ${assets.plateSource} · close-up: ${assets.closeup.plateSource} · ${assets.seq.frames.length} aircraft frames at ${assets.seq.fps} fps · ${proof.fx.puffs.length} puffs, ${proof.fx.clods.length} clods · warmed in ${warm} ms · ready in ${Math.round(performance.now()-t0)} ms`;
  if(status.textContent.startsWith('Loading…'))status.textContent=status.textContent.slice(8);
  window.introProof={render:x=>{t=x;return draw();},ready:true,start:PROOF_START,end:PROOF_END,keyframes:KEYFRAME_TIMES,canvas:$('view')};
  if(q.has('play'))setPlaying(true);

@@ -1,26 +1,118 @@
 # Intro sprite proof: descent and crash
 
-**Status (October 12, 2026): composition accepted; round 2 of the aesthetics is waiting for the user.** Nothing here changes the 3D study.
+**Status (October 12, 2026): composition and pacing accepted; round 3 (a close-up of the drop, realistic rock, a taller butte, haze) is waiting for the user.** Nothing here changes the 3D study.
 
 > **Direction (the user, 2026-10-12), on the round 1 keyframes:** "this version of the crash resolves a lot of my conflicts with it."
 >
 > **Direction (the user, 2026-10-12), on the animated proof:** "the composition is addressed well, but the aesthetics could be improved a little bit. cut scenes should be a bit higher quality than the game but speak in the same visual language of the sprites. these examples are closer to the style of the games sprite aesthetics. you have translated the gameplay parts of the style well so far." The examples were the goat flamethrower sprite and storyboard sheet 01–06.
 >
 > **Direction (the user, 2026-10-12), on a crop of the storyboard's cliff:** "this painterly realism is what you should be pointing to"
+>
+> **Direction (the user, 2026-10-12), on round 2:** "the cliffs feel oversimplified. maybe its as simple as having another shot of the descent. a prior shot that shot that looks like the first panel you included in the upper left where its zoomed in to show the scale and detail of the cliff. the cliffs also look small. perhaps we need some atmospheric perspective to push them back behind the helicopter. the starting scene in the upper right has the helicopter and the trees on the cliff roughly the same color and value, so the helicopter disappears in the background. i like the pacing and the way you handled the landing, that felt right. so much of this works just like it should."
+>
+> **Direction (the user, 2026-10-12), on the cliff's height in the game (two tiers of 2.12 units):** "mostly taller up close, but i dont mind if you stretch the truth in the intro shot too. its basically a butte, so it should feel tall."
+>
+> **Direction (the user, 2026-10-12), on the first close-up preview:** "scale is looking good, but it looks fairly low poly with the thick block shapes on a flat plane. this should look fairly realistic"
 
-![Round 2 contact sheet: the storyboard beside keyframes A, B and C](intro-sprites/contact-sheet-round-2.jpg)
+![Round 3 contact sheet: the storyboard's panel 08 beside the new close-up and keyframes A and C](intro-sprites/contact-sheet-round-3.jpg)
 
 | Keyframe | What it has to establish |
 | --- | --- |
-| [A · Descent past the plateau rim](intro-sprites/keyframe-A.jpg), t = 23.0 s | The curved two-tier rim, plateau woods above it, the lower woods and the open clearing below it. The hit aircraft drops off the rim, nose down, trailing smoke back to the hit. |
+| [0 · Down the cliff face](intro-sprites/keyframe-0.jpg), t = 22.4 s (close-up) | The scale and detail of the butte: the aircraft drops past a towering columnar wall, trailing smoke, nose toward screen right, with the plateau forest along the rim and the valley hazing into distant hills. |
+| [A · Descent past the plateau rim](intro-sprites/keyframe-A.jpg), t = 23.75 s | The curved two-tier rim, plateau woods above it, the lower woods and the open clearing below it. The hit aircraft drops off the rim, nose down, trailing smoke back to the hit. |
 | [B · Impact in the marked clearing](intro-sprites/keyframe-B.jpg), t = 26.6 s | The rim stays visible behind the clearing. The skids plant and gouge with the rotor still turning, and rotor-wash dust and soil burst outward. |
 | [C · Settled survivable wreck](intro-sprites/keyframe-C.jpg), t = 34.7 s | Same camera as B. The wreck is in the user's circle: upright cabin, damaged tail still attached, crushed skids, broken rotor, an open starboard door facing the camera, thin engine smoke, and skid gouges back to touchdown. |
 
 The stills are frames of the animated proof at those times. Comparisons:
 
+- [The wide cliff, round 2 beside round 3](intro-sprites/cliff-before-after.jpg)
 - [Round 1 beside round 2](intro-sprites/aesthetic-before-after.jpg)
+- [Round 2 contact sheet](intro-sprites/contact-sheet-round-2.jpg)
 - [The 3D shot 12 beside round 1](intro-sprites/before-after-closing-frame.jpg)
 - [Round 1 contact sheet](intro-sprites/contact-sheet-round-1.jpg)
+
+## Round 3: the close-up, the butte, realistic rock and haze
+
+### A close-up of the drop
+
+A new shot cuts in after the hit, from **21.2 to 23.6 s**, and cuts back to the wide shot on the A framing. The wide shot then pushes in to the crash as before. The pacing and the landing, which the user liked, are unchanged. The hit still plays in the wide shot first, so the close-up follows it.
+
+- **Camera.** The camera floats out over the lowland, looking along the wall (`closeup.js`, `CLOSEUP_CAMERA`). The cliff recedes to the right and the aircraft's nose (+x) stays toward screen right, as in every other shot. The player adds a 6% push-in and a follow pan that takes up a third of the aircraft's travel.
+- **Painting.** The plate is painted once through a perspective lens: 1760 × 990 px, the 1600 × 900 window plus a margin for the move. A tracer walks each pixel's ray through the same map solid as the wide shots. The ground uses the same shading; the trees are the game's sprites, drawn as billboards and depth-tested against the rock, so the lip hides the trunks behind it. Behind the cliff are a painted sky and three ridgelines. Beyond the map edge the world reflects back into it, so the plateau ring and the valley continue into the distance.
+- **The aircraft.** `tools/bake-intro-heli-closeup.mjs` photographs Codex's rig through the same lens: 51 frames at 20 fps, inked and split-toned like the others. A test checks that the cabin is never inside or behind rock.
+
+### A butte: the cliff is taller than in the game
+
+**This departs from game scale, at the user's direction.** In the game, the two tiers total 4.24 units (about 1.3 aircraft heights). The cutscene stretches them (`HEIGHT_SCALE`):
+
+| Shot | Height | Two tiers |
+| --- | --- | --- |
+| Close-up | 4× | 17 units, about 5 aircraft heights |
+| Wide shots | 1.6× | 6.8 units |
+
+The map's outline, the clearing and every tree stay at game scale; only the rock grows. The wide stretch is kept moderate so the cut into gameplay is not a jump.
+
+### Realistic rock
+
+The user's note on the first close-up was that it "looks fairly low poly with the thick block shapes on a flat plane". That was a geometry problem, not a texture problem. Columns sat a fraction of a tile proud of one smooth wall, and their faces were flat facets. Three changes fix it, in `crash-sector.js`:
+
+1. **Real depth.** Each tier gets a true signed distance to its smooth outline: an exact Euclidean distance transform of the warped field, corrected to the field's own sub-cell contour near the edge. The rock surface is where that distance plus a relief, in tiles, reaches zero. The relief has:
+   - buttresses and bays, as deep as 0.19 × the tier height;
+   - columns that stand forward or sit back by up to 0.55 tiles;
+   - fracture ledges and overhangs at each column's own heights;
+   - worn column tops;
+   - bedding shared across the columns;
+   - lumps and hollows.
+2. **Rounded columns.** Each column face is rounded unevenly, so light rolls across it instead of breaking into facets.
+3. **Light that touches the shapes.** Each rock pixel gets a soft cast shadow, marched toward the key light, and ambient occlusion along its normal. Jutting rock shades what lies behind it. Rock that faces the sky holds moss and grass. Fissures, water streaks, lichen and ochre staining fade out where they could not be resolved.
+
+At wide scale the full detail reads as a sawtooth, so the wide shots carry half of it (`ROCK_DETAIL`).
+
+### Haze, and the aircraft against its background
+
+The user noted that in round 2's A frame the aircraft and the plateau trees were "roughly the same color and value". Both shots now have atmospheric perspective:
+
+- **Wide shots.** A cool veil thickens with distance behind the falling aircraft (`PLATE_HAZE`, clear in front of its depth at 23 s).
+- **Close-up.** The veil thickens with distance from the lens and takes the sky's colour near the horizon (`CLOSEUP_HAZE`).
+
+The aircraft is drawn unveiled over the plate, so it stands forward of the hazed cliff and forest: [round 2 beside round 3](intro-sprites/cliff-before-after.jpg).
+
+### What the measurements caught
+
+Each of these was found by measuring rather than by eye:
+
+- **Black pepper dots on the rock.** Rays were slipping through it. The relief is not a true distance field (worn tops change by many tiles per tile of height), so long sphere steps overshot. Fine steps are now capped at 0.1 tiles, and a lone miss inside rock takes its neighbours' colour.
+- **Dark specks on the far cliff.** Four guesses failed: trees, ink, grass tufts and ledge moss. A probe that traced individual speck pixels found the cause. They were rays that missed the far terrain past the old 700-tile range and were painted with the near-hill ridge colour. Below the horizon there is no sky, so a miss now takes the colour of the terrain beside it, and the range is 1200 tiles.
+- **A wrong relief bound.** A new test found the safe-step bound (`RMAX`) too small. Worn tops cut up to about 4.9 tiles inward, past the cutoff, so the rock function reported solid rock where a notch should be. There are now separate outward and inward bounds (`ROUT`, `RIN`), each a sum of the relief terms' maxima.
+
+  Measured over 200,000 samples, the real reach is well within them:
+
+  | Rock | Out (measured / bound) | In (measured / bound) |
+  | --- | --- | --- |
+  | Wide | 1.70 / 2.51 | 3.50 / 5.16 |
+  | Close-up | 2.51 / 4.60 | 4.27 / 7.81 |
+
+### Tests and costs
+
+`tests/intro-sprites.test.mjs` now has 14 tests, all passing. The new ones:
+
+- both plates were painted for the current cameras, heights, rock detail and haze;
+- the close-up cuts in after the hit and out before the push-in;
+- the close-up frames cover the cut and sit on the plate;
+- in the close-up the aircraft is in front of the rock, never inside or behind it;
+- the rock function's cutoff never changes the answer.
+
+Mutation checks:
+
+- With the close-up camera moved behind the cliff, the in-front test fails.
+- The cutoff test fails when the buttress relief is made 6× stronger without its bound: 1 point in 2,228 is overridden. It does not catch a 2.5× buttress, because the bounds' slack absorbs it and nothing actually clips. It is a backstop; the bound itself is a sum of the terms' maxima.
+
+Costs:
+
+- **Painting.** The close-up plate takes about 1.8 minutes; the wide plate about 2.3 minutes, with denser ray samples for the finer rock.
+- **Playback.** First playback in the preview browser runs at a median of 0.7 ms per frame and a worst of 23 ms; the close-up median is 0.4 ms. The recording went 0 of 445 frames over budget.
+
+`closeup.html` is a development viewer for the close-up plate. Its `?marks` parameter overlays the aircraft's path and the window, `?scale=0.5` paints a quick half-size preview, and `?noflora` drops the trees.
 
 ## Round 2: the sprites' visual language
 
@@ -105,7 +197,7 @@ The game's trees are 2.3 units tall (pine, `foliage-models.js`), or 1.8× that f
 
 ## Animated proof
 
-[`tactics/intro-sprites/proof.html`](../../dist/tactics/intro-sprites/proof.html) plays 20.2–35 s of the intro: the missile hit, the drop past the rim, contact, the rotor strike, the door opening and the hold. It can scrub, run at 0.25–1× speed and jump to A/B/C, and takes `?t=` and `?play` URL parameters.
+[`tactics/intro-sprites/proof.html`](../../dist/tactics/intro-sprites/proof.html) plays 20.2–35 s of the intro: the missile hit, the close-up of the drop past the butte, the drop past the rim, contact, the rotor strike, the door opening and the hold. It can scrub, run at 0.25–1× speed and jump to 0/A/B/C, and takes `?t=` and `?play` URL parameters.
 
 ![Proof strip: fifteen moments from the missile hit to the settled wreck](intro-sprites/proof-strip.jpg)
 
@@ -113,22 +205,22 @@ The game's trees are 2.3 units tall (pine, `foliage-models.js`), or 1.8× that f
 
 | Layer | What it is |
 | --- | --- |
-| Plate | One static painting at the crash zoom (52 px tiles): terrain, the game's flora sprites and their shadows, split-toned, 3139 × 2051 px. It covers every frame of the camera path. `tools/render-intro-plate.mjs` writes `plate/crash-plate.webp` (3.3 MB) and its geometry. The player repaints live if the stored plate no longer matches the camera path. |
+| Plates | The wide shots: one static painting at the crash zoom (52 px tiles), with terrain, the game's flora sprites and their shadows, split-toned, 3139 × 2051 px. It covers every frame of the wide camera path. The close-up: its own perspective plate, 1760 × 990 px (Round 3). `tools/render-intro-plate.mjs` and `tools/render-intro-closeup.mjs` write `plate/crash-plate.webp` and `plate/cliff-plate.webp`, each with its spec. The player repaints a plate live, slowly, if its stored spec no longer matches. |
 | Aircraft | `tools/bake-intro-heli-sequence.mjs` photographs the intro rig at 20 fps from 20.2 to 31.8 s: 233 frames in 4 sprite sheets and 3 shadow sheets (2.4 MB of WebP). The frames are inked and given the aircraft's split tone. The rig supplies roll, yaw, skid compression, rotor strike, fragment and door; the pitch comes from `trajectory.js`. The rails are planted with the study's own `landingSupportHeight`. Each frame also records the tail, engine and blade-tip points and the rotor-disc axes. |
 | Motion | `trajectory.js`, which is pure. The flight is a Hermite path: the hit over the summit, the rim crossed at about 22 s, a steepening drop, then a flare (nose 0.16 up at contact, so the skid rears touch first) and contact at 26 s. The slide copies the study's slide profile at 1.5× length and stops on the circle's centre. The study's event times are kept: hit 20.5, contact 26, rotor strike 28.25, door 30.6. |
-| Camera | Opens over the plateau, settles on the A framing at 22.9 s, then a log-zoom push-in reaches the locked B/C framing at 25.9 s. |
+| Camera | The wide camera opens over the plateau. The close-up cuts in from 21.2 to 23.6 s. The wide comes back on the A framing at 23.6 s, then a log-zoom push-in reaches the locked B/C framing at 25.9 s. |
 | Effects | All deterministic, so scrubbing and recording agree: two missiles (one hits the tail, one passes and leaves the frame), the flash and tail shards, tail smoke until the aircraft settles, a thin engine plume, rotor-wash dust, the contact burst, slide scrape, rotor-strike spray, ballistic clods that land and stay, and gouges that grow without reshuffling. The puffs are cut from the painted smoke atlas. |
 
 `tools/record-intro-proof.mjs` writes stills (`--frames`) and the WebM (`--video`). The video is paced frame by frame through `MediaRecorder`.
 
-`tests/intro-sprites.test.mjs` has 10 tests:
+`tests/intro-sprites.test.mjs` has 14 tests: the 10 below, plus the four round 3 added (see Round 3).
 
 - the wreck rests in the circle;
 - the flight is continuous, lands at contact and only slides forward;
 - the hit is over the summit;
 - the nose is up at contact;
 - the plate contains every camera frame;
-- the committed plate matches the camera path;
+- the committed plates match their camera, height, detail and haze specs;
 - the frame manifest is complete;
 - no tree stands in the pocket or the door lane;
 - every tree keeps the rim apron and lip setback, at game scale;
@@ -152,22 +244,22 @@ Not done yet:
 
 ## Questions for the user
 
-1. Is round 2 the right reading of "the same visual language of the sprites"? In particular:
-   - the weight of the ink;
-   - the golden late-summer grass, as in the storyboard (a greener spring is a single grade change);
-   - the cliff's pillars.
-2. Should the game camera stay, or should the descent use a lower cinematic angle with the game camera kept for C?
-3. Are the copses in the open ground welcome, or should the open ground stay exactly as the map paints it?
+1. Does the close-up read as the storyboard's cliff: the scale, the rock and the haze into the valley?
+2. Is the wide shots' 1.6× stretch enough, now that the close-up carries the butte's full height?
+3. The close-up's rock is grey with ochre patches. Should it be warmer, closer to the storyboard's pink-ochre?
+4. Are the copses in the open ground welcome, or should the open ground stay exactly as the map paints it?
 
 ## Reproduce
 
 ```powershell
 $env:PORT=4496; node tools/serve.mjs              # serves dist/
 node tools/bake-intro-heli-sequence.mjs           # 233 inked aircraft frames -> dist/tactics/intro-sprites/heli-seq/
-node tools/render-intro-plate.mjs                 # static plate -> dist/tactics/intro-sprites/plate/
-node tools/render-intro-keyframes.mjs A,B,C       # stills (player frames) -> docs/tactics/intro-sprites/keyframe-*.png
+node tools/bake-intro-heli-closeup.mjs            # 51 close-up aircraft frames -> dist/tactics/intro-sprites/heli-closeup/
+node tools/render-intro-plate.mjs                 # wide plate -> dist/tactics/intro-sprites/plate/crash-plate.*
+node tools/render-intro-closeup.mjs               # close-up plate -> dist/tactics/intro-sprites/plate/cliff-plate.*
+node tools/render-intro-keyframes.mjs 0,A,B,C     # stills (player frames) -> docs/tactics/intro-sprites/keyframe-*.png
 node tools/record-intro-proof.mjs --video         # WebM -> docs/tactics/intro-sprites/proof-playback.webm
 node --test tests/intro-sprites.test.mjs
 ```
 
-The stills page is `tactics/intro-sprites/keyframes.html?shot=A|B|C`. The committed review images are JPEG conversions of the tool's PNGs.
+The stills page is `tactics/intro-sprites/keyframes.html?shot=0|A|B|C`. The committed review images are JPEG conversions of the tool's PNGs.

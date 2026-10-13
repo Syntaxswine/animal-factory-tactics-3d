@@ -2,20 +2,28 @@
 // crash in the user's clearing, as sprites over one painted plate.
 //   proof.html[?t=26.6][&play]
 // Everything is a pure function of time t, so scrubbing and recording agree.
-import {buildSector,makeView,loadGroundTextures,LEVEL_HEIGHT,SUN,COS_EL,rng} from './crash-sector.js';
+import {buildSector,makeView,loadGroundTextures,HEIGHT_SCALE,ROCK_DETAIL,SUN,COS_EL,SIN_EL,rng} from './crash-sector.js';
 import {loadFloraSprites} from './painted-trees.js';
 import {rotorDisc,gouge,puff,puffSprite,missile,flash} from './effects.js';
 import {paintPlate,finishFrame} from './plate.js';
-import {heliPath,cameraAt,EVENTS,PROOF_START,PROOF_END,TOUCHDOWN,KEYFRAME_TIMES,smooth} from './trajectory.js';
+import {heliPath,cameraAt,EVENTS,PROOF_START,PROOF_END,TOUCHDOWN,KEYFRAME_TIMES,CLOSEUP,smooth} from './trajectory.js';
+import {closeupView,closeupWindow,paintCloseupPlate,closeupSpec,CLOSEUP_CAMERA} from './closeup.js';
 export {PROOF_START,PROOF_END,KEYFRAME_TIMES};
 // The three stills shown to the user are frames of this player.
 export const KEYFRAMES=Object.freeze({
+ 0:{title:'Down the cliff face',caption:'A close-up cut in after the hit: the aircraft drops past the towering columnar cliff, trailing smoke, the plateau forest along the rim, the valley hazing into distant hills.'},
  A:{title:'Descent past the plateau',caption:'The hit aircraft drops off the curved plateau rim toward the wooded pocket below; its shadow and the smoke trail give the altitude.'},
  B:{title:'Impact in the marked clearing',caption:'Skids plant and buckle first; rotor wash and soil burst outward, the blades still turning. Same rim and screen direction.'},
  C:{title:'Settled survivable wreck',caption:'Upright cabin, attached damaged tail, crushed skids, broken rotor and an open starboard door with clear ground for the squad. Thin engine smoke.'},
 });
 
 export const WIDTH=1600,HEIGHT=900,PLATE_TILE=52;
+// The wide shots' haze: clear in front of the falling aircraft (its depth at
+// 23.0 s, less 3 units), thickening behind it. depth = view.depth (nearer = larger).
+const ISO_DEPTH=(x,y,h)=>(x+y)*COS_EL/Math.SQRT2+h*SIN_EL;
+export const PLATE_HAZE=Object.freeze((()=>{const p=heliPath(23.0);return {ref:+(ISO_DEPTH(p.x,p.y,p.h)-3).toFixed(3),k:.07,max:.55};})());
+// What the stored plate was painted with; any mismatch repaints it live.
+export const plateSpec=()=>({geometry:plateGeometry(),heightScale:HEIGHT_SCALE.wide,detail:ROCK_DETAIL.wide,haze:PLATE_HAZE});
 const HV=PLATE_TILE/Math.SQRT2*COS_EL,GRAVITY=18;
 // The plate is painted once at the closest zoom (52 px tiles, the scale the
 // aircraft frames were baked at) and must contain every camera frame.
@@ -36,11 +44,17 @@ export async function loadProofAssets({paint=false}={}){
  // its first draw, which stalled playback 35-92 ms at each new sheet.
  const bitmap=async src=>createImageBitmap(await load(src));
  const [sheets,shadowSheets]=await Promise.all([Promise.all(seq.sheets.map(s=>bitmap('heli-seq/'+s))),Promise.all(seq.shadowSheets.map(s=>bitmap('heli-seq/'+s)))]);
- const sector=buildSector(map,woodland),geometry=plateGeometry(),view=plateView(geometry);
+ const sector=buildSector(map,woodland,{heightScale:HEIGHT_SCALE.wide,detail:ROCK_DETAIL.wide}),geometry=plateGeometry(),view=plateView(geometry),spec=plateSpec();
  let plate=null,plateSource='painted live';
- if(!paint){try{const meta=await json('plate/crash-plate.json');if(['width','height','ox','oy'].every(k=>meta.geometry[k]===geometry[k])){plate=await bitmap('plate/crash-plate.webp');plateSource='plate/crash-plate.webp';}else plateSource='painted live (stored plate is for another camera path)';}catch{}}
- if(!plate){const [textures,flora]=await Promise.all([loadGroundTextures(),loadFloraSprites()]);plate=paintPlate({sector,textures,flora},view).canvas;}
- return {sector,view,geometry,plate,plateSource,seq,sheets,shadowSheets,smoke};
+ if(!paint){try{const meta=await json('plate/crash-plate.json');if(JSON.stringify(meta.spec)===JSON.stringify(spec)){plate=await bitmap('plate/crash-plate.webp');plateSource='plate/crash-plate.webp';}else plateSource='painted live (the stored plate was painted for another camera, height or haze)';}catch{}}
+ if(!plate){const [textures,flora]=await Promise.all([loadGroundTextures(),loadFloraSprites()]);plate=paintPlate({sector,textures,flora},view,{haze:PLATE_HAZE}).canvas;}
+ // The close-up: its own plate (painted through the lens) and aircraft frames.
+ const cuSeq=await json('heli-closeup/sequence.json'),cuSheets=await Promise.all(cuSeq.sheets.map(s=>bitmap('heli-closeup/'+s))),cuSpec=closeupSpec();
+ let cuPlate=null,cuPlateSource='painted live';
+ if(!paint){try{const meta=await json('plate/cliff-plate.json');if(JSON.stringify(meta.spec)===JSON.stringify(cuSpec)){cuPlate=await bitmap('plate/cliff-plate.webp');cuPlateSource='plate/cliff-plate.webp';}else cuPlateSource='painted live (the stored close-up plate is stale)';}catch{}}
+ if(!cuPlate){const [textures,flora]=await Promise.all([loadGroundTextures(),loadFloraSprites()]);cuPlate=paintCloseupPlate({sector:buildSector(map,woodland,{heightScale:HEIGHT_SCALE.closeup,extend:true,detail:ROCK_DETAIL.closeup}),textures,flora},closeupView()).canvas;}
+ const closeup={view:closeupView(),plate:cuPlate,plateSource:cuPlateSource,seq:cuSeq,sheets:cuSheets};
+ return {sector,view,geometry,spec,plate,plateSource,seq,sheets,shadowSheets,smoke,closeup};
 }
 
 export function createProof(canvas,A){
@@ -52,8 +66,30 @@ export function createProof(canvas,A){
  // Build every tinted puff sprite now: building them on first use stalled the
  // first playback by up to 90 ms a frame (0 frames over 33 ms once warm).
  for(const p of fx.puffs)puffSprite(A.smoke,p.cell,p.tint);
+ // The close-up of the drop past the cliff: the same effects schedule, seen
+ // through the lens; the aircraft frames were baked from the same camera.
+ const CU=A.closeup,cuFrameAt=t=>CU.seq.frames[Math.max(0,Math.min(CU.seq.frames.length-1,Math.round((t-CU.seq.from)*CU.seq.fps)))];
+ function renderCloseup(t){
+  const V=CU.view,path=heliPath(t),hp=V.project(path.x,path.y,path.h+1.2),win=closeupWindow(t,hp),z=win.zoom*WIDTH/CLOSEUP_CAMERA.window[0];
+  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#2c3524';ctx.fillRect(0,0,WIDTH,HEIGHT);
+  ctx.setTransform(z,0,0,z,WIDTH/2-win.cx*z,HEIGHT/2-win.cy*z);
+  ctx.drawImage(CU.plate,0,0);
+  const air=[];
+  for(const p of fx.puffs){const age=t-p.t;if(age<0||age>=p.life)continue;const u=age/p.life,x=p.p[0]+p.v[0]*age,y=p.p[1]+p.v[1]*age,h=p.p[2]+p.v[2]*age-(p.sink||0)*age*age,pr=V.project(x,y,h);if(!pr)continue;
+   const size=(p.s0+(p.s1-p.s0)*Math.sqrt(u))*V.scaleAt(x,y,h),alpha=p.a*Math.pow(1-u,1.4)*Math.min(1,age/.08);
+   air.push({depth:V.depth(x,y,h),draw:()=>puff(ctx,A.smoke,{x:pr[0],y:pr[1],size,cell:p.cell,tint:p.tint,alpha,flip:p.flip,angle:p.rot})});}
+  for(const k of fx.clods){if(t<k.t)continue;const s=clodAt(k,t);if(s.landed)continue;const pr=V.project(s.x,s.y,s.h);if(!pr)continue;air.push({depth:V.depth(s.x,s.y,s.h),draw:()=>drawClodPx(ctx,pr,k,k.size*V.scaleAt(s.x,s.y,s.h))});}
+  for(const m of fx.missiles){if(t<m.t0||t>=m.t1)continue;const a=m.pos(t),nose=a.map((v,k)=>v+m.dir[k]*1.5),pa=V.project(...a),pn=V.project(...nose);if(!pa||!pn)continue;air.push({depth:V.depth(...a)+.01,draw:()=>missile(ctx,pa,pn,{width:.17*V.scaleAt(...a)})});}
+  const f=cuFrameAt(t);
+  air.push({depth:f.depth,draw:()=>{if(f.sprite){const [sh,x,y,w,h]=f.sprite;ctx.drawImage(CU.sheets[sh],x,y,w,h,f.pos[0],f.pos[1],w,h);}
+   const d=f.rotorDisc;rotorDisc(ctx,{hub:d.hub,u:d.u,v:d.v},{alpha:1,angle:31*t});}});
+  air.sort((a,b)=>a.depth-b.depth);for(const it of air)it.draw();
+  ctx.setTransform(1,0,0,1,0,0);finishFrame(ctx,WIDTH,HEIGHT);
+  return {t,shot:'closeup',heli:path,frame:f.t};
+ }
  function render(t){
   t=Math.max(PROOF_START,Math.min(PROOF_END,t));
+  if(t>=CLOSEUP.start&&t<CLOSEUP.end)return renderCloseup(t);
   const c=cameraAt(t),s=c.w/PLATE_TILE,[fpx,fpy]=view.project(...c.F);
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#2c3524';ctx.fillRect(0,0,WIDTH,HEIGHT);
   ctx.setTransform(s,0,0,s,c.S[0]-fpx*s,c.S[1]-fpy*s);
@@ -128,8 +164,8 @@ function clodAt(k,t){
  const age=t-k.t,h0=k.p[2],vz=k.v[2],g=k.ground,disc=vz*vz+2*GRAVITY*(h0-g),tl=disc>0?(vz+Math.sqrt(disc))/GRAVITY:0;
  const a=Math.min(age,tl),landed=age>=tl;return {x:k.p[0]+k.v[0]*a,y:k.p[1]+k.v[1]*a,h:landed?g:h0+vz*a-GRAVITY*a*a/2,landed};
 }
-function drawClod(ctx,view,k,s){
- const [x,y]=view.project(s.x,s.y,s.h),r=k.size*view.w/Math.SQRT2;
+function drawClod(ctx,view,k,s){drawClodPx(ctx,view.project(s.x,s.y,s.h),k,k.size*view.w/Math.SQRT2);}
+function drawClodPx(ctx,[x,y],k,r){
  ctx.fillStyle=k.shard?(k.tone<.5?'rgb(96,96,58)':'rgb(58,56,48)'):(k.tone<.4?'rgb(124,116,54)':k.tone<.75?'rgb(84,62,38)':'rgb(128,104,70)');
  ctx.beginPath();if(k.shard){ctx.save();ctx.translate(x,y);ctx.rotate(k.rot);ctx.rect(-r*1.2,-r*.35,r*2.4,r*.7);ctx.restore();}else ctx.ellipse(x,y,r,r*.72,k.rot,0,Math.PI*2);ctx.fill();
 }

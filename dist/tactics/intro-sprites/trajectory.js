@@ -5,7 +5,11 @@
 // 28.25 s, settled 30 s, door 30.6 s.
 export const PROOF_START=20.2,PROOF_END=35;
 export const EVENTS=Object.freeze({hit:20.5,contact:26,rotorStrike:28.25,settled:30,door:30.6});
-export const KEYFRAME_TIMES=Object.freeze({A:23.0,B:26.6,C:34.7});
+// The close-up of the drop past the cliff (closeup.js) cuts in after the hit
+// and back out to the wide A framing. The user, 2026-10-12: "a prior shot ...
+// where its zoomed in to show the scale and detail of the cliff."
+export const CLOSEUP=Object.freeze({start:21.2,end:23.6});
+export const KEYFRAME_TIMES=Object.freeze({0:22.4,A:23.75,B:26.6,C:34.7});
 // The user's circled clearing; the wreck comes to rest at its centre.
 export const REST=Object.freeze([205.5,104]);
 
@@ -46,11 +50,12 @@ export function heliPath(t){
 export function artPitch(t){const fall=smooth(20.5,22.8,t),flare=smooth(24.0,25.65,t),contact=smooth(26,27,t);return mix(-.40*fall,.16,flare)*(1-contact);}
 
 // Camera: tile width w (2:1 diamond px), focus tile point F lands on screen S.
-// Starts above the rim, settles on the A framing, then eases down into the
-// locked crash framing shared by keyframes B and C.
+// Starts above the rim; the close-up cuts in at CLOSEUP.start; the wide comes
+// back on the A framing and eases down into the locked crash framing shared
+// by keyframes B and C.
 const CAMERA=[
  [20.2,{w:30,F:[175,101.1,16.5],S:[820,330]}],
- [22.9,{w:30,F:[188,102.5,9],S:[820,330]}],
+ [23.6,{w:30,F:[188,102.5,9],S:[820,330]}],
  [25.9,{w:52,F:[204,104,0],S:[790,640]}],
 ];
 export function cameraAt(t){

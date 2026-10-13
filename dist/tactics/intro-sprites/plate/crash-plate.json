@@ -1,4 +1,19 @@
 {
+ "spec": {
+  "geometry": {
+   "width": 3139,
+   "height": 2051,
+   "ox": -468,
+   "oy": -2460
+  },
+  "heightScale": 1.6,
+  "detail": 0.5,
+  "haze": {
+   "ref": 179.109,
+   "k": 0.07,
+   "max": 0.55
+  }
+ },
  "geometry": {
   "width": 3139,
   "height": 2051,
@@ -6,5 +21,5 @@
   "oy": -2460
  },
  "tile": 52,
- "note": "Static plate for proof.html: terrain + flora + flora shadows. Re-render with tools/render-intro-plate.mjs whenever the camera path, the map, the woodland or the flora rules change; proof.js repaints live if the geometry no longer matches."
+ "note": "Static plate for proof.html: terrain + flora + flora shadows. Re-render with tools/render-intro-plate.mjs whenever the camera path, the height scale, the haze, the map, the woodland or the flora rules change; proof.js repaints live if the geometry no longer matches."
 }

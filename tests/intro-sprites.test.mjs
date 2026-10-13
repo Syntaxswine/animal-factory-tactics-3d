@@ -3,16 +3,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
-import {heliPath,artPitch,cameraAt,PROOF_START,PROOF_END,EVENTS,REST,TOUCHDOWN} from '../dist/tactics/intro-sprites/trajectory.js';
-import {plateGeometry,WIDTH,HEIGHT,PLATE_TILE} from '../dist/tactics/intro-sprites/proof.js';
-import {buildSector} from '../dist/tactics/intro-sprites/crash-sector.js';
+import {heliPath,artPitch,cameraAt,PROOF_START,PROOF_END,EVENTS,REST,TOUCHDOWN,CLOSEUP,KEYFRAME_TIMES} from '../dist/tactics/intro-sprites/trajectory.js';
+import {plateGeometry,plateSpec,WIDTH,HEIGHT,PLATE_TILE} from '../dist/tactics/intro-sprites/proof.js';
+import {buildSector,HEIGHT_SCALE,ROCK_DETAIL} from '../dist/tactics/intro-sprites/crash-sector.js';
+import {closeupView,closeupSpec,traceRay,CLOSEUP_CAMERA} from '../dist/tactics/intro-sprites/closeup.js';
 import {planFlora} from '../dist/tactics/intro-sprites/painted-trees.js';
 import {keepClear} from '../dist/tactics/intro-sprites/plate.js';
 import {splitTone,SPLIT} from '../dist/tactics/intro-sprites/grade.js';
 
 const dir=new URL('../dist/tactics/intro-sprites/',import.meta.url),read=p=>JSON.parse(readFileSync(new URL(p,dir)));
 const map=JSON.parse(readFileSync(new URL('../dist/tactics/sector-library/tutorial-step-1/rough-plateau.json',import.meta.url))),woodland=read('crash-sector-woodland.json');
-let sector;const S=()=>sector??=buildSector(map,woodland);
+// The sectors the plates are painted from: the wide shots' and the close-up's.
+let sector,closeSector;const S=()=>sector??=buildSector(map,woodland,{heightScale:HEIGHT_SCALE.wide,detail:ROCK_DETAIL.wide});
+const SC=()=>closeSector??=buildSector(map,woodland,{heightScale:HEIGHT_SCALE.closeup,extend:true,detail:ROCK_DETAIL.closeup});
 
 test('the wreck comes to rest in the centre of the user\'s circle', ()=>{
  assert.deepEqual(REST,[205.5,104]);
@@ -33,7 +36,7 @@ test('the flight is continuous, lands at contact and slides forward only', ()=>{
 test('the hit happens over the plateau and the drop crosses the rim', ()=>{
  const s=S(),hit=heliPath(EVENTS.hit);
  assert.equal(s.levelAt(hit.x,hit.y),2,'hit over the summit');
- assert.ok(hit.h>2*2.12+10,'well above the summit');
+ assert.ok(hit.h>2*s.LH+10,'well above the (stretched) summit');
  assert.equal(s.levelAt(TOUCHDOWN[0],TOUCHDOWN[1]),0,'touchdown on the lower ground');
 });
 
@@ -49,10 +52,52 @@ test('the painted plate contains every camera frame of the proof', ()=>{
   for(const [dx,dy] of [[0,0],[WIDTH,0],[0,HEIGHT],[WIDTH,HEIGHT]]){const px=fx+(dx-c.S[0])/s,py=fy+(dy-c.S[1])/s;assert.ok(px>=0&&py>=0&&px<=g.width&&py<=g.height,`frame corner off the plate at ${t.toFixed(2)} s`);}}
 });
 
-test('the committed plate was painted for the current camera path', ()=>{
- const meta=read('plate/crash-plate.json');
- assert.deepEqual(meta.geometry,plateGeometry(),'re-run tools/render-intro-plate.mjs');
- assert.ok(existsSync(new URL('plate/crash-plate.webp',dir)));
+test('the committed plates were painted for the current cameras, heights, rock detail and haze', ()=>{
+ const wide=read('plate/crash-plate.json'),close=read('plate/cliff-plate.json');
+ assert.deepEqual(wide.spec,JSON.parse(JSON.stringify(plateSpec())),'re-run tools/render-intro-plate.mjs');
+ assert.deepEqual(close.spec,JSON.parse(JSON.stringify(closeupSpec())),'re-run tools/render-intro-closeup.mjs');
+ assert.ok(existsSync(new URL('plate/crash-plate.webp',dir))&&existsSync(new URL('plate/cliff-plate.webp',dir)));
+});
+
+test('the close-up cuts in after the hit and back out before the push-in to the crash', ()=>{
+ assert.ok(CLOSEUP.start>EVENTS.hit+.5,'the hit plays in the wide shot first');
+ assert.ok(CLOSEUP.end<=23.6&&CLOSEUP.end>CLOSEUP.start+2,'at least two seconds of close-up');
+ assert.ok(KEYFRAME_TIMES[0]>CLOSEUP.start&&KEYFRAME_TIMES[0]<CLOSEUP.end,'still 0 is a frame of the close-up');
+ assert.ok(KEYFRAME_TIMES.A>=CLOSEUP.end,'still A is a frame of the wide shot after it');
+});
+
+test('the close-up aircraft frames cover the cut and sit on the plate', ()=>{
+ const seq=read('heli-closeup/sequence.json'),[W,H]=CLOSEUP_CAMERA.plate;
+ assert.ok(seq.from<=CLOSEUP.start&&seq.to>=CLOSEUP.end);
+ assert.deepEqual(seq.camera,JSON.parse(JSON.stringify(CLOSEUP_CAMERA)),'re-run tools/bake-intro-heli-closeup.mjs');
+ for(const [i,f] of seq.frames.entries()){
+  assert.ok(Math.abs(f.t-(seq.from+i/seq.fps))<1e-3,'frame '+i+' time');
+  const [,x,y,w,h]=f.sprite;assert.ok(x>=0&&y>=0&&x+w<=2048&&y+h<=2048);
+  assert.ok(f.pos[0]+w>0&&f.pos[1]+h>0&&f.pos[0]<W&&f.pos[1]<H,'frame '+i+' on the plate');}
+});
+
+test('in the close-up the aircraft is in front of the rock, never inside or behind it', ()=>{
+ const s=SC(),V=closeupView();let checked=0;
+ for(let t=CLOSEUP.start;t<=CLOSEUP.end;t+=.1){
+  const p=heliPath(t),c=[p.x,p.y,p.h+1.2],d=[c[0]-V.C[0],c[1]-V.C[1],c[2]-V.C[2]],L=Math.hypot(...d),dir=d.map(v=>v/L);
+  assert.ok(!s.solidAt(...c),`cabin inside rock at ${t.toFixed(1)} s`);
+  const hit=traceRay(s,V.C,dir);
+  assert.ok(!hit||hit.t>L,`rock between the lens and the aircraft at ${t.toFixed(1)} s (hit at ${hit&&hit.t.toFixed(1)}, aircraft at ${L.toFixed(1)})`);
+  // Once the cabin is below the summit, the wall stands right behind it.
+  if(c[2]<2*s.LH)assert.ok(hit&&hit.kind==='face'&&hit.t<L+40,`no cliff behind the aircraft at ${t.toFixed(1)} s`);
+  checked++;}
+ assert.ok(checked>=20);
+});
+
+test('the rock function\'s cutoff never changes the answer (the tracer\'s safe steps rely on it)', ()=>{
+ // Past ROUT outside and RIN inside the outline, rockG answers from the outline
+ // alone. That is only right if no relief term can reach that far: sample just
+ // beyond both cutoffs and compare with the full outline-plus-relief answer.
+ for(const s of [S(),SC()]){let n=0,wrong=0;
+  for(let i=0;i<40000;i++){const x=110+((i*7919)%12000)/100,y=30+((i*104729)%11000)/100,lev=1+(i%2),h=(lev-1)*s.LH+((i*31)%997)/997*s.LH;
+   const sd=s.sdAt(lev,x,y),beyond=(sd>s.RIN+.2&&sd<s.RIN+3)||(sd<-s.ROUT-.2&&sd>-s.ROUT-3);if(!beyond)continue;n++;
+   if(Math.sign(sd+s.rock(x,y,h).disp)!==Math.sign(sd))wrong++;}
+  assert.ok(n>300,`enough samples just beyond the cutoffs (${n})`);assert.equal(wrong,0,`${wrong} of ${n} points where the cutoff overrides the relief`);}
 });
 
 test('the aircraft frames cover the action at the stated rate', ()=>{
