@@ -9,6 +9,9 @@ import {checkModuleClosure} from '../tools/check-module-closure.mjs';
 
 test('3D distribution includes the entire encounter, editor, title and overmap module graphs',()=>{
  execFileSync(process.execPath,['tools/build-tactics-3d.mjs'],{cwd:new URL('../',import.meta.url),stdio:'pipe'});
+ for(const file of ['biome-foliage-data.js','biome-foliage-models.js','biome-foliage-paint.js','biome-foliage-study.js','biome-foliage-study.html','biome-foliage-study.css'])assert.deepEqual(fs.readFileSync(new URL('../.pages-output/tactics/'+file,import.meta.url)),fs.readFileSync(new URL('../dist/tactics/'+file,import.meta.url)));
+ const biomeSource=new URL('../dist/assets/environment/biome-foliage/',import.meta.url),biomeOutput=new URL('../.pages-output/assets/environment/biome-foliage/',import.meta.url);
+ for(const file of fs.readdirSync(biomeSource,{recursive:true}).filter(file=>fs.statSync(new URL(file.replaceAll('\\','/'),biomeSource)).isFile()))assert.deepEqual(fs.readFileSync(new URL(file.replaceAll('\\','/'),biomeOutput)),fs.readFileSync(new URL(file.replaceAll('\\','/'),biomeSource)));
  for(const name of ['reference-v1.png','paint-atlas-v1.png','PROMPTS.json'])assert.deepEqual(
   fs.readFileSync(new URL('../.pages-output/assets/environment/utility-helicopter/'+name,import.meta.url)),
   fs.readFileSync(new URL('../dist/assets/environment/utility-helicopter/'+name,import.meta.url))
