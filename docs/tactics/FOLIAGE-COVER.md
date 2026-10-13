@@ -9,6 +9,8 @@ The controls are independent:
 
 Plants match the current ground automatically: leafy shrubs and pointed growth on grass; lower, spreading olive, sage and tawny scrub on dirt, gravel and sandy cliff caps. Repainting grass as dirt changes the plant mixture without repainting foliage. Plant variation is deterministic. Painting over foliage replaces its density and movement settings.
 
+Maps with a generated environment profile also select their palette and provisional plant mixture from the surrounding world region. See [Seeded environment regions](ENVIRONMENT-GENERATION.md) for the one-to-five-family rules, shared sector boundaries and the asset integration still to come. Older maps without a profile keep the original ground-based selection.
+
 Foliage sits on top of supported natural ground, including plateau tops and cliff-cap tiles. Water, buildings, paving, complete prop footprints, stairs and climb endpoints are skipped. Impassable fill also protects character starts, travel markers and ramp approaches. The brush never creates a floor over empty space. Level 4 remains the decorative roof layer.
 
 **Erase → Clear foliage** uses the same brush and preserves the ground beneath it. The overlay is stored in `foliage`, keyed by `x,y,z`, with `[densityPercent, blocksWalking]` values. It survives map and block saving, export/import, block relocation and replacement, playtest, and encounter save/load. Painting non-natural terrain or removing a supporting floor clears its overlay. Validation rejects malformed coordinates, values and unsupported cells. Undoing or clearing the last foliage in a block also removes its exported metadata.

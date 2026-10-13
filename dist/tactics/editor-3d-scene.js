@@ -1,3 +1,4 @@
+import {EnvironmentPaint} from './environment-paint.js';
 import {SceneryScene} from './scenery-scene.js';
 import {StrategicSiteScene} from './strategic-site-scene.js';
 import {siteSupportAt} from './strategic-site-rules.js';
@@ -28,7 +29,7 @@ export class InspectionScene {
   this.reducedMotion=motionPreference();this.changed=changed;this.renderer=new T.WebGLRenderer({canvas,antialias:true});this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));this.renderer.outputColorSpace=T.SRGBColorSpace;
   this.scene=new T.Scene();this.scene.background=new T.Color('#172c29');this.camera=new T.OrthographicCamera();
   this.daylight=new DaylightRig(this.scene,this.renderer);
-  this.geometry=environmentGeometries();this.materials=new Map();this.dimMaterials=new Map();this.loader=new T.TextureLoader();this.models=[];this.data=new Map();this.generation=0;this.diagnostics=[];
+  this.environmentPaint=new EnvironmentPaint();this.geometry=environmentGeometries();this.materials=new Map();this.dimMaterials=new Map();this.loader=new T.TextureLoader();this.models=[];this.data=new Map();this.generation=0;this.diagnostics=[];
   this.scenery=new T.Group();this.markers=new T.Group();this.scene.add(this.scenery,this.markers);
   this.highlight=new T.LineSegments(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffe5a5,depthTest:false}));this.highlight.renderOrder=20;this.scene.add(this.highlight);
   this.markerGeo=new T.RingGeometry(.27,.39,20);this.guardMat=new T.MeshBasicMaterial({color:0xef9e75,side:T.DoubleSide});this.startMat=new T.MeshBasicMaterial({color:0x96dbce,side:T.DoubleSide});this.accessMat=new T.MeshBasicMaterial({color:0xf7d17d,side:T.DoubleSide});
@@ -44,7 +45,7 @@ export class InspectionScene {
    const paintKind=kind.replace(/^breach-/,'');
    if(FOLIAGE_MATERIALS.has(paintKind)){
     if(!this.foliageTexture){this.foliageTexture=this.loader.load(FOLIAGE_ATLAS,texture=>{if(this.disposed){texture.dispose();return;}this.foliageReady=true;this.changed();},undefined,()=>{this.diagnostics.push('Failed asset: '+FOLIAGE_ATLAS);this.changed();});this.foliageTexture.colorSpace=T.SRGBColorSpace;this.foliageTexture.anisotropy=Math.min(8,this.renderer.capabilities.getMaxAnisotropy());}
-    paintFoliageMaterial(material,paintKind,this.foliageTexture);
+    paintFoliageMaterial(material,paintKind,this.foliageTexture);this.environmentPaint.attach(material,paintKind);
    }
    this.materials.set(kind,material);
   }return this.materials.get(kind);
@@ -83,8 +84,8 @@ export class InspectionScene {
   this.rebuild();for(const unit of wanted.values())await this.loadUnit(unit,this.generation);this.changed();
  }
  rebuild(){
-  if(!this.document)return;const started=performance.now(),{roofs,walls}=this.options,level=this.visibleLevel,source=this.document.map;
-  this.sceneryAssets.rebuild({...source,difficulty:'easy'},this.visibleLevel);this.sites.rebuild({...source,difficulty:'easy'},this.visibleLevel);this.cliffs.rebuild(source,level,{editor:true,dim:!this.options.showAllLevels,grassTexture:this.material('grass').map});
+  if(!this.document)return;const started=performance.now(),{roofs,walls}=this.options,level=this.visibleLevel,source=this.document.map;this.environmentPaint.setMap(source);
+  this.sceneryAssets.rebuild({...source,difficulty:'easy'},this.visibleLevel);this.sites.rebuild({...source,difficulty:'easy'},this.visibleLevel);this.cliffs.rebuild(source,level,{editor:true,dim:!this.options.showAllLevels,grassTexture:this.material('grass').map,environmentPaint:this.environmentPaint});
   const map={...source,canopies:roofs?source.canopies:[],coverOccupiedProps:source.props,props:source.props.filter(p=>!PAINTED_PROP_FORMS[p.kind]&&(roofs||!p.kind.startsWith('roof-')))};
   const world={...this.world,boxes:this.world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood')&&(walls||!b.source.edge)&&(roofs||b.kind!=='roof'))};
   const groups=new Map(),matrix=new T.Matrix4(),q=new T.Quaternion(),yaw=new T.Quaternion(),euler=new T.Euler(),position=new T.Vector3(),scale=new T.Vector3();
@@ -150,5 +151,5 @@ export class InspectionScene {
  }
  clearMarkers(){for(const object of this.markers.children)if(object.isArrowHelper||object.type==='ArrowHelper'){object.line.material.dispose();object.cone.material.dispose();}this.markers.clear();}
  clearModels(){for(const m of this.models){m.root.removeFromParent();m.root.position.set(0,0,0);m.root.updateMatrixWorld(true);m.cap?.dispose();m.equipment?.dispose();m.paint.dispose();m.worker.skeleton.dispose();m.worker.dispose();}this.models=[];for(const m of this.dimMaterials.values())m.dispose();this.dimMaterials.clear();}
- dispose(){this.sceneryAssets.dispose();this.sites.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();this.disposed=true;this.preview(null);this.generation++;this.clearModels();this.clearScenery();this.clearMarkers();this.cargo.dispose();for(const g of Object.values(this.geometry))g.dispose();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.highlight.geometry.dispose();this.highlight.material.dispose();this.markerGeo.dispose();this.guardMat.dispose();this.startMat.dispose();this.accessMat.dispose();this.renderer.dispose();}
+ dispose(){this.environmentPaint.dispose();this.sceneryAssets.dispose();this.sites.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();this.disposed=true;this.preview(null);this.generation++;this.clearModels();this.clearScenery();this.clearMarkers();this.cargo.dispose();for(const g of Object.values(this.geometry))g.dispose();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.highlight.geometry.dispose();this.highlight.material.dispose();this.markerGeo.dispose();this.guardMat.dispose();this.startMat.dispose();this.accessMat.dispose();this.renderer.dispose();}
 }

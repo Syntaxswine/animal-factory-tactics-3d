@@ -1,3 +1,4 @@
+import {localEnvironmentProfile} from './environment-regions.js';
 import {createGame,refresh,alive,incapacitated,abandonCasualties,walkable} from './core/engine.js';
 import {neighbors,tileKey,validateMap} from './core/maps.js';
 import {syncWeapons} from './core/inventory.js';
@@ -52,6 +53,7 @@ export function resolveCharacterReference(c,sector,authoredId){
 }
 export function createCampaign(content,{id='campaign_'+crypto.randomUUID(),difficulty='easy'}={}){
  const c={version:CAMPAIGN_VERSION,id,seed:content.seed,contentVersion:content.contentVersion,difficulty,revision:0,clock:createClock(),money:20000,overmap:structuredClone(content.overmap),assignments:structuredClone(content.assignments),sectors:{},characters:{},groups:[],active:null,incidents:[],nextIncident:1,nextGroup:2,nextUnitId:0,selectedGroup:'group-1',objectives:{},logistics:{weapons:0,forts:[],convoys:[],militia:{},militiaCost:500},log:[]};
+ for(const [index,assignment]of Object.entries(c.assignments))if(c.overmap.environments&&!assignment.map.environment)assignment.map.environment=localEnvironmentProfile(c.overmap.environments,+index);
  validateAssignments(c);
  const initial=c.assignments[content.start].map,roster=createGame(c.seed,{...initial,guards:[]},false,difficulty,{social:true,awareness:true,statSystem:true,rosterSeed:c.seed}).units;
  for(const [i,u]of roster.entries()){register(c,u,c.id+':merc:'+i,{kind:'sector',sector:content.start});if(u.characterId)sectorRecord(c,content.start).references[u.characterId]=u.campaignId;}

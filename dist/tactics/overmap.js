@@ -1,9 +1,12 @@
+import {ENVIRONMENTS,environmentSummary} from './environment-regions.js';
+import {ENVIRONMENT_PREVIEW_KEY,environmentPreviewKey} from './environment-preview.js';
 import {travelPanel} from './overmap-travel-panel.js';
 import {validateGenerated} from './overmap-generator.js';
 import {WIDTH,HEIGHT,SIDES,ROLES,TERRAINS,slots,fraction,route,blank,demo,validate,warnings,SketchDocument,plateauRim,placeTutorial,tutorialCells} from './overmap-model.js';
 import {svg,drawSector,icon,LEGEND,crossing} from './overmap-symbols.js';
 const $=id=>document.getElementById(id),doc=new SketchDocument(),STORAGE='animal-factory-overmap-sketch-v1';
-let selected=7*WIDTH+7,worldWorker=null,controlsMap=null;const generationReports=new WeakMap();
+let selected=7*WIDTH+7,worldWorker=null,controlsMap=null;const generationReports=new WeakMap(),environmentReports=new WeakMap();
+function environmentReport(){const field=doc.map.environments;if(!field)return [];let report=environmentReports.get(field);if(!report){report=environmentSummary(field);environmentReports.set(field,report);}return report;}
 const status=text=>{$('status').textContent=text;};
 const attempt=fn=>{try{fn();}catch(e){status(e.message);}};
 const option=(v,label=v)=>new Option(label.replaceAll('-',' '),v);
@@ -17,7 +20,7 @@ function drawGrid(){
  doc.map.sectors.forEach((s,i)=>{
   const x=i%WIDTH,y=Math.floor(i/WIDTH),g=svg('g',{transform:`translate(${x*100} ${y*100})`,class:'sector-cell',role:'button',tabindex:i===selected?0:-1,'aria-label':`Sector ${x+1}, ${y+1}: ${s.name||s.role}, ${s.difficulty}`,'aria-pressed':String(i===selected),'data-sector':i});
   const title=svg('title');title.textContent=`${x+1},${y+1} · ${s.name||s.role}\n${s.routes.map(r=>r.kind+': '+r.from.side+' '+fraction(r.from.offset)+' → '+r.to.side+' '+fraction(r.to.offset)).join('\n')}`;
-  g.append(title,drawSector({...s,owner:travelUI.owner(i)||s.owner},{ports:$('ports').checked,overlay:$('overlay').value,rim:plateauRim(doc.map,i)}),svg('rect',{width:100,height:100,class:'cell-border'}));
+  g.append(title,drawSector({...s,owner:travelUI.owner(i)||s.owner},{ports:$('ports').checked,overlay:$('overlay').value,rim:plateauRim(doc.map,i),environments:doc.map.environments,index:i}),svg('rect',{width:100,height:100,class:'cell-border'}));
   if(i===selected)g.append(svg('rect',{x:2,y:2,width:96,height:96,class:'selection'}));
   const choose=()=>{selected=i;travelUI.chooseDestination(i);render();};g.onclick=choose;
   g.onkeydown=e=>{let next=i;if(e.key==='ArrowRight')next=y*WIDTH+Math.min(WIDTH-1,x+1);else if(e.key==='ArrowLeft')next=y*WIDTH+Math.max(0,x-1);else if(e.key==='ArrowUp')next=Math.max(0,y-1)*WIDTH+x;else if(e.key==='ArrowDown')next=Math.min(HEIGHT-1,y+1)*WIDTH+x;else if(e.key!=='Enter'&&e.key!==' ')return;else {e.preventDefault();choose();return;}e.preventDefault();selected=next;render();$('overmap').querySelector(`[data-sector="${selected}"]`).focus();};
@@ -27,13 +30,13 @@ function drawGrid(){
  const drawings=travelUI.drawing,palette=['#275f76','#a3422a','#536b24','#713e80'];
  for(const [n,g]of drawings.entries())if(g.route.length)host.append(svg('polyline',{points:[g.position,...g.route.map(i=>({x:i%WIDTH+.5,y:Math.floor(i/WIDTH)+.5}))].map(p=>p.x*100+','+p.y*100).join(' '),fill:'none',stroke:g.kind==='raiders'?'#b32721':g.kind==='convoy'?'#80612e':palette[n%4],'marker-end':g.kind==='raiders'?'url(#red-route-arrow)':'','stroke-width':g.selected?9:5,'stroke-dasharray':g.selected?'':'12 7','pointer-events':'none'}));
  for(const [n,g]of drawings.entries()){const same=drawings.filter(d=>d.position.x===g.position.x&&d.position.y===g.position.y),offset=(same.indexOf(g)-(same.length-1)/2)*32,marker=svg('g',{transform:`translate(${g.position.x*100+offset} ${g.position.y*100})`,role:'button',tabindex:0,'aria-label':(g.kind?'Intercept ':'Select ')+g.name,class:'travel-marker'});if(g.kind==='raiders'){marker.append(svg('ellipse',{rx:17,ry:20,fill:'#cfa97a',stroke:'#442d22','stroke-width':3}),svg('path',{d:'M-22 -9L-14 -25L15 -25L23 -9Z',fill:'#b32721',stroke:'#442d22','stroke-width':3}),svg('path',{d:'M-8 0h3M6 0h3M-5 11h10',stroke:'#442d22','stroke-width':4}));}else if(g.kind==='convoy'){marker.append(svg('rect',{x:-18,y:-14,width:36,height:28,fill:'#a98347',stroke:'#442d22','stroke-width':4}),svg('path',{d:'M-13 -10L13 10M13 -10L-13 10',stroke:'#442d22','stroke-width':3}));}else marker.append(svg('circle',{r:g.selected?22:17,fill:palette[n%4],stroke:'#fff4d6','stroke-width':5}));const choose=e=>{e.stopPropagation();if(g.kind)travelUI.chooseDestination(g.route[0]??Math.floor(g.position.y)*WIDTH+Math.floor(g.position.x));else travelUI.chooseGroup(g.id);};marker.onclick=choose;marker.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose(e);}};host.append(marker);}
- const colors=$('overlay').value==='difficulty'?[['Easy','#dbe0c1'],['Medium','#ebd7ad'],['Hard','#e2bbb0'],['Unassigned','#ece4cf']]:$('overlay').value==='ownership'?[['Player','#c3d9d5'],['Red Hats','#e4b6a7'],['Neutral','#d7d3c1'],['Unassigned','#ece4cf']]:[['Landscape','#ece4cf']];
+ const colors=$('overlay').value==='environment'?environmentReport().map(p=>[ENVIRONMENTS[p.family].name+' · '+p.percent.toFixed(1)+'%',ENVIRONMENTS[p.family].color]):$('overlay').value==='difficulty'?[['Easy','#dbe0c1'],['Medium','#ebd7ad'],['Hard','#e2bbb0'],['Unassigned','#ece4cf']]:$('overlay').value==='ownership'?[['Player','#c3d9d5'],['Red Hats','#e4b6a7'],['Neutral','#d7d3c1'],['Unassigned','#ece4cf']]:[['Landscape','#ece4cf']];
  $('overlay-key').replaceChildren(...colors.map(([label,color])=>{const span=document.createElement('span'),chip=document.createElement('i');chip.className='swatch';chip.style.background=color;span.append(chip,label);return span;}));
  const tutorial=doc.map.sectors.filter(s=>s.tutorialStep||s.role==='tutorial');$('tutorial-summary').textContent=`Tutorial: ${tutorial.length} / 5 sectors. Town + three tutorial sectors + start. Footprint: TOO / XXO / XSO; any quarter-turn.`;$('find-start').disabled=!tutorial.length;
  $('counts').textContent=`450 sectors · ${doc.map.sectors.filter(s=>s.routes.some(r=>r.kind==='river')).length} river sectors · ${doc.map.sectors.filter(s=>s.gate==='bridge'&&!['town','village','city'].includes(s.role)).length} bridges · ${doc.map.sectors.filter(s=>s.gate==='bridge'&&['town','village','city'].includes(s.role)).length} settlement crossings`;
 }
 function drawDetail(s){
- const el=$('detail');el.replaceChildren(drawSector(s,{ports:true,overlay:$('overlay').value,detail:true,rim:plateauRim(doc.map,selected)}),svg('rect',{width:100,height:100,class:'detail-outline'}));
+ const el=$('detail');el.replaceChildren(drawSector(s,{ports:true,overlay:$('overlay').value,detail:true,rim:plateauRim(doc.map,selected),environments:doc.map.environments,index:selected}),svg('rect',{width:100,height:100,class:'detail-outline'}));
  for(const n of [1/3,.5,2/3]){const v=n*100,t=fraction(n);el.append(textNode(t,{x:v,y:-3,class:'edge-label'}),textNode(t,{x:v,y:106,class:'edge-label'}),textNode(t,{x:-6,y:v+1.5,class:'edge-label'}),textNode(t,{x:107,y:v+1.5,class:'edge-label'}));}
  for(const [t,x,y]of [['N',50,-11],['S',50,114],['W',-13,52],['E',114,52]])el.append(textNode(t,{x,y,class:'side-label'}));
 }
@@ -46,6 +49,8 @@ function render(){
  travelUI.render();
  const s=doc.map.sectors[selected];const placement=doc.map.tutorialPlacement;if(placement){$('tutorial-x').value=placement.x+1;$('tutorial-y').value=placement.y+1;$('tutorial-rotation').value=placement.rotation;}$('map-name').value=doc.map.name;$('map-caption').textContent=doc.map.name;$('sector-title').textContent=`${String(selected%WIDTH+1).padStart(2,'0')} / ${String(Math.floor(selected/WIDTH)+1).padStart(2,'0')}`;
  drawGrid();drawDetail(s);showGenerationReport();
+ const field=doc.map.environments;$('preview-environment').disabled=!field;$('environment-detail').textContent=field?environmentSummary(field,selected%WIDTH,Math.floor(selected/WIDTH),1,1,20).map(p=>ENVIRONMENTS[p.family].name+' '+p.percent.toFixed(1)+'%').join(' · '):'No environment regions in this older sketch. Generate a fresh world to preview them.';
+ $('environment-summary').textContent=field?field.families.length+' environment '+(field.families.length===1?'family':'families')+' · '+environmentReport().map(p=>ENVIRONMENTS[p.family].name+' '+p.percent.toFixed(1)+'%').join(' · '):'';
  $('tutorial-step-label').hidden=!['tutorial','town'].includes(s.role);$('tutorial-step').value=s.tutorialStep||'';
  $('sector-name').value=s.name;for(const id of ['terrain','role','difficulty','owner','gate'])$(id).value=s[id];for(const id of ['factory','workshop'])$(id).checked=s.facilities.includes(id);
  $('routes').replaceChildren(...s.routes.map(pathEditor));if(!s.routes.length)$('routes').textContent='No paths in this sector.';
@@ -75,6 +80,7 @@ function generateWorldUI(seed){
  };
  worker.postMessage({seed,options});
 }
+$('preview-environment').onclick=()=>attempt(()=>{const key=environmentPreviewKey(doc.map.environments,selected);localStorage.setItem(ENVIRONMENT_PREVIEW_KEY+':'+key,JSON.stringify({field:doc.map.environments,index:selected}));window.open('editor-3d.html?editing=1&environmentPreview='+key,'_blank','noopener');status('Opened a ground and foliage sample. This is a preview, not an assigned tactical sector.');});
 $('generate-world').onclick=()=>generateWorldUI(Number($('world-seed').value));
 $('randomize-world').onclick=()=>{let seed=crypto.getRandomValues(new Uint32Array(1))[0];if(seed===Number($('world-seed').value))seed=(seed+1)>>>0;$('world-seed').value=seed;generateWorldUI(seed);};
 $('validate-world').onclick=()=>{const result=validateGenerated(doc.map);generationReports.set(doc.map,result);$('generation-checks').textContent=result.errors.join('\n')||'All strategic checks pass. Local map templates are not assigned.';$('generation-checks').parentElement.open=true;status(result.valid?'All strategic layout checks pass.':result.errors.length+' world validation issue(s). See generation checks.');};

@@ -1,3 +1,4 @@
+import {localEnvironmentFamily} from './environment-regions.js';
 import {isStrategicSite} from './strategic-site-rules.js';
 import {foliageAt,foliageKey} from './foliage-data.js';
 import {canopyPresentation} from './editor-canopies.js';
@@ -18,7 +19,7 @@ export function environmentVisuals(world,map){map=canopyPresentation(map);
  const result=world.boxes.filter(b=>b.kind!=='prop'&&!b.id.includes(':slope:'));
  const occupied=new Set((map.coverOccupiedProps||map.props||[]).flatMap(p=>(isStrategicSite(p)?Array.from({length:64},(_,i)=>({x:p.x+i%8,y:p.y+Math.floor(i/8)})):isCliff(p)?[p]:propCells(p)).map(c=>`${c.x},${c.y},${p.z||0}`)));
  const sandyCaps=new Set((map.props||[]).filter(p=>isCliff(p)&&(p.cliffSand??0)>=.5).map(p=>foliageKey(p.x,p.y,(p.z||0)+1)));
- const coverBox=b=>{const {x,y,z=0}=b.source;return {...b,foliage:map.foliage?.[foliageKey(x,y,z)],habitat:['ground-dirt','ground-gravel'].includes(b.material)||sandyCaps.has(foliageKey(x,y,z))?'dry':'grass'};};
+ const coverBox=b=>{const {x,y,z=0}=b.source;return {...b,foliage:map.foliage?.[foliageKey(x,y,z)],family:map.environment?localEnvironmentFamily(map.environment,x+.5,y+.5):null,habitat:['ground-dirt','ground-gravel'].includes(b.material)||sandyCaps.has(foliageKey(x,y,z))?'dry':'grass'};};
  for(const b of world.boxes)if(!occupied.has(`${b.source.x},${b.source.y},${b.source.z||0}`)){
   const box=coverBox(b);result.push(...(box.foliage?[]:grassTufts(b)),...coverUndergrowth(box));
  }

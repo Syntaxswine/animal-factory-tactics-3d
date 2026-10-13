@@ -1,3 +1,4 @@
+import {EnvironmentPaint} from './environment-paint.js';
 import {environmentGeometries,environmentGeometry} from './environment-geometry.js';
 import {setBattleCamera} from './isometric-camera.js';
 export {FLOOR_PIXELS} from './isometric-camera.js';
@@ -47,17 +48,18 @@ export class HybridRenderer{
  constructor(onReady=()=>{}){
   this.renderer=new THREE.WebGLRenderer({antialias:false,alpha:true,preserveDrawingBuffer:true});this.renderer.setPixelRatio(1);this.renderer.outputColorSpace=THREE.SRGBColorSpace;
   this.scene=new THREE.Scene();this.camera=new THREE.OrthographicCamera();this.scene.add(new THREE.HemisphereLight(0xfff3d8,0x52634d,2));const sun=new THREE.DirectionalLight(0xffe2ac,2);sun.position.set(-4,9,5);this.scene.add(sun);
-  this.structures=new THREE.Group();this.scene.add(this.structures);this.materials=new Map();this.textures=new Map();this.actors=new Map();this.loader=new THREE.TextureLoader();this.onReady=onReady;this.geometries=environmentGeometries();this.boxGeometry=this.geometries.box;this.diagnostics=[];
+  this.environmentPaint=new EnvironmentPaint();this.structures=new THREE.Group();this.scene.add(this.structures);this.materials=new Map();this.textures=new Map();this.actors=new Map();this.loader=new THREE.TextureLoader();this.onReady=onReady;this.geometries=environmentGeometries();this.boxGeometry=this.geometries.box;this.diagnostics=[];
  }
  material(kind){if(this.materials.has(kind))return this.materials.get(kind);const p=surfacePixels(kind),t=new THREE.DataTexture(p.data,p.width,p.height);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.generateMipmaps=true;t.needsUpdate=true;const material=new THREE.MeshStandardMaterial({map:t,roughness:1,vertexColors:kind.startsWith('breach-')});
   const paintKind=kind.replace(/^breach-/,'');
   if(FOLIAGE_MATERIALS.has(paintKind)){
    if(!this.foliageTexture){this.foliageTexture=this.loader.load(FOLIAGE_ATLAS,texture=>{if(this.disposed){texture.dispose();return;}this.foliageReady=true;this.onReady();},undefined,()=>{this.diagnostics.push('Failed asset: '+FOLIAGE_ATLAS);this.onReady();});this.foliageTexture.colorSpace=THREE.SRGBColorSpace;this.foliageTexture.anisotropy=Math.min(8,this.renderer.capabilities.getMaxAnisotropy());}
-   paintFoliageMaterial(material,paintKind,this.foliageTexture);this.materials.set(kind,material);return material;
+   paintFoliageMaterial(material,paintKind,this.foliageTexture);this.environmentPaint.attach(material,paintKind);this.materials.set(kind,material);return material;
   }
   material.onBeforeCompile=shader=>{shader.vertexShader=shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n#ifdef USE_MAP\n vec3 surfaceWorld=(instanceMatrix*vec4(position,1.0)).xyz; vMapUv=abs(normal.y)>.5?surfaceWorld.xz:abs(normal.x)>.5?surfaceWorld.zy:surfaceWorld.xy;\n#endif');};if(kind==='water'){material.roughness=.28;material.metalness=.2;const surfaceCompile=material.onBeforeCompile;material.onBeforeCompile=shader=>{surfaceCompile(shader);shader.uniforms.environmentTime={value:0};material.userData.waterTime=shader.uniforms.environmentTime;shader.fragmentShader='uniform float environmentTime;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n float ripple=sin(vMapUv.x*15.0+vMapUv.y*9.0+environmentTime)*.055+sin(vMapUv.y*18.0-environmentTime*.7)*.025; normal=normalize(normal+vec3(ripple,0.0,ripple*.6));');};}this.materials.set(kind,material);return material;
  }
  rebuild(world,seen,level,map){
+  this.environmentPaint.setMap(map);
   const previous=this.chunks||new Map(),next=new Map();
   const groups=new Map();
   for(const box of environmentVisuals(world,map)){const z=surfaceLevel(box);if(z>level||!known(box,seen)||!['wall','roof'].includes(box.kind)&&map.concealedInteriors?.has(key(box.source.x,box.source.y,z)))continue;const material=materialKind(box),cutaway=this.wallXray?xrayThroughLevel(box):null,groupKey=`${cutaway===null?'':`xray:${xrayWall(box)?'wall':'slab'}:${cutaway}:`}${material}:${box.shape||'box'}:${Math.floor(box.center[0]/16)},${Math.floor(box.center[2]/16)}`;if(!groups.has(groupKey))groups.set(groupKey,{material,cutaway,shape:box.shape||'box',boxes:[]});groups.get(groupKey).boxes.push(box);}
@@ -100,5 +102,5 @@ export class HybridRenderer{
  }
  animateMaterials(time){for(const m of this.materials.values())if(m.userData.waterTime)m.userData.waterTime.value=time;}
  stats(){return {meshes:this.structures.children.length,actors:this.actors.size,cachedPoses:this.textures.size,textures:this.renderer.info.memory.textures,geometries:this.renderer.info.memory.geometries,calls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,drawTimes:[...this.drawTimes||[]],diagnostics:[...this.diagnostics],unsupported:this.world?.diagnostics||[]};}
- dispose(){this.disposed=true;for(const mesh of this.structures.children)mesh.dispose();for(const mesh of this.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}for(const t of this.textures.values())t.dispose();this.textures.clear();this.actors.clear();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.materials.clear();this.chunks?.clear();this.world=null;this.editorWorld=null;this.scene.clear();for(const geometry of Object.values(this.geometries))geometry.dispose();this.renderer.dispose();}
+ dispose(){this.environmentPaint.dispose();this.disposed=true;for(const mesh of this.structures.children)mesh.dispose();for(const mesh of this.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}for(const t of this.textures.values())t.dispose();this.textures.clear();this.actors.clear();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.materials.clear();this.chunks?.clear();this.world=null;this.editorWorld=null;this.scene.clear();for(const geometry of Object.values(this.geometries))geometry.dispose();this.renderer.dispose();}
 }

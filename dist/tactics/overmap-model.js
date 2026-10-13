@@ -1,4 +1,5 @@
 // Strategic drawing data. This is deliberately separate from local map/block schemas.
+import {environmentErrors} from './environment-regions.js';
 export const WIDTH=30,HEIGHT=15;
 export const SIDES=['north','east','south','west'];
 export const KINDS=['road','river','cliff'];
@@ -33,6 +34,7 @@ export function demo(){
 export function validate(m){
  if(!m||m.kind!=='animal-factory-overmap-sketch'||m.version!==1||m.width!==WIDTH||m.height!==HEIGHT||!Array.isArray(m.sectors)||m.sectors.length!==WIDTH*HEIGHT)throw Error('Use a version 1 overmap sketch with 30 × 15 sectors. Local maps and blocks use a different format.');
  if(typeof m.name!=='string'||m.name.length>100)throw Error('Overmap name must be 100 characters or fewer.');
+ const environmentIssues=environmentErrors(m.environments);if(environmentIssues.length)throw Error(environmentIssues[0]);
  const has=(arr,v)=>arr.includes(v);
  m.sectors.forEach((s,i)=>{
   const fail=()=>{throw Error('Invalid properties in sector '+(i%WIDTH+1)+','+(Math.floor(i/WIDTH)+1)+'.');};
