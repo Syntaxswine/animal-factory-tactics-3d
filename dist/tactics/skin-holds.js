@@ -11,7 +11,7 @@
 // newest on top) and releases it when it is disposed has its restore run only once every hold taken after it has been
 // released too, so the restores run newest first; until then the skin stays as the later controllers built on it. A
 // holder under a live later one refuses to write the skin again (the ladder's apply, transition and restore, the idle's
-// at and poseHead).
+// at and poseHead), and disposed there leaves the pose to it.
 //
 // Only what a controller puts back through its hold waits. Every other skin writer (the fire, throw and armed-idle
 // motions, the mantle, descent and cliff climbs, the walking motions) still composes last in, first out only, and so

@@ -228,7 +228,10 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
  // the skin, the ladder may not put its weights on again.
  const putBack=()=>{for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}};
  let hold=null;const held=()=>{if(hold&&!hold.top)throw new Error('Ladder motion cannot put its weights on while the skin is held by '+disposeAbove(hold));};
- function reset(mode,skin){equipmentStow.restore();root.position.set(0,0,0);root.rotation.set(0,0,0);for(const {asset}of grips)asset.restore();if(skin)putBack();worker.pose(mode);paintCorrection.set(false);root.position.copy(entry.position);root.quaternion.copy(entry.quaternion);result=null;root.updateMatrixWorld(true);worker.skeleton.update();}
+ // Off the ladder: the sling, the gloves and the paint come off; with `skin`, the worker's own weights go back on; with
+ // `pose`, the worker stands in `mode` at the entry. Disposed under a controller made later that holds the skin (the
+ // idle), the pose and the root are that controller's, and are left alone.
+ function reset(mode,skin,pose=true){equipmentStow.restore();if(pose){root.position.set(0,0,0);root.rotation.set(0,0,0);}for(const {asset}of grips)asset.restore();if(skin)putBack();if(pose)worker.pose(mode);paintCorrection.set(false);if(pose){root.position.copy(entry.position);root.quaternion.copy(entry.quaternion);}result=null;root.updateMatrixWorld(true);worker.skeleton.update();}
  function restore(mode='carry'){if(disposed)throw new Error('Ladder motion is disposed');held();reset(mode,true);}
  // Solve the bend routes across the whole clip once. Adjacent samples may
  // move at most five degrees: a locally cheaper elbow solution cannot snap
@@ -258,5 +261,5 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
  reset('neutral',true);
  }catch(error){reset('neutral',true);equipmentStow.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();putBack();throw error;}
  hold=holdSkin(worker,'ladder motion',putBack);CLIMBING.add(worker);
- return {grips:grips.map(g=>g.asset),duration:playbackDuration,definition:d,phases:playbackPhases.map(p=>({...p})),apply,diagnostics:()=>result,restore,transition,stow:()=>equipmentStow.apply(),stowBlend:w=>equipmentStow.blend(w),syncStow:()=>equipmentStow.sync(),get equipmentState(){return equipmentStow.state;},dispose(){if(disposed)return;reset('neutral',false);disposed=true;CLIMBING.delete(worker);equipmentStow.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();hold.release();}};
+ return {grips:grips.map(g=>g.asset),duration:playbackDuration,definition:d,phases:playbackPhases.map(p=>({...p})),apply,diagnostics:()=>result,restore,transition,stow:()=>equipmentStow.apply(),stowBlend:w=>equipmentStow.blend(w),syncStow:()=>equipmentStow.sync(),get equipmentState(){return equipmentStow.state;},dispose(){if(disposed)return;disposed=true;CLIMBING.delete(worker);try{reset('neutral',false,hold.top);equipmentStow.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();}finally{hold.release();}}};
 }

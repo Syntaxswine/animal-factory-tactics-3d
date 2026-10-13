@@ -61,6 +61,8 @@ test('skin holds put the skin back newest first, whatever order they are release
 for(const p of MAMMALS)test(p.id+': a ladder and an idle on top put the worker\'s own skin back in either disposal order',()=>{
  for(const ladderFirst of [true,false]){const w=build(p),o=own(w),label=p.id+(ladderFirst?', ladder disposed first':', idle disposed first');
   try{
+   // placed away from the origin, so that a ladder putting the worker back at its entry would show
+   w.root.position.set(1,0,2);w.root.rotation.y=.4;w.root.updateMatrixWorld(true);
    const ladder=createLadderMotion(w,p,ladderOf(p));ladder.apply(.3);const climbing=weights(w);
    const idle=createIdle(w,{seed:3,eye:p.eye});idle.at(2);const idling=weights(w);
    // the fixture can fail: both controllers rewrite the cloth (the ladder 27 vertices off the arms on the sheep to 774 on
@@ -70,10 +72,14 @@ for(const p of MAMMALS)test(p.id+': a ladder and an idle on top put the worker\'
    assert.ok(total(climbing,idling)>=1000,label+': the idle rewrote too little to test');
    const fitted=w.parts.filter(m=>m.geometry.userData.layerFit?.vertices.length);assert.ok(fitted.length>0,label+': no part carries the neck-cloth fit');
    if(ladderFirst){
+    const posed=w.bones.map(b=>b.quaternion.clone()),rootWas=[w.root.position.clone(),w.root.quaternion.clone()];
     ladder.dispose();
     // the idle keeps the skin it built (weights and its neck bone); only a gripping arm lets go (the gloves are not
     // under the hold), to its own weights
     weights(w).forEach((x,k)=>{const d=differ(x,idling[k]);if(d)assert.ok(/forearm and hand/.test(x.name)&&differ(x,o.weights[k])===0,label+': '+x.name+' lost '+d+' vertices of the idle\'s weights under it');});
+    // and its pose and root: the ladder takes only its own sling, gloves and paint off
+    assert.ok(w.bones.every((b,i)=>b.quaternion.equals(posed[i])),label+': the ladder\'s dispose re-posed the idle');
+    assert.ok(w.root.position.equals(rootWas[0])&&w.root.quaternion.equals(rootWas[1]),label+': the ladder\'s dispose moved the idle\'s root');
     assert.ok(neckOf(w),label+': the idle neck bone was unbound under the idle');
     assert.throws(()=>ladder.apply(.3),/disposed/);assert.throws(()=>ladder.restore(),/disposed/);
     assert.deepEqual(skinHolds(w),[{owner:'ladder motion',released:true},{owner:'idle',released:false}]);
@@ -166,4 +172,20 @@ test('one live ladder per worker: a second is refused untouched, and one made ov
    assertOwn(w,o,label);
   }finally{w.dispose();}
  }
+});
+
+test('a ladder whose cleanup throws still lets go of the skin, alone and over a live idle',()=>{
+ const p=profile('horse');
+ {const w=build(p),o=own(w);
+  try{
+   const ladder=createLadderMotion(w,p,ladderOf(p));ladder.apply(.3);ladder.grips[0].dispose=()=>{throw Error('glove broke');};
+   assert.throws(()=>ladder.dispose(),/glove broke/);assertOwn(w,o,'cleanup threw');
+   const next=createLadderMotion(w,p,ladderOf(p));next.apply(.3);next.dispose();assertOwn(w,o,'a ladder after the one whose cleanup threw');
+  }finally{w.dispose();}}
+ {const w=build(p),o=own(w);
+  try{
+   const idle=createIdle(w,{seed:3,eye:p.eye});idle.at(2);const ladder=createLadderMotion(w,p,ladderOf(p));ladder.apply(.3);ladder.grips[0].dispose=()=>{throw Error('glove broke');};
+   assert.throws(()=>ladder.dispose(),/glove broke/);assert.deepEqual(skinHolds(w),[{owner:'idle',released:false}]);
+   idle.at(1);idle.dispose();assertOwn(w,o,'cleanup threw over a live idle');
+  }finally{w.dispose();}}
 });
