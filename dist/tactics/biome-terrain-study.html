@@ -9,10 +9,11 @@
 <label><input type="checkbox" id="trees" checked>Trees</label>
 <label><input type="checkbox" id="blocked">Blocked overlay</label>
 <label><input type="checkbox" id="grey">Grey forms</label>
-<label><input type="checkbox" id="paint" checked>Painted debris</label>
-<label>Pattern <select id="seed"><option value="173">A</option><option value="829">B</option><option value="1409">C</option></select></label>
+<label><input type="checkbox" id="paint" checked>Generated ground</label>
+<label><input type="checkbox" id="grid">Tile joins</label>
+<label>Landscape <select id="seed"><option value="173">A</option><option value="829">B</option><option value="1409">C</option></select></label>
 <button id="reset">Reset view</button>
 </div>
 <div id="scene" aria-label="Interactive 3D tutorial landscape"></div><p id="error" role="alert"></p><p id="status">Loading the tutorial landscape…</p>
-<footer><p id="description"></p><p>Branches, fallen wood and litter are painted into the surface across several tiles. Ground paint hides the trees for inspection; Painted debris compares it with the base pattern.</p><p>The plateau uses the saved tutorial terrain. Foliage regions follow your screenshot as a layout study; the saved map is unchanged. Every environment uses the same blocked mask. Gameplay integration is a separate step.</p><p>Drag to orbit. Use Frame to compare the whole map with the horse at route scale. <a href="../assets/environment/biome-obstacles/reference-v1.png">Paint and detail reference ↗</a></p></footer>
+<footer><p id="description"></p><p>Connected moss, leaf beds, mud and snow are generated across the landscape, then cut into matching tiles. Fallen wood crosses tile joins. Ground paint hides raised foliage; Tile joins shows an 8 by 8 area. Landscape A/B/C generates a different composition; Generated ground compares against the old repeating fill.</p><p>The plateau uses the saved tutorial terrain. Foliage regions follow your screenshot as a layout study; the saved map is unchanged. Every environment uses the same blocked mask. Gameplay integration is a separate step.</p><p>Drag to orbit. Use Frame to compare the whole map with the horse at route scale. <a href="../assets/environment/biome-obstacles/reference-v1.png">Paint and detail reference ↗</a></p></footer>
 </main><script type="module" src="biome-terrain-study.js"></script></body></html>

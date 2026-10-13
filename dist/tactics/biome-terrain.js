@@ -2,7 +2,7 @@ import * as T from './vendor/three.module.js';
 import {BIOME_FAMILIES} from './biome-foliage-data.js';
 import {BIOME_OBSTACLES,CELL_EDGES} from './biome-obstacle-data.js';
 import {random,field,createTerrainFill} from './biome-terrain-fill.js';
-import {createGroundSpriteSkin} from './biome-ground-sprites.js';
+import {createConnectedGroundSkin} from './biome-connected-ground.js';
 
 export const BIOME_CHUNK_SIZE=24;
 const quad=(a,b,c,d,out)=>out.push(...a,...c,...b,...a,...d,...c);
@@ -25,12 +25,12 @@ export function terrainCellOutline(plan,x,z){
 }
 function geometry(positions,colors,normals){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));if(colors)g.setAttribute('color',new T.Float32BufferAttribute(colors,3));if(normals)g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));else g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();return g;}
 
-export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obstacleMaterials,plantFactory,grey=false,groundSprites=true,paintSeed}){
+export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obstacleMaterials,plantFactory,grey=false,groundSprites=true,paintSeed,onPaintReady}){
  if(!BIOME_OBSTACLES[family])throw Error('Unknown terrain biome');
  const root=new T.Group(),owned=new Set(),instances=[],treeInstances=[],chunks=[],denseMeshes=[],groundMeshes=[],trees=[],fill=createTerrainFill(plan,family),bog=family==='wetlands',snow=family==='snow';root.name='Spatial biome terrain';
  const own=g=>(owned.add(g),g),crown=own(new T.SphereGeometry(.5,8,4)),proxyCrown=own(new T.IcosahedronGeometry(.5,0)),trunk=own(new T.CylinderGeometry(.5,.5,1,5)),cone=own(new T.ConeGeometry(.5,1,6)),rimMaterial=new T.LineBasicMaterial({color:0x5f513c});
  const original=grey?plantMaterials.grey:snow?plantMaterials.snow:obstacleMaterials[BIOME_OBSTACLES[family].paint],fillMaterial=original.clone();fillMaterial.onBeforeCompile=original.onBeforeCompile;fillMaterial.customProgramCacheKey=original.customProgramCacheKey;fillMaterial.vertexColors=true;
- const groundSkin=createGroundSpriteSkin(plan,family,{seed:paintSeed,canvas:grey?null:undefined});groundSkin.attach(fillMaterial);groundSkin.setEnabled(groundSprites);
+ const groundSkin=createConnectedGroundSkin(plan,family,{seed:paintSeed,onChange:onPaintReady,...(grey?{canvasFactory:()=>null}:{})}),fillMaterials=[];groundSkin.setEnabled(groundSprites);
  const leaf=family==='jungle'?'jungle':family==='temperate'?'leaves':snow?'snow':'dry',paint=id=>grey?plantMaterials.grey:(plantMaterials[id]||obstacleMaterials[id]),object=new T.Object3D();
  const cols=Math.ceil(plan.width/BIOME_CHUNK_SIZE);
  for(let z=0;z<plan.depth;z+=BIOME_CHUNK_SIZE)for(let x=0;x<plan.width;x+=BIOME_CHUNK_SIZE){
@@ -59,7 +59,8 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
     }
    }
   }
-  groundMeshes.push(mesh(groundPositions,ground,'Saved tutorial terrain',chunk));mesh(walls,cliff,'Two plateau tiers',chunk,wallColors);chunk.dense=mesh(dense,fillMaterial,'Continuous impassable ground',chunk,colors,normals);if(chunk.dense)denseMeshes.push(chunk.dense);
+  groundMeshes.push(mesh(groundPositions,ground,'Saved tutorial terrain',chunk));mesh(walls,cliff,'Two plateau tiers',chunk,wallColors);
+  if(dense.length){const m=fillMaterial.clone();m.onBeforeCompile=fillMaterial.onBeforeCompile;m.customProgramCacheKey=fillMaterial.customProgramCacheKey;fillMaterials.push(m);groundSkin.attach(m,chunk);chunk.dense=mesh(dense,m,'Continuous impassable ground',chunk,colors,normals);denseMeshes.push(chunk.dense);}
   if(edges.length){const g=own(new T.BufferGeometry().setAttribute('position',new T.Float32BufferAttribute(edges,3)));g.computeBoundingSphere();const rims=new T.LineSegments(g,rimMaterial);rims.userData.chunk=chunk.index;chunk.group.add(rims);}
  }
  let clusters=0,logs=0,reeds=0;const lowPlants=BIOME_FAMILIES[family].low.map(id=>plantFactory.create(id,{grey}));
@@ -118,7 +119,7 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
   root.updateMatrixWorld(true);const localFocus=root.worldToLocal(focus?.clone()??new T.Vector3()),fx=localFocus.x,fz=localFocus.z;
   for(const c of chunks){
    const dx=Math.max(c.x-.5-fx,0,fx-(c.x+BIOME_CHUNK_SIZE-.5)),dz=Math.max(c.z-.5-fz,0,fz-(c.z+BIOME_CHUNK_SIZE-.5)),distance=Math.hypot(dx,dz);
-   const inView=frustum.intersectsBox(worldBounds.copy(c.bounds).applyMatrix4(root.matrixWorld));
+   const inView=frustum.intersectsBox(worldBounds.copy(c.bounds).applyMatrix4(root.matrixWorld));c.inView=inView;c.distance=distance;
    // Orthographic distance does not shrink a visible tree. Keep every visible
    // block detailed at close scale, including the far edge of a low-angle view.
    c.nearActive=ppu>(c.nearActive?12:16)&&(inView||distance<(c.nearActive?52:44));const shadows=ppu>12&&distance<28;
@@ -126,8 +127,9 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
    for(const m of c.meshes){m.castShadow=shadows&&m.name!=='Saved tutorial terrain'&&m.name!=='Distant trees';m.userData.noShadow=!m.castShadow;}
    if(inView){visible++;if(c.near.visible)detailed++;}if(shadows)shadowed++;
   }
+  groundSkin.update(chunks,localFocus,ppu);stats.groundSprites=groundSkin.stats;
   root.updateMatrixWorld(true);let visibleTriangles=0,visibleBatches=0;root.traverseVisible(o=>{if(o.isMesh&&frustum.intersectsObject(o)){visibleTriangles+=triangles(o);visibleBatches++;}});
   Object.assign(stats,{visibleChunks:visible,detailedChunks:detailed,shadowChunks:shadowed,visibleTriangles,visibleBatches});return stats;
  }
- return {root,chunks,denseMeshes,groundMeshes,trees,treeInstances,fill,groundSkin,stats,update,dispose(){if(disposed)return;disposed=true;root.removeFromParent();instances.forEach(m=>m.dispose());owned.forEach(g=>g.dispose());fillMaterial.dispose();groundSkin?.dispose();rimMaterial.dispose();}};
+ return {root,chunks,denseMeshes,groundMeshes,trees,treeInstances,fill,groundSkin,stats,update,dispose(){if(disposed)return;disposed=true;root.removeFromParent();instances.forEach(m=>m.dispose());owned.forEach(g=>g.dispose());fillMaterials.forEach(m=>m.dispose());fillMaterial.dispose();groundSkin?.dispose();rimMaterial.dispose();}};
 }

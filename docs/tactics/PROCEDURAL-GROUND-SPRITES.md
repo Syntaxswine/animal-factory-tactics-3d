@@ -1,5 +1,7 @@
 # Procedural ground sprites
 
+**Historical stamp pass, superseded by [Connected ground tiles](CONNECTED-GROUND-TILES.md).** The user found that this finite atlas still repeated. The active terrain renderer now generates connected material beds and unique features in map coordinates, including the base fill, then crops neighboring tiles from that composition. The old assets remain as reference; their old review score below does not approve the replacement.
+
 This pass adds painted deadfall, branches and litter to the five-biome terrain study. The details sit in the existing fill material's albedo. They have no mesh, collision volume or separate shadow. The former small cylindrical landscape logs are removed; tree silhouettes, broad fill heights and nearby plants remain.
 
 ## Review

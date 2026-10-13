@@ -16,8 +16,16 @@ export function paintGroundSpriteAtlas(recipes,canvas){
  const {columns,rows,panel}=GROUND_SPRITE_ATLAS;canvas.width=columns*panel;canvas.height=rows*panel;
  const c=canvas.getContext('2d');if(!c)throw Error('A 2D canvas is required to paint ground sprites');
  for(const recipe of recipes){
+  c.save();c.translate(recipe.index%columns*panel,Math.floor(recipe.index/columns)*panel);c.scale(panel,panel);paintGroundFeature(c,recipe);c.restore();
+ }
+ return canvas;
+}
+
+// The connected terrain painter calls this directly with a fresh recipe for
+// every world feature. The old atlas exporter remains available for comparison.
+export function paintGroundFeature(c,recipe){
   const r=spriteRandom(recipe.inkSeed),p=PALETTES[recipe.family],large=recipe.kind!=='litter',snow=recipe.family==='snow',wet=recipe.family==='wetlands';
-  c.save();c.translate(recipe.index%columns*panel,Math.floor(recipe.index/columns)*panel);c.scale(panel,panel);c.beginPath();c.rect(.04,.04,.92,.92);c.clip();
+  c.save();c.beginPath();c.rect(.04,.04,.92,.92);c.clip();
   function dab(x,y,rx,ry,color,alpha=1,angle=0){c.save();c.translate(x,y);c.rotate(angle);c.fillStyle=color;c.globalAlpha=alpha;c.beginPath();const count=9;for(let i=0;i<count;i++){const a=i/count*Math.PI*2,f=.72+r()*.40,u=Math.cos(a)*rx*f,v=Math.sin(a)*ry*f;i?c.lineTo(u,v):c.moveTo(u,v);}c.closePath();c.fill();c.restore();}
   function stroke(points,width,color,alpha=1){c.save();c.globalAlpha=alpha;c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();c.restore();}
   // Broken brush marks make a soft patch, rather than an opaque rectangular
@@ -92,8 +100,6 @@ export function paintGroundSpriteAtlas(recipes,canvas){
   // Fine mottling breaks the digital outlines without a costly extra texture.
   for(let i=0;i<140;i++)dab(.10+r()*.80,.10+r()*.80,.001+r()*.005,.001+r()*.003,choose(r,p.leaves),.04+r()*.10,r()*6.28);
   c.restore();
- }
- return canvas;
 }
 
 function defaultCanvas(){if(typeof document!=='undefined')return document.createElement('canvas');if(typeof OffscreenCanvas!=='undefined')return new OffscreenCanvas(1,1);return null;}

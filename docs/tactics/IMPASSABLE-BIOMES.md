@@ -1,5 +1,7 @@
 # Impassable biome regions — art and integration handoff
 
+The active ground-paint implementation is documented in [Connected ground tiles](CONNECTED-GROUND-TILES.md): continuous seeded regions and unique multi-tile features replace the finite stamp overlay.
+
 The dense regions in the user's tutorial reference are **fully impassable**. Clearings and corridors remain open. The art now supports large connected regions across all five environments, in addition to small pieces for inspecting materials and joins.
 
 ## Review views
