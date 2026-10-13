@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.js';
+import {holdSkin} from './skin-holds.js';
 import {IDLE_FITS} from './idle-fits.js';
 // Idle: a worker standing and looking around, on any of the eleven mammal rigs (the hen has wings, not arms). Seeded
 // and seamless: at(t) repeats every `length` seconds, and each seed draws its own looks, breaths and weight shifts.
@@ -145,8 +146,10 @@ function closest(p,A,B,C){const ab=[B[0]-A[0],B[1]-A[1],B[2]-A[2]],ac=[C[0]-A[0]
 // The fitted limits depend only on the rig, not the seed: one fit per rig shape (1.4-6 s), kept for every later loop. The
 // catalog rigs' fits ship in idle-fits.js, keyed by rigKey (tools/fit-idle-rigs.mjs writes it; tests/idle-fits.test.mjs
 // refits every rig against it); a rig not in it is fitted when its first idle is made, and `refit: true` fits afresh.
-// (LIVE: each worker with an idle running, and its rig's key as read before the idle weighted it afresh)
-const FITS=new Map(),LIVE=new WeakMap();
+// (LIVE: each worker an idle has weighted afresh, and its rig's key as read before. An idle disposed under a live
+// controller made after it keeps the skin, and its place here, until that one is disposed too: skin-holds.js. HOLD: the
+// idle's skin hold on each of these workers.)
+const FITS=new Map(),LIVE=new WeakMap(),HOLD=new WeakMap();
 const sum=(a,k)=>{let s=0;for(let i=0;i<a.length;i++)s+=a[i]*(1+i%k);return s;};
 // each vertex's bones and weights, whatever slots they sit in
 const skinSum=a=>{let s=0,t=0;for(let i=0;i<a.skinIndex.count;i++)for(let k=0;k<4;k++){const b=a.skinIndex.getComponent(i,k)+1,w=a.skinWeight.getComponent(i,k);s+=b*w*(1+i%7);t+=b*b*w;}return s.toFixed(3)+','+t.toFixed(3);};
@@ -165,7 +168,7 @@ export function createIdle(worker,options={}){
  if(typeof length!=='number'||!Number.isFinite(length)||length<12||length>600)throw Error('Idle loop must last 12 to 600 s');
  if(eye!==null&&!(Array.isArray(eye)&&eye.length===3&&eye.every(Number.isFinite)))throw Error('Idle eye must be a world point [x, y, z] on the rest pose');
  if(typeof refit!=='boolean')throw Error('Idle refit must be true or false');
- if(LIVE.has(worker))throw Error('This worker already has an idle running: dispose it first');
+ if(LIVE.has(worker))throw Error(HOLD.get(worker)?.released?'This worker\'s last idle was disposed under a controller made after it ('+HOLD.get(worker).above().join(', ')+') and keeps its skin until that is disposed: dispose it first':'This worker already has an idle running: dispose it first');
  const bones=Object.fromEntries(worker.bones.map(b=>[b.name,b])),missing=['hips','spine','head',...[-1,1].flatMap(s=>['upperArm','forearm','hand','fingers','thigh','shin','hoof'].map(b=>b+s))].filter(n=>!bones[n]);
  if(missing.length)throw Error('Idle needs a mammal rig with arms and legs: this worker has no '+missing.slice(0,3).join(', ')+(missing.length>3?' (and '+(missing.length-3)+' more)':'')+(missing.length>1?' bones':' bone'));
  // the skeleton the parts are bound to now: the rig's own, or one a motion has made (the game's adds tail bones)
@@ -539,7 +542,7 @@ export function createIdle(worker,options={}){
   if(stretch<.995)break;SHIFT*=.8;}
  if(stretch>=.995){throw Error('Idle pose unreachable on this rig: a leg would stretch to '+(stretch*100).toFixed(1)+'% of its reach');}
  const {trunk,head,arm,kneePole,body}=kin;
- LIVE.set(worker,key);built=true;
+ const skinHold=holdSkin(worker,'idle',()=>{LIVE.delete(worker);HOLD.delete(worker);restoreSkin();});LIVE.set(worker,key);HOLD.set(worker,skinHold);built=true;
 
  // ---- posing ----
  const eyeAt=(tr,h)=>tr.chest.clone().add(h.offset.clone().applyQuaternion(tr.qc)).add(EYE.clone().applyQuaternion(tr.qc.clone().multiply(h.q)));
@@ -565,7 +568,9 @@ export function createIdle(worker,options={}){
   poseHead(yaw,nod,roll=0){if(disposed)throw Error('Idle motion was disposed');if(![yaw,nod,roll].every(Number.isFinite))throw Error('Idle head pose must be finite');
    root.position.set(0,0,0);root.quaternion.identity();neutral();placeHead(turn([0,1,0],yaw*DEG).multiply(turn([0,0,1],-nod*DEG)).multiply(turn([1,0,0],roll*DEG)));skeleton.update();},
   diagnostics(){return state;},
-  dispose(){if(disposed)return;disposed=true;LIVE.delete(worker);restoreSkin();worker.pose('neutral');}
+  // Puts the rig's skin back (its weights, its own skeleton, no neck bone) once no controller made after the idle is live
+  // (skin-holds.js); until then the neck bone stays bound, at rest.
+  dispose(){if(disposed)return;disposed=true;skinHold.release();neutral();}
  };
  }finally{if(!built){restoreSkin();worker.pose('neutral');}}
 }

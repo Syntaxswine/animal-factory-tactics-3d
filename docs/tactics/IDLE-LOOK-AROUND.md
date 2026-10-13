@@ -520,7 +520,8 @@ finite number of seconds from 12 to 600; `eye` the world point between the eyes 
 catalog's `eye`; the horse's by default), within 0.5 m of the head joint; `refit` fits the character afresh
 instead of reading `idle-fits.js`. The worker must have the mammal bones (hips, spine, head, and both arms and
 legs down to the fingers and hooves), every part bound to one skeleton (the rig's own, or one a motion such as
-the game's walk has made); a rig already running an idle is refused until that one is disposed. It returns:
+the game's walk has made); a rig already running an idle is refused until that one is disposed (and its skin
+put back: see below). It returns:
 - `at(t)`: poses the rig, and returns the phase (look label), look, stance, weight, breath, feet, hips
   and chest;
 - `gaze(t)`: eye, direction, target point and the planned look;
@@ -537,7 +538,10 @@ frozen: `{length, gravity, neck}`. `lookLabel` names a look; `rigKey(worker)` ke
 
 The motion works in local +X space on any of the eleven mammal rigs. Like the throw, it owns the pose, the
 neck bone and its weight corrections while it runs; `dispose` returns the rig to its neutral pose, the
-skeleton its parts had and their weights.
+skeleton its parts had and their weights. If a controller made after the idle that also rewrites the skin (a
+ladder) is still live, the skeleton and weights come back when that one is disposed instead (`skin-holds.js`),
+so the restores run newest first whichever is disposed first; until then the neck bone stays bound, at rest,
+`rigKey` keeps the rig's own key, and a new idle is refused.
 
 ## Still open
 
