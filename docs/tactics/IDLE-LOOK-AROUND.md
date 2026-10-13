@@ -538,10 +538,12 @@ frozen: `{length, gravity, neck}`. `lookLabel` names a look; `rigKey(worker)` ke
 
 The motion works in local +X space on any of the eleven mammal rigs. Like the throw, it owns the pose, the
 neck bone and its weight corrections while it runs; `dispose` returns the rig to its neutral pose, the
-skeleton its parts had and their weights. If a controller made after the idle that also rewrites the skin (a
-ladder) is still live, the skeleton and weights come back when that one is disposed instead (`skin-holds.js`),
-so the restores run newest first whichever is disposed first; until then the neck bone stays bound, at rest,
-`rigKey` keeps the rig's own key, and a new idle is refused.
+skeleton its parts had and their weights. The idle takes a skin hold (`skin-holds.js`), as the ladder motion
+does, and no other controller takes one yet. If a ladder made after the idle is still live when the idle is
+disposed, the skeleton and weights come back when the ladder is disposed instead, so those two may be disposed in
+either order; until then the neck bone stays bound, at rest, the skin and the pose are the ladder's, `rigKey`
+keeps the rig's own key, and a new idle is refused. While a ladder made after the idle is live, `at` and
+`poseHead` refuse (posing rewrites the support arm's skin). Any other controller that rewrites the skin must still be disposed newest first.
 
 ## Still open
 

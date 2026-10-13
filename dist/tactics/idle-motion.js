@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {holdSkin} from './skin-holds.js';
+import {holdSkin,disposeAbove} from './skin-holds.js';
 import {IDLE_FITS} from './idle-fits.js';
 // Idle: a worker standing and looking around, on any of the eleven mammal rigs (the hen has wings, not arms). Seeded
 // and seamless: at(t) repeats every `length` seconds, and each seed draws its own looks, breaths and weight shifts.
@@ -168,7 +168,7 @@ export function createIdle(worker,options={}){
  if(typeof length!=='number'||!Number.isFinite(length)||length<12||length>600)throw Error('Idle loop must last 12 to 600 s');
  if(eye!==null&&!(Array.isArray(eye)&&eye.length===3&&eye.every(Number.isFinite)))throw Error('Idle eye must be a world point [x, y, z] on the rest pose');
  if(typeof refit!=='boolean')throw Error('Idle refit must be true or false');
- if(LIVE.has(worker))throw Error(HOLD.get(worker)?.released?'This worker\'s last idle was disposed under a controller made after it ('+HOLD.get(worker).above().join(', ')+') and keeps its skin until that is disposed: dispose it first':'This worker already has an idle running: dispose it first');
+ if(LIVE.has(worker))throw Error(HOLD.get(worker)?.released?'This worker\'s last idle was disposed but keeps its skin under '+disposeAbove(HOLD.get(worker)):'This worker already has an idle running: dispose it first');
  const bones=Object.fromEntries(worker.bones.map(b=>[b.name,b])),missing=['hips','spine','head',...[-1,1].flatMap(s=>['upperArm','forearm','hand','fingers','thigh','shin','hoof'].map(b=>b+s))].filter(n=>!bones[n]);
  if(missing.length)throw Error('Idle needs a mammal rig with arms and legs: this worker has no '+missing.slice(0,3).join(', ')+(missing.length>3?' (and '+(missing.length-3)+' more)':'')+(missing.length>1?' bones':' bone'));
  // the skeleton the parts are bound to now: the rig's own, or one a motion has made (the game's adds tail bones)
@@ -196,7 +196,7 @@ export function createIdle(worker,options={}){
  // The rigs' neck skin blends straight from the chest bone to the head bone, so a bending neck could only shear. While the
  // idle runs, a neck bone sits at the branch's base, the head joint rides at its tip, and the skin and the cloth round the
  // neck are weighted along it by height (below); dispose() removes it, rebinds the rig's own skeleton and restores the
- // rig's weights.
+ // rig's weights (at once, or once a controller made after the idle that holds the skin too is disposed: see dispose).
  const neck=new T.Bone();neck.name='idle neck';bones.spine.add(neck);neck.position.copy(NECK_BASE);root.updateMatrixWorld(true);
  const skeleton=new T.Skeleton([...base0.bones,neck],[...base0.boneInverses.map(m=>m.clone()),neck.matrixWorld.clone().invert()]);
  const savedBind=worker.parts.map(m=>[m,m.skeleton,m.bindMatrix.clone()]);for(const m of worker.parts)m.bind(skeleton,m.bindMatrix.clone());
@@ -277,6 +277,9 @@ export function createIdle(worker,options={}){
    for(let i=0;i<b.position.count;i++){if((b.position.getZ(i)<0?-1:1)!==s)continue;const own=weightsOf(b,i);if((own[bi('upperArm'+s)]||0)+(own[bi('forearm'+s)]||0)<.01)continue;
     const r=under(restAt(mesh,i),Infinity,.03),g=r?1-smooth((Math.sqrt(r.d2)-.01)/.02):0;if(g>0)setWeights(b,i,mix(own,r.w,g));}
    b.skinIndex.needsUpdate=b.skinWeight.needsUpdate=true;}}
+ // (Copies into the attribute objects attached when it runs. Under a ladder disposed first, the gripping arm's are its
+ // own again, and take the glove's weights saved here; the ladder's restore, which runs next, attaches its own copies
+ // and nothing attaches those objects again.)
  const restoreSkin=()=>{for(const {m,index,weight} of savedSkin){m.geometry.attributes.skinIndex.copy(index);m.geometry.attributes.skinWeight.copy(weight);m.geometry.attributes.skinIndex.needsUpdate=m.geometry.attributes.skinWeight.needsUpdate=true;}
   for(const [m,sk,bm] of savedBind)m.bind(sk,bm);neck.removeFromParent();skeleton.dispose();};
 
@@ -543,6 +546,9 @@ export function createIdle(worker,options={}){
  if(stretch>=.995){throw Error('Idle pose unreachable on this rig: a leg would stretch to '+(stretch*100).toFixed(1)+'% of its reach');}
  const {trunk,head,arm,kneePole,body}=kin;
  const skinHold=holdSkin(worker,'idle',()=>{LIVE.delete(worker);HOLD.delete(worker);restoreSkin();});LIVE.set(worker,key);HOLD.set(worker,skinHold);built=true;
+ // Posing goes through worker.pose, which rewrites the support arm's skin: not while a controller made after the idle
+ // (a ladder) holds the skin.
+ const mayPose=()=>{if(!skinHold.top)throw Error('Idle cannot pose the rig while the skin is held by '+disposeAbove(skinHold));};
 
  // ---- posing ----
  const eyeAt=(tr,h)=>tr.chest.clone().add(h.offset.clone().applyQuaternion(tr.qc)).add(EYE.clone().applyQuaternion(tr.qc.clone().multiply(h.q)));
@@ -553,7 +559,7 @@ export function createIdle(worker,options={}){
   balance:{residual:balance.residual,rest:[...base],clearance,cop:t=>copAt(live(t)),centre:t=>centre(body(live(t)))},
   // Where the eyes are pointed (world point 6 m out, or on the floor when looking down), for overlays and tests.
   gaze(t){t=live(t);const tr=trunk(t),h=head(t,tr),eye=eyeAt(tr,h),dir=V([1,0,0]).applyQuaternion(tr.qc.clone().multiply(h.q));const reach=dir.y<-.05?Math.min(6,eye.y/-dir.y):6;return {eye,dir,target:eye.clone().addScaledVector(dir,reach),want:{yaw:gazeYaw(t),pitch:gazePitch(t),roll:gazeRoll(t)}};},
-  at(t){time=live(t);root.position.set(0,0,0);root.quaternion.identity();neutral();
+  at(t){t=live(t);mayPose();time=t;root.position.set(0,0,0);root.quaternion.identity();neutral();
    const tr=trunk(time);bones.hips.position.copy(tr.hips);bones.hips.quaternion.copy(tr.qp);bones.spine.quaternion.copy(tr.local);const h=head(time,tr);placeHead(h.q,h);
    for(const s of [-1,1])bones['upperArm'+s].position.copy(ARM_ROOT[s]).add(V([0,tr.shrug,0]));root.updateMatrixWorld(true);
    for(const s of [-1,1]){limb(bones['thigh'+s],bones['shin'+s],bones['hoof'+s],ANKLE[s].clone(),kneePole(time,s));rotate(bones['hoof'+s],Q());
@@ -565,12 +571,13 @@ export function createIdle(worker,options={}){
    return state;},
   // For checking the fit: the rest pose with the head turned (yaw, degrees to the left), nodded (pitch, degrees down)
   // and tilted (roll) as the fit poses it, the neck bent as in at(); the next at() poses the idle again.
-  poseHead(yaw,nod,roll=0){if(disposed)throw Error('Idle motion was disposed');if(![yaw,nod,roll].every(Number.isFinite))throw Error('Idle head pose must be finite');
+  poseHead(yaw,nod,roll=0){if(disposed)throw Error('Idle motion was disposed');mayPose();if(![yaw,nod,roll].every(Number.isFinite))throw Error('Idle head pose must be finite');
    root.position.set(0,0,0);root.quaternion.identity();neutral();placeHead(turn([0,1,0],yaw*DEG).multiply(turn([0,0,1],-nod*DEG)).multiply(turn([1,0,0],roll*DEG)));skeleton.update();},
   diagnostics(){return state;},
-  // Puts the rig's skin back (its weights, its own skeleton, no neck bone) once no controller made after the idle is live
-  // (skin-holds.js); until then the neck bone stays bound, at rest.
-  dispose(){if(disposed)return;disposed=true;skinHold.release();neutral();}
+  // Puts the rig's skin back (its weights, its own skeleton, no neck bone) and stands it neutral; or, under a controller
+  // made after the idle that holds the skin too (skin-holds.js), only puts the neck bone at rest, still bound, and leaves
+  // the skin and the pose to that controller until it is disposed.
+  dispose(){if(disposed)return;disposed=true;const top=skinHold.top;skinHold.release();if(top)neutral();else{neck.quaternion.identity();root.updateMatrixWorld(true);}}
  };
  }finally{if(!built){restoreSkin();worker.pose('neutral');}}
 }
