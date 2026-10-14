@@ -40,6 +40,12 @@ The stills are frames of the animated proof at those times. Comparisons:
 
 ## On main
 
+The 3D Pages build publishes the complete `intro-sprites/` folder, including the
+committed plates and aircraft sheets. The [published crash proof](https://syntaxswine.github.io/animal-factory-tactics-3d/tactics/intro-sprites/proof.html)
+is a standalone review player; it is not yet connected to campaign startup.
+Deployment checks follow all three HTML pages' module imports and verify the
+published intro files and their shared map/texture dependencies against source.
+
 Round 4 was approved on `intro/sprite-keyframes` (PR #8), a branch built on the helicopter art branch `work/utility-helicopter`. That base carries older art and gameplay work whose files `main` has since changed: grenade blasts, wall breaches, floor rims, RPG flight, guardhouse consoles, the chair collection and horse sitting. Merged whole, `2152bd0` conflicts with `main` in 26 files, none of them an intro sprite file. The branch `intro/sprite-crash-sequence` therefore starts from `main` (`1dbbc3f`) and carries only the 52 intro sprite files, byte-identical to `2152bd0`. All 52 are new on `main`.
 
 - **Run time.** Everything the proof reads is already on `main`, blob-identical to the helicopter branch: the map (`sector-library/tutorial-step-1/rough-plateau.json`), `ground-grass.png` and `ground-dirt.png`, the three foliage paintings and the smoke atlas. The strip's 15 moments render byte-identical from both branches.
