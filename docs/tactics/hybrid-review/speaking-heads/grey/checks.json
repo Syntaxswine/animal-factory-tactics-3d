@@ -1,0 +1,405 @@
+{
+ "stage": "grey",
+ "level": "author",
+ "base": "http://127.0.0.1:4499",
+ "date": "2026-10-14T15:05:23.721Z",
+ "characters": {
+  "horse": {
+   "id": "horse",
+   "level": "author",
+   "triangles": 9116,
+   "characterTriangles": 28886,
+   "parts": [
+    {
+     "name": "unified skull jaw neck and ears (speaking)",
+     "triangles": 8120
+    },
+    {
+     "name": "upper teeth",
+     "triangles": 288
+    },
+    {
+     "name": "lower teeth",
+     "triangles": 288
+    },
+    {
+     "name": "tongue",
+     "triangles": 420
+    }
+   ],
+   "bones": 18,
+   "jawParent": "head",
+   "closed difference, cutscene": {
+    "mean": 0.183,
+    "changed": 0.138
+   },
+   "closed difference, native": {
+    "mean": 0.104,
+    "changed": 0.074
+   },
+   "pageErrors": []
+  },
+  "goat": {
+   "id": "goat",
+   "level": "author",
+   "triangles": 10548,
+   "characterTriangles": 29586,
+   "parts": [
+    {
+     "name": "unified goat skull ears and swept horns (speaking)",
+     "triangles": 9744
+    },
+    {
+     "name": "lower teeth",
+     "triangles": 384
+    },
+    {
+     "name": "tongue",
+     "triangles": 420
+    }
+   ],
+   "bones": 18,
+   "jawParent": "head",
+   "closed difference, cutscene": {
+    "mean": 0.21,
+    "changed": 0.198
+   },
+   "closed difference, native": {
+    "mean": 0.121,
+    "changed": 0.111
+   },
+   "pageErrors": []
+  },
+  "bull": {
+   "id": "bull",
+   "level": "author",
+   "triangles": 10554,
+   "characterTriangles": 29572,
+   "parts": [
+    {
+     "name": "unified bull skull ears and short horns (speaking)",
+     "triangles": 9750
+    },
+    {
+     "name": "lower teeth",
+     "triangles": 384
+    },
+    {
+     "name": "tongue",
+     "triangles": 420
+    }
+   ],
+   "bones": 18,
+   "jawParent": "head",
+   "closed difference, cutscene": {
+    "mean": 0.367,
+    "changed": 0.369
+   },
+   "closed difference, native": {
+    "mean": 0.183,
+    "changed": 0.148
+   },
+   "pageErrors": []
+  },
+  "cow": {
+   "id": "cow",
+   "level": "author",
+   "triangles": 9728,
+   "characterTriangles": 29988,
+   "parts": [
+    {
+     "name": "unified cow skull ears and forehead tuft (speaking)",
+     "triangles": 8924
+    },
+    {
+     "name": "lower teeth",
+     "triangles": 384
+    },
+    {
+     "name": "tongue",
+     "triangles": 420
+    }
+   ],
+   "bones": 18,
+   "jawParent": "head",
+   "closed difference, cutscene": {
+    "mean": 0.192,
+    "changed": 0.109
+   },
+   "closed difference, native": {
+    "mean": 0.111,
+    "changed": 0.049
+   },
+   "pageErrors": []
+  },
+  "donkey": {
+   "id": "donkey",
+   "level": "author",
+   "triangles": 9734,
+   "characterTriangles": 28898,
+   "parts": [
+    {
+     "name": "unified donkey skull muzzle and long ears (speaking)",
+     "triangles": 8738
+    },
+    {
+     "name": "upper teeth",
+     "triangles": 288
+    },
+    {
+     "name": "lower teeth",
+     "triangles": 288
+    },
+    {
+     "name": "tongue",
+     "triangles": 420
+    }
+   ],
+   "bones": 18,
+   "jawParent": "head",
+   "closed difference, cutscene": {
+    "mean": 0.249,
+    "changed": 0.178
+   },
+   "closed difference, native": {
+    "mean": 0.123,
+    "changed": 0.111
+   },
+   "pageErrors": []
+  },
+  "sheep": {
+   "id": "sheep",
+   "level": "author",
+   "triangles": 10552,
+   "characterTriangles": 30756,
+   "parts": [
+    {
+     "name": "unified sheep skull ears and wool (speaking)",
+     "triangles": 9748
+    },
+    {
+     "name": "lower teeth",
+     "triangles": 384
+    },
+    {
+     "name": "tongue",
+     "triangles": 420
+    }
+   ],
+   "bones": 18,
+   "jawParent": "head",
+   "closed difference, cutscene": {
+    "mean": 0.243,
+    "changed": 0.149
+   },
+   "closed difference, native": {
+    "mean": 0.147,
+    "changed": 0.111
+   },
+   "pageErrors": []
+  },
+  "skunk": {
+   "id": "skunk",
+   "level": "author",
+   "triangles": 6812,
+   "characterTriangles": 29934,
+   "parts": [
+    {
+     "name": "unified skunk skull rounded ears and muzzle (speaking)",
+     "triangles": 5624
+    },
+    {
+     "name": "upper teeth",
+     "triangles": 384
+    },
+    {
+     "name": "lower teeth",
+     "triangles": 384
+    },
+    {
+     "name": "tongue",
+     "triangles": 420
+    }
+   ],
+   "bones": 18,
+   "jawParent": "head",
+   "closed difference, cutscene": {
+    "mean": 0.163,
+    "changed": 0.113
+   },
+   "closed difference, native": {
+    "mean": 0.102,
+    "changed": 0.086
+   },
+   "pageErrors": []
+  },
+  "pig-foreman": {
+   "id": "pig-foreman",
+   "level": "author",
+   "triangles": 7714,
+   "characterTriangles": 29978,
+   "parts": [
+    {
+     "name": "unified pig skull folded ears and snout (speaking)",
+     "triangles": 6622
+    },
+    {
+     "name": "upper teeth",
+     "triangles": 288
+    },
+    {
+     "name": "lower teeth",
+     "triangles": 384
+    },
+    {
+     "name": "tongue",
+     "triangles": 420
+    }
+   ],
+   "bones": 18,
+   "jawParent": "head",
+   "closed difference, cutscene": {
+    "mean": 0.232,
+    "changed": 0.186
+   },
+   "closed difference, native": {
+    "mean": 0.162,
+    "changed": 0.16
+   },
+   "pageErrors": []
+  },
+  "pig-director": {
+   "id": "pig-director",
+   "level": "author",
+   "triangles": 8616,
+   "characterTriangles": 29996,
+   "parts": [
+    {
+     "name": "unified director skull folded ears and snout (speaking)",
+     "triangles": 7620
+    },
+    {
+     "name": "upper teeth",
+     "triangles": 288
+    },
+    {
+     "name": "lower teeth",
+     "triangles": 288
+    },
+    {
+     "name": "tongue",
+     "triangles": 420
+    }
+   ],
+   "bones": 18,
+   "jawParent": "head",
+   "closed difference, cutscene": {
+    "mean": 0.4,
+    "changed": 0.361
+   },
+   "closed difference, native": {
+    "mean": 0.192,
+    "changed": 0.123
+   },
+   "pageErrors": []
+  },
+  "rabbit": {
+   "id": "rabbit",
+   "level": "author",
+   "triangles": 9612,
+   "characterTriangles": 29972,
+   "parts": [
+    {
+     "name": "unified rabbit skull and leaf ears (speaking)",
+     "triangles": 9000
+    },
+    {
+     "name": "upper teeth",
+     "triangles": 96
+    },
+    {
+     "name": "lower teeth",
+     "triangles": 96
+    },
+    {
+     "name": "tongue",
+     "triangles": 420
+    }
+   ],
+   "bones": 18,
+   "jawParent": "head",
+   "closed difference, cutscene": {
+    "mean": 0.082,
+    "changed": 0.059
+   },
+   "closed difference, native": {
+    "mean": 0.043,
+    "changed": 0.025
+   },
+   "pageErrors": []
+  },
+  "dog": {
+   "id": "dog",
+   "level": "author",
+   "triangles": 8626,
+   "characterTriangles": 29850,
+   "parts": [
+    {
+     "name": "unified dog skull and upright ears (speaking)",
+     "triangles": 7438
+    },
+    {
+     "name": "upper teeth",
+     "triangles": 384
+    },
+    {
+     "name": "lower teeth",
+     "triangles": 384
+    },
+    {
+     "name": "tongue",
+     "triangles": 420
+    }
+   ],
+   "bones": 18,
+   "jawParent": "head",
+   "closed difference, cutscene": {
+    "mean": 0.135,
+    "changed": 0.115
+   },
+   "closed difference, native": {
+    "mean": 0.074,
+    "changed": 0.049
+   },
+   "pageErrors": []
+  },
+  "hen": {
+   "id": "hen",
+   "level": "author",
+   "triangles": 2230,
+   "characterTriangles": 29952,
+   "parts": [
+    {
+     "name": "short hooked beak (speaking)",
+     "triangles": 1812
+    },
+    {
+     "name": "tongue",
+     "triangles": 418
+    }
+   ],
+   "bones": 12,
+   "jawParent": "head",
+   "closed difference, cutscene": {
+    "mean": 0.03,
+    "changed": 0.037
+   },
+   "closed difference, native": {
+    "mean": 0.025,
+    "changed": 0.037
+   },
+   "pageErrors": []
+  }
+ },
+ "pageErrors": []
+}

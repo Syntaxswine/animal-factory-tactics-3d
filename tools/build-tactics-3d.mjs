@@ -46,10 +46,14 @@ console.log('Built Animal Factory Tactics 3D landing page.');
 
 fs.cpSync(new URL('dist/tactics/sector-library/',root),new URL('.pages-output/tactics/sector-library/',root),{recursive:true});
 fs.cpSync(new URL('dist/tactics/intro-sprites/',root),new URL('.pages-output/tactics/intro-sprites/',root),{recursive:true});
+// Speaking heads (docs/tactics/SPEAKING-HEADS.md): the review page, its runtime and the built heads.
+for(const file of ['speaking-head.js','speaking-heads.html','speaking-heads-viewer.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+fs.cpSync(new URL('dist/tactics/speaking-heads/',root),new URL('.pages-output/tactics/speaking-heads/',root),{recursive:true});
 import {checkModuleClosure} from './check-module-closure.mjs';
 checkModuleClosure(new URL('.pages-output/',root),['tactics/biome-foliage-study.js','tactics/biome-terrain-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/intro-sprites/proof.html','tactics/intro-sprites/keyframes.html','tactics/intro-sprites/closeup.html','tactics/intro-sprites/ambush.html','tactics/intro-sprites/intro.html']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/utility-helicopter-study.js']);
+checkModuleClosure(new URL('.pages-output/',root),['tactics/speaking-heads.html']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-chairs-study.js','tactics/horse-chair-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/guardhouse-machines-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/rpg-flight-study.js']);

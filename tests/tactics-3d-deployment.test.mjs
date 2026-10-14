@@ -30,6 +30,9 @@ test('3D distribution includes the encounter, editor, title, overmap and sprite 
   if(!fs.statSync(source).isFile())continue;
   assert.deepEqual(fs.readFileSync(new URL('../.pages-output/tactics/intro-sprites/'+relative.replaceAll(path.sep,'/'),import.meta.url)),fs.readFileSync(source),relative);
  }
+ // The speaking heads' page, runtime and every built head (docs/tactics/SPEAKING-HEADS.md).
+ for(const relative of ['tactics/speaking-heads.html','tactics/speaking-heads-viewer.js','tactics/speaking-head.js',...fs.readdirSync(new URL('../dist/tactics/speaking-heads/',import.meta.url)).map(f=>'tactics/speaking-heads/'+f)])
+  assert.deepEqual(fs.readFileSync(new URL('../.pages-output/'+relative,import.meta.url)),fs.readFileSync(new URL('../dist/'+relative,import.meta.url)),relative);
  for(const relative of [
   'tactics/sector-library/tutorial-step-1/rough-plateau.json',
   'assets/environment/ground-grass.png',
