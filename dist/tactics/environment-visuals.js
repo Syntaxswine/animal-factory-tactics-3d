@@ -1,7 +1,7 @@
 import {localEnvironmentFamily} from './environment-regions.js';
 import {biomeTree} from './biome-gameplay-data.js';
 import {isStrategicSite} from './strategic-site-rules.js';
-import {foliageAt,foliageKey} from './foliage-data.js';
+import {foliageAt,foliageKey,foliageTreeAt} from './foliage-data.js';
 import {canopyPresentation} from './editor-canopies.js';
 import {roofVisualKind} from './climbable-roofs.js';
 import {bankInfo,BANK_YAW} from './ramp-banks.js';
@@ -17,21 +17,22 @@ import {damagedFloorVisuals} from './floor-breaches.js';
 
 // The visual catalog deliberately does not replace simulation collision volumes.
 export function environmentVisuals(world,map,{biomes=false}={}){map=canopyPresentation(map);
- const result=world.boxes.filter(b=>b.kind!=='prop'&&!b.id.includes(':slope:'));
+ const result=world.boxes.filter(b=>b.kind!=='prop'&&!b.id.includes(':slope:')),fallbackTrees=[];
  const occupied=new Set((map.coverOccupiedProps||map.props||[]).flatMap(p=>(isStrategicSite(p)?Array.from({length:64},(_,i)=>({x:p.x+i%8,y:p.y+Math.floor(i/8)})):isCliff(p)?[p]:propCells(p)).map(c=>`${c.x},${c.y},${p.z||0}`)));
  const sandyCaps=new Set((map.props||[]).filter(p=>isCliff(p)&&(p.cliffSand??0)>=.5).map(p=>foliageKey(p.x,p.y,(p.z||0)+1)));
  const coverBox=b=>{const {x,y,z=0}=b.source;return {...b,foliage:map.foliage?.[foliageKey(x,y,z)],family:map.environment?localEnvironmentFamily(map.environment,x+.5,y+.5):null,habitat:['ground-dirt','ground-gravel'].includes(b.material)||sandyCaps.has(foliageKey(x,y,z))?'dry':'grass'};};
  for(const b of world.boxes)if(!biomes&&!occupied.has(`${b.source.x},${b.source.y},${b.source.z||0}`)){
   const box=coverBox(b);result.push(...(box.foliage?[]:grassTufts(b)),...coverUndergrowth(box));
+  if(b.kind==='floor'&&foliageTreeAt(map,b.source.x,b.source.y,b.source.z||0))fallbackTrees.push({kind:'tree-broadleaf',...b.source,foliageHeight:b.center[1]+D.slab/2});
  }
  // A ledge cap replaces its floor slab. Keep foliage on that supported surface
  // even though there is no ordinary floor mesh to seed its visual instances.
  for(const [layer,tiles]of (biomes?[]:map.upper||[]).entries())for(const [key,terrain]of Object.entries(tiles)){
   const [x,y]=key.split(',').map(Number),z=layer+1;if(!foliageAt(map,x,y,z))continue;const source={x,y,z},support=cliffSupportAt(map,source);
-  if(support&&!occupied.has(`${x},${y},${z}`))result.push(...coverUndergrowth(coverBox({id:`floor:${x},${y},${z}`,kind:'floor',material:terrain,source,center:[x,support.level*D.floorSpacing+support.height-D.slab/2,y],size:[1,D.slab,1]})));
+  if(support&&!occupied.has(`${x},${y},${z}`)){result.push(...coverUndergrowth(coverBox({id:`floor:${x},${y},${z}`,kind:'floor',material:terrain,source,center:[x,support.level*D.floorSpacing+support.height-D.slab/2,y],size:[1,D.slab,1]})));if(foliageTreeAt(map,x,y,z))fallbackTrees.push({kind:'tree-broadleaf',x,y,z,foliageHeight:support.level*D.floorSpacing+support.height});}
  }
  const add=(id,source,kind,material,center,size,shape='box',rotation=[0,0,0])=>result.push({id,source,kind,material,center,size,shape,rotation});
- for(const p of map.props||[]){
+ for(const p of [...(map.props||[]),...fallbackTrees]){
   if(isCliff(p)||biomes&&biomeTree(p.kind))continue;
   const bank=bankInfo(p);if(bank){const id='prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind;add(id,{prop:id,x:p.x,y:p.y,z:p.z||0},'ramp-bank',bank.surface==='grass'?'ground-grass':'sand',[p.x,(p.z||0)*D.floorSpacing,p.y],[1,1,1],'rampbank-'+bank.side+'-'+bank.step);result.at(-1).yaw=BANK_YAW[bank.direction];continue;}
   if(isRamp(p)){const r=rampInfo(p),yaw={east:0,south:-Math.PI/2,west:Math.PI,north:Math.PI/2}[r.direction],center=[(r.low.x+r.high.x)/2,r.z*D.floorSpacing+1,(r.low.y+r.high.y)/2],source={x:p.x,y:p.y,z:p.z||0,prop:'prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind};
@@ -40,7 +41,7 @@ export function environmentVisuals(world,map,{biomes=false}={}){map=canopyPresen
    add('ramp:'+p.x+','+p.y+':surface',source,'ramp',r.surface==='road'?'ground-asphalt':r.surface==='concrete'?'ground-concrete':r.surface==='grass'?'ground-grass':'sand',[center[0],center[1]+.01,center[2]],[Math.sqrt(20),.02,1],'box',[0,0,Math.atan(.5)]);result.at(-1).yaw=yaw;continue;
   }
   const rule=PROPS[p.kind];if(!rule)continue;
-  const id=`prop:${p.x},${p.y},${p.z||0}:${p.kind}`,source={prop:id,x:p.x,y:p.y,z:p.z||0},base=(p.z||0)*D.floorSpacing;
+  const id=`prop:${p.x},${p.y},${p.z||0}:${p.kind}`,source={prop:id,x:p.x,y:p.y,z:p.z||0},base=p.foliageHeight??(p.z||0)*D.floorSpacing;
   if(p.kind.startsWith('roof-')){
    if(roofVisualKind(p.kind)==='roof-corrugated-sloped')add(id+':sheet',source,'roof','metal',[p.x+.5,base-D.slab-.16,p.y+.5],[2,.32,2],'wedge',[0,p.rotated?-Math.PI/2:0,0]);
    // Corrugation and folded eaves remain below the walkable top of the roof.

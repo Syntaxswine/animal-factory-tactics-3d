@@ -11,6 +11,9 @@ import {groundHash} from './biome-ground-composition.js';
 import {DIMENSIONS} from './hybrid-world.js';
 import {cliffSupportAt} from './cliff-support.js';
 
+// Light woods keep an open understory: no shrub domes or continuous thickets.
+export const OPEN_WOODLAND_PLANTS={jungle:'jungle-fern',temperate:'temperate-tuft',snow:'snow-grass',dry:'dry-tussock',wetlands:'wetland-reeds'};
+
 export function mixedBiomeFill(plan,map){
  const fills=new Map(),cache=new Map(),get=family=>{if(!fills.has(family))fills.set(family,createTerrainFill(plan,family));return fills.get(family);};
  const blend=(method,x,y)=>{const mix=biomeMixAt(map,x,y,plan.level);return mix.reduce((n,p)=>n+get(p.family)[method](x,y)*p.weight,0);};
@@ -20,7 +23,7 @@ export function mixedBiomeFill(plan,map){
 export class BiomeScene{
  constructor(scene,loader,onReady=()=>{},onError=()=>{}){
   this.root=new T.Group();this.root.name='Gameplay biomes';scene.add(this.root);this.loader=loader;this.onReady=onReady;this.onError=onError;
-  this.terrains=[];this.paints=[];this.instances=[];this.layerMaterials=new Map();this.layers=new Map();this.textures={};this.signature=null;this.ready=false;this.disposed=false;
+  this.terrains=[];this.openTrees=[];this.paints=[];this.instances=[];this.layerMaterials=new Map();this.layers=new Map();this.textures={};this.signature=null;this.ready=false;this.disposed=false;
  }
  load(){
   if(this.loading||this.ready||this.failed)return;
@@ -54,13 +57,13 @@ export class BiomeScene{
  }
  material(base,level,size){const key=base.uuid+':'+level;if(!this.layerMaterials.has(key)){const m=base.clone();m.onBeforeCompile=base.onBeforeCompile;m.customProgramCacheKey=base.customProgramCacheKey;this.layerMaterials.set(key,this.decorate(m,level,size));}return this.layerMaterials.get(key);}
  clear(){
-  for(const t of this.terrains)t.dispose();this.terrains=[];for(const m of this.instances){m.removeFromParent();m.dispose();}this.instances=[];
+  for(const t of this.terrains)t.dispose();this.terrains=[];this.openTrees=[];for(const m of this.instances){m.removeFromParent();m.dispose();}this.instances=[];
   for(const p of this.paints)p.dispose();this.paints=[];for(const m of this.layerMaterials.values())m.dispose();this.layerMaterials.clear();for(const l of this.layers.values())l.texture.dispose();this.layers.clear();this.signature=null;
  }
  rebuild(map,seen,level,{editor=false,selectedLevel=level,dim=false}={}){
   this.map=map;this.level=level;this.root.visible=biomeEnabled(map);if(!this.root.visible){if(this.signature)this.clear();return false;}
   if(!this.ready){this.load();return false;}
-  const signature=JSON.stringify([map.terrain||map.map,map.upper,map.coverOccupiedProps||map.props,map.foliage,map.environment]);
+  const definition=map.definition||map,signature=JSON.stringify([map.terrain||map.map,map.upper,map.coverOccupiedProps||map.props,map.foliage,map.environment,map.edges,map.stairs,map.climbs,definition.starts,definition.guards,definition.exits]);
   const size=(map.terrain||map.map).length;
   if(signature!==this.signature){
    this.clear();this.signature=signature;const plans=biomePlans(map),fills=new Map(),paints=new Map(),batches=new Map();
@@ -70,11 +73,17 @@ export class BiomeScene{
     if(!fills.has(z))fills.set(z,mixedBiomeFill(plan,map));
     const terrain=createBiomeTerrain(plan,plan.family,{ground:paints.get(z).ground,cliff:null,plantMaterials:Object.fromEntries(Object.entries(this.materials).map(([k,m])=>[k,this.material(m,z,size)])),obstacleMaterials:Object.fromEntries(Object.entries(this.obstacleMaterials).map(([k,m])=>[k,this.material(m,z,size)])),plantFactory:factory(z),paintSeed:biomeSeed(map),fill:fills.get(z),onPaintReady:()=>this.onReady(),decorateMaterial:m=>this.decorate(m,z,size),groundSkinOptions:{maxResident:Math.max(1,Math.floor(16/plans.length)),...(plan.cells.length?{}:{canvasFactory:()=>null})}});
     terrain.level=z;terrain.root.position.y=.008;this.root.add(terrain.root);this.terrains.push(terrain);
-    const prototypes=BIOME_FAMILIES[plan.family].low.flatMap(id=>[0,1,2].map(variant=>factory(z).create(id,{variant})));
+    const prototypes=[0,1,2].map(variant=>factory(z).create(OPEN_WOODLAND_PLANTS[plan.family],{variant}));
+    const trees=BIOME_FAMILIES[plan.family].trees.flatMap(id=>[0,1,2].map(variant=>factory(z).create(id,{variant})));
     for(const c of plan.passableCells()){
+     if(plan.treeAt(c.x,c.y)){
+      const tree=trees[Math.floor(groundHash(c.x+plan.origin[0],c.y+plan.origin[1],plan.seed+z*911+587)*trees.length)];
+      this.batchPlant(batches,tree,c.x,c.height+.008,c.y,z,1);this.openTrees.push({x:c.x,y:c.y,z,height:c.height,id:tree.userData.id});continue;
+     }
      const hash=groundHash(c.x+plan.origin[0],c.y+plan.origin[1],plan.seed+z*911);if(hash*100>=c.density)continue;
      const p=prototypes[Math.floor(groundHash(c.x,c.y,plan.seed+71)*prototypes.length)],b=p.userData.bounds,max=Math.max(Math.abs(b.min[0]),b.max[0],Math.abs(b.min[2]),b.max[2]),scale=Math.min(1,.43/max);
-     this.batchPlant(batches,p,c.x,c.height+.008,c.y,z,scale);
+     const jitter=groundHash(c.x,c.y,plan.seed+z*911+137)-.5;
+     this.batchPlant(batches,p,c.x+jitter*.16,c.height+.008,c.y-jitter*.16,z,scale*.85,hash*Math.PI*2);
     }
    }
    for(const p of map.props||[])if(biomeTree(p.kind)){
@@ -94,6 +103,6 @@ export class BiomeScene{
   plant.updateMatrixWorld(true);const low=plant.userData.category==='low',transform=new T.Matrix4().compose(new T.Vector3(x,y,z),new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),yaw),new T.Vector3(scale,scale,scale));plant.traverse(m=>{if(!m.isMesh)return;const key=`${Math.floor(x/24)},${Math.floor(z/24)}:${level}:${low}:${m.geometry.uuid}:${m.material.uuid}`;if(!batches.has(key))batches.set(key,{geometry:m.geometry,material:m.material,matrices:[],level,low});batches.get(key).matrices.push(new T.Matrix4().multiplyMatrices(transform,m.matrixWorld));});
  }
  update(camera,focus,ppu){for(const t of this.terrains)if(t.root.visible)t.update(camera,{focus,ppu});for(const m of this.instances){m.visible=m.userData.biomeLevel<=this.level&&(!m.userData.low||ppu>=9);const p=m.boundingSphere?.center,near=p&&p.distanceTo(focus)<28;m.castShadow=m.visible&&ppu>12&&!!near&&m.userData.shadowKnown;m.userData.noShadow=!m.castShadow;}}
- stats(){return {ready:this.ready,regions:this.terrains.length,trees:this.terrains.reduce((n,t)=>n+t.trees.length,0),blockedCells:this.terrains.reduce((n,t)=>n+t.stats.blockedCells,0),paint:this.terrains.map(t=>t.groundSkin.stats)};}
+ stats(){return {ready:this.ready,regions:this.terrains.length,trees:this.openTrees.length+this.terrains.reduce((n,t)=>n+t.trees.length,0),openWoodlandTrees:this.openTrees.length,blockedCells:this.terrains.reduce((n,t)=>n+t.stats.blockedCells,0),paint:this.terrains.map(t=>t.groundSkin.stats)};}
  dispose(){if(this.disposed)return;this.disposed=true;this.clear();this.factory?.dispose();for(const m of Object.values(this.materials||{}))m.dispose();for(const m of Object.values(this.obstacleMaterials||{}))m.dispose();for(const t of Object.values(this.textures))t.dispose();this.root.removeFromParent();}
 }
