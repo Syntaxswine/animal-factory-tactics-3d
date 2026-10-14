@@ -1,0 +1,185 @@
+{
+  "helper": "independent-ground-projection-1791929507175",
+  "errors": [],
+  "projection": [
+    {
+      "family": "temperate",
+      "paintedPixels": 254245,
+      "clearChanged": 0,
+      "seam": {
+        "changedChannels": 0,
+        "maxChannelDelta": 0
+      },
+      "translated": {
+        "changedChannels": 0,
+        "maxChannelDelta": 0
+      },
+      "disposed": [
+        {
+          "name": "Procedural temperate ground sprites",
+          "count": 1
+        },
+        {
+          "name": "Seeded large ground layout",
+          "count": 1
+        },
+        {
+          "name": "Seeded litter ground layout",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "family": "jungle",
+      "paintedPixels": 278516,
+      "clearChanged": 0,
+      "seam": {
+        "changedChannels": 0,
+        "maxChannelDelta": 0
+      },
+      "translated": {
+        "changedChannels": 0,
+        "maxChannelDelta": 0
+      },
+      "disposed": [
+        {
+          "name": "Procedural jungle ground sprites",
+          "count": 1
+        },
+        {
+          "name": "Seeded large ground layout",
+          "count": 1
+        },
+        {
+          "name": "Seeded litter ground layout",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "family": "snow",
+      "paintedPixels": 221882,
+      "clearChanged": 0,
+      "seam": {
+        "changedChannels": 0,
+        "maxChannelDelta": 0
+      },
+      "translated": {
+        "changedChannels": 0,
+        "maxChannelDelta": 0
+      },
+      "disposed": [
+        {
+          "name": "Procedural snow ground sprites",
+          "count": 1
+        },
+        {
+          "name": "Seeded large ground layout",
+          "count": 1
+        },
+        {
+          "name": "Seeded litter ground layout",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "family": "dry",
+      "paintedPixels": 263122,
+      "clearChanged": 0,
+      "seam": {
+        "changedChannels": 0,
+        "maxChannelDelta": 0
+      },
+      "translated": {
+        "changedChannels": 0,
+        "maxChannelDelta": 0
+      },
+      "disposed": [
+        {
+          "name": "Procedural dry ground sprites",
+          "count": 1
+        },
+        {
+          "name": "Seeded large ground layout",
+          "count": 1
+        },
+        {
+          "name": "Seeded litter ground layout",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "family": "wetlands",
+      "paintedPixels": 232485,
+      "clearChanged": 0,
+      "seam": {
+        "changedChannels": 0,
+        "maxChannelDelta": 0
+      },
+      "translated": {
+        "changedChannels": 0,
+        "maxChannelDelta": 0
+      },
+      "disposed": [
+        {
+          "name": "Procedural wetlands ground sprites",
+          "count": 1
+        },
+        {
+          "name": "Seeded large ground layout",
+          "count": 1
+        },
+        {
+          "name": "Seeded litter ground layout",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "timing": [
+    {
+      "biome": "temperate",
+      "paint": false,
+      "medianMs": 9.600000143051147,
+      "p95Ms": 15.899999856948853,
+      "triangles": 84011
+    },
+    {
+      "biome": "temperate",
+      "paint": true,
+      "medianMs": 6.700000047683716,
+      "p95Ms": 10.400000095367432,
+      "triangles": 84011
+    },
+    {
+      "biome": "snow",
+      "paint": false,
+      "medianMs": 1.2000000476837158,
+      "p95Ms": 1.3000001907348633,
+      "triangles": 21083
+    },
+    {
+      "biome": "snow",
+      "paint": true,
+      "medianMs": 1.2999999523162842,
+      "p95Ms": 1.3999998569488525,
+      "triangles": 21083
+    },
+    {
+      "biome": "wetlands",
+      "paint": false,
+      "medianMs": 5.299999952316284,
+      "p95Ms": 8.5,
+      "triangles": 27463
+    },
+    {
+      "biome": "wetlands",
+      "paint": true,
+      "medianMs": 8.400000095367432,
+      "p95Ms": 11.5,
+      "triangles": 27463
+    }
+  ]
+}

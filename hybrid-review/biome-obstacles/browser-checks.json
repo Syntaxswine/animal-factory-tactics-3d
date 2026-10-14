@@ -1,0 +1,1213 @@
+{
+  "errors": [],
+  "requests": [],
+  "captures": [
+    {
+      "name": "jungle-map",
+      "state": {
+        "biome": "jungle",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1463,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 7
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "details": 0,
+        "render": {
+          "frame": 7,
+          "calls": 11,
+          "triangles": 1762445,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 20,
+          "textures": 7
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "jungle-route",
+      "state": {
+        "biome": "jungle",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1463,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 7
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "details": 46,
+        "render": {
+          "frame": 8,
+          "calls": 21,
+          "triangles": 1774985,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 21,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "temperate-map",
+      "state": {
+        "biome": "temperate",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 6
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "details": 0,
+        "render": {
+          "frame": 9,
+          "calls": 10,
+          "triangles": 2461477,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 21,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "temperate-route",
+      "state": {
+        "biome": "temperate",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 6
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "details": 46,
+        "render": {
+          "frame": 10,
+          "calls": 20,
+          "triangles": 2473121,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 22,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "snow-map",
+      "state": {
+        "biome": "snow",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 5
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "details": 0,
+        "render": {
+          "frame": 11,
+          "calls": 9,
+          "triangles": 3056881,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 22,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "snow-route",
+      "state": {
+        "biome": "snow",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 5
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "details": 46,
+        "render": {
+          "frame": 12,
+          "calls": 19,
+          "triangles": 3068669,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 22,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "dry-map",
+      "state": {
+        "biome": "dry",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 643,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 4
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "details": 0,
+        "render": {
+          "frame": 13,
+          "calls": 8,
+          "triangles": 1362557,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 22,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "dry-route",
+      "state": {
+        "biome": "dry",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 643,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 4
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "details": 46,
+        "render": {
+          "frame": 14,
+          "calls": 18,
+          "triangles": 1376889,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 22,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "wetlands-map",
+      "state": {
+        "biome": "wetlands",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "shrubs": 13170,
+          "baseTriangles": 230525,
+          "batches": 6
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "details": 0,
+        "render": {
+          "frame": 15,
+          "calls": 10,
+          "triangles": 844373,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 23,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "wetlands-route",
+      "state": {
+        "biome": "wetlands",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "shrubs": 13170,
+          "baseTriangles": 230525,
+          "batches": 6
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "details": 46,
+        "render": {
+          "frame": 16,
+          "calls": 20,
+          "triangles": 855729,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 23,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "cliff-route",
+      "state": {
+        "biome": "temperate",
+        "frame": "cliff",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 6
+        },
+        "focus": [
+          152,
+          0,
+          164
+        ],
+        "details": 43,
+        "render": {
+          "frame": 17,
+          "calls": 24,
+          "triangles": 2472737,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 22,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "clearing",
+      "state": {
+        "biome": "temperate",
+        "frame": "clearing",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 6
+        },
+        "focus": [
+          182,
+          0,
+          206
+        ],
+        "details": 53,
+        "render": {
+          "frame": 18,
+          "calls": 20,
+          "triangles": 2472449,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 22,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "blocked-map",
+      "state": {
+        "biome": "temperate",
+        "frame": "overview",
+        "view": "top",
+        "grey": false,
+        "blocked": true,
+        "trees": true,
+        "ppu": 3.0429954931023344,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 6
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "details": 0,
+        "render": {
+          "frame": 19,
+          "calls": 12,
+          "triangles": 2587317,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 23,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "grey-route",
+      "state": {
+        "biome": "temperate",
+        "frame": "corridor",
+        "view": "three",
+        "grey": true,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 5
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "details": 46,
+        "render": {
+          "frame": 20,
+          "calls": 18,
+          "triangles": 2473121,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 23,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "bog-no-trees",
+      "state": {
+        "biome": "wetlands",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": false,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "shrubs": 13170,
+          "baseTriangles": 230525,
+          "batches": 6
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "details": 46,
+        "render": {
+          "frame": 21,
+          "calls": 16,
+          "triangles": 662001,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 24,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "mobile",
+      "state": {
+        "biome": "temperate",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 1.0264741253334964,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "shrubs": 31460,
+          "baseTriangles": 230525,
+          "batches": 6
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "details": 0,
+        "render": {
+          "frame": 63,
+          "calls": 10,
+          "triangles": 2461477,
+          "points": 0,
+          "lines": 787
+        },
+        "resources": {
+          "geometries": 23,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    }
+  ],
+  "memories": [
+    {
+      "geometries": 23,
+      "textures": 10
+    },
+    {
+      "geometries": 23,
+      "textures": 10
+    }
+  ],
+  "disposal": [
+    {
+      "key": "texture:original",
+      "count": 1
+    },
+    {
+      "key": "texture:foliage",
+      "count": 1
+    },
+    {
+      "key": "texture:obstacles",
+      "count": 1
+    },
+    {
+      "key": "texture:ground",
+      "count": 1
+    },
+    {
+      "key": "texture:horse",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:bark",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:leaves",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:pine",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:jungle",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:frond",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:dry",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:wet",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:cypress",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:snowPine",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:snow",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:straw",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:moss",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:blade",
+      "count": 1
+    },
+    {
+      "key": "plantMaterials:grey",
+      "count": 1
+    },
+    {
+      "key": "obstacleMaterials:bogWater",
+      "count": 1
+    },
+    {
+      "key": "obstacleMaterials:peat",
+      "count": 1
+    },
+    {
+      "key": "obstacleMaterials:vines",
+      "count": 1
+    },
+    {
+      "key": "obstacleMaterials:bramble",
+      "count": 1
+    },
+    {
+      "key": "obstacleMaterials:dryThorns",
+      "count": 1
+    },
+    {
+      "key": "obstacleMaterials:brokenWood",
+      "count": 1
+    },
+    {
+      "key": "grounds:jungle",
+      "count": 1
+    },
+    {
+      "key": "grounds:temperate",
+      "count": 1
+    },
+    {
+      "key": "grounds:snow",
+      "count": 1
+    },
+    {
+      "key": "grounds:dry",
+      "count": 1
+    },
+    {
+      "key": "grounds:wetlands",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:box",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:cylinder",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:taper",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:cone",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:crown",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:cushion",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:leaf",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:ring",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:wedge",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:foliage-crown",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:broadleaf-crown",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:pine-tier",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:cover-crown",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:grass-tuft",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:ramp",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:rampbank-left-0",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:rampbank-left-1",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:rampbank-left-2",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:rampbank-left-3",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:rampbank-right-0",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:rampbank-right-1",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:rampbank-right-2",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:rampbank-right-3",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:biome-leaf",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:biome-frond",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:biome-crown",
+      "count": 1
+    },
+    {
+      "key": "plantFactory:biome-buttress",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:crown",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:bank",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:branch",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:root",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-0",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-1",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-2",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-3",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-4",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-5",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-6",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-7",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-8",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-9",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-10",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-11",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-12",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-13",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-14",
+      "count": 1
+    },
+    {
+      "key": "obstacleFactory:surface-15",
+      "count": 1
+    },
+    {
+      "key": "shadow",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:8ed347d0-4536-4ad2-9781-604ab522730b",
+      "count": 1
+    },
+    {
+      "key": "scene-material:63c40426-bb92-42a7-aa7d-79aff0cbbe6d",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:83544d8d-1c6f-4622-9043-fdd62022dce2",
+      "count": 1
+    },
+    {
+      "key": "scene-material:5767ba44-c764-4453-a8e7-3ec25e68b20a",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:fe669246-bee6-4f25-91a6-d95d21966499",
+      "count": 1
+    },
+    {
+      "key": "scene-material:86f19116-1698-48a6-9764-67cb67c81e21",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:483a61f3-e8e2-4ddd-ad0b-c13e6573ece5",
+      "count": 1
+    },
+    {
+      "key": "scene-material:cbfde66e-a91d-4690-8ed7-a33bea715d56",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:42d905f8-acef-4977-88c4-76de5908ee14",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:adbff3a8-0c25-483f-9b62-b1bfadd12df9",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:5893c926-1da2-4734-9021-2bf9f90ee1b3",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:e94a99f3-98ed-4f08-b5c9-d691ece8a3dc",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:4c86843a-a793-471f-a9f3-5eff6cec0b0c",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:ef13d8a2-3d18-4f31-a90c-6597ca6ae884",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:c9862429-7b74-4342-a5eb-79b03f028f30",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:9fe13fb7-4cfe-466b-8ed0-e8a4341a7b0f",
+      "count": 1
+    },
+    {
+      "key": "scene-material:b5494a2d-2bfb-4ac7-9689-bbaf4ad95672",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:6d2b163a-b103-4783-a57c-40906ad42954",
+      "count": 1
+    },
+    {
+      "key": "scene-material:78c6f551-91e0-4ab9-a476-491b7694d860",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:432c90ba-0286-4e15-89f3-413d292f132a",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:01e3b4cf-2c17-4715-96fc-5ec5b92c8125",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:dec63342-aa74-4c28-be31-9a55074db58b",
+      "count": 1
+    },
+    {
+      "key": "scene-material:61585496-5d9c-448e-8314-aecb460a278c",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:985902fc-1ecd-40d2-879c-ed944c4d0053",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:b6f9293d-641f-4608-b46f-771ee96b97a8",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:d411868e-973b-496a-b984-60e46d34406e",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:343140b0-bf31-42c7-a8fd-3d71636b060a",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:9b114068-5f4f-49cc-936a-c035a8bf8299",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:6893c07e-ea0e-4bfe-a604-1ac6f63fcc3d",
+      "count": 1
+    },
+    {
+      "key": "scene-material:e4b29666-f246-4c6f-98bf-42b7620e8ce1",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:2b84dbac-7ba5-427d-bdfe-feb64cddf1f6",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:e75a9eef-3d89-49ff-8b99-e89b875b63bd",
+      "count": 1
+    },
+    {
+      "key": "scene-material:7b7f85d7-1e50-4856-afc5-a0b41a44174e",
+      "count": 1
+    },
+    {
+      "key": "scene-geometry:7cecfb5d-5952-4bcd-a9bc-93b15dca5e14",
+      "count": 1
+    },
+    {
+      "key": "instance:dd166e3b-5f9f-4d8f-addf-abe558be1106",
+      "count": 1
+    },
+    {
+      "key": "instance:d617ed14-8e5e-43d2-9e65-17c9acfa657c",
+      "count": 1
+    },
+    {
+      "key": "instance:c0213fb7-7a95-4fcb-ab68-3034c588f529",
+      "count": 1
+    },
+    {
+      "key": "instance:3727006c-25f7-4ae6-a9da-dd0e32d45172",
+      "count": 1
+    },
+    {
+      "key": "instance:e4163cfc-8658-4263-9276-44dc17ed12ec",
+      "count": 1
+    },
+    {
+      "key": "instance:e0fb5f66-7e85-4d9d-9d13-10485254d06a",
+      "count": 1
+    }
+  ],
+  "failedLoadCleanup": true,
+  "controls": true,
+  "patchControls": true
+}

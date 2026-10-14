@@ -1,0 +1,7326 @@
+{
+  "date": "2026-10-13T21:38:23.677Z",
+  "hashes": {
+    "biome-terrain.js": "b7e48d73339ee8e6b245c673d65f8bc1791cb693064ed0a0796c8186be390872",
+    "biome-terrain-fill.js": "394c52b8dffead4c04ef18031d006ced6e98dbd57e7fc72a5da286dc9a141056",
+    "biome-terrain-study.js": "31921f0d02b4cbc5aa9299121da3f6c8c716534876fa0fb752f96aaffa43fd8f",
+    "biome-terrain-plan.js": "83ad5565b4e1dce6fb3dd5a57fe882e031022ebe285f71d79fb29cb77ce3b8ae",
+    "biome-obstacles.js": "05ac6d32c8aa3d7c82ae19276ba76578467b5862e71811f0183a73b755f93d3a"
+  },
+  "errors": [],
+  "requests": [],
+  "captures": [
+    {
+      "name": "jungle-map",
+      "state": {
+        "biome": "jungle",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1463,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 1396299,
+          "batches": 993,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 493579,
+          "visibleBatches": 776
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 7,
+          "calls": 793,
+          "triangles": 493579,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 476.5,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 240,
+          "textures": 7
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "jungle-route",
+      "state": {
+        "biome": "jungle",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1463,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 1396299,
+          "batches": 993,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 163286,
+          "visibleBatches": 89
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 19,
+          "calls": 201,
+          "triangles": 376083,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 266,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 241,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "temperate-map",
+      "state": {
+        "biome": "temperate",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2226811,
+          "batches": 1096,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 625059,
+          "visibleBatches": 949
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 31,
+          "calls": 966,
+          "triangles": 625059,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 57.10000014305115,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 242,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "temperate-route",
+      "state": {
+        "biome": "temperate",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2226811,
+          "batches": 1096,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 238918,
+          "visibleBatches": 87
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 43,
+          "calls": 197,
+          "triangles": 558519,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 3,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 245,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "snow-map",
+      "state": {
+        "biome": "snow",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "clusters": 0,
+          "logs": 371,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2503447,
+          "batches": 615,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 306291,
+          "visibleBatches": 471
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 55,
+          "calls": 488,
+          "triangles": 306291,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 288.60000014305115,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 243,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "snow-route",
+      "state": {
+        "biome": "snow",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "clusters": 0,
+          "logs": 371,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2503447,
+          "batches": 615,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 316706,
+          "visibleBatches": 63
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 67,
+          "calls": 135,
+          "triangles": 657619,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 81.5,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 243,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "dry-map",
+      "state": {
+        "biome": "dry",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 643,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 1071603,
+          "batches": 823,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 568771,
+          "visibleBatches": 861
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 79,
+          "calls": 878,
+          "triangles": 568771,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 437.90000009536743,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 244,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "dry-route",
+      "state": {
+        "biome": "dry",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 643,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 1071603,
+          "batches": 823,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 99206,
+          "visibleBatches": 66
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 91,
+          "calls": 154,
+          "triangles": 246475,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 1.7000000476837158,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 244,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "wetlands-map",
+      "state": {
+        "biome": "wetlands",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "clusters": 217,
+          "logs": 0,
+          "reeds": 1924,
+          "baseTriangles": 198183,
+          "storedTriangles": 529967,
+          "batches": 892,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 336239,
+          "visibleBatches": 884
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 103,
+          "calls": 901,
+          "triangles": 336239,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 450.2000000476837,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 246,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "wetlands-route",
+      "state": {
+        "biome": "wetlands",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "clusters": 217,
+          "logs": 0,
+          "reeds": 1924,
+          "baseTriangles": 198183,
+          "storedTriangles": 529967,
+          "batches": 892,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 37674,
+          "visibleBatches": 44
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 115,
+          "calls": 112,
+          "triangles": 99291,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 1,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 246,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "snow-low",
+      "state": {
+        "biome": "snow",
+        "frame": "corridor",
+        "view": "low",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "clusters": 0,
+          "logs": 371,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2503447,
+          "batches": 615,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 10,
+          "detailedChunks": 10,
+          "shadowChunks": 10,
+          "visibleTriangles": 348713,
+          "visibleBatches": 102
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 127,
+          "calls": 175,
+          "triangles": 689626,
+          "points": 0,
+          "lines": 52,
+          "cpuMs": 31.600000143051147,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 57,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "snow-grey",
+      "state": {
+        "biome": "snow",
+        "frame": "corridor",
+        "view": "three",
+        "grey": true,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "clusters": 0,
+          "logs": 371,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2503447,
+          "batches": 529,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 316706,
+          "visibleBatches": 54
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 139,
+          "calls": 117,
+          "triangles": 657619,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 201.80000019073486,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 39,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "snow-top",
+      "state": {
+        "biome": "snow",
+        "frame": "overview",
+        "view": "top",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.0429954931023344,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "clusters": 0,
+          "logs": 371,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2503447,
+          "batches": 615,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 306291,
+          "visibleBatches": 471
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 140,
+          "calls": 488,
+          "triangles": 306291,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 47,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 244,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "jungle-grey",
+      "state": {
+        "biome": "jungle",
+        "frame": "corridor",
+        "view": "low",
+        "grey": true,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1463,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 1396299,
+          "batches": 830,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 12,
+          "detailedChunks": 12,
+          "shadowChunks": 10,
+          "visibleTriangles": 233501,
+          "visibleBatches": 118
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 141,
+          "calls": 213,
+          "triangles": 446298,
+          "points": 0,
+          "lines": 52,
+          "cpuMs": 28.5,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 58,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "temperate-grey",
+      "state": {
+        "biome": "temperate",
+        "frame": "corridor",
+        "view": "three",
+        "grey": true,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2226811,
+          "batches": 1018,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 239686,
+          "visibleBatches": 81
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 142,
+          "calls": 183,
+          "triangles": 559287,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 21.5,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 40,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "bog-low",
+      "state": {
+        "biome": "wetlands",
+        "frame": "corridor",
+        "view": "low",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "clusters": 217,
+          "logs": 0,
+          "reeds": 1924,
+          "baseTriangles": 198183,
+          "storedTriangles": 529967,
+          "batches": 892,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 9,
+          "detailedChunks": 9,
+          "shadowChunks": 10,
+          "visibleTriangles": 57683,
+          "visibleBatches": 71
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 143,
+          "calls": 140,
+          "triangles": 119300,
+          "points": 0,
+          "lines": 52,
+          "cpuMs": 49.40000009536743,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 60,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "bog-top",
+      "state": {
+        "biome": "wetlands",
+        "frame": "overview",
+        "view": "top",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.0429954931023344,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "clusters": 217,
+          "logs": 0,
+          "reeds": 1924,
+          "baseTriangles": 198183,
+          "storedTriangles": 529967,
+          "batches": 892,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 336239,
+          "visibleBatches": 884
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 144,
+          "calls": 901,
+          "triangles": 336239,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 14.5,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 246,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "bog-cliff",
+      "state": {
+        "biome": "wetlands",
+        "frame": "cliff",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "clusters": 217,
+          "logs": 0,
+          "reeds": 1924,
+          "baseTriangles": 198183,
+          "storedTriangles": 529967,
+          "batches": 892,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 21186,
+          "visibleBatches": 30
+        },
+        "focus": [
+          152,
+          0,
+          164
+        ],
+        "render": {
+          "frame": 145,
+          "calls": 93,
+          "triangles": 58765,
+          "points": 0,
+          "lines": 133,
+          "cpuMs": 4.299999952316284,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 246,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "dry-clearing",
+      "state": {
+        "biome": "dry",
+        "frame": "clearing",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 643,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 1071603,
+          "batches": 823,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 6,
+          "detailedChunks": 6,
+          "shadowChunks": 9,
+          "visibleTriangles": 52618,
+          "visibleBatches": 40
+        },
+        "focus": [
+          182,
+          0,
+          206
+        ],
+        "render": {
+          "frame": 146,
+          "calls": 115,
+          "triangles": 136776,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 23.600000143051147,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 34,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "mask-top",
+      "state": {
+        "biome": "temperate",
+        "frame": "overview",
+        "view": "top",
+        "grey": false,
+        "blocked": true,
+        "trees": false,
+        "ppu": 3.0429954931023344,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2226811,
+          "batches": 1096,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 519055,
+          "visibleBatches": 684
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 147,
+          "calls": 883,
+          "triangles": 644895,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 93.59999990463257,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 335,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "mobile-map",
+      "state": {
+        "biome": "jungle",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 1.0264741253334964,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1463,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 1396299,
+          "batches": 993,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 493579,
+          "visibleBatches": 776
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 167,
+          "calls": 793,
+          "triangles": 493579,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 72.5,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 336,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    },
+    {
+      "name": "mobile-route",
+      "state": {
+        "biome": "snow",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 15.826086956521738,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "clusters": 0,
+          "logs": 371,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2503447,
+          "batches": 615,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 10,
+          "detailedChunks": 0,
+          "shadowChunks": 10,
+          "visibleTriangles": 39403,
+          "visibleBatches": 50
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 169,
+          "calls": 84,
+          "triangles": 70552,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 24.09999990463257,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 134,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "label": "jungle overview",
+      "state": {
+        "biome": "jungle",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1463,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 1396299,
+          "batches": 993,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 493579,
+          "visibleBatches": 776
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 8,
+          "calls": 793,
+          "triangles": 493579,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 4.599999904632568,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 240,
+          "textures": 7
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      },
+      "passes": {
+        "main": {
+          "triangles": 493579,
+          "calls": 776,
+          "chunks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            71,
+            72,
+            73,
+            74,
+            75,
+            76,
+            77,
+            78,
+            79,
+            80,
+            81,
+            82,
+            83,
+            84,
+            85,
+            86,
+            87,
+            88,
+            89,
+            90,
+            91,
+            92,
+            93,
+            94,
+            95,
+            96,
+            97,
+            98,
+            99
+          ],
+          "names": {
+            "Two plateau tiers": 1574,
+            "Distant trees": 87780,
+            "Grouped ground cover": 207616,
+            "Saved tutorial terrain": 115200,
+            "Continuous impassable ground": 81409
+          }
+        },
+        "shadow": {
+          "triangles": 0,
+          "calls": 0,
+          "chunks": [],
+          "names": {}
+        }
+      },
+      "timing": {
+        "kind": "CPU submit + blocking GPU completion on this host",
+        "medianMs": 4.200000047683716,
+        "p90Ms": 4.900000095367432,
+        "samples": [
+          3.299999952316284,
+          3.5,
+          3.5,
+          3.700000047683716,
+          4,
+          4.200000047683716,
+          4.300000190734863,
+          4.5,
+          4.599999904632568,
+          4.900000095367432
+        ]
+      }
+    },
+    {
+      "label": "jungle corridor",
+      "state": {
+        "biome": "jungle",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1463,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 1396299,
+          "batches": 993,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 163286,
+          "visibleBatches": 89
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 20,
+          "calls": 201,
+          "triangles": 376083,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 4.200000047683716,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 241,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      },
+      "passes": {
+        "main": {
+          "triangles": 173586,
+          "calls": 97,
+          "chunks": [
+            23,
+            24,
+            32,
+            33,
+            34,
+            35,
+            43,
+            44,
+            45,
+            54
+          ],
+          "names": {
+            "Trees": 123120,
+            "Grouped ground cover": 19120,
+            "Saved tutorial terrain": 11520,
+            "mane crest": 300,
+            "forearm and hand 1": 1260,
+            "unified skull jaw neck and ears": 2498,
+            "connected shirt and sleeves": 1700,
+            "connected overalls seat and legs": 2600,
+            "exposed hoof 1": 350,
+            "forearm and hand -1": 1242,
+            "exposed hoof -1": 350,
+            "Continuous impassable ground": 9526
+          }
+        },
+        "shadow": {
+          "triangles": 202497,
+          "calls": 104,
+          "chunks": [
+            23,
+            24,
+            33,
+            34,
+            35,
+            43,
+            44,
+            45,
+            53,
+            54
+          ],
+          "names": {
+            "connected shirt and sleeves": 1700,
+            "connected overalls seat and legs": 2600,
+            "forearm and hand -1": 1242,
+            "exposed hoof -1": 350,
+            "forearm and hand 1": 1260,
+            "exposed hoof 1": 350,
+            "unified skull jaw neck and ears": 2498,
+            "mane crest": 300,
+            "Trees": 153888,
+            "Continuous impassable ground": 9549,
+            "Grouped ground cover": 28760
+          }
+        }
+      },
+      "timing": {
+        "kind": "CPU submit + blocking GPU completion on this host",
+        "medianMs": 2.799999952316284,
+        "p90Ms": 3.3999998569488525,
+        "samples": [
+          2.299999952316284,
+          2.5,
+          2.700000047683716,
+          2.799999952316284,
+          2.799999952316284,
+          2.799999952316284,
+          2.9000000953674316,
+          3,
+          3.3000001907348633,
+          3.3999998569488525
+        ]
+      }
+    },
+    {
+      "label": "temperate overview",
+      "state": {
+        "biome": "temperate",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2226811,
+          "batches": 1096,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 625059,
+          "visibleBatches": 949
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 32,
+          "calls": 966,
+          "triangles": 625059,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 5.200000047683716,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 242,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      },
+      "passes": {
+        "main": {
+          "triangles": 625059,
+          "calls": 949,
+          "chunks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            71,
+            72,
+            73,
+            74,
+            75,
+            76,
+            77,
+            78,
+            79,
+            80,
+            81,
+            82,
+            83,
+            84,
+            85,
+            86,
+            87,
+            88,
+            89,
+            90,
+            91,
+            92,
+            93,
+            94,
+            95,
+            96,
+            97,
+            98,
+            99
+          ],
+          "names": {
+            "Two plateau tiers": 1574,
+            "Distant trees": 106004,
+            "Grouped ground cover": 320872,
+            "Saved tutorial terrain": 115200,
+            "Continuous impassable ground": 81409
+          }
+        },
+        "shadow": {
+          "triangles": 0,
+          "calls": 0,
+          "chunks": [],
+          "names": {}
+        }
+      },
+      "timing": {
+        "kind": "CPU submit + blocking GPU completion on this host",
+        "medianMs": 4.700000047683716,
+        "p90Ms": 5.900000095367432,
+        "samples": [
+          3.5999999046325684,
+          4.299999952316284,
+          4.300000190734863,
+          4.5,
+          4.5,
+          4.700000047683716,
+          4.799999952316284,
+          4.900000095367432,
+          5.799999952316284,
+          5.900000095367432
+        ]
+      }
+    },
+    {
+      "label": "temperate corridor",
+      "state": {
+        "biome": "temperate",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1831,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2226811,
+          "batches": 1096,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 238918,
+          "visibleBatches": 87
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 44,
+          "calls": 197,
+          "triangles": 558519,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 3.0999999046325684,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 245,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      },
+      "passes": {
+        "main": {
+          "triangles": 249218,
+          "calls": 95,
+          "chunks": [
+            23,
+            24,
+            32,
+            33,
+            34,
+            35,
+            43,
+            44,
+            45,
+            54
+          ],
+          "names": {
+            "Grouped ground cover": 28288,
+            "Trees": 189584,
+            "Saved tutorial terrain": 11520,
+            "mane crest": 300,
+            "forearm and hand 1": 1260,
+            "unified skull jaw neck and ears": 2498,
+            "connected shirt and sleeves": 1700,
+            "connected overalls seat and legs": 2600,
+            "exposed hoof 1": 350,
+            "forearm and hand -1": 1242,
+            "exposed hoof -1": 350,
+            "Continuous impassable ground": 9526
+          }
+        },
+        "shadow": {
+          "triangles": 309301,
+          "calls": 102,
+          "chunks": [
+            23,
+            24,
+            33,
+            34,
+            35,
+            43,
+            44,
+            45,
+            53,
+            54
+          ],
+          "names": {
+            "connected shirt and sleeves": 1700,
+            "connected overalls seat and legs": 2600,
+            "forearm and hand -1": 1242,
+            "exposed hoof -1": 350,
+            "forearm and hand 1": 1260,
+            "exposed hoof 1": 350,
+            "unified skull jaw neck and ears": 2498,
+            "mane crest": 300,
+            "Trees": 248548,
+            "Continuous impassable ground": 9549,
+            "Grouped ground cover": 40904
+          }
+        }
+      },
+      "timing": {
+        "kind": "CPU submit + blocking GPU completion on this host",
+        "medianMs": 3.200000047683716,
+        "p90Ms": 4.5,
+        "samples": [
+          2.3999998569488525,
+          2.5,
+          2.700000047683716,
+          3,
+          3.200000047683716,
+          3.200000047683716,
+          3.299999952316284,
+          4,
+          4.299999952316284,
+          4.5
+        ]
+      }
+    },
+    {
+      "label": "snow overview",
+      "state": {
+        "biome": "snow",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "clusters": 0,
+          "logs": 371,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2503447,
+          "batches": 615,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 306291,
+          "visibleBatches": 471
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 56,
+          "calls": 488,
+          "triangles": 306291,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 2.5999999046325684,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 243,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      },
+      "passes": {
+        "main": {
+          "triangles": 306291,
+          "calls": 471,
+          "chunks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            71,
+            72,
+            73,
+            74,
+            75,
+            76,
+            77,
+            78,
+            79,
+            80,
+            81,
+            82,
+            83,
+            84,
+            85,
+            86,
+            87,
+            88,
+            89,
+            90,
+            91,
+            92,
+            93,
+            94,
+            95,
+            96,
+            97,
+            98,
+            99
+          ],
+          "names": {
+            "Two plateau tiers": 1574,
+            "Distant trees": 100688,
+            "Grouped ground cover": 7420,
+            "Saved tutorial terrain": 115200,
+            "Continuous impassable ground": 81409
+          }
+        },
+        "shadow": {
+          "triangles": 0,
+          "calls": 0,
+          "chunks": [],
+          "names": {}
+        }
+      },
+      "timing": {
+        "kind": "CPU submit + blocking GPU completion on this host",
+        "medianMs": 2.5,
+        "p90Ms": 2.8000001907348633,
+        "samples": [
+          2,
+          2.1000001430511475,
+          2.200000047683716,
+          2.299999952316284,
+          2.3999998569488525,
+          2.5,
+          2.5,
+          2.5999999046325684,
+          2.799999952316284,
+          2.8000001907348633
+        ]
+      }
+    },
+    {
+      "label": "snow corridor",
+      "state": {
+        "biome": "snow",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "clusters": 0,
+          "logs": 371,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2503447,
+          "batches": 615,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 316706,
+          "visibleBatches": 63
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 68,
+          "calls": 135,
+          "triangles": 657619,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 1.5999999046325684,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 243,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      },
+      "passes": {
+        "main": {
+          "triangles": 327006,
+          "calls": 71,
+          "chunks": [
+            23,
+            24,
+            32,
+            33,
+            34,
+            35,
+            43,
+            44,
+            45,
+            54
+          ],
+          "names": {
+            "Trees": 295020,
+            "Grouped ground cover": 640,
+            "Saved tutorial terrain": 11520,
+            "mane crest": 300,
+            "forearm and hand 1": 1260,
+            "unified skull jaw neck and ears": 2498,
+            "connected shirt and sleeves": 1700,
+            "connected overalls seat and legs": 2600,
+            "exposed hoof 1": 350,
+            "forearm and hand -1": 1242,
+            "exposed hoof -1": 350,
+            "Continuous impassable ground": 9526
+          }
+        },
+        "shadow": {
+          "triangles": 330613,
+          "calls": 64,
+          "chunks": [
+            23,
+            24,
+            33,
+            34,
+            35,
+            43,
+            44,
+            45,
+            53,
+            54
+          ],
+          "names": {
+            "connected shirt and sleeves": 1700,
+            "connected overalls seat and legs": 2600,
+            "forearm and hand -1": 1242,
+            "exposed hoof -1": 350,
+            "forearm and hand 1": 1260,
+            "exposed hoof 1": 350,
+            "unified skull jaw neck and ears": 2498,
+            "mane crest": 300,
+            "Trees": 309764,
+            "Continuous impassable ground": 9549,
+            "Grouped ground cover": 1000
+          }
+        }
+      },
+      "timing": {
+        "kind": "CPU submit + blocking GPU completion on this host",
+        "medianMs": 2.1000001430511475,
+        "p90Ms": 2.700000047683716,
+        "samples": [
+          1.7000000476837158,
+          1.7000000476837158,
+          1.7999999523162842,
+          1.9000000953674316,
+          1.9000000953674316,
+          2.1000001430511475,
+          2.299999952316284,
+          2.5,
+          2.5999999046325684,
+          2.700000047683716
+        ]
+      }
+    },
+    {
+      "label": "dry overview",
+      "state": {
+        "biome": "dry",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 643,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 1071603,
+          "batches": 823,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 568771,
+          "visibleBatches": 861
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 80,
+          "calls": 878,
+          "triangles": 568771,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 3.8999998569488525,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 244,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      },
+      "passes": {
+        "main": {
+          "triangles": 568771,
+          "calls": 861,
+          "chunks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            71,
+            72,
+            73,
+            74,
+            75,
+            76,
+            77,
+            78,
+            79,
+            80,
+            81,
+            82,
+            83,
+            84,
+            85,
+            86,
+            87,
+            88,
+            89,
+            90,
+            91,
+            92,
+            93,
+            94,
+            95,
+            96,
+            97,
+            98,
+            99
+          ],
+          "names": {
+            "Two plateau tiers": 1574,
+            "Grouped ground cover": 332008,
+            "Distant trees": 38580,
+            "Saved tutorial terrain": 115200,
+            "Continuous impassable ground": 81409
+          }
+        },
+        "shadow": {
+          "triangles": 0,
+          "calls": 0,
+          "chunks": [],
+          "names": {}
+        }
+      },
+      "timing": {
+        "kind": "CPU submit + blocking GPU completion on this host",
+        "medianMs": 3.799999952316284,
+        "p90Ms": 4.1000001430511475,
+        "samples": [
+          3,
+          3.0999999046325684,
+          3.299999952316284,
+          3.4000000953674316,
+          3.6000001430511475,
+          3.799999952316284,
+          3.9000000953674316,
+          4,
+          4,
+          4.1000001430511475
+        ]
+      }
+    },
+    {
+      "label": "dry corridor",
+      "state": {
+        "biome": "dry",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 643,
+          "clusters": 1437,
+          "logs": 158,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 1071603,
+          "batches": 823,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 99206,
+          "visibleBatches": 66
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 92,
+          "calls": 154,
+          "triangles": 246475,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 2.1000001430511475,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 244,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      },
+      "passes": {
+        "main": {
+          "triangles": 109506,
+          "calls": 74,
+          "chunks": [
+            23,
+            24,
+            32,
+            33,
+            34,
+            35,
+            43,
+            44,
+            45,
+            54
+          ],
+          "names": {
+            "Grouped ground cover": 35896,
+            "Trees": 42264,
+            "Saved tutorial terrain": 11520,
+            "mane crest": 300,
+            "forearm and hand 1": 1260,
+            "unified skull jaw neck and ears": 2498,
+            "connected shirt and sleeves": 1700,
+            "connected overalls seat and legs": 2600,
+            "exposed hoof 1": 350,
+            "forearm and hand -1": 1242,
+            "exposed hoof -1": 350,
+            "Continuous impassable ground": 9526
+          }
+        },
+        "shadow": {
+          "triangles": 136969,
+          "calls": 80,
+          "chunks": [
+            23,
+            24,
+            33,
+            34,
+            35,
+            43,
+            44,
+            45,
+            53,
+            54
+          ],
+          "names": {
+            "connected shirt and sleeves": 1700,
+            "connected overalls seat and legs": 2600,
+            "forearm and hand -1": 1242,
+            "exposed hoof -1": 350,
+            "forearm and hand 1": 1260,
+            "exposed hoof 1": 350,
+            "unified skull jaw neck and ears": 2498,
+            "mane crest": 300,
+            "Continuous impassable ground": 9549,
+            "Grouped ground cover": 47240,
+            "Trees": 69880
+          }
+        }
+      },
+      "timing": {
+        "kind": "CPU submit + blocking GPU completion on this host",
+        "medianMs": 3.0999999046325684,
+        "p90Ms": 6.299999952316284,
+        "samples": [
+          2.5,
+          2.5,
+          2.5,
+          2.5999999046325684,
+          2.6000001430511475,
+          3.0999999046325684,
+          3.1000001430511475,
+          3.5,
+          4.099999904632568,
+          6.299999952316284
+        ]
+      }
+    },
+    {
+      "label": "wetlands overview",
+      "state": {
+        "biome": "wetlands",
+        "frame": "overview",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 3.5440055271167283,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "clusters": 217,
+          "logs": 0,
+          "reeds": 1924,
+          "baseTriangles": 198183,
+          "storedTriangles": 529967,
+          "batches": 892,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 100,
+          "detailedChunks": 0,
+          "shadowChunks": 0,
+          "visibleTriangles": 336239,
+          "visibleBatches": 884
+        },
+        "focus": [
+          119.5,
+          2.12,
+          119.5
+        ],
+        "render": {
+          "frame": 104,
+          "calls": 901,
+          "triangles": 336239,
+          "points": 0,
+          "lines": 787,
+          "cpuMs": 2.8000001907348633,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 246,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      },
+      "passes": {
+        "main": {
+          "triangles": 336239,
+          "calls": 884,
+          "chunks": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            71,
+            72,
+            73,
+            74,
+            75,
+            76,
+            77,
+            78,
+            79,
+            80,
+            81,
+            82,
+            83,
+            84,
+            85,
+            86,
+            87,
+            88,
+            89,
+            90,
+            91,
+            92,
+            93,
+            94,
+            95,
+            96,
+            97,
+            98,
+            99
+          ],
+          "names": {
+            "Two plateau tiers": 1574,
+            "Grouped ground cover": 129344,
+            "Distant trees": 8712,
+            "Saved tutorial terrain": 115200,
+            "Continuous impassable ground": 81409
+          }
+        },
+        "shadow": {
+          "triangles": 0,
+          "calls": 0,
+          "chunks": [],
+          "names": {}
+        }
+      },
+      "timing": {
+        "kind": "CPU submit + blocking GPU completion on this host",
+        "medianMs": 4.3999998569488525,
+        "p90Ms": 5.099999904632568,
+        "samples": [
+          3,
+          4,
+          4.1000001430511475,
+          4.200000047683716,
+          4.200000047683716,
+          4.3999998569488525,
+          4.5,
+          4.799999952316284,
+          4.900000095367432,
+          5.099999904632568
+        ]
+      }
+    },
+    {
+      "label": "wetlands corridor",
+      "state": {
+        "biome": "wetlands",
+        "frame": "corridor",
+        "view": "three",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 150,
+          "clusters": 217,
+          "logs": 0,
+          "reeds": 1924,
+          "baseTriangles": 198183,
+          "storedTriangles": 529967,
+          "batches": 892,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 8,
+          "detailedChunks": 8,
+          "shadowChunks": 10,
+          "visibleTriangles": 37674,
+          "visibleBatches": 44
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 116,
+          "calls": 112,
+          "triangles": 99291,
+          "points": 0,
+          "lines": 0,
+          "cpuMs": 1.7000000476837158,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 246,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      },
+      "passes": {
+        "main": {
+          "triangles": 47974,
+          "calls": 52,
+          "chunks": [
+            23,
+            24,
+            32,
+            33,
+            34,
+            35,
+            43,
+            44,
+            45,
+            54
+          ],
+          "names": {
+            "Trees": 12896,
+            "Grouped ground cover": 3732,
+            "Saved tutorial terrain": 11520,
+            "mane crest": 300,
+            "forearm and hand 1": 1260,
+            "unified skull jaw neck and ears": 2498,
+            "connected shirt and sleeves": 1700,
+            "connected overalls seat and legs": 2600,
+            "exposed hoof 1": 350,
+            "forearm and hand -1": 1242,
+            "exposed hoof -1": 350,
+            "Continuous impassable ground": 9526
+          }
+        },
+        "shadow": {
+          "triangles": 51317,
+          "calls": 60,
+          "chunks": [
+            23,
+            24,
+            33,
+            34,
+            35,
+            43,
+            44,
+            45,
+            53,
+            54
+          ],
+          "names": {
+            "connected shirt and sleeves": 1700,
+            "connected overalls seat and legs": 2600,
+            "forearm and hand -1": 1242,
+            "exposed hoof -1": 350,
+            "forearm and hand 1": 1260,
+            "exposed hoof 1": 350,
+            "unified skull jaw neck and ears": 2498,
+            "mane crest": 300,
+            "Continuous impassable ground": 9549,
+            "Grouped ground cover": 5276,
+            "Trees": 26192
+          }
+        }
+      },
+      "timing": {
+        "kind": "CPU submit + blocking GPU completion on this host",
+        "medianMs": 2.200000047683716,
+        "p90Ms": 3.0999999046325684,
+        "samples": [
+          2,
+          2.0999999046325684,
+          2.1000001430511475,
+          2.200000047683716,
+          2.200000047683716,
+          2.200000047683716,
+          2.299999952316284,
+          2.299999952316284,
+          2.299999952316284,
+          3.0999999046325684
+        ]
+      }
+    },
+    {
+      "label": "snow low",
+      "state": {
+        "biome": "snow",
+        "frame": "corridor",
+        "view": "low",
+        "grey": false,
+        "blocked": false,
+        "trees": true,
+        "ppu": 56.23188405797101,
+        "stats": {
+          "terrainCells": 57600,
+          "blockedCells": 31460,
+          "trees": 1798,
+          "clusters": 0,
+          "logs": 371,
+          "reeds": 0,
+          "baseTriangles": 198183,
+          "storedTriangles": 2503447,
+          "batches": 615,
+          "chunks": 100,
+          "chunkSize": 24,
+          "visibleChunks": 10,
+          "detailedChunks": 10,
+          "shadowChunks": 10,
+          "visibleTriangles": 348713,
+          "visibleBatches": 102
+        },
+        "focus": [
+          100,
+          4.239999771118164,
+          94
+        ],
+        "render": {
+          "frame": 128,
+          "calls": 175,
+          "triangles": 689626,
+          "points": 0,
+          "lines": 52,
+          "cpuMs": 1.5999999046325684,
+          "includesShadows": true
+        },
+        "resources": {
+          "geometries": 57,
+          "textures": 10
+        },
+        "source": {
+          "name": "Tutorial 1 · closed two-tier plateau",
+          "props": 642,
+          "terrain": "sector-library/tutorial-step-1/rough-plateau.json",
+          "foliage": "Screenshot-inspired study regions; source map is untouched.",
+          "sealedPinholes": 3,
+          "reservedMarkers": 5
+        }
+      },
+      "passes": {
+        "main": {
+          "triangles": 359013,
+          "calls": 110,
+          "chunks": [
+            2,
+            11,
+            12,
+            13,
+            21,
+            22,
+            23,
+            24,
+            32,
+            33,
+            34,
+            35,
+            43,
+            44,
+            45,
+            53,
+            54,
+            55,
+            56,
+            64,
+            65
+          ],
+          "names": {
+            "Two plateau tiers": 104,
+            "Distant trees": 8568,
+            "Trees": 302560,
+            "Grouped ground cover": 1440,
+            "Saved tutorial terrain": 20736,
+            "forearm and hand 1": 1260,
+            "mane crest": 300,
+            "unified skull jaw neck and ears": 2498,
+            "connected shirt and sleeves": 1700,
+            "exposed hoof 1": 350,
+            "connected overalls seat and legs": 2600,
+            "forearm and hand -1": 1242,
+            "exposed hoof -1": 350,
+            "Continuous impassable ground": 15305
+          }
+        },
+        "shadow": {
+          "triangles": 330613,
+          "calls": 64,
+          "chunks": [
+            23,
+            24,
+            33,
+            34,
+            35,
+            43,
+            44,
+            45,
+            53,
+            54
+          ],
+          "names": {
+            "connected shirt and sleeves": 1700,
+            "connected overalls seat and legs": 2600,
+            "forearm and hand -1": 1242,
+            "exposed hoof -1": 350,
+            "forearm and hand 1": 1260,
+            "exposed hoof 1": 350,
+            "unified skull jaw neck and ears": 2498,
+            "mane crest": 300,
+            "Trees": 309764,
+            "Continuous impassable ground": 9549,
+            "Grouped ground cover": 1000
+          }
+        }
+      },
+      "timing": {
+        "kind": "CPU submit + blocking GPU completion on this host",
+        "medianMs": 2,
+        "p90Ms": 2.9000000953674316,
+        "samples": [
+          1.5,
+          1.6000001430511475,
+          1.7000000476837158,
+          1.7999999523162842,
+          2,
+          2,
+          2.1000001430511475,
+          2.4000000953674316,
+          2.5,
+          2.9000000953674316
+        ]
+      }
+    }
+  ],
+  "helper": "independent-refinement-1791927503679",
+  "pan": [
+    {
+      "focus": [
+        92,
+        4.239999771118164,
+        94
+      ],
+      "stats": {
+        "terrainCells": 57600,
+        "blockedCells": 31460,
+        "trees": 1798,
+        "clusters": 0,
+        "logs": 371,
+        "reeds": 0,
+        "baseTriangles": 198183,
+        "storedTriangles": 2503447,
+        "batches": 615,
+        "chunks": 100,
+        "chunkSize": 24,
+        "visibleChunks": 7,
+        "detailedChunks": 7,
+        "shadowChunks": 12,
+        "visibleTriangles": 294012,
+        "visibleBatches": 57
+      },
+      "render": {
+        "frame": 149,
+        "calls": 141,
+        "triangles": 675668,
+        "points": 0,
+        "lines": 0
+      }
+    },
+    {
+      "focus": [
+        94,
+        4.239999771118164,
+        94
+      ],
+      "stats": {
+        "terrainCells": 57600,
+        "blockedCells": 31460,
+        "trees": 1798,
+        "clusters": 0,
+        "logs": 371,
+        "reeds": 0,
+        "baseTriangles": 198183,
+        "storedTriangles": 2503447,
+        "batches": 615,
+        "chunks": 100,
+        "chunkSize": 24,
+        "visibleChunks": 6,
+        "detailedChunks": 6,
+        "shadowChunks": 12,
+        "visibleTriangles": 294012,
+        "visibleBatches": 57
+      },
+      "render": {
+        "frame": 150,
+        "calls": 141,
+        "triangles": 675668,
+        "points": 0,
+        "lines": 0
+      }
+    },
+    {
+      "focus": [
+        95.4,
+        4.239999771118164,
+        94
+      ],
+      "stats": {
+        "terrainCells": 57600,
+        "blockedCells": 31460,
+        "trees": 1798,
+        "clusters": 0,
+        "logs": 371,
+        "reeds": 0,
+        "baseTriangles": 198183,
+        "storedTriangles": 2503447,
+        "batches": 615,
+        "chunks": 100,
+        "chunkSize": 24,
+        "visibleChunks": 7,
+        "detailedChunks": 7,
+        "shadowChunks": 12,
+        "visibleTriangles": 273564,
+        "visibleBatches": 56
+      },
+      "render": {
+        "frame": 151,
+        "calls": 140,
+        "triangles": 655220,
+        "points": 0,
+        "lines": 0
+      }
+    },
+    {
+      "focus": [
+        95.6,
+        4.239999771118164,
+        94
+      ],
+      "stats": {
+        "terrainCells": 57600,
+        "blockedCells": 31460,
+        "trees": 1798,
+        "clusters": 0,
+        "logs": 371,
+        "reeds": 0,
+        "baseTriangles": 198183,
+        "storedTriangles": 2503447,
+        "batches": 615,
+        "chunks": 100,
+        "chunkSize": 24,
+        "visibleChunks": 7,
+        "detailedChunks": 7,
+        "shadowChunks": 12,
+        "visibleTriangles": 273564,
+        "visibleBatches": 56
+      },
+      "render": {
+        "frame": 152,
+        "calls": 140,
+        "triangles": 655220,
+        "points": 0,
+        "lines": 0
+      }
+    },
+    {
+      "focus": [
+        97,
+        4.239999771118164,
+        94
+      ],
+      "stats": {
+        "terrainCells": 57600,
+        "blockedCells": 31460,
+        "trees": 1798,
+        "clusters": 0,
+        "logs": 371,
+        "reeds": 0,
+        "baseTriangles": 198183,
+        "storedTriangles": 2503447,
+        "batches": 615,
+        "chunks": 100,
+        "chunkSize": 24,
+        "visibleChunks": 7,
+        "detailedChunks": 7,
+        "shadowChunks": 12,
+        "visibleTriangles": 264428,
+        "visibleBatches": 56
+      },
+      "render": {
+        "frame": 153,
+        "calls": 140,
+        "triangles": 646084,
+        "points": 0,
+        "lines": 0
+      }
+    },
+    {
+      "focus": [
+        100,
+        4.239999771118164,
+        94
+      ],
+      "stats": {
+        "terrainCells": 57600,
+        "blockedCells": 31460,
+        "trees": 1798,
+        "clusters": 0,
+        "logs": 371,
+        "reeds": 0,
+        "baseTriangles": 198183,
+        "storedTriangles": 2503447,
+        "batches": 615,
+        "chunks": 100,
+        "chunkSize": 24,
+        "visibleChunks": 8,
+        "detailedChunks": 8,
+        "shadowChunks": 10,
+        "visibleTriangles": 316706,
+        "visibleBatches": 63
+      },
+      "render": {
+        "frame": 154,
+        "calls": 135,
+        "triangles": 657619,
+        "points": 0,
+        "lines": 0
+      }
+    }
+  ],
+  "memories": [
+    {
+      "geometries": 337,
+      "textures": 10
+    },
+    {
+      "geometries": 337,
+      "textures": 10
+    }
+  ],
+  "disposal": {
+    "resources": [
+      {
+        "label": "horse",
+        "count": 1
+      },
+      {
+        "label": "original",
+        "count": 1
+      },
+      {
+        "label": "obstacles",
+        "count": 1
+      },
+      {
+        "label": "ground",
+        "count": 1
+      },
+      {
+        "label": "foliage",
+        "count": 1
+      },
+      {
+        "label": "bark",
+        "count": 1
+      },
+      {
+        "label": "leaves",
+        "count": 1
+      },
+      {
+        "label": "pine",
+        "count": 1
+      },
+      {
+        "label": "jungle",
+        "count": 1
+      },
+      {
+        "label": "frond",
+        "count": 1
+      },
+      {
+        "label": "dry",
+        "count": 1
+      },
+      {
+        "label": "wet",
+        "count": 1
+      },
+      {
+        "label": "cypress",
+        "count": 1
+      },
+      {
+        "label": "snowPine",
+        "count": 1
+      },
+      {
+        "label": "snow",
+        "count": 1
+      },
+      {
+        "label": "straw",
+        "count": 1
+      },
+      {
+        "label": "moss",
+        "count": 1
+      },
+      {
+        "label": "blade",
+        "count": 1
+      },
+      {
+        "label": "grey",
+        "count": 1
+      },
+      {
+        "label": "bogWater",
+        "count": 1
+      },
+      {
+        "label": "peat",
+        "count": 1
+      },
+      {
+        "label": "vines",
+        "count": 1
+      },
+      {
+        "label": "bramble",
+        "count": 1
+      },
+      {
+        "label": "dryThorns",
+        "count": 1
+      },
+      {
+        "label": "brokenWood",
+        "count": 1
+      },
+      {
+        "label": "jungle",
+        "count": 1
+      },
+      {
+        "label": "temperate",
+        "count": 1
+      },
+      {
+        "label": "snow",
+        "count": 1
+      },
+      {
+        "label": "dry",
+        "count": 1
+      },
+      {
+        "label": "wetlands",
+        "count": 1
+      },
+      {
+        "label": "box",
+        "count": 1
+      },
+      {
+        "label": "cylinder",
+        "count": 1
+      },
+      {
+        "label": "taper",
+        "count": 1
+      },
+      {
+        "label": "cone",
+        "count": 1
+      },
+      {
+        "label": "crown",
+        "count": 1
+      },
+      {
+        "label": "cushion",
+        "count": 1
+      },
+      {
+        "label": "leaf",
+        "count": 1
+      },
+      {
+        "label": "ring",
+        "count": 1
+      },
+      {
+        "label": "wedge",
+        "count": 1
+      },
+      {
+        "label": "foliage-crown",
+        "count": 1
+      },
+      {
+        "label": "broadleaf-crown",
+        "count": 1
+      },
+      {
+        "label": "pine-tier",
+        "count": 1
+      },
+      {
+        "label": "cover-crown",
+        "count": 1
+      },
+      {
+        "label": "grass-tuft",
+        "count": 1
+      },
+      {
+        "label": "ramp",
+        "count": 1
+      },
+      {
+        "label": "rampbank-left-0",
+        "count": 1
+      },
+      {
+        "label": "rampbank-left-1",
+        "count": 1
+      },
+      {
+        "label": "rampbank-left-2",
+        "count": 1
+      },
+      {
+        "label": "rampbank-left-3",
+        "count": 1
+      },
+      {
+        "label": "rampbank-right-0",
+        "count": 1
+      },
+      {
+        "label": "rampbank-right-1",
+        "count": 1
+      },
+      {
+        "label": "rampbank-right-2",
+        "count": 1
+      },
+      {
+        "label": "rampbank-right-3",
+        "count": 1
+      },
+      {
+        "label": "biome-leaf",
+        "count": 1
+      },
+      {
+        "label": "biome-frond",
+        "count": 1
+      },
+      {
+        "label": "biome-crown",
+        "count": 1
+      },
+      {
+        "label": "biome-buttress",
+        "count": 1
+      },
+      {
+        "label": "shadow",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":material",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "overhand support glove:geometry",
+        "count": 1
+      },
+      {
+        "label": "overhand support glove:material",
+        "count": 1
+      },
+      {
+        "label": "fitted glove cuff:geometry",
+        "count": 1
+      },
+      {
+        "label": "fitted glove cuff:material",
+        "count": 1
+      },
+      {
+        "label": "connected shirt and sleeves:geometry",
+        "count": 1
+      },
+      {
+        "label": "connected shirt and sleeves:material",
+        "count": 1
+      },
+      {
+        "label": "connected overalls seat and legs:geometry",
+        "count": 1
+      },
+      {
+        "label": "forearm and hand -1:geometry",
+        "count": 1
+      },
+      {
+        "label": "exposed hoof -1:geometry",
+        "count": 1
+      },
+      {
+        "label": "forearm and hand 1:geometry",
+        "count": 1
+      },
+      {
+        "label": "exposed hoof 1:geometry",
+        "count": 1
+      },
+      {
+        "label": "unified skull jaw neck and ears:geometry",
+        "count": 1
+      },
+      {
+        "label": "mane crest:geometry",
+        "count": 1
+      },
+      {
+        "label": "wooden shoulder stock:geometry",
+        "count": 1
+      },
+      {
+        "label": "wooden shoulder stock:material",
+        "count": 1
+      },
+      {
+        "label": "receiver:geometry",
+        "count": 1
+      },
+      {
+        "label": "receiver:material",
+        "count": 1
+      },
+      {
+        "label": "wooden fore-end:geometry",
+        "count": 1
+      },
+      {
+        "label": "barrel:geometry",
+        "count": 1
+      },
+      {
+        "label": "muzzle opening:geometry",
+        "count": 1
+      },
+      {
+        "label": "muzzle opening:material",
+        "count": 1
+      },
+      {
+        "label": "front sight:geometry",
+        "count": 1
+      },
+      {
+        "label": "trigger guard:geometry",
+        "count": 1
+      },
+      {
+        "label": "bolt handle:geometry",
+        "count": 1
+      },
+      {
+        "label": "bolt knob:geometry",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:geometry",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:geometry",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:material",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:material",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": ":material",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Two plateau tiers:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": ":geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Distant trees:instance",
+        "count": 1
+      },
+      {
+        "label": "Saved tutorial terrain:geometry",
+        "count": 1
+      },
+      {
+        "label": "Continuous impassable ground:geometry",
+        "count": 1
+      },
+      {
+        "label": "Grouped ground cover:instance",
+        "count": 1
+      }
+    ],
+    "live": 0,
+    "canvas": 0
+  }
+}
