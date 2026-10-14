@@ -25,12 +25,12 @@ export function terrainCellOutline(plan,x,z){
 }
 function geometry(positions,colors,normals){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));if(colors)g.setAttribute('color',new T.Float32BufferAttribute(colors,3));if(normals)g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));else g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();return g;}
 
-export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obstacleMaterials,plantFactory,grey=false,groundSprites=true,paintSeed,onPaintReady,edgeBlend=true}){
+export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obstacleMaterials,plantFactory,grey=false,groundSprites=true,paintSeed,onPaintReady,edgeBlend=true,fill:providedFill,groundSkinOptions={},decorateMaterial=m=>m}){
  if(!BIOME_OBSTACLES[family])throw Error('Unknown terrain biome');
- const root=new T.Group(),owned=new Set(),instances=[],treeInstances=[],chunks=[],denseMeshes=[],groundMeshes=[],trees=[],fill=createTerrainFill(plan,family,{softEdge:edgeBlend}),bog=family==='wetlands',snow=family==='snow';root.name='Spatial biome terrain';
+ const root=new T.Group(),owned=new Set(),instances=[],treeInstances=[],chunks=[],denseMeshes=[],groundMeshes=[],trees=[],fill=providedFill||createTerrainFill(plan,family,{softEdge:edgeBlend}),bog=family==='wetlands',snow=family==='snow';root.name='Spatial biome terrain';
  const own=g=>(owned.add(g),g),crown=own(new T.SphereGeometry(.5,8,4)),proxyCrown=own(new T.IcosahedronGeometry(.5,0)),trunk=own(new T.CylinderGeometry(.5,.5,1,5)),cone=own(new T.ConeGeometry(.5,1,6)),rimMaterial=new T.LineBasicMaterial({color:0x5f513c});
  const original=grey?plantMaterials.grey:snow?plantMaterials.snow:obstacleMaterials[BIOME_OBSTACLES[family].paint],fillMaterial=original.clone();fillMaterial.onBeforeCompile=original.onBeforeCompile;fillMaterial.customProgramCacheKey=original.customProgramCacheKey;fillMaterial.vertexColors=true;
- const groundSkin=createConnectedGroundSkin(plan,family,{seed:paintSeed,onChange:onPaintReady,underlay:ground,edgeBlend,...(grey?{canvasFactory:()=>null}:{})}),fillMaterials=[];groundSkin.setEnabled(groundSprites);
+ const groundSkin=createConnectedGroundSkin(plan,family,{seed:paintSeed,onChange:onPaintReady,underlay:ground,edgeBlend,...groundSkinOptions,...(grey?{canvasFactory:()=>null}:{})}),fillMaterials=[];groundSkin.setEnabled(groundSprites);
  const leaf=family==='jungle'?'jungle':family==='temperate'?'leaves':snow?'snow':'dry',paint=id=>grey?plantMaterials.grey:(plantMaterials[id]||obstacleMaterials[id]),object=new T.Object3D();
  const cols=Math.ceil(plan.width/BIOME_CHUNK_SIZE);
  for(let z=0;z<plan.depth;z+=BIOME_CHUNK_SIZE)for(let x=0;x<plan.width;x+=BIOME_CHUNK_SIZE){
@@ -48,8 +48,9 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
   const groundPositions=[],walls=[],wallColors=[],dense=[],normals=[],colors=[],edges=[];
   function surface(points,h){for(const [u,v]of points){dense.push(u,h+fill.height(u,v),v);normals.push(...fill.normal(u,v));colors.push(...(grey?[1,1,1]:fill.color(u,v)));}}
   for(let z=chunk.z;z<Math.min(chunk.z+BIOME_CHUNK_SIZE,plan.depth);z++)for(let x=chunk.x;x<Math.min(chunk.x+BIOME_CHUNK_SIZE,plan.width);x++){
+   if(plan.includeAt&&!plan.includeAt(x,z))continue;
    const h=plan.heightAt(x,z),corners=[[x-.5,z-.5],[x+.5,z-.5],[x+.5,z+.5],[x-.5,z+.5]];quad(...corners.map(([u,v])=>[u,h,v]),groundPositions);
-   for(let i=0;i<4;i++){const e=CELL_EDGES[i],nh=plan.heightAt(x+e.dx,z+e.dz),a=corners[i],b=corners[(i+1)%4];if(nh!==null&&nh<h){quad([a[0],nh,a[1]],[b[0],nh,b[1]],[b[0],h,b[1]],[a[0],h,a[1]],walls);for(let j=0;j<6;j++)wallColors.push(.63,.58,.46);edges.push(a[0],h+.012,a[1],b[0],h+.012,b[1]);}}
+   if(cliff)for(let i=0;i<4;i++){const e=CELL_EDGES[i],nh=plan.heightAt(x+e.dx,z+e.dz),a=corners[i],b=corners[(i+1)%4];if(nh!==null&&nh<h){quad([a[0],nh,a[1]],[b[0],nh,b[1]],[b[0],h,b[1]],[a[0],h,a[1]],walls);for(let j=0;j<6;j++)wallColors.push(.63,.58,.46);edges.push(a[0],h+.012,a[1],b[0],h+.012,b[1]);}}
    if(groundSkin.edgeField?.fringe[z*plan.width+x])chunk.fringe=true;
    if(!plan.blockedAt(x,z))continue;const outline=terrainCellOutline(plan,x,z),p=outline.points;
    if(!outline.outside.some(Boolean)){surface([p[0],p[2],p[1],p[0],p[3],p[2]],h);}else{
@@ -64,9 +65,9 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
     }
    }
   }
-  const pathMaterial=ground.clone();pathMaterial.onBeforeCompile=ground.onBeforeCompile;pathMaterial.customProgramCacheKey=ground.customProgramCacheKey;fillMaterials.push(pathMaterial);groundSkin.attach(pathMaterial,chunk,{layer:'path'});
+  const pathMaterial=ground.clone();pathMaterial.onBeforeCompile=ground.onBeforeCompile;pathMaterial.customProgramCacheKey=ground.customProgramCacheKey;fillMaterials.push(pathMaterial);groundSkin.attach(pathMaterial,chunk,{layer:'path'});decorateMaterial(pathMaterial,'ground');
   groundMeshes.push(mesh(groundPositions,pathMaterial,'Saved tutorial terrain',chunk));mesh(walls,cliff,'Two plateau tiers',chunk,wallColors);
-  if(dense.length){const m=fillMaterial.clone();m.onBeforeCompile=fillMaterial.onBeforeCompile;m.customProgramCacheKey=fillMaterial.customProgramCacheKey;fillMaterials.push(m);groundSkin.attach(m,chunk);chunk.dense=mesh(dense,m,'Continuous impassable ground',chunk,colors,normals);denseMeshes.push(chunk.dense);}
+  if(dense.length){const m=fillMaterial.clone();m.onBeforeCompile=fillMaterial.onBeforeCompile;m.customProgramCacheKey=fillMaterial.customProgramCacheKey;fillMaterials.push(m);groundSkin.attach(m,chunk);decorateMaterial(m,'cover');chunk.dense=mesh(dense,m,'Continuous impassable ground',chunk,colors,normals);denseMeshes.push(chunk.dense);}
   if(edges.length){const g=own(new T.BufferGeometry().setAttribute('position',new T.Float32BufferAttribute(edges,3)));g.computeBoundingSphere();const rims=new T.LineSegments(g,rimMaterial);rims.userData.chunk=chunk.index;chunk.group.add(rims);}
  }
  let clusters=0,logs=0,reeds=0;const lowPlants=BIOME_FAMILIES[family].low.map(id=>plantFactory.create(id,{grey}));
@@ -74,7 +75,8 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
  // broad continuous drifts do all of the snow's volume work.
  const step=bog?2.7:snow?5.7:3.7;
  for(let z=1;z<plan.depth-1;z+=step)for(let x=1;x<plan.width-1;x+=step){
-  const n=Math.round(x*191+z*631),cx=x+(random(n)-.5)*step,cz=z+(random(n+1)-.5)*step,ix=Math.floor(cx+.5),iz=Math.floor(cz+.5),h=plan.heightAt(ix,iz);if(!plan.blockedAt(ix,iz))continue;
+  const n=Math.round(x*191+z*631)+(plan.seed||0)+(plan.origin?.[0]||0)*191+(plan.origin?.[1]||0)*631,cx=x+(random(n)-.5)*step,cz=z+(random(n+1)-.5)*step,ix=Math.floor(cx+.5),iz=Math.floor(cz+.5),h=plan.heightAt(ix,iz);if(!plan.blockedAt(ix,iz))continue;
+  if(plan.includeAt&&!plan.includeAt(ix,iz)||plan.densityAt&&random(n+57)>plan.densityAt(ix,iz))continue;
   const chunk=chunkAt(ix,iz),d=fill.distance(cx,cz),patch=field(cx,cz,9,306);
   if(!snow&&random(n+120)<.43){const plant=lowPlants[Math.floor(random(n+123)*lowPlants.length)],pb=plant.userData.bounds,scale=1.35;
    if(safe(cx,cz,Math.max(Math.abs(pb.min[0]),pb.max[0])*scale,Math.max(Math.abs(pb.min[2]),pb.max[2])*scale,h)&&(!bog||d<2)){
@@ -98,7 +100,8 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
  for(const id of BIOME_FAMILIES[family].trees)for(let variant=0;variant<3;variant++)prototypes.push(plantFactory.create(id,{variant,mature:true,grey}));
  const treeStep=bog?10:family==='dry'?5:3.6;
  for(let z=3;z<plan.depth-3;z+=treeStep)for(let x=3;x<plan.width-3;x+=treeStep){
-  const n=Math.round(z*plan.width+x),p=prototypes[Math.floor(random(n)*prototypes.length)],bounds=p.userData.bounds,cx=x+(random(n+3)-.5)*2.2,cz=z+(random(n+7)-.5)*2.2,h=plan.heightAt(Math.floor(cx+.5),Math.floor(cz+.5));
+  const n=Math.round(z*plan.width+x)+(plan.seed||0)+(plan.origin?.[0]||0)+(plan.origin?.[1]||0)*plan.width,p=prototypes[Math.floor(random(n)*prototypes.length)],bounds=p.userData.bounds,cx=x+(random(n+3)-.5)*2.2,cz=z+(random(n+7)-.5)*2.2,h=plan.heightAt(Math.floor(cx+.5),Math.floor(cz+.5));
+  if(plan.includeAt&&!plan.includeAt(Math.floor(cx+.5),Math.floor(cz+.5))||plan.densityAt&&random(n+57)>plan.densityAt(Math.floor(cx+.5),Math.floor(cz+.5)))continue;
   if(random(n+17)<(bog?.40:family==='dry'?.28:.08))continue;
   const min=[cx+bounds.min[0],h,cz+bounds.min[2]],max=[cx+bounds.max[0],h+bounds.max[1],cz+bounds.max[2]];
   if(!safe((min[0]+max[0])/2,(min[2]+max[2])/2,(max[0]-min[0])/2,(max[2]-min[2])/2,h))continue;
@@ -130,7 +133,7 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
    // block detailed at close scale, including the far edge of a low-angle view.
    c.nearActive=ppu>(c.nearActive?12:16)&&(inView||distance<(c.nearActive?52:44));const shadows=ppu>12&&distance<28;
    c.near.visible=showTrees&&c.nearActive;c.far.visible=showTrees&&!c.nearActive;
-   for(const m of c.meshes){m.castShadow=shadows&&m.name!=='Saved tutorial terrain'&&m.name!=='Distant trees';m.userData.noShadow=!m.castShadow;}
+   for(const m of c.meshes){m.castShadow=shadows&&c.shadowKnown!==false&&m.name!=='Saved tutorial terrain'&&m.name!=='Distant trees';m.userData.noShadow=!m.castShadow;}
    if(inView){visible++;if(c.near.visible)detailed++;}if(shadows)shadowed++;
   }
   groundSkin.update(chunks,localFocus,ppu);stats.groundSprites=groundSkin.stats;

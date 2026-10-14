@@ -52,7 +52,8 @@ export function paintGroundRegion(composition,{x,z,width,depth,pixelsPerTile=32}
  return canvas;
 }
 function texture(canvas,name){const t=new T.CanvasTexture(canvas);t.colorSpace=T.SRGBColorSpace;t.flipY=false;t.name=name;t.minFilter=T.LinearMipmapLinearFilter;t.magFilter=T.LinearFilter;return t;}
-export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=canvasDefault,onChange=()=>{},underlay,edgeBlend=true}={}){
+export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=canvasDefault,onChange=()=>{},underlay,edgeBlend=true,maxResident=GROUND_PAGE.maxResident}={}){
+ maxResident=Math.max(1,Math.min(GROUND_PAGE.maxResident,Math.floor(maxResident)));
  const composition=createGroundComposition(plan,family,seed),overviewCanvas=canvasFactory(),pages=new Map(),bindings=new Map(),strength={value:1},focus={value:new T.Vector2()},detail={value:0},waiters=[],edgeSource=groundUnderlay(underlay);
  const edgeField=overviewCanvas&&edgeSource?createGroundEdgeField(plan):null,edgeMap=edgeField?new T.DataTexture(edgeField.data,edgeField.width,edgeField.depth,T.RedFormat,T.UnsignedByteType):null;
  const edgeBarriers=edgeField?new T.DataTexture(edgeField.barriers,plan.width,plan.depth,T.RedFormat,T.UnsignedByteType):null;
@@ -108,7 +109,7 @@ export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=ca
     diffuseColor.rgb=mix(diffuseColor.rgb,groundColor,pow(clamp(vConnectedTop,0.,1.),4.)*groundStrength${layer==='path'&&edgeMap?'*groundEdgeEnabled':''});
    `);
    if(edgeMap){Object.assign(s.uniforms,{groundEdge:{value:edgeMap},groundBarriers:{value:edgeBarriers},groundEdgeEnabled:{value:edgeBlend?1:0},groundEdgeSeed:{value:seed}});s.fragmentShader='uniform sampler2D groundEdge,groundBarriers;uniform float groundEdgeEnabled,groundEdgeSeed;\n'+s.fragmentShader;
-    if(layer!=='path'){s.uniforms.edgeUnderlay={value:edgeSource.map};s.uniforms.edgeFarPaint={value:edgeSource.average};s.fragmentShader=s.fragmentShader.replace('#include <map_pars_fragment>','#include <map_pars_fragment>\n'+edgeSource.shader);}
+    if(layer!=='path'){Object.assign(s.uniforms,edgeSource.uniforms||{});s.uniforms.edgeUnderlay={value:edgeSource.map};s.uniforms.edgeFarPaint={value:edgeSource.average};s.fragmentShader=s.fragmentShader.replace('#include <map_pars_fragment>','#include <map_pars_fragment>\n'+edgeSource.shader);}
    }
   };
  }
@@ -118,7 +119,7 @@ export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=ca
  function settle(){if(disposed||error||overviewReady&&pending()===0){for(const waiter of waiters.splice(0))error?waiter.reject(Error(error)):waiter.resolve(!disposed);}}
  function accept(c,image,ms){
   const wanted=new Set(needed.map(n=>n.index));
-  if(pages.size>=GROUND_PAGE.maxResident){const victim=[...pages].filter(([key])=>!wanted.has(key)).sort((a,b)=>a[1].lastUsed-b[1].lastUsed)[0];if(victim)release(victim[0]);else {closeImage(image);return;}}
+  if(pages.size>=maxResident){const victim=[...pages].filter(([key])=>!wanted.has(key)).sort((a,b)=>a[1].lastUsed-b[1].lastUsed)[0];if(victim)release(victim[0]);else {closeImage(image);return;}}
   const x=c.x-1.5,z=c.z-1.5,t=texture(image,'Connected ground '+c.x+','+c.z);pages.set(c.index,{image,texture:t,x,z,lastUsed:frame});generations++;generationMs+=ms;
   for(const u of bindings.get(c.index)||[]){u.groundDetail.value=t;u.groundHasPage.value=wanted.has(c.index)?1:0;u.groundPageOrigin.value.set(x,z);}
  }
@@ -142,7 +143,7 @@ export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=ca
  }else if(overviewCanvas){paintGroundRegion(composition,{x:-.5,z:-.5,width:plan.width,depth:plan.depth,pixelsPerTile:2},overviewCanvas);overview.needsUpdate=true;overviewReady=true;}
  function update(chunks,point,ppu){
   if(disposed||!overview)return;focus.value.set(point.x,point.z);detail.value=T.MathUtils.smoothstep(ppu,5,12);
-  needed=detail.value>0&&strength.value?chunks.filter(c=>c.inView&&c.distance<24&&(c.dense||c.fringe)).sort((a,b)=>a.distance-b.distance).slice(0,GROUND_PAGE.maxResident):[];
+  needed=detail.value>0&&strength.value?chunks.filter(c=>c.inView&&c.distance<24&&(c.dense||c.fringe)).sort((a,b)=>a.distance-b.distance).slice(0,maxResident):[];
   frame++;
   for(const group of bindings.values())for(const u of group)u.groundHasPage.value=0;
   for(const c of needed){
@@ -150,5 +151,5 @@ export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=ca
   }
   pump();settle();
  }
- return {composition,pages,overview,edgeMap,edgeBarriers,edgeField,attach,update,setEnabled(v){strength.value=v?1:0;},whenReady(){if(error)return Promise.reject(Error(error));if(disposed||overviewReady&&!pending())return Promise.resolve(!disposed);return new Promise((resolve,reject)=>waiters.push({resolve,reject}));},get stats(){const pixels=!disposed&&overview?overview.image.width*overview.image.height+pages.size*832*832:0,base=bases.get(composition),edgeBytes=!disposed&&edgeField?edgeField.data.byteLength+edgeField.barriers.byteLength:0;return {...composition.stats,seed,residentPages:pages.size,activePages:needed.length,pendingPages:pending(),overviewReady,worker:!!worker,workerTerminated,error,maxResidentPages:GROUND_PAGE.maxResident,edgeBytes,textureBytes:Math.ceil(pixels*4*4/3)+edgeBytes,canvasBytes:(pixels+(base?base.width*base.height:0))*4,workerBaseBytes:!disposed&&worker?(plan.width+4)*(plan.depth+4)*16*4:0,generations,generationMs,mode:'connected world painting'};},dispose(){if(disposed)return;disposed=true;worker?.terminate();workerTerminated=!!worker;for(const key of [...pages.keys()])release(key);overview?.dispose();edgeMap?.dispose();edgeBarriers?.dispose();closeImage(overview?.image);releaseGroundPaint(composition);bindings.clear();needed=[];inFlight=null;settle();}};
+ return {composition,pages,overview,edgeMap,edgeBarriers,edgeField,attach,update,setEnabled(v){strength.value=v?1:0;},whenReady(){if(error)return Promise.reject(Error(error));if(disposed||overviewReady&&!pending())return Promise.resolve(!disposed);return new Promise((resolve,reject)=>waiters.push({resolve,reject}));},get stats(){const pixels=!disposed&&overview?overview.image.width*overview.image.height+pages.size*832*832:0,base=bases.get(composition),edgeBytes=!disposed&&edgeField?edgeField.data.byteLength+edgeField.barriers.byteLength:0;return {...composition.stats,seed,residentPages:pages.size,activePages:needed.length,pendingPages:pending(),overviewReady,worker:!!worker,workerTerminated,error,maxResidentPages:maxResident,edgeBytes,textureBytes:Math.ceil(pixels*4*4/3)+edgeBytes,canvasBytes:(pixels+(base?base.width*base.height:0))*4,workerBaseBytes:!disposed&&worker?(plan.width+4)*(plan.depth+4)*16*4:0,generations,generationMs,mode:'connected world painting'};},dispose(){if(disposed)return;disposed=true;worker?.terminate();workerTerminated=!!worker;for(const key of [...pages.keys()])release(key);overview?.dispose();edgeMap?.dispose();edgeBarriers?.dispose();closeImage(overview?.image);releaseGroundPaint(composition);bindings.clear();needed=[];inFlight=null;settle();}};
 }

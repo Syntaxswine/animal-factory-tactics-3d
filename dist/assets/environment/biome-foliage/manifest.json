@@ -2987,8 +2987,8 @@
     "dist/tactics/biome-atlas-lod.js": "877304c162ec30aa771a35fac67bc40a9847ed38bd9c663129ae58b7fb4fe415",
     "dist/tactics/biome-foliage-data.js": "05c500352b3ecef1be47b1341e700d0099e720f1f42680eb4787a5d5a7e482f4",
     "dist/tactics/biome-foliage-models.js": "7ef26d2c3a96ac9352f6158136747a6ce9c7341c44c97109b7c21ffa0b9f28da",
-    "dist/tactics/biome-foliage-paint.js": "fdd68e1552da56bfbb0fb31fc08367752799cd1884dc6c3de480ee9217108616",
-    "dist/tactics/foliage-models.js": "64cb393a32655b4ee841cb38771ef933bdc1ecdda43ba1339c30e5b49df6b746",
+    "dist/tactics/biome-foliage-paint.js": "5ad79a2a31e181d8c60cfc4835676def24075f3ba0e5fc8eed3c16e473b2f37c",
+    "dist/tactics/foliage-models.js": "e179c77117a69cb56aa1144105f7ba2eb00878c3158d023cc82a097e775530b6",
     "dist/tactics/environment-geometry.js": "82e34231b7acd7b8f04499a5d68a95e772b875b7f3d22b6b844d5a0bc212238b"
   }
 }

@@ -1,3 +1,4 @@
+import {BIOME_TERRAIN} from '../biome-gameplay-data.js';
 import {SCENERY_PROPS,isHelicopter} from '../scenery-catalog.js';
 import {helicopterBlocked} from '../scenery-rules.js';
 export const FOLIAGE_TERRAINS=['woodland','woodland-dense'];
@@ -12,6 +13,7 @@ import {CLIFF_PROPS} from '../cliff-map.js';
 import {LIGHT_PROPS} from '../light-sources.js';
 // Explicit game rules for the supplied environment art. Manifest prose is not executable.
 export const GROUNDS=['ground-dirt','ground-gravel','ground-grass','ground-concrete','ground-asphalt','ground-tiles','ground-wood-planks',...DIAGONAL_ROADS];
+GROUNDS.push(...Object.keys(BIOME_TERRAIN));
 export const PROPS={
  'crate-wood':{w:1,h:1,cover:25,solid:true},'crate-steel':{w:1,h:1,cover:25,solid:true},'crate-stack':{w:1,h:1,cover:25,solid:true,tall:true},
  'table-wood':{w:2,h:1,cover:25,solid:true},'table-steel':{w:2,h:1,cover:25,solid:true},'workbench-vise':{w:2,h:1,cover:25,solid:true},'workbench-metal':{w:2,h:1,cover:25,solid:true},

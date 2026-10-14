@@ -1,8 +1,24 @@
 # Biome foliage and ground art
 
-Five environment families are ready for review and integration: jungle, temperate, snow, dry grassland and wetlands. The user asked for distinct tree and low-plant shapes for each family and authorized missing grass sets. Automatic selection from the grass underneath a plant is assigned to another agent.
+Five environment families are integrated into the editor and gameplay: jungle, temperate, snow, dry grassland and wetlands. The artist's assets and procedural terrain were imported from `work/biome-foliage` at `bdfb813` without merging its unrelated animation work.
 
-This branch supplies art, reusable Three.js factories, exported ground images and a comparison viewer. It does not add shared gameplay terrain/prop IDs or alter collision, movement, existing maps or the live selector.
+The original art package supplies reusable Three.js factories, exported ground images and comparison viewers. The live integration selects those factories from a map's saved environment profile or explicit ground tiles. Collision and movement continue to use the saved foliage overlay.
+
+## Editor and gameplay integration
+
+- **Foliage** paints density and passability on outdoor levels 1–3. Passable cells receive low plants; blocked areas receive continuous painted ground, broad low-poly masses and crown-safe trees. The artist's study mask is never substituted for authored foliage.
+- **Tiles** includes Jungle floor, Temperate meadow, Snow and winter grass, Dry grassland and Wetland grass, with previews of the actual paint. These override automatic family selection locally. Ordinary grass follows the overmap environment profile; older maps without a profile keep a temperate default, with dry plants on dirt/gravel.
+- Existing broadleaf/pine objects, including large forms and their rotation, select matching tree models. Their existing trunk collision rules remain unchanged.
+- `biome-gameplay.js` adapts the saved map into per-floor/family plans. It protects water, roads, object footprints and missing upper surfaces, and uses the actual 2 m cliff cap height. `biome-map-paint.js` blends ground families, including a halo matching adjacent sector profiles. `biome-scene.js` is shared by the inspection and battle renderers.
+- Plans and art placement are deterministic. Saves and blocks retain their existing ground/foliage metadata, so there is no extra generated art state to migrate. Density does not change passability.
+- Fog clips terrain and plant fragments; batches containing unexplored ground do not cast revealing shadows. Level visibility and editor dimming are preserved. At overview scale, small passable plants are omitted and dense forest uses simplified tree silhouettes.
+- Detailed forest paint uses owned module workers and a shared budget of at most 16 resident pages across active plans. Replacing or closing a scene terminates its workers and releases its textures and geometry. Existing visuals remain available while the new atlases load or if loading fails.
+
+Open `tactics/editor-3d.html?editing=1&study=biomes` for an editable five-family fixture with a narrow passage and foliage on all three playable levels. Its Playtest button uses the normal editor handoff. `tactics/battle-3d.html?study=biomes` opens the same fixture directly.
+
+Strategic environment profiles and their base ground edges match across sectors. Connected forest debris is generated within the loaded local map and respects its mask; it does not yet join a log or shrub across two independently authored sector borders. Actual campaign sector-template assignment remains separate work.
+
+Integration verification (2026-10-13): the focused art/foliage/environment/packaging suite passes, including 13 new gameplay integration cases. Browser checks covered the overmap's Snow preview, the five-family editor fixture, its normal Playtest handoff, and painting/undo/redo on the raised third level. Core regeneration and the 3D Pages build pass. These results do not replace slower-hardware performance testing.
 
 ## Contents
 

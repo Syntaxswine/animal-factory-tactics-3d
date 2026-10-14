@@ -62,7 +62,7 @@ test('sketch save, import, tutorial relocation and undo preserve world-space env
 });
 test('local profiles survive map parsing and encounter saves without changing terrain or foliage rules',()=>{
  const map=environmentPreviewMap(generateEnvironments(blank(),1),70),before=structuredClone(map),loaded=parseMap(JSON.stringify(map));
- assert.deepEqual(loaded,before);assert.ok(Object.values(map.foliage).every(v=>v[0]===65&&v[1]===false));
+ assert.deepEqual(loaded,before);assert.ok(Object.values(map.foliage).every(v=>v[0]===65));assert.ok(Object.values(map.foliage).some(v=>v[1]));assert.ok(Object.values(map.foliage).some(v=>!v[1]));
  const state=createGame(7,loaded,false,'easy',{awareness:true,statSystem:true});assert.deepEqual(state.environment,map.environment);
  startEncounterClock(state);const saved=restoreEncounter(structuredClone(captureEncounter(state)));assert.deepEqual(saved.environment,map.environment);assert.deepEqual(saved.map,map.terrain);assert.deepEqual(saved.foliage,map.foliage);
  for(const profile of [null,{...map.environment,origin:[30,1]},{...map.environment,origin:[1.5,2]},{...map.environment,field:undefined}]){

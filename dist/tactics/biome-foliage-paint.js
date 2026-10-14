@@ -50,6 +50,7 @@ export function createBiomeGround(texture,kind,{variant=-1,unlit=false}={}){
 // The forest margin borrows the actual ground atlas and its sampling rule, so
 // its colour and surface grain meet the path exactly, including at distant LOD.
 export function groundUnderlay(ground){
+ if(ground?.groundUnderlay)return ground.groundUnderlay;
  const panel=BIOME_GROUNDS[ground?.userData?.family];if(!panel||!ground.map)return null;
  const rect=atlasRect(panel),variant=ground.userData.variant;
  return {map:ground.map,average:panelAverage(ground.map,panel),shader:`
