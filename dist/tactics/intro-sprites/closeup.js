@@ -24,8 +24,12 @@ const KEY=ROCK_KEY;
 const INK=[40,34,26],TMAX=1200;
 const clamp=(v,a=0,b=1)=>v<a?a:v>b?b:v,smooth=(a,b,t)=>{t=clamp((t-a)/(b-a));return t*t*(3-2*t);};
 const mixc=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
-const HAZE=HAZE_COLOR.split(',').map(Number);
-export const closeupSpec=()=>({camera:CLOSEUP_CAMERA,heightScale:HEIGHT_SCALE.closeup,detail:ROCK_DETAIL.closeup,haze:CLOSEUP_HAZE});
+// The sky, distant hills, clouds and veil the close-up was approved with. An
+// approach shot passes its own (ambush.js AMBUSH_ATMOSPHERE) through its spec.
+export const CLOSEUP_ATMOSPHERE=Object.freeze({top:[104,146,190],horizon:[214,222,218],ridges:[[170,186,200],[146,166,180],[118,140,140]],forest:[84,104,92],cloud:[[196,202,212],[248,246,238]],haze:HAZE_COLOR.split(',').map(Number)});
+// What a plate through this lens was painted with (the close-up's, or another
+// camera's: the approach shots in ambush.js use the same lens and butte).
+export const closeupSpec=(camera=CLOSEUP_CAMERA)=>({camera,heightScale:HEIGHT_SCALE.closeup,detail:ROCK_DETAIL.closeup,haze:CLOSEUP_HAZE});
 
 // --- the lens -------------------------------------------------------------------
 // Right, up and forward in tile coordinates; the same basis three.js builds for
@@ -97,29 +101,36 @@ export function traceRay(S,o,d,tMax=TMAX){
 }
 
 // --- sky and distant hills -----------------------------------------------------
-const SKY_TOP=[104,146,190],SKY_HORIZON=[214,222,218];
-const RIDGES=[ // far to near: base elevation, amplitude (radians), colour
- {b:.034,a:.05,f:2.6,s:11,c:[170,186,200]},
- {b:.018,a:.034,f:4.3,s:23,c:[146,166,180]},
- {b:.006,a:.022,f:7.1,s:37,c:[118,140,140]}];
-function sky(dir){
- const phi=Math.asin(clamp(dir[2],-1,1)),th=Math.atan2(dir[1],dir[0]);
+const RIDGES=[ // far to near: base elevation, amplitude (radians); colours in the atmosphere
+ {b:.034,a:.05,f:2.6,s:11},
+ {b:.018,a:.034,f:4.3,s:23},
+ {b:.006,a:.022,f:7.1,s:37}];
+// `ahead` is the camera's bearing: bearings are taken within half a turn of
+// it, so a plate looking across due west (where atan2 jumps from pi to -pi)
+// has no seam in its hills and clouds. (The close-up looks north and never
+// reaches the jump, so its bearings are unchanged.)
+export function sky(dir,A=CLOSEUP_ATMOSPHERE,ahead){
+ const phi=Math.asin(clamp(dir[2],-1,1));let th=Math.atan2(dir[1],dir[0]);
+ if(ahead!==undefined){const d=th-ahead;if(d>Math.PI)th-=2*Math.PI;else if(d<-Math.PI)th+=2*Math.PI;}
  for(let i=RIDGES.length-1;i>=0;i--){const R=RIDGES[i],r=R.b+R.a*(fbm(th*R.f+3,i*7.1,R.s,4)-.35)+.006*(vnoise(th*R.f*7,i,R.s+1)-.5);
   if(phi<r){// A ridge: lit toward the key side, darker in its folds, paler at its foot.
    const e=.002,slope=(fbm((th+e)*R.f+3,i*7.1,R.s,4)-fbm((th-e)*R.f+3,i*7.1,R.s,4))/(2*e)*R.a,lit=clamp(.5-slope*.6),depthIn=clamp((r-phi)/.05);
-   let c=mixc(R.c.map(v=>v*.86),R.c.map(v=>Math.min(255,v*1.12)),lit);
-   if(i===2){const tex=fbm(th*90,phi*260,R.s+5,3);c=mixc(c,[84,104,92],.35+.3*tex);} // forested near hills
-   return mixc(c,SKY_HORIZON,(1-depthIn)*.25);}}
+   const rc=A.ridges[i];let c=mixc(rc.map(v=>v*.86),rc.map(v=>Math.min(255,v*1.12)),lit);
+   if(i===2){const tex=fbm(th*90,phi*260,R.s+5,3);c=mixc(c,A.forest,.35+.3*tex);} // forested near hills
+   return mixc(c,A.horizon,(1-depthIn)*.25);}}
  // Sky: a warm horizon to a clear blue top, soft cumulus lit from the upper left.
- const u=clamp(phi/.45);let c=mixc(SKY_HORIZON,SKY_TOP,Math.pow(u,.7));
+ const u=clamp(phi/.45);let c=mixc(A.horizon,A.top,Math.pow(u,.7));
  const cl=fbm(th*3.1+5,phi*8.5,61,5)*smooth(.02,.08,phi)*(1-smooth(.25,.45,phi));
  const shape=smooth(.5,.62,cl+.08*Math.sin(th*1.3));
- if(shape>0){const lit=smooth(-.02,.03,fbm(th*3.1+4.97,phi*8.5+.06,61,5)-cl);c=mixc(c,mixc([196,202,212],[248,246,238],.35+.65*lit),shape*.92);}
+ if(shape>0){const lit=smooth(-.02,.03,fbm(th*3.1+4.97,phi*8.5+.06,61,5)-cl);c=mixc(c,mixc(A.cloud[0],A.cloud[1],.35+.65*lit),shape*.92);}
  return c;
 }
 
 // --- painter ----------------------------------------------------------------------
-export function paintCloseupPlate(assets,view,{haze=CLOSEUP_HAZE,billboards=true}={}){
+// keepClear: where no tree may stand (plate.js keepClear: the crash clearing,
+// its meadow, door lane and approach; another sector passes its own).
+export function paintCloseupPlate(assets,view,{haze=CLOSEUP_HAZE,billboards=true,keepClear:kc=keepClear(),atmosphere:A=CLOSEUP_ATMOSPHERE}={}){
+ const HAZE=A.haze,SKY_HORIZON=A.horizon,ahead=Math.atan2(view.f[1],view.f[0]);
  const {sector,textures,flora}=assets,W=view.W,H=view.H;setGroundTextures(textures);
  const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d',{willReadFrequently:true});
  const img=g.createImageData(W,H),d=img.data,T=new Float32Array(W*H),K=new Uint8Array(W*H),HZ=new Float32Array(W*H),BELOW=new Uint8Array(W*H);
@@ -129,7 +140,7 @@ export function paintCloseupPlate(assets,view,{haze=CLOSEUP_HAZE,billboards=true
   // terrain, which by then is all haze: paint the haze it would have reached
   // (the hills and sky belong above the horizon). Measured: such misses had
   // painted the near-hill ridge colour, dark specks among hazed far rock.
-  if(!hit){col=dir[2]<0?mixc(SKY_HORIZON,HAZE,.25):sky(dir);T[p]=Infinity;K[p]=0;HZ[p]=1;BELOW[p]=dir[2]<0?1:0;}
+  if(!hit){col=dir[2]<0?mixc(SKY_HORIZON,HAZE,.25):sky(dir,A,ahead);T[p]=Infinity;K[p]=0;HZ[p]=1;BELOW[p]=dir[2]<0?1:0;}
   else{
    if(hit.kind==='top'){const fp=hit.t/view.focal/Math.max(.18,-dir[2]);col=shadeTop(sector,hit.x,hit.y,hit.lev,0,0,groundLod(fp));K[p]=1;
     // Far forest reads as one canopy mass (its trees are culled below 3 px);
@@ -177,14 +188,14 @@ export function paintCloseupPlate(assets,view,{haze=CLOSEUP_HAZE,billboards=true
  g.putImageData(img,0,0);
  // Flora: the game's sprites as billboards, far to near, depth-tested
  // against the rock so the lip hides the trunks of the trees behind it.
- const n=billboards?drawBillboards(g,view,sector,flora,T,haze):0;
+ const n=billboards?drawBillboards(g,view,sector,flora,T,haze,kc,A.haze.join(',')):0;
  splitToneCanvas(c);
  return {canvas:c,depth:T,kind:K,flora:n};
 }
 
-function drawBillboards(g,view,sector,S,T,haze){
+function drawBillboards(g,view,sector,S,T,haze,kc,hazeColor){
  const W=view.W,H=view.H,C=view.C,R=260;
- const bounds=[C[0]-R,C[1]-R,C[0]+R,C[1]+R],kc=keepClear();
+ const bounds=[C[0]-R,C[1]-R,C[0]+R,C[1]+R];
  const all=[...planFlora(sector,bounds,{keepClear:kc,seed:3}),...planRocks(sector,bounds,{keepClear:kc,seed:9}),...planLedges(sector,bounds,{seed:13,density:.7})].filter(t=>t.kind!=='rock');
  const items=[];
  for(const t of all){const z=view.cam3(t.x,t.y,t.base)[2];if(z<2)continue;const b=view.project(t.x,t.y,t.base);if(!b)continue;
@@ -200,7 +211,7 @@ function drawBillboards(g,view,sector,S,T,haze){
  items.sort((a,b)=>b.z-a.z);
  const img=g.getImageData(0,0,W,H),d=img.data,cache=new Map(),tmp=document.createElement('canvas'),tg=tmp.getContext('2d',{willReadFrequently:true});
  for(const it of items){
-  const {t}=it,K=S[t.kind],v=floraVariant(K,t,closeupHazeAt(it.dist,haze),HAZE_COLOR),flipped=(t.seed%K.variants.length)%2===1;
+  const {t}=it,K=S[t.kind],v=floraVariant(K,t,closeupHazeAt(it.dist,haze),hazeColor),flipped=(t.seed%K.variants.length)%2===1;
   const hq=Math.max(2,Math.round(it.hpx)),key=t.kind+'|'+(t.seed%K.variants.length)+'|'+Math.round(Math.min(1,closeupHazeAt(it.dist,haze))*16)+'|'+hq;
   let sp=cache.get(key);
   if(!sp){const k=hq/(v.height-2*K.pad),w=Math.max(1,Math.round(v.width*k)),h=Math.max(1,Math.round(v.height*k));

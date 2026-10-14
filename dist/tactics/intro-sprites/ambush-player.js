@@ -1,0 +1,277 @@
+// The player for the intro's first part (ambush.js SHOTS, 0 to 20.2 s), built
+// like proof.js: every frame is a pure function of time t. Perspective shots
+// composite their painted plate and their baked frames: the aircraft with its
+// painted rotor disc (01, 03), or the launcher with the launch's painted smoke,
+// flames and flashes (05, 06). 07 is drawn in the crash player's wide view, and
+// from 20.2 s the crash player itself takes over (`proof`), so one player runs
+// the whole intro. Shots not painted yet say so.
+import {SHOTS,shotAt,lensPath,shotSpec,shotSector,shotKeepClear,plateName,lensWindow,HANDLER_LINE} from './ambush.js';
+export {lensWindow};
+import {SAM_SITE} from './sam-sector.js';
+import {loadProofAssets,createProof,PLATE_TILE,PROOF_START,PROOF_END} from './proof.js';
+import {approachPath,cameraAt} from './trajectory.js';
+import {SUN} from './crash-sector.js';
+import {closeupView,paintCloseupPlate} from './closeup.js';
+import {rotorDisc,puff,puffSprite,missile} from './effects.js';
+import {finishFrame} from './plate.js';
+import {loadGroundTextures,rng,fbm} from './crash-sector.js';
+import {loadFloraSprites} from './painted-trees.js';
+import {smooth} from './trajectory.js';
+export const WIDTH=1600,HEIGHT=900;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const load=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(Error('Missing '+src));i.src=src;});
+const json=async p=>{const r=await fetch(p);if(!r.ok)throw Error('Missing '+p);return r.json();};
+const bitmap=async src=>createImageBitmap(await load(src));
+
+export {PROOF_START,PROOF_END};
+export async function loadAmbushAssets({crash:withCrash=true}={}){
+ const lens={},plates=new Map(),frames=new Map();let painter=null,crash=null;
+ const smoke=await load('../../assets/effects/painted-fire/smoke-atlas-v1.png');
+ for(const s of SHOTS){if(!s.camera)continue;
+  const name=plateName(s);
+  if(!plates.has(name)){const spec=shotSpec(s);let plate=null,source='painted live';
+   try{const meta=await json(`plate/${name}.json`);if(JSON.stringify(meta.spec)===JSON.stringify(spec)){plate=await bitmap(`plate/${name}.webp`);source=`plate/${name}.webp`;}else source='painted live (the stored plate is stale)';}catch{}
+   if(!plate){painter??=await Promise.all([loadGroundTextures(),loadFloraSprites()]);
+    crash??=await Promise.all([json('../sector-library/tutorial-step-1/rough-plateau.json'),json('crash-sector-woodland.json')]).then(([map,woodland])=>({map,woodland}));
+    plate=paintCloseupPlate({sector:shotSector(s,crash),textures:painter[0],flora:painter[1]},closeupView(s.camera),{keepClear:shotKeepClear(s),atmosphere:spec.atmosphere}).canvas;}
+   plates.set(name,{plate,source});}
+  if(!frames.has(s.frames)){const seq=await json(`${s.frames}/sequence.json`);frames.set(s.frames,{seq,sheets:await Promise.all(seq.sheets.map(f=>bitmap(`${s.frames}/${f}`)))});}
+  lens[s.id]={shot:s,view:closeupView(s.camera),...plates.get(name),...frames.get(s.frames),kind:s.frames.startsWith('heli')?'heli':'sam'};}
+ // 02: the baked room, a plate and the rectangle around her head per frame.
+ const r=SHOTS.find(s=>s.id==='02'),seq=await json(`${r.frames}/sequence.json`);
+ const room={shot:r,seq,plate:await bitmap(`${r.frames}/${seq.plate}`),sheets:await Promise.all(seq.sheets.map(f=>bitmap(`${r.frames}/${f}`)))};
+ // 07 and after: the crash player's assets, and the aircraft frames before them.
+ let proof=null,incoming=null;
+ if(withCrash){proof=await loadProofAssets();const s=SHOTS.find(s=>s.id==='07'),seq=await json(`${s.frames}/sequence.json`);
+  incoming={shot:s,seq,sheets:await Promise.all(seq.sheets.map(f=>bitmap(`${s.frames}/${f}`))),shadowSheets:await Promise.all(seq.shadowSheets.map(f=>bitmap(`${s.frames}/${f}`)))};}
+ return {lens,smoke,room,proof,incoming};
+}
+
+// A baked sequence's frame at t: by frame rate, or the nearest baked time when
+// only keyframes were baked.
+function frameAt(seq,t){
+ if(seq.fps)return seq.frames[Math.max(0,Math.min(seq.frames.length-1,Math.round((t-seq.from)*seq.fps)))];
+ let best=seq.frames[0];for(const f of seq.frames)if(Math.abs(f.t-t)<Math.abs(best.t-t))best=f;return best;
+}
+
+// --- the launch: painted smoke, flames and flashes along the baked tracks -------
+// Track points: [t, x, y, h, dx, dy, dh] in sector tiles, every 0.02 s from launch.
+function trackAt(track,t){const P=track.points,u=clamp((t-P[0][0])/.02,0,P.length-1.001),i=Math.floor(u),f=u-i,a=P[i],b=P[i+1];
+ return {pos:[1,2,3].map(k=>a[k]+(b[k]-a[k])*f),dir:[4,5,6].map(k=>a[k]+(b[k]-a[k])*f)};}
+const TAIL=1.47; // the study's trail starts this far behind the missile's centre
+// Tiles of flight between trail puffs. Round 2: the puffs grow from 0.9 tile
+// and overlap into one plume, as the storyboard's trails do; spaced 0.5 and
+// starting at 0.55 they read as a string of beads against the darker sky.
+const TRAIL_STEP=.35,TRAIL_WARM='atop:rgba(255,224,168,.85)';
+function launchItems(t,tracks,V){
+ const items=[];
+ for(const [i,tr] of tracks.entries()){if(t<tr.birth)continue;
+  const R=rng(911+i*37),last=tr.points.at(-1)[0];
+  // The exhaust trail: a puff every TRAIL_STEP tiles of flight (by distance,
+  // so it stays continuous however fast the missile goes), rising and spreading.
+  const P=tr.points,life=2.6;let carry=0;
+  for(let k=1;k<P.length&&P[k-1][0]<=t;k++){const a=P[k-1],b=P[k],seg=Math.hypot(b[1]-a[1],b[2]-a[2],b[3]-a[3]);
+   for(let u=carry;u<seg;u+=TRAIL_STEP){const f=u/seg,te=a[0]+(b[0]-a[0])*f,jx=(R()-.5)*.5,jy=(R()-.5)*.5,cell=Math.floor(R()*4);if(te>t)break;const age=t-te;if(age>=life)continue;
+    const p=[1,2,3].map(c=>a[c]+(b[c]-a[c])*f),d=[4,5,6].map(c=>a[c]+(b[c]-a[c])*f),q=[p[0]-d[0]*TAIL+jx*age,p[1]-d[1]*TAIL+jy*age,p[2]-d[2]*TAIL+.3*age];
+    // (lit warm by the motor for its first tenth of a second)
+    items.push({kind:'puff',p:q,size:.9+age*2.1,alpha:.55*Math.pow(1-age/life,1.4)*Math.min(1,age/.04),cell,tint:age<.1?TRAIL_WARM:'atop:rgba(246,244,238,.8)'});}
+   carry=(carry-seg)%TRAIL_STEP;if(carry<0)carry+=TRAIL_STEP;}
+  // The launch cloud: blast smoke shoved out low around the rails, slowing.
+  const C=trackAt(tr,tr.birth),o=[C.pos[0]-C.dir[0]*2.4,C.pos[1]-C.dir[1]*2.4,Math.max(.4,C.pos[2]-C.dir[2]*2.4-1.2)];
+  // (its own random stream: the trail's puff count grows with t, so sharing one
+  // would reshuffle the cloud every frame)
+  const RC=rng(977+i*41);
+  for(let k=0;k<22;k++){const ang=RC()*Math.PI*2,sp=1.4+RC()*2.4,life=3.2+RC()*1.2,cell=Math.floor(RC()*4),lift=.2*RC(),age=t-tr.birth-k*.012;if(age<0||age>=life)continue;
+   const d=sp*(1-Math.exp(-1.7*age))/1.7,p=[o[0]+Math.cos(ang)*d,o[1]+Math.sin(ang)*d,o[2]+.35*age+lift];
+   items.push({kind:'puff',p,size:1+2.9*Math.sqrt(age/life),alpha:.55*Math.pow(1-age/life,1.2)*Math.min(1,age/.06),cell,tint:'atop:rgba(226,222,212,.72)'});}
+  // The motor: a flame behind the tail while it burns, a flash at ignition.
+  const now=trackAt(tr,Math.min(t,last)),noz=[0,1,2].map(k=>now.pos[k]-now.dir[k]*(TAIL+.3));
+  if(t<=last)items.push({kind:'flame',p:noz,back:[0,1,2].map(k=>noz[k]-now.dir[k]*1.7),flicker:.8+.2*Math.sin(t*61+i)});
+  const age=t-tr.birth;if(age<.38)items.push({kind:'flash',p:noz,age,seed:41+i});}
+ for(const it of items){it.depth=V.depth(...it.p);it.px=V.project(...it.p);it.scale=V.scaleAt(...it.p);}
+ return items.filter(it=>it.px);
+}
+// Ignition: a soft blast of light at the nozzle (the impact flash's star of
+// sparks belongs to the hit, not to a motor lighting).
+function ignition(ctx,[x,y],{radius,age}){
+ const life=.32,u=clamp(age/life,0,1);if(u>=1)return;const a=1-u,r=radius*(.7+1.1*Math.sqrt(u));
+ ctx.save();ctx.globalCompositeOperation='lighter';const g=ctx.createRadialGradient(x,y,0,x,y,r);
+ g.addColorStop(0,`rgba(255,250,228,${.95*a})`);g.addColorStop(.35,`rgba(255,212,130,${.7*a})`);g.addColorStop(1,'rgba(255,140,50,0)');
+ ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.restore();
+}
+function drawLaunchItem(ctx,smoke,it){
+ if(it.kind==='puff')puff(ctx,smoke,{x:it.px[0],y:it.px[1],size:it.size*it.scale,cell:it.cell,tint:it.tint,alpha:it.alpha});
+ else if(it.kind==='flash')ignition(ctx,it.px,{radius:1.6*it.scale,age:it.age});
+ else{const [x,y]=it.px,r=.32*it.scale*it.flicker;ctx.save();ctx.globalCompositeOperation='lighter';
+  const g=ctx.createRadialGradient(x,y,0,x,y,r*1.6);g.addColorStop(0,'rgba(255,244,210,.9)');g.addColorStop(.35,'rgba(255,190,96,.6)');g.addColorStop(1,'rgba(255,120,36,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r*1.6,0,Math.PI*2);ctx.fill();
+  const b=it.backPx;if(b){ctx.lineCap='round';for(const [w,c]of [[r*1.4,'rgba(255,170,70,.45)'],[r*.8,'rgba(255,236,190,.8)']]){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(b[0],b[1]);ctx.stroke();}}
+  ctx.restore();}
+}
+
+// --- 04: the radar insert --------------------------------------------------------
+// Code-drawn, as the study's was (intro-radar.js), in the sprites' language: a
+// worn olive console, a green scope whose sweep meets the new contact at
+// RADAR.contact s, an AIR CONTACT tag, amber lamps and three knobs, inked.
+export const RADAR=Object.freeze({from:12,to:14,contact:12.55,bearing:-.55,range:.62,rate:1.6});
+const SCOPE={x:560,y:450,r:330},INK_RGB='34,30,22';
+let consoleCache=null;
+function consoleFace(){
+ if(consoleCache)return consoleCache;
+ // Painted metal at half size (soft is fine for paint): olive, mottled, worn
+ // at the edges, scratched; then upscaled once.
+ const w=800,h=450,c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d'),img=g.createImageData(w,h),d=img.data;
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){const n=fbm(x*.018,y*.018,71,4),m=fbm(x*.09,y*.09,73,2),edge=Math.min(x,y,w-1-x,h-1-y)/w;
+  const wear=smooth(.5,.72,fbm(x*.03+9,y*.03,75,3))*(1-smooth(0,.05,edge)),o=(y*w+x)*4;
+  let r=62+n*28+m*10,gg=70+n*28+m*9,b=46+n*18+m*6;r+=(128-r)*wear*.5;gg+=(116-gg)*wear*.5;b+=(86-b)*wear*.5;
+  d[o]=r;d[o+1]=gg;d[o+2]=b;d[o+3]=255;}
+ g.putImageData(img,0,0);
+ const R=rng(77);g.strokeStyle='rgba(176,170,140,.18)';g.lineWidth=.6;
+ for(let i=0;i<90;i++){const x=R()*w,y=R()*h,a=(R()-.5)*1.2,l=4+R()*26;g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(a)*l,y+Math.sin(a)*l);g.stroke();}
+ const big=document.createElement('canvas');big.width=WIDTH;big.height=HEIGHT;const bg=big.getContext('2d');bg.imageSmoothingQuality='high';bg.drawImage(c,0,0,WIDTH,HEIGHT);
+ return consoleCache=big;
+}
+function renderRadarInsert(ctx,t){
+ const {x:cx,y:cy,r}=SCOPE,sweep=RADAR.bearing+RADAR.rate*(t-RADAR.contact),seen=t>=RADAR.contact;
+ ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(consoleFace(),0,0);
+ // The scope's bezel: a dark rubber ring in a bolted, rounded frame.
+ ctx.fillStyle='rgba(28,30,24,.92)';ctx.beginPath();ctx.roundRect(cx-r-58,cy-r-58,2*r+116,2*r+116,46);ctx.fill();
+ ctx.fillStyle='#10140f';ctx.beginPath();ctx.arc(cx,cy,r+16,0,Math.PI*2);ctx.fill();
+ for(const [bx,by] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ctx.fillStyle='#5b5a48';ctx.beginPath();ctx.arc(cx+bx*(r+30),cy+by*(r+30),9,0,Math.PI*2);ctx.fill();ctx.strokeStyle=`rgb(${INK_RGB})`;ctx.lineWidth=2;ctx.stroke();}
+ // The tube: dark green glass with a vignette.
+ const glass=ctx.createRadialGradient(cx-r*.25,cy-r*.3,r*.1,cx,cy,r);glass.addColorStop(0,'#1d3a24');glass.addColorStop(.75,'#11251a');glass.addColorStop(1,'#08120c');
+ ctx.fillStyle=glass;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+ ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.clip();
+ // Range rings and the cross.
+ ctx.strokeStyle='rgba(98,190,110,.42)';ctx.lineWidth=2;for(const k of [.25,.5,.75,1]){ctx.beginPath();ctx.arc(cx,cy,r*k*.96,0,Math.PI*2);ctx.stroke();}
+ ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);ctx.stroke();
+ // The sweep: bright at its leading edge, fading behind it over 70 degrees.
+ ctx.globalCompositeOperation='lighter';
+ const cone=ctx.createConicGradient(sweep-1.22,cx,cy);cone.addColorStop(0,'rgba(80,220,100,0)');cone.addColorStop(.155,'rgba(90,235,110,.30)');cone.addColorStop(.1945,'rgba(150,255,160,.62)');cone.addColorStop(.195,'rgba(80,220,100,0)');cone.addColorStop(1,'rgba(80,220,100,0)');
+ ctx.fillStyle=cone;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,sweep-1.22,sweep+.005);ctx.closePath();ctx.fill();
+ ctx.strokeStyle='rgba(190,255,190,.9)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(sweep)*r,cy+Math.sin(sweep)*r);ctx.stroke();
+ // Ground clutter: faint returns the sweep refreshes, for a working scope.
+ const R=rng(5);for(let i=0;i<46;i++){const a=R()*Math.PI*2,d=(.08+R()*.85)*r,since=((sweep-a)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)/RADAR.rate,glow=Math.exp(-since*1.2)*.5+.06;
+  ctx.fillStyle=`rgba(110,230,120,${glow*(.4+R()*.6)})`;ctx.beginPath();ctx.arc(cx+Math.cos(a)*d,cy+Math.sin(a)*d,1.5+R()*2.5,0,Math.PI*2);ctx.fill();}
+ // The contact: lit the instant the sweep reaches it, then an afterglow.
+ const bx=cx+Math.cos(RADAR.bearing)*r*RADAR.range,by=cy+Math.sin(RADAR.bearing)*r*RADAR.range;
+ if(seen){const since=t-RADAR.contact,glow=.45+.55*Math.exp(-since*1.4),rad=10+14*Math.exp(-since*3);
+  const bg=ctx.createRadialGradient(bx,by,0,bx,by,rad*2.4);bg.addColorStop(0,`rgba(230,255,225,${glow})`);bg.addColorStop(.3,`rgba(140,255,150,${.8*glow})`);bg.addColorStop(1,'rgba(80,220,100,0)');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.arc(bx,by,rad*2.4,0,Math.PI*2);ctx.fill();
+  // Its heading: a short trail behind it.
+  ctx.strokeStyle=`rgba(150,255,160,${.5*glow})`;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(bx-34,by+12);ctx.stroke();}
+ ctx.globalCompositeOperation='source-over';
+ // Glass: a cool highlight and faint scanlines.
+ const hl=ctx.createLinearGradient(cx-r,cy-r,cx,cy);hl.addColorStop(0,'rgba(220,255,230,.10)');hl.addColorStop(1,'rgba(220,255,230,0)');ctx.fillStyle=hl;ctx.fillRect(cx-r,cy-r,2*r,2*r);
+ ctx.fillStyle='rgba(0,0,0,.10)';for(let y=cy-r;y<cy+r;y+=4)ctx.fillRect(cx-r,y,2*r,1.5);
+ ctx.restore();
+ ctx.strokeStyle=`rgb(${INK_RGB})`;ctx.lineWidth=5;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+ // The AIR CONTACT tag: a green box upper left of the tube, flickering on.
+ if(seen){const since=t-RADAR.contact,on=since>.12||Math.floor(since*40)%2===0;
+  if(on){ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(120,240,130,.85)';ctx.lineWidth=3;ctx.strokeRect(cx-r+40,cy-r+60,250,58);
+   ctx.fillStyle='rgba(150,255,160,.95)';ctx.font='bold 34px "Courier New", monospace';ctx.fillText('AIR CONTACT',cx-r+56,cy-r+101);ctx.restore();}}
+ // The panel: amber lamps (the lowest lights with the contact) and three knobs.
+ const px=1070;
+ ctx.fillStyle='rgba(30,32,26,.85)';ctx.beginPath();ctx.roundRect(px-40,90,250,730,24);ctx.fill();
+ for(const [i,lit] of [[0,true],[1,false],[2,seen]].map(([i,l])=>[i,l])){const ly=160+i*112;
+  ctx.fillStyle='#2a2a22';ctx.beginPath();ctx.roundRect(px+26,ly-36,118,72,10);ctx.fill();
+  const lg=ctx.createRadialGradient(px+85,ly,4,px+85,ly,40);if(lit){lg.addColorStop(0,'#fff1c0');lg.addColorStop(.45,'#f0a43a');lg.addColorStop(1,'#7a4a16');}else{lg.addColorStop(0,'#6e5a36');lg.addColorStop(1,'#3a3022');}
+  ctx.fillStyle=lg;ctx.beginPath();ctx.roundRect(px+34,ly-28,102,56,8);ctx.fill();ctx.strokeStyle=`rgb(${INK_RGB})`;ctx.lineWidth=3;ctx.stroke();
+  if(lit){ctx.save();ctx.globalCompositeOperation='lighter';const halo=ctx.createRadialGradient(px+85,ly,10,px+85,ly,90);halo.addColorStop(0,'rgba(255,170,60,.35)');halo.addColorStop(1,'rgba(255,170,60,0)');ctx.fillStyle=halo;ctx.fillRect(px-10,ly-90,190,180);ctx.restore();}}
+ for(const [i,label] of ['RANGE','GAIN','FOCUS'].entries()){const ky=520+i*104,turn=[.6,-.4,1.1][i];
+  ctx.fillStyle='#1b1c17';ctx.beginPath();ctx.arc(px+85,ky,34,0,Math.PI*2);ctx.fill();ctx.strokeStyle=`rgb(${INK_RGB})`;ctx.lineWidth=3;ctx.stroke();
+  ctx.strokeStyle='#c9c4a8';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(px+85,ky);ctx.lineTo(px+85+Math.cos(turn-Math.PI/2)*26,ky+Math.sin(turn-Math.PI/2)*26);ctx.stroke();
+  ctx.fillStyle='rgba(214,208,182,.85)';ctx.font='20px Georgia, serif';ctx.textAlign='center';ctx.fillText(label,px+85,ky+56);ctx.textAlign='start';}
+ ctx.strokeStyle=`rgb(${INK_RGB})`;ctx.lineWidth=4;ctx.beginPath();ctx.roundRect(px-40,90,250,730,24);ctx.stroke();ctx.beginPath();ctx.roundRect(cx-r-58,cy-r-58,2*r+116,2*r+116,46);ctx.stroke();
+ finishFrame(ctx,WIDTH,HEIGHT);
+ return {t,shot:'04',sweep,contact:seen};
+}
+
+// --- 02: the overseas radio room -------------------------------------------------
+// The baked room (bake-intro-room.mjs): the hen at her desk in the modelled
+// room, one render inked and split-toned together. A plate holds the frame;
+// only the rectangle around her head changes, one sprite per frame. Then a
+// location card and her line as a subtitle.
+function renderRoom(ctx,t,L){
+ ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(L.plate,0,0);
+ const f=frameAt(L.seq,t),[rx,ry]=L.seq.rect;if(f.sprite){const [sh,x,y,w,h]=f.sprite;ctx.drawImage(L.sheets[sh],x,y,w,h,rx,ry,w,h);}
+ finishFrame(ctx,WIDTH,HEIGHT);
+ // Location card, then her line as a subtitle (after the grade: titles are not painted).
+ const s=L.shot,card=smooth(s.from,s.from+.4,t)*(1-smooth(s.from+2,s.from+2.6,t));
+ if(card>0){ctx.save();ctx.globalAlpha=card;ctx.fillStyle='rgba(20,22,18,.72)';ctx.fillRect(48,44,372,50);ctx.fillStyle='#e9e2cc';ctx.font='24px Georgia, serif';ctx.fillText('OVERSEAS RADIO ROOM',66,78);ctx.restore();}
+ const line=smooth(s.from+.5,s.from+.8,t)*(1-smooth(s.to-.5,s.to-.2,t));
+ if(line>0){ctx.save();ctx.globalAlpha=line;ctx.font='italic 34px Georgia, serif';const tw=ctx.measureText('“'+HANDLER_LINE+'”').width;
+  ctx.fillStyle='rgba(16,18,14,.66)';ctx.fillRect((WIDTH-tw)/2-28,786,tw+56,62);ctx.fillStyle='#f1ead2';ctx.fillText('“'+HANDLER_LINE+'”',(WIDTH-tw)/2,828);ctx.restore();}
+ return {t,shot:s.id,frame:f.t};
+}
+
+export function createAmbush(canvas,A){
+ const ctx=canvas.getContext('2d'),proof=A.proof?createProof(canvas,A.proof):null;
+ // Build the tinted puff sprites up front (proof.js: on first use they stalled playback).
+ for(let c=0;c<4;c++)for(const tint of ['atop:rgba(246,244,238,.8)','atop:rgba(226,222,212,.72)',TRAIL_WARM])puffSprite(A.smoke,c,tint);
+ function begin(L,subjectPx,t){const s=L.shot,win=lensWindow(s,t,subjectPx),z=win.zoom*WIDTH/s.camera.window[0];
+  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#2c3524';ctx.fillRect(0,0,WIDTH,HEIGHT);
+  ctx.setTransform(z,0,0,z,WIDTH/2-win.cx*z,HEIGHT/2-win.cy*z);ctx.drawImage(L.plate,0,0);}
+ const drawFrame=(L,f)=>{if(f.sprite){const [sh,x,y,w,h]=f.sprite;ctx.drawImage(L.sheets[sh],x,y,w,h,f.pos[0],f.pos[1],w,h);}};
+ function renderHeli(t,L){
+  const V=L.view,p=lensPath(t);begin(L,V.project(p.x,p.y,p.h+1.2),t);
+  const f=frameAt(L.seq,t);drawFrame(L,f);
+  const d=f.rotorDisc;rotorDisc(ctx,{hub:d.hub,u:d.u,v:d.v},{alpha:1,angle:31*t});
+  ctx.setTransform(1,0,0,1,0,0);finishFrame(ctx,WIDTH,HEIGHT);
+  return {t,shot:L.shot.id,heli:p,frame:f.t};
+ }
+ function renderSam(t,L){
+  const V=L.view,site=[SAM_SITE.x,SAM_SITE.y,2.4];begin(L,V.project(...site),t);
+  const f=frameAt(L.seq,t),items=launchItems(t,L.seq.tracks,V),depth=V.depth(...site);
+  for(const it of items)if(it.kind==='flame')it.backPx=V.project(...it.back);
+  const puffs=items.filter(it=>it.kind==='puff').sort((a,b)=>a.depth-b.depth);
+  // The launcher in its layers (bake-intro-sam.mjs): the static base, the
+  // turret, then the missiles in flight over their own smoke.
+  const layer=g=>{if(g?.sprite){const [sh,x,y,w,h]=g.sprite;ctx.drawImage(L.sheets[sh],x,y,w,h,g.pos[0],g.pos[1],w,h);}};
+  for(const it of puffs)if(it.depth<depth)drawLaunchItem(ctx,A.smoke,it);
+  layer(L.seq.base);layer(f.turret);
+  for(const it of puffs)if(it.depth>=depth)drawLaunchItem(ctx,A.smoke,it);
+  for(const m of f.missiles||[])layer(m);
+  for(const it of items)if(it.kind!=='puff')drawLaunchItem(ctx,A.smoke,it);
+  ctx.setTransform(1,0,0,1,0,0);finishFrame(ctx,WIDTH,HEIGHT);
+  return {t,shot:L.shot.id,frame:f.t,puffs:puffs.length};
+ }
+ // 07: the crash player's wide view before it starts. Its plate, its camera
+ // (cameraAt holds the first framing until 20.2 s), the aircraft on the
+ // approach with its shadow and rotor, and the crash's own missile schedule
+ // (they enter from screen left as it starts): drawn as proof.js draws them.
+ function renderIncoming(t,I){
+  const P=A.proof,view=P.view,ppu=PLATE_TILE/Math.SQRT2,c=cameraAt(t),s=c.w/PLATE_TILE,[fpx,fpy]=view.project(...c.F);
+  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#2c3524';ctx.fillRect(0,0,WIDTH,HEIGHT);
+  ctx.setTransform(s,0,0,s,c.S[0]-fpx*s,c.S[1]-fpy*s);ctx.drawImage(P.plate,0,0);
+  const path=approachPath(t),f=frameAt(I.seq,t),ground=(x,y)=>P.sector.heightAt(x,y);
+  if(f.shadow){let g=0;for(let i=0;i<2;i++){const alt=Math.max(0,path.h-g);g=ground(path.x-SUN[0]/SUN[1]*alt,path.y-SUN[2]/SUN[1]*alt);}
+   const alt=Math.max(0,path.h-g),[sx,sy]=view.project(path.x-SUN[0]/SUN[1]*alt,path.y-SUN[2]/SUN[1]*alt,g),[sh,x,y,w,h]=f.shadow;
+   ctx.save();ctx.globalAlpha=Math.max(.16,.5-alt*.014);if(alt>.3)ctx.filter=`blur(${(1+alt*.22)*s}px)`;ctx.drawImage(I.shadowSheets[sh],x,y,w,h,sx-f.shadowAnchor[0],sy-f.shadowAnchor[1],w,h);ctx.restore();}
+  const air=[];
+  for(const p of proof.fx.puffs){const age=t-p.t;if(age<0||age>=p.life)continue;const u=age/p.life,x=p.p[0]+p.v[0]*age,y=p.p[1]+p.v[1]*age,h=p.p[2]+p.v[2]*age-(p.sink||0)*age*age;
+   const [px,py]=view.project(x,y,h),size=(p.s0+(p.s1-p.s0)*Math.sqrt(u))*ppu,alpha=p.a*Math.pow(1-u,1.4)*Math.min(1,age/.08);
+   air.push({depth:view.depth(x,y,h),draw:()=>puff(ctx,P.smoke,{x:px,y:py,size,cell:p.cell,tint:p.tint,alpha,flip:p.flip,angle:p.rot})});}
+  for(const m of proof.fx.missiles){if(t<m.t0||t>=m.t1)continue;const a=m.pos(t),nose=a.map((v,k)=>v+m.dir[k]*1.5);air.push({depth:view.depth(...a)+.01,draw:()=>missile(ctx,view.project(...a),view.project(...nose),{width:.17*ppu})});}
+  air.push({depth:view.depth(path.x,path.y,path.h+1.2),draw:()=>{const [ax,ay]=view.project(path.x,path.y,path.h),[sh,x,y,w,h]=f.sprite;
+   ctx.drawImage(I.sheets[sh],x,y,w,h,ax-f.anchor[0],ay-f.anchor[1],w,h);
+   if(f.rotorDisc){const d=f.rotorDisc;rotorDisc(ctx,{hub:[ax+d.hub[0],ay+d.hub[1]],u:d.u,v:d.v},{alpha:1,angle:31*t});}}});
+  air.sort((a,b)=>a.depth-b.depth);for(const it of air)it.draw();
+  ctx.setTransform(1,0,0,1,0,0);finishFrame(ctx,WIDTH,HEIGHT);
+  return {t,shot:'07',camera:c,heli:path,frame:f.t};
+ }
+ function unpainted(t,s){
+  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#1d2620';ctx.fillRect(0,0,WIDTH,HEIGHT);
+  ctx.fillStyle='#e9e2cc';ctx.font='30px Georgia, serif';ctx.fillText(`${s.id} · ${s.title}`,64,96);
+  ctx.fillStyle='#a9ad98';ctx.font='22px Georgia, serif';ctx.fillText(`${s.place}, ${s.from}–${s.to} s: not painted yet`,64,136);
+  return {t,shot:s.id,unpainted:true};
+ }
+ // The whole intro: these shots to 20.2 s, then the crash player.
+ function render(t){
+  if(proof&&t>=PROOF_START)return proof.render(Math.min(t,PROOF_END));
+  t=clamp(t,SHOTS[0].from,SHOTS.at(-1).to-1e-6);const s=shotAt(t),L=A.lens[s.id];
+  if(s.id==='04')return renderRadarInsert(ctx,t);
+  if(s.id==='02'&&A.room)return renderRoom(ctx,t,A.room);
+  if(s.id==='07')return A.incoming&&proof?renderIncoming(t,A.incoming):unpainted(t,s);
+  return !L?unpainted(t,s):L.kind==='heli'?renderHeli(t,L):renderSam(t,L);}
+ return {render,proof,end:proof?PROOF_END:SHOTS.at(-1).to};
+}

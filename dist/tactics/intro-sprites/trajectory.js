@@ -39,6 +39,33 @@ const FLIGHT=[
  [25.4,[199.8,103.7,1.4],[4.4,.35,-2.6]],
  [26.0,[TOUCHDOWN[0],TOUCHDOWN[1],0],[SLIDE_SCALE*2,0,-2.2]],
 ];
+// The approach, 0 to 20.2 s (storyboard shots 01-06): one smooth heading and
+// speed profile, integrated back from FLIGHT's first key so it meets the proof's
+// path in place, direction and speed (19.4-21.5 s is one shot). In over the
+// southern lowland, across the plateau's south rim at about 1.8 s, north-east
+// over the plateau, then an easy right turn from 9 s onto the hit line.
+// Heading: rad, 0 = +x, positive toward -y (north). Wide-shot heights, like
+// FLIGHT; the perspective shots lift them by PERSPECTIVE_LIFT.
+const AP=Object.freeze({heading:55*Math.PI/180,turn:9,speed:10.5,slow:10});
+const AP_END=Math.atan2(-FLIGHT[0][2][1],FLIGHT[0][2][0]),AP_V=Math.hypot(FLIGHT[0][2][0],FLIGHT[0][2][1]);
+export const approachHeading=t=>AP.heading+(AP_END-AP.heading)*smooth(AP.turn,PROOF_START,t);
+const apSpeed=t=>AP.speed+(AP_V-AP.speed)*smooth(AP.slow,PROOF_START,t);
+const AP_DT=.005,AP_XY=(()=>{const n=Math.round(PROOF_START/AP_DT),out=new Float64Array(2*n+2);let x=FLIGHT[0][1][0],y=FLIGHT[0][1][1];
+ for(let i=n;i>=0;i--){out[2*i]=x;out[2*i+1]=y;const t=i*AP_DT,s=apSpeed(t),p=approachHeading(t);x-=s*Math.cos(p)*AP_DT;y+=s*Math.sin(p)*AP_DT;}return out;})();
+const AP_H=[[0,[18.5],[.4]],[8,[20.4],[.1]],[16,[20.6],[-.1]],[PROOF_START,[FLIGHT[0][1][2]],[FLIGHT[0][2][2]]]];
+export function approachPath(t){t=clamp(t,0,PROOF_START);const u=t/AP_DT,i=Math.min(Math.floor(u),AP_XY.length/2-2),f=u-i;
+ return {x:mix(AP_XY[2*i],AP_XY[2*i+2],f),y:mix(AP_XY[2*i+1],AP_XY[2*i+3],f),h:hermite(AP_H,t)[0]};}
+// The perspective shots stretch the cliff 4x where the wide shots stretch it
+// 2.4x (crash-sector.js HEIGHT_SCALE): lifting the path by the difference in
+// the summit's height keeps the aircraft's clearance over the plateau the same.
+export const PERSPECTIVE_LIFT=+(2*2.12*(4-2.4)).toFixed(3);
+// Attitude in flight: banked into the turn (atan(v * turn rate / g), g = 9.8
+// tiles/s^2 at about 2 m a tile, positive = right side down) and the nose a
+// little down for cruise, easing level by the hit line (artPitch is 0 there).
+export function approachAttitude(t){
+ const e=.05,rate=(approachHeading(t+e)-approachHeading(t-e))/(2*e);
+ return {yaw:approachHeading(t),pitch:-.07*(1-smooth(17,PROOF_START,t)),roll:-Math.atan(apSpeed(t)*rate/9.8)};
+}
 // Height h is the lowest skid rail above level 0 (the bake plants the rails on
 // the sprite's ground plane, so h = 0 means the skids touch flat ground).
 export function heliPath(t){
