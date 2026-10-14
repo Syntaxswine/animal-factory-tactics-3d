@@ -1,4 +1,6 @@
 // node tools/build-speaking-heads.mjs [--only=<id>,<id>]
+// (SPEAKING_DEBUG=1 logs the reductions; SPEAKING_DUMP=<dir> writes their meshes there;
+// SPEAKING_OUT=<dir> writes the heads there instead of dist)
 // Builds each character's speaking head from its approved head sculpt (tools/speaking-heads):
 // the sculpt is opened for speech (sculpt.mjs, mouths.mjs), placed where the character's tool
 // placed its skull (place.mjs), then reduced twice, as the characters were: to an authoring
@@ -15,14 +17,15 @@ import {placement,measurePlacement} from './speaking-heads/place.mjs';
 import {sculptSpeaking,toothMesh,tongueMesh} from './speaking-heads/sculpt.mjs';
 const simplify=createRequire(import.meta.url)('./vendor/meshoptimizer/meshopt_simplifier.cjs');await simplify.ready;
 const only=process.argv.find(a=>a.startsWith('--only='))?.slice(7).split(',');
-const out=new URL('../dist/tactics/speaking-heads/',import.meta.url);fs.mkdirSync(out,{recursive:true});
+const out=process.env.SPEAKING_OUT?new URL('file:///'+process.env.SPEAKING_OUT.split('\\').join('/')+'/'):new URL('../dist/tactics/speaking-heads/',import.meta.url);fs.mkdirSync(out,{recursive:true});
 const sourceHash=speakingSourceHash();
 
 // The speaking skin spends what the skull it replaces spent on the approved surface, and a
 // quarter more on the mouth inside it (the lips' faces, cheeks, cavity), at a tolerance of its own.
 // Teeth and tongue are small closed lathes with budgets of their own (sides x rings).
 const MOUTH_SHARE=.25,MOUTH_TOLERANCE={author:.0015,low:.008};
-const TOOTH={author:[10,6],low:[6,2]},TONGUE={author:[12,14],low:[8,7]};
+// (the game mesh's teeth and tongue are seen at portrait size at most: 30 and 72 triangles)
+const TOOTH={author:[10,6],low:[5,2]},TONGUE={author:[12,14],low:[6,6]};
 // The attribute weights keep the jaw's weight, the mouth's paint and the lips' two sides from
 // being simplified away: a full change of one counts as this much distance (less in the game mesh,
 // whose mouth is seen at portrait size at most). The skin is simplified where it was sculpted (the
@@ -62,39 +65,78 @@ function weld(mesh,eps=1e-6){
  const index=new Uint32Array(mesh.index.length);for(let i=0;i<index.length;i++)index[i]=map[mesh.index[i]];
  return {...mesh,index:cleanFaces(dropDegenerate(index))};
 }
+// The outer skin's triangles that cross another near the mouth (not sharing a vertex), closed and
+// with the jaw open 6 and 12 degrees: their vertices, a list per crossing pair, marked `crossed`.
+// The outer skin: no vertex the mouth's or a lip's face. Posed as the head is written and the
+// runtime turns it (rest to the micrometre, jaw weights to 1e-4, about the hinge), so a crossing
+// the rounding makes is found here too.
+const sub3=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cross3=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+function segTri(p,q,a,b,c){const e1=sub3(b,a),e2=sub3(c,a),dir=sub3(q,p),pv=cross3(dir,e2),det=dot3(e1,pv);if(Math.abs(det)<1e-14)return false;const inv=1/det,tv=sub3(p,a),u=dot3(tv,pv)*inv;if(u<0||u>1)return false;const qv=cross3(tv,e1),v=dot3(dir,qv)*inv;if(v<0||u+v>1)return false;const t=dot3(e2,qv)*inv;return t>1e-7&&t<1-1e-7;}
+const triTri=(A,B)=>{for(let k=0;k<3;k++)if(segTri(A[k],A[(k+1)%3],B[0],B[1],B[2])||segTri(B[k],B[(k+1)%3],A[0],A[1],A[2]))return true;return false;};
+function crossings(mesh,index,{hinge,reach=.12,cell=.005}={}){
+ const outer=i=>mesh.fold[i]<.5&&Math.round(mesh.inside[i]*1000)/1000<.5,found=[],n=mesh.jaw.length;
+ let c=[0,0],k=0;for(let i=0;i<mesh.fold.length;i++)if(mesh.fold[i]>.5){c[0]+=mesh.rest[i*3];c[1]+=mesh.rest[i*3+1];k++;}c=c.map(v=>v/Math.max(1,k));
+ const R=mesh.rest.map(v=>Math.round(v*1e6)/1e6),W=mesh.jaw.map(v=>Math.round(v*1e4)/1e4),[hx,hy]=hinge.map(v=>Math.round(v*1e6)/1e6);
+ const turned=deg=>{const a=-deg*Math.PI/180,co=Math.cos(a),si=Math.sin(a),P=new Float64Array(n*3);
+  for(let i=0;i<n;i++){const x=R[i*3],y=R[i*3+1],w=W[i],dx=x-hx,dy=y-hy;P[i*3]=x+w*(hx+dx*co-dy*si-x);P[i*3+1]=y+w*(hy+dx*si+dy*co-y);P[i*3+2]=R[i*3+2];}return P;};
+ for(const P of [turned(0),turned(6),turned(12)]){
+  const T=[],grid=new Map(),at=i=>[P[i*3],P[i*3+1],P[i*3+2]];
+  for(let t=0;t<index.length;t+=3){const ids=[index[t],index[t+1],index[t+2]];if(!ids.every(outer))continue;if(Math.hypot(P[ids[0]*3]-c[0],P[ids[0]*3+1]-c[1])>reach)continue;
+   const v=ids.map(at),min=[0,1,2].map(a=>Math.min(v[0][a],v[1][a],v[2][a])),max=[0,1,2].map(a=>Math.max(v[0][a],v[1][a],v[2][a])),j=T.length;T.push({ids,v,min,max});
+   for(let x=Math.floor(min[0]/cell);x<=Math.floor(max[0]/cell);x++)for(let y=Math.floor(min[1]/cell);y<=Math.floor(max[1]/cell);y++)for(let z=Math.floor(min[2]/cell);z<=Math.floor(max[2]/cell);z++){const key=x+','+y+','+z;if(!grid.has(key))grid.set(key,[]);grid.get(key).push(j);}}
+  const seen=new Set();
+  for(const list of grid.values())for(let a=0;a<list.length;a++)for(let b=a+1;b<list.length;b++){const A=T[list[a]],B=T[list[b]],key=list[a]*1e6+list[b];if(seen.has(key))continue;seen.add(key);
+   if(B.ids.some(v=>A.ids.includes(v)))continue;if([0,1,2].some(d=>B.min[d]>A.max[d]||B.max[d]<A.min[d]))continue;
+   if(triTri(A.v,B.v))found.push([...A.ids,...B.ids]);}}
+ found.crossed=true;return found;
+}
 // Reduce a mesh carried as {position (where it is simplified: the open, expanded space), index,
 // per-vertex arrays...} in parts that meet along locked borders: the approved outer surface
 // (triangles all of whose vertices have outer = 1) at the skull's own target and tolerance, and
 // the mouth at its own. A collapse can pinch a thin wall (a cheek, a lip over the cavity) into
 // edges shared by four triangles: where one does, the vertices around the pinch are locked and
 // the reduction is done again. Every per-vertex array follows the kept vertices.
-function reduce(mesh,parts,attributes,weights){
+function reduce(mesh,parts,attributes,weights,{lockBy=null,hinge}={}){
  // each attribute one value per vertex, or three (a position)
  const n=mesh.position.length/3,columns=attributes.flatMap(a=>mesh[a].length===n*3?[[a,0],[a,1],[a,2]]:[[a,null]]),attr=new Float32Array(n*columns.length);
  columns.forEach(([a,c],k)=>{const v=mesh[a];for(let i=0;i<n;i++)attr[i*columns.length+k]=c===null?v[i]:v[i*3+c];});
  const P=mesh.position;
  const outerTri=t=>mesh.outer[mesh.index[t*3]]>.5&&mesh.outer[mesh.index[t*3+1]]>.5&&mesh.outer[mesh.index[t*3+2]]>.5;
  const split=[[],[]];for(let t=0;t<mesh.index.length/3;t++)split[outerTri(t)?0:1].push(mesh.index[t*3],mesh.index[t*3+1],mesh.index[t*3+2]);
- const sources=split.map(s=>new Uint32Array(s)),lock=new Uint8Array(n);let locked=0,tries=0,indices,errors;
+ const sources=split.map(s=>new Uint32Array(s)),lock=new Uint8Array(n);let locked=0,tries=0,indices,errors,crossed=0;
+ if(lockBy)for(let i=0;i<n;i++)if(mesh[lockBy][i]>0){lock[i]=1;locked++;}
  for(;;tries++){
   const done=sources.map((source,k)=>{const {target,tolerance}=parts[k],count=Math.min(Math.round(target)*3,source.length);
    const [ix,error]=simplify.simplifyWithAttributes(source.slice(),P,3,attr,columns.length,columns.map(([a])=>weights[a]),lock,count-count%3,tolerance,['ErrorAbsolute','LockBorder','Sparse']);return {ix,error};});
   indices=cleanFaces(new Uint32Array([...done[0].ix,...done[1].ix]));errors=done.map(d=>d.error);
   if(process.env.SPEAKING_DEBUG)console.log('  reduce',sources.map((s,k)=>`${['outer','mouth'][k]} ${s.length/3} -> ${done[k].ix.length/3} (target ${Math.round(parts[k].target)}, error ${(done[k].error*1000).toFixed(2)} mm of ${(parts[k].tolerance*1000).toFixed(1)})`).join(', '));
-  const bad=badEdges(indices);if(!bad.length)break;
-  if(tries>=8)throw Error(`reduce: still ${bad.length} pinched edges after ${locked} locks`);
+  let bad=badEdges(indices);
+  // (a reduction can also fold the outer skin through itself, closed or with the jaw open, where
+  // the two lips' surfaces meet at the crease: the vertices of the crossing triangles are locked
+  // the same way, if a few retries can; what the sculpt itself leaves is reported, not refused)
+  if(!bad.length){bad=crossings(mesh,indices,{hinge});crossed=bad.length;if(tries>=3)break;}
+  if(!bad.length)break;
+  if(tries>=8){const left=badEdges(indices).length;if(left)throw Error(`reduce: still ${left} pinched edges after ${locked} locks`);break;}
   // lock the source's vertices within `tries + 2` rings of the pinch (and within the reach), so
-  // the collapses that made it cannot happen
-  const reach=.0025,at=[...new Set(bad.flat())].map(i=>[P[i*3],P[i*3+1],P[i*3+2]]);
-  for(let i=0;i<n;i++){if(lock[i])continue;const x=P[i*3],y=P[i*3+1],z=P[i*3+2];for(const q of at)if((x-q[0])**2+(y-q[1])**2+(z-q[2])**2<reach*reach){lock[i]=1;locked++;break;}}
-  let ring=new Set(bad.flat());for(let r=0;r<tries+2;r++){const next=new Set(ring);for(let t=0;t<mesh.index.length;t+=3){const tri=[mesh.index[t],mesh.index[t+1],mesh.index[t+2]];if(tri.some(v=>ring.has(v)))tri.forEach(v=>next.add(v));}ring=next;}
+  // the collapses that made it cannot happen (a crossing: its triangles' vertices and one ring)
+  const isCrossing=bad.crossed,reach=.0025,at=[...new Set(bad.flat())].map(i=>[P[i*3],P[i*3+1],P[i*3+2]]);
+  if(!isCrossing)for(let i=0;i<n;i++){if(lock[i])continue;const x=P[i*3],y=P[i*3+1],z=P[i*3+2];for(const q of at)if((x-q[0])**2+(y-q[1])**2+(z-q[2])**2<reach*reach){lock[i]=1;locked++;break;}}
+  let ring=new Set(bad.flat());for(let r=0;r<(isCrossing?1:tries+2);r++){const next=new Set(ring);for(let t=0;t<mesh.index.length;t+=3){const tri=[mesh.index[t],mesh.index[t+1],mesh.index[t+2]];if(tri.some(v=>ring.has(v)))tri.forEach(v=>next.add(v));}ring=next;}
   for(const i of ring)if(!lock[i]){lock[i]=1;locked++;}
  }
- const [remap,count]=simplify.compactMesh(indices),result={index:indices,errorWorld:Math.max(...errors),errors,sourceTriangles:mesh.index.length/3,tries,locked};
+ if(process.env.SPEAKING_DEBUG&&crossed)console.log(`  reduce: ${crossed} crossing pairs left after ${tries} retries`);
+ const [remap,count]=simplify.compactMesh(indices),result={index:indices,errorWorld:Math.max(...errors),errors,sourceTriangles:mesh.index.length/3,tries,locked,crossings:crossed};
  // The remap covers the vertices up to the highest one still used, not all n.
  for(const [key,value] of Object.entries(mesh)){if(key==='index'||!ArrayBuffer.isView(value))continue;const k=value.length/n,array=new Float32Array(count*k);for(let i=0;i<remap.length;i++)if(remap[i]!==0xffffffff)array.set(value.subarray(i*k,i*k+k),remap[i]*k);result[key]=array;}
  return result;
 }
+// Closed, the two lips' faces lie in one sheet (the cut, at rest). Reduced each on its own, they
+// leave it a little differently, and a ray along the sheet (seen edge on, from the front) can pass
+// between them to the teeth: a hairline. So at rest each face sits OVERLAP past the sheet into the
+// other's side, the upper lip's a little low and the lower's a little high (hidden, inside the
+// closed mouth; open, the parted lips are that much less apart).
+const OVERLAP={author:.0002,low:.0005};
+function overlap(m,eps){for(let i=0;i<m.lower.length;i++)if(m.fold[i]>.5&&(m.lower[i]===0||m.lower[i]===1))m.rest[i*3+1]+=m.lower[i]?eps:-eps;}
 function meshNormals(position,index){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(position,3));g.setIndex(new THREE.BufferAttribute(index,1));g.computeVertexNormals();const n=g.attributes.normal.array.slice();g.dispose();return n;}
 const round=(a,d)=>Array.from(a,v=>+v.toFixed(d));
 const placeAll=(place,P)=>{const o=new Float32Array(P.length);for(let i=0;i<P.length;i+=3)o.set(place.map([P[i],P[i+1],P[i+2]]),i);return o;};
@@ -114,7 +156,16 @@ function prepare(S,place,M){
  for(let i=0;i<n;i++){const w=S.jaw[i],x=rest[i*3],y=rest[i*3+1],dx=x-hx,dy=y-hy;posed.set([x+w*(hx+dx*c-dy*s-x),y+w*(hy+dx*s+dy*c-y),rest[i*3+2]],i*3);}
  const c24=Math.cos(-2*POSED),s24=Math.sin(-2*POSED),posed24=new Float32Array(n*3);
  for(let i=0;i<n;i++){const w=S.jaw[i],x=rest[i*3],y=rest[i*3+1],dx=x-hx,dy=y-hy;posed24.set([x+w*(hx+dx*c24-dy*s24-x),y+w*(hy+dx*s24+dy*c24-y),rest[i*3+2]],i*3);}
- const {posed24:_,...skin}=mergeTiny(weld({position:P,index:S.skin.index.array,rest,posed,posed24,normal,jaw:S.jaw,inside:S.inside,depth:S.depth,lower:S.lower,fold:S.fold,part:S.part,outer:S.outer}));
+ // The crease at the front of the mouth, where the lips meet over the teeth: the lips' faces'
+ // edge rows (folding vertices of one side, next to the outer skin) within the window and a
+ // little beyond. The authoring mesh keeps them (locked), so its closed lips meet along the
+ // approved surface's section (a beak has no teeth: none). The game mesh cannot spend its mouth's
+ // few triangles on them: its lips overlap instead (see overlap).
+ const crease=new Float32Array(n),I=S.skin.index.array,wz=M.cheeks?M.cheeks.window+.005:-1;
+ for(let t=0;t<I.length;t+=3){const v=[I[t],I[t+1],I[t+2]];if(!v.some(i=>S.outer[i]>.5))continue;
+  for(const i of v)if(S.fold[i]&&(S.lower[i]===0||S.lower[i]===1)&&Math.abs(S.rest[i*3+2])<wz)crease[i]=1;}
+
+ const {posed24:_,...skin}=mergeTiny(weld({position:P,index:I,rest,posed,posed24,normal,jaw:S.jaw,inside:S.inside,depth:S.depth,lower:S.lower,fold:S.fold,part:S.part,outer:S.outer,crease}));
  return {skin,rest};
 }
 for(const head of HEADS){
@@ -132,7 +183,9 @@ for(const head of HEADS){
  if(process.env.SPEAKING_DUMP)fs.writeFileSync(process.env.SPEAKING_DUMP+`/${head.id}-raw.json`,JSON.stringify({hinge:place.map([M.hinge[0],M.hinge[1],0]),rest:Array.from(skin.rest,v=>+v.toFixed(7)),jaw:Array.from(skin.jaw,v=>+v.toFixed(4)),inside:Array.from(skin.inside,v=>+v.toFixed(3)),fold:Array.from(skin.fold),lower:Array.from(skin.lower,v=>+v.toFixed(3)),index:Array.from(skin.index)}));
  for(const level of ['author','low']){const L=head[level],from=level==='author'?skin:(()=>{const {errorWorld,errors,sourceTriangles,tries,locked,...m}=levels.author.skin;return m;})();
   if(process.env.SPEAKING_DUMP&&level==='low')fs.writeFileSync(process.env.SPEAKING_DUMP+`/${head.id}-author-source.json`,JSON.stringify({open:Array.from(from.position),outer:Array.from(from.outer),lower:Array.from(from.lower),index:Array.from(from.index)}));
-  levels[level]={skin:reduce(from,[{target:L.target,tolerance:L.tolerance},{target:L.target*MOUTH_SHARE,tolerance:MOUTH_TOLERANCE[level]}],['jaw','inside','lower','fold','rest','posed'],ATTRIBUTE_WEIGHT[level])};}
+  levels[level]={skin:reduce(from,[{target:L.target,tolerance:L.tolerance},{target:L.target*(M.share??MOUTH_SHARE),tolerance:MOUTH_TOLERANCE[level]}],['jaw','inside','lower','fold','rest','posed'],ATTRIBUTE_WEIGHT[level],{lockBy:level==='author'?'crease':null,hinge:place.map([M.hinge[0],M.hinge[1],0])})};}
+ // closed, the two lips' faces (a beak's, its gape's) overlap
+ for(const level of ['author','low'])overlap(levels[level].skin,OVERLAP[level]);
  // Teeth: one part per jaw; each tooth a closed lathe, listed with its first vertex and count.
  const teeth=['upper','lower'].map(jaw=>S.teeth.filter(t=>t.jaw===jaw)).filter(a=>a.length);
  const teethPart=(row,level)=>{const position=[],nor=[],index=[],list=[];
@@ -159,10 +212,10 @@ for(const head of HEADS){
   const data={schema:2,species:head.id,kind:'speaking head',replaces:head.part,character:head.file,level:level==='author'?'author':'10k',sourceHash,
    source:'The approved head sculpt opened for speech: lips parted along the painted mouth line, cheeks closing the mouth\'s sides, a mouth cavity, teeth and tongue; reduced as the characters were (tools/build-speaking-heads.mjs)',
    jaw:{hinge:hinge.map(v=>+v.toFixed(6)),axis:[0,0,1],sculpt:'closed',lever:+lever.toFixed(4),angle:r(toSheet([...G.lines.a,0])),line:G.lines.points.map(p=>r(toSheet([...p,0])))},
-   budget:{skull:head[level].target,skin:Math.round(head[level].target*(1+MOUTH_SHARE))},
+   budget:{skull:head[level].target,skin:Math.round(head[level].target*(1+(M.share??MOUTH_SHARE)))},
    triangles:partOut.reduce((t,p)=>t+p.triangles,0),reference,parts:partOut};
   fs.writeFileSync(new URL(`${head.id}-${data.level}.json`,out),JSON.stringify(data)+'\n');
-  if(process.env.SPEAKING_DUMP)fs.writeFileSync(process.env.SPEAKING_DUMP+`/${head.id}-${data.level}-debug.json`,JSON.stringify({open:round(sk.position,6),lower:round(sk.lower,3),outer:Array.from(sk.outer),index:Array.from(sk.index)}));
+  if(process.env.SPEAKING_DUMP)fs.writeFileSync(process.env.SPEAKING_DUMP+`/${head.id}-${data.level}-debug.json`,JSON.stringify({open:round(sk.position,6),rest:round(sk.rest,6),lower:round(sk.lower,3),outer:Array.from(sk.outer),fold:Array.from(sk.fold),crease:Array.from(sk.crease),index:Array.from(sk.index)}));
   return data;
  }
  const a=record('author'),l=record('low');

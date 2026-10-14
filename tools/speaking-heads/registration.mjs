@@ -14,7 +14,7 @@ import {sheetPoint} from './plan.mjs';
 const args=process.argv.slice(2),id=args[0],out=args[1],head=HEAD[id],M=MOUTHS[id];
 const opt=k=>args.find(a=>a.startsWith('--'+k+'='))?.split('=')[1];
 const S=+(opt('scale')||3600),HALF=+(opt('half')||.05);
-const place=placement(head),G=mouthGeometry(M),field=head.field,P=PAINT[id],F=P.frame;
+const place=placement(head),field=head.field,G=mouthGeometry(M,field),P=PAINT[id],F=P.frame;
 const sheet=decodePNG(fs.readFileSync(new URL('../../'+P.sheet,import.meta.url)));
 // Sheet space <-> sculpt space (sheetPoint is sculpt -> sheet; this is its inverse).
 const toSculpt=([x,y,z])=>{const q=[x,y-(P.lift||0),z];return P.space==='sculpt'?q:place.unmap(q);};
@@ -37,8 +37,8 @@ for(const pane of panes){const grid=[];for(let j=0;j<N;j+=step){const row=[];for
  for(let r=0;r<grid.length;r++)for(let c=0;c<grid[r].length;c++){const here=grid[r][c];if((c+1<grid[r].length&&grid[r][c+1]!==here)||(r+1<grid.length&&grid[r+1][c]!==here)){const i=c*step,j=r*step;for(let a=0;a<step;a++){const k=((j+1)*W+pane.x0+i+a)*4;if(i+a<N&&j+1<N){img[k]=img[k+1]=img[k+2]=255;}}}}}
 // The lip line where the cut meets the surface, seen from the side (+z) and from the front (+x).
 const cutAt=(x,z)=>{let lo=M.lip.y-.06,hi=M.lip.y+.06;const c=y=>G.cut(x,y,z);if(Math.sign(c(lo))===Math.sign(c(hi)))return null;for(let k=0;k<40;k++){const m=(lo+hi)/2;if(Math.sign(c(m))===Math.sign(c(lo)))lo=m;else hi=m;}return (lo+hi)/2;};
-for(let x=M.corner.x-.03;x<=M.lip.x+.08;x+=.0005){for(let z=.3;z>=0;z-=.0005){const y=cutAt(x,z);if(y!==null&&field(x,y,z)<0){put(panes[0],sheetPoint(head,place,[x,y,z]),G.slitHalf(x,z)>0?[255,0,255]:[150,0,150],1);break;}}}
-for(let z=-.12;z<=.12;z+=.0005){for(let x=.4;x>=-.1;x-=.0005){const y=cutAt(x,z);if(y!==null&&field(x,y,z)<0){put(panes[1],sheetPoint(head,place,[x,y,z]),G.slitHalf(x,z)>0?[255,0,255]:[150,0,150],1);break;}}}
+for(let x=M.corner.x-.03;x<=M.lip.x+.08;x+=.0005){for(let z=.3;z>=0;z-=.0005){const y=cutAt(x,z);if(y!==null&&field(x,y,z)<0){put(panes[0],sheetPoint(head,place,[x,y,z]),G.sigma(x,z)>0?[255,0,255]:[150,0,150],1);break;}}}
+for(let z=-.12;z<=.12;z+=.0005){for(let x=.4;x>=-.1;x-=.0005){const y=cutAt(x,z);if(y!==null&&field(x,y,z)<0){put(panes[1],sheetPoint(head,place,[x,y,z]),G.sigma(x,z)>0?[255,0,255]:[150,0,150],1);break;}}}
 put(panes[0],sheetPoint(head,place,[M.hinge[0],M.hinge[1],0]),[255,235,0],4);
 const corner=sheetPoint(head,place,[M.corner.x,G.lipY(M.corner.x,M.corner.z<.15?M.corner.z:.05),0]);put(panes[0],corner,[0,229,255],3);
 fs.writeFileSync(out,encodePNG({width:W,height:N,pixels:img}));

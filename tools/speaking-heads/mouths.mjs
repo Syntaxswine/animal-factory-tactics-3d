@@ -35,6 +35,7 @@
 //  tongue   on the floor behind the lower teeth: half-width at most `width`; its top `below` the
 //           cut at the tip rising to `rise` above it at the back
 //  reach    how far from the cut the mouth can be (where the cavity is looked for)
+//  share    the mouth's triangles, as a share of the skull's (build-speaking-heads.mjs: a quarter)
 import {henGape} from './heads.mjs';
 
 const common={gap:.008,edge:.001,reach:.09,step:.0025,taper:.01,teethGap:.0008,
@@ -84,7 +85,7 @@ export const MOUTHS={
   cavity:{back:.03,width:.032},
   cheeks:{window:.02},
   pad:ruminantPad(.026),
-  teeth:[incisors('lower',8,.025,.0041,.0026,.0045,{lean:.25})],
+  teeth:[incisors('lower',8,.025,.0041,.0026,.005,{lean:.25})],
   tongue:tongue(.026)
  }),
  donkey:mouth({
@@ -112,8 +113,8 @@ export const MOUTHS={
   band:{cheek:.024,z0:.025,z1:.05},
   cavity:{back:.03,width:.02,floor:.0055,roof:.009},
   cheeks:{window:.011},
-  teeth:[incisors('upper',6,.009,.0019,.002,.0035),canines('upper',.0215,.0026,.0055),
-   incisors('lower',4,.0055,.0018,.0019,.0035),canines('lower',.011,.0024,.005)],
+  teeth:[incisors('upper',6,.009,.0019,.002,.0035),canines('upper',.0215,.0026,.004),
+   incisors('lower',4,.0055,.0018,.0019,.0037),canines('lower',.011,.0024,.005)],
   tongue:tongue(.016)
  }),
  'pig-foreman':mouth({
@@ -162,9 +163,10 @@ export const MOUTHS={
   band:{mid:.002,cheek:.002,z0:1,z1:2},
   cavity:{back:.14,tip:.214,roof:.0035,floor:.0035,width:.012,wall:.003,front:.003,wallMin:null,round:.0015},
   cheeks:null,
-  tongue:tongue(.0055,{embed:.0008,rise:.0008,below:.0005,backInset:.035,gap:.003,clear:.0008})
+  tongue:tongue(.0055,{embed:.0008,rise:.0008,below:.0015,backInset:.035,gap:.003,clear:.0008})
  }),
- dog:mouth({
+ // (the heaviest character, 10,446 triangles: its long mouth gets a fifth more, not a quarter)
+ dog:mouth({share:.2,
   lip:{x:.195,y:1.3736,line:[[.06,1.386],[.075,1.3847],[.09,1.3835],[.105,1.3816],[.12,1.3793],[.135,1.377],[.15,1.3754],[.165,1.3744],[.18,1.3738],[.195,1.3736],[.21,1.3749],[.225,1.3763]],smile:0,width:.04},
   corner:{x:.079,z:.2,zOpen:.02},hinge:[-.035,1.43],
   band:{z0:.033,z1:.063},

@@ -177,9 +177,12 @@ export function selfIntersections(head,deg,{reach=.12,cell=.005}={}){
 // The jaw's weight along the profile jaw line, as seen: the skin at rest drawn from the side, and in
 // each half-millimetre column from the jaw's angle to the lower lip's tip, the weight where its
 // lowest pixel is (interpolated across that triangle), and which side of the lips it is (lower,
-// 0 the upper). Left out: the first millimetre past the angle, where the underside rises out of
-// the throat across the column; and, at the front, the columns where the upper lip is the lowest
-// (it overhangs the lower lip's tip). Returns [{x, y, w, lower}].
+// 0 the upper). Left out: the first 3 mm past the angle, where the underside rises steeply out of
+// the throat (the throat's blend meets the jaw there: the pig-director's chin rises 13 mm in
+// them); at the front, the columns where the upper lip is the lowest (it overhangs the lower
+// lip's tip); and any column whose lowest point is not below the lips (the lowest of the lips'
+// folded faces within 1.5 mm, less half a millimetre): there the lips meet, and a thin lower lip's
+// edge can leave a column only the upper lip covers (the cow's, 0.5 mm wide). Returns [{x, y, w, lower}].
 export function jawLine(head,{ppu=2000,size=800}={}){
  const s=head.parts[0],P=s.position,I=s.index,c=mouthCentre(head),angle=head.jaw.angle[0];let tip=-Infinity;
  for(let i=0;i<P.length/3;i++)if(s.jaw[i]>.98&&Math.abs(P[i*3+2])<.01)tip=Math.max(tip,P[i*3]);
@@ -190,7 +193,9 @@ export function jawLine(head,{ppu=2000,size=800}={}){
   for(let x=x0;x<=x1;x++)for(let y=y1;y>=y0;y--){if(y<=low[x])break;const px=x+.5,py=y+.5;
    const w0=((X[1]-px)*(Y[2]-py)-(X[2]-px)*(Y[1]-py))/area,w1=((X[2]-px)*(Y[0]-py)-(X[0]-px)*(Y[2]-py))/area,w2=1-w0-w1;if(w0<-1e-9||w1<-1e-9||w2<-1e-9)continue;
    low[x]=y;wt[x]=w0*s.jaw[v[0]]+w1*s.jaw[v[1]]+w2*s.jaw[v[2]];lw[x]=w0*s.lower[v[0]]+w1*s.lower[v[1]]+w2*s.lower[v[2]];break;}}
- const out=[];for(let x=0;x<W;x++){const wx=c[0]+(x+.5-W/2)/ppu;if(low[x]<0||wx<angle+.001||wx>tip-.001)continue;out.push({x:wx,y:c[1]-(low[x]+.5-H/2)/ppu,w:wt[x],lower:lw[x]});}
+ const lips=[];for(let i=0;i<P.length/3;i++)if(s.fold[i]>.5)lips.push([P[i*3],P[i*3+1]]);
+ const lipAt=x=>{let y=Infinity;for(const [u,v] of lips)if(Math.abs(u-x)<.0015)y=Math.min(y,v);return y;};
+ const out=[];for(let x=0;x<W;x++){const wx=c[0]+(x+.5-W/2)/ppu,wy=c[1]-(low[x]+.5-H/2)/ppu;if(low[x]<0||wx<angle+.003||wx>tip-.001||wy>lipAt(wx)-.0005)continue;out.push({x:wx,y:wy,w:wt[x],lower:lw[x]});}
  while(out.length&&out.at(-1).lower<.5)out.pop();
  return out;
 }

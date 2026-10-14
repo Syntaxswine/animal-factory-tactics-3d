@@ -22,7 +22,7 @@ export const speakingHeadFile=(id,level='10k')=>`./speaking-heads/${id}-${level}
 // the front (the lever is the jaw joint to the lips' front, head.jaw.lever), within 3 to 9
 // degrees. speechOpen(head) is the rule; SPEECH_OPEN the built heads' values (tested equal).
 export const speechOpen=head=>Math.min(.15,Math.max(.05,.025/head.jaw.lever));
-export const SPEECH_OPEN={horse:.0786,goat:.105,bull:.0983,cow:.1108,donkey:.0926,sheep:.1198,skunk:.1234,'pig-foreman':.1019,'pig-director':.091,rabbit:.149,dog:.099,hen:.15};
+export const SPEECH_OPEN={horse:.079,goat:.1092,bull:.0998,cow:.1116,donkey:.0927,sheep:.1214,skunk:.1231,'pig-foreman':.1046,'pig-director':.0902,rabbit:.1496,dog:.0994,hen:.15};
 
 // The mouth's paint, as display (sRGB) colours: inner lip, gum and the shadowed back of the
 // mouth, by depth below the approved surface, plus the teeth and tongue. The shaders work in

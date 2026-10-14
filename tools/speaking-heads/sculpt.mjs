@@ -141,11 +141,14 @@ export function jawLines(M,head,refY){
  const J={margin:.002,...M.jawLine};
  let front=M.lip.x+.15;while(front>M.hinge[0]&&head(front,refY(front,0)-.004,0)>0)front-=.0005;
  const under=x=>{const y0=refY(x,0);let y=y0-.004;if(head(x,y,0)>0)return null;while(y>y0-.5&&head(x,y,0)<0)y-=.0005;return bisect(v=>head(x,v,0),y,y+.0005);};
+ // (the angle is looked for every 5 mm; the line itself is read every millimetre, so a steep
+ // stretch of the underside, as at the director's chin, is not cut across)
  const pts=[];for(let x=M.hinge[0];x<=front-.003;x+=.005){const y=under(x);if(y!==null)pts.push([x,y]);}
  let ai=0;
  if(J.a)ai=pts.reduce((best,p,i)=>abs(p[0]-J.a)<abs(pts[best][0]-J.a)?i:best,0);
  else{let steepest=-Infinity;for(let i=1;i<pts.length&&pts[i][0]<(M.hinge[0]+front)/2;i++){const u0=refY(pts[i-1][0],0)-pts[i-1][1],u1=refY(pts[i][0],0)-pts[i][1],k=(u0-u1)/(pts[i][0]-pts[i-1][0]);if(k>steepest){steepest=k;ai=i;}}}
- const line=pts.slice(ai),a=[line[0][0],line[0][1]],b=line.at(-1);
+ const line=[];for(let x=pts[ai][0];x<=front-.003;x+=.001){const y=under(x);if(y!==null)line.push([x,y]);}
+ const a=[line[0][0],line[0][1]],b=line.at(-1);
  const lineY=x=>{if(x<=line[0][0])return line[0][1]-J.margin;if(x>=b[0])return b[1]-J.margin;
   let i=1;while(line[i][0]<x)i++;const [x0,y0]=line[i-1],[x1,y1]=line[i];return y0+(y1-y0)*(x-x0)/(x1-x0)-J.margin;};
  const blendWidth=J.blend??.4*Math.hypot(a[0]-M.hinge[0],a[1]-M.hinge[1]);
