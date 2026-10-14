@@ -25,7 +25,9 @@ const INK=[40,34,26],TMAX=1200;
 const clamp=(v,a=0,b=1)=>v<a?a:v>b?b:v,smooth=(a,b,t)=>{t=clamp((t-a)/(b-a));return t*t*(3-2*t);};
 const mixc=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
 const HAZE=HAZE_COLOR.split(',').map(Number);
-export const closeupSpec=()=>({camera:CLOSEUP_CAMERA,heightScale:HEIGHT_SCALE.closeup,detail:ROCK_DETAIL.closeup,haze:CLOSEUP_HAZE});
+// What a plate through this lens was painted with (the close-up's, or another
+// camera's: the approach shots in ambush.js use the same lens and butte).
+export const closeupSpec=(camera=CLOSEUP_CAMERA)=>({camera,heightScale:HEIGHT_SCALE.closeup,detail:ROCK_DETAIL.closeup,haze:CLOSEUP_HAZE});
 
 // --- the lens -------------------------------------------------------------------
 // Right, up and forward in tile coordinates; the same basis three.js builds for
@@ -119,7 +121,9 @@ function sky(dir){
 }
 
 // --- painter ----------------------------------------------------------------------
-export function paintCloseupPlate(assets,view,{haze=CLOSEUP_HAZE,billboards=true}={}){
+// keepClear: where no tree may stand (plate.js keepClear: the crash clearing,
+// its meadow, door lane and approach; another sector passes its own).
+export function paintCloseupPlate(assets,view,{haze=CLOSEUP_HAZE,billboards=true,keepClear:kc=keepClear()}={}){
  const {sector,textures,flora}=assets,W=view.W,H=view.H;setGroundTextures(textures);
  const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d',{willReadFrequently:true});
  const img=g.createImageData(W,H),d=img.data,T=new Float32Array(W*H),K=new Uint8Array(W*H),HZ=new Float32Array(W*H),BELOW=new Uint8Array(W*H);
@@ -177,14 +181,14 @@ export function paintCloseupPlate(assets,view,{haze=CLOSEUP_HAZE,billboards=true
  g.putImageData(img,0,0);
  // Flora: the game's sprites as billboards, far to near, depth-tested
  // against the rock so the lip hides the trunks of the trees behind it.
- const n=billboards?drawBillboards(g,view,sector,flora,T,haze):0;
+ const n=billboards?drawBillboards(g,view,sector,flora,T,haze,kc):0;
  splitToneCanvas(c);
  return {canvas:c,depth:T,kind:K,flora:n};
 }
 
-function drawBillboards(g,view,sector,S,T,haze){
+function drawBillboards(g,view,sector,S,T,haze,kc){
  const W=view.W,H=view.H,C=view.C,R=260;
- const bounds=[C[0]-R,C[1]-R,C[0]+R,C[1]+R],kc=keepClear();
+ const bounds=[C[0]-R,C[1]-R,C[0]+R,C[1]+R];
  const all=[...planFlora(sector,bounds,{keepClear:kc,seed:3}),...planRocks(sector,bounds,{keepClear:kc,seed:9}),...planLedges(sector,bounds,{seed:13,density:.7})].filter(t=>t.kind!=='rock');
  const items=[];
  for(const t of all){const z=view.cam3(t.x,t.y,t.base)[2];if(z<2)continue;const b=view.project(t.x,t.y,t.base);if(!b)continue;

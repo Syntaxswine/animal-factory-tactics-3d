@@ -1,0 +1,33 @@
+{
+ "spec": {
+  "camera": {
+   "pos": [
+    128,
+    157,
+    20
+   ],
+   "target": [
+    100,
+    132,
+    27
+   ],
+   "hfov": 56,
+   "plate": [
+    1760,
+    990
+   ],
+   "window": [
+    1600,
+    900
+   ]
+  },
+  "heightScale": 4,
+  "detail": 1,
+  "haze": {
+   "t0": 28,
+   "k": 0.009,
+   "max": 0.85
+  }
+ },
+ "note": "Static plate for approach shot 03 (ambush.js). Re-render with tools/render-intro-closeup.mjs --shot 03 whenever its camera, the height scale, haze, map, woodland, flora or rock rules change."
+}

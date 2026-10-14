@@ -1,0 +1,1 @@
+{"version":1,"shot":"02","fps":null,"times":[6.5],"from":6.5,"to":6.5,"size":[1600,900],"micPx":[669.0897201639947,1116.6232185976244],"note":"sprite = [sheet, x, y, w, h]; pos = top-left in frame pixels (1600 x 900); micPx = the desk microphone grille in frame pixels","sheets":["sheet-0.webp"],"frames":[{"t":6.5,"sprite":[0,0,0,1554,790],"pos":[49,113]}]}

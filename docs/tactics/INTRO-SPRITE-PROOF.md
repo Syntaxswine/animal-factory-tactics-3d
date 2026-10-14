@@ -2,6 +2,8 @@
 
 **Status (October 13, 2026): approved. The architect accepted round 4 (`2152bd0`) as the working crash sequence. It reaches `main` without the helicopter art branch it was built on (see [On main](#on-main)).** Nothing here changes the 3D study.
 
+The intro's first part, storyboard 01–06 (0–20.2 s, up to where this player begins), is in [INTRO-AMBUSH.md](INTRO-AMBUSH.md).
+
 > **Direction (the user, 2026-10-12), on the round 1 keyframes:** "this version of the crash resolves a lot of my conflicts with it."
 >
 > **Direction (the user, 2026-10-12), on the animated proof:** "the composition is addressed well, but the aesthetics could be improved a little bit. cut scenes should be a bit higher quality than the game but speak in the same visual language of the sprites. these examples are closer to the style of the games sprite aesthetics. you have translated the gameplay parts of the style well so far." The examples were the goat flamethrower sprite and storyboard sheet 01–06.
@@ -43,7 +45,7 @@ The stills are frames of the animated proof at those times. Comparisons:
 The 3D Pages build publishes the complete `intro-sprites/` folder, including the
 committed plates and aircraft sheets. The [published crash proof](https://syntaxswine.github.io/animal-factory-tactics-3d/tactics/intro-sprites/proof.html)
 is a standalone review player; it is not yet connected to campaign startup.
-Deployment checks follow all three HTML pages' module imports and verify the
+Deployment checks follow the HTML pages' module imports (proof, keyframes, close-up, and since round 1 of [the approach and ambush](INTRO-AMBUSH.md), its stills page) and verify the
 published intro files and their shared map/texture dependencies against source.
 
 Round 4 was approved on `intro/sprite-keyframes` (PR #8), a branch built on the helicopter art branch `work/utility-helicopter`. That base carries older art and gameplay work whose files `main` has since changed: grenade blasts, wall breaches, floor rims, RPG flight, guardhouse consoles, the chair collection and horse sitting. Merged whole, `2152bd0` conflicts with `main` in 26 files, none of them an intro sprite file. The branch `intro/sprite-crash-sequence` therefore starts from `main` (`1dbbc3f`) and carries only the 52 intro sprite files, byte-identical to `2152bd0`. All 52 are new on `main`.

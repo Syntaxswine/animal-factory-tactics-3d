@@ -6,6 +6,8 @@
 // tools/render-intro-plate.mjs and tools/render-intro-closeup.mjs.
 //   node tools/preview-intro-rock.mjs closeup [--scale .5] [--crop x0,y0,x1,y1] [--out f.png]
 //   node tools/preview-intro-rock.mjs wide [--t 23.75] [--hs 2.4] [--detail .8] [--key x,up,y] [--w 30] [--mask m.png]
+//   node tools/preview-intro-rock.mjs closeup --cam x,y,h,tx,ty,th[,hfov] [--width 1600 --height 900]
+//     (any perspective camera through the close-up's lens: position, target, field of view)
 import {Worker,isMainThread,parentPort,workerData} from 'node:worker_threads';
 import {readFileSync,writeFileSync} from 'node:fs';
 import zlib from 'node:zlib';
@@ -16,11 +18,11 @@ const rd=p=>JSON.parse(readFileSync(new URL(p,ROOT)));
 
 if(isMainThread){
  const a=process.argv.slice(2),shot=a[0],opt=(k,d)=>{const i=a.indexOf('--'+k);return i<0?d:a[i+1];};
- const cfg={shot,scale:Number(opt('scale',.5)),t:Number(opt('t',23.75)),hs:opt('hs',null)&&Number(opt('hs')),detail:opt('detail',null)&&Number(opt('detail')),w:opt('w',null)&&Number(opt('w')),crop:opt('crop',null)&&opt('crop').split(',').map(Number),out:opt('out','prev.png'),mask:opt('mask',null),key:opt('key',null)&&(()=>{const v=opt('key').split(',').map(Number),n=Math.hypot(...v);return v.map(c=>c/n);})(),width:Number(opt('width',1600)),height:Number(opt('height',900))};
+ const cfg={shot,scale:Number(opt('scale',.5)),t:Number(opt('t',23.75)),hs:opt('hs',null)&&Number(opt('hs')),detail:opt('detail',null)&&Number(opt('detail')),w:opt('w',null)&&Number(opt('w')),crop:opt('crop',null)&&opt('crop').split(',').map(Number),out:opt('out','prev.png'),mask:opt('mask',null),key:opt('key',null)&&(()=>{const v=opt('key').split(',').map(Number),n=Math.hypot(...v);return v.map(c=>c/n);})(),width:Number(opt('width',1600)),height:Number(opt('height',900)),cam:opt('cam',null)&&opt('cam').split(',').map(Number),mark:opt('mark',null)&&opt('mark').split(',').map(Number)};
  const N=Number(opt('workers',Math.max(2,os.cpus().length-2))),t0=Date.now();
  // Frame size.
  let W,H;
- if(shot==='closeup'){const {CLOSEUP_CAMERA}=await import(CS+'closeup.js');W=Math.round(CLOSEUP_CAMERA.plate[0]*cfg.scale);H=Math.round(CLOSEUP_CAMERA.plate[1]*cfg.scale);}
+ if(shot==='closeup'){const {CLOSEUP_CAMERA}=await import(CS+'closeup.js'),plate=cfg.cam?[cfg.width,cfg.height]:CLOSEUP_CAMERA.plate;W=Math.round(plate[0]*cfg.scale);H=Math.round(plate[1]*cfg.scale);}
  else{W=cfg.width;H=cfg.height;}
  const [x0,y0,x1,y1]=cfg.crop||[0,0,W,H],CW=x1-x0,CH=y1-y0;
  const rgb=new Uint8ClampedArray(CW*CH*4),T=new Float32Array(CW*CH),K=new Uint8Array(CW*CH),HZ=new Float32Array(CW*CH);
@@ -35,6 +37,11 @@ if(isMainThread){
  if(shot==='closeup')closeupInk(rgb,T,K,HZ,CW,CH);
  const {splitTone}=await import(CS+'grade.js');splitTone(rgb);
  cssGrade(rgb);
+ // --mark x,y,h[,x,y,h...]: a red bar the aircraft's length (8.65 tiles) long at each point.
+ if(cfg.mark&&shot==='closeup'){const C=await import(CS+'closeup.js'),cam=cfg.cam&&{pos:cfg.cam.slice(0,3),target:cfg.cam.slice(3,6),hfov:cfg.cam[6]??50,plate:[cfg.width,cfg.height],window:[cfg.width,cfg.height]},view=C.closeupView(cam||undefined,cfg.scale);
+  for(let i=0;i+2<cfg.mark.length;i+=3){const [x,y,h]=cfg.mark.slice(i,i+3),p=view.project(x,y,h);if(!p)continue;const half=8.65*view.scaleAt(x,y,h)/2;
+   for(let dy=-1;dy<=1;dy++)for(let dx=-half;dx<=half;dx++){const px=Math.round(p[0]+dx)-x0,py=Math.round(p[1]+dy)-y0;if(px<0||py<0||px>=CW||py>=CH)continue;const o=(py*CW+px)*4;rgb[o]=230;rgb[o+1]=30;rgb[o+2]=30;}
+   console.log(`mark ${x},${y},${h} -> px ${p.map(v=>v.toFixed(0))}, aircraft ${(2*half).toFixed(0)} px long, ${view.dist(x,y,h).toFixed(1)} tiles away`);}}
  writeFileSync(cfg.out,png(rgb,CW,CH));
  if(cfg.mask){const m=new Uint8ClampedArray(CW*CH*4);for(let i=0;i<CW*CH;i++){const v=K[i]===2?255:0;m[i*4]=m[i*4+1]=m[i*4+2]=v;m[i*4+3]=255;}writeFileSync(cfg.mask,png(m,CW,CH));}
  console.log(`${cfg.out} ${CW}x${CH} paint ${((t1-t0)/1000).toFixed(1)} s, ${N} workers`);
@@ -47,7 +54,8 @@ if(isMainThread){
   const C=await import(CS+'closeup.js'),P=await import(CS+'plate.js');
   const sector=S.buildSector(map,woodland,{heightScale:cfg.hs??S.HEIGHT_SCALE.closeup,extend:true,detail:cfg.detail??S.ROCK_DETAIL.closeup});
   S.setGroundTextures(null);
-  const view=C.closeupView(undefined,cfg.scale),HAZE=P.HAZE_COLOR.split(',').map(Number),SKYH=[214,222,218];
+  const cam=cfg.cam&&{pos:cfg.cam.slice(0,3),target:cfg.cam.slice(3,6),hfov:cfg.cam[6]??50,plate:[cfg.width,cfg.height],window:[cfg.width,cfg.height]};
+  const view=C.closeupView(cam||undefined,cfg.scale),HAZE=P.HAZE_COLOR.split(',').map(Number),SKYH=[214,222,218];
   const key=(()=>{const v=[-.24,.5,.83],n=Math.hypot(...v);return v.map(c=>c/n);})();
   const mixc=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],sm=(a,b,t)=>{t=Math.max(0,Math.min(1,(t-a)/(b-a)));return t*t*(3-2*t);};
   paintBand=(r0,r1)=>{const n=(r1-r0)*CW,rgb=new Uint8ClampedArray(n*4),T=new Float32Array(n),K=new Uint8Array(n),HZ=new Float32Array(n);

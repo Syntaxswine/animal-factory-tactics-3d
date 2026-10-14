@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Intro approach and ambush</title>
+<link rel="icon" href="data:,">
+<style>
+ :root{--bg:#1d2620;--ink:#e9e2cc;--muted:#a9ad98;--line:#3a4a3e;--accent:#d8b46a}
+ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Georgia,serif}
+ header{padding:18px 24px 6px}
+ h1{margin:0;font-size:22px;font-weight:normal}
+ nav{display:flex;flex-wrap:wrap;gap:8px;padding:8px 24px}
+ nav a{color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:3px}
+ nav a[aria-current]{border-color:var(--accent);color:var(--accent)}
+ figure{margin:8px 24px 24px}
+ canvas{display:block;width:100%;max-width:1600px;height:auto;border:1px solid var(--line)}
+ #status{color:var(--muted);padding:0 24px}
+</style>
+</head>
+<body>
+<header><h1>Intro — approach and ambush (storyboard 01–06)</h1></header>
+<nav id="nav"></nav>
+<p id="status">Loading…</p>
+<figure><canvas id="frame" width="1600" height="900"></canvas></figure>
+<script type="module">
+// Stills of the intro's first part, frames of the ambush player at fixed times:
+// ?shot=01 shows that shot's round-1 keyframe, ?t=2.5 any moment.
+import {SHOTS,AMBUSH_KEYFRAMES} from './ambush.js';
+import {loadAmbushAssets,createAmbush} from './ambush-player.js';
+const q=new URLSearchParams(location.search),$=x=>document.getElementById(x);
+const id=q.get('shot')||(q.has('t')?null:'01'),t=q.has('t')?Number(q.get('t')):AMBUSH_KEYFRAMES[id];
+$('nav').innerHTML=SHOTS.filter(s=>AMBUSH_KEYFRAMES[s.id]!==undefined).map(s=>`<a href="?shot=${s.id}"${s.id===id?' aria-current="page"':''}>${s.id} · ${s.title}</a>`).join('');
+try{
+ if(!Number.isFinite(t))throw Error('No keyframe for shot '+id);
+ const t0=performance.now(),A=await loadAmbushAssets(),player=createAmbush($('frame'),A),r=player.render(t);
+ const L=A.lens[r.shot];
+ $('status').textContent=`${r.shot} · t = ${t} s${L?' · plate: '+L.source:''} · ${Math.round(performance.now()-t0)} ms`;
+ window.ambush={t,shot:r.shot,canvas:$('frame'),render:player.render,ready:true};
+}catch(e){$('status').textContent='Failed: '+e.message;window.ambush={error:e.message};throw e;}
+</script>
+</body>
+</html>
