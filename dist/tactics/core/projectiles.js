@@ -1,5 +1,6 @@
 import {helicopterRayHit} from '../scenery-rules.js';
 import {isHelicopter,sceneryId} from '../scenery-catalog.js';
+import {foliageRayHit} from '../foliage-obstacles.js';
 import {siteRayHit,isStrategicSite,siteId} from '../strategic-site-rules.js';
 import {barrelRayHit,barrelId} from '../explosive-barrels.js';
 import {bodyIntersection,firearmTrajectory,pelletTrajectories} from '../ballistic-shot.js';
@@ -20,12 +21,12 @@ const point=(origin,direction,t)=>({x:origin.x+direction.x*t,y:origin.y+directio
 const slab=(origin,velocity,low,high)=>Math.abs(velocity)<EPS?(origin>=low&&origin<=high?[-Infinity,Infinity]:null):[Math.min((low-origin)/velocity,(high-origin)/velocity),Math.max((low-origin)/velocity,(high-origin)/velocity)];
 
 // A shot has one continuous path. Team membership never filters collision candidates.
-export function traceProjectile(state,shooter,origin,direction,reach){
+export function traceProjectile(state,shooter,origin,direction,reach,{purpose='shot'}={}){
  const length=Math.hypot(direction.x,direction.y,direction.h);
  if(!Number.isFinite(length)||length<EPS||!Number.isFinite(reach)||reach<=0)throw Error('Invalid projectile ray');
  const d={x:direction.x/length,y:direction.y/length,h:direction.h/length};
  let nearest=null,limit=reach;
- for(const unit of state.units){
+ for(const unit of purpose==='sight'?[]:state.units){
   if(unit===shooter||unit.away||unit.casualty==='quit'||!(unit.hp>0||['bleeding','stable'].includes(unit.casualty)))continue; // a unit that crossed the map edge (away) or quit the squad (G5) has no body here
   const hit=bodyIntersection(unit,origin,d,reach,bodyHeight(unit));
   if(hit&&hit.distance<limit){limit=hit.distance;nearest=unit;}
@@ -37,7 +38,7 @@ export function traceProjectile(state,shooter,origin,direction,reach){
  const helicopterHit=helicopterRayHit(state.props,origin,d,limit);
  if(helicopterHit){limit=helicopterHit.distance;nearest=null;nearestProp=helicopterHit.prop;}
  const impact=(kind,t,extra={})=>{const p=point(origin,d,t);return {kind,...p,z:Math.max(0,Math.min(LEVELS-1,Math.floor((p.h+EPS)/3))),distance:t,...extra};};
- const hits=[bankRayHit(state.props,origin,d,limit),rampRayHit(state.props,origin,d,limit),towerRayHit(state.props,origin,d,limit),cliffRayHit(state.props,origin,d,limit)].filter(t=>t!==null),terrainHit=hits.length?Math.min(...hits):null;if(terrainHit!==null&&terrainHit<limit){limit=terrainHit;nearest=null;nearestProp=null;}
+ const hits=[foliageRayHit(state,origin,d,limit,purpose),bankRayHit(state.props,origin,d,limit),rampRayHit(state.props,origin,d,limit),towerRayHit(state.props,origin,d,limit),cliffRayHit(state.props,origin,d,limit)].filter(t=>t!==null),terrainHit=hits.length?Math.min(...hits):null;if(terrainHit!==null&&terrainHit<limit){limit=terrainHit;nearest=null;nearestProp=null;}
  // Exact grid/level crossings keep thin walls, corner joins and floor slabs solid.
  const crossings=[0,limit];
  for(const axis of ['x','y'])if(Math.abs(d[axis])>EPS){

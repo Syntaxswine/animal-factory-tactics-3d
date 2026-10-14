@@ -1,3 +1,4 @@
+import {BIOME_TERRAIN} from '../dist/tactics/biome-gameplay-data.js';
 import {TRUCK_PAINT} from '../dist/tactics/canvas-truck-paint.js';
 import {RAMP_PROPS} from '../dist/tactics/cliff-ramps.js';
 import {BANK_PROPS} from '../dist/tactics/ramp-banks.js';
@@ -68,7 +69,7 @@ for(const file of ['index.html','sprites.html','app.js','engine.js','people.js',
 const environment=JSON.parse(await readFile(new URL('assets/environment/manifest.json',root)));
 const artIds=[...Object.keys(PROPS),...new Set(Object.values(EDGES).map(r=>r.art).filter(Boolean)),...GROUNDS];
 // Procedural assets and roof aliases have real render paths, not independent PNGs.
-const proceduralProps=[...Object.keys(RAMP_PROPS),...Object.keys(BANK_PROPS)],proceduralEdges=[TRELLIS_KIND,TRELLIS_ARCH_KIND],proceduralGround=['ground-wood-planks'],roofAliases=ROOF_KINDS.map(climbableRoofKind),nonRaster=new Set([...proceduralProps,...proceduralEdges,...proceduralGround,...roofAliases,...GAP_ROOF_KINDS,...DIAGONAL_ROADS]);
+const proceduralProps=[...Object.keys(RAMP_PROPS),...Object.keys(BANK_PROPS)],proceduralEdges=[TRELLIS_KIND,TRELLIS_ARCH_KIND],proceduralGround=['ground-wood-planks',...Object.keys(BIOME_TERRAIN)],roofAliases=ROOF_KINDS.map(climbableRoofKind),nonRaster=new Set([...proceduralProps,...proceduralEdges,...proceduralGround,...roofAliases,...GAP_ROOF_KINDS,...DIAGONAL_ROADS]);
 assert(PROPS[EXPLOSIVE_BARREL]?.explosive);auditExplosiveBarrel();nonRaster.add(EXPLOSIVE_BARREL);
 assert.deepEqual(environment.assets.map(a=>a.id).sort(),artIds.filter(id=>!nonRaster.has(id)).sort());
 const geometries=environmentGeometries();
@@ -81,7 +82,7 @@ for(const kind of proceduralEdges){
  assert(EDGES[kind],kind);const world=buildWorld({terrain:[['yard']],props:[],edges:{'e:0:0':kind}}),parts=world.boxes.filter(p=>p.source.edge==='e:0:0');
  assert(parts.length,kind);assert(parts.every(p=>p.trellisPart&&p.center.every(Number.isFinite)&&p.size.every(n=>Number.isFinite(n)&&n>0)),kind);
 }
-for(const kind of proceduralGround){
+for(const kind of proceduralGround.filter(id=>!BIOME_TERRAIN[id])){
  assert(GROUNDS.includes(kind),kind);const material=materialKind({kind:'floor',material:kind});assert.equal(material,'wood-planks');const {data:pixels}=surfacePixels(material,16);assert.equal(pixels.length,16*16*4);assert(pixels.some(v=>v!==0),kind);
 }
 for(const kind of ROOF_KINDS)assert(environment.assets.some(a=>a.id===kind),kind);
@@ -123,6 +124,13 @@ for(const [directory,suffix,width,height]of [['biome-ground-sprites','sprites',2
   assert.equal(createHash('sha256').update(await readFile(new URL('assets/environment/'+file,root))).digest('hex'),asset.sha256,file+' differs from its manifest');
  }
 }
+const biomeManifest=JSON.parse(await readFile(new URL('assets/environment/biome-foliage/manifest.json',root)));
+assert.deepEqual(Object.keys(biomeManifest.families).sort(),Object.keys(BIOME_FAMILIES).sort());
+for(const [id,family]of Object.entries(BIOME_TERRAIN)){assert(GROUNDS.includes(id));assert(BIOME_GROUNDS[family]);assert.deepEqual(biomeManifest.ground.families[family],biomeGround.families[family]);}
+await readFile(new URL('assets/environment/biome-foliage/'+biomeManifest.ground.manifest,root));
+const connected=JSON.parse(await readFile(new URL('assets/environment/connected-ground/manifest.json',root)));
+assert.equal(connected.tilesAcross,8);assert.equal(connected.tilesDown,8);assert.equal(connected.pixelsPerTile,64);
+for(const asset of connected.assets)assert.equal(asset.tiles.length,64);
 const siteManifest=JSON.parse(await readFile(new URL('assets/environment/strategic-sites/manifest.json',root)));
 assert.equal(STRATEGIC_SITE_ATLAS,'../assets/environment/strategic-sites/'+siteManifest.atlas);
 assert.deepEqual([...new Set(siteManifest.assets.map(a=>a.reference))].sort(),['reference-radar.png','reference-radio.png','reference-sam.png']);
@@ -137,7 +145,7 @@ for(const [directory,names] of [['sand-cliff',['sand.png','sand-feather.png']],[
  if(directory==='grass-cliff-meadow'){assert.deepEqual(manifest.atlas,{file:'atlas.png',columns:2,rows:2});active.add(directory+'/atlas.png');await checkPNG('assets/environment/'+directory+'/atlas.png',1024,1024);}
 }
 const superseded=new Set(['door-steel-closed.png','door-wood-closed.png','doorway-concrete-open.png','foliage/river-straight.png','foliage/river-bend.png','foliage/river-banks-atlas.png']);
-for(const file of await readdir(new URL('assets/environment/',root),{recursive:true}))if(file.endsWith('.png'))assert.ok(active.has(file.replaceAll('\\','/'))||superseded.has(file.replaceAll('\\','/')),`Unattached environment sprite: ${file}`);
+const orphaned=(await readdir(new URL('assets/environment/',root),{recursive:true})).map(file=>file.replaceAll('\\','/')).filter(file=>file.endsWith('.png')&&!active.has(file)&&!superseded.has(file));assert.deepEqual(orphaned,[],'Unattached environment assets');
 for(const species of RED_HAT_SPECIES)for(const weapon of ['hands',...ARMED_WEAPONS])for(const stance of ['standing','kneeling','prone']){
  const frame=unitArt({species,weapon,stance,outfit:'red-hats'});
  await checkPNG(frame.src.replace('../',''),frame.width,frame.height);

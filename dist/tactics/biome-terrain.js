@@ -98,13 +98,17 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
  // blocked cells at one height. A cheap second representation serves overview.
  const prototypes=[],world=new T.Matrix4(),translation=new T.Matrix4();
  for(const id of BIOME_FAMILIES[family].trees)for(let variant=0;variant<3;variant++)prototypes.push(plantFactory.create(id,{variant,mature:true,grey}));
- const treeStep=bog?10:family==='dry'?5:3.6;
- for(let z=3;z<plan.depth-3;z+=treeStep)for(let x=3;x<plan.width-3;x+=treeStep){
+ const treeStep=bog?10:family==='dry'?5:3.6,treeCandidates=[];
+ if(plan.trees){for(const t of plan.trees)if(t.dense)treeCandidates.push({cx:t.x,cz:t.y,h:t.base,p:prototypes.find(p=>p.userData.id===t.id&&p.userData.variant===t.variant)});}
+ else for(let z=3;z<plan.depth-3;z+=treeStep)for(let x=3;x<plan.width-3;x+=treeStep){
   const n=Math.round(z*plan.width+x)+(plan.seed||0)+(plan.origin?.[0]||0)+(plan.origin?.[1]||0)*plan.width,p=prototypes[Math.floor(random(n)*prototypes.length)],bounds=p.userData.bounds,cx=x+(random(n+3)-.5)*2.2,cz=z+(random(n+7)-.5)*2.2,h=plan.heightAt(Math.floor(cx+.5),Math.floor(cz+.5));
   if(plan.includeAt&&!plan.includeAt(Math.floor(cx+.5),Math.floor(cz+.5))||plan.densityAt&&random(n+57)>plan.densityAt(Math.floor(cx+.5),Math.floor(cz+.5)))continue;
   if(random(n+17)<(bog?.40:family==='dry'?.28:.08))continue;
-  const min=[cx+bounds.min[0],h,cz+bounds.min[2]],max=[cx+bounds.max[0],h+bounds.max[1],cz+bounds.max[2]];
-  if(!safe((min[0]+max[0])/2,(min[2]+max[2])/2,(max[0]-min[0])/2,(max[2]-min[2])/2,h))continue;
+  if(!safe(cx+(bounds.min[0]+bounds.max[0])/2,cz+(bounds.min[2]+bounds.max[2])/2,(bounds.max[0]-bounds.min[0])/2,(bounds.max[2]-bounds.min[2])/2,h))continue;
+  treeCandidates.push({cx,cz,h,p});
+ }
+ for(const {cx,cz,h,p} of treeCandidates){
+  const bounds=p.userData.bounds,min=[cx+bounds.min[0],h,cz+bounds.min[2]],max=[cx+bounds.max[0],h+bounds.max[1],cz+bounds.max[2]];
   trees.push({id:p.userData.id,x:cx,y:h,z:cz,bounds:{min,max}});const chunk=chunkAt(Math.floor(cx+.5),Math.floor(cz+.5));p.updateMatrixWorld(true);translation.makeTranslation(cx,h,cz);
   p.traverse(m=>{if(!m.isMesh)return;world.multiplyMatrices(translation,m.matrixWorld);batch(chunk,'near',m.geometry,m.material,world);});
   const width=max[0]-min[0],depth=max[2]-min[2],height=max[1]-min[1],px=(min[0]+max[0])/2,pz=(min[2]+max[2])/2,pine=/pine|spruce|cypress/.test(p.userData.id),flat=/acacia|palm/.test(p.userData.id);

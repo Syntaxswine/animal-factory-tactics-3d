@@ -1,4 +1,6 @@
-// Foliage is an overlay: each cell stores [density percent, blocks walking].
+import {FOLIAGE_PRESETS,validFoliagePreset} from './foliage-presets.js';
+import {biomeFamilyAt} from './biome-family.js';
+// Foliage is an overlay: each cell stores [density percent, blocks walking, optional preset ID].
 // Ground remains authoritative for the plants' habitat and survives clearing.
 import {BIOME_TERRAIN} from './biome-gameplay-data.js';
 import {PROPS} from './environment.js';
@@ -27,14 +29,18 @@ export function foliageTreeAt(map,x,y,z=0){
   const c=foliageAt(map,x+dx,y+dy,z);if(!c||c[1])return false;
   for(let above=z+1;above<=(map.upper?.length||0);above++){const t=map.upper[above-1]?.[`${x+dx},${y+dy}`];if(t&&t!=='void')return false;}
  }
- const definition=map.definition||map,near=p=>(p.z||0)===z&&Math.abs(p.x-x)<=2&&Math.abs(p.y-y)<=2;
+ return foliageTreeSpaceAvailable(map,x,y,z,2);
+}
+export function foliageTreeSpaceAvailable(map,x,y,z,radius=2){
+ for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++)for(let above=z+1;above<=(map.upper?.length||0);above++){const t=map.upper[above-1]?.[`${x+dx},${y+dy}`];if(t&&t!=='void')return false;}
+ const definition=map.definition||map,near=p=>(p.z||0)===z&&Math.abs(p.x-x)<=radius&&Math.abs(p.y-y)<=radius;
  if([...(definition.starts||[]),...(definition.guards||[]),...(definition.exits||[])].some(near))return false;
  if((map.stairs||[]).some(p=>(p.z===z||p.z+1===z)&&near({...p,z})))return false;
  if((map.climbs||[]).some(p=>near(p)||near({x:p.x+p.dx,y:p.y+p.dy,z:p.z+1})))return false;
- for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)for(const axis of ['e','s'])if(map.edges?.[`${axis}:${x+dx}:${y+dy}${z?':'+z:''}`])return false;
- for(const p of definition.props||map.props||[]){
+ for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++)for(const axis of ['e','s'])if(map.edges?.[`${axis}:${x+dx}:${y+dy}${z?':'+z:''}`])return false;
+ for(const p of map.coverOccupiedProps||map.props||definition.props||[]){
   if((p.z||0)<z)continue;const rule=SITE_PROPS[p.kind]||SCENERY_PROPS[p.kind]||PROPS[p.kind]||{w:1,h:1},w=p.rotated?rule.h:rule.w,h=p.rotated?rule.w:rule.h;
-  if(p.x<=x+2&&p.x+w-1>=x-2&&p.y<=y+2&&p.y+h-1>=y-2)return false;
+  if(p.x<=x+radius&&p.x+w-1>=x-radius&&p.y<=y+radius&&p.y+h-1>=y-radius)return false;
  }
  return true;
 }
@@ -43,7 +49,7 @@ export function foliageErrors(map,size=240){
  if(!map.foliage||typeof map.foliage!=='object'||Array.isArray(map.foliage))return ['Invalid foliage overlay.'];
  for(const [key,value]of Object.entries(map.foliage)){
   const [x,y,z]=key.split(',').map(Number);
-  if(key!==foliageKey(x,y,z)||![x,y,z].every(Number.isInteger)||x<0||y<0||x>=size||y>=size||z<0||z>2||!Array.isArray(value)||value.length!==2||!Number.isInteger(value[0])||value[0]<1||value[0]>100||typeof value[1]!=='boolean'||!foliageGround(foliageTerrain(map,x,y,z)))return ['Invalid foliage cell: '+key];
+  if(key!==foliageKey(x,y,z)||![x,y,z].every(Number.isInteger)||x<0||y<0||x>=size||y>=size||z<0||z>2||!Array.isArray(value)||![2,3].includes(value.length)||(value.length===3&&!validFoliagePreset(value[2],value[1]))||!Number.isInteger(value[0])||value[0]<1||value[0]>100||typeof value[1]!=='boolean'||!foliageGround(foliageTerrain(map,x,y,z)))return ['Invalid foliage cell: '+key];
  }
  return [];
 }
@@ -60,4 +66,16 @@ export function placeFoliage(map,block,x,y,size=24){
  const foliage={...map.foliage};for(const key of Object.keys(foliage)){const [a,b]=key.split(',').map(Number);if(a>=x&&b>=y&&a<x+size&&b<y+size)delete foliage[key];}
  for(const [key,value]of Object.entries(block.foliage||{})){const [a,b,z]=key.split(',').map(Number);foliage[foliageKey(a+x,b+y,z)]=[...value];}
  if(Object.keys(foliage).length)map.foliage=foliage;else delete map.foliage;
+}
+
+// Legacy blocking wetlands retain their bog ground texture beneath the new
+// dense sight screen. Unrelated impassable terrain gains no opacity.
+export function foliagePreset(map,x,y,z=0){const c=foliageAt(map,x,y,z);return c?(c[2]||(!c[1]?'woodland-v1':biomeFamilyAt(map,x,y,z)==='wetlands'?'wetland-v1':'thicket-v1')):null;}
+export function foliageRule(map,x,y,z=0){return FOLIAGE_PRESETS[foliagePreset(map,x,y,z)]||null;}
+
+// A shared exclusion mask prevents collision where scenery replaces the plants.
+export function foliageOccupied(map){
+ const occupied=new Set();
+ for(const p of map.coverOccupiedProps||map.props||[]){const rule=SITE_PROPS[p.kind]||SCENERY_PROPS[p.kind]||PROPS[p.kind]||{w:1,h:1},w=p.rotated?rule.h:rule.w,h=p.rotated?rule.w:rule.h;for(let y=0;y<h;y++)for(let x=0;x<w;x++)occupied.add(foliageKey(p.x+x,p.y+y,p.z||0));}
+ return occupied;
 }

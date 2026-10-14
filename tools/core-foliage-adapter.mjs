@@ -3,6 +3,7 @@ export const foliageOverrides={
  'maps.js':'Validate ground-preserving foliage overlays on all three levels and honor independent walking restrictions.',
  'editor-model.js':'Paint dense foliage with the same protected occupancy rules as other blocking terrain.',
  'blocks.js':'Preserve and relocate foliage overlays with reusable blocks, including legacy foliage terrain.',
+ 'projectiles.js':'Separate sight screens from solid foliage shot cover.',
  'engine.js':'Retain foliage density and walking restrictions in encounters.',
  'visibility.js':'Invalidate terrain visibility when foliage changes.',
  'woodland.js':'Density controls foliage concealment independently of passability.'
@@ -30,9 +31,25 @@ export function adaptCoreFoliage(name,data){let s=data.toString();
   s=once(s,"if(d.edgeLocks){m.edgeLocks||={};","placeFoliage(m,d,x,y);if(d.edgeLocks){m.edgeLocks||={};");
   s=once(s,'const breachIssues=breachErrors(d,24);','const foliageIssues=foliageErrors(d,24);if(foliageIssues.length)throw Error(foliageIssues[0]);const breachIssues=breachErrors(d,24);');
  }
- if(name==='engine.js')s=once(s,'edges:{...definition.edges},','edges:{...definition.edges},...(definition.foliage?{foliage:structuredClone(definition.foliage)}:{}),');
+ if(name==='projectiles.js'){
+  s="import {foliageRayHit} from '../foliage-obstacles.js';\n"+s;
+  s=once(s,'origin,direction,reach){',"origin,direction,reach,{purpose='shot'}={}){");
+  s=once(s,'for(const unit of state.units){',"for(const unit of purpose==='sight'?[]:state.units){");
+  s=once(s,'const hits=[bankRayHit(',"const hits=[foliageRayHit(state,origin,d,limit,purpose),bankRayHit(");
+ }
+ if(name==='engine.js'){
+  s="import {synchronizeFoliage} from '../foliage-obstacles.js';\n"+s;
+  s=once(s,'edges:{...definition.edges},','edges:{...definition.edges},...(definition.foliage?{foliage:structuredClone(definition.foliage)}:{}),');
+  s=once(s,'traceProjectile({...s,units:[]},null,origin,direction,length)',"traceProjectile(s,null,origin,direction,length,{purpose:'sight'})");
+  s=once(s,'function refreshNow(s){','function refreshNow(s){synchronizeFoliage(s);');
+ }
+
  if(name==='visibility.js'){
-  s=once(s,'JSON.stringify([s.map,s.upper,s.edges,s.props,s.stairs])','JSON.stringify([s.map,s.upper,s.edges,s.props,s.stairs,s.foliage])');
+  s="import {foliageSignature,synchronizeFoliage,traceFoliage} from '../foliage-obstacles.js';\n"+s;
+  s=once(s,'JSON.stringify([s.map,s.upper,s.edges,s.props,s.stairs])','foliageSignature(s)');
+  s=s.replaceAll("+eyeHeight(p)","+eyeHeight(p)+','+unitBaseHeight(p)");
+  s=once(s,'observers:new Map()','foliage:synchronizeFoliage(s),observers:new Map()');
+  s=once(s,'if(dh)for(let z=1;',"const length=Math.hypot(dx,dy,dh);if(length>.51){const t=(length-.51)/length;if(traceFoliage(c.foliage,[a.x,h0,a.y],[a.x+dx*t,h0+dh*t,a.y+dy*t],'sight'))return false;}\n if(dh)for(let z=1;");
   s=once(s,"hasWoodland:signature.includes('woodland')","hasWoodland:!!Object.keys(s.foliage||{}).length||signature.includes('woodland')");
  }
  if(name==='woodland.js'){

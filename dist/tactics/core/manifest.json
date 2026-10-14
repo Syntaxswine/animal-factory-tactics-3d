@@ -40,7 +40,7 @@
       "upstreamSha256": "8cf9aed74b163167aa7e432ad0c744ab9d3f55a30d5a3f3eaf218c163bde4e23"
     },
     "projectiles.js": {
-      "reason": "Helicopter body, debris and overhead rotor use the visible model triangles for bullet collisions. Identify the exact wall or floor struck without changing shot obstruction or hit rolls. Terrain targets aim at the tile surface rather than a fictional torso. Use the actual strategic-site triangles for shots and sight; retain open lattice gaps. Trace the actual explosive drum cylinder, including incidental misses and pellets. Share actor intersections with helicoid miss placement while retaining tactical obstacle tracing. Intersect the continuous ramp solid. Trace open tower windows, elevated occupants and welded cliff surfaces. Use physical cliff caps instead of phantom upper slabs.",
+      "reason": "Helicopter body, debris and overhead rotor use the visible model triangles for bullet collisions. Separate sight screens from solid foliage shot cover. Identify the exact wall or floor struck without changing shot obstruction or hit rolls. Terrain targets aim at the tile surface rather than a fictional torso. Use the actual strategic-site triangles for shots and sight; retain open lattice gaps. Trace the actual explosive drum cylinder, including incidental misses and pellets. Share actor intersections with helicoid miss placement while retaining tactical obstacle tracing. Intersect the continuous ramp solid. Trace open tower windows, elevated occupants and welded cliff surfaces. Use physical cliff caps instead of phantom upper slabs.",
       "upstreamSha256": "f8b2afc98c686cd892189d17f4fe7cb7ae7c16b8d8f2f8609ca78cf8b3192674"
     },
     "visibility.js": {
@@ -61,7 +61,7 @@
     "blocks.js": "7ffca06b0c1ec5a8d71c13b448bfd27d34ebb6e7a11591dcf5d46bc5e61edc59",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
     "editor-model.js": "73e78cd3808adc401c543ea83b92c01c99bdfdbaf752c566acaca11d442bd191",
-    "engine.js": "14846d4ca53b024c1fbb339e6a08ba482f0e3a6f43d5b54c1f0b3cc0f714e235",
+    "engine.js": "db8108c08f95c9f3373604338380b308ca30402cedc501f5334ed60a38f3ce61",
     "environment.js": "647f002ba5f02aab66e34a0261641891216614d1723fbe038b10b333de05a3f7",
     "explosives.js": "13615e19ec32c03f8065df1c7de26baf556caa5cd991bcb3c889c1b65fd3b8a0",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
@@ -71,10 +71,10 @@
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",
-    "projectiles.js": "67a5f4a7ad61e9ee58548c928fa2199714459ce8a5bc495b39e85872cfede78f",
+    "projectiles.js": "efcd953cfaf4d7ca680c254c89af4b9abdeceb17a18738813289317fe350d51f",
     "recruits.js": "5e4495962cdad3d0b57f0d1784bddbf54fa785e6e00a9ae932cfb7dbbbeeb81b",
     "sector-rules.js": "d20ee872471a503a60ac706655b19f9ba9857c41882dd6cc6a08d61e3572132a",
-    "visibility.js": "10c9aac8caddae41bdd1cc77e5dbc5b80df1b158dbddcf9205ffe11b23f72fc6",
+    "visibility.js": "b630a4058ee7639f3c5fd3a20ad723fb4d97c463ad4e83ba6ac2671ab25a56f5",
     "woodland.js": "9ec3ae7a46e4a484151d1a2f4c567f48ffca359248c8bacca47e4083b2d4c58f",
     "world.js": "f3f516f61b837f5bd3df582d04b5b2d15b54e461ce109e64acdce42cc27de6fe"
   }

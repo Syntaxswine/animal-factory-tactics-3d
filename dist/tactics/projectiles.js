@@ -1,3 +1,4 @@
+import {foliageRayHit} from './foliage-obstacles.js';
 import {terrainAt,levelOf,sightEdge,W,H,LEVELS} from './maps.js';
 import {PROPS,propAt} from './environment.js';
 import {isHybrid,traceHybrid,floorSpacing,physicalHeight,physicalMuzzle,aimPoint,muzzlePoint} from './hybrid-combat.js';
@@ -11,13 +12,13 @@ const point=(origin,direction,t)=>({x:origin.x+direction.x*t,y:origin.y+directio
 const slab=(origin,velocity,low,high)=>Math.abs(velocity)<EPS?(origin>=low&&origin<=high?[-Infinity,Infinity]:null):[Math.min((low-origin)/velocity,(high-origin)/velocity),Math.max((low-origin)/velocity,(high-origin)/velocity)];
 
 // A shot has one continuous path. Team membership never filters collision candidates.
-export function traceProjectile(state,shooter,origin,direction,reach){
- if(isHybrid(state))return traceHybrid(state,shooter,origin,direction,reach);
+export function traceProjectile(state,shooter,origin,direction,reach,{purpose='shot'}={}){
+ if(isHybrid(state))return traceHybrid(state,shooter,origin,direction,reach,{purpose});
  const length=Math.hypot(direction.x,direction.y,direction.h);
  if(!Number.isFinite(length)||length<EPS||!Number.isFinite(reach)||reach<=0)throw Error('Invalid projectile ray');
  const d={x:direction.x/length,y:direction.y/length,h:direction.h/length};
- let nearest=null,limit=reach;
- for(const unit of state.units){
+ let nearest=null,limit=reach;const foliageHit=foliageRayHit(state,origin,d,limit,purpose);if(foliageHit!==null)limit=foliageHit;
+ for(const unit of purpose==='sight'?[]:state.units){
   if(unit===shooter||unit.away||!(unit.hp>0||['bleeding','stable'].includes(unit.casualty)))continue; // a unit that crossed the map edge (away) has no body here
   const ox=origin.x-unit.x,oy=origin.y-unit.y,a=d.x*d.x+d.y*d.y,b=2*(ox*d.x+oy*d.y),c=ox*ox+oy*oy-.34*.34;
   let horizontal;
@@ -62,6 +63,7 @@ export function traceProjectile(state,shooter,origin,direction,reach){
   const height=terrain==='wall'||prop?.tall?2.7:(terrain==='crate'||prop?.solid&&prop.cover>0)?.8:0;
   if(height){const vertical=slab(origin.h,d.h,z*3,z*3+height);if(vertical){const hit=Math.max(t,vertical[0]);if(hit<=Math.min(end,vertical[1]))return impact('cover',hit);}}
  }
+ if(foliageHit!==null&&limit===foliageHit)return impact('cover',limit);
  if(nearest){const result=impact('unit',limit,{unitId:nearest.id}),relative=(result.h-levelOf(nearest)*3)/bodyHeight(nearest);result.zone=relative>.85?'head':relative<.38?'legs':'torso';return result;}
  return impact('range',reach);
 }
