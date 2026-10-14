@@ -1,4 +1,5 @@
 import {patrolDestination} from '../character-patrol.js';
+import {synchronizeFoliage} from '../foliage-obstacles.js';
 import {projectileStructureDamage,commitStructureDamage} from '../structure-damage.js';
 import {planFlameStructureDamage} from '../structure-flame.js';
 import {settleStructureCollapse} from '../structure-collapse.js';
@@ -124,7 +125,7 @@ export function zoneVisible(s,a,b,zone='torso'){a={...a,cliffSupport:rampSupport
  const origin={x:a.x,y:a.y,h:unitBaseHeight(a)+eyeHeight(a)},end=unitBaseHeight(b)+(b.hp===undefined?eyeHeight(b):targetHeight(b,zone));
  const direction={x:b.x-a.x,y:b.y-a.y,h:end-origin.h},length=Math.hypot(direction.x,direction.y,direction.h);
  if(length<1e-7)return true;
- const hit=traceProjectile({...s,units:[]},null,origin,direction,length);
+ const hit=traceProjectile(s,null,origin,direction,length,{purpose:'sight'});
  return hit.kind==='range'||hit.distance>=length-1e-7;
 }
 export const visibleZones=(s,a,b)=>Object.keys(AIM_ZONES).filter(zone=>zoneVisible(s,a,b,zone));
@@ -192,7 +193,7 @@ export function notices(s,a,b){if(a.team==='guard'&&b.team==='squad'&&!playerThr
 // Every trigger that can put several guards in Alert at once (a refresh's sightings, a gunshot's alarm ring) is one cascade: a listener that
 // declined a shout is not re-asked by the next guard the same trigger alerts.
 export function refresh(s){return cascade(s,()=>refreshNow(s));}
-function refreshNow(s){settleCivilianFear(s);updateCliffSupports(s);
+function refreshNow(s){synchronizeFoliage(s);settleCivilianFear(s);updateCliffSupports(s);
  updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});
  const oldDetected=s.detected,oldVisible=s.visible,oldGlimpses=s.glimpses||{};
  for(const u of s.units){const at=u.x+','+u.y+','+levelOf(u);u.moved=!!u.fired||u.lastAt!==at;u.lastAt=at;u.fired=false;}s.visible=terrainVisibility(s,squad(s));s.detected=new Set(guards(s).filter(g=>squad(s).some(p=>canSee(s,p,g))).map(g=>g.id));

@@ -1,3 +1,4 @@
+import {BIOME_TREE_GROUNDING} from '../dist/tactics/biome-plant-parts.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -93,4 +94,11 @@ test('the integration manifest matches current source and every plant appearance
   assert.equal(p.appearances.length,BIOME_PLANTS[id].category==='tree'?6:3);
   for(const appearance of p.appearances)assert.deepEqual(s.factory.create(id,appearance).userData,appearance);
  }}finally{s.dispose();}
+});
+
+test('headless trunk grounding stays aligned with the actual generated tree vertices',()=>{
+ const kit=setup();try{for(const [id,offsets]of Object.entries(BIOME_TREE_GROUNDING))for(let variant=0;variant<3;variant++){
+  const p=biomePlantParts(id,variant)[0],tree=kit.factory.create(id,{variant}),before=p.position?.[1]??(p.a[1]+p.b[1])/2;
+  assert.ok(Math.abs(tree.children[0].position.y-before-offsets[variant])<1e-10,id+'/'+variant);
+ }}finally{kit.dispose();}
 });

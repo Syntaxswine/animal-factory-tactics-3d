@@ -1,3 +1,4 @@
+import {synchronizeFoliage,foliageSegment} from './foliage-obstacles.js';
 import {isScenery} from './scenery-catalog.js';
 import {isStrategicSite} from './strategic-site-rules.js';
 import {trellisParts,trellisSegment,TRELLIS_KIND,TRELLIS_ARCH_KIND} from './bridge-trellis.js';
@@ -93,6 +94,7 @@ export function buildWorld(map){map=canopyPresentation(map);
   // Open steel treads preserve a visible opening, with the same volumes for rays.
   for(let i=0;i<8;i++)box(`stairs:${p.x},${p.y},${p.z}:tread:${i}`,'stairs','metal',[p.x-.5+(i+.5)/8,base+(i+1)*D.floorSpacing/8-.025,p.y],[.1,.05,.8],{x:p.x,y:p.y,z:p.z});
  }
+ boxes.push(...synchronizeFoliage(map).worldBoxes);
  const index=new Map();
  for(const b of boxes)for(let x=Math.floor(b.min[0]/chunk);x<=Math.floor(b.max[0]/chunk);x++)for(let z=Math.floor(b.min[2]/chunk);z<=Math.floor(b.max[2]/chunk);z++){
   const key=`${x},${z}`;if(!index.has(key))index.set(key,[]);index.get(key).push(b);
@@ -107,18 +109,24 @@ export function traceWorld(world,start,end,{filter=b=>b.blocksShot!==false}={}){
   const low=Math.min(start[axis],end[axis]),high=Math.max(start[axis],end[axis]);
   for(let boundary=Math.ceil(low/chunk)*chunk;boundary<=high;boundary+=chunk)times.push((boundary-start[axis])/delta);
  }
- times.sort((a,b)=>a-b);const candidates=new Set(),lowY=Math.min(start[1],end[1]),highY=Math.max(start[1],end[1]);
- for(let i=0;i<times.length;i++)for(const t of [times[i],i? (times[i]+times[i-1])/2:times[i]]){
-  const x=start[0]+(end[0]-start[0])*t,z=start[2]+(end[2]-start[2])*t;
-  // Inclusive box insertion already puts boundary-touching boxes in the cell
-  // on the positive side. No four-way epsilon lookup is needed here.
-  for(const b of world.index.get(`${Math.floor(x/chunk)},${Math.floor(z/chunk)}`)||[])if(b.max[1]>=lowY&&b.min[1]<=highY)candidates.add(b);
- }
+ times.sort((a,b)=>a-b);const visited=new Set(),chunks=new Set(),lowY=Math.min(start[1],end[1]),highY=Math.max(start[1],end[1]);
  let hit=null;const length=Math.hypot(...end.map((v,i)=>v-start[i]));
- for(const b of candidates){if(!filter(b))continue;const t=b.trellisPart?trellisSegment(start,end,b.trellisPart):segmentBox(start,end,b);if(t===null||hit&&(t>hit.t||t===hit.t&&b.id>=hit.id))continue;
-  const point=start.map((v,i)=>v+(end[i]-v)*t),normal=[0,0,0];
-  for(let axis=0;axis<3;axis++){if(Math.abs(point[axis]-b.min[axis])<1e-7){normal[axis]=-1;break;}if(Math.abs(point[axis]-b.max[axis])<1e-7){normal[axis]=1;break;}}
-  hit={id:b.id,kind:b.kind,material:b.material,source:b.source,t,distance:t*length,point,normal};
+ for(let i=0;i<times.length;i++){
+  const next=times[i+1]??1;
+  for(const t0 of [times[i],(times[i]+next)/2]){
+   const key=`${Math.floor((start[0]+(end[0]-start[0])*t0)/chunk)},${Math.floor((start[2]+(end[2]-start[2])*t0)/chunk)}`;
+   if(chunks.has(key))continue;chunks.add(key);
+   for(const b of world.index.get(key)||[]){
+    if(visited.has(b))continue;visited.add(b);if(b.max[1]<lowY||b.min[1]>highY||!filter(b))continue;
+    const entry=segmentBox(start,end,b);if(entry===null||hit&&entry>hit.t)continue;
+    const t=b.foliageVolume?foliageSegment(start,end,b):b.trellisPart?trellisSegment(start,end,b.trellisPart):entry;if(t===null||hit&&(t>hit.t||t===hit.t&&b.id>=hit.id))continue;
+    const point=start.map((v,i)=>v+(end[i]-v)*t),normal=[0,0,0];
+    for(let axis=0;axis<3;axis++){if(Math.abs(point[axis]-b.min[axis])<1e-7){normal[axis]=-1;break;}if(Math.abs(point[axis]-b.max[axis])<1e-7){normal[axis]=1;break;}}
+    hit={id:b.id,kind:b.kind,material:b.material,source:b.source,t,distance:t*length,point,normal};
+   }
+  }
+  // Equal-distance boundary hits still visit the next chunk for stable tie breaks.
+  if(hit&&hit.t<next-1e-10)break;
  }
  return hit;
 }

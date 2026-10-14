@@ -1,3 +1,4 @@
+import {foliageBlocks,foliageErrors} from './foliage-data.js';
 import {validatePlannedMap} from './feature-plan.js';
 import {invalidateHybrid} from './hybrid-combat.js';
 import {validateConnections} from './connections.js';
@@ -11,7 +12,7 @@ export const edgeKey=(axis,x,y,z=0)=>`${axis}:${x}:${y}${z?':'+z:''}`;
 export const inBounds=(x,y,z=0)=>Number.isInteger(x)&&Number.isInteger(y)&&Number.isInteger(z)&&x>=0&&y>=0&&x<W&&y<H&&z>=0&&z<LEVELS;
 export function terrainAt(m,x,y,z=0){if(!inBounds(x,y,z))return 'void';if(m.knowledge&&!m.knowledge.has(tileKey(x,y,z)))return z?'floor':'yard';return z===0?(m.terrain||m.map)[y][x]:(m.upper?.[z-1]?.[tileKey(x,y)]||'void');}
 export function setTerrain(m,x,y,z,value){if(!inBounds(x,y,z))return false;if(!z)m.terrain[y][x]=value;else if(value==='void')delete m.upper[z-1][tileKey(x,y)];else m.upper[z-1][tileKey(x,y)]=value;return true;}
-export const passable=(m,p)=>floorTerrain(terrainAt(m,p.x,p.y,levelOf(p)))&&!propBlocks(m,p.x,p.y,levelOf(p));
+export const passable=(m,p)=>floorTerrain(terrainAt(m,p.x,p.y,levelOf(p)))&&!foliageBlocks(m,p.x,p.y,levelOf(p))&&!propBlocks(m,p.x,p.y,levelOf(p));
 export function edgeBetween(a,b){if(levelOf(a)!==levelOf(b)||Math.abs(a.x-b.x)+Math.abs(a.y-b.y)!==1)return null;return a.x!==b.x?edgeKey('e',Math.min(a.x,b.x),a.y,levelOf(a)):edgeKey('s',a.x,Math.min(a.y,b.y),levelOf(a));}
 export function blockedEdge(m,a,b){const k=edgeBetween(a,b);return !k||!!EDGES[m.edges?.[k]]?.solid;}
 export function openDoorBetween(m,a,b){const k=edgeBetween(a,b),next=EDGES[m.edges?.[k]]?.opensTo;if(!next)return false;m.edges[k]=next;invalidateHybrid(m);return true;}
@@ -69,9 +70,9 @@ export function validateMap(raw,{connectivity=true}={}){
  const errors=[],point=p=>p&&inBounds(p.x,p.y,levelOf(p));
  if(!raw||raw.version!==2||raw.width!==W||raw.height!==H||raw.levels!==LEVELS)return ['Expected a version 2 map: 240 × 240 tiles and 3 levels.'];
  if(typeof raw.name!=='string'||raw.name.length<1||raw.name.length>60)errors.push('Map name must contain 1–60 characters.');
- if(!Array.isArray(raw.terrain)||raw.terrain.length!==H||raw.terrain.some(r=>!Array.isArray(r)||r.length!==W||r.some(t=>!['yard','floor','crate','void','water','bridge','woodland',...GROUNDS].includes(t))))return [...errors,'Invalid ground terrain.'];
+ if(!Array.isArray(raw.terrain)||raw.terrain.length!==H||raw.terrain.some(r=>!Array.isArray(r)||r.length!==W||r.some(t=>!['yard','floor','crate','void','water','bridge','woodland','woodland-dense',...GROUNDS].includes(t))))return [...errors,'Invalid ground terrain.'];
  if(!Array.isArray(raw.upper)||raw.upper.length!==2)return [...errors,'Expected two sparse upper levels.'];
- for(const layer of raw.upper){if(!layer||typeof layer!=='object'||Array.isArray(layer))return [...errors,'Invalid upper floor.'];for(const [k,v]of Object.entries(layer)){const [x,y]=k.split(',').map(Number);if(k!==tileKey(x,y)||!inBounds(x,y)||!['yard','floor','crate','bridge','woodland',...GROUNDS].includes(v))return [...errors,'Invalid upper floor tile.'];}}
+ for(const layer of raw.upper){if(!layer||typeof layer!=='object'||Array.isArray(layer))return [...errors,'Invalid upper floor.'];for(const [k,v]of Object.entries(layer)){const [x,y]=k.split(',').map(Number);if(k!==tileKey(x,y)||!inBounds(x,y)||!['yard','floor','crate','bridge','woodland','woodland-dense',...GROUNDS].includes(v))return [...errors,'Invalid upper floor tile.'];}}
  if(!raw.edges||typeof raw.edges!=='object'||Array.isArray(raw.edges))return [...errors,'Missing edge barriers.'];
  for(const [k,v]of Object.entries(raw.edges)){const p=/^(e|s):(-?\d+):(-?\d+)(?::([12]))?$/.exec(k);if(!p)return [...errors,'Invalid edge key.'];const x=Number(p[2]),y=Number(p[3]),z=Number(p[4]||0);if(!Object.hasOwn(EDGES,v)||k!==edgeKey(p[1],x,y,z)||(p[1]==='e'?(x< -1||x>=W||y<0||y>=H):(x<0||x>=W||y< -1||y>=H)))return [...errors,'Invalid edge location or type.'];}
  if(!Array.isArray(raw.starts)||raw.starts.length!==4||raw.starts.some(p=>!point(p)))return [...errors,'Place exactly four valid squad starts.'];
@@ -81,7 +82,7 @@ export function validateMap(raw,{connectivity=true}={}){
  if(!Array.isArray(raw.stairs)||raw.stairs.length>4096||raw.stairs.some(p=>!point(p)||!Number.isInteger(p.z)||p.z>=2||(p.kind!==undefined&&!['stairs','ladder'].includes(p.kind))))return [...errors,'Invalid stairs: lower level must be 0 or 1.'];
  if(raw.climbs!==undefined&&(!Array.isArray(raw.climbs)||raw.climbs.length>4096||raw.climbs.some(p=>!point(p)||!Number.isInteger(p.z)||p.z>=2||!Number.isInteger(p.dx)||!Number.isInteger(p.dy)||Math.abs(p.dx)+Math.abs(p.dy)!==1)))return [...errors,'Invalid roof climb: adjacent tiles and exactly one level required.'];
  if(raw.props!==undefined&&(!Array.isArray(raw.props)||raw.props.length>4096||raw.props.some(p=>!point(p)||!Object.hasOwn(PROPS,p.kind)||(p.rotated!==undefined&&typeof p.rotated!=='boolean'))))return [...errors,'Invalid environment props.'];
- errors.push(...validateConnections(raw),...validatePlannedMap(raw));
+ errors.push(...foliageErrors(raw),...validateConnections(raw),...validatePlannedMap(raw));
  if(raw.sectors){errors.push(...validateSectorPlan(raw.sectors));if(!errors.length){const plan=raw.sectors;for(let sy=0;sy<10;sy++)for(let sx=0;sx<10;sx++){const type=plan.cells[sy][sx];if(!['river-ns','bridge-ns','road-ew'].includes(type))continue;for(let y=0;y<24;y++)for(let x=0;x<24;x++){const p=plan.orientation==='ew'?{x:sy*24+y,y:sx*24+x}:{x:sx*24+x,y:sy*24+y},t=terrainAt(raw,p.x,p.y,0);if(['river-ns','bridge-ns'].includes(type)&&x>=9&&x<=14){const crossing=type==='bridge-ns'&&y>=10&&y<=13;if(crossing?!passable(raw,p):t!=='water')errors.push('River rule broken: preserve the water channel and both bridge corridors.');}else if(['road-ew','bridge-ns'].includes(type)&&y>=10&&y<=13&&!passable(raw,p))errors.push('Bridge approach road must remain open.');if(['bridge-ns','road-ew'].includes(type)&&y>=10&&y<=13){const q=plan.orientation==='ew'?{x:p.x,y:p.y+1}:{x:p.x+1,y:p.y};if(inBounds(q.x,q.y)&&blockedEdge(raw,p,q))errors.push('Bridge and approach corridors must not have crossing barriers.');}}}}}
  const propPositions=new Set();for(const p of raw.props||[])for(const q of propCells(p)){const k=tileKey(q.x,q.y,q.z);if(propPositions.has(k))errors.push('Overlapping prop footprints.');propPositions.add(k);if(!inBounds(q.x,q.y,q.z)||!floorTerrain(terrainAt(raw,q.x,q.y,q.z)))errors.push('Props need supported floor tiles across their whole footprint.');}
  for(const p of raw.props||[]){const cells=propCells(p);if(cells.some(a=>cells.some(b=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y)===1&&blockedEdge(raw,a,b))))errors.push('A prop footprint crosses a wall or fence.');}

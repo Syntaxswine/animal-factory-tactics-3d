@@ -1,3 +1,5 @@
+import {FOLIAGE_PRESETS} from './foliage-presets.js';
+import {biomeFamilyAt} from './biome-family.js';
 import {landBrushCells} from './land-paint.js';
 import {foliageAt,foliageKey,foliageGround,cleanFoliage} from './foliage-data.js';
 import {terrainAt,setTerrain,roofEndpoint} from './core/maps.js';
@@ -8,7 +10,8 @@ export function paintFoliage(map,command,size=240){
  const {start,end=start,options={},path,tool}=command,z=start.z||0,mode=options.foliageShape||'rectangle';
  if(!['round','square','rectangle'].includes(mode))throw Error('Choose a round brush, square brush or rectangle.');
  if(z<0||z>2)throw Error('Foliage needs outdoor ground on levels 1, 2 or 3.');
- const density=options.foliageDensity??100,blocked=options.foliageBlocked??options.foliageKind==='dense';
+ const preset=options.foliagePreset;if(preset!==undefined&&!FOLIAGE_PRESETS[preset])throw Error('Choose a supported foliage preset.');
+ const density=options.foliageDensity??100,blocked=FOLIAGE_PRESETS[preset]?.blocked??options.foliageBlocked??options.foliageKind==='dense';
  if(!Number.isInteger(density)||density<1||density>100||typeof blocked!=='boolean')throw Error('Choose foliage density from 1–100% and whether it blocks walking.');
  let points;
  if(mode==='rectangle'){
@@ -19,6 +22,7 @@ export function paintFoliage(map,command,size=240){
  const access=new Set([...map.starts,...map.guards,...map.exits,...map.props.filter(isRamp).flatMap(p=>{const r=rampInfo(p);return [r.entry,r.exit];})].map(p=>foliageKey(p.x,p.y,p.z||0)));
  const cells=[],clearing=tool==='clear-foliage';
  for(const p of points){
+  const selectedPreset=preset==='thicket-v1'&&biomeFamilyAt(map,p.x,p.y,z)==='wetlands'?'wetland-v1':preset;
   const key=foliageKey(p.x,p.y,z),terrain=terrainAt(map,p.x,p.y,z),previous=foliageAt(map,p.x,p.y,z);
   if(clearing){
    if(!previous)continue;
@@ -27,9 +31,9 @@ export function paintFoliage(map,command,size=240){
    if(isWoodland(terrain))setTerrain(map,p.x,p.y,z,'ground-grass');
   }else{
    if(!foliageGround(terrain)||occupied.has(key)||map.stairs.some(q=>q.x===p.x&&q.y===p.y&&(q.z===z||q.z+1===z))||roofEndpoint(map,p)||blocked&&access.has(key))continue;
-   if(previous?.[0]===density&&previous?.[1]===blocked&&!isWoodland(terrain))continue;
+   if(previous?.[0]===density&&previous?.[1]===blocked&&previous?.[2]===selectedPreset&&!isWoodland(terrain))continue;
    if(isWoodland(terrain))setTerrain(map,p.x,p.y,z,'ground-grass');
-   map.foliage||={};map.foliage[key]=[density,blocked];
+   map.foliage||={};map.foliage[key]=selectedPreset?[density,blocked,selectedPreset]:[density,blocked];
   }
   cells.push(p);
  }

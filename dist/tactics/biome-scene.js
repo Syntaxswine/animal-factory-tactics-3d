@@ -1,3 +1,4 @@
+import {createFoliageScreens} from './foliage-screen-scene.js';
 import * as T from './vendor/three.module.js';
 import {BIOME_TEXTURES,BIOME_FAMILIES} from './biome-foliage-data.js';
 import {configureBiomeTexture,createBiomeMaterials} from './biome-foliage-paint.js';
@@ -57,7 +58,7 @@ export class BiomeScene{
  }
  material(base,level,size){const key=base.uuid+':'+level;if(!this.layerMaterials.has(key)){const m=base.clone();m.onBeforeCompile=base.onBeforeCompile;m.customProgramCacheKey=base.customProgramCacheKey;this.layerMaterials.set(key,this.decorate(m,level,size));}return this.layerMaterials.get(key);}
  clear(){
-  for(const t of this.terrains)t.dispose();this.terrains=[];this.openTrees=[];for(const m of this.instances){m.removeFromParent();m.dispose();}this.instances=[];
+  for(const t of this.terrains){t.screens?.dispose();t.dispose();}this.terrains=[];this.openTrees=[];for(const m of this.instances){m.removeFromParent();m.dispose();}this.instances=[];
   for(const p of this.paints)p.dispose();this.paints=[];for(const m of this.layerMaterials.values())m.dispose();this.layerMaterials.clear();for(const l of this.layers.values())l.texture.dispose();this.layers.clear();this.signature=null;
  }
  rebuild(map,seen,level,{editor=false,selectedLevel=level,dim=false}={}){
@@ -72,12 +73,14 @@ export class BiomeScene{
     const z=plan.level;if(!paints.has(z)){const paint=createMapGroundPaint(map,z,this.textures.ground);paints.set(z,paint);this.paints.push(paint);}
     if(!fills.has(z))fills.set(z,mixedBiomeFill(plan,map));
     const terrain=createBiomeTerrain(plan,plan.family,{ground:paints.get(z).ground,cliff:null,plantMaterials:Object.fromEntries(Object.entries(this.materials).map(([k,m])=>[k,this.material(m,z,size)])),obstacleMaterials:Object.fromEntries(Object.entries(this.obstacleMaterials).map(([k,m])=>[k,this.material(m,z,size)])),plantFactory:factory(z),paintSeed:biomeSeed(map),fill:fills.get(z),onPaintReady:()=>this.onReady(),decorateMaterial:m=>this.decorate(m,z,size),groundSkinOptions:{maxResident:Math.max(1,Math.floor(16/plans.length)),...(plan.cells.length?{}:{canvasFactory:()=>null})}});
+    terrain.screens=createFoliageScreens(plan,{plantMaterials:this.materials,obstacleMaterials:this.obstacleMaterials,decorate:m=>this.material(m,z,size)});terrain.root.add(terrain.screens.root);
     terrain.level=z;terrain.root.position.y=.008;this.root.add(terrain.root);this.terrains.push(terrain);
     const prototypes=[0,1,2].map(variant=>factory(z).create(OPEN_WOODLAND_PLANTS[plan.family],{variant}));
     const trees=BIOME_FAMILIES[plan.family].trees.flatMap(id=>[0,1,2].map(variant=>factory(z).create(id,{variant})));
+    const treeSpecs=new Map(plan.trees.map(t=>[`${t.x},${t.y}`,t]));
     for(const c of plan.passableCells()){
      if(plan.treeAt(c.x,c.y)){
-      const tree=trees[Math.floor(groundHash(c.x+plan.origin[0],c.y+plan.origin[1],plan.seed+z*911+587)*trees.length)];
+      const spec=treeSpecs.get(`${c.x},${c.y}`),tree=trees.find(p=>p.userData.id===spec.id&&p.userData.variant===spec.variant);
       this.batchPlant(batches,tree,c.x,c.height+.008,c.y,z,1);this.openTrees.push({x:c.x,y:c.y,z,height:c.height,id:tree.userData.id});continue;
      }
      const hash=groundHash(c.x+plan.origin[0],c.y+plan.origin[1],plan.seed+z*911);if(hash*100>=c.density)continue;

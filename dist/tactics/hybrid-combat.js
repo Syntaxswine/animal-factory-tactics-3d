@@ -1,3 +1,4 @@
+import {foliageSignature} from './foliage-obstacles.js';
 import {buildWorld,traceWorld,DIMENSIONS} from './hybrid-world.js';
 import {segmentBox} from './hybrid-geometry.js';
 const caches=new WeakMap();
@@ -13,7 +14,7 @@ export function muzzlePoint(s,u){
 }
 // Explicit invalidation at simulation mutations. Shallow state views share their map key.
 export function invalidateHybrid(s){caches.delete(s.map||s.terrain);}
-const geometrySignature=s=>JSON.stringify([s.map||s.terrain,s.upper,s.edges,s.props,s.stairs]);
+const geometrySignature=s=>foliageSignature(s);
 export function synchronizeHybrid(s){if(!isHybrid(s))return;const old=caches.get(s.map||s.terrain);if(old?.signature!==geometrySignature(s))invalidateHybrid(s);}
 export function hybridWorld(s){
  const key=s.map||s.terrain;let cached=caches.get(key);
@@ -33,14 +34,14 @@ export function aimPoint(s,u,zone='torso'){
  const body=bodyRegions(s,u),r=body.regions.find(r=>r.zone===zone)||body.regions[1],c=Math.cos(body.heading),n=Math.sin(body.heading);
  return {x:u.x+r.center[0]*c,y:u.y+r.center[0]*n,h:body.origin[1]+r.center[1]};
 }
-export function traceHybrid(s,shooter,origin,direction,reach,{bodies=true}={}){
+export function traceHybrid(s,shooter,origin,direction,reach,{bodies=true,purpose='shot'}={}){
  const length=Math.hypot(direction.x,direction.y,direction.h);if(!Number.isFinite(length)||length<1e-7||!Number.isFinite(reach)||reach<=0)throw Error('Invalid projectile ray');
  const start=[origin.x,origin.h,origin.y],end=[origin.x+direction.x/length*reach,origin.h+direction.h/length*reach,origin.y+direction.y/length*reach];
- let hit=traceWorld(hybridWorld(s),start,end),limit=hit?.t??1;
+ let hit=traceWorld(hybridWorld(s),start,end,{filter:b=>purpose==='sight'?b.blocksSight!==false:b.blocksShot!==false}),limit=hit?.t??1;
  // Canonical event precision avoids last-bit Math.hypot differences between V8 builds.
  const canonical=v=>Math.round(v*1e10)/1e10;
  const impact=(kind,t,extra={})=>{const p=start.map((v,i)=>canonical(v+(end[i]-v)*t));return {kind,x:p[0],y:p[2],h:p[1],z:Math.max(0,Math.min(2,Math.floor((p[1]+1e-7)/floorSpacing(s)))),distance:canonical(t*reach),...extra};};
- let result=hit?impact(hit.kind==='roof'?'floor':hit.kind,hit.t,{objectId:hit.id,normal:hit.normal,material:hit.material}):impact('range',1);
+ let result=hit?impact(hit.kind==='roof'?'floor':hit.kind==='foliage'?'cover':hit.kind,hit.t,{objectId:hit.id,normal:hit.normal,material:hit.material}):impact('range',1);
  // Keep the playable map boundary and physical ground outside painted/void tiles.
  for(const [axis,lo,hi]of [[0,-.5,239.5],[2,-.5,239.5],[1,0,Infinity]]){
   const delta=end[axis]-start[axis];let t=null;
@@ -49,7 +50,7 @@ export function traceHybrid(s,shooter,origin,direction,reach,{bodies=true}={}){
   else if(delta>0&&end[axis]>hi)t=(hi-start[axis])/delta;
   if(t!==null&&t<limit){limit=t;result=impact(axis===1?'floor':'boundary',t);}
  }
- if(bodies)for(const u of s.units||[]){if(u===shooter||u.away||!(u.hp>0||['bleeding','stable'].includes(u.casualty)))continue;
+ if(bodies&&purpose!=='sight')for(const u of s.units||[]){if(u===shooter||u.away||!(u.hp>0||['bleeding','stable'].includes(u.casualty)))continue;
   const body=bodyRegions(s,u),c=Math.cos(body.heading),n=Math.sin(body.heading);
   const local=p=>{const x=p[0]-body.origin[0],z=p[2]-body.origin[2];return [x*c+z*n,p[1]-body.origin[1],-x*n+z*c];};
   for(const r of body.regions){const t=segmentBox(local(start),local(end),r);if(t!==null&&t<limit){limit=t;result=impact('unit',t,{unitId:u.id,zone:r.zone,objectId:`unit:${u.id}:${r.zone}`});}}
