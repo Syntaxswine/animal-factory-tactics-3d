@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
+import * as T from '../dist/tactics/vendor/three.module.js';
+import {createBiomeObstacleMaterials} from '../dist/tactics/biome-obstacle-paint.js';
+import {createBiomeGround} from '../dist/tactics/biome-foliage-paint.js';
 import {createGroundComposition} from '../dist/tactics/biome-ground-composition.js';
 import {createConnectedGroundSkin} from '../dist/tactics/biome-connected-ground.js';
 function plan(){const width=96,depth=96,blockedAt=(x,z)=>Number.isInteger(x)&&Number.isInteger(z)&&x>=0&&z>=0&&x<width&&z<depth&&x!==45&&z!==51,heightAt=(x,z)=>x<0||z<0||x>=width||z>=depth?null:z<64?0:2.12;return {width,depth,blockedAt,heightAt};}
@@ -21,6 +24,35 @@ test('each grown material bed is connected like the overmap settlement frontier'
 });
 test('grey/headless planning allocates no textures and releases safely',()=>{
  const skin=createConnectedGroundSkin(plan(),'temperate',{canvasFactory:()=>null});assert.equal(skin.stats.textureBytes,0);assert.equal(skin.stats.canvasBytes,0);assert.equal(skin.pages.size,0);skin.update([],{},40);skin.dispose();skin.dispose();assert(skin.composition.features.length>0);
+});
+
+test('connected wetland paint preserves the water atlas inside the bog but not on walkable ground',()=>{
+ const previousWorker=globalThis.Worker,atlas=new T.Texture(),materials=createBiomeObstacleMaterials(atlas),ground=createBiomeGround(atlas,'wetlands');
+ // Only the material assembly is under test; defer asynchronous canvas baking.
+ globalThis.Worker=class{postMessage(){}terminate(){}};
+ const canvasFactory=()=>({getContext:()=>({createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),putImageData(){}})});
+ const compile=m=>{const shader={uniforms:{},vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader};m.onBeforeCompile(shader);return shader;};
+ const preserveWater='groundColor=mix(groundColor,diffuseColor.rgb,mix(1.,edgeWash,groundEdgeEnabled));';
+ try{
+  for(const edgeBlend of [true,false]){
+   const skin=createConnectedGroundSkin(plan(),'wetlands',{canvasFactory,underlay:ground,edgeBlend});
+   const water=materials.bogWater.clone(),path=ground.clone();water.onBeforeCompile=materials.bogWater.onBeforeCompile;path.onBeforeCompile=ground.onBeforeCompile;
+   try{
+    skin.attach(water,{index:0});skin.attach(path,{index:0},{layer:'path'});
+    const wet=compile(water),dry=compile(path);
+    assert.match(wet.fragmentShader,/diffuseColor.rgb\*=obstaclePaint/,'the actual bog atlas is sampled before edge blending');
+    assert.ok(wet.fragmentShader.includes(preserveWater),'fully opaque forest-floor paint must not replace the water interior');
+    assert.equal(wet.uniforms.groundEdgeEnabled.value,edgeBlend?1:0);
+    assert.equal(water.roughness,materials.bogWater.roughness);
+    assert.ok(!dry.fragmentShader.includes(preserveWater),'walkable wetland grass stays dry');
+    assert.ok(wet.uniforms.groundEdge.value===dry.uniforms.groundEdge.value,'water and ground use the same bank boundary');
+   }finally{water.dispose();path.dispose();skin.dispose();}
+  }
+  const skin=createConnectedGroundSkin(plan(),'wetlands',{canvasFactory}),water=materials.bogWater.clone();water.onBeforeCompile=materials.bogWater.onBeforeCompile;
+  try{skin.attach(water,{index:0});assert.ok(compile(water).fragmentShader.includes('groundColor=diffuseColor.rgb;'),'water survives without an underlay too');}finally{skin.dispose();water.dispose();}
+  const forest=createConnectedGroundSkin(plan(),'temperate',{canvasFactory,underlay:ground}),brush=materials.bramble.clone();brush.onBeforeCompile=materials.bramble.onBeforeCompile;
+  try{forest.attach(brush,{index:0});assert.ok(!compile(brush).fragmentShader.includes(preserveWater),'forest connected paint remains enabled');}finally{forest.dispose();brush.dispose();}
+ }finally{if(previousWorker===undefined)delete globalThis.Worker;else globalThis.Worker=previousWorker;ground.dispose();Object.values(materials).forEach(m=>m.dispose());atlas.dispose();}
 });
 test('invalid family or seed does not silently generate a different terrain',()=>{for(const seed of [-1,NaN,1.2,2**32])assert.throws(()=>createGroundComposition(plan(),'temperate',seed));assert.throws(()=>createGroundComposition(plan(),'unknown'));});
 test('five exported sets contain 64 neighboring tiles with current source fingerprints',()=>{
