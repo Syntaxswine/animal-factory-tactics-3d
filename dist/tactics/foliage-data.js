@@ -1,6 +1,7 @@
 // Foliage is an overlay: each cell stores [density percent, blocks walking].
 // Ground remains authoritative for the plants' habitat and survives clearing.
-const natural=new Set(['yard','ground-grass','ground-dirt','ground-gravel','woodland','woodland-dense']);
+import {BIOME_TERRAIN} from './biome-gameplay-data.js';
+const natural=new Set(['yard','ground-grass','ground-dirt','ground-gravel','woodland','woodland-dense',...Object.keys(BIOME_TERRAIN)]);
 export const foliageGround=terrain=>natural.has(terrain);
 export const foliageKey=(x,y,z=0)=>`${x},${y},${z}`;
 export const foliageTerrain=(map,x,y,z=0)=>z?map.upper?.[z-1]?.[`${x},${y}`]||'void':(map.terrain||map.map)?.[y]?.[x]||'void';

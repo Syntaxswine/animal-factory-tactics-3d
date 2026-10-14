@@ -61,7 +61,7 @@ export function materialKind(box){
  if(/brick|^wall$/.test(box.material))return 'brick';
  if(/corrugated|steel/.test(box.material))return 'metal';
  if(/wood|crate|door/.test(box.material))return 'wood';
- if(box.material==='yard'||box.material==='ground-grass')return 'grass';
+ if(box.material==='yard'||box.material==='ground-grass'||box.material?.startsWith('ground-biome-'))return 'grass';
  if(box.kind==='cover')return 'sand';return 'concrete';
 }
 export function materialGallery(map){

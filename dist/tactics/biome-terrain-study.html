@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="data:,"><title>Tutorial foliage regions</title><link rel="stylesheet" href="biome-foliage-study.css"></head>
+<body><main>
+<header><div><p class="eyebrow">Animal Factory Tactics · landscape study</p><h1>Tutorial foliage regions</h1><p>Five environments · continuous blocked regions · clear routes</p></div><a href="biome-foliage-study.html?display=barriers">Close-up foliage pieces ↗</a></header>
+<div class="controls">
+<label>Environment <select id="biome"><option value="temperate">Temperate</option><option value="jungle">Jungle</option><option value="snow">Snow</option><option value="dry">Dry grassland</option><option value="wetlands">Wetlands</option></select></label>
+<label>Frame <select id="frame"><option value="overview">Whole map</option><option value="corridor">Corridor</option><option value="boundary">Forest margin</option><option value="ground">Ground paint</option><option value="cliff">Cliff edge</option><option value="clearing">Clearing</option></select></label>
+<label>View <select id="view"><option value="three">Three-quarter</option><option value="top">Top</option><option value="low">Low</option></select></label>
+<label>Scale <select id="scale"><option value="close">Close</option><option value="game">Gameplay · 32 px/tile</option></select></label>
+<label><input type="checkbox" id="trees" checked>Trees</label>
+<label><input type="checkbox" id="blocked">Blocked overlay</label>
+<label><input type="checkbox" id="grey">Grey forms</label>
+<label><input type="checkbox" id="paint" checked>Generated ground</label>
+<label><input type="checkbox" id="edges" checked>Soften margins</label>
+<label><input type="checkbox" id="grid">Tile grid</label>
+<label>Landscape <select id="seed"><option value="173">A</option><option value="829">B</option><option value="1409">C</option></select></label>
+<button id="reset">Reset view</button>
+</div>
+<div id="scene" aria-label="Interactive 3D tutorial landscape"></div><p id="error" role="alert"></p><p id="status">Loading the tutorial landscape…</p>
+<footer><p id="description"></p><p>Connected moss, leaf beds, mud and snow cross tile joins. Soften margins blends colour and tiny flat flecks into the adjoining ground; trees, banks and fallen timber stay inside blocked cells. Compare Forest margin at Gameplay scale with Tile grid on and off.</p><p>Ground paint hides raised foliage for texture inspection and shows an 8 by 8 grid; other close frames show 24 by 24. Landscape A/B/C generates a different composition. Generated ground compares against the old repeating fill.</p><p>The plateau uses the saved tutorial terrain. Foliage regions follow your screenshot as a layout study; the saved map is unchanged. Every environment uses the same blocked mask. Gameplay integration is a separate step.</p><p>Drag to orbit. The horse is at native scale. <a href="../assets/environment/biome-obstacles/reference-v1.png">Paint and detail reference ↗</a></p></footer>
+</main><script type="module" src="biome-terrain-study.js"></script></body></html>

@@ -1,3 +1,4 @@
+import {biomeFixture} from './biome-fixture.js';
 import {sceneryFixture} from './scenery-fixture.js';
 import {wallXrayFixture} from './wall-xray-fixture.js';
 import {strategicSiteFixture} from './strategic-site-fixture.js';
@@ -10,6 +11,7 @@ import {receivePlaytest} from './editor-playtest.js';
 export async function loadBattleMap(fetcher=fetch){
  const token=globalThis.location?new URLSearchParams(location.search).get('editorPlaytest'):null;
  if(token)return receivePlaytest(token);
+ if(globalThis.location&&new URLSearchParams(location.search).get('study')==='biomes')return biomeFixture();
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='scenery')return sceneryFixture();
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='grenades')return grenadeFixture();
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='wall-breaches')return wallBreachBattleFixture();

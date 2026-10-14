@@ -1,4 +1,5 @@
 import {EnvironmentPaint} from './environment-paint.js';
+import {BiomeScene} from './biome-scene.js';
 import {SceneryScene} from './scenery-scene.js';
 import {StrategicSiteScene} from './strategic-site-scene.js';
 import {siteSupportAt} from './strategic-site-rules.js';
@@ -30,6 +31,7 @@ export class InspectionScene {
   this.scene=new T.Scene();this.scene.background=new T.Color('#172c29');this.camera=new T.OrthographicCamera();
   this.daylight=new DaylightRig(this.scene,this.renderer);
   this.environmentPaint=new EnvironmentPaint();this.geometry=environmentGeometries();this.materials=new Map();this.dimMaterials=new Map();this.loader=new T.TextureLoader();this.models=[];this.data=new Map();this.generation=0;this.diagnostics=[];
+  this.biomes=new BiomeScene(this.scene,this.loader,()=>{if(this.document)this.rebuild();this.changed();},e=>{this.diagnostics.push(e.message);this.changed();});
   this.scenery=new T.Group();this.markers=new T.Group();this.scene.add(this.scenery,this.markers);
   this.highlight=new T.LineSegments(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffe5a5,depthTest:false}));this.highlight.renderOrder=20;this.scene.add(this.highlight);
   this.markerGeo=new T.RingGeometry(.27,.39,20);this.guardMat=new T.MeshBasicMaterial({color:0xef9e75,side:T.DoubleSide});this.startMat=new T.MeshBasicMaterial({color:0x96dbce,side:T.DoubleSide});this.accessMat=new T.MeshBasicMaterial({color:0xf7d17d,side:T.DoubleSide});
@@ -85,12 +87,13 @@ export class InspectionScene {
  }
  rebuild(){
   if(!this.document)return;const started=performance.now(),{roofs,walls}=this.options,level=this.visibleLevel,source=this.document.map;this.environmentPaint.setMap(source);
+  const biomes=this.biomes.rebuild(source,null,level,{editor:true,selectedLevel:this.options.level,dim:!this.options.showAllLevels});
   this.sceneryAssets.rebuild({...source,difficulty:'easy'},this.visibleLevel);this.sites.rebuild({...source,difficulty:'easy'},this.visibleLevel);this.cliffs.rebuild(source,level,{editor:true,dim:!this.options.showAllLevels,grassTexture:this.material('grass').map,environmentPaint:this.environmentPaint});
   const map={...source,canopies:roofs?source.canopies:[],coverOccupiedProps:source.props,props:source.props.filter(p=>!PAINTED_PROP_FORMS[p.kind]&&(roofs||!p.kind.startsWith('roof-')))};
   const world={...this.world,boxes:this.world.boxes.filter(b=>!(b.kind==='cover'&&b.material==='crate-wood')&&(walls||!b.source.edge)&&(roofs||b.kind!=='roof'))};
   const groups=new Map(),matrix=new T.Matrix4(),q=new T.Quaternion(),yaw=new T.Quaternion(),euler=new T.Euler(),position=new T.Vector3(),scale=new T.Vector3();
   const add=(geometry,material,m,z,x,y)=>{const mat=this.dim(material,z),key=`${Math.floor(x/16)},${Math.floor(y/16)}:${geometry.uuid}:${mat.uuid}`;if(!groups.has(key))groups.set(key,{geometry,material:mat,matrices:[]});groups.get(key).matrices.push(m.clone());};
-  for(const b of environmentVisuals(world,map)){
+  for(const b of environmentVisuals(world,map,{biomes})){
    const z=b.source.z??Number(b.source.edge?.split(':')[3]||0);if(z>level)continue;
    q.setFromEuler(euler.set(...(b.rotation||[0,0,0])));yaw.setFromAxisAngle(new T.Vector3(0,1,0),b.yaw||0);q.premultiply(yaw);matrix.compose(position.fromArray(b.center),q,scale.fromArray(b.size));
    add(environmentGeometry(this.geometry,b.shape||'box'),this.material(materialKind(b)),matrix,z,b.center[0],b.center[2]);
@@ -118,7 +121,7 @@ export class InspectionScene {
   else for(const p of selection?.cells||[]){const corners=[[-.5,-.5],[.5,-.5],[.5,.5],[-.5,.5]];for(let i=0;i<4;i++){const a=corners[i],b=corners[(i+1)%4];points.push(new T.Vector3(p.x+a[0],h,p.y+a[1]),new T.Vector3(p.x+b[0],h,p.y+b[1]));}}
   this.highlight.geometry.dispose();this.highlight.geometry=new T.BufferGeometry().setFromPoints(points);this.changed();
  }
- draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.lights.update(this.document?.map,this.visibleLevel,this.previewMinutes??mapStartMinutes(this.document?.map),this.reducedMotion?.matches?null:performance.now()/1000,true);this.daylight.update(this.previewMinutes??mapStartMinutes(this.document?.map),this.camera,0,true);this.sceneryAssets.update(performance.now()/1000,this.camera,{reducedMotion:!!this.reducedMotion?.matches});this.lights.render(this.renderer,this.camera);}
+ draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.biomes.update(this.camera,new T.Vector3(view.x,0,view.y),height/(view.span||24));this.lights.update(this.document?.map,this.visibleLevel,this.previewMinutes??mapStartMinutes(this.document?.map),this.reducedMotion?.matches?null:performance.now()/1000,true);this.daylight.update(this.previewMinutes??mapStartMinutes(this.document?.map),this.camera,0,true);this.sceneryAssets.update(performance.now()/1000,this.camera,{reducedMotion:!!this.reducedMotion?.matches});this.lights.render(this.renderer,this.camera);}
  pick(x,y,width,height){return floorPoint(this.camera,x,y,width,height,this.options.level);}
  projectTile(p,width,height){const v=new T.Vector3(p.x,(p.z||0)*D.floorSpacing+.08,p.y).project(this.camera);return {x:(v.x+1)*width/2,y:(1-v.y)*height/2,visible:v.z>=-1&&v.z<=1};}
  pickCharacter(x,y,width,height){
@@ -151,5 +154,5 @@ export class InspectionScene {
  }
  clearMarkers(){for(const object of this.markers.children)if(object.isArrowHelper||object.type==='ArrowHelper'){object.line.material.dispose();object.cone.material.dispose();}this.markers.clear();}
  clearModels(){for(const m of this.models){m.root.removeFromParent();m.root.position.set(0,0,0);m.root.updateMatrixWorld(true);m.cap?.dispose();m.equipment?.dispose();m.paint.dispose();m.worker.skeleton.dispose();m.worker.dispose();}this.models=[];for(const m of this.dimMaterials.values())m.dispose();this.dimMaterials.clear();}
- dispose(){this.environmentPaint.dispose();this.sceneryAssets.dispose();this.sites.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();this.disposed=true;this.preview(null);this.generation++;this.clearModels();this.clearScenery();this.clearMarkers();this.cargo.dispose();for(const g of Object.values(this.geometry))g.dispose();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.highlight.geometry.dispose();this.highlight.material.dispose();this.markerGeo.dispose();this.guardMat.dispose();this.startMat.dispose();this.accessMat.dispose();this.renderer.dispose();}
+ dispose(){this.biomes.dispose();this.environmentPaint.dispose();this.sceneryAssets.dispose();this.sites.dispose();this.cliffs.dispose();this.lights.dispose();this.daylight.dispose();this.disposed=true;this.preview(null);this.generation++;this.clearModels();this.clearScenery();this.clearMarkers();this.cargo.dispose();for(const g of Object.values(this.geometry))g.dispose();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.highlight.geometry.dispose();this.highlight.material.dispose();this.markerGeo.dispose();this.guardMat.dispose();this.startMat.dispose();this.accessMat.dispose();this.renderer.dispose();}
 }
