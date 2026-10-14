@@ -3,7 +3,8 @@
 // composite their painted plate and their baked frames: the aircraft with its
 // painted rotor disc (01, 03), or the launcher with the launch's painted smoke,
 // flames and flashes (05, 06). Shots not painted yet say so.
-import {SHOTS,shotAt,lensPath,shotSpec,shotSector,shotKeepClear,plateName,HANDLER_LINE} from './ambush.js';
+import {SHOTS,shotAt,lensPath,shotSpec,shotSector,shotKeepClear,plateName,lensWindow,HANDLER_LINE} from './ambush.js';
+export {lensWindow};
 import {SAM_SITE} from './sam-sector.js';
 import {closeupView,paintCloseupPlate} from './closeup.js';
 import {rotorDisc,puff,puffSprite} from './effects.js';
@@ -26,22 +27,14 @@ export async function loadAmbushAssets(){
    try{const meta=await json(`plate/${name}.json`);if(JSON.stringify(meta.spec)===JSON.stringify(spec)){plate=await bitmap(`plate/${name}.webp`);source=`plate/${name}.webp`;}else source='painted live (the stored plate is stale)';}catch{}
    if(!plate){painter??=await Promise.all([loadGroundTextures(),loadFloraSprites()]);
     crash??=await Promise.all([json('../sector-library/tutorial-step-1/rough-plateau.json'),json('crash-sector-woodland.json')]).then(([map,woodland])=>({map,woodland}));
-    plate=paintCloseupPlate({sector:shotSector(s,crash),textures:painter[0],flora:painter[1]},closeupView(s.camera),{keepClear:shotKeepClear(s)}).canvas;}
+    plate=paintCloseupPlate({sector:shotSector(s,crash),textures:painter[0],flora:painter[1]},closeupView(s.camera),{keepClear:shotKeepClear(s),atmosphere:spec.atmosphere}).canvas;}
    plates.set(name,{plate,source});}
   if(!frames.has(s.frames)){const seq=await json(`${s.frames}/sequence.json`);frames.set(s.frames,{seq,sheets:await Promise.all(seq.sheets.map(f=>bitmap(`${s.frames}/${f}`)))});}
   lens[s.id]={shot:s,view:closeupView(s.camera),...plates.get(name),...frames.get(s.frames),kind:s.frames.startsWith('heli')?'heli':'sam'};}
- // 02: the baked hen at her desk, composited over the painted room.
+ // 02: the baked room, a plate and the rectangle around her head per frame.
  const r=SHOTS.find(s=>s.id==='02'),seq=await json(`${r.frames}/sequence.json`);
- const room={shot:r,seq,sheets:await Promise.all(seq.sheets.map(f=>bitmap(`${r.frames}/${f}`)))};
+ const room={shot:r,seq,plate:await bitmap(`${r.frames}/${seq.plate}`),sheets:await Promise.all(seq.sheets.map(f=>bitmap(`${r.frames}/${f}`)))};
  return {lens,smoke,room};
-}
-
-// A slow push-in and a follow pan that takes up a third of the subject's
-// offset from the plate's centre, clamped inside the plate's margin.
-export function lensWindow(shot,t,subjectPx){
- const [W,H]=shot.camera.plate,[ww,wh]=shot.camera.window,zoom=1+.04*smooth(shot.from,shot.to,t);
- const mx=(W-ww/zoom)/2,my=(H-wh/zoom)/2,want=subjectPx?[(subjectPx[0]-W/2)*.33,(subjectPx[1]-H/2)*.33]:[0,0];
- return {zoom,cx:W/2+clamp(want[0],-mx,mx),cy:H/2+clamp(want[1],-my,my)};
 }
 
 // A baked sequence's frame at t: by frame rate, or the nearest baked time when
@@ -56,7 +49,10 @@ function frameAt(seq,t){
 function trackAt(track,t){const P=track.points,u=clamp((t-P[0][0])/.02,0,P.length-1.001),i=Math.floor(u),f=u-i,a=P[i],b=P[i+1];
  return {pos:[1,2,3].map(k=>a[k]+(b[k]-a[k])*f),dir:[4,5,6].map(k=>a[k]+(b[k]-a[k])*f)};}
 const TAIL=1.47; // the study's trail starts this far behind the missile's centre
-const TRAIL_STEP=.5; // tiles of flight between trail puffs
+// Tiles of flight between trail puffs. Round 2: the puffs grow from 0.9 tile
+// and overlap into one plume, as the storyboard's trails do; spaced 0.5 and
+// starting at 0.55 they read as a string of beads against the darker sky.
+const TRAIL_STEP=.35,TRAIL_WARM='atop:rgba(255,224,168,.85)';
 function launchItems(t,tracks,V){
  const items=[];
  for(const [i,tr] of tracks.entries()){if(t<tr.birth)continue;
@@ -67,7 +63,8 @@ function launchItems(t,tracks,V){
   for(let k=1;k<P.length&&P[k-1][0]<=t;k++){const a=P[k-1],b=P[k],seg=Math.hypot(b[1]-a[1],b[2]-a[2],b[3]-a[3]);
    for(let u=carry;u<seg;u+=TRAIL_STEP){const f=u/seg,te=a[0]+(b[0]-a[0])*f,jx=(R()-.5)*.5,jy=(R()-.5)*.5,cell=Math.floor(R()*4);if(te>t)break;const age=t-te;if(age>=life)continue;
     const p=[1,2,3].map(c=>a[c]+(b[c]-a[c])*f),d=[4,5,6].map(c=>a[c]+(b[c]-a[c])*f),q=[p[0]-d[0]*TAIL+jx*age,p[1]-d[1]*TAIL+jy*age,p[2]-d[2]*TAIL+.3*age];
-    items.push({kind:'puff',p:q,size:.55+age*1.1,alpha:.62*Math.pow(1-age/life,1.3)*Math.min(1,age/.04),cell,tint:'atop:rgba(246,244,238,.8)'});}
+    // (lit warm by the motor for its first tenth of a second)
+    items.push({kind:'puff',p:q,size:.9+age*2.1,alpha:.55*Math.pow(1-age/life,1.4)*Math.min(1,age/.04),cell,tint:age<.1?TRAIL_WARM:'atop:rgba(246,244,238,.8)'});}
    carry=(carry-seg)%TRAIL_STEP;if(carry<0)carry+=TRAIL_STEP;}
   // The launch cloud: blast smoke shoved out low around the rails, slowing.
   const C=trackAt(tr,tr.birth),o=[C.pos[0]-C.dir[0]*2.4,C.pos[1]-C.dir[1]*2.4,Math.max(.4,C.pos[2]-C.dir[2]*2.4-1.2)];
@@ -180,51 +177,13 @@ function renderRadarInsert(ctx,t){
 }
 
 // --- 02: the overseas radio room -------------------------------------------------
-// The baked hen at her desk (bake-intro-room.mjs) over a painted room: lamp-lit
-// plaster, a pinned map behind her, radio stacks on a shelf, a green desk lamp,
-// conduit; a location card and her line as a subtitle.
-let roomCache=null;
-function roomBackdrop(){
- if(roomCache)return roomCache;
- const w=800,h=450,c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d'),img=g.createImageData(w,h),d=img.data;
- // Plaster: warm where the lamp (upper right) reaches, cool and dark in the corners.
- for(let y=0;y<h;y++)for(let x=0;x<w;x++){const n=fbm(x*.02,y*.02,81,4),m=fbm(x*.11,y*.11,83,2),lamp=Math.exp(-(((x-690)/330)**2+((y-40)/260)**2)),corner=smooth(.35,1,Math.hypot((x-400)/400,(y-225)/260));
-  const k=.62+.38*lamp-.28*corner,o=(y*w+x)*4;d[o]=(150+n*40+m*12)*k+40*lamp;d[o+1]=(138+n*34+m*10)*k+26*lamp;d[o+2]=(112+n*24+m*8)*k+8*lamp;d[o+3]=255;}
- g.putImageData(img,0,0);
- const ink=(lw=2)=>{g.strokeStyle='rgba(34,28,20,.9)';g.lineWidth=lw;g.stroke();};
- // Conduit along the wall and down to the shelf.
- g.strokeStyle='rgba(70,64,52,.85)';g.lineWidth=5;g.beginPath();g.moveTo(0,52);g.lineTo(560,52);g.quadraticCurveTo(590,52,590,80);g.lineTo(590,150);g.stroke();
- // The map: parchment, a coastline, borders, pins and a string to the relay's sector.
- g.save();g.translate(70,40);g.rotate(-.012);
- g.fillStyle='#d9cfae';g.fillRect(0,0,310,196);
- const R=rng(31);g.fillStyle='rgba(122,150,96,.75)';g.beginPath();g.moveTo(20,40);
- for(let i=0;i<=14;i++){const a=i/14,x=20+a*270+(R()-.5)*16,y=36+Math.sin(a*5.2)*22+(R()-.5)*14;g.lineTo(x,y);}
- g.lineTo(290,170);for(let i=14;i>=0;i--){const a=i/14,x=20+a*270+(R()-.5)*14,y=150+Math.sin(a*4.1+1)*18+(R()-.5)*12;g.lineTo(x,y);}g.closePath();g.fill();
- g.fillStyle='rgba(96,138,164,.55)';g.beginPath();g.ellipse(210,104,38,20,.4,0,Math.PI*2);g.fill();
- g.strokeStyle='rgba(90,70,50,.55)';g.lineWidth=1;for(let i=1;i<6;i++){g.beginPath();g.moveTo(i*52,0);g.lineTo(i*52,196);g.stroke();}for(let i=1;i<4;i++){g.beginPath();g.moveTo(0,i*49);g.lineTo(310,i*49);g.stroke();}
- g.strokeStyle='rgba(170,40,30,.85)';g.lineWidth=1.5;g.beginPath();g.moveTo(64,120);g.lineTo(150,78);g.lineTo(236,138);g.stroke();
- for(const [px,py] of [[64,120],[150,78],[236,138]]){g.fillStyle='#b8302a';g.beginPath();g.arc(px,py,4.5,0,Math.PI*2);g.fill();ink(1.2);}
- g.beginPath();g.rect(0,0,310,196);ink(2.5);g.restore();
- // The shelf of radio sets on the right, behind the transceiver.
- g.fillStyle='#4a4436';g.fillRect(560,150,240,10);g.beginPath();g.rect(560,150,240,10);ink(1.5);
- for(const [bx,by,bw,bh,dials] of [[580,92,96,58,3],[684,74,116,76,4],[600,206,120,64,2],[728,198,72,72,2]]){
-  g.fillStyle='#3d4231';g.fillRect(bx,by,bw,bh);g.fillStyle='rgba(20,22,16,.5)';g.fillRect(bx+6,by+8,bw-12,bh*.38);
-  g.fillStyle='rgba(222,206,150,.85)';g.fillRect(bx+10,by+12,Math.min(40,bw*.35),bh*.18);
-  for(let i=0;i<dials;i++){g.fillStyle='#1d1f18';g.beginPath();g.arc(bx+16+i*(bw-26)/Math.max(1,dials-1),by+bh*.72,6,0,Math.PI*2);g.fill();}
-  g.beginPath();g.rect(bx,by,bw,bh);ink(1.6);}
- g.fillStyle='#4a4436';g.fillRect(560,272,240,8);
- // The desk lamp: a green enamel shade throwing a warm cone down.
- g.save();g.globalCompositeOperation='lighter';const cone=g.createLinearGradient(700,40,700,330);cone.addColorStop(0,'rgba(255,214,140,.28)');cone.addColorStop(1,'rgba(255,214,140,0)');
- g.fillStyle=cone;g.beginPath();g.moveTo(672,46);g.lineTo(736,46);g.lineTo(800,330);g.lineTo(600,330);g.closePath();g.fill();g.restore();
- g.strokeStyle='#2c3024';g.lineWidth=4;g.beginPath();g.moveTo(770,0);g.lineTo(745,20);g.stroke();
- g.fillStyle='#4f6a3e';g.beginPath();g.moveTo(668,48);g.lineTo(740,48);g.lineTo(726,18);g.lineTo(684,18);g.closePath();g.fill();ink(2);
- g.fillStyle='rgba(255,236,190,.95)';g.beginPath();g.ellipse(704,48,30,5,0,0,Math.PI*2);g.fill();
- const big=document.createElement('canvas');big.width=WIDTH;big.height=HEIGHT;const bg=big.getContext('2d');bg.imageSmoothingQuality='high';bg.drawImage(c,0,0,WIDTH,HEIGHT);
- return roomCache=big;
-}
+// The baked room (bake-intro-room.mjs): the hen at her desk in the modelled
+// room, one render inked and split-toned together. A plate holds the frame;
+// only the rectangle around her head changes, one sprite per frame. Then a
+// location card and her line as a subtitle.
 function renderRoom(ctx,t,L){
- ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(roomBackdrop(),0,0);
- const f=frameAt(L.seq,t);if(f.sprite){const [sh,x,y,w,h]=f.sprite;ctx.drawImage(L.sheets[sh],x,y,w,h,f.pos[0],f.pos[1],w,h);}
+ ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(L.plate,0,0);
+ const f=frameAt(L.seq,t),[rx,ry]=L.seq.rect;if(f.sprite){const [sh,x,y,w,h]=f.sprite;ctx.drawImage(L.sheets[sh],x,y,w,h,rx,ry,w,h);}
  finishFrame(ctx,WIDTH,HEIGHT);
  // Location card, then her line as a subtitle (after the grade: titles are not painted).
  const s=L.shot,card=smooth(s.from,s.from+.4,t)*(1-smooth(s.from+2,s.from+2.6,t));
@@ -238,7 +197,7 @@ function renderRoom(ctx,t,L){
 export function createAmbush(canvas,A){
  const ctx=canvas.getContext('2d');
  // Build the tinted puff sprites up front (proof.js: on first use they stalled playback).
- for(let c=0;c<4;c++)for(const tint of ['atop:rgba(246,244,238,.8)','atop:rgba(226,222,212,.72)'])puffSprite(A.smoke,c,tint);
+ for(let c=0;c<4;c++)for(const tint of ['atop:rgba(246,244,238,.8)','atop:rgba(226,222,212,.72)',TRAIL_WARM])puffSprite(A.smoke,c,tint);
  function begin(L,subjectPx,t){const s=L.shot,win=lensWindow(s,t,subjectPx),z=win.zoom*WIDTH/s.camera.window[0];
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#2c3524';ctx.fillRect(0,0,WIDTH,HEIGHT);
   ctx.setTransform(z,0,0,z,WIDTH/2-win.cx*z,HEIGHT/2-win.cy*z);ctx.drawImage(L.plate,0,0);}

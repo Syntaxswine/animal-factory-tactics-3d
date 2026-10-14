@@ -4,10 +4,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import {approachPath,approachAttitude,heliPath,PERSPECTIVE_LIFT,PROOF_START} from '../dist/tactics/intro-sprites/trajectory.js';
-import {SHOTS,shotById,shotSpec,plateName,lensPath,AMBUSH_KEYFRAMES,SAM_LAUNCH} from '../dist/tactics/intro-sprites/ambush.js';
+import {SHOTS,shotById,shotSpec,plateName,lensPath,lensWindow,inWindow,AMBUSH_KEYFRAMES,SAM_LAUNCH,AMBUSH_ATMOSPHERE,shotSector,
+ ROOM_CAMERA,ROOM_LIGHT,ROOM_MIC,HEN_POSE,LINE_SPEECH,lineEnd,beakAt,henPoseAt} from '../dist/tactics/intro-sprites/ambush.js';
+import {ROOM_SET} from '../dist/tactics/intro-sprites/room-set.js';
 import {samSector,samKeepClear,samSectorKey,SAM_SITE,LAUNCH_DIR,SAM_LOOK} from '../dist/tactics/intro-sprites/sam-sector.js';
 import {buildSector,HEIGHT_SCALE,ROCK_DETAIL} from '../dist/tactics/intro-sprites/crash-sector.js';
-import {closeupView} from '../dist/tactics/intro-sprites/closeup.js';
+import {closeupView,closeupSpec,traceRay,sky,CLOSEUP_ATMOSPHERE} from '../dist/tactics/intro-sprites/closeup.js';
 import {planFlora} from '../dist/tactics/intro-sprites/painted-trees.js';
 
 const dir=new URL('../dist/tactics/intro-sprites/',import.meta.url),read=p=>JSON.parse(readFileSync(new URL(p,dir)));
@@ -50,10 +52,56 @@ test('the aircraft banks into the turn and levels for the hit line', ()=>{
 
 test('the nose keeps toward screen right in both approach shots', ()=>{
  for(const id of ['01','03']){const s=shotById(id),V=closeupView(s.camera),a=lensPath(s.from),b=lensPath(s.to),pa=V.project(a.x,a.y,a.h),pb=V.project(b.x,b.y,b.h);
-  assert.ok(pb[0]-pa[0]>300,`${id}: crosses ${(pb[0]-pa[0]).toFixed(0)} px to the right`);
-  // The keyframe catches the aircraft inside the window, clear of its edges.
-  const k=lensPath(AMBUSH_KEYFRAMES[id]),pk=V.project(k.x,k.y,k.h),[W,H]=s.camera.plate;
-  assert.ok(pk[0]>200&&pk[0]<W-200&&pk[1]>100&&pk[1]<H-100,`${id} keyframe at ${pk.map(v=>v.toFixed(0))}`);}
+  assert.ok(pb[0]-pa[0]>300,`${id}: crosses ${(pb[0]-pa[0]).toFixed(0)} px to the right`);}
+});
+
+// Where the aircraft is in the 1600 x 900 frame at t, through the window the
+// player shows (ambush.js lensWindow), and how long it is there.
+function inFrame(s,t){const V=closeupView(s.camera),p=lensPath(t),c=V.project(p.x,p.y,p.h+1.2),win=lensWindow(s,t,c);
+ return {at:inWindow(s,win,c),length:8.65*V.scaleAt(p.x,p.y,p.h)*win.zoom*1600/s.camera.window[0],win};}
+test('the aircraft has presence: large, and whole in the frame for all of 01 and 03', ()=>{
+ // The architect, 2026-10-14: "bring the helicopter closer ... give the aircraft
+ // more presence". Round 1's 01 drew it 190-220 px long; the frame is 1600.
+ for(const id of ['01','03']){const s=shotById(id);
+  for(let t=s.from;t<=s.to+1e-9;t+=.1){const {at,length}=inFrame(s,t);
+   assert.ok(length>=400,`${id} at ${t.toFixed(1)} s: ${length.toFixed(0)} px long`);
+   assert.ok(at[0]-length/2>=0&&at[0]+length/2<=1600&&at[1]>120&&at[1]<780,`${id} at ${t.toFixed(1)} s: in the frame at ${at.map(v=>v.toFixed(0))}`);}}
+});
+
+// What fills a shot's frame at t: a grid of rays through its window, traced
+// through the 4x butte. Sky = a miss looking up; plateau = a hit on its top.
+function frameContents(s,t,n=[48,27]){const V=closeupView(s.camera),{win}=inFrame(s,t),S=shotSector(s,{map,woodland}),k=s.camera.window[0]/1600/win.zoom;let sky=0,plateau=0,all=0;
+ for(let j=0;j<n[1];j++)for(let i=0;i<n[0];i++){const fx=(i+.5)/n[0]*1600,fy=(j+.5)/n[1]*900,px=(fx-800)*k+win.cx,py=(fy-450)*k+win.cy,d=V.ray(px,py),hit=traceRay(S,V.C,d);
+  all++;if(!hit){if(d[2]>0)sky++;}else if(hit.kind==='top'&&hit.lev===2)plateau++;}
+ return {sky:sky/all,plateau:plateau/all};}
+test('the approach shots are framed on the plateau, not the pale sky', ()=>{
+ // 01 "Currently the pale sky dominates"; 03 "show more plateau". Measured the
+ // same way, round 1's 01 was 0.56 sky and 0.09 plateau, its 03 0.85 sky and
+ // 0.15 plateau, and neither had terrain behind the aircraft at any time.
+ const a=frameContents(shotById('01'),AMBUSH_KEYFRAMES['01']),b=frameContents(shotById('03'),AMBUSH_KEYFRAMES['03']);
+ assert.ok(a.sky<.25,'01 sky '+a.sky.toFixed(2));assert.ok(a.plateau>.3,'01 plateau '+a.plateau.toFixed(2));
+ assert.ok(b.sky<.1,'03 sky '+b.sky.toFixed(2));assert.ok(b.plateau>.6,'03 plateau '+b.plateau.toFixed(2));
+ // And the aircraft is seen against the ground, not against the sky.
+ for(const id of ['01','03']){const s=shotById(id),V=closeupView(s.camera),S=shotSector(s,{map,woodland});
+  for(let t=s.from+.5;t<=s.to-.5+1e-9;t+=.5){const p=lensPath(t),c=V.project(p.x,p.y,p.h+1.2);assert.ok(traceRay(S,V.C,V.ray(...c)),`${id} at ${t} s: terrain behind the aircraft`);}}
+});
+
+// plate.js GRADE's tone filter, brightness(1.2) contrast(1.4) saturate(.72),
+// each step clamped like the CSS filter's; the soft light and haze over it only
+// brighten a sky further.
+const graded=c=>{let v=c.map(x=>Math.min(1,x/255*1.2));v=v.map(x=>Math.min(1,Math.max(0,(x-.5)*1.4+.5)));const L=.2126*v[0]+.7152*v[1]+.0722*v[2];return v.map(x=>255*Math.min(1,Math.max(0,x+(1-.72)*(L-x))));};
+const lum=c=>.2126*c[0]+.7152*c[1]+.0722*c[2];
+test("the new shots' sky keeps the missile trail visible; the crash keeps its own sky", ()=>{
+ // The architect, 2026-10-14: "the missile trail disappears into the white
+ // background. Adjust these new shots while preserving the approved crash's
+ // appearance." The trail is the smoke sprite washed 80% toward (246,244,238).
+ const trail=lum(graded([246,244,238])),A=AMBUSH_ATMOSPHERE,C=CLOSEUP_ATMOSPHERE,mid=A.horizon.map((v,i)=>(v+A.top[i])/2);
+ for(const [name,c] of [['horizon',A.horizon],['haze',A.haze],['mid sky',mid]])assert.ok(trail-lum(graded(c))>=40,`${name}: the trail is ${(trail-lum(graded(c))).toFixed(0)} brighter`);
+ assert.ok(Math.max(...graded(A.horizon))<235,'the ambush horizon is not clipped');
+ // Round 1's (the close-up's) horizon went white: the falsifier for the above.
+ assert.ok(trail-lum(graded(C.horizon))<5,"the close-up's sky clips with the trail");
+ for(const s of SHOTS.filter(s=>s.camera))assert.deepEqual(shotSpec(s).atmosphere,A,s.id);
+ assert.equal(closeupSpec().atmosphere,undefined,"the crash close-up's spec is unchanged");
 });
 
 test('the missiles leave toward screen right, as they arrive from screen left in the crash sector', ()=>{
@@ -74,6 +122,33 @@ test('the SAM sector is its own deterministic set with an empty clearing', ()=>{
  assert.notEqual(a.map.name,map.name);
 });
 
+test('the sky has no seam across the wide plates', ()=>{
+ // Its hills and clouds are noise keyed on the bearing, and atan2's bearing
+ // jumps a full turn at due west, which 01's wide plate looks across. Walk
+ // each plate's bearings, left edge to right, at 8.6 degrees up (above every
+ // hill: only sky and clouds there), two pixels a step: no seam.
+ const walk=(s,ahead)=>{const V=closeupView(s.camera),aim=Math.atan2(V.f[1],V.f[0]),at=px=>{const d=V.ray(px,V.cy);let th=Math.atan2(d[1],d[0]);if(th-aim>Math.PI)th-=2*Math.PI;if(th-aim<-Math.PI)th+=2*Math.PI;return th;};
+  const a=at(0),b=at(V.W),phi=.15,step=2/V.focal;let prev=null,worst=0;
+  for(let th=a;th<=b;th+=step){const c=sky([Math.cos(phi)*Math.cos(th),Math.cos(phi)*Math.sin(th),Math.sin(phi)],AMBUSH_ATMOSPHERE,ahead===null?undefined:aim);if(prev)worst=Math.max(worst,...c.map((v,k)=>Math.abs(v-prev[k])));prev=c;}
+  return worst;};
+ for(const s of SHOTS.filter(s=>s.camera))assert.ok(walk(s)<4,`${s.id}: a jump of ${walk(s).toFixed(1)}`);
+ // The falsifier: without the camera's bearing, 01's sky has its seam.
+ assert.ok(walk(shotById('01'),null)>8,'01 without the unwrap: '+walk(shotById('01'),null).toFixed(1));
+});
+
+test('the hen speaks her line: one beak movement a syllable, shut outside it', ()=>{
+ const sy=LINE_SPEECH.syllables.filter(s=>s[0]).length;let cycles=0,open=false,most=0;
+ for(let t=3;t<=10;t+=.005){const b=beakAt(t);most=Math.max(most,b);if(!open&&b>.08){open=true;cycles++;}else if(open&&b<.02)open=false;
+  if(t<LINE_SPEECH.start||t>lineEnd())assert.equal(b,0,'shut at '+t.toFixed(3));}
+ assert.equal(cycles,sy,'opens once per syllable');assert.ok(most<=LINE_SPEECH.maxBeak&&most>.2,'opens up to '+most.toFixed(2));
+ // Her line sits inside her shot.
+ assert.ok(LINE_SPEECH.start>=shotById('02').from+.5&&lineEnd()<=shotById('02').to-.5);
+ // The pose: turned and leaning toward the microphone, the near wing forward
+ // onto the desk (the architect's note), the body still while only the head moves.
+ assert.ok(HEN_POSE.turn>.3&&HEN_POSE.lean>.1&&HEN_POSE.wing[2]>1.2);
+ const a=henPoseAt(5.3),b=henPoseAt(7.1);for(const k of ['turn','lean','wing','wingTip'])assert.deepEqual(a[k],b[k],k+' holds');
+});
+
 test('every perspective shot has its plate and frames, painted for the shot as it is now', ()=>{
  for(const s of SHOTS.filter(s=>s.camera)){
   const meta=read(`plate/${plateName(s)}.json`);assert.deepEqual(meta.spec,shotSpec(s),s.id+': stored plate spec');
@@ -82,5 +157,11 @@ test('every perspective shot has its plate and frames, painted for the shot as i
   const k=AMBUSH_KEYFRAMES[s.id],near=Math.min(...seq.frames.map(f=>Math.abs(f.t-k)));
   assert.ok(near<=(seq.fps?.5/seq.fps:1e-6)+1e-9,`${s.id}: a frame at its keyframe (${near})`);
   for(const f of seq.frames)assert.ok(f.sprite&&f.pos,s.id+' frame at '+f.t+' is drawn');}
- const room=read(shotById('02').frames+'/sequence.json');assert.ok(room.frames.some(f=>Math.abs(f.t-AMBUSH_KEYFRAMES['02'])<1e-6));
+ // The room: baked for the room, light, microphone, pose and line as they are
+ // now, every 20th of a second through the shot, each frame drawn.
+ const room=read(shotById('02').frames+'/sequence.json');
+ assert.deepEqual(room.spec,JSON.parse(JSON.stringify({camera:ROOM_CAMERA,light:ROOM_LIGHT,mic:ROOM_MIC,pose:HEN_POSE,speech:LINE_SPEECH,set:ROOM_SET})),'room spec');
+ assert.equal(room.fps,20);assert.ok(room.from<=shotById('02').from&&room.to>=shotById('02').to);
+ assert.ok(room.frames.some(f=>Math.abs(f.t-AMBUSH_KEYFRAMES['02'])<1e-6));for(const f of room.frames)assert.ok(f.sprite,'room frame at '+f.t);
+ assert.ok(existsSync(new URL(shotById('02').frames+'/'+room.plate,dir)));
 });

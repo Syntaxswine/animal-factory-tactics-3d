@@ -36,7 +36,7 @@ try{
  if(q.get('shot')&&!shot?.camera)throw Error('No perspective shot '+q.get('shot'));
  const t0=performance.now(),sector=shot?AM.shotSector(shot,{map,woodland}):buildSector(map,woodland,{heightScale:HEIGHT_SCALE.closeup,extend:true,detail:ROCK_DETAIL.closeup}),t1=performance.now();
  const cam=shot?.camera||(q.get('cam')?(()=>{const v=q.get('cam').split(',').map(Number),size=(q.get('size')||'1600,900').split(',').map(Number);return {pos:v.slice(0,3),target:v.slice(3,6),hfov:v[6]??50,plate:size,window:size};})():undefined);
- const scale=Number(q.get('scale')||1),view=closeupView(cam,scale),r=paintCloseupPlate({sector,textures,flora},view,{billboards:!q.has('noflora'),keepClear:shot?AM.shotKeepClear(shot):undefined}),t2=performance.now();
+ const scale=Number(q.get('scale')||1),view=closeupView(cam,scale),r=paintCloseupPlate({sector,textures,flora},view,{billboards:!q.has('noflora'),keepClear:shot?AM.shotKeepClear(shot):undefined,atmosphere:shot?AM.AMBUSH_ATMOSPHERE:undefined}),t2=performance.now();
  const shown=document.createElement('canvas');shown.width=r.canvas.width;shown.height=r.canvas.height;const g=shown.getContext('2d');g.drawImage(r.canvas,0,0);
  if(q.has('marks')){g.strokeStyle='#ff3b1f';g.lineWidth=2;
   for(let t=CLOSEUP.start;t<=CLOSEUP.end+1e-9;t+=.2){const p=heliPath(t),a=view.project(p.x,p.y,p.h+1.2);if(!a)continue;g.beginPath();g.arc(a[0],a[1],6,0,Math.PI*2);g.stroke();g.fillStyle='#ff3b1f';g.font='13px monospace';g.fillText(t.toFixed(1),a[0]+8,a[1]-8);}

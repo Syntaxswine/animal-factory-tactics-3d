@@ -10,6 +10,18 @@ export const DEPTH_SHADER={
  vertex:`varying float vz;void main(){vec4 mv=modelViewMatrix*vec4(position,1.0);vz=-mv.z;gl_Position=projectionMatrix*mv;}`,
  fragment:`uniform float near;uniform float far;varying float vz;void main(){float d=clamp((vz-near)/(far-near),0.0,1.0);vec3 e=fract(d*vec3(1.0,255.0,65025.0));e-=e.yzz*vec3(1.0/255.0,1.0/255.0,0.0);gl_FragColor=vec4(e,1.0);}`
 };
+// The same depth, through the skinning chunks, for posed skinned meshes (the
+// hen): the plain shader above reads the bind pose's positions.
+export const SKINNED_DEPTH_SHADER={
+ vertex:`#include <common>
+#include <skinning_pars_vertex>
+varying float vz;void main(){
+#include <begin_vertex>
+#include <skinbase_vertex>
+#include <skinning_vertex>
+vec4 mv=modelViewMatrix*vec4(transformed,1.0);vz=-mv.z;gl_Position=projectionMatrix*mv;}`,
+ fragment:DEPTH_SHADER.fragment
+};
 export function inkSprite(color,normal,depth,{near,far,ink=INK}={}){
  const W=color.width,H=color.height,pad=Math.ceil(ink.silhouette)+1;
  const px=c=>c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data;
@@ -34,10 +46,10 @@ export function inkSprite(color,normal,depth,{near,far,ink=INK}={}){
  return {canvas:out,pad};
 }
 // Render the three passes of whatever is visible in `scene` through `camera`.
-export function renderPasses(T,renderer,scene,camera,W,H){
+export function renderPasses(T,renderer,scene,camera,W,H,{skinned=false}={}){
  const grab=()=>{const c=document.createElement('canvas');c.width=W;c.height=H;c.getContext('2d').drawImage(renderer.domElement,0,0);return c;};
  renderer.render(scene,camera);const color=grab();
- const keep=scene.overrideMaterial,normalMat=new T.MeshNormalMaterial({side:T.DoubleSide}),depthMat=new T.ShaderMaterial({vertexShader:DEPTH_SHADER.vertex,fragmentShader:DEPTH_SHADER.fragment,uniforms:{near:{value:camera.near},far:{value:camera.far}},side:T.DoubleSide});
+ const keep=scene.overrideMaterial,normalMat=new T.MeshNormalMaterial({side:T.DoubleSide}),depthMat=new T.ShaderMaterial({vertexShader:(skinned?SKINNED_DEPTH_SHADER:DEPTH_SHADER).vertex,fragmentShader:DEPTH_SHADER.fragment,uniforms:{near:{value:camera.near},far:{value:camera.far}},side:T.DoubleSide});
  scene.overrideMaterial=normalMat;renderer.render(scene,camera);const normal=grab();
  scene.overrideMaterial=depthMat;renderer.render(scene,camera);const depth=grab();
  scene.overrideMaterial=keep;normalMat.dispose();depthMat.dispose();
