@@ -1,6 +1,9 @@
 // Foliage is an overlay: each cell stores [density percent, blocks walking].
 // Ground remains authoritative for the plants' habitat and survives clearing.
 import {BIOME_TERRAIN} from './biome-gameplay-data.js';
+import {PROPS} from './environment.js';
+import {SITE_PROPS} from './strategic-site-rules.js';
+import {SCENERY_PROPS} from './scenery-catalog.js';
 const natural=new Set(['yard','ground-grass','ground-dirt','ground-gravel','woodland','woodland-dense',...Object.keys(BIOME_TERRAIN)]);
 export const foliageGround=terrain=>natural.has(terrain);
 export const foliageKey=(x,y,z=0)=>`${x},${y},${z}`;
@@ -9,8 +12,32 @@ export function foliageAt(map,x,y,z=0){
  const terrain=foliageTerrain(map,x,y,z);if(!foliageGround(terrain))return null;
  return map.foliage?.[foliageKey(x,y,z)]||(terrain==='woodland-dense'?[100,true]:terrain==='woodland'?[100,false]:null);
 }
-export const foliageBlocks=(map,x,y,z=0)=>!(map.knowledge&&!map.knowledge.has(z?foliageKey(x,y,z):`${x},${y}`))&&foliageAt(map,x,y,z)?.[1]===true;
+export const foliageBlocks=(map,x,y,z=0)=>!(map.knowledge&&!map.knowledge.has(z?foliageKey(x,y,z):`${x},${y}`))&&(foliageAt(map,x,y,z)?.[1]===true||foliageTreeAt(map,x,y,z));
 export const foliageDepth=(map,x,y,z=0)=>(foliageAt(map,x,y,z)?.[0]||0)/100;
+const treeHash=(x,y,seed)=>{let n=Math.imul(x,374761393)^Math.imul(y,668265263)^Math.imul(seed,1442695041);n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967296;};
+// Open woodland has isolated trunk tiles, never a solid wall of shrub cover.
+// One candidate per 7x7 block, jittered by one tile, leaves at least four clear
+// tiles between trunks even at maximum density. Collision and art use this rule.
+export function foliageTreeAt(map,x,y,z=0){
+ const cover=foliageAt(map,x,y,z);if(!cover||cover[1])return false;
+ const seed=((map.environment?.field.seed??173)&0x7fffffff)+z*911,ox=(map.environment?.origin?.[0]||0)*240,oy=(map.environment?.origin?.[1]||0)*240,wx=x+ox,wy=y+oy,gx=Math.floor(wx/7),gy=Math.floor(wy/7);
+ if(wx!==gx*7+2+Math.floor(treeHash(gx,gy,seed+83)*3)||wy!==gy*7+2+Math.floor(treeHash(gx,gy,seed+197)*3)||treeHash(gx,gy,seed+419)*100>=cover[0])return false;
+ // Never plant in narrow strips or along the edge of a clearing or upper floor.
+ for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
+  const c=foliageAt(map,x+dx,y+dy,z);if(!c||c[1])return false;
+  for(let above=z+1;above<=(map.upper?.length||0);above++){const t=map.upper[above-1]?.[`${x+dx},${y+dy}`];if(t&&t!=='void')return false;}
+ }
+ const definition=map.definition||map,near=p=>(p.z||0)===z&&Math.abs(p.x-x)<=2&&Math.abs(p.y-y)<=2;
+ if([...(definition.starts||[]),...(definition.guards||[]),...(definition.exits||[])].some(near))return false;
+ if((map.stairs||[]).some(p=>(p.z===z||p.z+1===z)&&near({...p,z})))return false;
+ if((map.climbs||[]).some(p=>near(p)||near({x:p.x+p.dx,y:p.y+p.dy,z:p.z+1})))return false;
+ for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)for(const axis of ['e','s'])if(map.edges?.[`${axis}:${x+dx}:${y+dy}${z?':'+z:''}`])return false;
+ for(const p of definition.props||map.props||[]){
+  if((p.z||0)<z)continue;const rule=SITE_PROPS[p.kind]||SCENERY_PROPS[p.kind]||PROPS[p.kind]||{w:1,h:1},w=p.rotated?rule.h:rule.w,h=p.rotated?rule.w:rule.h;
+  if(p.x<=x+2&&p.x+w-1>=x-2&&p.y<=y+2&&p.y+h-1>=y-2)return false;
+ }
+ return true;
+}
 export function foliageErrors(map,size=240){
  if(map.foliage===undefined)return [];
  if(!map.foliage||typeof map.foliage!=='object'||Array.isArray(map.foliage))return ['Invalid foliage overlay.'];

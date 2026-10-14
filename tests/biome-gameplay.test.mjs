@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../dist/tactics/vendor/three.module.js';
 import {biomePlans,biomeFamilyAt,biomeEnabled,BIOME_TERRAIN} from '../dist/tactics/biome-gameplay.js';
-import {BiomeScene,mixedBiomeFill} from '../dist/tactics/biome-scene.js';
+import {BiomeScene,mixedBiomeFill,OPEN_WOODLAND_PLANTS} from '../dist/tactics/biome-scene.js';
+import {foliageTreeAt} from '../dist/tactics/foliage-data.js';
 import {biomeMixAt,createMapGroundPaint} from '../dist/tactics/biome-map-paint.js';
 import {BIOME_FAMILIES} from '../dist/tactics/biome-foliage-data.js';
 import {generateEnvironments,localEnvironmentProfile} from '../dist/tactics/environment-regions.js';
@@ -10,10 +11,12 @@ import {blank} from '../dist/tactics/overmap-model.js';
 import {blankMap,parseMap,passable} from '../dist/tactics/core/maps.js';
 import {EditingDocument} from '../dist/tactics/editor-3d-controller.js';
 import {extractBlock,placeBlock} from '../dist/tactics/core/blocks.js';
-import {createGame} from '../dist/tactics/core/engine.js';
+import {createGame,pathTo} from '../dist/tactics/core/engine.js';
 import {startEncounterClock} from '../dist/tactics/encounter-clock.js';
 import {captureEncounter,restoreEncounter} from '../dist/tactics/encounter-save.js';
 import {tilePreview} from '../dist/tactics/editor-tool-previews.js';
+import {buildWorld} from '../dist/tactics/hybrid-world.js';
+import {environmentVisuals} from '../dist/tactics/environment-visuals.js';
 import fs from 'node:fs';
 
 function small(size=24){return {terrain:Array.from({length:size},()=>Array(size).fill('ground-grass')),upper:[{},{}],props:[],foliage:{}};}
@@ -58,12 +61,33 @@ for(const family of Object.keys(BIOME_FAMILIES))test(`${family} uses the same sa
  const scene=new T.Scene(),errors=[],biomes=new BiomeScene(scene,{loadAsync:async()=>new T.Texture()},()=>{},e=>errors.push(e));
  try{assert.equal(biomes.rebuild(map,null,2),false);await biomes.loading;assert.equal(biomes.rebuild(map,null,2),true);assert.equal(errors.length,0);assert.equal(biomes.terrains.length,1);
   const t=biomes.terrains[0];assert.equal(t.stats.blockedCells,242);assert.ok(biomes.instances.length);for(const tree of t.trees)assert.ok(tree.bounds.max[0]<11.5,'Canopy must not cross the clear column');
+  assert.ok(biomes.openTrees.length>0,'passable woodland includes scattered trees');
+  for(const tree of biomes.openTrees){assert.ok(BIOME_FAMILIES[family].trees.includes(tree.id));assert.ok(foliageTreeAt(map,tree.x,tree.y,tree.z));assert.equal(passable(map,tree),false);}
+  const fallback=environmentVisuals(buildWorld(map),map);for(const tree of biomes.openTrees)assert.ok(fallback.some(b=>b.kind==='prop'&&b.source.x===tree.x&&b.source.y===tree.y),'trunk remains visible while atlases load or fail');
+  assert.ok(!/shrub|scrub|broadleaf|marsh-leaves/.test(OPEN_WOODLAND_PLANTS[family]),'open understory is grass, reeds or ferns, not shrub clumps');
   const groups=biomes.terrains.map(t=>t.root);biomes.rebuild(map,null,2);assert.deepEqual(biomes.terrains.map(t=>t.root),groups,'unchanged maps reuse their geometry');
   const seen=new Set(['5,5']);biomes.rebuild({...map,concealedInteriors:new Set(['5,5'])},seen,0);const visibility=biomes.layers.get(0).texture;assert.equal(visibility.image.data[5*24+5],0);
   biomes.rebuild(map,seen,0);assert.equal(visibility.image.data[5*24+5],255);assert.equal(visibility.image.data[5*24+6],0);
   for(const material of biomes.layerMaterials.values()){const shader={uniforms:{},vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader};biomes.decorate(material,0,24);material.onBeforeCompile(shader);assert.equal((shader.vertexShader.match(/varying vec2 vBiomeVisibility;/g)||[]).length,1);}
   const texture=biomes.layers.get(0).texture;let released=0;texture.addEventListener('dispose',()=>released++);biomes.dispose();biomes.dispose();assert.equal(released,1);assert.equal(scene.children.length,0);
  }finally{biomes.dispose();}
+});
+
+test('open woods leave connected walking gaps, keep trunk positions after saving, and protect access and clearings',()=>{
+ const map=blankMap();map.foliage={};for(let y=25;y<60;y++)for(let x=25;x<60;x++)map.foliage[`${x},${y},0`]=[100,false];
+ const trees=m=>Object.keys(m.foliage).map(key=>{const [x,y,z]=key.split(',').map(Number);return {x,y,z};}).filter(p=>foliageTreeAt(m,p.x,p.y,p.z));
+ const initial=trees(map);assert.ok(initial.length>10);assert.ok(initial.length<35,'even maximum density stays an open stand');
+ for(const a of initial)for(const b of initial)if(a!==b)assert.ok(Math.hypot(a.x-b.x,a.y-b.y)>=5,'wide gaps between trunks');
+ const tree=initial[0],state=createGame(5,map,false),merc=state.units[0];Object.assign(merc,{x:tree.x-2,y:tree.y,z:0});state.seen=new Set(Object.keys(map.foliage).map(k=>k.slice(0,-2)));
+ const route=pathTo(state,merc,tree.x+2,tree.y);assert.ok(route?.length);assert.ok(route.every(p=>!foliageTreeAt(state,p.x,p.y,p.z||0)),'walk around the visible trunk');
+ assert.equal(passable({...state,knowledge:new Set()},tree),true,'unseen trunks do not leak into navigation');
+ startEncounterClock(state);assert.deepEqual(trees(restoreEncounter(captureEncounter(state))),initial);
+ for(const kind of ['ground-asphalt','water']){const copy=structuredClone(map);copy.terrain[tree.y][tree.x+1]=kind;assert.equal(foliageTreeAt(copy,tree.x,tree.y),false);}
+ for(const key of ['starts','exits','guards']){const copy=structuredClone(map);copy[key]=[{x:tree.x+1,y:tree.y,z:0}];assert.equal(foliageTreeAt(copy,tree.x,tree.y),false);}
+ const roof=structuredClone(map);roof.upper[0][`${tree.x},${tree.y}`]='floor';assert.equal(foliageTreeAt(roof,tree.x,tree.y),false,'no trees through an overhead floor');
+ const copy=structuredClone(map);copy.stairs=[{x:tree.x+1,y:tree.y,z:0,kind:'ladder'}];assert.equal(foliageTreeAt(copy,tree.x,tree.y),false);
+ const prop=structuredClone(map);prop.props=[{x:tree.x-4,y:tree.y,z:0,kind:'site-radio'}];assert.equal(foliageTreeAt(prop,tree.x,tree.y),false,'full structure footprint stays free');
+ const d=new EditingDocument().open(JSON.stringify(map));assert.ok(d.apply({tool:'clear-foliage',start:tree,end:tree,options:{foliageShape:'square',foliageSize:1}}).ok);assert.equal(foliageTreeAt(d.map,tree.x,tree.y),false);d.undo();assert.deepEqual(trees(d.map),initial);d.redo();assert.equal(foliageTreeAt(d.map,tree.x,tree.y),false);
 });
 test('ground clones keep shared uniforms out of serialized user data and separate GLSL preprocessor lines',()=>{
  const paint=createMapGroundPaint(small(),0,new T.Texture());try{const clone=paint.ground.clone(),shader={uniforms:{},vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader};assert.deepEqual(clone.userData,{});paint.ground.onBeforeCompile(shader);assert.doesNotMatch(shader.fragmentShader,/}#define/);assert.ok(shader.uniforms.biomeWeightsA);clone.dispose();}finally{paint.dispose();}

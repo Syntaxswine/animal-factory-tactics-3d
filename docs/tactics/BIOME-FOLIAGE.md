@@ -6,17 +6,31 @@ The original art package supplies reusable Three.js factories, exported ground i
 
 ## Editor and gameplay integration
 
-- **Foliage** paints density and passability on outdoor levels 1–3. Passable cells receive low plants; blocked areas receive continuous painted ground, broad low-poly masses and crown-safe trees. The artist's study mask is never substituted for authored foliage.
+- **Foliage** paints density and passability on outdoor levels 1–3. Passable areas are light woods: widely spaced trees above grass, reeds or ferns, with no continuous shrub fill. Only isolated trunk tiles block walking; the same deterministic positions drive rendering and pathfinding. Tree candidates need a clear 5×5 patch and stay away from roads, clearings, structures, starts and access points. Blocked areas receive continuous painted ground, broad low-poly masses and crown-safe trees. The artist's study mask is never substituted for authored foliage.
 - **Tiles** includes Jungle floor, Temperate meadow, Snow and winter grass, Dry grassland and Wetland grass, with previews of the actual paint. These override automatic family selection locally. Ordinary grass follows the overmap environment profile; older maps without a profile keep a temperate default, with dry plants on dirt/gravel.
 - Existing broadleaf/pine objects, including large forms and their rotation, select matching tree models. Their existing trunk collision rules remain unchanged.
 - `biome-gameplay.js` adapts the saved map into per-floor/family plans. It protects water, roads, object footprints and missing upper surfaces, and uses the actual 2 m cliff cap height. `biome-map-paint.js` blends ground families, including a halo matching adjacent sector profiles. `biome-scene.js` is shared by the inspection and battle renderers.
-- Plans and art placement are deterministic. Saves and blocks retain their existing ground/foliage metadata, so there is no extra generated art state to migrate. Density does not change passability.
+- Plans and art placement are deterministic. Saves and blocks retain their existing ground/foliage metadata, so there is no extra generated art state to migrate. Density changes grass and the number of isolated trees, but even maximum-density passable woods keep wide walking gaps. Impassable areas block every painted cell regardless of visual density.
 - Fog clips terrain and plant fragments; batches containing unexplored ground do not cast revealing shadows. Level visibility and editor dimming are preserved. At overview scale, small passable plants are omitted and dense forest uses simplified tree silhouettes.
 - Detailed forest paint uses owned module workers and a shared budget of at most 16 resident pages across active plans. Replacing or closing a scene terminates its workers and releases its textures and geometry. Existing visuals remain available while the new atlases load or if loading fails.
 
 Open `tactics/editor-3d.html?editing=1&study=biomes` for an editable five-family fixture with a narrow passage and foliage on all three playable levels. Its Playtest button uses the normal editor handoff. `tactics/battle-3d.html?study=biomes` opens the same fixture directly.
 
 Strategic environment profiles and their base ground edges match across sectors. Connected forest debris is generated within the loaded local map and respects its mask; it does not yet join a log or shrub across two independently authored sector borders. Actual campaign sector-template assignment remains separate work.
+
+## Additional blocker artwork for the architect
+
+Passability describes whether a character can cross an area, not what it is made of. Rocks, ravines, brambles and bogs can all block movement. Their concealment, ballistic cover, height and climbability must remain separate gameplay properties; a bare ravine must not acquire foliage concealment simply because it blocks walking.
+
+The current art already covers open woodland trees/understory, jungle root tangles, temperate bramble/deadfall, dry thorn thickets, snowy windthrow/drifts and wetland bogs. No replacement trees or shrubs are needed for the current integration.
+
+Additional asset requests, in priority order:
+
+1. **Rock and boulder fields.** Individual 1×1, 1×2 and 2×2 obstacles plus a connected scree/rock-fill surface. Supply a sparse rocky margin and a densely blocked interior, with 3–4 silhouette variants and paint variations for all five environments. Keep the actual blocked footprint explicit so visible gaps can remain walkable.
+2. **Ravine / fissure kit.** A continuous open cut with straight sections, bends, inner/outer corners, ends and junctions; include stepped diagonal edges and an optional widened interior. It needs near and far banks, readable vertical depth, and adjoining ground that accepts the local biome paint. Author to the existing tile grid and level-height conventions. Expose the void footprint and edge profiles rather than baking in a walkable floor. Climbable faces and crossings are separate choices.
+3. **Shared transitions.** For both sets, provide clear boundary/margin pieces that meet open grass, light woods and existing cliffs without a visible square rim. Snow, moss, dust and wet staining should mostly come from skins rather than added small meshes.
+
+For every kit, record stable IDs, bounds, occupied cells, pivot/orientation and edge attachment profiles; identify which rotations/mirrors are supported. Include a joined-patch study, a narrow walkable-gap study and a raised-level example. Rendering may overhang a blocked footprint, but it must not visually close a declared walking route. Keep large-area fills low-poly and batchable, with simplified distant forms where needed. This is an art handoff; rock/ravine brush modes and their new gameplay rules are not part of the current foliage integration.
 
 Integration verification (2026-10-13): the focused art/foliage/environment/packaging suite passes, including 13 new gameplay integration cases. Browser checks covered the overmap's Snow preview, the five-family editor fixture, its normal Playtest handoff, and painting/undo/redo on the raised third level. Core regeneration and the 3D Pages build pass. These results do not replace slower-hardware performance testing.
 

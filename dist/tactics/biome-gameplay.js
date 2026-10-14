@@ -1,4 +1,4 @@
-import {foliageAt,foliageTerrain,foliageGround} from './foliage-data.js';
+import {foliageAt,foliageTerrain,foliageGround,foliageTreeAt} from './foliage-data.js';
 import {localEnvironmentFamily} from './environment-regions.js';
 import {isCliff} from './cliff-map.js';
 import {propCells} from './environment.js';
@@ -44,6 +44,7 @@ export function biomePlans(map){
    includeAt:(x,y)=>familyAt[index(x,y)]===family,
    naturalAt:(x,y)=>natural[index(x,y)]===1,
    familyAt:(x,y)=>familyAt[index(x,y)],
+   treeAt:(x,y)=>foliageTreeAt(map,x,y,level),
    passableCells:()=>{const result=[];for(let y=0;y<depth;y++)for(let x=0;x<width;x++){const i=y*width+x;if(familyAt[i]===family&&density[i]&&!blocked[i])result.push({x,y,height:heights[i],density:density[i]});}return result;}
   });
  }
