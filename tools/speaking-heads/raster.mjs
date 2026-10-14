@@ -12,7 +12,8 @@ const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 
 // view: {dir: from the eye toward the subject, up, center, scale (px per unit), width, height}.
-// meshes: [{position (flat xyz), index, normal? (flat), color? [r,g,b] 0..1, colors? (flat rgb)}].
+// meshes: [{position (flat xyz), index, normal? (flat), color? [r,g,b] 0..1, colors? (flat rgb),
+//  values? (flat, k per vertex) with paint(values) -> [r,g,b] for each pixel, as a shader would}].
 // Returns {rgba, depth (larger is nearer, -Infinity where empty), width, height}.
 export function render(meshes,view,{background=[0.55,0.55,0.53],light=[.45,.75,.5],ambient=.38,wire=false}={}){
  const W=view.width,H=view.height,d=norm(view.dir),right=norm(cross(d,view.up)),up=cross(right,d),L=norm(light),c=view.center,s=view.scale;
@@ -25,6 +26,7 @@ export function render(meshes,view,{background=[0.55,0.55,0.53],light=[.45,.75,.
   for(let t=0;t<ix.length;t+=3){
    const a=ix[t],b=ix[t+1],e=ix[t+2];
    const area=(sx[b]-sx[a])*(sy[e]-sy[a])-(sx[e]-sx[a])*(sy[b]-sy[a]);
+   if(Math.abs(area)<1e-9)continue;                // edge-on or folded flat (a closed mouth's lips)
    if(area>=0&&!m.doubleSided)continue;           // counter-clockwise on screen is front-facing (y down)
    const x0=Math.max(0,Math.floor(Math.min(sx[a],sx[b],sx[e]))),x1=Math.min(W-1,Math.ceil(Math.max(sx[a],sx[b],sx[e])));
    const y0=Math.max(0,Math.floor(Math.min(sy[a],sy[b],sy[e]))),y1=Math.min(H-1,Math.ceil(Math.max(sy[a],sy[b],sy[e])));
@@ -38,6 +40,7 @@ export function render(meshes,view,{background=[0.55,0.55,0.53],light=[.45,.75,.
     if(area>=0)nn=nn.map(v=>-v);
     const lit=ambient+(1-ambient)*Math.max(0,dot(nn,L))+.12*Math.pow(Math.max(0,1+dot(nn,d)),3)*0;
     let col=m.color||[.72,.71,.68];if(m.colors){const C=m.colors;col=[0,1,2].map(q=>w0*C[a*3+q]+w1*C[b*3+q]+w2*C[e*3+q]);}
+    if(m.paint){const V=m.values,k=V.length/n,v=[];for(let q=0;q<k;q++)v.push(w0*V[a*k+q]+w1*V[b*k+q]+w2*V[e*k+q]);col=m.paint(v);}
     if(wire){const edge=Math.min(w0,w1,w2)*Math.abs(area)/Math.max(Math.hypot(sx[b]-sx[a],sy[b]-sy[a]),Math.hypot(sx[e]-sx[b],sy[e]-sy[b]),Math.hypot(sx[a]-sx[e],sy[a]-sy[e]));if(edge<.6)col=col.map(v=>v*.35);}
     rgba[k*4]=Math.min(255,col[0]*lit*255);rgba[k*4+1]=Math.min(255,col[1]*lit*255);rgba[k*4+2]=Math.min(255,col[2]*lit*255);
    }

@@ -1,169 +1,177 @@
-// Each character's mouth, in its head's sculpt space (heads.mjs): where the lips meet and how
-// far back the mouth runs, the jaw joint, how the jaw's weight blends into cheeks and throat,
-// the cavity behind the lips, the teeth and the tongue. Placed by the character's painted face:
-// the lip line is the painted mouth line (docs/tactics/SPEAKING-HEADS.md, the reference sheets).
-//  lip      the line where the lips meet: y at x, rising `slope` per unit x and `smile` toward
-//           the corners (in full from |z| = width)
-//  corner   where the mouth ends: behind x and beyond |z| < z the slit ends round; in front of
-//           them the lips' weights part over `open` (and in from the sides over `zOpen`). A mouth
-//           whose corners lie on the cheeks has z beyond the face (.2); a mouth on the front of
-//           a broad muzzle (bull, rabbit) ends at its z
-//  hinge    the jaw joint (the jaw bone turns about Z through it)
-//  lipDepth how far from the slit the lips are rigidly on their own side (default 2 cm)
-//  band     how far above and below the lip line the jaw's weight blends: `mid` inside the
-//           mouth, `cheek` from |z| = z0 to z1 outward
-//  throat   the jaw's underside, as an angle (degrees) from the jaw joint, forward and down:
-//           below that ray the throat and jowls stay with the head (weight fades over `blend`)
-//  back     the back of the jaw: weight fades behind x, over `blend`
-//  cavity   the mouth behind the lips: inside the head deeper than `wall`, from `floor` below
-//           the lip line to `roof` above it, within `width` of the middle, in front of x `back`
-//  teeth    rows along an arch: count, x at the middle, arch (how far back the ends sit), half
-//           width of the row, tip (how far past the lip line a tip reaches), length, tooth
-//           half-width and half-depth; `lengths`/`widths` per tooth where they differ
-//  tongue   tip and back x, half width, thickness, drop (below the lip line)
-//  lowerLip ellipsoids [centre, radii, blend] added under the lip line where the approved head is
-//           too thin there to part (the bull)
-//  slit     the slit's width where fully open; round, how round its edges and the cavity's
-//  partWall how far inside the approved surface the teeth and tongue are kept
-//  seal     how far from the lip line the rest pose's closing reaches
+// Each character's mouth, in its head's sculpt space (heads.mjs). Placed by the character's
+// painted face: the lip line is the painted mouth line (docs/tactics/SPEAKING-HEADS.md, the
+// reference sheets). sculpt.mjs says how each part is used.
+//  lip      where the lips meet, on the painted mouth line: its height along the head (a curve
+//           through `line`'s knots [x, y]; or y at x rising `slope` per unit x), plus its rise
+//           across the head (a curve through `across`'s knots [|z|, rise]; or `smile` toward the
+//           corners, in full from |z| = width). The knots were fitted to the painted line traced
+//           off each approved head (tools/speaking-heads/fit-lips.mjs); `x`, `y` are a point on the
+//           line near the front. In front of where a beak's gap ends, its `mandibles` say which side
+//           a point is (the distance to the lower minus the upper)
+//  corner   where the mouth ends: the lips part in front of x (and within |z| < z: a mouth on the
+//           front of a muzzle; .2 is beyond any face), each wholly on its own side from `open`
+//           in front of x (and `zOpen` inside z)
+//  gap      how far the lips are parted in the space the head is sculpted in (folded shut at rest),
+//           tapering out over `taper` behind the corners
+//  hinge    the jaw's joint (the jaw bone turns about z through it)
+//  rigid    a beak's mandibles are rigid: the lower one's weight ramps over this much at the hinge
+//  band     how far above and below the lip line the cheeks' weight blends behind the corners:
+//           `mid` inside the mouth (|z| < z0), `cheek` from |z| = z1 outward
+//  jawLine  the mandible's outline is read off the profile (sculpt.mjs jawLines): `margin` below
+//           the underside, the jaw's angle where it last rises steeply (`steep`) or at x `a`, and
+//           the throat's blend behind and below it (`blend`, by default 0.4 x angle-to-joint)
+//  cavity   the mouth behind the lips: `floor` below the cut to `roof` above it, `wall` inside the
+//           cheeks and no wider than `width` (narrowing by `taper` toward the back), `front`
+//           behind the front of the lips, in front of x `back`, never nearer the surface than
+//           `wallMin`, edges rounded over `round`
+//  cheeks   the mouth's sides between the parted lips are closed by skin stretched from the upper
+//           lip to the lower (sculpt.mjs: the slab); it opens at the front within `window` of the
+//           middle, its ends walls across the slab with their edges rounded over `windowEnd`
+//  pad      a ruminant's dental pad on the front of the roof: its bottom `bottom` above the cut,
+//           half-height, half-depth and half-width
+//  teeth    rows on an arch inside the lips: jaw, kind (incisor, canine), count, half (arc length
+//           from the middle to the outer teeth), width and depth (half-sizes along and across the
+//           arch), tip (how far past the cut), embed (into the gum), inset (further in), lean
+//  tongue   on the floor behind the lower teeth: half-width at most `width`; its top `below` the
+//           cut at the tip rising to `rise` above it at the back
+//  reach    how far from the cut the mouth can be (where the cavity is looked for)
 import {henGape} from './heads.mjs';
 
-const common={slit:.010,round:.004,seal:.018,reach:.09,step:.0025,partWall:.0022,band:{mid:.006,cheek:.034,z0:.025,z1:.06}};
-const ends=(n,end,mid)=>Array.from({length:n},(_,i)=>i===0||i===n-1?end:mid);
+const common={gap:.008,edge:.001,reach:.09,step:.0025,taper:.01,teethGap:.0008,
+ band:{mid:.006,cheek:.034,z0:.04,z1:.07},
+ cavity:{roof:.010,floor:.006,width:.03,taper:.2,wall:.010,front:.006,wallMin:.004,round:.004},
+ cheeks:{window:.018,windowEnd:.002}};
+const mouth=o=>({...common,...o,band:{...common.band,...o.band},cavity:{...common.cavity,...o.cavity},cheeks:o.cheeks===null?null:{...common.cheeks,...o.cheeks}});
+const incisors=(jaw,count,half,width,depth,tip=.0045,o={})=>({jaw,kind:'incisor',count,half,width,depth,tip,embed:.003,...o});
+const canines=(jaw,half,size,tip,o={})=>({jaw,kind:'canine',count:2,half,width:size,depth:size,tip,embed:.004,...o});
+const tongue=(width,o={})=>({width,embed:.0015,rise:.002,below:.002,backInset:.015,gap:.003,clear:.0015,...o});
+const ruminantPad=half=>({bottom:.005,height:.004,depth:.005,half,inset:.001});
 
 export const MOUTHS={
- horse:{...common,
-  lip:{x:.245,y:1.3255,slope:-.28,smile:0,width:.04},
-  corner:{x:.17,z:.2,zOpen:.02},
-  hinge:[-.035,1.43],
-  throat:{angle:-45,blend:10},
-  back:{x:0,blend:.03},
-  cavity:{back:.05,roof:.010,floor:.006,width:.032,wall:.008},
-  teeth:[{jaw:'upper',count:6,x:.238,arch:.018,half:.021,tip:.005,length:.016,width:.0045,depth:.004},
-   {jaw:'lower',count:6,x:.229,arch:.018,half:.020,tip:.0015,length:.015,width:.0043,depth:.004}],
-  tongue:{tip:.22,back:.06,width:.029,thick:.015,drop:.001}
- },
- goat:{...common,
-  lip:{x:.19,y:1.3843,slope:0,smile:.004,width:.045},
-  corner:{x:.13,z:.2,zOpen:.02},
-  hinge:[-.03,1.42],
-  throat:{angle:-45,blend:10},
-  back:{x:0,blend:.03},
-  cavity:{back:.035,roof:.009,floor:.006,width:.026,wall:.007},
-  teeth:[{jaw:'lower',count:8,x:.179,arch:.018,half:.019,tip:-.0005,length:.012,width:.0033,depth:.0024}],
-  tongue:{tip:.17,back:.045,width:.023,thick:.015,drop:.001}
- },
- bull:{...common,
-  lowerLip:[[[.185,1.343,0],[.04,.012,.052],.012]],
-  lip:{x:.215,y:1.3538,slope:0,smile:0,width:.068},
-  corner:{x:.14,z:.2,zOpen:.02},
-  hinge:[-.03,1.43],
-  band:{mid:.006,cheek:.024,z0:.04,z1:.07},
-  throat:{angle:-40,blend:10},
-  back:{x:.02,blend:.03},
-  cavity:{back:.04,roof:.010,floor:.006,width:.05,wall:.008},
-  teeth:[{jaw:'lower',count:8,x:.205,arch:.02,half:.035,tip:-.0005,length:.015,width:.0048,depth:.0032}],
-  tongue:{tip:.20,back:.05,width:.047,thick:.015,drop:.001}
- },
- cow:{...common,
-  lip:{x:.178,y:1.3845,slope:-.19,smile:.001,width:.05},
-  corner:{x:.119,z:.2,zOpen:.02},
-  hinge:[-.02,1.44],
-  throat:{angle:-42,blend:10},
-  back:{x:0,blend:.025},
-  cavity:{back:.03,roof:.010,floor:.006,width:.036,wall:.008},
-  teeth:[{jaw:'lower',count:8,x:.178,arch:.022,half:.027,tip:-.0005,length:.0145,width:.0042,depth:.0028}],
-  tongue:{tip:.172,back:.04,width:.033,thick:.015,drop:.001}
- },
- donkey:{...common,
-  lip:{x:.21,y:1.302,slope:-.08,smile:0,width:.05},
-  corner:{x:.15,z:.2,zOpen:.02},
-  hinge:[-.04,1.36],
-  throat:{angle:-45,blend:10},
-  back:{x:-.01,blend:.03},
-  cavity:{back:.03,roof:.010,floor:.006,width:.03,wall:.008},
-  teeth:[{jaw:'upper',count:6,x:.198,arch:.016,half:.019,tip:.005,length:.015,width:.0042,depth:.0038},
-   {jaw:'lower',count:6,x:.19,arch:.016,half:.018,tip:.0015,length:.014,width:.004,depth:.0036}],
-  tongue:{tip:.185,back:.04,width:.027,thick:.015,drop:.001}
- },
- sheep:{...common,
-  lip:{x:.175,y:1.374,slope:0,smile:.002,width:.045},
-  corner:{x:.11,open:.03,z:.2,zOpen:.02},
-  hinge:[-.02,1.43],
-  throat:{angle:-45,blend:10},
-  back:{x:.01,blend:.03},
-  cavity:{back:.03,roof:.009,floor:.006,width:.03,wall:.008},
-  teeth:[{jaw:'lower',count:8,x:.157,arch:.018,half:.022,tip:-.0005,length:.012,width:.0036,depth:.0025}],
-  tongue:{tip:.152,back:.04,width:.027,thick:.015,drop:.001}
- },
- skunk:{...common,
-  lip:{x:.165,y:1.3837,slope:0,smile:0,width:.035},
-  corner:{x:.10,open:.025,z:.2,zOpen:.02},
-  hinge:[-.03,1.44],
-  throat:{angle:-42,blend:10},
-  back:{x:0,blend:.03},
-  cavity:{back:.03,roof:.008,floor:.005,width:.024,wall:.007},
-  teeth:[{jaw:'upper',count:8,x:.158,arch:.016,half:.017,tip:.003,length:.008,lengths:ends(8,.0115,.008),width:.0026,widths:ends(8,.0032,.0026),depth:.0025},
-   {jaw:'lower',count:8,x:.151,arch:.016,half:.016,tip:.0005,length:.007,lengths:ends(8,.010,.007),width:.0024,widths:ends(8,.003,.0024),depth:.0024}],
-  tongue:{tip:.152,back:.04,width:.021,thick:.015,drop:.001}
- },
- 'pig-foreman':{...common,
-  lip:{x:.205,y:1.386,slope:-.15,smile:0,width:.05},
-  corner:{x:.15,z:.2,zOpen:.02},
-  hinge:[-.02,1.42],
-  band:{mid:.006,cheek:.026,z0:.035,z1:.065},
-  throat:{angle:-35,blend:10},
-  back:{x:.02,blend:.035},
-  cavity:{back:.04,roof:.009,floor:.006,width:.045,wall:.009},
-  teeth:[{jaw:'upper',count:6,x:.182,arch:.016,half:.024,tip:.004,length:.011,width:.0045,depth:.0032},
-   {jaw:'lower',count:8,x:.176,arch:.02,half:.03,tip:.001,length:.010,lengths:ends(8,.016,.010),width:.0042,widths:ends(8,.005,.0042),depth:.0032}],
-  tongue:{tip:.175,back:.05,width:.042,thick:.015,drop:.001}
- },
- 'pig-director':{...common,
-  lip:{x:.21,y:1.452,slope:-.1,smile:.012,width:.07},
-  corner:{x:.10,z:.075,zOpen:.03},
-  hinge:[-.03,1.48],
-  band:{mid:.006,cheek:.03,z0:.04,z1:.08},
-  throat:{angle:-24,blend:10},
-  back:{x:.09,blend:.04},
-  cavity:{back:.05,roof:.009,floor:.006,width:.05,wall:.010},
-  teeth:[{jaw:'upper',count:6,x:.19,arch:.02,half:.03,tip:.004,length:.012,width:.0052,depth:.0034},
-   {jaw:'lower',count:6,x:.184,arch:.02,half:.028,tip:.001,length:.011,width:.005,depth:.0034}],
-  tongue:{tip:.185,back:.06,width:.047,thick:.015,drop:.001}
- },
- rabbit:{...common,
-  lip:{x:.115,y:1.360,slope:0,smile:-.002,width:.025},
-  corner:{x:.075,open:.025,z:.04,zOpen:.015},
-  hinge:[-.02,1.43],
-  band:{mid:.005,cheek:.02,z0:.02,z1:.045},
-  throat:{angle:-50,blend:10},
-  back:{x:0,blend:.03},
-  cavity:{back:.03,roof:.008,floor:.005,width:.025,wall:.007},
-  teeth:[{jaw:'upper',count:2,x:.112,arch:0,half:.0055,tip:.004,length:.016,width:.005,depth:.003},
-   {jaw:'lower',count:2,x:.106,arch:0,half:.0045,tip:.001,length:.011,width:.0038,depth:.0028}],
-  tongue:{tip:.115,back:.035,width:.022,thick:.015,drop:.001}
- },
- // The beak opens along the gape: its two mandibles part from tip to root (where the beak is
- // already buried in the face), so the slit runs its whole length and the halves are rigid.
- hen:{...common,slit:.006,round:.002,seal:.006,reach:.05,step:.0015,cut:henGape,
-  lip:{x:.17,y:1.411,slope:-.04,smile:0,width:.05},
-  corner:{x:.085,open:.005,z:.2,zOpen:.01},
-  hinge:[.14,1.425],
+ horse:mouth({
+  lip:{x:.245,y:1.317,line:[[.15,1.3484],[.165,1.3429],[.18,1.3372],[.195,1.3309],[.21,1.3247],[.225,1.3199],[.24,1.3173],[.255,1.3171],[.27,1.3177]],smile:0,width:.04},
+  corner:{x:.168,z:.2,zOpen:.02},hinge:[-.035,1.43],
+  band:{z0:.04,z1:.07},
+  cavity:{back:.05,width:.035},
+  cheeks:{window:.02},
+  teeth:[incisors('upper',6,.022,.0042,.0034),incisors('lower',6,.021,.004,.0032)],
+  tongue:tongue(.027)
+ }),
+ goat:mouth({
+  lip:{x:.19,y:1.3728,line:[[.095,1.3935],[.11,1.3886],[.125,1.3837],[.14,1.38],[.155,1.3775],[.17,1.3754],[.185,1.3733],[.2,1.3718],[.215,1.3702]],smile:0,width:.045},
+  corner:{x:.112,z:.2,zOpen:.02},hinge:[-.03,1.42],
+  band:{z0:.03,z1:.06},
+  cavity:{back:.035,width:.025},
+  cheeks:{window:.015},
+  pad:ruminantPad(.02),
+  teeth:[incisors('lower',8,.02,.0031,.0022,.0045,{lean:.25})],
+  tongue:tongue(.02)
+ }),
+ bull:mouth({
+  lip:{x:.215,y:1.3518,line:[[.1,1.3613],[.115,1.3587],[.13,1.3562],[.145,1.3528],[.16,1.3505],[.175,1.3498],[.19,1.3498],[.205,1.3508],[.22,1.352]],smile:0,width:.068},
+  corner:{x:.12,z:.2,zOpen:.02},hinge:[-.03,1.43],
+  band:{cheek:.024,z0:.047,z1:.077},
+  cavity:{back:.04,width:.042},
+  cheeks:{window:.025},
+  pad:ruminantPad(.032),
+  teeth:[incisors('lower',8,.031,.0045,.0028,.0045,{lean:.25})],
+  tongue:tongue(.035)
+ }),
+ cow:mouth({
+  lip:{x:.178,y:1.3755,line:[[.095,1.3958],[.11,1.393],[.125,1.3899],[.14,1.3847],[.155,1.3784],[.17,1.3752],[.185,1.3765],[.2,1.3805],[.215,1.3842]],smile:0,width:.05},
+  corner:{x:.112,z:.2,zOpen:.02},hinge:[-.02,1.44],
+  band:{z0:.037,z1:.067},
+  cavity:{back:.03,width:.032},
+  cheeks:{window:.02},
+  pad:ruminantPad(.026),
+  teeth:[incisors('lower',8,.025,.0041,.0026,.0045,{lean:.25})],
+  tongue:tongue(.026)
+ }),
+ donkey:mouth({
+  lip:{x:.21,y:1.2938,line:[[.125,1.313],[.1387,1.3077],[.1525,1.3022],[.1663,1.2961],[.18,1.292],[.1937,1.291],[.2075,1.2932],[.2213,1.2968],[.235,1.3004]],smile:0,width:.05},
+  corner:{x:.145,z:.2,zOpen:.02},hinge:[-.04,1.36],
+  band:{z0:.035,z1:.065},
+  cavity:{back:.03,width:.03},
+  cheeks:{window:.019},
+  teeth:[incisors('upper',6,.019,.004,.0033),incisors('lower',6,.018,.0038,.0031)],
+  tongue:tongue(.023)
+ }),
+ sheep:mouth({
+  lip:{x:.175,y:1.3679,line:[[.085,1.3831],[.1,1.3786],[.115,1.3739],[.13,1.3695],[.145,1.3666],[.16,1.3658],[.175,1.3679],[.19,1.3713]],smile:0,width:.045},
+  corner:{x:.1,open:.03,z:.2,zOpen:.02},hinge:[-.02,1.43],
+  band:{z0:.03,z1:.06},
+  cavity:{back:.03,width:.025},
+  cheeks:{window:.015},
+  pad:ruminantPad(.021),
+  teeth:[incisors('lower',8,.021,.0033,.0023,.0045,{lean:.25})],
+  tongue:tongue(.02)
+ }),
+ skunk:mouth({
+  lip:{x:.165,y:1.3844,line:[[.085,1.3864],[.1,1.3814],[.115,1.3763],[.13,1.3739],[.145,1.3762],[.16,1.3817],[.175,1.3885]],smile:0,width:.035},
+  corner:{x:.1,open:.025,z:.2,zOpen:.02},hinge:[-.03,1.44],
+  band:{cheek:.024,z0:.025,z1:.05},
+  cavity:{back:.03,width:.02,floor:.0055,roof:.009},
+  cheeks:{window:.011},
+  teeth:[incisors('upper',6,.009,.0019,.002,.0035),canines('upper',.0215,.0026,.0055),
+   incisors('lower',4,.0055,.0018,.0019,.0035),canines('lower',.011,.0024,.005)],
+  tongue:tongue(.016)
+ }),
+ 'pig-foreman':mouth({
+  lip:{x:.205,y:1.3804,line:[[.115,1.3956],[.13,1.3943],[.145,1.393],[.16,1.3923],[.175,1.3899],[.19,1.3853],[.205,1.3804],[.22,1.3777],[.235,1.3748]],smile:0,width:.05},
+  corner:{x:.13,z:.2,zOpen:.02},hinge:[-.02,1.42],
+  // the lower face slopes down all the way back to the jowls; the jaw's angle is taken where the
+  // underside last steepens, under the mouth's corner
+  jawLine:{a:.15},
+  band:{cheek:.026,z0:.043,z1:.073},
+  cavity:{back:.04,width:.038},
+  cheeks:{window:.02},
+  teeth:[incisors('upper',6,.017,.0038,.003,.004),canines('upper',.034,.0042,.007),
+   incisors('lower',6,.012,.0036,.0029,.004,{lean:.3}),canines('lower',.020,.004,.008)],
+  tongue:tongue(.03)
+ }),
+ 'pig-director':mouth({
+  lip:{x:.21,y:1.4447,line:[[.12,1.478],[.135,1.4682],[.15,1.4589],[.165,1.4524],[.18,1.4483],[.195,1.4461],[.21,1.4447],[.225,1.4464],[.24,1.4502],[.255,1.4536]],smile:0,width:.05},
+  corner:{x:.138,z:.2,zOpen:.03},hinge:[-.03,1.48],
+  // the jaw is the small chin in front of the double chin
+  jawLine:{a:.21},
+  band:{cheek:.03,z0:.05,z1:.08},
+  cavity:{back:.05,width:.045},
+  cheeks:{window:.022},
+  teeth:[incisors('upper',6,.019,.0042,.0032,.004),canines('upper',.038,.0045,.007),
+   incisors('lower',6,.014,.004,.003,.004,{lean:.3}),canines('lower',.023,.0042,.008)],
+  tongue:tongue(.034)
+ }),
+ rabbit:mouth({
+  lip:{x:.115,y:1.3627,line:[[.05,1.3627],[.2,1.3627]],
+   across:[[0,0],[.03,-.0066],[.045,-.0013],[.06,.0069],[.075,.0151]]},
+  corner:{x:.075,open:.025,z:.068,zOpen:.015},hinge:[-.02,1.43],
+  band:{mid:.005,cheek:.02,z0:.027,z1:.05},
+  cavity:{back:.03,width:.022,roof:.009,front:.005},
+  cheeks:{window:.012},
+  teeth:[incisors('upper',2,.0048,.0045,.003,.0055,{embed:.004}),incisors('lower',2,.0038,.0035,.0028,.0045)],
+  tongue:tongue(.016)
+ }),
+ // The beak parts along its gape: two rigid mandibles, the lower one turning about the beak's
+ // root where it leaves the face.
+ hen:mouth({gap:.006,edge:.0006,reach:.05,step:.0015,taper:.003,mandibles:henGape,
+  // the gape at the middle, from the beak's root to the lower mandible's tip (a plane: at the sides
+  // it runs in the groove between the two mandibles)
+  lip:{x:.17,y:1.4149,slope:-.168,smile:0,width:.05},
+  // the lower mandible ends short of the upper's hooked tip: the gap ends there too
+  corner:{x:.165,front:.222,open:.005,z:.2,zOpen:.01},hinge:[.165,1.4145],rigid:.006,
   band:{mid:.002,cheek:.002,z0:1,z1:2},
-  throat:{angle:-80,blend:10},
-  back:{x:.10,blend:.005},
-  cavity:{back:.12,roof:.0035,floor:.0035,width:.012,wall:.003,round:.0015},
-  tongue:{tip:.215,back:.13,width:.007,thick:.004,drop:.0015}
- },
- dog:{...common,
-  lip:{x:.195,y:1.379,slope:-.12,smile:.002,width:.04},
-  corner:{x:.135,z:.2,zOpen:.02},
-  hinge:[-.035,1.43],
-  throat:{angle:-45,blend:10},
-  back:{x:0,blend:.03},
-  cavity:{back:.03,roof:.010,floor:.006,width:.03,wall:.008},
-  teeth:[{jaw:'upper',count:8,x:.193,arch:.024,half:.021,tip:.004,length:.009,lengths:ends(8,.016,.009),width:.003,widths:ends(8,.004,.003),depth:.003},
-   {jaw:'lower',count:8,x:.185,arch:.024,half:.020,tip:.001,length:.008,lengths:ends(8,.014,.008),width:.0028,widths:ends(8,.0038,.0028),depth:.003}],
-  tongue:{tip:.19,back:.04,width:.027,thick:.015,drop:.001}
- }
+  cavity:{back:.14,tip:.214,roof:.0035,floor:.0035,width:.012,wall:.003,front:.003,wallMin:null,round:.0015},
+  cheeks:null,
+  tongue:tongue(.0055,{embed:.0008,rise:.0008,below:.0005,backInset:.035,gap:.003,clear:.0008})
+ }),
+ dog:mouth({
+  lip:{x:.195,y:1.3736,line:[[.06,1.386],[.075,1.3847],[.09,1.3835],[.105,1.3816],[.12,1.3793],[.135,1.377],[.15,1.3754],[.165,1.3744],[.18,1.3738],[.195,1.3736],[.21,1.3749],[.225,1.3763]],smile:0,width:.04},
+  corner:{x:.079,z:.2,zOpen:.02},hinge:[-.035,1.43],
+  band:{z0:.033,z1:.063},
+  cavity:{back:.03,width:.028,floor:.008},
+  cheeks:{window:.015},
+  teeth:[incisors('upper',6,.013,.0024,.0026,.004),canines('upper',.0295,.0033,.0065),
+   incisors('lower',6,.012,.0023,.0025,.004),canines('lower',.019,.0031,.006)],
+  tongue:tongue(.022)
+ })
 };

@@ -18,8 +18,11 @@ import * as THREE from './vendor/three.module.js';
 
 export const speakingHeadFile=(id,level='10k')=>`./speaking-heads/${id}-${level}.json`;
 
-// How far each jaw opens for speech at full stress, in radians; a beak opens wider.
-export const SPEECH_OPEN={horse:.2,goat:.2,bull:.19,cow:.2,donkey:.2,sheep:.2,skunk:.22,'pig-foreman':.18,'pig-director':.18,rabbit:.22,dog:.22,hen:.3};
+// How far each jaw opens for speech at full stress, in radians: the lips part about 2.5 cm at
+// the front (the lever is the jaw joint to the lips' front, head.jaw.lever), within 3 to 9
+// degrees. speechOpen(head) is the rule; SPEECH_OPEN the built heads' values (tested equal).
+export const speechOpen=head=>Math.min(.15,Math.max(.05,.025/head.jaw.lever));
+export const SPEECH_OPEN={horse:.0786,goat:.105,bull:.0983,cow:.1108,donkey:.0926,sheep:.1198,skunk:.1234,'pig-foreman':.1019,'pig-director':.091,rabbit:.149,dog:.099,hen:.15};
 
 // The mouth's paint, as display (sRGB) colours: inner lip, gum and the shadowed back of the
 // mouth, by depth below the approved surface, plus the teeth and tongue. The shaders work in
@@ -69,6 +72,12 @@ export function rigSpeakingHead(worker,head){
  a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;
  g.setAttribute('speechMouth',new THREE.Float32BufferAttribute(skinData.inside,1));
  g.setAttribute('speechDepth',new THREE.Float32BufferAttribute(skinData.depth,1));
+ // the skin stretched between the parted lips (the cheeks): how far down it a vertex is (0 the upper
+ // lip, 1 the lower) and how far the lips part there (0 behind the mouth's corners)
+ g.setAttribute('speechLower',new THREE.Float32BufferAttribute(skinData.lower,1));
+ g.setAttribute('speechPart',new THREE.Float32BufferAttribute(skinData.part,1));
+ // the lips' faces (folded into the crease when closed)
+ g.setAttribute('speechFold',new THREE.Float32BufferAttribute(skinData.fold,1));
  // The skin's weights at the vertex nearest a point (of those on one side of the mouth).
  const nearest=(p,keep=()=>true)=>{let best=-1,d=Infinity;for(let i=0;i<n;i++){if(!keep(i))continue;const e=(P.getX(i)-p.x)**2+(P.getY(i)-p.y)**2+(P.getZ(i)-p.z)**2;if(e<d){d=e;best=i;}}return weightsOf(a,best);};
  // Hair on the face (the goat's beard) grows from the skin, so it takes the skin's weights where
@@ -87,7 +96,13 @@ export function rigSpeakingHead(worker,head){
   worker.root.add(mesh);mesh.bind(skeleton,skin.bindMatrix);mouthParts.push(mesh);
  }
  const grey=mouthParts.map(m=>m.material);let painted=[],skinMaterial=null;
- function setJaw(angle){jaw.rotation.z=-angle;jaw.updateMatrixWorld(true);}
+ // How open the jaw is, for the paint: the cheeks between the lips are the mouth's only once they
+ // open (closed, they lie folded in the crease, and the painted mouth line shows there).
+ const opening={value:0};
+ // The grey sculpt with the mouth shaded (the inside darker, the cheeks between the lips too).
+ const greySkin=new THREE.MeshStandardMaterial({color:0x8a8a8a,roughness:.88});
+ greySkin.onBeforeCompile=shader=>shadeGrey(shader,opening);greySkin.customProgramCacheKey=()=>'speaking-grey-v4';
+ function setJaw(angle){jaw.rotation.z=-angle;jaw.updateMatrixWorld(true);opening.value=THREE.MathUtils.smoothstep(angle,0,CHEEKS_SHOW);}
  // The mouth's paint, over the character's registered paint (createAnimalPaint): the skin gets
  // its own material that draws the paint and then the mouth inside the lips; the teeth and
  // tongue are painted as the paint is lit (flat, with their form painted in), or lit.
@@ -95,15 +110,15 @@ export function rigSpeakingHead(worker,head){
   const colors=MOUTH_PAINT[species]||MOUTH;
   skinMaterial?.dispose();painted.forEach(m=>m.dispose());
   skinMaterial=paint.material.clone();const base=paint.material;
-  skinMaterial.onBeforeCompile=(shader,renderer)=>{base.onBeforeCompile(shader,renderer);paintMouth(shader,colors);};
-  skinMaterial.customProgramCacheKey=()=>base.customProgramCacheKey()+'|speaking-mouth-v1-'+species;
+  skinMaterial.onBeforeCompile=(shader,renderer)=>{base.onBeforeCompile(shader,renderer);paintMouth(shader,colors,opening);};
+  skinMaterial.customProgramCacheKey=()=>base.customProgramCacheKey()+'|speaking-mouth-v5-'+species;
   skin.material=skinMaterial;
   painted=mouthParts.map(mesh=>{const m=sceneLighting?new THREE.MeshStandardMaterial({vertexColors:true,roughness:mesh.userData.speechKind==='teeth'?.45:.7}):new THREE.MeshBasicMaterial({vertexColors:true,toneMapped:false});
    mesh.geometry.setAttribute('color',new THREE.Float32BufferAttribute(partColors(mesh,colors,!sceneLighting),3));mesh.material=m;return m;});
  }
- function setGrey(on){if(on){skin.material=worker.grey||skin.material;mouthParts.forEach((m,i)=>m.material=grey[i]);}else if(skinMaterial){skin.material=skinMaterial;mouthParts.forEach((m,i)=>m.material=painted[i]);}}
- function dispose(){for(const m of mouthParts){m.removeFromParent();m.geometry.dispose();}grey.forEach(m=>m.dispose());painted.forEach(m=>m.dispose());skinMaterial?.dispose();}
- return {jaw,skin,mouthParts,hinge:hinge.toArray(),setJaw,applyPaint,setGrey,dispose,get material(){return skinMaterial;}};
+ function setGrey(on){if(on){skin.material=greySkin;mouthParts.forEach((m,i)=>m.material=grey[i]);}else if(skinMaterial){skin.material=skinMaterial;mouthParts.forEach((m,i)=>m.material=painted[i]);}}
+ function dispose(){for(const m of mouthParts){m.removeFromParent();m.geometry.dispose();}grey.forEach(m=>m.dispose());painted.forEach(m=>m.dispose());skinMaterial?.dispose();greySkin.dispose();}
+ return {jaw,skin,mouthParts,hinge:hinge.toArray(),setJaw,applyPaint,setGrey,dispose,greySkin,get material(){return skinMaterial;}};
 }
 
 // Teeth darken toward their roots in the gum; the tongue is lighter along its top, darker at its
@@ -121,27 +136,46 @@ function partColors(mesh,colors,formLight){
  return out;
 }
 
+// How much a fragment is the mouth's, and how deep in it: the inside (speechMouth, by depth under
+// the approved surface) and the cheeks stretched between the parted lips, deepest midway between
+// them (speechLower 0..1 across, where the lips part: speechPart). Per fragment, so a cheek's long
+// triangles shade evenly however they were reduced.
+// (a cheek is painted as deep as the mouth's back midway between the lips: it is the open mouth
+// seen from the side, in its shadow)
+const SLAB_DEPTH=.03;
+// (the cheeks, and the lips' faces, take the mouth's paint over the jaw's first 2 degrees: closed
+// they lie folded in the crease, where the painted mouth line shows)
+const CHEEKS_SHOW=2*Math.PI/180;
+const mouthVaryings=`varying float vSpeechMouth,vSpeechDepth,vSpeechLower,vSpeechPart,vSpeechFold;uniform float uSpeechOpen;
+  void speechMouthAt(out float m,out float d){float g=vSpeechPart*4.*vSpeechLower*(1.-vSpeechLower)*uSpeechOpen;m=max(vSpeechMouth*mix(1.,uSpeechOpen,vSpeechFold),smoothstep(0.,.35,g));d=max(vSpeechDepth,${SLAB_DEPTH}*g);}`;
+function mouthVertex(shader){
+ shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float speechMouth,speechDepth,speechLower,speechPart,speechFold; varying float vSpeechMouth,vSpeechDepth,vSpeechLower,vSpeechPart,vSpeechFold;').replace('#include <begin_vertex>','#include <begin_vertex>\nvSpeechMouth=speechMouth;vSpeechDepth=speechDepth;vSpeechLower=speechLower;vSpeechPart=speechPart;vSpeechFold=speechFold;');
+}
+// The grey sculpt: the mouth darker with depth, so its forms read.
+function shadeGrey(shader,opening){
+ mouthVertex(shader);shader.uniforms.uSpeechOpen=opening;
+ shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\n'+mouthVaryings).replace('#include <color_fragment>','#include <color_fragment>\n{float m,d;speechMouthAt(m,d);diffuseColor.rgb*=1.-m*(.38+.32*smoothstep(.004,.035,d));diffuseColor.r*=1.+.10*m;}');
+}
 // The mouth inside the lips, drawn over the registered paint: the lip's own colour on its inner
-// face, then gum, darkening into the back of the mouth, with a painterly grain. vSpeechMouth is 0
-// on the approved surface and 1 from 4.5 mm below it; vSpeechDepth the depth below it.
-function paintMouth(shader,c){
+// face, then gum, darkening into the back of the mouth, with a painterly grain.
+function paintMouth(shader,c,opening){
  const v=a=>`vec3(${linear(a).map(x=>x.toFixed(4)).join(',')})`;
- shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float speechMouth,speechDepth; varying float vSpeechMouth,vSpeechDepth;').replace('#include <begin_vertex>','#include <begin_vertex>\nvSpeechMouth=speechMouth;vSpeechDepth=speechDepth;');
+ mouthVertex(shader);shader.uniforms.uSpeechOpen=opening;
  shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>
-  varying float vSpeechMouth,vSpeechDepth;
+  ${mouthVaryings}
   float speechHash(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453);}
   float speechNoise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
    return mix(mix(mix(speechHash(i),speechHash(i+vec3(1,0,0)),f.x),mix(speechHash(i+vec3(0,1,0)),speechHash(i+vec3(1,1,0)),f.x),f.y),mix(mix(speechHash(i+vec3(0,0,1)),speechHash(i+vec3(1,0,1)),f.x),mix(speechHash(i+vec3(0,1,1)),speechHash(i+vec3(1,1,1)),f.x),f.y),f.z);}`)
- .replace('if(uPaintDebug>.5)',`if(vSpeechMouth>.001){
-   float d=vSpeechDepth,deep=smoothstep(.004,.035,d);
+ .replace('if(uPaintDebug>.5)',`{float m,d;speechMouthAt(m,d);if(m>.001){
+   float deep=smoothstep(.004,.035,d);
    vec3 mouth=mix(${v(c.lip)},${v(c.gum)},smoothstep(.003,.011,d));
    mouth=mix(mouth,${v(c.back)},deep*deep*(3.-2.*deep));
    vec3 mn=normalize(vPaintNormal);
    mouth*=(.80+.20*clamp(mn.y*.5+.5,0.,1.))*(.90+.20*speechNoise(vPaintPosition*220.));
-   diffuseColor.rgb=mix(diffuseColor.rgb,mouth,vSpeechMouth);
-  }
+   diffuseColor.rgb=mix(diffuseColor.rgb,mouth,m);
+  }}
   if(uPaintDebug>.5)`)
- .replace('#include <alphamap_fragment>','if(uPaintDebug>.5)diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.,.75,.85),vSpeechMouth);\n#include <alphamap_fragment>');
+ .replace('#include <alphamap_fragment>','{float m,d;speechMouthAt(m,d);if(uPaintDebug>.5)diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.,.75,.85),m);}\n#include <alphamap_fragment>');
 }
 
 // A line of speech as syllables [text, seconds, stress 0..1] (null text: a pause), from `start`:

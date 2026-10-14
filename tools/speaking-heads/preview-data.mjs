@@ -18,7 +18,8 @@ function pose(angle){return head.parts.map(part=>{const P=part.position,N=part.n
   col.set(base.map((v,k)=>v*(1-m)+[.42,.12,.12][k]*m),i*3);}
  return {position:pos,normal:nor,index:part.index,colors:col};});}
 const originalMesh=[{position:original.position,normal:original.normal,index:original.index,color:[.74,.72,.68]}];
-const skin=head.parts[0],lip=[0,1,2].map(k=>{let s=0,c=0;for(let i=0;i<skin.inside.length;i++)if(skin.inside[i]>.5){s+=skin.position[i*3+k];c++;}return s/c;});
+// centred on the mouth: the vertices that fold flat at rest (its lips' faces and cheeks)
+const skin=head.parts[0],mouth=i=>skin.fold?skin.fold[i]>.5:skin.inside[i]>.5,lip=[0,1,2].map(k=>{let s=0,c=0;for(let i=0;i<skin.inside.length;i++)if(mouth(i)){s+=skin.position[i*3+k];c++;}return s/c;});
 const center=[lip[0]-.02,lip[1]-.01,0],size=420,scale=1500;
 const views=[{dir:[0,0,-1],up:[0,1,0]},{dir:[-.78,-.18,-.6],up:[0,1,0]},{dir:[-1,.05,0],up:[0,1,0]}];
 const angles=[0,8,16,24].map(a=>a*Math.PI/180);

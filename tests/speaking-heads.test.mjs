@@ -2,11 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import * as THREE from '../dist/tactics/vendor/three.module.js';
-import {HEADS,HEAD,donkeyNeck} from '../tools/speaking-heads/heads.mjs';
+import {HEADS,HEAD} from '../tools/speaking-heads/heads.mjs';
 import {MOUTHS} from '../tools/speaking-heads/mouths.mjs';
 import {placement} from '../tools/speaking-heads/place.mjs';
-import {closedField,mouthGeometry} from '../tools/speaking-heads/sculpt.mjs';
+import {mouthGeometry,spline} from '../tools/speaking-heads/sculpt.mjs';
 import {speakingSourceHash} from '../tools/speaking-heads/source-hash.mjs';
+import {fitLips,CURATED} from '../tools/speaking-heads/fit-lips.mjs';
+import {seeThrough,closedVisibility,partsAgainstSkin,crownExposure,tongueVisible,selfIntersections,jawLine,loadCharacter} from '../tools/speaking-heads/measure.mjs';
 import {ANIMAL_MOTION_CATALOG} from '../dist/tactics/animal-motion-catalog.js';
 import {withSpeakingHead,rigSpeakingHead,jawAt,MOUTH_PAINT,SPEECH_OPEN} from '../dist/tactics/speaking-head.js';
 
@@ -54,23 +56,41 @@ test('every part is a closed surface',()=>{
  }
 });
 
-test('closed, a speaking head is its approved head away from the mouth, and keeps its mouth inside',()=>{
+test('each mouth parts on its painted mouth line: the lip lines are the fit to the line traced off the approved paint',()=>{
+ const traces=JSON.parse(fs.readFileSync(new URL('../tools/speaking-heads/painted-mouths.json',import.meta.url)));
+ for(const id of Object.keys(CURATED)){const f=fitLips(id,traces),M=MOUTHS[id];
+  assert.deepEqual(M.lip.line.map(k=>k[0]),f.line.map(k=>k[0]),id+': the knots');
+  M.lip.line.forEach(([x,y],i)=>assert.ok(Math.abs(y-f.line[i][1])<2e-4,`${id}: the line at x ${x} is not the fit (node tools/speaking-heads/fit-lips.mjs)`));
+  if(f.across)M.lip.across.forEach(([z,y],i)=>assert.ok(Math.abs(y-f.across[i][1])<2e-4,`${id}: across at ${z}`));
+  assert.ok(Math.abs(M.corner.x-f.corner.x)<1e-3&&Math.abs(M.corner.z-f.corner.z)<1e-3,id+': the corner is at the painted line\'s back end');
+  // The fitted line follows the painted one: measured when fitted, 0.5 to 1.8 mm rms along the
+  // side and 0.2 to 1.8 mm across the front's middle.
+  assert.ok(f.residual.side<2.5,`${id}: the cut is ${f.residual.side.toFixed(1)} mm (rms) from the painted line along the side`);
+  assert.ok(f.residual.front<2.5,`${id}: the cut is ${f.residual.front.toFixed(1)} mm (rms) from the painted line across the front`);
+ }
+ // The residual can fail: the goat's straight line before the fit was 6 mm (rms) off its
+ // painted line, and a fitted line moved 4 mm is 4 mm off.
+ const goat=fitLips('goat',traces),moved=goat.samples.filter(q=>q.kind==='side'&&q.fit);
+ const off=Math.sqrt(moved.reduce((s,q)=>s+((q.y-(spline(goat.line)(q.x)+.004))*1000)**2,0)/moved.length);
+ assert.ok(off>2.5,`a line 4 mm off is ${off.toFixed(1)} mm (rms) off`);
+});
+
+test('closed, a speaking head is its approved head: its outer skin on the approved surface, its lips on their own sides',()=>{
  let lipsChecked=0;
  for(const head of HEADS){
-  const M=MOUTHS[head.id],place=placement(head),closed=closedField(head.field,M),G=mouthGeometry(M,closed),xmin=Math.min(M.cavity.back,M.corner.x)-.03;
+  const M=MOUTHS[head.id],place=placement(head),G=mouthGeometry(M,head.field);
   for(const level of LEVELS){const data=built(head.id,level),skin=data.parts.find(p=>p.kind==='skin');
-   let far=0,worst=0;
-   for(let i=0;i<skin.position.length/3;i++){const p=toSculpt(head,place,skin,i),inMouth=p[1]>M.lip.y-M.reach&&p[1]<M.lip.y+M.reach&&p[0]>xmin;
-    if(inMouth)continue;far++;worst=Math.max(worst,Math.abs(closed(...p)));}
-   // (the hen's speaking part is her beak alone: all of it is mouth)
-   if(!head.head)assert.ok(far>skin.position.length/6,`${head.id}: most of the head is away from the mouth`);
-   assert.ok(worst<3e-3,`${head.id}-${level}: ${(worst*1000).toFixed(2)} mm off the approved surface away from the mouth`);
-   // Teeth and tongue stay at least 1 mm inside the closed head, so a closed mouth hides them.
-   for(const part of data.parts.filter(p=>p.kind!=='skin'))for(let i=0;i<part.position.length/3;i++){const d=closed(...toSculpt(head,place,part,i));assert.ok(d<-1e-3,`${head.id}-${level} ${part.name}: ${(d*1000).toFixed(2)} mm from the surface`);}
+   // Every vertex of the outer skin (not the lips' faces, the cheeks between them or the mouth
+   // inside) lies on the approved surface, near the mouth too. Measured when written: under
+   // 0.2 mm (the sculpt's own meshing error); the round-1 heads, sealed, were 4.4 to 7.9 mm off.
+   let outer=0,worst=0;
+   for(let i=0;i<skin.position.length/3;i++){if(skin.fold[i]>.5||skin.inside[i]>.5)continue;outer++;worst=Math.max(worst,Math.abs(head.field(...toSculpt(head,place,skin,i))));}
+   assert.ok(outer>skin.position.length/3*.6,`${head.id}-${level}: ${outer} outer vertices`);
+   assert.ok(worst<1e-3,`${head.id}-${level}: the closed outer skin is ${(worst*1000).toFixed(2)} mm off the approved surface`);
    // Where the mouth parts, the lips' outer faces belong wholly to their sides: the lower lip
    // to the jaw, the upper to the head.
    let lower=0,upper=0;
-   for(let i=0;i<skin.position.length/3;i++){if(skin.inside[i]>.01)continue;const p=toSculpt(head,place,skin,i),d=G.cut(...p);
+   for(let i=0;i<skin.position.length/3;i++){if(skin.fold[i]>.5||skin.inside[i]>.01)continue;const p=toSculpt(head,place,skin,i),d=G.cut(...p);
     if(G.parting(p[0],p[2])<1||Math.abs(d)<.0065||Math.abs(d)>.014)continue;
     if(d<0){lower++;assert.ok(skin.jaw[i]>.95,`${head.id}-${level}: lower lip ${skin.jaw[i]}`);}else{upper++;assert.ok(skin.jaw[i]<.05,`${head.id}-${level}: upper lip ${skin.jaw[i]}`);}}
    // (the game mesh may keep no vertex in that band on a small lip; the authoring mesh does)
@@ -78,6 +98,41 @@ test('closed, a speaking head is its approved head away from the mouth, and keep
   }
  }
  assert.ok(lipsChecked>200,`${lipsChecked} lip vertices checked in all`);
+});
+
+// The round-1 review's acceptance numbers (docs/tactics/hybrid-review/speaking-heads/reviews/
+// round-1.md), on both meshes, by its own instruments lifted into the tree (measure.mjs): the
+// heads posed as the runtime poses them.
+const OPEN=[6,12,24];
+test('open, a mouth is no hole through the head: nothing is seen through it in profile or from behind',()=>{
+ // (the hen's beak has no cheeks: a beak open is open at its sides, as the review found fine)
+ for(const head of HEADS.filter(h=>h.id!=='hen'))for(const level of LEVELS){const data=built(head.id,level);
+  for(const deg of OPEN)for(const az of [0,30,45]){const s=seeThrough(data,deg,az).mm2;assert.ok(s<=.5,`${head.id}-${level} at ${deg}°, ${az}° from profile: ${s.toFixed(1)} mm² seen through the head`);}}
+});
+test('closed, a mouth shows nothing of its inside: no tooth or tongue from any direction',()=>{
+ for(const head of HEADS)for(const level of LEVELS){const data=built(head.id,level),occluder=head.head?loadCharacter(data,level).parts.find(p=>p.name===head.head.part):null;
+  const c=closedVisibility(data,level,{occluder});
+  assert.ok(c.teeth.teeth<=.5,`${head.id}-${level}: ${c.teeth.teeth.toFixed(1)} mm² of teeth or tongue seen closed (from azimuth ${c.teeth.az}°, elevation ${c.teeth.el}°)`);}
+});
+test('teeth and tongue stay in the skin at every opening: rooted, none through the outer skin; incisors show a crown when open',()=>{
+ for(const head of HEADS)for(const level of LEVELS){const data=built(head.id,level);
+  for(const deg of [0,...OPEN])for(const g of partsAgainstSkin(data,deg)){
+   assert.equal(g.poke,0,`${head.id}-${level} at ${deg}°: ${g.kind} ${g.tooth??''} stands ${(g.maxPoke*1000).toFixed(1)} mm through the outer skin`);
+   if(g.kind!=='tongue')assert.ok(g.inside>0,`${head.id}-${level} at ${deg}°: ${g.kind} ${g.tooth} has no root in the skin`);}
+  if(level==='author')for(const t of crownExposure(data,12).filter(t=>t.kind==='incisor'))assert.ok(t.crown>=.004,`${head.id}: an incisor shows ${(t.crown*1000).toFixed(1)} mm of crown at 12°`);}
+});
+test('the tongue shows from the front when the mouth opens',()=>{
+ for(const head of HEADS){const v=tongueVisible(built(head.id,'author'),12,0,head.id==='hen'?30:0);assert.ok(v>=.3,`${head.id}: ${(v*100).toFixed(0)}% of the tongue seen from the front at 12°`);}
+});
+test('the outer skin does not pass through itself as the jaw opens',()=>{
+ for(const head of HEADS)for(const level of LEVELS){const data=built(head.id,level);
+  for(const deg of [6,12]){const s=selfIntersections(data,deg);assert.equal(s.outer,0,`${head.id}-${level} at ${deg}°: ${s.outer} pairs of outer skin triangles cross`);}}
+});
+test('the jaw carries the whole mandible: weight at least 0.9 along the jaw line seen in profile, from its angle to the chin',()=>{
+ // (the hen's lower mandible is rigid by construction)
+ for(const head of HEADS.filter(h=>h.id!=='hen')){const line=jawLine(built(head.id,'author')),under=line.filter(p=>p.w<.9);
+  assert.ok(line.length>50,`${head.id}: ${line.length} columns`);
+  assert.equal(under.length,0,`${head.id}: jaw weight ${Math.min(...under.map(p=>p.w)).toFixed(2)} on the jaw line at x ${under.map(p=>(p.x*1000).toFixed(0)).join(', ')} mm`);}
 });
 
 test('the game meshes keep to their budgets: a quarter more than the skull they replace, about a third of the authoring mesh',()=>{
