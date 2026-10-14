@@ -111,7 +111,7 @@ export function rigSpeakingHead(worker,head){
   skinMaterial?.dispose();painted.forEach(m=>m.dispose());
   skinMaterial=paint.material.clone();const base=paint.material;
   skinMaterial.onBeforeCompile=(shader,renderer)=>{base.onBeforeCompile(shader,renderer);paintMouth(shader,colors,opening);};
-  skinMaterial.customProgramCacheKey=()=>base.customProgramCacheKey()+'|speaking-mouth-v5-'+species;
+  skinMaterial.customProgramCacheKey=()=>base.customProgramCacheKey()+'|speaking-mouth-v6-'+species;
   skin.material=skinMaterial;
   painted=mouthParts.map(mesh=>{const m=sceneLighting?new THREE.MeshStandardMaterial({vertexColors:true,roughness:mesh.userData.speechKind==='teeth'?.45:.7}):new THREE.MeshBasicMaterial({vertexColors:true,toneMapped:false});
    mesh.geometry.setAttribute('color',new THREE.Float32BufferAttribute(partColors(mesh,colors,!sceneLighting),3));mesh.material=m;return m;});
@@ -173,7 +173,9 @@ function paintMouth(shader,c,opening){
    vec3 mn=normalize(vPaintNormal);
    mouth*=(.80+.20*clamp(mn.y*.5+.5,0.,1.))*(.90+.20*speechNoise(vPaintPosition*220.));
    diffuseColor.rgb=mix(diffuseColor.rgb,mouth,m);
-  }}
+  }
+  // closed, the lips' faces lie in the crease: its shadow (no view of the registered paint sees them)
+  diffuseColor.rgb*=1.-.6*smoothstep(0.,.2,vSpeechFold)*(1.-uSpeechOpen);}
   if(uPaintDebug>.5)`)
  .replace('#include <alphamap_fragment>','{float m,d;speechMouthAt(m,d);if(uPaintDebug>.5)diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.,.75,.85),m);}\n#include <alphamap_fragment>');
 }
