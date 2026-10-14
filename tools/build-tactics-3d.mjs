@@ -2,6 +2,8 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
+for(const file of ['loading-screen-study.html','loading-screen.css','loading-screen.js','loading-screen-study.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+fs.cpSync(new URL('dist/assets/ui/loading-screen/',root),new URL('.pages-output/assets/ui/loading-screen/',root),{recursive:true});
 for(const file of ['biome-atlas-lod.js','biome-obstacle-data.js','biome-obstacle-paint.js','biome-obstacles.js','biome-terrain-plan.js','biome-terrain.js','biome-terrain-fill.js','biome-ground-sprite-layout.js','biome-ground-sprites.js','biome-ground-composition.js','biome-ground-edge.js','biome-connected-ground.js','biome-ground-worker.js','biome-terrain-study.js','biome-terrain-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.cpSync(new URL('dist/assets/environment/biome-obstacles/',root),new URL('.pages-output/assets/environment/biome-obstacles/',root),{recursive:true});
 fs.cpSync(new URL('dist/assets/environment/biome-ground-sprites/',root),new URL('.pages-output/assets/environment/biome-ground-sprites/',root),{recursive:true});
@@ -46,6 +48,7 @@ console.log('Built Animal Factory Tactics 3D landing page.');
 
 fs.cpSync(new URL('dist/tactics/sector-library/',root),new URL('.pages-output/tactics/sector-library/',root),{recursive:true});
 import {checkModuleClosure} from './check-module-closure.mjs';
+checkModuleClosure(new URL('.pages-output/',root),['tactics/loading-screen-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/biome-foliage-study.js','tactics/biome-terrain-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/intro-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/utility-helicopter-study.js']);

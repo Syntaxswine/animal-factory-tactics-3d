@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Animal Factory Tactics — Loading screen study</title>
+  <link rel="icon" href="data:,">
+  <link rel="preload" as="image" href="../assets/ui/loading-screen/command-room-v1.png">
+  <link rel="stylesheet" href="loading-screen.css">
+</head>
+<body>
+  <main class="loading-screen" id="loading-screen" data-state="loading" aria-label="Animal Factory Tactics loading screen">
+    <img class="loading-art" src="../assets/ui/loading-screen/command-room-v1.png" alt="" fetchpriority="high">
+    <div class="loading-shade" aria-hidden="true"></div>
+    <header class="loading-masthead"><span class="loading-insignia" aria-hidden="true">AF</span><span>FIELD OPERATIONS<br><b>COMMAND NETWORK</b></span></header>
+    <section class="loading-brand" aria-label="Animal Factory Tactics">
+      <p class="loading-eyebrow">TACTICAL OPERATIONS</p>
+      <h1>ANIMAL<br>FACTORY<span>TACTICS</span></h1>
+      <p class="loading-caption">Stand by for deployment.</p>
+    </section>
+    <section class="loading-readout" aria-label="Loading status">
+      <div class="loading-status-row"><p class="loading-status" role="status" aria-live="polite">Establishing connection</p><span class="loading-percent" aria-hidden="true">—</span></div>
+      <div class="loading-track" role="progressbar" aria-label="Sector loading" aria-valuemin="0" aria-valuemax="100"><div class="loading-fill"></div><div class="loading-ticks" aria-hidden="true"></div></div>
+      <div class="loading-readout-footer"><span class="loading-phase">PREPARING THE FIELD</span><div class="loading-lights" aria-hidden="true"><span><i></i>PWR</span><span class="data-lamp"><i></i>DATA</span><span class="link-lamp"><i></i>LINK</span></div></div>
+    </section>
+  </main>
+  <aside class="loading-study-tools" aria-label="Preview controls"><span>PREVIEW · SIMULATED LOADING</span><button id="preview-pause" type="button">Pause</button><button id="preview-replay" type="button">Replay</button></aside>
+  <script type="module" src="loading-screen-study.js"></script>
+</body>
+</html>

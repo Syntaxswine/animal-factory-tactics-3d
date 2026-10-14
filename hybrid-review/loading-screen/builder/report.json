@@ -1,0 +1,226 @@
+{
+  "views": [
+    {
+      "name": "desktop",
+      "width": 1920,
+      "height": 1080,
+      "scrollWidth": 1920,
+      "scrollHeight": 1080,
+      "brand": {
+        "x": 105.59375,
+        "y": 206.53125,
+        "right": 908.734375,
+        "bottom": 752.453125
+      },
+      "controls": {
+        "x": 1578.71875,
+        "y": 23,
+        "right": 1866,
+        "bottom": 50.6875
+      },
+      "readout": {
+        "x": 105.59375,
+        "y": 925.5,
+        "right": 1814.40625,
+        "bottom": 1026
+      },
+      "art": [
+        1672,
+        941
+      ],
+      "progress": "62"
+    },
+    {
+      "name": "laptop",
+      "width": 1366,
+      "height": 768,
+      "scrollWidth": 1366,
+      "scrollHeight": 768,
+      "brand": {
+        "x": 75.125,
+        "y": 124.9375,
+        "right": 646.515625,
+        "bottom": 578.171875
+      },
+      "controls": {
+        "x": 1037.75,
+        "y": 23,
+        "right": 1325.03125,
+        "bottom": 50.6875
+      },
+      "readout": {
+        "x": 75.125,
+        "y": 629.109375,
+        "right": 1290.875,
+        "bottom": 729.609375
+      },
+      "art": [
+        1672,
+        941
+      ],
+      "progress": "62"
+    },
+    {
+      "name": "ultrawide",
+      "width": 2560,
+      "height": 1080,
+      "scrollWidth": 2560,
+      "scrollHeight": 1080,
+      "brand": {
+        "x": 106,
+        "y": 235.875,
+        "right": 1209.546875,
+        "bottom": 693.75
+      },
+      "controls": {
+        "x": 2218.71875,
+        "y": 23,
+        "right": 2506,
+        "bottom": 50.6875
+      },
+      "readout": {
+        "x": 106,
+        "y": 925.5,
+        "right": 2454,
+        "bottom": 1026
+      },
+      "art": [
+        1672,
+        941
+      ],
+      "progress": "62"
+    },
+    {
+      "name": "phone",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "brand": {
+        "x": 26,
+        "y": 156.015625,
+        "right": 364,
+        "bottom": 534.953125
+      },
+      "controls": {
+        "x": 26,
+        "y": 85,
+        "right": 364,
+        "bottom": 111.390625
+      },
+      "readout": {
+        "x": 26,
+        "y": 715,
+        "right": 364,
+        "bottom": 814
+      },
+      "art": [
+        1672,
+        941
+      ],
+      "progress": "62"
+    },
+    {
+      "name": "small-phone",
+      "width": 320,
+      "height": 568,
+      "scrollWidth": 320,
+      "scrollHeight": 568,
+      "brand": {
+        "x": 26,
+        "y": 81.84375,
+        "right": 294,
+        "bottom": 407.3125
+      },
+      "controls": {
+        "x": 26,
+        "y": 85,
+        "right": 294,
+        "bottom": 111.390625
+      },
+      "readout": {
+        "x": 26,
+        "y": 439,
+        "right": 294,
+        "bottom": 538
+      },
+      "art": [
+        1672,
+        941
+      ],
+      "progress": "62"
+    },
+    {
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "scrollWidth": 844,
+      "scrollHeight": 390,
+      "brand": {
+        "x": 24,
+        "y": 82.015625,
+        "right": 398.109375,
+        "bottom": 227.484375
+      },
+      "controls": {
+        "x": 565.078125,
+        "y": 18,
+        "right": 820,
+        "bottom": 44.390625
+      },
+      "readout": {
+        "x": 24,
+        "y": 291.5,
+        "right": 820,
+        "bottom": 374
+      },
+      "art": [
+        1672,
+        941
+      ],
+      "progress": "62"
+    },
+    {
+      "name": "small-landscape",
+      "width": 568,
+      "height": 320,
+      "scrollWidth": 568,
+      "scrollHeight": 320,
+      "brand": {
+        "x": 24,
+        "y": 65.71875,
+        "right": 268.390625,
+        "bottom": 191.546875
+      },
+      "controls": {
+        "x": 289.078125,
+        "y": 18,
+        "right": 544,
+        "bottom": 44.390625
+      },
+      "readout": {
+        "x": 24,
+        "y": 223,
+        "right": 544,
+        "bottom": 304
+      },
+      "art": [
+        1672,
+        941
+      ],
+      "progress": "62"
+    }
+  ],
+  "errors": [],
+  "requests": [],
+  "lifecycle": {
+    "pausedElapsed": 549.9,
+    "reducedMotion": true,
+    "disposed": {
+      "playing": false,
+      "elapsed": 8680,
+      "frame": 0,
+      "state": "loading"
+    }
+  }
+}

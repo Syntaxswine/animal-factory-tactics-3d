@@ -1,0 +1,229 @@
+{
+  "createdAt": "2026-10-14T13:40:19.792Z",
+  "scope": "Loading screen visual concept and presentation controller; no gameplay loading integration.",
+  "views": [
+    {
+      "name": "desktop",
+      "width": 1920,
+      "height": 1080,
+      "scrollWidth": 1920,
+      "scrollHeight": 1080,
+      "title": {
+        "x": 105.59375,
+        "y": 331.921875,
+        "right": 908.734375,
+        "bottom": 643.453125
+      },
+      "caption": {
+        "x": 105.59375,
+        "y": 678.453125,
+        "right": 908.734375,
+        "bottom": 702.453125
+      },
+      "controls": {
+        "x": 1578.71875,
+        "y": 23,
+        "right": 1866,
+        "bottom": 50.6875
+      },
+      "readout": {
+        "x": 105.59375,
+        "y": 925.5,
+        "right": 1814.40625,
+        "bottom": 1026
+      },
+      "progress": "62"
+    },
+    {
+      "name": "laptop",
+      "width": 1366,
+      "height": 768,
+      "scrollWidth": 1366,
+      "scrollHeight": 768,
+      "title": {
+        "x": 75.125,
+        "y": 225.375,
+        "right": 646.515625,
+        "bottom": 472.6875
+      },
+      "caption": {
+        "x": 75.125,
+        "y": 507.6875,
+        "right": 646.515625,
+        "bottom": 528.171875
+      },
+      "controls": {
+        "x": 1037.75,
+        "y": 23,
+        "right": 1325.03125,
+        "bottom": 50.6875
+      },
+      "readout": {
+        "x": 75.125,
+        "y": 629.109375,
+        "right": 1290.875,
+        "bottom": 729.609375
+      },
+      "progress": "62"
+    },
+    {
+      "name": "phone",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "title": {
+        "x": 26,
+        "y": 261.125,
+        "right": 364,
+        "bottom": 411.4375
+      },
+      "caption": {
+        "x": 26,
+        "y": 446.4375,
+        "right": 364,
+        "bottom": 467.4375
+      },
+      "controls": {
+        "x": 26,
+        "y": 85,
+        "right": 364,
+        "bottom": 111.390625
+      },
+      "readout": {
+        "x": 26,
+        "y": 715,
+        "right": 364,
+        "bottom": 814
+      },
+      "progress": "62"
+    },
+    {
+      "name": "small-phone",
+      "width": 320,
+      "height": 568,
+      "scrollWidth": 320,
+      "scrollHeight": 568,
+      "title": {
+        "x": 26,
+        "y": 173.4375,
+        "right": 294,
+        "bottom": 305.875
+      },
+      "caption": {
+        "x": 26,
+        "y": 340.875,
+        "right": 294,
+        "bottom": 361.875
+      },
+      "controls": {
+        "x": 26,
+        "y": 85,
+        "right": 294,
+        "bottom": 111.390625
+      },
+      "readout": {
+        "x": 26,
+        "y": 439,
+        "right": 294,
+        "bottom": 538
+      },
+      "progress": "62"
+    },
+    {
+      "name": "landscape",
+      "width": 844,
+      "height": 390,
+      "scrollWidth": 844,
+      "scrollHeight": 390,
+      "title": {
+        "x": 24,
+        "y": 94.015625,
+        "right": 398.109375,
+        "bottom": 215.484375
+      },
+      "caption": {
+        "x": 0,
+        "y": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "controls": {
+        "x": 565.078125,
+        "y": 18,
+        "right": 820,
+        "bottom": 44.390625
+      },
+      "readout": {
+        "x": 24,
+        "y": 291.5,
+        "right": 820,
+        "bottom": 374
+      },
+      "progress": "62"
+    },
+    {
+      "name": "small-landscape",
+      "width": 568,
+      "height": 320,
+      "scrollWidth": 568,
+      "scrollHeight": 320,
+      "title": {
+        "x": 24,
+        "y": 77.71875,
+        "right": 268.390625,
+        "bottom": 179.546875
+      },
+      "caption": {
+        "x": 0,
+        "y": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "controls": {
+        "x": 289.078125,
+        "y": 18,
+        "right": 544,
+        "bottom": 44.390625
+      },
+      "readout": {
+        "x": 24,
+        "y": 223,
+        "right": 544,
+        "bottom": 304
+      },
+      "progress": "62"
+    }
+  ],
+  "layoutFailures": [],
+  "errors": [],
+  "requests": [],
+  "checks": {
+    "keyboardReplayPause": true,
+    "hiddenSuspendsFrames": true,
+    "progressStatusErrorAndReady": true,
+    "reducedMotionStatic": true,
+    "dispose": {
+      "state": {
+        "playing": false,
+        "elapsed": 116.70000000000002,
+        "frame": 0,
+        "state": "loading"
+      },
+      "pending": 0,
+      "animations": [
+        "paused"
+      ],
+      "removedReplayListener": true,
+      "postDisposeNoMutation": true
+    }
+  },
+  "sources": {
+    "dist/tactics/loading-screen-study.html": "b96193841d0edfc79dd8dd230fcba87797f79927183c3a6b0c1df50bfc318727",
+    "dist/tactics/loading-screen.css": "19f6661ad39ba736f5281471b4955226d7dc2866c75ba59dfd58242cb228658d",
+    "dist/tactics/loading-screen.js": "16db74149ed68c13ce015f925303a5ee8d41c8449b6f5fec10c13d3afd3bc64e",
+    "dist/tactics/loading-screen-study.js": "01edd18c9b1d40b8e79a18289623c56a01d5916c7dab1e2019d43950160c3c35",
+    "dist/assets/ui/loading-screen/command-room-v1.png": "01a616bc6f20808d1983c38388d4b1a0a167d2c8de42b333adf6de6375ea82b2"
+  },
+  "browserClosed": true
+}
