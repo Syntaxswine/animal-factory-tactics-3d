@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
-import {approachPath,approachAttitude,heliPath,PERSPECTIVE_LIFT,PROOF_START} from '../dist/tactics/intro-sprites/trajectory.js';
+import {approachPath,approachAttitude,heliPath,cameraAt,PERSPECTIVE_LIFT,PROOF_START} from '../dist/tactics/intro-sprites/trajectory.js';
 import {SHOTS,shotById,shotSpec,plateName,lensPath,lensWindow,inWindow,AMBUSH_KEYFRAMES,SAM_LAUNCH,AMBUSH_ATMOSPHERE,shotSector,
  ROOM_CAMERA,ROOM_LIGHT,ROOM_MIC,HEN_POSE,LINE_SPEECH,lineEnd,beakAt,henPoseAt} from '../dist/tactics/intro-sprites/ambush.js';
 import {ROOM_SET} from '../dist/tactics/intro-sprites/room-set.js';
@@ -156,7 +156,10 @@ test('every perspective shot has its plate and frames, painted for the shot as i
   const seq=read(s.frames+'/sequence.json');assert.deepEqual(seq.camera??seq.size,s.camera??seq.size);
   const k=AMBUSH_KEYFRAMES[s.id],near=Math.min(...seq.frames.map(f=>Math.abs(f.t-k)));
   assert.ok(near<=(seq.fps?.5/seq.fps:1e-6)+1e-9,`${s.id}: a frame at its keyframe (${near})`);
-  for(const f of seq.frames)assert.ok(f.sprite&&f.pos,s.id+' frame at '+f.t+' is drawn');}
+  // (the launcher's frames are layered: a static base, then a turret and the
+  // missiles in flight per frame)
+  if(seq.base)assert.ok(seq.base.sprite&&seq.base.pos,s.id+' base');
+  for(const f of seq.frames){const g=seq.base?f.turret:f;assert.ok(g?.sprite&&g.pos,s.id+' frame at '+f.t+' is drawn');}}
  // The room: baked for the room, light, microphone, pose and line as they are
  // now, every 20th of a second through the shot, each frame drawn.
  const room=read(shotById('02').frames+'/sequence.json');
@@ -164,4 +167,36 @@ test('every perspective shot has its plate and frames, painted for the shot as i
  assert.equal(room.fps,20);assert.ok(room.from<=shotById('02').from&&room.to>=shotById('02').to);
  assert.ok(room.frames.some(f=>Math.abs(f.t-AMBUSH_KEYFRAMES['02'])<1e-6));for(const f of room.frames)assert.ok(f.sprite,'room frame at '+f.t);
  assert.ok(existsSync(new URL(shotById('02').frames+'/'+room.plate,dir)));
+});
+
+test('every shot is animated: frames every 20th of a second from its first moment to its last', ()=>{
+ for(const s of SHOTS.filter(s=>s.frames)){const seq=read(s.frames+'/sequence.json');
+  assert.equal(seq.fps,20,s.id+' at 20 fps');assert.ok(seq.from<=s.from+1e-9&&seq.to>=s.to-1/20-1e-9,`${s.id}: ${seq.from}-${seq.to} covers ${s.from}-${s.to}`);
+  for(let i=1;i<seq.frames.length;i++)assert.ok(Math.abs(seq.frames[i].t-seq.frames[i-1].t-.05)<1e-6,`${s.id}: a gap after ${seq.frames[i-1].t}`);}
+});
+
+test('the launcher is baked in layers: a base once, the turret every frame, each missile while it flies', ()=>{
+ for(const id of ['05','06']){const s=shotById(id),seq=read(s.frames+'/sequence.json');assert.ok(seq.base?.sprite,id+' base');
+  for(const f of seq.frames){assert.ok(f.turret?.sprite,id+' turret at '+f.t);
+   const flying=SAM_LAUNCH.launches.map((b,i)=>f.t>=b&&f.t<=b+SAM_LAUNCH.flight?i:-1).filter(i=>i>=0);
+   // (a missile may have flown out of the frame: never listed when not flying)
+   for(const m of f.missiles)assert.ok(flying.includes(m.i),`${id} at ${f.t}: missile ${m.i} drawn while not in flight`);
+   if(id==='06'&&f.t>=SAM_LAUNCH.launches[0]+.05&&f.t<=SAM_LAUNCH.launches[0]+.5)assert.ok(f.missiles.some(m=>m.i===0),`06 at ${f.t}: the first missile is drawn`);}
+  // The turret moves; nothing in the base does.
+  const a=seq.frames[0].state,b=seq.frames.at(-1).state;assert.ok(id!=='05'||b.pitch-a.pitch>.3,'05: the cradle rises');}
+});
+
+test('the cut into the crash: 07 holds the crash camera and meets its first frame', ()=>{
+ // The crash player's camera holds its first framing before 20.2 s, so its
+ // painted plate (built to contain every camera frame from 20.2 s) contains 07.
+ const c0=cameraAt(PROOF_START);for(let t=19.4;t<PROOF_START;t+=.05){const c=cameraAt(t);assert.equal(c.w,c0.w);assert.deepEqual(c.F,c0.F);assert.deepEqual(c.S,c0.S);}
+ // The pre-roll's last frame meets the proof's first: the same attitude and
+ // rotor hub, from the same place on the path.
+ const pre=read('heli-07/sequence.json'),seq=read('heli-seq/sequence.json'),a=pre.frames.at(-1),b=seq.frames[0];
+ assert.ok(Math.abs(PROOF_START-a.t-1/20)<1e-6,'the pre-roll ends one frame before the proof');
+ for(const k of ['pitch','roll','yaw'])assert.ok(Math.abs(a[k]-b[k])<.004,`${k}: ${a[k]} vs ${b[k]}`);
+ for(let i=0;i<2;i++)assert.ok(Math.abs(a.rotorDisc.hub[i]-b.rotorDisc.hub[i])<.5,'rotor hub');
+ const p=approachPath(PROOF_START-1e-9),q=heliPath(PROOF_START);assert.ok(Math.hypot(p.x-q.x,p.y-q.y,p.h-q.h)<1e-6);
+ // And every pre-roll frame has its aircraft and its shadow.
+ for(const f of pre.frames)assert.ok(f.sprite&&f.anchor&&f.shadow&&f.rotorDisc,'07 frame at '+f.t);
 });

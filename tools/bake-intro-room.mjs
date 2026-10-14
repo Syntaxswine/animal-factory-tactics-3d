@@ -78,8 +78,10 @@ for(const t of setup.times){
 // Pass 2: keep each frame's rectangle, feathered at its edge.
 const rect=await page.evaluate(({MARGIN,SHEET})=>{const B=window.__room,b=B.box;if(b[2]<0)return null;
  const x0=Math.max(0,b[0]-MARGIN),y0=Math.max(0,b[1]-MARGIN),x1=Math.min(B.W-1,b[2]+MARGIN),y1=Math.min(B.H-1,b[3]+MARGIN);
- const sheets=[];let c=null,x=0,y=0,row=0;const fresh=()=>{c=document.createElement('canvas');c.width=c.height=SHEET;sheets.push(c);x=0;y=0;row=0;};
- B.packer={sheets,place(img,w,h){if(!c)fresh();if(x+w>SHEET){x=0;y+=row;row=0;}if(y+h>SHEET)fresh();const at=[sheets.length-1,x,y];c.getContext('2d').drawImage(img,0,0,w,h,x,y,w,h);x+=w+2;row=Math.max(row,h+2);return at;}};
+ const sheets=[],used=[];let c=null,x=0,y=0,row=0;const fresh=()=>{c=document.createElement('canvas');c.width=c.height=SHEET;sheets.push(c);used.push([0,0]);x=0;y=0;row=0;};
+ // (sheets are trimmed to what they hold: a decoded sheet costs its whole area)
+ B.packer={sheets,trimmed:()=>sheets.map((s,i)=>{const [w,h]=used[i],k=document.createElement('canvas');k.width=w;k.height=h;k.getContext('2d').drawImage(s,0,0);return k;}),
+  place(img,w,h){if(!c)fresh();if(x+w>SHEET){x=0;y+=row;row=0;}if(y+h>SHEET)fresh();const at=[sheets.length-1,x,y];c.getContext('2d').drawImage(img,0,0,w,h,x,y,w,h);const u=used.at(-1);u[0]=Math.max(u[0],x+w);u[1]=Math.max(u[1],y+h);x+=w+2;row=Math.max(row,h+2);return at;}};
  B.rect=[x0,y0,x1-x0+1,y1-y0+1];B.frames=[];return B.rect;},{MARGIN,SHEET});
 if(!rect)throw Error('No frame differs from the plate: nothing moves');
 for(const t of setup.times){
@@ -90,7 +92,7 @@ for(const t of setup.times){
 const result=await page.evaluate(()=>{const B=window.__room;
  // Put the study's room back as it was found.
  for(const o of B.hidden)o.visible=true;B.set.dispose();B.rig.dispose();B.parent?.add(B.room.root);
- return {frames:B.frames,plate:B.plate.toDataURL('image/webp',.92).split(',')[1],sheets:B.packer.sheets.map(c=>c.toDataURL('image/webp',.92).split(',')[1])};});
+ return {frames:B.frames,plate:B.plate.toDataURL('image/webp',.92).split(',')[1],sheets:B.packer.trimmed().map(c=>c.toDataURL('image/webp',.92).split(',')[1])};});
 await rm(out,{recursive:true,force:true});await mkdir(out,{recursive:true});
 let bytes=0;const save=async(name,b)=>{const buf=Buffer.from(b,'base64');bytes+=buf.length;await writeFile(out+name,buf);};
 await save('plate.webp',result.plate);for(const [i,b]of result.sheets.entries())await save(`sheet-${i}.webp`,b);

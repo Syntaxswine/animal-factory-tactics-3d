@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Intro sprite player</title>
+<link rel="icon" href="data:,">
+<style>
+ :root{--bg:#1d2620;--ink:#e9e2cc;--muted:#a9ad98;--line:#3a4a3e;--accent:#d8b46a}
+ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Georgia,serif}
+ header{padding:18px 24px 4px}
+ h1{margin:0;font-size:22px;font-weight:normal}
+ .sub{color:var(--muted);margin:2px 0 0}
+ main{padding:10px 24px 24px;max-width:1600px}
+ canvas{display:block;width:100%;height:auto;border:1px solid var(--line);background:#2c3524}
+ .bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
+ button,select{font:inherit;color:var(--ink);background:#26302a;border:1px solid var(--line);border-radius:3px;padding:3px 10px}
+ button[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}
+ input[type=range]{flex:1 1 300px;accent-color:var(--accent)}
+ output{font:13px/1 ui-monospace,monospace;color:var(--muted);min-width:7ch}
+ #shots button{font-size:13px;padding:2px 8px}
+ #status{color:var(--muted);font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<header><h1>Intro — the whole sequence</h1><p class="sub">Storyboard 01–12 as sprites: the approach and ambush (ambush-player.js), then the hit, the drop and the crash (proof.js), in one timeline.</p></header>
+<main>
+ <canvas id="view" width="1600" height="900"></canvas>
+ <div class="bar">
+  <button id="play" aria-pressed="false">Play</button>
+  <button id="restart">Restart</button>
+  <input id="time" type="range" step="0.01" aria-label="Time">
+  <output id="clock">—</output>
+  <select id="speed" aria-label="Speed"><option value="1">1×</option><option value="0.5">0.5×</option><option value="0.25">0.25×</option></select>
+ </div>
+ <div class="bar" id="shots"></div>
+ <p id="status">Loading…</p>
+</main>
+<script type="module">
+// The whole intro, 0 to 35 s: ?t=19.4 opens at a moment, &play plays.
+// Every frame is a pure function of t, so scrubbing and recording agree.
+import {SHOTS} from './ambush.js';
+import {loadAmbushAssets,createAmbush,PROOF_START,PROOF_END} from './ambush-player.js';
+import {KEYFRAME_TIMES} from './proof.js';
+const q=new URLSearchParams(location.search),$=id=>document.getElementById(id),status=$('status');
+try{
+ const t0=performance.now(),A=await loadAmbushAssets(),player=createAmbush($('view'),A),slider=$('time'),START=SHOTS[0].from,END=PROOF_END;
+ slider.min=START;slider.max=END;
+ let t=Number(q.get('t')??START),playing=false,last=0;
+ const draw=()=>{const r=player.render(t);slider.value=t;$('clock').textContent=t.toFixed(2)+' s';return r;};
+ const frame=now=>{if(!playing)return;const dt=Math.min(.1,(now-last)/1000)*Number($('speed').value);last=now;t+=dt;if(t>=END){t=END;setPlaying(false);}draw();if(playing)requestAnimationFrame(frame);};
+ const setPlaying=v=>{playing=v;$('play').textContent=v?'Pause':'Play';$('play').setAttribute('aria-pressed',v);if(v){if(t>=END)t=START;last=performance.now();requestAnimationFrame(frame);}};
+ $('play').onclick=()=>setPlaying(!playing);$('restart').onclick=()=>{t=START;draw();setPlaying(true);};
+ slider.oninput=()=>{t=Number(slider.value);setPlaying(false);draw();};
+ // One button a shot (the storyboard's numbers), and the crash's keyframes.
+ const jump=(label,at)=>{const b=document.createElement('button');b.textContent=label;b.onclick=()=>{t=at;setPlaying(false);draw();};$('shots').append(b);};
+ for(const s of SHOTS)jump(`${s.id} ${s.title}`,s.from);
+ for(const [k,at] of Object.entries(KEYFRAME_TIMES))jump(k==='0'?'close-up':'crash '+k,at);
+ addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();setPlaying(!playing);}});
+ // One pass over the timeline before reporting ready: the first draw of each
+ // sheet and puff texture costs an upload, which stutters first playback.
+ const w0=performance.now();for(let x=START;x<=END;x+=.1)player.render(x);const warm=Math.round(performance.now()-w0);
+ draw();
+ status.textContent=`${SHOTS.length} shots to ${PROOF_START} s, then the crash to ${END} s · warmed in ${warm} ms · ready in ${Math.round(performance.now()-t0)} ms`;
+ window.intro={render:x=>{t=x;return draw();},ready:true,start:START,end:END,canvas:$('view')};
+ if(q.has('play'))setPlaying(true);
+}catch(e){status.textContent='Failed: '+e.message;window.intro={error:e.message};throw e;}
+</script>
+</body>
+</html>

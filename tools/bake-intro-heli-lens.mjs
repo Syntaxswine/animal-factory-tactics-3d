@@ -41,8 +41,11 @@ const setup=await page.evaluate(async({SHEET,FPS,shotId})=>{
  // The lens in three.js terms: (X, Y, Z) = (x, h, y); vertical field of view
  // from the painter's focal length, so both project identically.
  const cam=new T.PerspectiveCamera(2*Math.atan(V.H/2/V.focal)*180/Math.PI,V.W/V.H,.3,800);
- const packer=()=>{const sheets=[];let c=null,x=0,y=0,row=0;const fresh=()=>{c=document.createElement('canvas');c.width=c.height=SHEET;sheets.push(c);x=0;y=0;row=0;};
-  return {sheets,place(img,w,h){if(!c)fresh();if(x+w>SHEET){x=0;y+=row;row=0;}if(y+h>SHEET)fresh();const at=[sheets.length-1,x,y];c.getContext('2d').drawImage(img,0,0,w,h,x,y,w,h);x+=w+2;row=Math.max(row,h+2);return at;}};};
+ const packer=()=>{const sheets=[],used=[];let c=null,x=0,y=0,row=0;const fresh=()=>{c=document.createElement('canvas');c.width=c.height=SHEET;sheets.push(c);used.push([0,0]);x=0;y=0;row=0;};
+  // (each sheet remembers how much of it is used, so it can be trimmed: a
+  // decoded sheet costs its full area in memory however little it holds)
+  const trimmed=()=>sheets.map((s,i)=>{const [w,h]=used[i],k=document.createElement('canvas');k.width=w;k.height=h;k.getContext('2d').drawImage(s,0,0);return k;});
+  return {sheets,used,trimmed,place(img,w,h){if(!c)fresh();if(x+w>SHEET){x=0;y+=row;row=0;}if(y+h>SHEET)fresh();const at=[sheets.length-1,x,y];c.getContext('2d').drawImage(img,0,0,w,h,x,y,w,h);const u=used.at(-1);u[0]=Math.max(u[0],x+w);u[1]=Math.max(u[1],y+h);x+=w+2;row=Math.max(row,h+2);return at;}};};
  const times=[];for(let t=shot.from-1/FPS;t<=shot.to+1/FPS+1e-9;t+=1/FPS)times.push(+Math.max(0,t).toFixed(4));
  window.__lens={T,landingSupportHeight,lensPath,approachAttitude,inkSprite,renderPasses,splitToneCanvas,SPLIT_AIRCRAFT,renderer,scene,root,rotor,helicopter,V,cam,sprites:packer(),frames:[]};
  return {times:[...new Set(times)],W:V.W,H:V.H,camera:shot.camera};
@@ -86,7 +89,7 @@ for(const t of setup.times){
  },{t});
  if(Math.round((t-setup.times[0])*FPS)%10===0)console.log('t',t.toFixed(2),'crop',r.w+'x'+r.h,'at',r.pos);
 }
-const result=await page.evaluate(()=>{const B=window.__lens;return {frames:B.frames,sheets:B.sprites.sheets.map(c=>c.toDataURL('image/webp',.9).split(',')[1])};});
+const result=await page.evaluate(()=>{const B=window.__lens;return {frames:B.frames,sheets:B.sprites.trimmed().map(c=>c.toDataURL('image/webp',.9).split(',')[1])};});
 await rm(out,{recursive:true,force:true});await mkdir(out,{recursive:true});
 let bytes=0;for(const [i,b]of result.sheets.entries()){const buf=Buffer.from(b,'base64');bytes+=buf.length;await writeFile(out+`sheet-${i}.webp`,buf);}
 await writeFile(out+'sequence.json',JSON.stringify({version:1,shot:shotId,fps:FPS,from:setup.times[0],to:setup.times.at(-1),plate:[setup.W,setup.H],camera:setup.camera,

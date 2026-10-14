@@ -1,6 +1,13 @@
 // Bake the helicopter's frames for the animated intro proof from the intro rig.
 //
 //   node tools/bake-intro-heli-sequence.mjs [baseUrl]
+//   node tools/bake-intro-heli-sequence.mjs --approach [baseUrl]
+//
+// --approach bakes the 0.8 s before the proof instead (the intro's shot 07,
+// ambush.js, 19.4-20.2 s): the intact aircraft on the approach's attitude
+// (trajectory.js approachAttitude), into heli-07/. Its yaw is taken relative
+// to the approach's heading at 20.2 s, so it meets this tool's first frame
+// (the study's yaw, 0 until the hit) without a jump.
 //
 // The 3D study supplies everything the airframe does (damaged tail, skid
 // compression, rotor strike and fragment, door and bench); trajectory.js
@@ -8,38 +15,48 @@
 // camera on a transparent background, cropped, and packed into WebP atlas
 // sheets with a matching ground-shadow sheet. Writes
 // dist/tactics/intro-sprites/heli-seq/{sheet-N.webp,shadow-N.webp,sequence.json}.
-// Needs a server on dist/ (default http://127.0.0.1:4496).
+// Needs a server with the 3D study (default http://127.0.0.1:4496).
 import {createRequire} from 'node:module';
-import {writeFile,mkdir,rm} from 'node:fs/promises';
+import {writeFile,mkdir,rm,readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
+import {extname} from 'node:path';
 const require=createRequire(import.meta.url);
 const {chromium}=require(process.env.PLAYWRIGHT_PATH||'C:/Users/baals/Local Storage/AI/wasteland-crystals/node_modules/playwright-core');
-const base=process.argv[2]||'http://127.0.0.1:4496';
-const out=fileURLToPath(new URL('../dist/tactics/intro-sprites/heli-seq/',import.meta.url));
-const W_TILE=52,PPU=W_TILE/Math.SQRT2,FPS=20,FROM=20.2,TO=31.8,SHEET=2048;
+const args=process.argv.slice(2),approach=args.includes('--approach'),base=args.find(a=>a.startsWith('http'))||'http://127.0.0.1:4496';
+const out=fileURLToPath(new URL(approach?'../dist/tactics/intro-sprites/heli-07/':'../dist/tactics/intro-sprites/heli-seq/',import.meta.url));
+const W_TILE=52,PPU=W_TILE/Math.SQRT2,FPS=20,FROM=approach?19.35:20.2,TO=approach?20.15:31.8,SHEET=2048;
 const times=[];for(let i=0;FROM+i/FPS<=TO+1e-9;i++)times.push(+(FROM+i/FPS).toFixed(4));
 const browser=await chromium.launch({channel:'msedge',args:['--use-angle=d3d11']});
 const page=await browser.newPage({viewport:{width:1280,height:900}});
 page.on('pageerror',e=>console.error('page:',e.message));
+// The study comes from the server (the helicopter authoring branch); this
+// checkout's intro-sprites (trajectory, ink, grade) are served from disk.
+const sprites=fileURLToPath(new URL('../dist/tactics/intro-sprites/',import.meta.url)),TYPES={'.js':'text/javascript','.json':'application/json','.webp':'image/webp','.png':'image/png'};
+await page.route('**/tactics/intro-sprites/**',async route=>{const rel=decodeURIComponent(new URL(route.request().url()).pathname.split('/tactics/intro-sprites/')[1]);
+ try{await route.fulfill({body:await readFile(sprites+rel),contentType:TYPES[extname(rel)]||'application/octet-stream'});}catch{await route.fulfill({status:404,body:'missing '+rel});}});
 await page.goto(base+'/tactics/intro-study.html?time=0',{waitUntil:'load'});
 await page.waitForFunction(()=>window.introReady===true,null,{timeout:60000});
-await page.evaluate(async({PPU,SHEET})=>{
- const T=await import('./vendor/three.module.js'),{aircraftState}=await import('./intro-timeline.js'),{landingSupportHeight}=await import('./intro-ground-contact.js'),{artPitch}=await import('./intro-sprites/trajectory.js'),{inkSprite,renderPasses}=await import('./intro-sprites/ink.js'),{splitToneCanvas,SPLIT_AIRCRAFT}=await import('./intro-sprites/grade.js');
+await page.evaluate(async({PPU,SHEET,approach})=>{
+ const T=await import('./vendor/three.module.js'),{aircraftState}=await import('./intro-timeline.js'),{landingSupportHeight}=await import('./intro-ground-contact.js'),{artPitch,approachAttitude,PROOF_START}=await import('./intro-sprites/trajectory.js'),{inkSprite,renderPasses}=await import('./intro-sprites/ink.js'),{splitToneCanvas,SPLIT_AIRCRAFT}=await import('./intro-sprites/grade.js');
  const {renderer,scene,helicopter}=window.introStudy,root=helicopter.root,rotor=helicopter.rotor;
  const W=900,H=640,el=Math.PI/6,cam=new T.OrthographicCamera(-W/2/PPU,W/2/PPU,H/2/PPU,-H/2/PPU,.1,400);
  const target=new T.Vector3(0,1.2,0);cam.position.copy(target).addScaledVector(new T.Vector3(Math.cos(el)/Math.SQRT2,Math.sin(el),Math.cos(el)/Math.SQRT2),150);cam.up.set(-Math.sin(el)/Math.SQRT2,Math.cos(el),-Math.sin(el)/Math.SQRT2);cam.lookAt(target);cam.updateMatrixWorld(true);
  const px=v=>{const q=v.clone().project(cam);return [(q.x+1)/2*W,(1-q.y)/2*H];};
  const sun=new T.Vector3(12,35,20).normalize(),flat=new T.Matrix4().set(1,-sun.x/sun.y,0,0, 0,0,0,0, 0,-sun.z/sun.y,1,0, 0,0,0,1),black=new T.MeshBasicMaterial({color:0x000000,side:T.DoubleSide});
  const grab=document.createElement('canvas');grab.width=W;grab.height=H;const gctx=grab.getContext('2d',{willReadFrequently:true});
- const packer=()=>{const sheets=[];let c=null,x=0,y=0,row=0;const fresh=()=>{c=document.createElement('canvas');c.width=c.height=SHEET;sheets.push(c);x=0;y=0;row=0;};
-  return {sheets,place(img,w,h){if(!c)fresh();if(x+w>SHEET){x=0;y+=row;row=0;}if(y+h>SHEET)fresh();const at=[sheets.length-1,x,y];c.getContext('2d').drawImage(img,0,0,w,h,x,y,w,h);x+=w+2;row=Math.max(row,h+2);return at;}};};
- window.__bake={T,aircraftState,landingSupportHeight,artPitch,inkSprite,renderPasses,splitToneCanvas,SPLIT_AIRCRAFT,renderer,scene,root,rotor,helicopter,cam,px,flat,black,grab,gctx,W,H,sprites:packer(),shadows:packer(),frames:[]};
-},{PPU,SHEET});
+ const packer=()=>{const sheets=[],used=[];let c=null,x=0,y=0,row=0;const fresh=()=>{c=document.createElement('canvas');c.width=c.height=SHEET;sheets.push(c);used.push([0,0]);x=0;y=0;row=0;};
+  // (each sheet remembers how much of it is used, so it can be trimmed: a
+  // decoded sheet costs its full area in memory however little it holds)
+  const trimmed=()=>sheets.map((s,i)=>{const [w,h]=used[i],k=document.createElement('canvas');k.width=w;k.height=h;k.getContext('2d').drawImage(s,0,0);return k;});
+  return {sheets,used,trimmed,place(img,w,h){if(!c)fresh();if(x+w>SHEET){x=0;y+=row;row=0;}if(y+h>SHEET)fresh();const at=[sheets.length-1,x,y];c.getContext('2d').drawImage(img,0,0,w,h,x,y,w,h);const u=used.at(-1);u[0]=Math.max(u[0],x+w);u[1]=Math.max(u[1],y+h);x+=w+2;row=Math.max(row,h+2);return at;}};};
+ window.__bake={T,aircraftState,landingSupportHeight,artPitch,approach,approachAttitude,heading:approachAttitude(PROOF_START).yaw,inkSprite,renderPasses,splitToneCanvas,SPLIT_AIRCRAFT,renderer,scene,root,rotor,helicopter,cam,px,flat,black,grab,gctx,W,H,sprites:packer(),shadows:packer(),frames:[]};
+},{PPU,SHEET,approach});
 for(const t of times){
  const r=await page.evaluate(({t})=>{
   const B=window.__bake,{T,root,rotor,helicopter,scene,renderer,cam,px,W,H,gctx,grab}=B;
   helicopter.update(t);
-  const s=B.aircraftState(t),pitch=B.artPitch(t),roll=s.roll,yaw=s.yaw,support=B.landingSupportHeight(s.compression,roll,yaw,pitch);
+  const s=B.aircraftState(t),A=B.approach?B.approachAttitude(t):null;
+  const pitch=A?A.pitch:B.artPitch(t),roll=A?A.roll:s.roll,yaw=A?A.yaw-B.heading:s.yaw,support=B.landingSupportHeight(A?0:s.compression,roll,yaw,pitch);
   root.position.set(0,support,0);root.rotation.set(roll,yaw,pitch);root.updateMatrixWorld(true);
   const hidden=[];const hide=o=>{if(o&&o.visible){o.visible=false;hidden.push(o);}};
   for(const o of scene.children)if(o!==root&&!o.isLight)hide(o);
@@ -78,12 +95,13 @@ for(const t of times){
  },{t});
  if(Math.round((t-FROM)*FPS)%20===0)console.log('t',t.toFixed(2),'crop',r.w+'x'+r.h,'sheets',r.sheets);
 }
-const result=await page.evaluate(()=>{const B=window.__bake,enc=c=>c.toDataURL('image/webp',.9).split(',')[1];return {frames:B.frames,sprites:B.sprites.sheets.map(enc),shadows:B.shadows.sheets.map(c=>c.toDataURL('image/webp',.8).split(',')[1])};});
+// (--approach trims its sheets to what they hold; the crash's own stay as baked)
+const result=await page.evaluate(trim=>{const B=window.__bake,enc=c=>c.toDataURL('image/webp',.9).split(',')[1],pick=p=>trim?p.trimmed():p.sheets;return {frames:B.frames,sprites:pick(B.sprites).map(enc),shadows:pick(B.shadows).map(c=>c.toDataURL('image/webp',.8).split(',')[1])};},approach);
 await rm(out,{recursive:true,force:true});await mkdir(out,{recursive:true});
 let bytes=0;
 for(const [i,b]of result.sprites.entries()){const buf=Buffer.from(b,'base64');bytes+=buf.length;await writeFile(out+`sheet-${i}.webp`,buf);}
 for(const [i,b]of result.shadows.entries()){const buf=Buffer.from(b,'base64');bytes+=buf.length;await writeFile(out+`shadow-${i}.webp`,buf);}
-const manifest={version:1,fps:FPS,from:FROM,to:TO,tileWidth:W_TILE,ppu:PPU,sheetSize:SHEET,camera:{azimuth:Math.PI/4,elevation:Math.PI/6},
+const manifest={version:1,fps:FPS,from:FROM,to:TO,...(approach?{shot:'07',attitude:'trajectory.js approachAttitude, yaw relative to its heading at 20.2 s'}:{}),tileWidth:W_TILE,ppu:PPU,sheetSize:SHEET,camera:{azimuth:Math.PI/4,elevation:Math.PI/6},
  note:'sprite = [sheet, x, y, w, h]; anchor = model origin (ground under the skid rails) within the crop; tail/engine/bladeTip = world offsets from that origin as tile [x, y, h]; rotorDisc in sprite px relative to the anchor (hub) and hub (u, v)',
  sheets:result.sprites.map((_,i)=>`sheet-${i}.webp`),shadowSheets:result.shadows.map((_,i)=>`shadow-${i}.webp`),frames:result.frames};
 await writeFile(out+'sequence.json',JSON.stringify(manifest)+'\n');

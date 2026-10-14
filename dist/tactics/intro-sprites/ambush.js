@@ -52,7 +52,11 @@ export const SHOTS=Object.freeze([
  {id:'04',from:12,to:14,title:'Radar contact',place:'SAM sector'},
  {id:'05',from:14,to:17,title:'SAM wakes',place:'SAM sector',sector:'sam',camera:samCamera,frames:'sam-05'},
  {id:'06',from:17,to:19.4,title:'Missile volley',place:'SAM sector',sector:'sam',camera:volleyCamera,frames:'sam-06'},
- {id:'07',from:19.4,to:PROOF_START,title:'Incoming',place:'plateau'},
+ // 07: the cut back to the aircraft, in the crash player's own wide view: its
+ // painted plate and its camera, which holds its first framing until 20.2 s,
+ // so the aircraft flies into the shot the proof then follows (heli-07, baked
+ // by tools/bake-intro-heli-sequence.mjs --approach).
+ {id:'07',from:19.4,to:PROOF_START,title:'Incoming',place:'plateau',frames:'heli-07',wide:true},
 ].map(Object.freeze));
 // 02: the study's radio room (intro-radio-room.js, its own units: the hen at
 // the origin facing +x, the desk in front of her, the microphone before her
@@ -89,8 +93,8 @@ export function henPoseAt(t){const y=syllableAt(t),nod=y?-.05*y.stress*Math.sin(
  return {...HEN_POSE,headTurn:HEN_POSE.headTurn+.04*Math.sin(1.3*t),headNod:HEN_POSE.headNod+nod+.015*Math.sin(.9*t+1),headRoll:.025*Math.sin(.7*t),beak:beakAt(t)};}
 export const shotAt=t=>SHOTS.find(s=>t>=s.from&&t<s.to)||SHOTS.at(-1);
 export const shotById=id=>SHOTS.find(s=>s.id===id);
-// Round 1 stills, one per shot, shown to the user before any in-between work.
-export const AMBUSH_KEYFRAMES=Object.freeze({'01':2,'02':6.5,'03':10.5,'04':13.2,'05':16.2,'06':18.05});
+// One still per shot (ambush.html?shot=), the moments shown in the reviews.
+export const AMBUSH_KEYFRAMES=Object.freeze({'01':2,'02':6.5,'03':10.5,'04':13.2,'05':16.2,'06':18.05,'07':19.8});
 
 // A slow push-in and a follow pan that takes up `follow` (default a third) of
 // the subject's offset from the plate's centre, clamped inside the plate.

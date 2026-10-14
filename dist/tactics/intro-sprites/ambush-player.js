@@ -2,12 +2,17 @@
 // like proof.js: every frame is a pure function of time t. Perspective shots
 // composite their painted plate and their baked frames: the aircraft with its
 // painted rotor disc (01, 03), or the launcher with the launch's painted smoke,
-// flames and flashes (05, 06). Shots not painted yet say so.
+// flames and flashes (05, 06). 07 is drawn in the crash player's wide view, and
+// from 20.2 s the crash player itself takes over (`proof`), so one player runs
+// the whole intro. Shots not painted yet say so.
 import {SHOTS,shotAt,lensPath,shotSpec,shotSector,shotKeepClear,plateName,lensWindow,HANDLER_LINE} from './ambush.js';
 export {lensWindow};
 import {SAM_SITE} from './sam-sector.js';
+import {loadProofAssets,createProof,PLATE_TILE,PROOF_START,PROOF_END} from './proof.js';
+import {approachPath,cameraAt} from './trajectory.js';
+import {SUN} from './crash-sector.js';
 import {closeupView,paintCloseupPlate} from './closeup.js';
-import {rotorDisc,puff,puffSprite} from './effects.js';
+import {rotorDisc,puff,puffSprite,missile} from './effects.js';
 import {finishFrame} from './plate.js';
 import {loadGroundTextures,rng,fbm} from './crash-sector.js';
 import {loadFloraSprites} from './painted-trees.js';
@@ -18,7 +23,8 @@ const load=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);
 const json=async p=>{const r=await fetch(p);if(!r.ok)throw Error('Missing '+p);return r.json();};
 const bitmap=async src=>createImageBitmap(await load(src));
 
-export async function loadAmbushAssets(){
+export {PROOF_START,PROOF_END};
+export async function loadAmbushAssets({crash:withCrash=true}={}){
  const lens={},plates=new Map(),frames=new Map();let painter=null,crash=null;
  const smoke=await load('../../assets/effects/painted-fire/smoke-atlas-v1.png');
  for(const s of SHOTS){if(!s.camera)continue;
@@ -34,7 +40,11 @@ export async function loadAmbushAssets(){
  // 02: the baked room, a plate and the rectangle around her head per frame.
  const r=SHOTS.find(s=>s.id==='02'),seq=await json(`${r.frames}/sequence.json`);
  const room={shot:r,seq,plate:await bitmap(`${r.frames}/${seq.plate}`),sheets:await Promise.all(seq.sheets.map(f=>bitmap(`${r.frames}/${f}`)))};
- return {lens,smoke,room};
+ // 07 and after: the crash player's assets, and the aircraft frames before them.
+ let proof=null,incoming=null;
+ if(withCrash){proof=await loadProofAssets();const s=SHOTS.find(s=>s.id==='07'),seq=await json(`${s.frames}/sequence.json`);
+  incoming={shot:s,seq,sheets:await Promise.all(seq.sheets.map(f=>bitmap(`${s.frames}/${f}`))),shadowSheets:await Promise.all(seq.shadowSheets.map(f=>bitmap(`${s.frames}/${f}`)))};}
+ return {lens,smoke,room,proof,incoming};
 }
 
 // A baked sequence's frame at t: by frame rate, or the nearest baked time when
@@ -195,7 +205,7 @@ function renderRoom(ctx,t,L){
 }
 
 export function createAmbush(canvas,A){
- const ctx=canvas.getContext('2d');
+ const ctx=canvas.getContext('2d'),proof=A.proof?createProof(canvas,A.proof):null;
  // Build the tinted puff sprites up front (proof.js: on first use they stalled playback).
  for(let c=0;c<4;c++)for(const tint of ['atop:rgba(246,244,238,.8)','atop:rgba(226,222,212,.72)',TRAIL_WARM])puffSprite(A.smoke,c,tint);
  function begin(L,subjectPx,t){const s=L.shot,win=lensWindow(s,t,subjectPx),z=win.zoom*WIDTH/s.camera.window[0];
@@ -214,12 +224,40 @@ export function createAmbush(canvas,A){
   const f=frameAt(L.seq,t),items=launchItems(t,L.seq.tracks,V),depth=V.depth(...site);
   for(const it of items)if(it.kind==='flame')it.backPx=V.project(...it.back);
   const puffs=items.filter(it=>it.kind==='puff').sort((a,b)=>a.depth-b.depth);
+  // The launcher in its layers (bake-intro-sam.mjs): the static base, the
+  // turret, then the missiles in flight over their own smoke.
+  const layer=g=>{if(g?.sprite){const [sh,x,y,w,h]=g.sprite;ctx.drawImage(L.sheets[sh],x,y,w,h,g.pos[0],g.pos[1],w,h);}};
   for(const it of puffs)if(it.depth<depth)drawLaunchItem(ctx,A.smoke,it);
-  drawFrame(L,f);
+  layer(L.seq.base);layer(f.turret);
   for(const it of puffs)if(it.depth>=depth)drawLaunchItem(ctx,A.smoke,it);
+  for(const m of f.missiles||[])layer(m);
   for(const it of items)if(it.kind!=='puff')drawLaunchItem(ctx,A.smoke,it);
   ctx.setTransform(1,0,0,1,0,0);finishFrame(ctx,WIDTH,HEIGHT);
   return {t,shot:L.shot.id,frame:f.t,puffs:puffs.length};
+ }
+ // 07: the crash player's wide view before it starts. Its plate, its camera
+ // (cameraAt holds the first framing until 20.2 s), the aircraft on the
+ // approach with its shadow and rotor, and the crash's own missile schedule
+ // (they enter from screen left as it starts): drawn as proof.js draws them.
+ function renderIncoming(t,I){
+  const P=A.proof,view=P.view,ppu=PLATE_TILE/Math.SQRT2,c=cameraAt(t),s=c.w/PLATE_TILE,[fpx,fpy]=view.project(...c.F);
+  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#2c3524';ctx.fillRect(0,0,WIDTH,HEIGHT);
+  ctx.setTransform(s,0,0,s,c.S[0]-fpx*s,c.S[1]-fpy*s);ctx.drawImage(P.plate,0,0);
+  const path=approachPath(t),f=frameAt(I.seq,t),ground=(x,y)=>P.sector.heightAt(x,y);
+  if(f.shadow){let g=0;for(let i=0;i<2;i++){const alt=Math.max(0,path.h-g);g=ground(path.x-SUN[0]/SUN[1]*alt,path.y-SUN[2]/SUN[1]*alt);}
+   const alt=Math.max(0,path.h-g),[sx,sy]=view.project(path.x-SUN[0]/SUN[1]*alt,path.y-SUN[2]/SUN[1]*alt,g),[sh,x,y,w,h]=f.shadow;
+   ctx.save();ctx.globalAlpha=Math.max(.16,.5-alt*.014);if(alt>.3)ctx.filter=`blur(${(1+alt*.22)*s}px)`;ctx.drawImage(I.shadowSheets[sh],x,y,w,h,sx-f.shadowAnchor[0],sy-f.shadowAnchor[1],w,h);ctx.restore();}
+  const air=[];
+  for(const p of proof.fx.puffs){const age=t-p.t;if(age<0||age>=p.life)continue;const u=age/p.life,x=p.p[0]+p.v[0]*age,y=p.p[1]+p.v[1]*age,h=p.p[2]+p.v[2]*age-(p.sink||0)*age*age;
+   const [px,py]=view.project(x,y,h),size=(p.s0+(p.s1-p.s0)*Math.sqrt(u))*ppu,alpha=p.a*Math.pow(1-u,1.4)*Math.min(1,age/.08);
+   air.push({depth:view.depth(x,y,h),draw:()=>puff(ctx,P.smoke,{x:px,y:py,size,cell:p.cell,tint:p.tint,alpha,flip:p.flip,angle:p.rot})});}
+  for(const m of proof.fx.missiles){if(t<m.t0||t>=m.t1)continue;const a=m.pos(t),nose=a.map((v,k)=>v+m.dir[k]*1.5);air.push({depth:view.depth(...a)+.01,draw:()=>missile(ctx,view.project(...a),view.project(...nose),{width:.17*ppu})});}
+  air.push({depth:view.depth(path.x,path.y,path.h+1.2),draw:()=>{const [ax,ay]=view.project(path.x,path.y,path.h),[sh,x,y,w,h]=f.sprite;
+   ctx.drawImage(I.sheets[sh],x,y,w,h,ax-f.anchor[0],ay-f.anchor[1],w,h);
+   if(f.rotorDisc){const d=f.rotorDisc;rotorDisc(ctx,{hub:[ax+d.hub[0],ay+d.hub[1]],u:d.u,v:d.v},{alpha:1,angle:31*t});}}});
+  air.sort((a,b)=>a.depth-b.depth);for(const it of air)it.draw();
+  ctx.setTransform(1,0,0,1,0,0);finishFrame(ctx,WIDTH,HEIGHT);
+  return {t,shot:'07',camera:c,heli:path,frame:f.t};
  }
  function unpainted(t,s){
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#1d2620';ctx.fillRect(0,0,WIDTH,HEIGHT);
@@ -227,9 +265,13 @@ export function createAmbush(canvas,A){
   ctx.fillStyle='#a9ad98';ctx.font='22px Georgia, serif';ctx.fillText(`${s.place}, ${s.from}–${s.to} s: not painted yet`,64,136);
   return {t,shot:s.id,unpainted:true};
  }
- function render(t){t=clamp(t,SHOTS[0].from,SHOTS.at(-1).to);const s=shotAt(t),L=A.lens[s.id];
+ // The whole intro: these shots to 20.2 s, then the crash player.
+ function render(t){
+  if(proof&&t>=PROOF_START)return proof.render(Math.min(t,PROOF_END));
+  t=clamp(t,SHOTS[0].from,SHOTS.at(-1).to-1e-6);const s=shotAt(t),L=A.lens[s.id];
   if(s.id==='04')return renderRadarInsert(ctx,t);
   if(s.id==='02'&&A.room)return renderRoom(ctx,t,A.room);
+  if(s.id==='07')return A.incoming&&proof?renderIncoming(t,A.incoming):unpainted(t,s);
   return !L?unpainted(t,s):L.kind==='heli'?renderHeli(t,L):renderSam(t,L);}
- return {render};
+ return {render,proof,end:proof?PROOF_END:SHOTS.at(-1).to};
 }

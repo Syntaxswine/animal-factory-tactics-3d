@@ -1,6 +1,12 @@
-# Intro, storyboard 01–06: approach and ambush
+# Intro, storyboard 01–07: approach, ambush and the cut into the crash
 
-**Status (October 14, 2026): round 2, the architect's composition pass on round 1 (`7574e32`).** Six keyframes again, one per shot. Shots 01, 02 and 03 now animate at 20 fps. The launcher (05, 06) is still baked only at its keyframe times, and shot 07, the cut into the crash, is not built yet: both come in the animation round. This part covers the first 20.2 s of the intro, up to the moment where the approved crash player ([INTRO-SPRITE-PROOF.md](INTRO-SPRITE-PROOF.md)) begins. The crash player and its plates are unchanged.
+**Status (October 14, 2026): round 3, the animation round, for the architect's review.**
+- Every shot animates at 20 fps.
+- Shot 07 cuts back to the aircraft at 19.4 s and hands over to the approved crash player ([INTRO-SPRITE-PROOF.md](INTRO-SPRITE-PROOF.md)) at 20.2 s.
+- One page plays the whole intro, 0–35 s: `tactics/intro-sprites/intro.html`.
+- The crash player and its plates are unchanged.
+
+Round 2 was the architect's composition pass on round 1 (`7574e32`). Its notes and changes are below the animation round.
 
 > **Direction (the user, 2026-10-13), after the crash sequence was merged:** "go ahead and clean up the merged branches, then we can start with the next part of the intro". The next item on the intro handoff's checklist is "Apply the accepted treatment to approach, overseas briefing, radar and the remote SAM cutaway." Round 1 followed the method the crash used: keyframes first, checked before any in-between animation.
 
@@ -20,6 +26,49 @@
 > All 28 intro and deployment checks I ran passed. I've left the PR unmerged for this revision; the completed animation and transition into the crash still need review.
 
 ![Storyboard 01–06, round 1 and round 2](intro-ambush/contact-sheet-round-2.jpg)
+
+## Round 3: the animation round
+
+> The architect, on round 1: "I've left the PR unmerged for this revision; the completed animation and transition into the crash still need review."
+
+| Shot | Animated by | Since |
+| --- | --- | --- |
+| 01, 03 · the aircraft | its lens bake at 20 fps, the window following it | round 1 (the cameras of round 2) |
+| 02 · the handler | her head and beak at 20 fps over the room's plate | round 2 |
+| 04 · the radar | code-drawn, a function of time | round 1 |
+| 05, 06 · the launcher | its bake at 20 fps, in layers (below), and the painted launch along the baked flights | round 3 |
+| 07 · incoming | the crash player's wide view before it starts (below) | round 3 |
+
+**07, the cut into the crash (19.4–20.2 s).** The storyboard's 07 cuts back from the remote SAM to the aircraft, in the crash sector, before the hit at 20.5 s. It is drawn in the crash player's own wide view:
+- its painted plate (`plate/crash-plate.webp`, unchanged);
+- its camera, which holds its first framing until 20.2 s (`trajectory.js` `cameraAt`). So the plate, built to contain every camera frame from 20.2 s, already contains 07, and needs no repaint. Round 1's doc said it would.
+- the aircraft on the approach, baked for those 0.8 s by the crash's own tool in the crash's own view (`tools/bake-intro-heli-sequence.mjs --approach`, into `heli-07/`), with its ground shadow and the painted rotor;
+- the crash's missile schedule, drawn as the proof draws it. The missiles enter from screen left as the proof starts.
+
+The pre-roll's yaw is taken relative to the approach's heading at 20.2 s. The crash's frames hold the study's yaw, 0, until the hit, so the aircraft meets them without a jump. At 20.2 s the player hands over to `proof.js`.
+
+**The whole intro in one player.** `intro.html` runs `ambush-player.js` to 20.2 s and the crash player (`proof.js`) after it, on one canvas, one timeline. It has buttons for every shot and the crash's keyframes. `ambush.html` (stills) runs the same player.
+
+**The launcher, baked in layers.** Baked whole, a frame held the launcher and any missile in flight, so its crop spanned most of the screen once a missile was away. 05 and 06 took 32 sprite sheets, 537 MB once decoded. The launcher bake (`tools/bake-intro-sam.mjs`) now keeps three layers:
+- the static slab, footings and cabinets, baked once;
+- per frame, the turret (turntable, cradle, rails and the missiles still on them);
+- per frame, each missile in flight.
+
+Each layer is rendered with the others as depth-only occluders, so a cabinet in front of the turret still hides it. The player draws the base, the turret, the smoke, then the missiles over their own trails. Every bake also trims its sprite sheets to what they hold.
+
+| Measured | |
+| --- | --- |
+| Whole-intro playback, 30 fps, 0–35 s, through `intro.html`; the same from the built Pages output | 1,051 frames, 0 over budget, no page errors |
+| The crash's 15 strip moments, through `intro.html` | byte-identical to `2152bd0`'s `proof.html` |
+| The cut at 20.2 s: the pre-roll's last frame vs the proof's first | attitude within 0.004 rad, rotor hub within 0.5 px, the same point on the path |
+| The launcher, 05 + 06 | 6 sprite sheets, 2.7 MB, 84 MB decoded (in one piece: 32 sheets, 5.6 MB, 537 MB) |
+| Decoded memory, the whole intro, every sheet and plate | 466 MB: 0–20.2 s takes 281 MB, the crash 184 MB |
+| `tests/intro-ambush.test.mjs` | 16 tests, 3 new: every shot at 20 fps from its first moment to its last; the launcher's layers; the cut into the crash |
+| Mutants, animation round (sandbox copy) | 9/9 caught: 07's last frame missing, 07 with the absolute heading (a 3.3° jump at the cut), 07 without a shadow, the crash camera moving before 20.2 s, 06 and the room at 10 fps, 06 drawing a missile before launch, 06 losing its first missile, 05 without its base |
+
+The whole intro, every half second: [0–20 s](intro-ambush/round-3/intro-strip-0-20.jpg) and [19–35 s](intro-ambush/round-3/intro-strip-19-35.jpg).
+
+A video of the whole intro is made by `tools/record-intro-proof.mjs --page intro --video`. It is not committed: it runs to 23 MB.
 
 ## Round 2: the notes and what changed
 
@@ -44,7 +93,7 @@ The architect approved the steeper launch and the wider volley camera, so they s
 | 04 · Radar contact | 12–14 s | [t = 13.2 s](intro-ambush/round-2/keyframe-04.jpg) | The sweep meets a new contact (it lights at 12.55 s); AIR CONTACT and an amber lamp come on. |
 | 05 · SAM wakes | 14–17 s | [t = 16.2 s](intro-ambush/round-2/keyframe-05.jpg) | In its own sector, the twin-rail launcher turns and raises its loaded rails against the sky. |
 | 06 · Missile volley | 17–19.4 s | [t = 18.05 s](intro-ambush/round-2/keyframe-06.jpg) | The first missile climbs away to the right on a white plume. The second ignites on its rail in a blast of smoke. |
-| 07 · Incoming | 19.4–20.2 s | (the crash player's opening) | The cut back to the aircraft in the crash sector, where the missiles arrive from screen left. |
+| 07 · Incoming | 19.4–20.2 s | [t = 19.8 s](intro-ambush/round-3/keyframe-07.jpg) | The cut back to the aircraft in the crash sector's wide view, over the plateau above the two-tier wall; the crash player takes over at 20.2 s, and the missiles arrive from screen left. |
 
 Round 1's keyframes are in [`intro-ambush/round-1/`](intro-ambush/round-1/), beside their [contact sheet](intro-ambush/contact-sheet-round-1.jpg).
 
@@ -122,12 +171,12 @@ All of it is the crash sequence's treatment: painted plates, the game's own art,
 
   Round 1's eight mutants are recorded in its PR and commit.
 
-## Not done yet: the animation round
+## Not done yet
 
-- **The launcher's in-betweens (05, 06).** It is baked only at its keyframe times; the full 20 fps bakes come next.
-- **The cut into the crash, 19.4–20.2 s (07).** Starting the crash player 0.8 s earlier needs a repaint of the wide plate (its geometry covers every camera frame) and the aircraft frames from 19.4 s. A player for the whole intro, 0–35 s, comes with it, so the transition can be watched.
-- **Sound.**
-- **One look to flag:** the new shots' sky is deeper than the crash close-up's (21.2–23.6 s), which keeps the approved, brighter sky. The crash's wide shots show no sky, so the change shows only at the close-up.
+- **Sound.** The storyboard's sound plan is in its README.
+- **Campaign startup.** The architect's note on the crash's merge stands: the intro plays as a standalone page, not yet at the start of a campaign.
+- **Streaming the frames.** The player decodes every sheet up front, as the crash player does: 466 MB for the whole intro. A game build would decode a few seconds ahead instead.
+- **One look to flag.** The new shots' sky is deeper than the crash close-up's (21.2–23.6 s), which keeps the approved, brighter sky. The crash's wide shots show no sky, so the change shows only at the close-up.
 
 ## Reproduce
 
@@ -137,12 +186,13 @@ All of it is the crash sequence's treatment: painted plates, the game's own art,
 node tools/render-intro-closeup.mjs --shot 01 http://127.0.0.1:4498        # plates: 01, 03, 05, 06
 node tools/bake-intro-heli-lens.mjs --shot 01 --study http://127.0.0.1:4496 # aircraft: 01, 03
 node tools/bake-intro-room.mjs --study http://127.0.0.1:4496                # the room at 20 fps (or --times 6.5)
-node tools/bake-intro-sam.mjs --shot 05 --times 15,16.2 --study http://127.0.0.1:4496
-node tools/bake-intro-sam.mjs --shot 06 --times 17.55,17.8,18.05,18.3,18.6 --study http://127.0.0.1:4496
+node tools/bake-intro-sam.mjs --shot 05 --study http://127.0.0.1:4496      # the launcher in layers: 05, 06
+node tools/bake-intro-heli-sequence.mjs --approach http://127.0.0.1:4496    # 07's pre-roll
+node tools/record-intro-proof.mjs --page intro --video --base http://127.0.0.1:4498   # the whole intro, paced, with its budget count
 node tools/preview-intro-rock.mjs closeup --cam x,y,h,tx,ty,th,hfov --mark x,y,h   # fast framing, no browser
 node --test tests/intro-ambush.test.mjs
 ```
 
-The stills page is `tactics/intro-sprites/ambush.html?shot=01` (or `?t=` for any moment). The 3D Pages build publishes it with the rest of `intro-sprites/`, and its import check includes it (`tools/build-tactics-3d.mjs`). `closeup.html?shot=05` paints a plate, and `closeup.html?sector=sam&cam=…` previews the SAM's set through any camera.
+The player for the whole intro is `tactics/intro-sprites/intro.html` (`?t=19.4` opens at a moment, `&play` plays); the stills page is `ambush.html?shot=01` (or `?t=`). The 3D Pages build publishes it with the rest of `intro-sprites/`, and its import check includes it (`tools/build-tactics-3d.mjs`). `closeup.html?shot=05` paints a plate, and `closeup.html?sector=sam&cam=…` previews the SAM's set through any camera.
 
 A note on the fast previews: `preview-intro-rock.mjs --cam … --width W` spreads the field of view across all W pixels. To preview a shot as the window shows it, pass `--width 1600 --height 900` with the shot's own field of view; a wider W with the same field of view magnifies the scene.
