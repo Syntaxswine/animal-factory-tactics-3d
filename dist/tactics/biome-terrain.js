@@ -25,12 +25,12 @@ export function terrainCellOutline(plan,x,z){
 }
 function geometry(positions,colors,normals){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));if(colors)g.setAttribute('color',new T.Float32BufferAttribute(colors,3));if(normals)g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));else g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();return g;}
 
-export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obstacleMaterials,plantFactory,grey=false,groundSprites=true,paintSeed,onPaintReady}){
+export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obstacleMaterials,plantFactory,grey=false,groundSprites=true,paintSeed,onPaintReady,edgeBlend=true}){
  if(!BIOME_OBSTACLES[family])throw Error('Unknown terrain biome');
- const root=new T.Group(),owned=new Set(),instances=[],treeInstances=[],chunks=[],denseMeshes=[],groundMeshes=[],trees=[],fill=createTerrainFill(plan,family),bog=family==='wetlands',snow=family==='snow';root.name='Spatial biome terrain';
+ const root=new T.Group(),owned=new Set(),instances=[],treeInstances=[],chunks=[],denseMeshes=[],groundMeshes=[],trees=[],fill=createTerrainFill(plan,family,{softEdge:edgeBlend}),bog=family==='wetlands',snow=family==='snow';root.name='Spatial biome terrain';
  const own=g=>(owned.add(g),g),crown=own(new T.SphereGeometry(.5,8,4)),proxyCrown=own(new T.IcosahedronGeometry(.5,0)),trunk=own(new T.CylinderGeometry(.5,.5,1,5)),cone=own(new T.ConeGeometry(.5,1,6)),rimMaterial=new T.LineBasicMaterial({color:0x5f513c});
  const original=grey?plantMaterials.grey:snow?plantMaterials.snow:obstacleMaterials[BIOME_OBSTACLES[family].paint],fillMaterial=original.clone();fillMaterial.onBeforeCompile=original.onBeforeCompile;fillMaterial.customProgramCacheKey=original.customProgramCacheKey;fillMaterial.vertexColors=true;
- const groundSkin=createConnectedGroundSkin(plan,family,{seed:paintSeed,onChange:onPaintReady,...(grey?{canvasFactory:()=>null}:{})}),fillMaterials=[];groundSkin.setEnabled(groundSprites);
+ const groundSkin=createConnectedGroundSkin(plan,family,{seed:paintSeed,onChange:onPaintReady,underlay:ground,edgeBlend,...(grey?{canvasFactory:()=>null}:{})}),fillMaterials=[];groundSkin.setEnabled(groundSprites);
  const leaf=family==='jungle'?'jungle':family==='temperate'?'leaves':snow?'snow':'dry',paint=id=>grey?plantMaterials.grey:(plantMaterials[id]||obstacleMaterials[id]),object=new T.Object3D();
  const cols=Math.ceil(plan.width/BIOME_CHUNK_SIZE);
  for(let z=0;z<plan.depth;z+=BIOME_CHUNK_SIZE)for(let x=0;x<plan.width;x+=BIOME_CHUNK_SIZE){
@@ -50,16 +50,22 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
   for(let z=chunk.z;z<Math.min(chunk.z+BIOME_CHUNK_SIZE,plan.depth);z++)for(let x=chunk.x;x<Math.min(chunk.x+BIOME_CHUNK_SIZE,plan.width);x++){
    const h=plan.heightAt(x,z),corners=[[x-.5,z-.5],[x+.5,z-.5],[x+.5,z+.5],[x-.5,z+.5]];quad(...corners.map(([u,v])=>[u,h,v]),groundPositions);
    for(let i=0;i<4;i++){const e=CELL_EDGES[i],nh=plan.heightAt(x+e.dx,z+e.dz),a=corners[i],b=corners[(i+1)%4];if(nh!==null&&nh<h){quad([a[0],nh,a[1]],[b[0],nh,b[1]],[b[0],h,b[1]],[a[0],h,a[1]],walls);for(let j=0;j<6;j++)wallColors.push(.63,.58,.46);edges.push(a[0],h+.012,a[1],b[0],h+.012,b[1]);}}
+   if(groundSkin.edgeField?.fringe[z*plan.width+x])chunk.fringe=true;
    if(!plan.blockedAt(x,z))continue;const outline=terrainCellOutline(plan,x,z),p=outline.points;
    if(!outline.outside.some(Boolean)){surface([p[0],p[2],p[1],p[0],p[3],p[2]],h);}else{
     for(let i=0;i<p.length;i++)surface([[x,z],p[(i+1)%p.length],p[i]],h);
     // Only exposed edges need skirts; shared seams must not acquire vertical walls.
     for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length],mid=[(a[0]+b[0])/2,(a[1]+b[1])/2],exposed=!((a[0]===b[0]&&((a[0]===x-.5&&!outline.outside[3])||(a[0]===x+.5&&!outline.outside[1])))||(a[1]===b[1]&&((a[1]===z-.5&&!outline.outside[0])||(a[1]===z+.5&&!outline.outside[2]))));if(!exposed)continue;
-     const side=[];quad([a[0],h,a[1]],[b[0],h,b[1]],[b[0],h+fill.height(...b),b[1]],[a[0],h+fill.height(...a),a[1]],side);dense.push(...side);const nx=b[1]-a[1],nz=a[0]-b[0],len=Math.hypot(nx,nz);for(let j=0;j<6;j++){normals.push(nx/len,0,nz/len);colors.push(...(grey?[1,1,1]:fill.color(...mid)));}
+     const side=[];quad([a[0],h,a[1]],[b[0],h,b[1]],[b[0],h+fill.height(...b),b[1]],[a[0],h+fill.height(...a),a[1]],side);dense.push(...side);const nx=b[1]-a[1],nz=a[0]-b[0],len=Math.hypot(nx,nz);for(let j=0;j<6;j++){
+      // The tapered toe shares the surface's paint and lighting. A separate
+      // vertical normal here would draw a dark, manufactured-looking trim.
+      const point=[side[j*3],side[j*3+2]];normals.push(...(edgeBlend?fill.normal(...point):[nx/len,0,nz/len]));colors.push(...(grey?[1,1,1]:fill.color(...(edgeBlend?point:mid))));
+     }
     }
    }
   }
-  groundMeshes.push(mesh(groundPositions,ground,'Saved tutorial terrain',chunk));mesh(walls,cliff,'Two plateau tiers',chunk,wallColors);
+  const pathMaterial=ground.clone();pathMaterial.onBeforeCompile=ground.onBeforeCompile;pathMaterial.customProgramCacheKey=ground.customProgramCacheKey;fillMaterials.push(pathMaterial);groundSkin.attach(pathMaterial,chunk,{layer:'path'});
+  groundMeshes.push(mesh(groundPositions,pathMaterial,'Saved tutorial terrain',chunk));mesh(walls,cliff,'Two plateau tiers',chunk,wallColors);
   if(dense.length){const m=fillMaterial.clone();m.onBeforeCompile=fillMaterial.onBeforeCompile;m.customProgramCacheKey=fillMaterial.customProgramCacheKey;fillMaterials.push(m);groundSkin.attach(m,chunk);chunk.dense=mesh(dense,m,'Continuous impassable ground',chunk,colors,normals);denseMeshes.push(chunk.dense);}
   if(edges.length){const g=own(new T.BufferGeometry().setAttribute('position',new T.Float32BufferAttribute(edges,3)));g.computeBoundingSphere();const rims=new T.LineSegments(g,rimMaterial);rims.userData.chunk=chunk.index;chunk.group.add(rims);}
  }

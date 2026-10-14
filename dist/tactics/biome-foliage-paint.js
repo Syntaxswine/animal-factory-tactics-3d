@@ -46,3 +46,17 @@ export function createBiomeGround(texture,kind,{variant=-1,unlit=false}={}){
  `);s.fragmentShader=s.fragmentShader.replace('#include <map_fragment>','diffuseColor.rgb*=bmGround(vBiomePosition.xz);');};
  m.userData={family:kind,variant,tileSize:GROUND_TILE_SIZE,note:'All four patterns share borders. Keep world coordinates when batching tiles.'};return m;
 }
+
+// The forest margin borrows the actual ground atlas and its sampling rule, so
+// its colour and surface grain meet the path exactly, including at distant LOD.
+export function groundUnderlay(ground){
+ const panel=BIOME_GROUNDS[ground?.userData?.family];if(!panel||!ground.map)return null;
+ const rect=atlasRect(panel),variant=ground.userData.variant;
+ return {map:ground.map,average:panelAverage(ground.map,panel),shader:`
+ uniform sampler2D edgeUnderlay;uniform vec3 edgeFarPaint;
+ vec2 edgeMirror(vec2 p){return 1.-abs(mod(p,2.)-1.);}
+ vec3 edgePaint(vec2 p){vec2 span=vec2(${rect.size.join(',')}),continuous=vConnectedWorld/${GROUND_TILE_SIZE.toFixed(1)},pixels=vec2(textureSize(edgeUnderlay,0));vec2 dx=dFdx(continuous)*span*pixels,dy=dFdy(continuous)*span*pixels;float footprint=log2(max(.0001,max(length(dx),length(dy)))),lod=clamp(footprint,0.,4.);return mix(textureLod(edgeUnderlay,vec2(${rect.origin.join(',')})+edgeMirror(p)*span,lod).rgb,edgeFarPaint,smoothstep(3.5,5.5,footprint));}
+ vec3 edgePeriodic(vec2 uv,vec2 offset){vec2 p=uv+offset,w=smoothstep(vec2(.65),vec2(1.),uv);return mix(mix(edgePaint(p),edgePaint(p-vec2(1,0)),w.x),mix(edgePaint(p-vec2(0,1)),edgePaint(p-vec2(1,1)),w.x),w.y);}
+ vec3 edgeGround(){vec2 cell=floor(vConnectedWorld/${GROUND_TILE_SIZE.toFixed(1)}),uv=fract(vConnectedWorld/${GROUND_TILE_SIZE.toFixed(1)});float variant=${variant===-1?'mod(cell.x*7.+cell.y*11.,4.)':Number(variant).toFixed(1)};float fade=pow(sin(uv.x*3.14159265)*sin(uv.y*3.14159265),2.);return mix(edgePeriodic(uv,vec2(0)),edgePeriodic(uv,vec2(.237,.371)*variant),fade*.80);}
+ `};
+}
