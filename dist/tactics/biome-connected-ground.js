@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {createGroundComposition,groundHash} from './biome-ground-composition.js';
+import {createGroundComposition,groundHash,bogLandAt,createBogLandField} from './biome-ground-composition.js';
 import {paintGroundFeature} from './biome-ground-sprites.js';
 import {spriteRandom} from './biome-ground-sprite-layout.js';
 import {createGroundEdgeField,GROUND_EDGE} from './biome-ground-edge.js';
@@ -55,6 +55,9 @@ function texture(canvas,name){const t=new T.CanvasTexture(canvas);t.colorSpace=T
 export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=canvasDefault,onChange=()=>{},underlay,edgeBlend=true,maxResident=GROUND_PAGE.maxResident}={}){
  maxResident=Math.max(1,Math.min(GROUND_PAGE.maxResident,Math.floor(maxResident)));
  const composition=createGroundComposition(plan,family,seed),overviewCanvas=canvasFactory(),pages=new Map(),bindings=new Map(),strength={value:1},focus={value:new T.Vector2()},detail={value:0},waiters=[],edgeSource=groundUnderlay(underlay);
+ const landAt=(x,z)=>family==='wetlands'?bogLandAt(x+(plan.origin?.[0]||0),z+(plan.origin?.[1]||0),seed):0;
+ const bogField=family==='wetlands'&&overviewCanvas?createBogLandField(plan,seed):null,bogMap=bogField?new T.DataTexture(bogField.data,bogField.width,bogField.depth,T.RedFormat,T.UnsignedByteType):null;
+ if(bogMap){bogMap.name='Bog peat and grass patches';bogMap.minFilter=bogMap.magFilter=T.LinearFilter;bogMap.generateMipmaps=false;bogMap.unpackAlignment=1;bogMap.needsUpdate=true;}
  const edgeField=overviewCanvas&&edgeSource?createGroundEdgeField(plan):null,edgeMap=edgeField?new T.DataTexture(edgeField.data,edgeField.width,edgeField.depth,T.RedFormat,T.UnsignedByteType):null;
  const edgeBarriers=edgeField?new T.DataTexture(edgeField.barriers,plan.width,plan.depth,T.RedFormat,T.UnsignedByteType):null;
  if(edgeMap){edgeMap.name='Ground surface margin';edgeMap.minFilter=edgeMap.magFilter=T.LinearFilter;edgeMap.generateMipmaps=false;edgeMap.unpackAlignment=1;edgeMap.needsUpdate=true;}
@@ -68,19 +71,22 @@ export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=ca
   if(!overview||layer==='path'&&!edgeMap)return;
   const bog=family==='wetlands'&&layer==='cover';
   const previous=material.onBeforeCompile,cache=material.customProgramCacheKey(),uniforms={groundOverview:{value:overview},groundDetail:{value:overview},groundPageOrigin:{value:new T.Vector2()},groundPageSize:{value:26},groundHasPage:{value:0}};
-  if(!bindings.has(chunk.index))bindings.set(chunk.index,[]);bindings.get(chunk.index).push(uniforms);material.customProgramCacheKey=()=>cache+'-connected-ground-v3-'+family+'-'+layer+'-'+!!edgeMap+'-'+underlay?.userData?.variant;
+  if(!bindings.has(chunk.index))bindings.set(chunk.index,[]);bindings.get(chunk.index).push(uniforms);material.customProgramCacheKey=()=>cache+'-connected-ground-v4-'+family+'-'+layer+'-'+!!edgeMap+'-'+underlay?.userData?.variant;
   material.onBeforeCompile=s=>{
    previous.call(material,s);Object.assign(s.uniforms,uniforms,{groundStrength:strength,groundFocus:focus,groundDetailAmount:detail,groundMapSize:{value:new T.Vector2(plan.width,plan.depth)}});
    s.vertexShader='varying vec2 vConnectedGround,vConnectedWorld; varying float vConnectedTop;\n'+s.vertexShader;
    s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvConnectedGround=position.xz;vConnectedWorld=(modelMatrix*vec4(position,1.)).xz;vConnectedTop=abs(normal.y);');
    s.fragmentShader=`varying vec2 vConnectedGround,vConnectedWorld;varying float vConnectedTop;
     uniform sampler2D groundOverview,groundDetail;uniform vec2 groundPageOrigin,groundMapSize,groundFocus;uniform float groundPageSize,groundHasPage,groundStrength,groundDetailAmount;
+    ${bog?'uniform sampler2D bogLand;':''}
    `+s.fragmentShader;
    s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
     vec3 groundColor=texture2D(groundOverview,(vConnectedGround+.5)/groundMapSize).rgb;
     float closePaint=groundHasPage*groundDetailAmount*(1.-smoothstep(18.,24.,distance(vConnectedGround,groundFocus)));
     groundColor=mix(groundColor,texture2D(groundDetail,(vConnectedGround-groundPageOrigin)/groundPageSize).rgb,closePaint);
-    ${bog&&!edgeMap?'groundColor=diffuseColor.rgb;':''}
+    ${bog?`float bogLandAmount=texture2D(bogLand,((vConnectedGround+.5)*2.+1.)/(groundMapSize*2.+2.)).r;
+    vec3 bogSurface=mix(diffuseColor.rgb,groundColor,bogLandAmount);`:''}
+    ${bog&&!edgeMap?'groundColor=bogSurface;':''}
     ${edgeMap?`
     vec2 edgeCell=floor(vConnectedGround+.5),edgePoint=vConnectedGround;
     float edgeBits=floor(texture2D(groundBarriers,(edgeCell+.5)/groundMapSize).r*255.+.5);
@@ -96,9 +102,9 @@ export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=ca
     if(mod(floor(edgeBits/128.),2.)>0.&&all(greaterThan(edgePoint,edgeCell+.375)))edgePoint=edgeCell+.375;
     float edgeDistance=texture2D(groundEdge,(edgePoint+.5)/groundMapSize).r*4.-2.;
     float edgeWash=smoothstep(-${GROUND_EDGE.outside},${GROUND_EDGE.inside},edgeDistance);
-    // A bog keeps its water atlas in the interior. Connected litter belongs on
-    // the saturated bank, where it also meets the adjacent path's margin.
-    ${bog?'groundColor=mix(groundColor,diffuseColor.rgb,mix(1.,edgeWash,groundEdgeEnabled));':''}
+    // Water surrounds soft peat islands; the saturated outer bank still meets
+    // the adjacent path's margin. Neither the islands nor water change collision.
+    ${bog?'groundColor=mix(groundColor,bogSurface,mix(1.,edgeWash,groundEdgeEnabled));':''}
     vec3 pathColor=${layer==='path'?'diffuseColor.rgb':'edgeGround()'};
     vec3 edgeColor=mix(pathColor,groundColor,edgeWash);
     // Tiny, sparse, flat flecks; substantial wood remains inside blocked cells.
@@ -113,6 +119,7 @@ export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=ca
     `:''}
     diffuseColor.rgb=mix(diffuseColor.rgb,groundColor,pow(clamp(vConnectedTop,0.,1.),4.)*groundStrength${layer==='path'&&edgeMap?'*groundEdgeEnabled':''});
    `);
+   if(bog){s.uniforms.bogLand={value:bogMap};s.fragmentShader=s.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(roughnessFactor,.94,bogLandAmount*groundStrength);').replace('#include <metalnessmap_fragment>','#include <metalnessmap_fragment>\nmetalnessFactor*=1.-bogLandAmount*groundStrength;');}
    if(edgeMap){Object.assign(s.uniforms,{groundEdge:{value:edgeMap},groundBarriers:{value:edgeBarriers},groundEdgeEnabled:{value:edgeBlend?1:0},groundEdgeSeed:{value:seed}});s.fragmentShader='uniform sampler2D groundEdge,groundBarriers;uniform float groundEdgeEnabled,groundEdgeSeed;\n'+s.fragmentShader;
     if(layer!=='path'){Object.assign(s.uniforms,edgeSource.uniforms||{});s.uniforms.edgeUnderlay={value:edgeSource.map};s.uniforms.edgeFarPaint={value:edgeSource.average};s.fragmentShader=s.fragmentShader.replace('#include <map_pars_fragment>','#include <map_pars_fragment>\n'+edgeSource.shader);}
    }
@@ -156,5 +163,5 @@ export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=ca
   }
   pump();settle();
  }
- return {composition,pages,overview,edgeMap,edgeBarriers,edgeField,attach,update,setEnabled(v){strength.value=v?1:0;},whenReady(){if(error)return Promise.reject(Error(error));if(disposed||overviewReady&&!pending())return Promise.resolve(!disposed);return new Promise((resolve,reject)=>waiters.push({resolve,reject}));},get stats(){const pixels=!disposed&&overview?overview.image.width*overview.image.height+pages.size*832*832:0,base=bases.get(composition),edgeBytes=!disposed&&edgeField?edgeField.data.byteLength+edgeField.barriers.byteLength:0;return {...composition.stats,seed,residentPages:pages.size,activePages:needed.length,pendingPages:pending(),overviewReady,worker:!!worker,workerTerminated,error,maxResidentPages:maxResident,edgeBytes,textureBytes:Math.ceil(pixels*4*4/3)+edgeBytes,canvasBytes:(pixels+(base?base.width*base.height:0))*4,workerBaseBytes:!disposed&&worker?(plan.width+4)*(plan.depth+4)*16*4:0,generations,generationMs,mode:'connected world painting'};},dispose(){if(disposed)return;disposed=true;worker?.terminate();workerTerminated=!!worker;for(const key of [...pages.keys()])release(key);overview?.dispose();edgeMap?.dispose();edgeBarriers?.dispose();closeImage(overview?.image);releaseGroundPaint(composition);bindings.clear();needed=[];inFlight=null;settle();}};
+ return {composition,pages,overview,edgeMap,edgeBarriers,edgeField,bogMap,landAt,attach,update,setEnabled(v){strength.value=v?1:0;},whenReady(){if(error)return Promise.reject(Error(error));if(disposed||overviewReady&&!pending())return Promise.resolve(!disposed);return new Promise((resolve,reject)=>waiters.push({resolve,reject}));},get stats(){const pixels=!disposed&&overview?overview.image.width*overview.image.height+pages.size*832*832:0,base=bases.get(composition),edgeBytes=!disposed&&edgeField?edgeField.data.byteLength+edgeField.barriers.byteLength:0,bogBytes=!disposed&&bogField?bogField.data.byteLength:0;return {...composition.stats,seed,residentPages:pages.size,activePages:needed.length,pendingPages:pending(),overviewReady,worker:!!worker,workerTerminated,error,maxResidentPages:maxResident,edgeBytes,bogBytes,textureBytes:Math.ceil(pixels*4*4/3)+edgeBytes+bogBytes,canvasBytes:(pixels+(base?base.width*base.height:0))*4,workerBaseBytes:!disposed&&worker?(plan.width+4)*(plan.depth+4)*16*4:0,generations,generationMs,mode:'connected world painting'};},dispose(){if(disposed)return;disposed=true;worker?.terminate();workerTerminated=!!worker;for(const key of [...pages.keys()])release(key);overview?.dispose();edgeMap?.dispose();edgeBarriers?.dispose();bogMap?.dispose();closeImage(overview?.image);releaseGroundPaint(composition);bindings.clear();needed=[];inFlight=null;settle();}};
 }

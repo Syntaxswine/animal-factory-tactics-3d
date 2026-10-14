@@ -12,6 +12,19 @@ const COLORS={
 const smooth=v=>v*v*(3-2*v),mix=(a,b,t)=>a+(b-a)*t;
 export function groundHash(x,z,seed){let n=Math.imul(x,374761393)^Math.imul(z,668265263)^Math.imul(seed,1442695041);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967296;}
 export function groundNoise(x,z,scale,seed){x/=scale;z/=scale;const ix=Math.floor(x),iz=Math.floor(z),u=smooth(x-ix),v=smooth(z-iz);return mix(mix(groundHash(ix,iz,seed),groundHash(ix+1,iz,seed),u),mix(groundHash(ix,iz+1,seed),groundHash(ix+1,iz+1,seed),u),v);}
+// Soft peat mats share one world field across tiles, chunks and sector edges.
+// This is visual land coverage only: every cell of the bog remains unsafe.
+export function bogLandAt(x,z,seed=173){
+ const u=x+(groundNoise(x,z,7,seed+71)-.5)*2.2,v=z+(groundNoise(x,z,7,seed+73)-.5)*2.2;
+ const n=.72*groundNoise(u,v,3.8,seed+79)+.28*groundNoise(x,z,1.15,seed+83);
+ return smooth(Math.max(0,Math.min(1,(n-.47)/.13)));
+}
+export function createBogLandField(plan,seed=173){
+ const width=plan.width*2+2,depth=plan.depth*2+2,data=new Uint8Array(width*depth),[ox,oz]=plan.origin||[0,0];
+ // A half-tile pixel plus one-pixel halo keeps neighboring samples continuous.
+ for(let z=0;z<depth;z++)for(let x=0;x<width;x++)data[z*width+x]=Math.round(bogLandAt(x/2-.75+ox,z/2-.75+oz,seed)*255);
+ return {width,depth,data};
+}
 export function createGroundComposition(plan,family,seed=173){
  if(!COLORS[family])throw Error('Unknown ground family');
  if(!Number.isSafeInteger(seed)||seed<0||seed>2147483647)throw Error('Invalid ground seed');

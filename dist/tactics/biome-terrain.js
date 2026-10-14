@@ -77,15 +77,15 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
  for(let z=1;z<plan.depth-1;z+=step)for(let x=1;x<plan.width-1;x+=step){
   const n=Math.round(x*191+z*631)+(plan.seed||0)+(plan.origin?.[0]||0)*191+(plan.origin?.[1]||0)*631,cx=x+(random(n)-.5)*step,cz=z+(random(n+1)-.5)*step,ix=Math.floor(cx+.5),iz=Math.floor(cz+.5),h=plan.heightAt(ix,iz);if(!plan.blockedAt(ix,iz))continue;
   if(plan.includeAt&&!plan.includeAt(ix,iz)||plan.densityAt&&random(n+57)>plan.densityAt(ix,iz))continue;
-  const chunk=chunkAt(ix,iz),d=fill.distance(cx,cz),patch=field(cx,cz,9,306);
+  const chunk=chunkAt(ix,iz),d=fill.distance(cx,cz),patch=field(cx,cz,9,306),peatIsland=bog&&groundSkin.landAt(cx,cz)>.78;
   if(!snow&&random(n+120)<.43){const plant=lowPlants[Math.floor(random(n+123)*lowPlants.length)],pb=plant.userData.bounds,scale=1.35;
-   if(safe(cx,cz,Math.max(Math.abs(pb.min[0]),pb.max[0])*scale,Math.max(Math.abs(pb.min[2]),pb.max[2])*scale,h)&&(!bog||d<2)){
+   if(safe(cx,cz,Math.max(Math.abs(pb.min[0]),pb.max[0])*scale,Math.max(Math.abs(pb.min[2]),pb.max[2])*scale,h)&&(!bog||d<2||peatIsland)){
     plant.updateMatrixWorld(true);const transform=new T.Matrix4().makeTranslation(cx,h+fill.height(cx,cz)-.025,cz).scale(new T.Vector3(scale,scale,scale));plant.traverse(m=>{if(m.isMesh)batch(chunk,'base',m.geometry,m.material,new T.Matrix4().multiplyMatrices(transform,m.matrixWorld));});
    }
   }
   if(bog){
-   // Reeds grow in a few uneven beds, leaving long lengths of open water bank.
-   if(d>1.5||patch<.53||!safe(cx,cz,.42,.42,h))continue;
+   // Sparse reeds mark saturated banks and soft islands among the open water.
+   if((d>1.5&&!peatIsland)||patch<.53||!safe(cx,cz,.42,.42,h))continue;
    part(chunk,'base',crown,paint('peat'),cx,h+.035,cz,.80,.10,.72);
    for(let j=0;j<5+Math.floor(random(n+9)*8);j++){const u=cx+(random(n+j*9)-.5)*.58,v=cz+(random(n+j*11)-.5)*.58,height=.40+random(n+j*17)*.8;part(chunk,'base',trunk,paint(j%3?'moss':'straw'),u,h+height/2,v,.027,height,.027);reeds++;}clusters++;continue;
   }

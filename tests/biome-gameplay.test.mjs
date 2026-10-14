@@ -17,6 +17,7 @@ import {captureEncounter,restoreEncounter} from '../dist/tactics/encounter-save.
 import {tilePreview} from '../dist/tactics/editor-tool-previews.js';
 import {buildWorld} from '../dist/tactics/hybrid-world.js';
 import {environmentVisuals} from '../dist/tactics/environment-visuals.js';
+import {bogLandAt,createBogLandField} from '../dist/tactics/biome-ground-composition.js';
 import fs from 'node:fs';
 
 function small(size=24){return {terrain:Array.from({length:size},()=>Array(size).fill('ground-grass')),upper:[{},{}],props:[],foliage:{}};}
@@ -46,6 +47,15 @@ test('the saved mask protects roads, water, objects, absent upper floors and act
  for(const [x,y]of [[4,4],[5,4],[6,4],[5,5]])assert.equal(ground.heightAt(x,y),null);
  assert.equal(upper.family,'jungle');assert.equal(upper.heightAt(5,5),2);assert.equal(upper.heightAt(6,5),null);assert.deepEqual(upper.cells,[[5,5]]);
  assert.equal(top.family,'snow');assert.equal(top.passableCells().length,1);assert.equal(ground.blockedAt(12,8),false);
+});
+
+test('bog land patches and water both remain impassable on ground and raised floors',()=>{
+ const map=small();map.terrain=map.terrain.map(row=>row.map(()=> 'ground-biome-wetlands'));
+ for(let y=1;y<23;y++)for(let x=1;x<23;x++)for(const z of [0,1]){map.foliage[`${x},${y},${z}`]=[85,true];if(z)map.upper[0][`${x},${y}`]='ground-biome-wetlands';}
+ const saved=JSON.stringify(map),plans=biomePlans(map);let land=0,water=0;
+ for(const p of plans){createBogLandField(p);for(const [x,y]of p.cells){const amount=bogLandAt(x,y,p.seed);land+=amount>.78;water+=amount<.1;assert.equal(passable(map,{x,y,z:p.level}),false,'a painted island must not open a walking route');}}
+ assert(land>50&&water>50);assert.equal(JSON.stringify(map),saved,'visual generation must not edit the authored mask');
+ delete map.foliage['5,5,0'];assert.equal(passable(map,{x:5,y:5,z:0}),true,'explicitly cleared ground remains walkable');
 });
 test('neighboring sectors share exact ground weights at their common edge, including the texture halo',()=>{
  const field=generateEnvironments(blank(),42),a=small(240),b=small(240);a.environment=localEnvironmentProfile(field,100);b.environment=localEnvironmentProfile(field,101);
