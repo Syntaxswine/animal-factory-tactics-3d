@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import * as T from '../dist/tactics/vendor/three.module.js';
 import {createBiomeObstacleMaterials} from '../dist/tactics/biome-obstacle-paint.js';
 import {createBiomeGround} from '../dist/tactics/biome-foliage-paint.js';
-import {createGroundComposition} from '../dist/tactics/biome-ground-composition.js';
+import {createGroundComposition,bogLandAt,createBogLandField} from '../dist/tactics/biome-ground-composition.js';
 import {createConnectedGroundSkin} from '../dist/tactics/biome-connected-ground.js';
 function plan(){const width=96,depth=96,blockedAt=(x,z)=>Number.isInteger(x)&&Number.isInteger(z)&&x>=0&&z>=0&&x<width&&z<depth&&x!==45&&z!==51,heightAt=(x,z)=>x<0||z<0||x>=width||z>=depth?null:z<64?0:2.12;return {width,depth,blockedAt,heightAt};}
 for(const family of ['temperate','jungle','snow','dry','wetlands'])test(family+' world painting is deterministic, unique, and contains joined multi-tile features',()=>{
@@ -26,13 +26,24 @@ test('grey/headless planning allocates no textures and releases safely',()=>{
  const skin=createConnectedGroundSkin(plan(),'temperate',{canvasFactory:()=>null});assert.equal(skin.stats.textureBytes,0);assert.equal(skin.stats.canvasBytes,0);assert.equal(skin.pages.size,0);skin.update([],{},40);skin.dispose();skin.dispose();assert(skin.composition.features.length>0);
 });
 
+test('bog patches vary with the seed and join across render chunks and neighboring sectors',()=>{
+ const p={width:24,depth:24,origin:[0,0]},a=createBogLandField(p),again=createBogLandField(p),b=createBogLandField({...p,origin:[24,0]}),c=createBogLandField({...p,origin:[0,24]});
+ assert.deepEqual(a.data,again.data);assert.notDeepEqual(a.data,createBogLandField(p,829).data);
+ assert(a.data.filter(v=>v<26).length>a.data.length*.2,'open water remains between patches');
+ assert(a.data.filter(v=>v>200).length>a.data.length*.15,'the bog includes visible land');
+ assert.equal(a.data.byteLength,(24*2+2)**2,'land paint adds only a small single-channel field');
+ for(let z=0;z<a.depth;z++)for(let halo=0;halo<2;halo++)assert.equal(a.data[z*a.width+a.width-2+halo],b.data[z*b.width+halo]);
+ for(let x=0;x<a.width;x++)for(let halo=0;halo<2;halo++)assert.equal(a.data[(a.depth-2+halo)*a.width+x],c.data[halo*c.width+x]);
+ for(let z=0;z<48;z+=.31)assert(Math.abs(bogLandAt(23.5-.0001,z)-bogLandAt(23.5+.0001,z))<.002,'no render-block seam');
+});
+
 test('connected wetland paint preserves the water atlas inside the bog but not on walkable ground',()=>{
  const previousWorker=globalThis.Worker,atlas=new T.Texture(),materials=createBiomeObstacleMaterials(atlas),ground=createBiomeGround(atlas,'wetlands');
  // Only the material assembly is under test; defer asynchronous canvas baking.
  globalThis.Worker=class{postMessage(){}terminate(){}};
  const canvasFactory=()=>({getContext:()=>({createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),putImageData(){}})});
  const compile=m=>{const shader={uniforms:{},vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader};m.onBeforeCompile(shader);return shader;};
- const preserveWater='groundColor=mix(groundColor,diffuseColor.rgb,mix(1.,edgeWash,groundEdgeEnabled));';
+ const preserveWater='groundColor=mix(groundColor,bogSurface,mix(1.,edgeWash,groundEdgeEnabled));';
  try{
   for(const edgeBlend of [true,false]){
    const skin=createConnectedGroundSkin(plan(),'wetlands',{canvasFactory,underlay:ground,edgeBlend});
@@ -42,6 +53,10 @@ test('connected wetland paint preserves the water atlas inside the bog but not o
     const wet=compile(water),dry=compile(path);
     assert.match(wet.fragmentShader,/diffuseColor.rgb\*=obstaclePaint/,'the actual bog atlas is sampled before edge blending');
     assert.ok(wet.fragmentShader.includes(preserveWater),'fully opaque forest-floor paint must not replace the water interior');
+    assert.ok(wet.fragmentShader.includes('vec3 bogSurface=mix(diffuseColor.rgb,groundColor,bogLandAmount);'),'the mask selects water and peat instead of replacing the entire bog');
+    assert.equal(wet.uniforms.bogLand.value,skin.bogMap);
+    assert.equal(dry.uniforms.bogLand,undefined,'passable ground never samples the bog land mask');
+    let released=0;skin.bogMap.addEventListener('dispose',()=>released++);skin.dispose();skin.dispose();assert.equal(released,1);assert.equal(skin.stats.bogBytes,0);
     assert.equal(wet.uniforms.groundEdgeEnabled.value,edgeBlend?1:0);
     assert.equal(water.roughness,materials.bogWater.roughness);
     assert.ok(!dry.fragmentShader.includes(preserveWater),'walkable wetland grass stays dry');
@@ -49,7 +64,7 @@ test('connected wetland paint preserves the water atlas inside the bog but not o
    }finally{water.dispose();path.dispose();skin.dispose();}
   }
   const skin=createConnectedGroundSkin(plan(),'wetlands',{canvasFactory}),water=materials.bogWater.clone();water.onBeforeCompile=materials.bogWater.onBeforeCompile;
-  try{skin.attach(water,{index:0});assert.ok(compile(water).fragmentShader.includes('groundColor=diffuseColor.rgb;'),'water survives without an underlay too');}finally{skin.dispose();water.dispose();}
+  try{skin.attach(water,{index:0});assert.ok(compile(water).fragmentShader.includes('groundColor=bogSurface;'),'water and land survive without an underlay too');}finally{skin.dispose();water.dispose();}
   const forest=createConnectedGroundSkin(plan(),'temperate',{canvasFactory,underlay:ground}),brush=materials.bramble.clone();brush.onBeforeCompile=materials.bramble.onBeforeCompile;
   try{forest.attach(brush,{index:0});assert.ok(!compile(brush).fragmentShader.includes(preserveWater),'forest connected paint remains enabled');}finally{forest.dispose();brush.dispose();}
  }finally{if(previousWorker===undefined)delete globalThis.Worker;else globalThis.Worker=previousWorker;ground.dispose();Object.values(materials).forEach(m=>m.dispose());atlas.dispose();}
