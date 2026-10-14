@@ -66,8 +66,9 @@ export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=ca
  const overview=overviewCanvas?texture(overviewCanvas,'Connected ground overview'):null;
  function attach(material,chunk,{layer='cover'}={}){
   if(!overview||layer==='path'&&!edgeMap)return;
+  const bog=family==='wetlands'&&layer==='cover';
   const previous=material.onBeforeCompile,cache=material.customProgramCacheKey(),uniforms={groundOverview:{value:overview},groundDetail:{value:overview},groundPageOrigin:{value:new T.Vector2()},groundPageSize:{value:26},groundHasPage:{value:0}};
-  if(!bindings.has(chunk.index))bindings.set(chunk.index,[]);bindings.get(chunk.index).push(uniforms);material.customProgramCacheKey=()=>cache+'-connected-ground-v2-'+family+'-'+layer+'-'+!!edgeMap+'-'+underlay?.userData?.variant;
+  if(!bindings.has(chunk.index))bindings.set(chunk.index,[]);bindings.get(chunk.index).push(uniforms);material.customProgramCacheKey=()=>cache+'-connected-ground-v3-'+family+'-'+layer+'-'+!!edgeMap+'-'+underlay?.userData?.variant;
   material.onBeforeCompile=s=>{
    previous.call(material,s);Object.assign(s.uniforms,uniforms,{groundStrength:strength,groundFocus:focus,groundDetailAmount:detail,groundMapSize:{value:new T.Vector2(plan.width,plan.depth)}});
    s.vertexShader='varying vec2 vConnectedGround,vConnectedWorld; varying float vConnectedTop;\n'+s.vertexShader;
@@ -79,6 +80,7 @@ export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=ca
     vec3 groundColor=texture2D(groundOverview,(vConnectedGround+.5)/groundMapSize).rgb;
     float closePaint=groundHasPage*groundDetailAmount*(1.-smoothstep(18.,24.,distance(vConnectedGround,groundFocus)));
     groundColor=mix(groundColor,texture2D(groundDetail,(vConnectedGround-groundPageOrigin)/groundPageSize).rgb,closePaint);
+    ${bog&&!edgeMap?'groundColor=diffuseColor.rgb;':''}
     ${edgeMap?`
     vec2 edgeCell=floor(vConnectedGround+.5),edgePoint=vConnectedGround;
     float edgeBits=floor(texture2D(groundBarriers,(edgeCell+.5)/groundMapSize).r*255.+.5);
@@ -94,6 +96,9 @@ export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=ca
     if(mod(floor(edgeBits/128.),2.)>0.&&all(greaterThan(edgePoint,edgeCell+.375)))edgePoint=edgeCell+.375;
     float edgeDistance=texture2D(groundEdge,(edgePoint+.5)/groundMapSize).r*4.-2.;
     float edgeWash=smoothstep(-${GROUND_EDGE.outside},${GROUND_EDGE.inside},edgeDistance);
+    // A bog keeps its water atlas in the interior. Connected litter belongs on
+    // the saturated bank, where it also meets the adjacent path's margin.
+    ${bog?'groundColor=mix(groundColor,diffuseColor.rgb,mix(1.,edgeWash,groundEdgeEnabled));':''}
     vec3 pathColor=${layer==='path'?'diffuseColor.rgb':'edgeGround()'};
     vec3 edgeColor=mix(pathColor,groundColor,edgeWash);
     // Tiny, sparse, flat flecks; substantial wood remains inside blocked cells.
