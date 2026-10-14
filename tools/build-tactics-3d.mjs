@@ -39,7 +39,9 @@ fs.writeFileSync(new URL('.pages-output/README.md',root),'# Animal Factory Tacti
 console.log('Built Animal Factory Tactics 3D landing page.');
 
 fs.cpSync(new URL('dist/tactics/sector-library/',root),new URL('.pages-output/tactics/sector-library/',root),{recursive:true});
+fs.cpSync(new URL('dist/tactics/intro-sprites/',root),new URL('.pages-output/tactics/intro-sprites/',root),{recursive:true});
 import {checkModuleClosure} from './check-module-closure.mjs';
+checkModuleClosure(new URL('.pages-output/',root),['tactics/intro-sprites/proof.html','tactics/intro-sprites/keyframes.html','tactics/intro-sprites/closeup.html']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/utility-helicopter-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-chairs-study.js','tactics/horse-chair-study.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/guardhouse-machines-study.js']);

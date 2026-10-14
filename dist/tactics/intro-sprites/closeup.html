@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Intro close-up plate</title>
+<link rel="icon" href="data:,">
+<style>
+ :root{--bg:#1d2620;--ink:#e9e2cc;--muted:#a9ad98;--line:#3a4a3e}
+ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Georgia,serif}
+ header{padding:18px 24px 6px}h1{margin:0;font-size:22px;font-weight:normal}
+ main{padding:8px 24px 24px;max-width:1760px}
+ canvas{display:block;width:100%;height:auto;border:1px solid var(--line)}
+ #status{color:var(--muted);font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<header><h1>Close-up plate — the drop past the cliff</h1></header>
+<main><div id="stage"></div><p id="status">Painting the close-up (this takes a while)…</p></main>
+<script type="module">
+// Development view of the close-up's static plate. ?marks overlays the
+// aircraft's path through the shot (the frames the bake will photograph).
+import {buildSector,loadGroundTextures,HEIGHT_SCALE,ROCK_DETAIL} from './crash-sector.js';
+import {loadFloraSprites} from './painted-trees.js';
+import {closeupView,paintCloseupPlate,closeupSpec,CLOSEUP_CAMERA} from './closeup.js';
+import {heliPath,CLOSEUP} from './trajectory.js';
+const q=new URLSearchParams(location.search),$=x=>document.getElementById(x);
+const json=async p=>{const r=await fetch(p);if(!r.ok)throw Error('Missing '+p);return r.json();};
+try{
+ const [map,woodland,textures,flora]=await Promise.all([json('../sector-library/tutorial-step-1/rough-plateau.json'),json('crash-sector-woodland.json'),loadGroundTextures(),loadFloraSprites()]);
+ const t0=performance.now(),sector=buildSector(map,woodland,{heightScale:HEIGHT_SCALE.closeup,extend:true,detail:ROCK_DETAIL.closeup}),t1=performance.now();
+ const scale=Number(q.get('scale')||1),view=closeupView(undefined,scale),r=paintCloseupPlate({sector,textures,flora},view,{billboards:!q.has('noflora')}),t2=performance.now();
+ const shown=document.createElement('canvas');shown.width=r.canvas.width;shown.height=r.canvas.height;const g=shown.getContext('2d');g.drawImage(r.canvas,0,0);
+ if(q.has('marks')){g.strokeStyle='#ff3b1f';g.lineWidth=2;
+  for(let t=CLOSEUP.start;t<=CLOSEUP.end+1e-9;t+=.2){const p=heliPath(t),a=view.project(p.x,p.y,p.h+1.2);if(!a)continue;g.beginPath();g.arc(a[0],a[1],6,0,Math.PI*2);g.stroke();g.fillStyle='#ff3b1f';g.font='13px monospace';g.fillText(t.toFixed(1),a[0]+8,a[1]-8);}
+  const [ww,wh]=CLOSEUP_CAMERA.window.map(v=>v*scale);g.strokeStyle='#ffffff99';g.strokeRect((shown.width-ww)/2,(shown.height-wh)/2,ww,wh);}
+ $('stage').append(shown);
+ $('status').textContent=`Sector ${Math.round(t1-t0)} ms · paint ${Math.round(t2-t1)} ms · ${r.flora} billboards`;
+ window.introCloseup={canvas:r.canvas,spec:closeupSpec(),scale,ready:true,flora:r.flora,ms:{sector:t1-t0,paint:t2-t1},sector,view,depth:r.depth,kind:r.kind};
+}catch(e){$('status').textContent='Failed: '+e.message;window.introCloseup={error:e.message};throw e;}
+</script>
+</body>
+</html>
