@@ -1,4 +1,5 @@
 import {loadOpeningContent} from './campaign-opening.js';
+import {sectorLoading} from './sector-loading.js';
 import {createCampaign,openCampaignSector,orderCampaignTravel,campaignRoute,advanceCampaign,splitCampaignGroup,groupMembers,travelState} from './campaign-model.js';
 import {captureCampaign} from './campaign-save.js';
 import {CampaignSession,loadCampaignSession,getCampaignSave,putCampaignSave,listCampaignSaves,CAMPAIGN_SLOTS} from './campaign-store.js';
@@ -16,7 +17,7 @@ $('hire-open').onclick=()=>roster.show();
 const saves=createSavePanel({slots:CAMPAIGN_SLOTS,list:listCampaignSaves,title:'Campaign save / load',onSave:async id=>{if(!session)throw Error('Start a campaign first.');await session.save(id);},onLoad:async id=>{session=await loadCampaignSession(id);render();say('Campaign loaded. Time is paused.');}});
 $('campaign-saves').onclick=()=>saves.show();
 async function run(fn){if(busy)return;busy=true;render();try{await fn();}catch(e){say(e.message);}finally{busy=false;render();}}
-async function enter(index){await session.transition(c=>openCampaignSector(c,index));location.href='battle-3d.html?campaign=continue';}
+async function enter(index){await sectorLoading.run(async()=>{await session.transition(c=>openCampaignSector(c,index));location.href='battle-3d.html?campaign=continue';},{message:'Preparing sector entry',keepOpen:true,back:()=>{},backLabel:'Campaign map'});}
 function render(){
  const c=session?.campaign,g=c?.groups.find(g=>g.id===c.selectedGroup);$('clock').textContent=c?formatClock(c.clock)+' · $'+c.money.toLocaleString():'';
  $('groups').replaceChildren();$('group-detail').replaceChildren();$('incidents').replaceChildren();$('campaign-log').replaceChildren();
@@ -48,7 +49,7 @@ $('travel-order').addEventListener('close',()=>{proposed=null;render();});
 $('travel-cancel').onclick=()=>$('travel-order').close();$('travel-confirm').onclick=()=>run(async()=>{const p=proposed;await session.transition(c=>orderCampaignTravel(c,p.id,p.index,{synchronize:$('synchronize').checked}));$('travel-order').close();say('Travel orders saved. Advance time to move the group.');});
 $('split-group').onclick=()=>run(async()=>{const ids=[...$('group-detail').querySelectorAll('input:checked')].map(e=>e.value);await session.transition(c=>splitCampaignGroup(c,c.selectedGroup,ids));say('Group split.');});
 for(const b of document.querySelectorAll('[data-minutes]'))b.onclick=()=>run(async()=>{await session.transition(c=>advanceCampaign(c,+b.dataset.minutes));say(session.campaign.incidents.some(i=>i.status==='pending')?'Contact. Enter the encounter to resolve it.':'Time advanced and checkpoint saved.');});
-$('new-campaign').onclick=()=>run(async()=>{const c=createCampaign(await loadOpeningContent(),{difficulty:readSettings().difficulty});await putCampaignSave('continue',captureCampaign(c));session=new CampaignSession(c);say('Campaign started. Enter the safehouse to equip and search supplies, or select the checkpoint to order travel.');});
+$('new-campaign').onclick=()=>run(()=>sectorLoading.run(async()=>{const c=createCampaign(await loadOpeningContent(),{difficulty:readSettings().difficulty});await putCampaignSave('continue',captureCampaign(c));session=new CampaignSession(c);say('Campaign started. Enter the safehouse to equip and search supplies, or select the checkpoint to order travel.');},{message:'Receiving campaign sectors',back:()=>{},backLabel:'Campaign map'}));
 try{const slot=new URLSearchParams(location.search).get('load')||'continue';if(await getCampaignSave(slot))session=await loadCampaignSession(slot);}catch(e){say(e.message);}render();
 if(session&&new URLSearchParams(location.search).has('defeat'))say('Squad defeated. Time is paused. Other groups can continue, and new mercenaries can be hired with the remaining funds.');
 window.campaignView={get state(){return session?.campaign;}};

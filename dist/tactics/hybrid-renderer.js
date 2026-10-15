@@ -8,6 +8,7 @@ import {surfaceLevel,xrayThroughLevel,xrayWall} from './wall-xray.js';
 import {environmentVisuals} from './environment-visuals.js';
 import {FOLIAGE_ATLAS,FOLIAGE_MATERIALS,paintFoliageMaterial} from './foliage-materials.js';
 import * as THREE from './vendor/three.module.js';
+import {LoadingTracker,trackLoadingManager} from './loading-tracker.js';
 import {buildWorld,GAME_CAMERA,toWorld} from './hybrid-world.js';
 import {hybridWorld} from './hybrid-combat.js';
 import {surfacePixels,materialKind} from './hybrid-materials.js';
@@ -50,7 +51,8 @@ export class HybridRenderer{
  constructor(onReady=()=>{}){
   this.renderer=new THREE.WebGLRenderer({antialias:false,alpha:true,preserveDrawingBuffer:true});this.renderer.setPixelRatio(1);this.renderer.outputColorSpace=THREE.SRGBColorSpace;
   this.scene=new THREE.Scene();this.camera=new THREE.OrthographicCamera();this.scene.add(new THREE.HemisphereLight(0xfff3d8,0x52634d,2));const sun=new THREE.DirectionalLight(0xffe2ac,2);sun.position.set(-4,9,5);this.scene.add(sun);
-  this.environmentPaint=new EnvironmentPaint();this.structures=new THREE.Group();this.scene.add(this.structures);this.materials=new Map();this.textures=new Map();this.actors=new Map();this.loader=new THREE.TextureLoader();this.onReady=onReady;this.geometries=environmentGeometries();this.boxGeometry=this.geometries.box;this.diagnostics=[];
+  this.loading=new LoadingTracker();
+  this.environmentPaint=new EnvironmentPaint();this.structures=new THREE.Group();this.scene.add(this.structures);this.materials=new Map();this.textures=new Map();this.actors=new Map();this.loader=new THREE.TextureLoader(trackLoadingManager(new THREE.LoadingManager(),this.loading));this.onReady=onReady;this.geometries=environmentGeometries();this.boxGeometry=this.geometries.box;this.diagnostics=[];
   this.biomes=new BiomeScene(this.scene,this.loader,()=>{this.world=null;this.onReady();},e=>{this.diagnostics.push(e.message);this.onReady();});
  }
  material(kind){if(this.materials.has(kind))return this.materials.get(kind);const p=surfacePixels(kind),t=new THREE.DataTexture(p.data,p.width,p.height);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.generateMipmaps=true;t.needsUpdate=true;const material=new THREE.MeshStandardMaterial({map:t,roughness:1,vertexColors:kind.startsWith('breach-')});

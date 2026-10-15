@@ -30,7 +30,11 @@ test('3D distribution includes the encounter, editor, title, overmap and sprite 
   if(!fs.statSync(source).isFile())continue;
   assert.deepEqual(fs.readFileSync(new URL('../.pages-output/tactics/intro-sprites/'+relative.replaceAll(path.sep,'/'),import.meta.url)),fs.readFileSync(source),relative);
  }
+ for(const file of ['loading-screen.js','loading-screen.css','sector-loading.js','battle-entry.js','loading-tracker.js','battle-control-icons.js'])assert.deepEqual(fs.readFileSync(new URL('../.pages-output/tactics/'+file,import.meta.url)),fs.readFileSync(new URL('../dist/tactics/'+file,import.meta.url)));
+ assert.match(fs.readFileSync(new URL('../.pages-output/tactics/battle-3d.html',import.meta.url),'utf8'),/src="battle-entry.js"/);
  for(const relative of [
+  'assets/ui/loading-screen/command-room-v1.png',
+  'assets/ui/loading-screen/PROMPT.json',
   'tactics/sector-library/tutorial-step-1/rough-plateau.json',
   'assets/environment/ground-grass.png',
   'assets/environment/foliage/tree-pine.png',

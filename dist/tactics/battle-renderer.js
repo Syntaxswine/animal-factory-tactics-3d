@@ -53,6 +53,7 @@ export class BattleRenderer extends HybridRenderer {
   this.sceneryAssets.rebuild(map,level);this.sites.rebuild(map,level);this.paintedEnvironment.rebuild(map,level);this.cliffs.rebuild(map,level,{grassTexture:this.material('grass').map,environmentPaint:this.environmentPaint});
  }
  async loadModel(unit){
+  this.loading.start();
   this.pending.add(unit.id);const generation=this.generation;
   const profile=ANIMAL_MOTION_CATALOG.find(p=>p.id===unit.species);
   let worker,paint,cap;
@@ -68,8 +69,8 @@ export class BattleRenderer extends HybridRenderer {
    const root=new T.Group();root.add(worker.root);
    const posture=createBattlePosture(worker,profile),locomotion=createWorkerLocomotion(worker,profile);
    this.models.set(unit.id,{worker,paint,root,profile,locomotion,posture,cap});this.actors.set(unit.id,root);this.scene.add(root);
-  }catch(error){cap?.dispose();paint?.dispose();worker?.dispose();this.diagnostics.push(error.message);if(this.traversal?.active?.event.unitId===unit.id)this.traversal.finish();}
-  finally{if(generation===this.generation)this.onReady();}
+  }catch(error){cap?.dispose();paint?.dispose();worker?.dispose();this.loading.fail(error);this.diagnostics.push(error.message);if(this.traversal?.active?.event.unitId===unit.id)this.traversal.finish();}
+  finally{this.loading.end();if(generation===this.generation)this.onReady();}
  }
  actor(unit){
   const model=this.models.get(unit.id);
@@ -137,14 +138,14 @@ export class BattleRenderer extends HybridRenderer {
   if(result&&!result.supported){model.aimWarning=`${unit.name||unit.species}: firing animation unavailable (${result.reason}); shot outcome unchanged.`;this.diagnostics.push(model.aimWarning);}
  }
  prune(){this.sceneryAssets.update((this.presentationNow??performance.now())/1000,this.camera,{reducedMotion:!!this.reducedMotion?.matches});this.grenades.update(this.combat.active,this.state,this.camera);this.tankEffects.draw(this.camera);} // Runs after posing, before rendering.
- pick(x,y,width,height,level=this.presentationLevel??this.level){
+ pick(x,y,width,height,level=this.presentationLevel??this.level,{selectBody=false}={}){
   const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
   const barrel=[this.paintedEnvironment.barrelHit(ray,level),this.sites.hit(ray,level)].filter(Boolean).sort((a,b)=>a.distance-b.distance)[0],onLevel=id=>(this.state.units.find(u=>u.id===id)?.z||0)===level;
   const roots=[...this.actors.entries()].filter(([id,root])=>root.visible&&onLevel(id));
   for(const hit of ray.intersectObjects(roots.map(([,root])=>root),true)){
    if(barrel&&hit.distance>=barrel.distance)break;
    let object=hit.object,visible=true;
-   while(object){if(!object.visible)visible=false;const entry=roots.find(([,root])=>root===object);if(entry&&visible)return entry[0];object=object.parent;}
+   while(object){if(!object.visible)visible=false;const entry=roots.find(([,root])=>root===object);if(entry&&visible){const id=entry[0],unit=this.state.units.find(u=>u.id===id);if(!selectBody||unit?.team!=='squad'||this.models.get(id)?.worker.parts.includes(hit.object))return id;}object=object.parent;}
   }
   return barrel?null:this.fire.pick(ray,onLevel);
  }

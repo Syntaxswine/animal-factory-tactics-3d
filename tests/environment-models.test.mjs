@@ -30,3 +30,11 @@ test('all boundary and ground types retain support and windows retain their open
  for(const kind of Object.keys(EDGES)){const map={terrain:[['yard']],edges:{'s:0:0':kind},props:[]},world=buildWorld(map);assert.equal(world.diagnostics.length,0);const parts=environmentVisuals(world,map);assert(parts.length>0);if(EDGES[kind].window){assert.equal(traceWorld(world,[0,1.1,0],[0,1.1,1]),null);assert(parts.filter(p=>p.kind==='wall').every(p=>p.center[1]+p.size[1]/2<=.85+1e-10||p.center[1]-p.size[1]/2>=1.55-1e-10));}}
  for(const kind of ['water','yard','floor','bridge','woodland',...GROUNDS])assert.equal(buildWorld({terrain:[[kind]]}).diagnostics.length,0);
 });
+
+test('sector environments with walls seed foliage only from floor tile coordinates',()=>{
+ const map={terrain:[['woodland','yard']],edges:{'s:0:0':'wall-brick','e:0:0':'window-brick'},props:[],environment:{version:1,origin:[0,0],size:240,field:{version:1,seed:42,width:30,height:15,families:['temperate','wetlands'],regions:[{family:'temperate',x:0,y:0,scale:1},{family:'wetlands',x:20,y:10,scale:1}]}}};
+ const world=buildWorld(map),parts=environmentVisuals(world,map);
+ assert.ok(parts.some(b=>b.kind==='wall'),'walls remain visible');
+ assert.ok(parts.some(b=>b.kind==='foliage-cover'),'woodland retains its foliage');
+ for(const p of parts)assert.ok(p.center.every(Number.isFinite)&&p.size.every(Number.isFinite),p.id);
+});

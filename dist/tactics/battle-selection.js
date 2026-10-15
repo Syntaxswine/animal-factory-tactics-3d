@@ -1,5 +1,6 @@
 import {alive,setStance,stanceOf,canControl,combatCosts,STANCES,MOVEMENT_MODES,movementModeOf,setMovementMode} from './core/engine.js';
 export const selectable=u=>u.team==='squad'&&alive(u)&&u.casualty!=='captured';
+export const selectionModifier=event=>!!(event.shiftKey||event.ctrlKey||event.metaKey);
 export function rectangleMembers(units,level,a,b,project){
  const left=Math.min(a.x,b.x),right=Math.max(a.x,b.x),top=Math.min(a.y,b.y),bottom=Math.max(a.y,b.y);
  return units.filter(u=>{if(!selectable(u)||(u.z||0)!==level)return false;const p=project(u);return p.x>=left&&p.x<=right&&p.y>=top&&p.y<=bottom;}).map(u=>u.id);

@@ -1,3 +1,5 @@
+import {sectorLoading} from './sector-loading.js';
+import {prepareSectorView} from './loading-tracker.js';
 import {BattleContextMenu,inspectBattleTile} from './battle-context-menu.js';
 import {PickupOrder,pickupRoute} from './pickup-order.js';
 import {reserve} from './core/inventory.js';
@@ -34,7 +36,7 @@ import {loadBattleMap} from './battle-map.js';
 import {BattleRenderer} from './battle-renderer.js';
 import {projectBattlePoint,battleFloorPoint,rotateBattleView,focusBattleView,overviewBattleView} from './isometric-camera.js';
 import {MOVEMENT_MS,queuedMovementDuration} from './battle-motion.js';
-import {rectangleMembers,pruneSelection,toggleSelection,selectable,stanceSelection,setSelectionStance,movementSelection,setSelectionMovement} from './battle-selection.js';
+import {rectangleMembers,pruneSelection,toggleSelection,selectable,selectionModifier,stanceSelection,setSelectionStance,movementSelection,setSelectionMovement} from './battle-selection.js';
 import {readSettings} from './settings-3d.js';
 import {createBattleHud} from './battle-hud.js';
 
@@ -58,7 +60,7 @@ const defeatFlow=new DefeatFlow({announce:summary=>{pickupOrder.cancel();closeSt
  complete:async()=>{storageBusy=true;frameClock.reset();try{if(campaign)await campaign.finishDefeat();}finally{storageBusy=false;frameClock.reset();}},
  navigate:()=>{location.href=campaign?'campaign.html?defeat=1':'../tactics-3d.html';}});
 const shotDialog=$('shot-popup');
-const paused=(ignorePlanner=false)=>(!ignorePlanner&&(shotDialog.open||flamePlanner.open||grenadePlanner.open||contextMenu.open))||userPaused||storageBusy||campaign?.paused||document.hidden||characterScreen.open||savePanel.open;
+const paused=(ignorePlanner=false)=>sectorLoading.active||(!ignorePlanner&&(shotDialog.open||flamePlanner.open||grenadePlanner.open||contextMenu.open))||userPaused||storageBusy||campaign?.paused||document.hidden||characterScreen.open||savePanel.open;
 function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('drawer-clock').textContent=$('game-clock').textContent;$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
 const view={x:0,y:0,zoom:1.15,turn:0};
 let stanceAnchor=null;
@@ -118,7 +120,9 @@ async function saveGame(id){
  try{const saved=campaign?await campaign.save(id):(await putSave(id,record),record);lastAuto=performance.now();autoRound=state.round;campaignSavedRevision=state.revision;autoDisabled=false;return saved;}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}
 }
 function installState(restored){defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=restored;definition=state.definition;$('difficulty').value=state.difficulty;selectedIds=new Set([state.selected]);targetId=null;drag=null;userPaused=true;presentationTime=0;renderer.presentationNow=0;lastStep=0;stepDelay=MOVEMENT_MS;lastClockCombat=undefined;lastUI='';lastAuto=performance.now();autoRound=state.round;frameClock.reset();center();sync();message('Encounter loaded and paused. Press Resume to continue.');}
-async function loadGame(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{if(campaign){const restored=await campaign.load(id);if(restored)installState(restored);}else{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);installState(restored);}}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}}
+async function loadGame(id){return sectorLoading.run(()=>loadEncounterSave(id),{message:'Restoring saved sector'});}
+async function prepareView(){await prepareSectorView(renderer,()=>{ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);},{status:text=>sectorLoading.status(text)});}
+async function loadEncounterSave(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{if(campaign){const restored=await campaign.load(id);if(restored)installState(restored);}else{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);installState(restored);}if(state)await prepareView();}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}}
 async function quickSave(){try{await saveGame('quick');message('Quicksave saved.');}catch(e){message('Could not save: '+e.message);}}
 async function quickLoad(){try{await loadGame('quick');}catch(e){message('Could not load: '+e.message);}}
 function autosave(){saveGame('auto').catch(e=>{autoDisabled=true;if(campaign)userPaused=true;sync();message('Autosave failed: '+e.message+' Use Save / Load to retry.');});}
@@ -233,7 +237,7 @@ function click(x,y,shift=false){
  if(overviewMode){const p=battleFloorPoint(view,x,y,level);focus(p.x,p.y);return;}
  if(grenadePlanner.open){if(!shift&&canPlanFlame())grenadePlanner.aim(grenadePoint(x,y),true);return;}
  if(flamePlanner.open){if(!shift&&canPlanFlame())flamePlanner.aim(flamePoint(x,y),true);return;}
- const hit=renderer.pick(x,y,width,height,level);
+ const hit=renderer.pick(x,y,width,height,level,{selectBody:true});
  if(hit!==null){const u=state.units.find(u=>u.id===hit);if(selectable(u)){selectMerc(u.id,shift);}else if(u.hp<=0&&nearbyLoot(state,selected()).some(p=>p.body===u.id)){characterScreen.show(state.selected);}else if(state.detected.has(u.id)&&u.hp>0){if(WEAPONS[selected().weapon].thrown){if(canPlanFlame())grenadePlanner.start(state,selected(),{x:u.x,y:u.y,z:u.z||0,towerPost:u.towerPost,cliffSupport:u.cliffSupport});}else if(WEAPONS[selected().weapon].incendiary){if(canPlanFlame())flamePlanner.start(state,selected(),{x:u.x,y:u.y,z:u.z||0});}else{targetId=u.id;shotDialog.showModal();frameClock.reset();lastUI='';}}sync();return;}
  const pile=renderer.pickLoot(x,y,width,height,level);if(pile){if(nearbyLoot(state,selected()).includes(pile))characterScreen.show(state.selected);else message('Move beside the supplies to pick them up.');return;}
  const barrel=renderer.pickScenery(x,y,width,height,level);
@@ -281,15 +285,15 @@ function showWalkingRoute(){
  showWalkingWarning(walkingWarning(walkingCache));
  drawWalkingRoutes(ctx,walkingCache,project,level,view.zoom,turnBased(state));
 }
-canvas.addEventListener('pointerdown',e=>{if(e.button!==0||drag)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,select:e.shiftKey};canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointerdown',e=>{if(e.button!==0||drag)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,select:e.shiftKey,toggle:selectionModifier(e)};canvas.setPointerCapture(e.pointerId);});
 canvas.addEventListener('pointermove',e=>{hoverPointer={x:e.clientX,y:e.clientY};lastHoverCheck=0;const bounds=canvas.getBoundingClientRect();renderer.wallXray.setPointer(e.clientX-bounds.left,e.clientY-bounds.top);if(grenadePlanner.open&&!drag)grenadePlanner.aim(grenadePoint(e.clientX-bounds.left,e.clientY-bounds.top));if(flamePlanner.open&&!drag)flamePlanner.aim(flamePoint(e.clientX-bounds.left,e.clientY-bounds.top));if(!drag||drag.id!==e.pointerId)return;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)drag.moved=true;if(drag.moved&&!drag.select){view.x+=e.clientX-drag.lastX;view.y+=e.clientY-drag.lastY;}drag.lastX=e.clientX;drag.lastY=e.clientY;});
-canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const d=drag;drag=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);const r=canvas.getBoundingClientRect();if(d.select&&d.moved){const ids=rectangleMembers(state.units,level,{x:d.x-r.left,y:d.y-r.top},{x:e.clientX-r.left,y:e.clientY-r.top},u=>project(renderer.displayUnit(u)));if(ids.length){selectedIds=new Set(ids);if(!selectedIds.has(state.selected))state.selected=ids[0];targetId=null;state.queue=[];message(ids.length+' mercs selected. Ground clicks move the group; stance buttons affect the group; Fire and Reload use the primary merc.');sync();}else message('No mercs in that rectangle.');}else if(!d.moved)click(e.clientX-r.left,e.clientY-r.top,d.select);});
+canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const d=drag;drag=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);const r=canvas.getBoundingClientRect();if(d.select&&d.moved){const ids=rectangleMembers(state.units,level,{x:d.x-r.left,y:d.y-r.top},{x:e.clientX-r.left,y:e.clientY-r.top},u=>project(renderer.displayUnit(u)));if(ids.length){selectedIds=new Set(ids);if(!selectedIds.has(state.selected))state.selected=ids[0];targetId=null;state.queue=[];message(ids.length+' mercs selected. Ground clicks move the group; stance buttons affect the group; Fire and Reload use the primary merc.');sync();}else message('No mercs in that rectangle.');}else if(!d.moved)click(e.clientX-r.left,e.clientY-r.top,d.toggle);});
 canvas.addEventListener('pointerleave',()=>{clearHover();renderer.wallXray.setPointer(null,null);});
 canvas.addEventListener('pointercancel',()=>{clearHover();drag=null;renderer.wallXray.setPointer(null,null);});
 canvas.addEventListener('lostpointercapture',()=>{drag=null;});
 window.addEventListener('blur',()=>{clearHover();drag=null;renderer.wallXray.setPointer(null,null);});
 canvas.addEventListener('wheel',e=>{e.preventDefault();const box=canvas.getBoundingClientRect(),x=e.clientX-box.left,y=e.clientY-box.top,old=view.zoom;view.zoom=Math.max(.08,Math.min(3,old*Math.exp(-e.deltaY*.001)));view.x=x-(x-view.x)*view.zoom/old;view.y=y-(y-view.y)*view.zoom/old;},{passive:false});
-document.addEventListener('keydown',e=>{if(e.defaultPrevented||characterScreen.open||savePanel.open)return;if(e.key==='Escape'&&grenadePlanner.open){e.preventDefault();grenadePlanner.cancel();return;}if(e.key==='Escape'&&flamePlanner.open){e.preventDefault();flamePlanner.cancel();return;}if(e.key==='Escape'&&!paused()){pickupOrder.cancel();drag=null;state.queue=[];targetId=null;tileTarget=null;sync();}});
+document.addEventListener('keydown',e=>{if(e.defaultPrevented||sectorLoading.active||characterScreen.open||savePanel.open)return;if(e.key==='Escape'&&grenadePlanner.open){e.preventDefault();grenadePlanner.cancel();return;}if(e.key==='Escape'&&flamePlanner.open){e.preventDefault();flamePlanner.cancel();return;}if(e.key==='Escape'&&!paused()){pickupOrder.cancel();drag=null;state.queue=[];targetId=null;tileTarget=null;sync();}});
 document.addEventListener('keydown',e=>{
  if(contextMenu.open||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||characterScreen.open||savePanel.open||document.hidden||e.target.isContentEditable||e.target.closest?.('input,select,textarea,[role="textbox"],#stance-menu,#command-drawer')||document.querySelector('dialog[open]'))return;
  if(/^[1-3]$/.test(e.key)){e.preventDefault();document.querySelector(`#battle-levels [data-level="${+e.key-1}"]`).click();return;}
@@ -302,9 +306,9 @@ function action(fn){if(paused()||renderer.busy)return;pickupOrder.cancel();const
  for(const mode of Object.keys(MOVEMENT_MODES))$('move-'+mode).onclick=()=>{if(paused()||renderer.busy)return;const result=setSelectionMovement(state,selectedIds,mode);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' set to '+mode+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'.':''));sync();};
  $('character').onclick=()=>characterScreen.show(state.selected);
  $('save-load').onclick=()=>savePanel.show();$('quicksave').onclick=quickSave;$('quickload').onclick=quickLoad;
- document.addEventListener('keydown',e=>{if(characterScreen.open||savePanel.open||e.target.closest?.('input,select,textarea'))return;if(e.key==='F6'||e.key==='F9'){e.preventDefault();(e.key==='F6'?quickSave:quickLoad)();}});
+ document.addEventListener('keydown',e=>{if(sectorLoading.active||characterScreen.open||savePanel.open||e.target.closest?.('input,select,textarea'))return;if(e.key==='F6'||e.key==='F9'){e.preventDefault();(e.key==='F6'?quickSave:quickLoad)();}});
  $('battle-menu').onclick=async e=>{e.preventDefault();const href=e.currentTarget.href;try{await saveGame('auto');location.href=href;}catch(error){message('Could not save before leaving: '+error.message);}};
- $('restart').onclick=async()=>{try{await saveGame('auto');restart();}catch(e){message('Restart cancelled: could not preserve the autosave. '+e.message);}};$('center').onclick=center;$('overview').onclick=overview;
+ $('restart').onclick=async()=>{try{await saveGame('auto');await sectorLoading.run(async()=>{restart();await prepareView();},{message:'Restarting sector'});}catch(e){message('Could not restart the sector. '+e.message);}};$('center').onclick=center;$('overview').onclick=overview;
  $('reload').onclick=()=>action(()=>reload(state,selected()));$('end').onclick=()=>action(()=>endTurn(state));
  climbButton.onclick=()=>action(()=>{const preview=climbPreview(state,selected(),level),ok=performClimb(state,selected(),level);if(ok&&preview.kind!=='tower'){level=preview.destination.z;$('floor').value=level;}return ok;});
  $('burst-fire').onchange=()=>{shotBurst=$('burst-fire').checked;lastUI='';sync();};
@@ -341,4 +345,6 @@ function frame(now){
 }
 // Read-only inspection hooks for browser regression checks.
 window.battle3d={get state(){return state;},get level(){return level;},get renderer(){return renderer;},get clock(){return state.clock;},get paused(){return paused();},get picks(){return picks;},get walkingPreview(){return walkingCache;},get flamePreview(){return flamePlanner.preview;},get grenadePreview(){return grenadePlanner.preview;},get contextMenu(){return contextMenu;},get pickupOrder(){return pickupOrder.pending;},get selectedIds(){return [...selectedIds];},project,view};
+await prepareView();
+document.addEventListener('sector-ready',()=>{frameClock.reset();lastUI='';sync();});
 requestAnimationFrame(frame);
