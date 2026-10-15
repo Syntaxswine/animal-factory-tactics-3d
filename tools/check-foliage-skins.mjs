@@ -11,6 +11,15 @@ const report={errors:[],views:[]};
 try{
  browser=await chromium.connect(server.wsEndpoint());const page=await browser.newPage({viewport:{width:1040,height:920}});
  page.on('pageerror',e=>report.errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))report.errors.push(m.text());});
+ // Compare this localized canopy pass at the exact same map/camera without
+ // changing the user's preview checkout. Only the two art modules are replaced.
+ if(process.env.REVIEW_BASELINE_REF){
+  report.baselineArtRef=process.env.REVIEW_BASELINE_REF;
+  for(const file of ['foliage-screen-surface.js','foliage-screen-paint.js']){
+   const body=execFileSync('git',['-c','safe.directory='+project,'show',`${report.baselineArtRef}:dist/tactics/${file}`],{cwd:project,encoding:'utf8'});
+   await page.route('**/tactics/'+file,route=>route.fulfill({status:200,contentType:'text/javascript',body}));
+  }
+ }
  const views=process.env.REVIEW_VIEWS?process.env.REVIEW_VIEWS.split(','):['mixed','dense','dense:reverse','dense:high','temperate','jungle','snow','dry','open','path','path:high:grid'];
  for(const view of views){const [selection,angle='normal',grid]=view.split(':'),family=selection.startsWith('trees-')?selection.slice(6):null,mode=family?'trees':selection;await page.goto(`${origin}/tactics/foliage-skins-review.html?view=${mode}&angle=${angle}&grid=${grid?1:0}${family?'&family='+family:''}${process.env.REVIEW_SCALE?'&scale='+process.env.REVIEW_SCALE:''}`);await page.waitForFunction(()=>window.foliageReview,null,{timeout:120000});await page.locator('canvas').screenshot({path:path.join(out,view.replaceAll(':','-')+'.jpg'),type:'jpeg',quality:90});const metrics=await page.evaluate(()=>foliageReview.result);report.views.push(metrics);console.log(JSON.stringify(metrics));}
  if(report.errors.length)throw Error(report.errors.join('\n'));

@@ -5,7 +5,7 @@ import * as T from '../dist/tactics/vendor/three.module.js';
 import {decodePNG} from '../tools/png-rgba.mjs';
 import {biomeFixture} from '../dist/tactics/biome-fixture.js';
 import {biomePlans} from '../dist/tactics/biome-gameplay.js';
-import {screenSurface,SCREEN_CHUNK_SIZE} from '../dist/tactics/foliage-screen-surface.js';
+import {screenSurface,screenComposition,SCREEN_CHUNK_SIZE} from '../dist/tactics/foliage-screen-surface.js';
 import {createFoliageScreens} from '../dist/tactics/foliage-screen-scene.js';
 import {createScreenMaterials,SCREEN_PANELS} from '../dist/tactics/foliage-screen-paint.js';
 import {BiomeScene} from '../dist/tactics/biome-scene.js';
@@ -15,6 +15,16 @@ const ellipsoidTop=(s,x,z)=>Math.max(s.base,...s.lobes.map(l=>{
  const q=1-((x-l.center[0])/l.radius[0])**2-((z-l.center[2])/l.radius[2])**2;
  return q>=0?l.center[1]+l.radius[1]*Math.sqrt(q):s.base;
 }));
+
+test('canopy grouping follows world coordinates across chunk and sector borders',()=>{
+ const a={origin:[0,0],seed:173},b={origin:[240,-240],seed:173};
+ for(const [x,z]of [[23.5,24],[24,24],[239.5,117],[240,117],[-.5,42]]){
+  assert.deepEqual(screenComposition(a,x,z),screenComposition(b,x-240,z+240));
+  const left=screenComposition(a,x-.0001,z),right=screenComposition(a,x+.0001,z);
+  for(const key of ['mass','angle','tone'])assert.ok(Math.abs(left[key]-right[key])<.001,'composition must not restart at a tile or chunk boundary');
+ }
+ assert.notDeepEqual(screenComposition(a,24,24),screenComposition({...a,seed:174},24,24));
+});
 
 test('screen art leaves serialized maps, seeded obstacle layout and open woodland unchanged',()=>{
  const before=JSON.stringify(map),world=JSON.stringify(plans[0].obstacles);
