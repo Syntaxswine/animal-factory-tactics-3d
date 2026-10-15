@@ -109,18 +109,18 @@ test('closed, a speaking head is its approved head: its outer skin on the approv
 // heads posed as the runtime poses them, drawn as the renderer draws them (back faces culled;
 // round 2's review found the instruments drew them, and so missed the closed mouths' leaks).
 const OPEN=[6,12,24];
-// Known defects of round 4, each as measured when written: the tests hold every other head to its
-// bar, and these in todo tests of their own, at the same bars, so they show in every run. (Round
-// 3's holes from the game's camera, its two game meshes' closed teeth and its two closed pokes are
-// gone with round 4's mesher, and the four game meshes' incisors that showed closed when the lining
-// went with the build's closed-teeth guard: every head meets those bars.) The slivers of the head's
-// inside seen first (`backFirst`, mm², over the hole test's views) are held at what they measure,
-// so none grows unseen; no background shows through any of them.
+// Known defects, each as measured when written (the architect's follow-up, 15 October 2026): the
+// tests hold every other head to its bar, and these in todo tests of their own, at the same bars, so
+// they show in every run. The slivers of the head's inside seen first (`backFirst`, mm², over the
+// hole test's views, to the hundredth up: it counts sixteenths of a mm²) are a ratchet, held at what
+// they measure so none grows unseen, not a bar; no background shows through any of them, and none
+// is over 1 mm² at ordinary speech from the portraits and the game's camera (the speech test).
+// (Round 5's teeth and tongue through the outer skin, on
+// seven game meshes and the hen's beak, and the skunk's game mesh's striped rims are gone: every
+// head meets those bars.)
 const KNOWN={
- openOuter:{'horse-10k':1,'bull-10k':1,'cow-10k':1,'donkey-10k':2,'pig-foreman-10k':2,'pig-director-10k':1,'dog-10k':1,'hen-author':1,'hen-10k':1}, // outer triangles crossed open
  self24:{'donkey-author':2},                                                                // outer pairs crossing at 24°
- stripes:{'skunk-10k':.096},                                                                // rims over 60° off
- backFirst:{'horse-author':4.69,'horse-10k':5.63,'goat-10k':3.75,'bull-author':7.38,'bull-10k':3.13,'cow-author':3.32,'cow-10k':13.38,'donkey-author':1.75,'donkey-10k':2.88,'sheep-author':2.94,'sheep-10k':6.57,'skunk-author':17.75,'skunk-10k':3.44,'pig-foreman-author':8.82,'pig-foreman-10k':3.44,'pig-director-author':3.19,'pig-director-10k':3.13,'rabbit-10k':1.69,'dog-author':1.63,'dog-10k':10.07,'hen-10k':1.13},
+ backFirst:{'horse-author':1.57,'horse-10k':1.5,'goat-10k':3.94,'bull-author':1.94,'bull-10k':2.13,'cow-author':1.88,'cow-10k':1.25,'donkey-author':1.5,'donkey-10k':1.57,'sheep-10k':1.13,'skunk-author':1.38,'pig-director-10k':1.32,'dog-10k':10.38,'hen-10k':2.94},
 };
 const known=(kind,head,level)=>(head.id+'-'+level) in (KNOWN[kind]||{});
 // The open mouth is a wedge open at its sides and front, its roof and floor the mouth's inside (the
@@ -145,13 +145,43 @@ const seeViews=head=>{const widest=SPEECH_OPEN[head.id]*180/Math.PI,v=[];
  for(let az=-180;az<180;az+=15){for(const deg of [widest,12,24])v.push({deg,az,el:0});for(const el of [30,-15,-30])v.push({deg:widest,az,el});}
  for(const deg of [.5,1,1.5])for(let az=-180;az<180;az+=30)for(const el of [0,30])v.push({deg,az,el});return v;};
 const SEE_BAR=1; // mm², the largest one hole
+// (messages give the viewer's azimuth, 0 from the character's left, 90 its front: holesThrough's negated)
 test('open, the head shows no inside of itself: no hole, crack or inside-out triangle seen, all round, at eye level, from above and from below, and as the jaw closes',()=>{
  // (no background through the head anywhere, from any of them; the slivers the known meshes show,
  // the mouth's inside through them, at what they measured: see KNOWN)
  for(const head of HEADS)for(const level of LEVELS){const data=built(head.id,level),bar=Math.max(SEE_BAR,KNOWN.backFirst[head.id+'-'+level]??0);
   for(const {deg,az,el} of seeViews(head)){const s=holesThrough(data,deg,az,{el});
-   assert.ok(s.largestBackground<=SEE_BAR,`${head.id}-${level} at ${deg.toFixed(1)}°, ${az}° round, ${el}° up: ${s.largestBackground.toFixed(2)} mm² of background seen through the head`);
-   assert.ok(s.largest<=bar,`${head.id}-${level} at ${deg.toFixed(1)}°, ${az}° round, ${el}° up: ${s.largest.toFixed(2)} mm² of the head's inside seen first (${s.mm2.toFixed(2)} mm² in all)`);}}
+   assert.ok(s.largestBackground<=SEE_BAR,`${head.id}-${level} at ${deg.toFixed(1)}°, from azimuth ${-az}°, ${el}° up: ${s.largestBackground.toFixed(2)} mm² of background seen through the head`);
+   assert.ok(s.largest<=bar,`${head.id}-${level} at ${deg.toFixed(1)}°, from azimuth ${-az}°, ${el}° up: ${s.largest.toFixed(2)} mm² of the head's inside seen first (${s.mm2.toFixed(2)} mm² in all)`);}}
+});
+// Ordinary speech, as the characters will be seen speaking (the architect's review, 15 October 2026:
+// "Prioritize the ordinary 4.5–8.6 degree speech range and portrait front/three-quarter/low views"):
+// the jaw open 4.5°, midway and at the widest (SPEECH_OPEN), and as every syllable passes the closed
+// shape's fade (0.5°, 1° and 1.5°, where a coarse rim folded into the closed crease shows in the
+// first millimetre the lips part: held to FADE_BAR, the build's), from the viewer's portraits (its front, its
+// three-quarter and its view from below, either side: speaking-heads-viewer.js VIEWS) and the game's
+// camera either side (hybrid-world.js GAME_CAMERA, 45° round, 30° above). holesThrough's azimuth is
+// the viewer's negated: -90 is the front.
+const SPEECH_VIEWS=[['front',-90,0],["three-quarter, the character's left",-54.48,5.73],["three-quarter, its right",-125.52,5.73],["below, its left",-72.81,-21.77],["below, its right",-107.19,-21.77],["the game's camera, its left",-45,30],["the game's camera, its right",-135,30]];
+const speechAngles=head=>{const widest=SPEECH_OPEN[head.id]*180/Math.PI;return [4.5,(4.5+widest)/2,widest];},FADE=[.5,1,1.5],FADE_BAR=4;
+test('at ordinary speech, from the portraits and the game\'s camera, no sliver of the head\'s inside over 1 mm² (through the closing fade, 4 mm²), no background through it, and no tooth or tongue through the outer skin',()=>{
+ for(const head of HEADS)for(const level of LEVELS){const data=built(head.id,level);
+  for(const deg of [...FADE,...speechAngles(head)]){
+   for(const [name,az,el] of SPEECH_VIEWS){const s=holesThrough(data,deg,az,{el}),bar=deg<2?FADE_BAR:SEE_BAR;
+    assert.ok(s.largestBackground===0,`${head.id}-${level} at ${deg.toFixed(1)}°, ${name}: ${s.largestBackground.toFixed(2)} mm² of background seen through the head`);
+    assert.ok(s.largest<=bar,`${head.id}-${level} at ${deg.toFixed(1)}°, ${name}: ${s.largest.toFixed(2)} mm² of the head's inside seen first`);}
+   if(deg>=4.5)for(const r of partsCrossSkin(data,deg))assert.equal(r.outer,0,`${head.id}-${level} at ${deg.toFixed(1)}°: the ${r.part} cross ${r.outer} triangles of the outer skin`);}}
+});
+test('the speech test can fail: a patch of a lip\'s face turned over, and incisors moved through the lip, show',()=>{
+ // (the horse's authoring mesh at 4.5°: its upper lip's face within 15 mm of its front middle turned
+ // inside-out, seen from below; its lower incisors 8 mm forward, through its lower lip)
+ const data=built('horse','author'),skin=data.parts[0],P=skin.position,{up}=lipTips(data),U=[P[up*3],P[up*3+1],P[up*3+2]],flipped=Array.from(skin.index);let n=0;
+ for(let t=0;t<flipped.length;t+=3){const v=[flipped[t],flipped[t+1],flipped[t+2]];if(!v.every(i=>skin.fold[i]>.5&&skin.lower[i]<=.02))continue;
+  if(Math.hypot(...[0,1,2].map(k=>v.reduce((a,i)=>a+P[i*3+k],0)/3-U[k]))>.015)continue;[flipped[t+1],flipped[t+2]]=[flipped[t+2],flipped[t+1]];n++;}
+ const below=SPEECH_VIEWS.find(([name])=>name==='below, its left'),seen=holesThrough({...data,parts:[{...skin,index:flipped},...data.parts.slice(1)]},4.5,below[1],{el:below[2]});
+ assert.ok(n>0&&seen.largest>SEE_BAR,`${n} triangles of the upper lip's face turned over: ${seen.largest.toFixed(2)} mm² seen first from below`);
+ const forward=data.parts.map(p=>p.name==='lower teeth'?{...p,position:p.position.map((v,i)=>i%3===0?v+.008:v)}:p),crossed=partsCrossSkin({...data,parts:forward},4.5).reduce((s,r)=>s+r.outer,0);
+ assert.ok(crossed>0,`the lower incisors 8 mm forward cross ${crossed} triangles of the outer skin`);
 });
 // The share of the opening between the lips that shows the background, in exact profile at 24°: the
 // background through the head against the background through the outer skin alone (`extra`, a
@@ -214,7 +244,7 @@ test("the closed instrument sees the whole crease: a tooth put through the dog's
  const seen=closedVisibility({...data,parts:[...data.parts,tooth]},'author').teeth.teeth;
  assert.ok(seen>1,`a 4 mm tooth through the dog's crease at its corner: ${seen.toFixed(2)} mm² seen`);
 });
-test("closed, the hen's beak shows nothing of its inside",{todo:"closed, her beak leaves a slit along the gape from the side, as her approved beak does (33 mm² of background through its own): 3.2 and 4.1 mm² of background through it (authoring, game), and through the game mesh's coarse gape (964 triangles) 5.7 mm² of her tongue"},()=>{
+test("closed, the hen's beak shows nothing of its inside",{todo:"closed, her beak leaves a slit along the gape from the side, as her approved beak does (33 mm² of background through its own): 1.1 and 0.02 mm² of background through it (authoring, game); her tongue no longer shows through the game mesh's gape (5.7 mm² in round 5)"},()=>{
  for(const level of LEVELS){const c=closedOf(HEAD.hen,level);assert.ok(c.teeth.teeth<=.5,`hen-${level}: ${c.teeth.teeth.toFixed(1)} mm² of tongue seen closed (from azimuth ${c.teeth.az}°, elevation ${c.teeth.el}°)`);
   assert.ok(c.hole.hole<=.5,`hen-${level}: ${c.hole.hole.toFixed(1)} mm² of background through her closed beak (from azimuth ${c.hole.az}°, elevation ${c.hole.el}°)`);}
 });
@@ -228,13 +258,13 @@ test('teeth and tongue stay in the skin at every opening: rooted, none through t
   for(const deg of [0,...OPEN])for(const g of partsAgainstSkin(data,deg)){
    if(deg===0)assert.ok(g.maxPoke<=5e-5,`${head.id}-${level} closed: ${g.kind} ${g.tooth??''} stands ${(g.maxPoke*1000).toFixed(2)} mm through the outer skin`);
    if(g.kind!=='tongue')assert.ok(g.inside>0,`${head.id}-${level} at ${deg}°: ${g.kind} ${g.tooth} has no root in the skin`);}
-  if(!known('openOuter',head,level))for(const deg of OPEN)for(const r of partsCrossSkin(data,deg))assert.equal(r.outer,0,`${head.id}-${level} at ${deg}°: the ${r.part} cross ${r.outer} triangles of the outer skin`);
+  for(const deg of OPEN)for(const r of partsCrossSkin(data,deg))assert.equal(r.outer,0,`${head.id}-${level} at ${deg}°: the ${r.part} cross ${r.outer} triangles of the outer skin`);
   if(level==='author')for(const t of crownExposure(data,12).filter(t=>t.kind==='incisor'))assert.ok(t.crown>=.004,`${head.id}: an incisor shows ${(t.crown*1000).toFixed(1)} mm of crown at 12°`);}
 });
 test('the tongue shows from the front when the mouth opens',()=>{
  for(const head of HEADS.filter(h=>h.id!=='hen')){const v=tongueVisible(built(head.id,'author'),12,0,0);assert.ok(v>=.3,`${head.id}: ${(v*100).toFixed(0)}% of the tongue seen from the front at 12°`);}
 });
-test("the game mesh's tongue shows from the front too",{todo:"the game mesh's mouth is coarse inside (the user: \"we really dont need a lot of detain inside the mouth\"): the skunk's shows 23% of the tongue from the front at 12°"},()=>{
+test("the game mesh's tongue shows from the front too",{todo:"the game mesh's mouth is coarse inside (the user: \"we really dont need a lot of detain inside the mouth\"): the skunk's shows 15% of the tongue from the front at 12°"},()=>{
  for(const head of HEADS.filter(h=>h.id!=='hen')){const v=tongueVisible(built(head.id,'10k'),12,0,0);assert.ok(v>=.3,`${head.id}-10k: ${(v*100).toFixed(0)}% of the tongue seen from the front at 12°`);}
 });
 test("the hen's tongue shows when her beak opens",{todo:"her upper mandible's hook covers the gape from the front and above at 12°; raised to show, her tongue showed through the closed gape"},()=>{
@@ -252,7 +282,7 @@ test('the outer skin does not pass through itself as the jaw opens, to 24 degree
  for(const head of HEADS)for(const level of LEVELS){const data=built(head.id,level);
   for(const deg of head.id==='hen'?[6,12]:[6,12,24]){if(deg===24&&known('self24',head,level))continue;const s=selfIntersections(data,deg);assert.equal(s.outer,0,`${head.id}-${level} at ${deg}°: ${s.outer} pairs of outer skin triangles cross`);}}
 });
-test("no tooth, and not the tongue, passes through a lip's face as the mouth opens",{todo:"inside the open mouth, teeth and tongue graze the lips' inner faces on all eleven mammals (up to 8 triangles on a mesh when written), where the cavity's front slopes up into the lower lip; the mouth's inside is to stay coarse (the user: \"we really dont need a lot of detain inside the mouth\")"},()=>{
+test("no tooth, and not the tongue, passes through a lip's face as the mouth opens",{todo:"inside the open mouth, teeth and tongue graze the lips' inner faces on all eleven mammals (up to 12 triangles on a mesh when written, the bull's game mesh), where the cavity's front slopes up into the lower lip; the mouth's inside is to stay coarse (the user: \"we really dont need a lot of detain inside the mouth\")"},()=>{
  // (round 2's review: on eight game meshes, teeth crossed 1 to 4 of the lips' inner faces, which
  // the poke check, looking only at the outer skin, could not see. Open only: closed, the lips'
  // faces lie folded in the crease inside the closed head, where an overbite's crowns reach across
@@ -266,8 +296,9 @@ test('open, the mouth shades as surfaces, not stripes',()=>{
  // the renderer shades it, is over 60 degrees off its triangle (round 2: 17 to 29% of the cheeks
  // on four game meshes, whose normals were the dense sculpt's; round 3 found the instrument blind
  // to the game meshes' cheek triangles that kept no folding vertex, before the cheeks went; round
- // 3's review: held as a todo for all, though most met it; those that do not are KNOWN)
- for(const head of HEADS)for(const level of LEVELS){if(known('stripes',head,level))continue;const data=built(head.id,level);
+ // 3's review: held as a todo for all, though most met it; the last, the skunk's game mesh's rims,
+ // 10% over 60 degrees off in round 5, are 0.4%, its head sculpted at 2 mm)
+ for(const head of HEADS)for(const level of LEVELS){const data=built(head.id,level);
   for(const deg of [6,12]){const c=mouthShading(data,deg);assert.ok(c.over60<=.06,`${head.id}-${level} at ${deg}°: ${(c.over60*100).toFixed(0)}% of the open mouth's lips shades over 60 degrees off`);}}
 });
 test('the jaw carries the whole mandible: weight at least 0.9 along the jaw line seen in profile, from its angle to the chin',()=>{
@@ -330,17 +361,11 @@ test('the normals check can fail: the outer skin about the mouth turned 30 degre
 
 // The known defects, at the same bars (see KNOWN).
 const knownCases=kind=>Object.keys(KNOWN[kind]).map(k=>{const level=k.endsWith('-10k')?'10k':'author';return {head:HEAD[k.slice(0,k.length-level.length-1)],level};});
-test("known: open, teeth or tongue through the outer skin at the lips of seven game meshes and the hen's beak",{todo:"1 or 2 triangles of the outer skin at the lips: the horse's, the bull's, the cow's, the donkey's, the pig foreman's, the pig director's and the dog's game meshes, and the hen's beak"},()=>{
- for(const {head,level} of knownCases('openOuter'))for(const deg of OPEN)for(const r of partsCrossSkin(built(head.id,level),deg))assert.equal(r.outer,0,`${head.id}-${level} at ${deg}°: the ${r.part}`);
-});
 test("known: the donkey's outer skin crosses itself at 24°",{todo:"2 pairs of triangles on its authoring mesh at 24°, past any speech opening (8.6° at most)"},()=>{
  for(const {head,level} of knownCases('self24'))assert.equal(selfIntersections(built(head.id,level),24).outer,0,`${head.id}-${level}`);
 });
-test("known: open, the head's inside seen first through slivers of the lips' faces near the corners",{todo:"slivers of 1.1 to 17.8 mm² on 21 of the 24 meshes, each showing the mouth's inside through it and never the background: the largest the skunk's authoring mesh's from 30 degrees below at speech (17.8), the cow's game mesh's at 24 degrees from the front (13.4), the dog's game mesh's at its corners' cheeks at 24 degrees (10.1); those looked at are triangles of the lips' faces near the corners, where the jaw's weight blends, turned inside-out as the jaw opens"},()=>{
- for(const {head,level} of knownCases('backFirst')){const data=built(head.id,level);for(const {deg,az,el} of seeViews(head))assert.ok(holesThrough(data,deg,az,{el}).largest<=SEE_BAR,`${head.id}-${level} at ${deg.toFixed(1)}°, ${az}° round, ${el}° up`);}
-});
-test("known: the lips' rims shade over 60 degrees off their triangles",{todo:"10% of the skunk's game mesh's open lips' rims, the light-only renders showing a thin fringe along the lips' edges (the user: \"we really dont need a lot of detain inside the mouth\")"},()=>{
- for(const {head,level} of knownCases('stripes'))for(const deg of [6,12])assert.ok(mouthShading(built(head.id,level),deg).over60<=.06,`${head.id}-${level} at ${deg}°`);
+test("known: open, the head's inside seen first through slivers of the lips' faces near the corners",{todo:"slivers of 1.1 to 10.4 mm² on 14 of the 24 meshes over the 216 views, each showing the mouth's inside through it and never the background, and none over 1 mm² at ordinary speech from the portraits and the game's camera: the largest the dog's game mesh's at its corners' cheeks at 24 degrees (10.4), the goat's game mesh's from its right at 24 degrees (3.9), the hen's game beak's in the closing fade (2.9), the rest 1.1 to 2.1; a ratchet, each held at what it measures"},()=>{
+ for(const {head,level} of knownCases('backFirst')){const data=built(head.id,level);for(const {deg,az,el} of seeViews(head))assert.ok(holesThrough(data,deg,az,{el}).largest<=SEE_BAR,`${head.id}-${level} at ${deg.toFixed(1)}°, from azimuth ${-az}°, ${el}° up`);}
 });
 test('the game meshes keep to their budgets: the speaking character at most 12,000 triangles, the game mesh 2 to 3.6 times lighter than the authoring mesh',()=>{
  // (11,500 until round 3, when the dog's and the bull's speaking characters came to 11,996 and

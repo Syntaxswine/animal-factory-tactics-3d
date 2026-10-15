@@ -352,6 +352,24 @@ export function sculptSpeaking(head,M,{shift=0}={}){
  for(let i=0;i<n;i++){const r=G.toRest(P[i*3],P[i*3+1],P[i*3+2]);
   rest.set(r.p,i*3);lower[i]=r.lower;fold[i]=r.fold?1:0;
   const below=-field(...r.p);depth[i]=clamp(below,0,.05);outer[i]=!r.fold&&below<.001?1:0;}
+ // A lip's face faces the slab's air, where it is sculpted. Where the cut passes within a grid step
+ // of another surface (the bull's lower lip a millimetre thick under its overhang, a cavity's floor
+ // held off the surface by `wallMin` a shelf over the slab), the grid draws the thin flap with its
+ // far side within the gap's 2 mm of the slab too, and folded onto the cut that side lay on the
+ // lip's face inside-out: open, seen from behind first (the architect's review, 15 October 2026:
+ // inside-out slivers at the mouth's corners at speech on 21 of 24 meshes; the bull's sculpt had
+ // 51 mm² of them, the skunk's 9). A folding vertex outside the slab whose lip's-face triangles
+ // all face away from it (by more than FACING) is left unfolded, shifted with its side.
+ const I=skin.index.array,FACING=.1;
+ // (a face's triangle: all three folding, of one lip, as the instruments class them)
+ {const flag=new Uint8Array(n),lip=i=>lower[i]<=.02?0:lower[i]>=.98?1:-1;
+  for(let t=0;t<I.length;t+=3){const v=[I[t],I[t+1],I[t+2]],sd=lip(v[0]);if(sd<0||!v.every(i=>fold[i]&&lip(i)===sd))continue;
+   const [a,b,e]=v.map(i=>[P[i*3],P[i*3+1],P[i*3+2]]),u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],w=[e[0]-a[0],e[1]-a[1],e[2]-a[2]],nn=[u[1]*w[2]-u[2]*w[1],u[2]*w[0]-u[0]*w[2],u[0]*w[1]-u[1]*w[0]],l=Math.hypot(...nn);if(l<1e-14)continue;
+   // (toward the slab: the upper lip's face down the cut's gradient, the lower's up it)
+   const m=[0,1,2].map(k=>(a[k]+b[k]+e[k])/3),h=1e-4,g=[(G.refY(m[0]-h,m[2])-G.refY(m[0]+h,m[2]))/(2*h),1,(G.refY(m[0],m[2]-h)-G.refY(m[0],m[2]+h))/(2*h)];
+   const d=(nn[0]*g[0]+nn[1]*g[1]+nn[2]*g[2])/(l*Math.hypot(...g))*(sd===0?-1:1);if(d>FACING)for(const i of v)flag[i]|=1;else if(d<-FACING)for(const i of v)flag[i]|=2;}
+  for(let i=0;i<n;i++){if(flag[i]!==2)continue;const [x,y,z]=[P[i*3],P[i*3+1],P[i*3+2]],c=G.cut(x,y,z),s=G.sigma(x,z);if(Math.abs(c)<=s)continue;
+   const p=[x,y-Math.sign(c)*s,z],below=-field(...p);rest.set(p,i*3);fold[i]=0;depth[i]=clamp(below,0,.05);outer[i]=below<.001?1:0;}}
  // The lips' edges, folded shut, lie on the approved surface's section at the cut: each lip face's
  // vertex next to the outer surface (the edge's own row, which the grid left a little inside the
  // lip) is moved out onto it, so the two lips' edges meet along one line, with no crack between
@@ -361,7 +379,7 @@ export function sculptSpeaking(head,M,{shift=0}={}){
  // vertex stays, as it does if the move would be more than 2 mm)
  const crease=([x,y,z])=>{let p=[x,z];for(let k=0;k<4;k++){const f=g(p[0],p[1]),e=1e-5,gx=(g(p[0]+e,p[1])-g(p[0]-e,p[1]))/(2*e),gz=(g(p[0],p[1]+e)-g(p[0],p[1]-e))/(2*e),l=gx*gx+gz*gz;if(l<.09)return [x,y,z];p=[p[0]-f*gx/l,p[1]-f*gz/l];}
   return Math.hypot(p[0]-x,p[1]-z)>.002?[x,y,z]:[p[0],G.refY(p[0],p[1]),p[1]];};
- const I=skin.index.array,edgeRow=new Uint8Array(n);
+ const edgeRow=new Uint8Array(n);
  for(let t=0;t<I.length;t+=3){const v=[I[t],I[t+1],I[t+2]];if(!v.some(i=>outer[i]))continue;for(const i of v)if(fold[i]&&(lower[i]===0||lower[i]===1)&&depth[i]<(M.crease??.0025))edgeRow[i]=1;}
  // (each only as far as turns none of its triangles inside-out: a lip is its sculpted shape shifted
  // by sigma, so a triangle of one lip faces at rest as it faced where sculpted, open; snapped in

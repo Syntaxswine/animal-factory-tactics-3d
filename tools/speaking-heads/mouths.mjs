@@ -100,7 +100,10 @@ export const MOUTHS={
   teeth:[incisors('lower',8,.021,.0033,.0023,.0045,{lean:.25})],
   tongue:tongue(.02)
  }),
- skunk:mouth({
+ // (sculpted at 2 mm, not 2.5: its lower lip's front is a wedge thinner than the coarser grid, whose top
+ // came out sagging below the cut, its rim turned over at rest, seen from below first at speech:
+ // 1.25 mm², the architect's review's corners)
+ skunk:mouth({step:.002,
   lip:{x:.165,y:1.3844,line:[[.085,1.3864],[.1,1.3814],[.115,1.3763],[.13,1.3739],[.145,1.3762],[.16,1.3817],[.175,1.3885]],smile:0,width:.035},
   corner:{x:.1,open:.025,z:.2,zOpen:.02},hinge:[-.03,1.44],
   band:{cheek:.024,z0:.025,z1:.05},

@@ -15,7 +15,8 @@ import {mouthPlan} from './speaking-heads/plan.mjs';
 import {MOUTHS} from './speaking-heads/mouths.mjs';
 import {placement,measurePlacement} from './speaking-heads/place.mjs';
 import {sculptSpeaking,toothMesh,tongueMesh} from './speaking-heads/sculpt.mjs';
-import {closedVisibility} from './speaking-heads/view.mjs';
+import {closedVisibility,holesThrough,partsCrossSkin,crownExposure} from './speaking-heads/view.mjs';
+import {SPEECH_OPEN} from '../dist/tactics/speaking-head.js';
 const simplify=createRequire(import.meta.url)('./vendor/meshoptimizer/meshopt_simplifier.cjs');await simplify.ready;
 const only=process.argv.find(a=>a.startsWith('--only='))?.slice(7).split(',');
 const out=process.env.SPEAKING_OUT?new URL('file:///'+process.env.SPEAKING_OUT.split('\\').join('/')+'/'):new URL('../dist/tactics/speaking-heads/',import.meta.url);fs.mkdirSync(out,{recursive:true});
@@ -46,6 +47,53 @@ const SHOWN_CLOSED={ppu:5000,bar:.25,reach:[.004,.007,.01]};
 // base as a fin a centimetre tall, and 9.2 mm² of her tongue showed through her closed beak (round
 // 4's review; round 3's beak, its reduction locked round inside-out triangles, had neither).
 const BEAK_ROOT=.01;
+// Open at ordinary speech (4.5 degrees, the midpoint, the character's widest: SPEECH_OPEN), from the
+// viewer's portraits (front, three-quarter and from below, either side) and the game's camera (either
+// side), no triangle is seen from behind first over the tests' 1 mm² (the architect's review, 15
+// October 2026: inside-out slivers at speech on 21 of 24 meshes, up to 15 mm² on the skunk's
+// authoring mesh; those the sculpt made, a thin flap's far side folded onto a lip's face, it now
+// leaves unfolded: sculpt.mjs). Where a reduction folds one over, the level is reduced again with
+// the source's vertices kept within SPEECH_FOLDS.reach of it. (Kept round its corners only, a game
+// mesh's rim triangle of 31 mm² on the pig foreman's lower lip came back at 22 mm² three times.)
+// And as the jaw passes the closed shape's fade on every syllable (0.5, 1 and 1.5 degrees, the closed
+// shape blended in as the runtime blends it), none over SPEECH_FOLDS.fadeBar: there a coarse rim
+// folded into the closed crease shows in the first millimetre the lips part, 12.5 mm² along the
+// skunk's game mesh's front crease at 0.5 degrees. (Held to 1 mm² in the fade too, the locks the
+// many small fade slivers took left the horse's game mesh's teeth showing closed and the pig
+// foreman's crowns short, past three retries.) Views as holesThrough's [azimuth, elevation], its
+// azimuth the viewer's negated (speaking-heads-viewer.js VIEWS; hybrid-world.js GAME_CAMERA).
+const SPEECH_FOLDS={views:[[-90,0],[-54.48,5.73],[-125.52,5.73],[-72.81,-21.77],[-107.19,-21.77],[-45,30],[-135,30]],fade:[.5,1,1.5],bar:1,fadeBar:4,reach:.0015};
+function speechFolds(oh,id){
+ const widest=SPEECH_OPEN[id]*180/Math.PI,S=oh.parts[0],R=S.position,I=S.index,tris=new Set();let worst=0;
+ for(const deg of [...SPEECH_FOLDS.fade,4.5,(4.5+widest)/2,widest])for(const [az,el] of SPEECH_FOLDS.views){const r=holesThrough(oh,deg,az,{el});if(r.largest<=(deg<2?SPEECH_FOLDS.fadeBar:SPEECH_FOLDS.bar))continue;worst=Math.max(worst,r.largest);
+  for(let k=0;k<r.mask.length;k++)if(r.mask[k]&&r.R.id[k]===0)tris.add(r.R.tri[k]);}
+ const points=[...tris].map(t=>({t:[0,1,2].map(k=>{const i=I[t*3+k];return [R[i*3],R[i*3+1],R[i*3+2]];}),r:SPEECH_FOLDS.reach}));
+ return {points,worst,triangles:tris.size};
+}
+// At ordinary speech no tooth or tongue crosses the outer skin (measure.mjs partsCrossSkin): where
+// a reduction leaves one through a coarse triangle from a lip's edge into the mouth (a game mesh's
+// lip whose face it reduced away: the bull's lower incisors stood through a floor of 770 mm² from
+// its lower lip's edge), the level is reduced again with the source's vertices kept round the
+// crossing parts' triangles, as round the teeth seen closed (SHOWN_CLOSED's reaches, the first time a
+// point is found, the second...; a beak's too, not BEAK_ROOT, which tripled the hen's game beak). The
+// architect's review, 15 October 2026: one or two outer triangles crossed on seven game meshes and
+// the hen.
+// At 12 degrees open (the tests' opening for crowns) every incisor shows CROWNS.bar of crown past
+// the gum, the tests' 4 mm and a little: where a reduction leaves the gum over one (a game mesh's
+// mouth is simplified to 4 mm), the level is reduced again with the source's vertices kept round
+// that tooth, as round the teeth seen closed (SHOWN_CLOSED's reaches). (The skunk's game mesh, its
+// head sculpted at 2 mm for its lower lip's front, first showed 3.6 mm of an upper incisor's.)
+const CROWNS={deg:12,bar:.0042};
+function thinCrowns(oh){
+ const thin=crownExposure(oh,CROWNS.deg).filter(t=>t.kind==='incisor'&&t.crown<CROWNS.bar),points=[];
+ for(const t of thin){const part=oh.parts.find(p=>p.name===t.part),{first,count}=part.teeth[t.tooth],P=part.position;for(let k=first;k<first+count;k++)points.push([P[k*3],P[k*3+1],P[k*3+2]]);}
+ return {points,teeth:thin.length,least:thin.length?Math.min(...thin.map(t=>t.crown)):null};
+}
+function speechCrossings(oh,id){
+ const widest=SPEECH_OPEN[id]*180/Math.PI,tris=new Set(),points=[];
+ for(const deg of [4.5,(4.5+widest)/2,widest])for(const r of partsCrossSkin(oh,deg,{collect:true})){for(const t of r.outerTriangles)tris.add(t);points.push(...r.outerParts);}
+ return {points,triangles:tris.size};
+}
 
 function cleanFaces(indices){const faces=new Map();for(let i=0;i<indices.length;i+=3){const key=Array.from(indices.subarray(i,i+3)).sort((a,b)=>a-b).join(':');if(!faces.has(key))faces.set(key,[]);faces.get(key).push(i);}
  const clean=[];for(const starts of faces.values())if(starts.length===1)clean.push(...indices.subarray(starts[0],starts[0]+3));return new Uint32Array(clean);}
@@ -85,6 +133,17 @@ function weld(mesh,eps=1e-6){
 // the rounding makes is found here too.
 const sub3=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cross3=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 function segTri(p,q,a,b,c){const e1=sub3(b,a),e2=sub3(c,a),dir=sub3(q,p),pv=cross3(dir,e2),det=dot3(e1,pv);if(Math.abs(det)<1e-14)return false;const inv=1/det,tv=sub3(p,a),u=dot3(tv,pv)*inv;if(u<0||u>1)return false;const qv=cross3(tv,e1),v=dot3(dir,qv)*inv;if(v<0||u+v>1)return false;const t=dot3(e2,qv)*inv;return t>1e-7&&t<1-1e-7;}
+// The squared distance from p to triangle a, b, c (its nearest point: a corner, an edge or inside).
+function toTriangle(p,a,b,c){
+ const ab=sub3(b,a),ac=sub3(c,a),ap=sub3(p,a),d1=dot3(ab,ap),d2=dot3(ac,ap),d=q=>{const v=sub3(p,q);return dot3(v,v);};
+ if(d1<=0&&d2<=0)return d(a);
+ const bp=sub3(p,b),d3=dot3(ab,bp),d4=dot3(ac,bp);if(d3>=0&&d4<=d3)return d(b);
+ const vc=d1*d4-d3*d2;if(vc<=0&&d1>=0&&d3<=0){const v=d1/(d1-d3);return d(a.map((x,k)=>x+ab[k]*v));}
+ const cp=sub3(p,c),d5=dot3(ab,cp),d6=dot3(ac,cp);if(d6>=0&&d5<=d6)return d(c);
+ const vb=d5*d2-d1*d6;if(vb<=0&&d2>=0&&d6<=0){const w=d2/(d2-d6);return d(a.map((x,k)=>x+ac[k]*w));}
+ const va=d3*d6-d5*d4;if(va<=0&&d4-d3>=0&&d5-d6>=0){const w=(d4-d3)/(d4-d3+d5-d6);return d(b.map((x,k)=>x+(c[k]-x)*w));}
+ const den=1/(va+vb+vc),v=vb*den,w=vc*den;return d(a.map((x,k)=>x+ab[k]*v+ac[k]*w));
+}
 const triTri=(A,B)=>{for(let k=0;k<3;k++)if(segTri(A[k],A[(k+1)%3],B[0],B[1],B[2])||segTri(B[k],B[(k+1)%3],A[0],A[1],A[2]))return true;return false;};
 function crossings(mesh,index,{hinge,degrees=[0,6,12,24],reach=.12,cell=.005}={}){
  const outer=i=>mesh.fold[i]<.5&&Math.round(mesh.inside[i]*1000)/1000<.5,found=[],n=mesh.jaw.length;
@@ -109,7 +168,9 @@ function crossings(mesh,index,{hinge,degrees=[0,6,12,24],reach=.12,cell=.005}={}
 // the mouth at its own. A collapse can pinch a thin wall (a cheek, a lip over the cavity) into
 // edges shared by four triangles: where one does, the vertices around the pinch are locked and
 // the reduction is done again. Every per-vertex array follows the kept vertices. `lockNear`: points
-// (rest) round which the source's vertices within `nearReach` are kept too (see SHOWN_CLOSED).
+// (rest) round which the source's vertices within `nearReach` are kept too (see SHOWN_CLOSED); or
+// {p, r}, a point with a reach of its own; or {t: [a, b, c], r}, a triangle, the source's vertices
+// within r of any of it (see SPEECH_FOLDS).
 function reduce(mesh,parts,attributes,weights,{lockBy=null,hinge,degrees,lockNear=[],nearReach=0}={}){
  // each attribute one value per vertex, or three (a position)
  const n=mesh.position.length/3,columns=attributes.flatMap(a=>mesh[a].length===n*3?[[a,0],[a,1],[a,2]]:[[a,null]]),attr=new Float32Array(n*columns.length);
@@ -119,7 +180,9 @@ function reduce(mesh,parts,attributes,weights,{lockBy=null,hinge,degrees,lockNea
  const split=[[],[]];for(let t=0;t<mesh.index.length/3;t++)split[outerTri(t)?0:1].push(mesh.index[t*3],mesh.index[t*3+1],mesh.index[t*3+2]);
  const sources=split.map(s=>new Uint32Array(s)),lock=new Uint8Array(n);let locked=0,tries=0,indices,errors,crossed=0;
  if(lockBy)for(let i=0;i<n;i++)if(mesh[lockBy][i]>0){lock[i]=1;locked++;}
- for(let i=0;i<n&&lockNear.length;i++){if(lock[i])continue;const R=mesh.rest;for(const q of lockNear)if((R[i*3]-q[0])**2+(R[i*3+1]-q[1])**2+(R[i*3+2]-q[2])**2<nearReach*nearReach){lock[i]=1;locked++;break;}}
+ const near=lockNear.map(q=>Array.isArray(q)?{p:q,r:nearReach}:q);
+ for(let i=0;i<n&&near.length;i++){if(lock[i])continue;const x=[mesh.rest[i*3],mesh.rest[i*3+1],mesh.rest[i*3+2]];
+  for(const q of near)if((q.t?toTriangle(x,...q.t):(x[0]-q.p[0])**2+(x[1]-q.p[1])**2+(x[2]-q.p[2])**2)<q.r*q.r){lock[i]=1;locked++;break;}}
  const reduceOne=(k,target)=>{const source=sources[k],count=Math.min(Math.round(target)*3,source.length);
   const [ix,error]=simplify.simplifyWithAttributes(source.slice(),P,3,attr,columns.length,columns.map(([a])=>weights[a]),lock,count-count%3,parts[k].tolerance,['ErrorAbsolute','LockBorder','Sparse']);return {ix,error};};
  for(;;tries++){
@@ -333,25 +396,34 @@ for(const head of HEADS){
  const closedHead=(sk,level)=>({species:head.id,level,jaw:{hinge:hingeAt},parts:[{kind:'skin',name:'skin',position:sk.closed,index:sk.index,jaw:sk.jaw,inside:sk.inside,fold:sk.fold,lower:sk.lower},
   ...teeth.map(row=>{const m=teethPart(row,level);return {kind:'teeth',name:row[0].jaw+' teeth',bone:row[0].jaw==='upper'?'head':'jaw',position:m.rest,index:m.index,teeth:m.teeth};}),
   ...(S.tongue?[(()=>{const m=tonguePart(level);return {kind:'tongue',name:'tongue',bone:'jaw',position:m.rest,index:m.index};})()]:[])]});
+ // the open head as measure.mjs reads it: the skin at rest, its closed shape a morph that pose()
+ // blends in over the jaw's last 2 degrees, as the runtime does
+ const openHead=(sk,level)=>{const h=closedHead(sk,level),vertices=[],offset=[];
+  for(let i=0;i<sk.rest.length/3;i++){const d=[0,1,2].map(k=>sk.closed[i*3+k]-sk.rest[i*3+k]);if(d.some(v=>v!==0)){vertices.push(i);offset.push(...d);}}
+  return {...h,parts:h.parts.map((p,k)=>k?p:{...p,position:sk.rest,closed:{vertices,offset}})};};
  for(const level of ['author','low']){const L=head[level],from=level==='author'?skin:(()=>{const {errorWorld,errors,sourceTriangles,tries,locked,closed,...m}=levels.author.skin;return m;})();
   if(process.env.SPEAKING_DUMP&&level==='low')fs.writeFileSync(process.env.SPEAKING_DUMP+`/${head.id}-author-source.json`,JSON.stringify({open:Array.from(from.position),outer:Array.from(from.outer),lower:Array.from(from.lower),index:Array.from(from.index)}));
   // (the hinge's line across a beak, every 5 mm: see BEAK_ROOT)
-  let near=M.rigid&&level==='low'?Array.from({length:13},(_,k)=>[hingeAt[0],hingeAt[1],(k-6)*.005]):[];
+  let near=M.rigid&&level==='low'?Array.from({length:13},(_,k)=>[hingeAt[0],hingeAt[1],(k-6)*.005]):[],folds=[],crossed=[],crowned=[];
   for(let attempt=0;;attempt++){
    const sk=reduce(from,[{target:L.target,tolerance:L.tolerance},{target:L.target*(M.share??MOUTH_SHARE),tolerance:MOUTH_TOLERANCE[level]}],['jaw','inside','lower','fold','rest','posed'],ATTRIBUTE_WEIGHT[level],{lockBy:level==='author'?'crease':null,hinge:hingeAt,
     // (a beak's mandible turns about its root inside the head part, through the upper mandible's
     // base, by construction past 12 degrees: locking that only kept her game mesh over budget)
-    degrees:M.rigid?[0,6,12]:[0,6,12,24],lockNear:near,nearReach:M.rigid?BEAK_ROOT:SHOWN_CLOSED.reach[attempt-1]??0});
+    degrees:M.rigid?[0,6,12]:[0,6,12,24],lockNear:[...near,...folds,...crossed,...crowned],nearReach:M.rigid?BEAK_ROOT:SHOWN_CLOSED.reach[attempt-1]??0});
    // closed, each lip's outer skin reaches the crease: the closed shape (see closeCrease)
    sk.closed=sk.rest.slice();const c=closeCrease(sk,sk.closed,G,head,place,Infinity);if(process.env.SPEAKING_DEBUG)console.log(`  crease ${level}: ${c.rims} rims and ${c.edges} edge vertices onto it; ${c.inverted} triangles inside-out at it, ${c.moved} outer vertices onto it (${c.left} out of reach) in ${c.rounds} rounds, ${c.zipped} moves onto one line`);
    levels[level]={skin:sk};
+   const why=[];let shown=[];
    // (a beak has no teeth; her tongue under the gape is a known todo of its own)
-   if(M.rigid)break;
-   const v=closedVisibility(closedHead(sk,level),level,{ppu:SHOWN_CLOSED.ppu,collect:true});
-   if(v.teeth.teeth<=SHOWN_CLOSED.bar)break;
-   if(attempt>=SHOWN_CLOSED.reach.length){console.log(`  ${head.id} ${level}: ${v.teeth.teeth.toFixed(2)} mm² of tooth or tongue still shows closed after ${attempt} retries`);break;}
-   console.log(`  ${head.id} ${level}: ${v.teeth.teeth.toFixed(2)} mm² of tooth or tongue shows closed (azimuth ${v.teeth.az}°, elevation ${v.teeth.el}°): reduced again, kept within ${SHOWN_CLOSED.reach[attempt]*1000} mm of ${v.shown.length+near.length} triangles`);
-   near=near.concat(v.shown);}}
+   if(!M.rigid){const v=closedVisibility(closedHead(sk,level),level,{ppu:SHOWN_CLOSED.ppu,collect:true});
+    if(v.teeth.teeth>SHOWN_CLOSED.bar){shown=v.shown;why.push(`${v.teeth.teeth.toFixed(2)} mm² of tooth or tongue closed (azimuth ${v.teeth.az}°, elevation ${v.teeth.el}°)`);}}
+   const f=speechFolds(openHead(sk,level),head.id);if(f.points.length)why.push(`${f.triangles} triangles folded at speech, to ${f.worst.toFixed(2)} mm²`);
+   const x=speechCrossings(openHead(sk,level),head.id);if(x.points.length)why.push(`${x.triangles} outer triangles crossed by the mouth at speech`);
+   const k=M.rigid?{points:[]}:thinCrowns(openHead(sk,level));if(k.points.length)why.push(`${k.teeth} incisors under ${CROWNS.bar*1000} mm of crown at ${CROWNS.deg}° (${(k.least*1000).toFixed(1)} mm)`);
+   if(!why.length)break;
+   if(attempt>=SHOWN_CLOSED.reach.length){console.log(`  ${head.id} ${level}: still ${why.join('; ')} after ${attempt} retries`);break;}
+   console.log(`  ${head.id} ${level}: ${why.join('; ')}: reduced again`);
+   near=near.concat(shown);folds=folds.concat(f.points);crossed=crossed.concat(x.points.map(p=>({p,r:SHOWN_CLOSED.reach[attempt]})));crowned=crowned.concat(k.points.map(p=>({p,r:SHOWN_CLOSED.reach[attempt]})));}}
  function record(level){
   const toSheet=p=>{const q=place.map(p);return head.revision?donkeyNeck(q):q;};
   const partOut=[];
