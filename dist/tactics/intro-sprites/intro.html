@@ -20,14 +20,15 @@
  output{font:13px/1 ui-monospace,monospace;color:var(--muted);min-width:7ch}
  #shots button{font-size:13px;padding:2px 8px}
  #status{color:var(--muted);font-size:13px;margin-top:8px}
- #caption{min-height:1.45em;text-align:center;margin:8px 0}
+ /* The scene already paints this subtitle; keep a text equivalent for access. */
+ #caption{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
  #voice-status{color:var(--muted);font-size:13px;margin:8px 0}
 </style>
 </head>
 <body>
 <header><h1>Intro — the whole sequence</h1><p class="sub">Storyboard 01–12 as sprites: the approach and ambush (ambush-player.js), then the hit, the drop and the crash (proof.js), in one timeline.</p></header>
 <main>
- <canvas id="view" width="1600" height="900"></canvas>
+ <canvas id="view" width="1600" height="900" aria-describedby="caption"></canvas>
  <p id="caption"></p>
  <audio id="voice" preload="auto"></audio>
  <div class="bar">
