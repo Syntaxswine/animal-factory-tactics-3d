@@ -18,7 +18,7 @@ function surface(field,from,dir,far=.5){if(field(...from)<0)return null;
 
 // S: the sculpt (sculpt.mjs sculptSpeaking): its geometry, teeth and tongue.
 export function mouthPlan(head,M,place,S){
- const G=S.geometry,Sh=p=>sheetPoint(head,place,p),f=head.field,lines=[],dots=[];
+ const G=S.geometry,Sh=p=>sheetPoint(head,place,p),f=head.speaking??head.field,lines=[],dots=[];
  const open=(x,z)=>G.sigma(x,z)>0;
  // The lip line where it meets the face, seen from the side and from the front.
  const profile=[],front=[];
@@ -29,8 +29,6 @@ export function mouthPlan(head,M,place,S){
  dots.push({view:'side',kind:'corner',point:Sh([M.corner.x,G.refY(M.corner.x,0),0])});
  dots.push({view:'side',kind:'jaw angle',point:Sh([...G.lines.a,0])});
  lines.push({view:'side',kind:'under',points:G.lines.points.map(([x,y])=>Sh([x,y,0]))});
- // Where the cheeks end and the mouth opens at the front, seen from the front.
- if(M.cheeks){const w=G.window,x=G.frontX(w);dots.push({view:'front',kind:'window',point:Sh([x,G.refY(x,w),w])},{view:'front',kind:'window',point:Sh([x,G.refY(x,-w),-w])});}
  // The cavity's outline at the middle.
  const y=x=>G.refY(x,0)+.0005;let x0=null,x1=null;for(let x=M.cavity.back-.01;x<G.frontX(0);x+=.001)if(G.cavity(x,y(x),0)<0){if(x0===null)x0=x;x1=x;}
  if(x0!==null){const C=M.cavity;lines.push({view:'side',kind:'cavity',points:[[x0,C.roof],[x1,C.roof],[x1,-C.floor],[x0,-C.floor],[x0,C.roof]].map(([x,dy])=>Sh([x,G.refY(x,0)+(C.lift||0)+dy,0]))});}

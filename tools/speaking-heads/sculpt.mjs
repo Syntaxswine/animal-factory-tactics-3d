@@ -8,15 +8,17 @@
 //
 // The lips are parted in an expanded space: everything above the cut is moved up by sigma,
 // everything below down by sigma, over the mouth (sigma tapers to nothing behind the corners).
-// The space between (the slab) is the head's section at the cut drawn out through it, except at
-// the front of the mouth, where it is air (the window: within cheeks.window of the middle, walled
-// at its ends). Each vertex of the head sculpted there is mapped back to rest space by the same shift,
-// and the slab's onto the cut, so a closed speaking head is the approved head (the lips' faces meet
-// on the cut, a crease along the lip line) and the mouth inside keeps the shape it was sculpted
-// with. As the jaw opens the slab's skin stretches from the upper lip to the lower: along the
-// sides of the mouth, from its corners to the window, the lips part over a wall of skin (the
-// cheeks, closing the mouth from the side, painted as the mouth); at the front, the window opens
-// onto the teeth and tongue.
+// The space between (the slab) is air in front of the corners (the window: the lips part all along
+// the lip line, the mouth opening as a wedge from its corners) but for the mouth's inner walls
+// along the muzzle's sides (the cavity's side walls drawn on through it, a centimetre inside the
+// lips), and behind the corners it is the head's section at the cut drawn out through it. Each
+// vertex of the head sculpted there is mapped back to rest space by the same shift, and the slab's
+// onto the cut, so a closed speaking head is the approved head (the lips' faces meet on the cut, a
+// crease along the lip line) and the mouth inside keeps the shape it was sculpted with. As the jaw
+// opens the lips part from the corners forward onto the mouth inside, its teeth and tongue, and
+// the inner walls stretch from jaw to jaw. (Rounds 2 and 3 closed the mouth's sides with a wall of
+// skin stretched from lip to lip, flush with them, opening only at the front within a window of the
+// middle: the user saw a small square opening where a mouth opens as a wedge, round 3.)
 //
 // The jaw's weight: the mandible (below the lip line, above the jaw line read off the head's own
 // profile, in front of the line from the jaw's angle up to its joint) is rigid; the throat behind
@@ -56,17 +58,15 @@ export function mouthGeometry(M,head){
  // The cut's height: the lip line (a beak's gape line at its middle).
  const refY=(x,z)=>lipY(x,abs(z)),cut=(x,y,z)=>y-refY(x,z);
  // How far the expanded space moves each side away from the cut (tapering out behind the
- // corners), and the air between: the window, within `window` of the middle (a beak opens along
- // its whole gape), ending round behind the corners (and in front of where a beak's gap ends).
- const fx=M.corner.front??Infinity,wz=M.cheeks?M.cheeks.window:cz;
+ // corners), and the air between: the window, along the whole lip line in front of the corners
+ // (within corner.z of the middle), ending round behind the corners (and in front of where a
+ // beak's gap ends): within h of an end the air's height falls off as an ellipse's.
+ const fx=M.corner.front??Infinity,wz=cz;
  const sigma=(x,z)=>h*smooth(x,cx-taper,cx)*(1-smooth(x,fx,fx+taper))*(1-smooth(abs(z),cz,cz+taper));
- // The window's ends are walls across the slab, their edges rounded over `windowEnd`. (Ends that
- // drew the air out to nothing left the slab there in layers thinner than the sculpt's step,
- // which tore into strips when the lips parted.)
- const rz=M.cheeks?.windowEnd??h;
- const sigmaAir=(x,z)=>{if(abs(z)>wz+rz)return 0;const ex=Math.max(0,cx-x,x-fx)/h;return Math.min(sigma(x,z),h*Math.sqrt(Math.max(0,1-ex*ex)));};
+ const rz=Math.min(h,.6*wz);
+ const sigmaAir=(x,z)=>{if(abs(z)>wz)return 0;const ex=Math.max(0,cx-x,x-fx)/h,ez=Math.max(0,abs(z)-(wz-rz))/rz;return Math.min(sigma(x,z),h*Math.sqrt(Math.max(0,1-ex*ex)),sigma(x,z)*Math.sqrt(Math.max(0,1-ez*ez)));};
  // how far inside the air a point is (c its height from the cut); null where there is none
- const air=(x,c,z)=>{const sa=sigmaAir(x,z);return sa<=0?null:blend(sa-abs(c),wz-abs(z),rz);};
+ const air=(x,c,z)=>{const sa=sigmaAir(x,z);return sa<=0?(abs(z)<wz+h?Math.min(wz-abs(z),-abs(c))-1e-4:null):sa-abs(c);};
  // The head at the cut: its half-width at x, and its front at z.
  const outerZ=lazy1(x=>{const y0=refY(x,0);if(head(x,y0,0)>0)return 0;let z=0;while(z<.45&&head(x,refY(x,z),z)<0)z+=.0005;return bisect(w=>head(x,refY(x,w),w),z-.0005,z);},.0005);
  const frontX=lazy1(z=>{let x=M.lip.x+.15;while(x>M.hinge[0]&&head(x,refY(x,z),z)>0)x-=.0005;return bisect(u=>head(u,refY(u,z),z),x,x+.0005);},.0005);
@@ -81,7 +81,7 @@ export function mouthGeometry(M,head){
   let d=c0>=0?c0-C.roof:-c0-C.floor;
   d=smax(d,abs(z)-sideZ(x),r);
   d=smax(d,x-Math.min(frontX(abs(z))-C.front,C.tip??Infinity),r);
-  d=smax(d,C.back-x,r);
+  d=smax(d,C.back-x,C.backRound??r);
   return C.wallMin===null?d:smax(d,head(x,y,z)+C.wallMin,r);};
  // A ruminant's dental pad: a firm ridge across the front of the roof, where its upper incisors
  // would be, that the lower incisors close against.
@@ -90,11 +90,23 @@ export function mouthGeometry(M,head){
  const near=(x,y,z)=>x>C.back-.03&&abs(y-refY(x,z))<M.reach;
  // The closed speaking head: the approved head with its mouth inside.
  const rest=(x,y,z)=>{let d=head(x,y,z);if(!near(x,y,z))return d;d=smax(d,-cavity(x,y,z),r);if(pad)d=blend(d,pad(x,y,z),P.blend??.003);return d;};
+ // The mouth's inner walls (`cavity.inner` thick; a beak has none): skin stretched from jaw to jaw
+ // inside the parted lips, `wall` in from the outer skin (or at the cavity's side, where that is
+ // nearer the lips), along the muzzle's sides from the corners until its outline turns to face
+ // forward (45 degrees), their front ends round. In exact profile the parted lips open onto them,
+ // the mouth's inside, and not through the head to the far side's opening (round 3: open from side
+ // to side, the profile was round 1's see-through hole); in front of them the mouth is open across.
+ // They stand in the head's own flesh, between the cavity and the lips: the cavity, its teeth and
+ // tongue keep their shape (round 3 first widened the cavity out to them, and that build measured
+ // its teeth through the lips' faces on ten heads and the hen's tongue through her closed beak).
+ // Negative inside a wall.
+ const sideEnd=(()=>{for(let x=cx;x<frontX(0);x+=.001)if(outerZ(x+.001)-outerZ(x)<-.001)return x;return frontX(0);})();
+ const innerWall=C.inner?(x,z)=>{const lo=Math.max(sideZ(x),outerZ(x)-C.wall-C.inner),az=abs(z);return smax(Math.max(lo-az,az-lo-C.inner),x-Math.min(sideEnd,frontX(az)-C.front,C.tip??Infinity),C.inner/2);}:()=>Infinity;
  // The expanded space's field (see the top of this file).
  function expanded(x,y,z){
   const s=sigma(x,z);if(s<=0)return rest(x,y,z);
   const c=cut(x,y,z),R=abs(c)>=s?rest(x,y-Math.sign(c)*s,z):rest(x,y-c,z);
-  const a=air(x,c,z);return a===null?R:smax(R,a,M.edge??.001);
+  const a=air(x,c,z);return a===null?R:smax(R,Math.min(a,innerWall(x,z)),M.edge??.001);
  }
  // A vertex of the expanded mesh, back in rest space: `lower` 0 on the upper side of the lips, 1
  // on the lower, between them in the slab (from its height in it); `fold` whether it lies in the
@@ -114,7 +126,7 @@ export function mouthGeometry(M,head){
    const a=air(x,c,z);
    if(a!==null&&abs(c)<s+.002&&a>rest(...p)){const q=[x,y-c,z];return {p:q,lower:M.mandibles&&x>fx?side(q):c>0?0:1,fold:true,slab:false,gap:true};}
    return {p,lower:side(p),fold:false,slab:false,gap:false};}
-  const edge=abs(c)>=s-inner,p=[x,y-c,z],a=air(x,c,z);
+  const p=[x,y-c,z],a=air(x,c,z),edge=abs(c)>=s-inner;
   const lower=edge?(c>0?0:1):M.mandibles&&x>fx?side(p):clamp((s-inner-c)/(2*(s-inner)),0,1);
   return {p,lower,fold:true,slab:!edge,gap:a!==null&&a>-.0005};
  }
@@ -124,12 +136,17 @@ export function mouthGeometry(M,head){
  const parting=(x,z)=>smooth(x,cx-taper,cx+(M.corner.open??.04))*(1-smooth(abs(z),cz-(M.corner.zOpen??.02),cz));
  const ramus=(()=>{const [ax,ay]=L.a,dx=hx-ax,dy=hy-ay,l=Math.hypot(dx,dy);return (x,y)=>((x-ax)*dy-(y-ay)*dx)/l;})();
  const region=(x,y)=>smooth(y-L.lineY(x),-L.blend,0)*smooth(ramus(x,y),-L.blend,0);
- function jawSide(x,y,z,side){
+ function jawSide(x,y,z,side,parted=false){
   if(M.rigid)return side>0?0:smooth(x,hx-M.rigid,hx+M.rigid);
   const d=cut(x,y,z),b=band(z),R=region(x,y),wBand=(1-smooth(d,-b,b))*R,wSide=side<0?R:0;
-  return wBand+(wSide-wBand)*parting(x,z);
+  return wBand+(wSide-wBand)*(parted?1:parting(x,z));
  }
- const jaw=([x,y,z],lower)=>{const up=jawSide(x,y,z,1),down=jawSide(x,y,z,-1);return up+(down-up)*lower;};
+ // A lip's face (`face`: a vertex folding at rest) belongs wholly to its own side wherever the lips
+ // part, the slab's skin graded between them; the outer skin takes the parting's blend toward the
+ // cheeks over `corner.open` in front of the corners (round 3: with the mouth open along the whole
+ // lip line, the faces' blended weights there twisted them into the opening as the jaw opened, and
+ // from the front they webbed the mouth: the game meshes showed 1 to 47% of the tongue).
+ const jaw=([x,y,z],lower,face=false)=>{const up=jawSide(x,y,z,1,face),down=jawSide(x,y,z,-1,face);return up+(down-up)*lower;};
  return {head,lipY,refY,cut,sigma,sigmaAir,window:wz,outerZ,frontX,sideZ,cavity,pad,padAt,rest,expanded,toRest,jaw,jawSide,lines:L,band,parting,region,ramus};
 }
 
@@ -284,13 +301,16 @@ export function tongueLayout(M,G,teeth){
  return {rings,tip:tipX,back:backX};
 }
 
-// The tongue as a closed surface: a rounded section at each ring (its top flatter, its underside
-// rounder), the tip rounded off and the back closed. Returns {position, normal, index}.
+// The tongue as a closed surface: an elliptic section at each ring (domed, round 2: a flatter top
+// read as a slab), the tip rounded off in plan over as much of its length as it is wide there (at
+// least the last 18%, at most half: round 3, a wide tongue's blunt front read as a box seen from
+// the front) and the back closed. Returns {position, normal, index}.
 export function tongueMesh(layout,sides,count){
  const R=layout.rings,P=[],ix=[],pick=[];for(let j=0;j<count;j++)pick.push(R[Math.round(j/(count-1)*(R.length-1))]);
- const tipRound=s=>s<.82?1:Math.sqrt(Math.max(0,1-((s-.82)/.18)**2))*.9+.1;
+ const s0=1-Math.min(.5,Math.max(.18,R.at(-1).half/Math.max(1e-6,R.at(-1).x-R[0].x)));
+ const tipRound=s=>s<s0?1:Math.sqrt(Math.max(0,1-((s-s0)/(1-s0))**2))*.9+.1;
  pick.forEach((r,j)=>{const s=j/(count-1),k=tipRound(s),cy=(r.bottom+r.top)/2,hh=(r.top-r.bottom)/2*Math.max(.35,k),w=r.half*k;
-  for(let i=0;i<sides;i++){const a=i/sides*Math.PI*2,u=Math.cos(a),v=Math.sin(a),yy=v>0?Math.pow(v,.55):v;P.push([r.x,cy+hh*yy,w*u]);}});
+  for(let i=0;i<sides;i++){const a=i/sides*Math.PI*2,u=Math.cos(a),v=Math.sin(a),yy=v;P.push([r.x,cy+hh*yy,w*u]);}});
  const back=P.length,rb=pick[0];P.push([rb.x-.002,(rb.bottom+rb.top)/2,0]);const tip=P.length,rt=pick.at(-1);P.push([rt.x+.003,(rt.bottom+rt.top)/2,0]);
  for(let j=0;j<count-1;j++)for(let i=0;i<sides;i++){const a=j*sides+i,b=j*sides+(i+1)%sides,c=b+sides,d=a+sides;ix.push(a,b,c,a,c,d);}
  for(let i=0;i<sides;i++){ix.push(back,(i+1)%sides,i);ix.push((count-1)*sides+i,(count-1)*sides+(i+1)%sides,tip);}
@@ -312,31 +332,31 @@ function closed(P,ix){
 // 0 behind the corners, 1 in front of them), how deep it lies under the approved surface
 // (`depth`, and `inside` 0..1 from 3 to 6 mm: the lips' faces keep the outer paint at their
 // edges) and whether it is the approved outer surface (`outer`). The skin stretched between the
-// parted lips (the cheeks) is painted as the mouth by part and lower: see speaking-head.js.
+// parted lips (at the corners) is painted as the mouth by part and lower: see speaking-head.js.
 // Teeth and tongue are made in rest space. Everything is in sculpt space; the caller places it.
 // `shift` moves the sculpt's grid by that many steps (a grid can catch two sheets of a surface
 // touching at one of its edges; another grid does not).
 export function sculptSpeaking(head,M,{shift=0}={}){
- const G=mouthGeometry(M,head.field),step=M.step||head.step,grow=M.gap+2*step,o=shift*step;
+ const field=head.speaking??head.field,G=mouthGeometry(M,field),step=M.step||head.step,grow=M.gap+2*step,o=shift*step;
  const min=[head.min[0]-o,head.min[1]-grow-o,head.min[2]-o],max=[head.max[0]+step,head.max[1]+grow+step,head.max[2]+step];
  const skin=sculptSurface(G.expanded,min,max,step),P=skin.attributes.position.array,n=P.length/3;
  const rest=new Float32Array(n*3),jaw=new Float32Array(n),lower=new Float32Array(n),fold=new Float32Array(n),part=new Float32Array(n),inside=new Float32Array(n),depth=new Float32Array(n),outer=new Float32Array(n);
  for(let i=0;i<n;i++){const r=G.toRest(P[i*3],P[i*3+1],P[i*3+2]);
   rest.set(r.p,i*3);lower[i]=r.lower;fold[i]=r.fold?1:0;
-  const below=-head.field(...r.p);depth[i]=clamp(below,0,.05);outer[i]=!r.fold&&below<.001?1:0;}
+  const below=-field(...r.p);depth[i]=clamp(below,0,.05);outer[i]=!r.fold&&below<.001?1:0;}
  // The lips' edges, folded shut, lie on the approved surface's section at the cut: each lip face's
  // vertex next to the outer surface (the edge's own row, which the grid left a little inside the
  // lip) is moved out onto it, so the two lips' edges meet along one line, with no crack between
  // them for a ray to pass, and an open lip's edge is the surface's own.
- const g=(u,w)=>head.field(u,G.refY(u,w),w);
+ const g=(u,w)=>field(u,G.refY(u,w),w);
  // (where the surface lies nearly flat in the cut, its section there is no line to move onto: the
  // vertex stays, as it does if the move would be more than 2 mm)
  const crease=([x,y,z])=>{let p=[x,z];for(let k=0;k<4;k++){const f=g(p[0],p[1]),e=1e-5,gx=(g(p[0]+e,p[1])-g(p[0]-e,p[1]))/(2*e),gz=(g(p[0],p[1]+e)-g(p[0],p[1]-e))/(2*e),l=gx*gx+gz*gz;if(l<.09)return [x,y,z];p=[p[0]-f*gx/l,p[1]-f*gz/l];}
   return Math.hypot(p[0]-x,p[1]-z)>.002?[x,y,z]:[p[0],G.refY(p[0],p[1]),p[1]];};
  const I=skin.index.array,edgeRow=new Uint8Array(n);
  for(let t=0;t<I.length;t+=3){const v=[I[t],I[t+1],I[t+2]];if(!v.some(i=>outer[i]))continue;for(const i of v)if(fold[i]&&(lower[i]===0||lower[i]===1)&&depth[i]<(M.crease??.0025))edgeRow[i]=1;}
- for(let i=0;i<n;i++)if(edgeRow[i]){const q=crease([rest[i*3],rest[i*3+1],rest[i*3+2]]);rest.set(q,i*3);depth[i]=clamp(-head.field(...q),0,.05);}
- for(let i=0;i<n;i++){const p=[rest[i*3],rest[i*3+1],rest[i*3+2]];jaw[i]=G.jaw(p,lower[i]);part[i]=G.parting(p[0],p[2]);
+ for(let i=0;i<n;i++)if(edgeRow[i]){const q=crease([rest[i*3],rest[i*3+1],rest[i*3+2]]);rest.set(q,i*3);depth[i]=clamp(-field(...q),0,.05);}
+ for(let i=0;i<n;i++){const p=[rest[i*3],rest[i*3+1],rest[i*3+2]];jaw[i]=G.jaw(p,lower[i],fold[i]>.5);part[i]=G.parting(p[0],p[2]);
   // the lips' faces are the mouth's beyond their first millimetre and a bit; any other surface
   // deeper than the approved surface's own (the cavity, a pad) is the mouth's
   inside[i]=fold[i]?smooth(depth[i],.0012,.003):smooth(depth[i],.001,.002);}

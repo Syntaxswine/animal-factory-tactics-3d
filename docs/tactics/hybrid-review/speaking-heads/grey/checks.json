@@ -2,17 +2,17 @@
  "stage": "grey",
  "level": "author",
  "base": "http://127.0.0.1:4499",
- "date": "2026-10-14T21:06:10.759Z",
+ "date": "2026-10-15T02:24:49.573Z",
  "characters": {
   "horse": {
    "id": "horse",
    "level": "author",
-   "triangles": 10136,
+   "triangles": 10716,
    "characterTriangles": 28886,
    "parts": [
     {
      "name": "unified skull jaw neck and ears (speaking)",
-     "triangles": 8120
+     "triangles": 8700
     },
     {
      "name": "upper teeth",
@@ -29,14 +29,6 @@
    ],
    "bones": 18,
    "jawParent": "head",
-   "closed difference, cutscene": {
-    "mean": 1.215,
-    "changed": 0.121
-   },
-   "closed difference, native": {
-    "mean": 0.567,
-    "changed": 0.123
-   },
    "pageErrors": []
   },
   "goat": {
@@ -60,25 +52,17 @@
    ],
    "bones": 18,
    "jawParent": "head",
-   "closed difference, cutscene": {
-    "mean": 1.097,
-    "changed": 0.193
-   },
-   "closed difference, native": {
-    "mean": 0.47,
-    "changed": 0.111
-   },
    "pageErrors": []
   },
   "bull": {
    "id": "bull",
    "level": "author",
-   "triangles": 11206,
+   "triangles": 11670,
    "characterTriangles": 29572,
    "parts": [
     {
      "name": "unified bull skull ears and short horns (speaking)",
-     "triangles": 9750
+     "triangles": 10214
     },
     {
      "name": "lower teeth",
@@ -91,25 +75,17 @@
    ],
    "bones": 18,
    "jawParent": "head",
-   "closed difference, cutscene": {
-    "mean": 1.187,
-    "changed": 0.308
-   },
-   "closed difference, native": {
-    "mean": 0.545,
-    "changed": 0.21
-   },
    "pageErrors": []
   },
   "cow": {
    "id": "cow",
    "level": "author",
-   "triangles": 10378,
+   "triangles": 10784,
    "characterTriangles": 29988,
    "parts": [
     {
      "name": "unified cow skull ears and forehead tuft (speaking)",
-     "triangles": 8922
+     "triangles": 9328
     },
     {
      "name": "lower teeth",
@@ -122,25 +98,17 @@
    ],
    "bones": 18,
    "jawParent": "head",
-   "closed difference, cutscene": {
-    "mean": 1.004,
-    "changed": 0.192
-   },
-   "closed difference, native": {
-    "mean": 0.483,
-    "changed": 0.136
-   },
    "pageErrors": []
   },
   "donkey": {
    "id": "donkey",
    "level": "author",
-   "triangles": 10758,
+   "triangles": 11158,
    "characterTriangles": 28898,
    "parts": [
     {
      "name": "unified donkey skull muzzle and long ears (speaking)",
-     "triangles": 8742
+     "triangles": 9142
     },
     {
      "name": "upper teeth",
@@ -157,25 +125,17 @@
    ],
    "bones": 18,
    "jawParent": "head",
-   "closed difference, cutscene": {
-    "mean": 1.092,
-    "changed": 0.215
-   },
-   "closed difference, native": {
-    "mean": 0.415,
-    "changed": 0.086
-   },
    "pageErrors": []
   },
   "sheep": {
    "id": "sheep",
    "level": "author",
-   "triangles": 11204,
+   "triangles": 11196,
    "characterTriangles": 30756,
    "parts": [
     {
      "name": "unified sheep skull ears and wool (speaking)",
-     "triangles": 9748
+     "triangles": 9740
     },
     {
      "name": "lower teeth",
@@ -188,25 +148,17 @@
    ],
    "bones": 18,
    "jawParent": "head",
-   "closed difference, cutscene": {
-    "mean": 1.431,
-    "changed": 0.164
-   },
-   "closed difference, native": {
-    "mean": 0.638,
-    "changed": 0.136
-   },
    "pageErrors": []
   },
   "skunk": {
    "id": "skunk",
    "level": "author",
-   "triangles": 7914,
+   "triangles": 8276,
    "characterTriangles": 29934,
    "parts": [
     {
      "name": "unified skunk skull rounded ears and muzzle (speaking)",
-     "triangles": 5618
+     "triangles": 5980
     },
     {
      "name": "upper teeth",
@@ -223,25 +175,17 @@
    ],
    "bones": 18,
    "jawParent": "head",
-   "closed difference, cutscene": {
-    "mean": 1.007,
-    "changed": 0.203
-   },
-   "closed difference, native": {
-    "mean": 0.452,
-    "changed": 0.173
-   },
    "pageErrors": []
   },
   "pig-foreman": {
    "id": "pig-foreman",
    "level": "author",
-   "triangles": 9196,
+   "triangles": 9604,
    "characterTriangles": 29978,
    "parts": [
     {
      "name": "unified pig skull folded ears and snout (speaking)",
-     "triangles": 6620
+     "triangles": 7028
     },
     {
      "name": "upper teeth",
@@ -258,25 +202,17 @@
    ],
    "bones": 18,
    "jawParent": "head",
-   "closed difference, cutscene": {
-    "mean": 1.189,
-    "changed": 0.216
-   },
-   "closed difference, native": {
-    "mean": 0.573,
-    "changed": 0.173
-   },
    "pageErrors": []
   },
   "pig-director": {
    "id": "pig-director",
    "level": "author",
-   "triangles": 10196,
+   "triangles": 11142,
    "characterTriangles": 29996,
    "parts": [
     {
      "name": "unified director skull folded ears and snout (speaking)",
-     "triangles": 7620
+     "triangles": 8566
     },
     {
      "name": "upper teeth",
@@ -293,25 +229,17 @@
    ],
    "bones": 18,
    "jawParent": "head",
-   "closed difference, cutscene": {
-    "mean": 1.988,
-    "changed": 0.416
-   },
-   "closed difference, native": {
-    "mean": 0.881,
-    "changed": 0.16
-   },
    "pageErrors": []
   },
   "rabbit": {
    "id": "rabbit",
    "level": "author",
-   "triangles": 9894,
+   "triangles": 9892,
    "characterTriangles": 29972,
    "parts": [
     {
      "name": "unified rabbit skull and leaf ears (speaking)",
-     "triangles": 8998
+     "triangles": 8996
     },
     {
      "name": "upper teeth",
@@ -328,25 +256,17 @@
    ],
    "bones": 18,
    "jawParent": "head",
-   "closed difference, cutscene": {
-    "mean": 1.135,
-    "changed": 0.037
-   },
-   "closed difference, native": {
-    "mean": 0.433,
-    "changed": 0.025
-   },
    "pageErrors": []
   },
   "dog": {
    "id": "dog",
    "level": "author",
-   "triangles": 9712,
+   "triangles": 10732,
    "characterTriangles": 29850,
    "parts": [
     {
      "name": "unified dog skull and upright ears (speaking)",
-     "triangles": 7136
+     "triangles": 8156
     },
     {
      "name": "upper teeth",
@@ -363,14 +283,6 @@
    ],
    "bones": 18,
    "jawParent": "head",
-   "closed difference, cutscene": {
-    "mean": 1.05,
-    "changed": 0.11
-   },
-   "closed difference, native": {
-    "mean": 0.467,
-    "changed": 0.074
-   },
    "pageErrors": []
   },
   "hen": {
@@ -390,14 +302,6 @@
    ],
    "bones": 12,
    "jawParent": "head",
-   "closed difference, cutscene": {
-    "mean": 0.097,
-    "changed": 0.021
-   },
-   "closed difference, native": {
-    "mean": 0.05,
-    "changed": 0.012
-   },
    "pageErrors": []
   }
  },

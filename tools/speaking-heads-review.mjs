@@ -2,10 +2,12 @@
 // Photographs the speaking heads in the real renderer (tactics/speaking-heads.html) and writes the
 // review evidence to docs/tactics/hybrid-review/speaking-heads/<stage>/:
 //  - <id>.png      the approved head and the speaking head closed, open 12 and 24 degrees, from
-//                  the side, three-quarter and front (grey: the authoring mesh; paint: the game mesh)
+//                  the side, three-quarter, front and the game's camera (grey: the authoring mesh;
+//                  paint: the game mesh)
 //  - overview.png  every character, three-quarter, closed and open 12 degrees
-//  - checks.json   per character: triangles, how far the closed speaking head differs on screen
-//                  from the approved head (cutscene and gameplay scale), paint coverage, page errors
+//  - checks.json   per character: triangles, paint coverage, page errors (round 2: a screen
+//                  difference between the closed heads was dropped, as round 1 showed it could not
+//                  tell a leaking crease from a closed one; tests/speaking-heads.test.mjs measures that)
 // Needs the page served (npm run serve, or the af3d-speaking-heads launch entry) and a Playwright
 // with Edge (PLAYWRIGHT_PATH, as the other review tools).
 import fs from 'node:fs';
@@ -25,9 +27,6 @@ function grid(rows,gap=4){const w=Math.max(...rows.map(r=>r.reduce((s,t)=>s+t.wi
  for(let i=0;i<w*h;i++){pixels[i*4]=pixels[i*4+1]=pixels[i*4+2]=24;pixels[i*4+3]=255;}
  let y0=0;for(const row of rows){let x0=0;for(const t of row){for(let y=0;y<t.height;y++)pixels.set(t.pixels.subarray(y*t.width*4,(y+1)*t.width*4),((y0+y)*w+x0)*4);x0+=t.width+gap;}y0+=Math.max(...row.map(t=>t.height))+gap;}
  return {width:w,height:h,pixels};}
-// How different two equal crops are: mean absolute difference (0..255) and the share of pixels
-// differing by more than 24 in any channel.
-function difference(a,b){let sum=0,big=0;const n=a.width*a.height;for(let i=0;i<n;i++){let m=0;for(let k=0;k<3;k++){const d=Math.abs(a.pixels[i*4+k]-b.pixels[i*4+k]);sum+=d/3;m=Math.max(m,d);}if(m>24)big++;}return {mean:+(sum/n).toFixed(3),changed:+(100*big/n).toFixed(3)};}
 
 const browser=await chromium.launch({headless:true,channel:'msedge'});
 const checks={stage,level,base,date:new Date().toISOString(),characters:{}},overview=[];
@@ -41,15 +40,13 @@ try{
  for(const id of IDS){
   const before=errors.length;await page.evaluate(([id,level])=>speakingHeads.load(id,level),[id,level]);
   const rows=[];
-  for(const view of ['side','three','front']){const row=[];
+  for(const view of ['side','three','front','game']){const row=[];
    for(const [k,jaw] of [0,12,24].entries()){const img=await shot({...look,coverage:false,wire:false,weights:false,view,scale:'portrait',jaw,heading:0});
     if(k===0)row.push(crop(img,W/4,H/2,TILE));row.push(crop(img,3*W/4,H/2,TILE));}
    rows.push(row);}
   const sheet=grid(rows);fs.writeFileSync(new URL(`${id}.png`,dir),encodePNG(sheet));
   overview.push([rows[1][0],rows[1][1],rows[1][2]]);
-  // Closed, the speaking head should look like the approved head: compare the two panes.
   const record={...(await page.evaluate(()=>speakingHeads.diagnostics()))};
-  for(const [scale,size] of [['cutscene',[320,320]],['native',[90,90]]]){const img=await shot({...look,view:'three',scale,jaw:0});record['closed difference, '+scale]=difference(crop(img,W/4,H/2,size),crop(img,3*W/4,H/2,size));}
   if(stage==='paint'){for(const jaw of [0,12]){await page.evaluate(o=>speakingHeads.set(o),{view:'three',scale:'close',jaw,painted:true,grey:false});record['coverage, jaw '+jaw]=await page.evaluate(()=>speakingHeads.coverage());}}
   record.pageErrors=errors.slice(before);checks.characters[id]=record;console.log(id,JSON.stringify(record));
  }

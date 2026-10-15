@@ -14,7 +14,7 @@ import {sheetPoint} from './plan.mjs';
 const args=process.argv.slice(2),id=args[0],out=args[1],head=HEAD[id],M=MOUTHS[id];
 const opt=k=>args.find(a=>a.startsWith('--'+k+'='))?.split('=')[1];
 const S=+(opt('scale')||3600),HALF=+(opt('half')||.05);
-const place=placement(head),field=head.field,G=mouthGeometry(M,field),P=PAINT[id],F=P.frame;
+const place=placement(head),field=head.speaking??head.field,G=mouthGeometry(M,field),P=PAINT[id],F=P.frame;
 const sheet=decodePNG(fs.readFileSync(new URL('../../'+P.sheet,import.meta.url)));
 // Sheet space <-> sculpt space (sheetPoint is sculpt -> sheet; this is its inverse).
 const toSculpt=([x,y,z])=>{const q=[x,y-(P.lift||0),z];return P.space==='sculpt'?q:place.unmap(q);};

@@ -8,9 +8,9 @@
 //           off each approved head (tools/speaking-heads/fit-lips.mjs); `x`, `y` are a point on the
 //           line near the front. In front of where a beak's gap ends, its `mandibles` say which side
 //           a point is (the distance to the lower minus the upper)
-//  corner   where the mouth ends: the lips part in front of x (and within |z| < z: a mouth on the
-//           front of a muzzle; .2 is beyond any face), each wholly on its own side from `open`
-//           in front of x (and `zOpen` inside z)
+//  corner   where the mouth ends: the lips part in front of x, all along the lip line (and within
+//           |z| < z: a mouth on the front of a muzzle; .2 is beyond any face), each wholly on its
+//           own side from `open` in front of x (and `zOpen` inside z)
 //  gap      how far the lips are parted in the space the head is sculpted in (folded shut at rest),
 //           tapering out over `taper` behind the corners
 //  hinge    the jaw's joint (the jaw bone turns about z through it)
@@ -23,10 +23,9 @@
 //  cavity   the mouth behind the lips: `floor` below the cut to `roof` above it, `wall` inside the
 //           cheeks and no wider than `width` (narrowing by `taper` toward the back), `front`
 //           behind the front of the lips, in front of x `back`, never nearer the surface than
-//           `wallMin`, edges rounded over `round`
-//  cheeks   the mouth's sides between the parted lips are closed by skin stretched from the upper
-//           lip to the lower (sculpt.mjs: the slab); it opens at the front within `window` of the
-//           middle, its ends walls across the slab with their edges rounded over `windowEnd`
+//           `wallMin`, edges rounded over `round` (its back over `backRound`: a throat, not a wall);
+//           `inner`: the mouth's inner walls, that thick, inside the parted lips along the
+//           muzzle's sides (sculpt.mjs innerWall; a beak has none)
 //  pad      a ruminant's dental pad on the front of the roof: its bottom `bottom` above the cut,
 //           half-height, half-depth and half-width
 //  teeth    rows on an arch inside the lips: jaw, kind (incisor, canine), count, half (arc length
@@ -35,14 +34,14 @@
 //  tongue   on the floor behind the lower teeth: half-width at most `width`; its top `below` the
 //           cut at the tip rising to `rise` above it at the back
 //  reach    how far from the cut the mouth can be (where the cavity is looked for)
-//  share    the mouth's triangles, as a share of the skull's (build-speaking-heads.mjs: a quarter)
+//  share    the mouth's triangles, as a share of the skull's (build-speaking-heads.mjs: a quarter);
+//           toothSides, the sides of its teeth's lathes by level (the build's TOOTH)
 import {henGape} from './heads.mjs';
 
 const common={gap:.008,edge:.001,reach:.09,step:.0025,taper:.01,teethGap:.0008,
  band:{mid:.006,cheek:.034,z0:.04,z1:.07},
- cavity:{roof:.010,floor:.006,width:.03,taper:.2,wall:.010,front:.006,wallMin:.004,round:.004},
- cheeks:{window:.018,windowEnd:.002}};
-const mouth=o=>({...common,...o,band:{...common.band,...o.band},cavity:{...common.cavity,...o.cavity},cheeks:o.cheeks===null?null:{...common.cheeks,...o.cheeks}});
+ cavity:{roof:.010,floor:.006,width:.03,taper:.2,wall:.010,front:.006,wallMin:.004,round:.004,backRound:.012,inner:.008}};
+const mouth=o=>({...common,...o,band:{...common.band,...o.band},cavity:{...common.cavity,...o.cavity}});
 const incisors=(jaw,count,half,width,depth,tip=.0045,o={})=>({jaw,kind:'incisor',count,half,width,depth,tip,embed:.003,...o});
 const canines=(jaw,half,size,tip,o={})=>({jaw,kind:'canine',count:2,half,width:size,depth:size,tip,embed:.004,...o});
 const tongue=(width,o={})=>({width,embed:.0015,rise:.002,below:.002,backInset:.015,gap:.003,clear:.0015,...o});
@@ -54,7 +53,6 @@ export const MOUTHS={
   corner:{x:.168,z:.2,zOpen:.02},hinge:[-.035,1.43],
   band:{z0:.04,z1:.07},
   cavity:{back:.05,width:.035},
-  cheeks:{window:.02},
   teeth:[incisors('upper',6,.022,.0042,.0034),incisors('lower',6,.021,.004,.0032)],
   tongue:tongue(.027)
  }),
@@ -63,7 +61,6 @@ export const MOUTHS={
   corner:{x:.112,z:.2,zOpen:.02},hinge:[-.03,1.42],
   band:{z0:.03,z1:.06},
   cavity:{back:.035,width:.025},
-  cheeks:{window:.015},
   pad:ruminantPad(.02),
   teeth:[incisors('lower',8,.02,.0031,.0022,.0045,{lean:.25})],
   tongue:tongue(.02)
@@ -73,17 +70,17 @@ export const MOUTHS={
   corner:{x:.12,z:.2,zOpen:.02},hinge:[-.03,1.43],
   band:{cheek:.024,z0:.047,z1:.077},
   cavity:{back:.04,width:.042},
-  cheeks:{window:.025},
   pad:ruminantPad(.032),
-  teeth:[incisors('lower',8,.031,.0045,.0028,.0045,{lean:.25})],
-  tongue:tongue(.035)
+  // (their fronts stood 0.24 mm through the game mesh's closed lip, round 3)
+  teeth:[incisors('lower',8,.031,.0045,.0028,.0045,{lean:.25,inset:.001})],
+  // (.035 read as a pink slab across the open mouth, round 3)
+  tongue:tongue(.028)
  }),
  cow:mouth({
   lip:{x:.178,y:1.3755,line:[[.095,1.3958],[.11,1.393],[.125,1.3899],[.14,1.3847],[.155,1.3784],[.17,1.3752],[.185,1.3765],[.2,1.3805],[.215,1.3842]],smile:0,width:.05},
   corner:{x:.112,z:.2,zOpen:.02},hinge:[-.02,1.44],
   band:{z0:.037,z1:.067},
   cavity:{back:.03,width:.032},
-  cheeks:{window:.02},
   pad:ruminantPad(.026),
   teeth:[incisors('lower',8,.025,.0041,.0026,.005,{lean:.25})],
   tongue:tongue(.026)
@@ -93,7 +90,6 @@ export const MOUTHS={
   corner:{x:.145,z:.2,zOpen:.02},hinge:[-.04,1.36],
   band:{z0:.035,z1:.065},
   cavity:{back:.03,width:.03},
-  cheeks:{window:.019},
   teeth:[incisors('upper',6,.019,.004,.0033),incisors('lower',6,.018,.0038,.0031)],
   tongue:tongue(.023)
  }),
@@ -102,7 +98,6 @@ export const MOUTHS={
   corner:{x:.1,open:.03,z:.2,zOpen:.02},hinge:[-.02,1.43],
   band:{z0:.03,z1:.06},
   cavity:{back:.03,width:.025},
-  cheeks:{window:.015},
   pad:ruminantPad(.021),
   teeth:[incisors('lower',8,.021,.0033,.0023,.0045,{lean:.25})],
   tongue:tongue(.02)
@@ -112,9 +107,10 @@ export const MOUTHS={
   corner:{x:.1,open:.025,z:.2,zOpen:.02},hinge:[-.03,1.44],
   band:{cheek:.024,z0:.025,z1:.05},
   cavity:{back:.03,width:.02,floor:.0055,roof:.009},
-  cheeks:{window:.011},
-  teeth:[incisors('upper',6,.009,.0019,.002,.0035),canines('upper',.0215,.0026,.004),
-   incisors('lower',4,.0055,.0018,.0019,.0037),canines('lower',.011,.0024,.005)],
+  // (the upper canines and incisors reached through the game mesh's thin closed lower lip, round 3)
+  teeth:[incisors('upper',6,.009,.0019,.002,.003),canines('upper',.0215,.0026,.003),
+   // (the lower canines reached 5 mm past the cut, through the game mesh's thin closed upper lip, round 3)
+   incisors('lower',4,.0055,.0018,.0019,.0037),canines('lower',.011,.0024,.0035)],
   tongue:tongue(.016)
  }),
  'pig-foreman':mouth({
@@ -125,7 +121,6 @@ export const MOUTHS={
   jawLine:{a:.15},
   band:{cheek:.026,z0:.043,z1:.073},
   cavity:{back:.04,width:.038},
-  cheeks:{window:.02},
   teeth:[incisors('upper',6,.017,.0038,.003,.004),canines('upper',.034,.0042,.007),
    incisors('lower',6,.012,.0036,.0029,.004,{lean:.3}),canines('lower',.020,.004,.008)],
   tongue:tongue(.03)
@@ -137,7 +132,6 @@ export const MOUTHS={
   jawLine:{a:.21},
   band:{cheek:.03,z0:.05,z1:.08},
   cavity:{back:.05,width:.045},
-  cheeks:{window:.022},
   teeth:[incisors('upper',6,.019,.0042,.0032,.004),canines('upper',.038,.0045,.007),
    incisors('lower',6,.014,.004,.003,.004,{lean:.3}),canines('lower',.023,.0042,.008)],
   tongue:tongue(.034)
@@ -148,7 +142,6 @@ export const MOUTHS={
   corner:{x:.075,open:.025,z:.068,zOpen:.015},hinge:[-.02,1.43],
   band:{mid:.005,cheek:.02,z0:.027,z1:.05},
   cavity:{back:.03,width:.022,roof:.009,front:.005},
-  cheeks:{window:.012},
   teeth:[incisors('upper',2,.0048,.0045,.003,.0055,{embed:.004}),incisors('lower',2,.0038,.0035,.0028,.0045)],
   tongue:tongue(.016)
  }),
@@ -161,17 +154,17 @@ export const MOUTHS={
   // the lower mandible ends short of the upper's hooked tip: the gap ends there too
   corner:{x:.165,front:.222,open:.005,z:.2,zOpen:.01},hinge:[.165,1.4145],rigid:.006,
   band:{mid:.002,cheek:.002,z0:1,z1:2},
-  cavity:{back:.14,tip:.214,roof:.0035,floor:.0035,width:.012,wall:.003,front:.003,wallMin:null,round:.0015},
-  cheeks:null,
+  cavity:{back:.14,tip:.214,roof:.0035,floor:.0035,width:.012,wall:.003,front:.003,wallMin:null,round:.0015,backRound:.0015,inner:0},
   tongue:tongue(.0055,{embed:.0008,rise:.0008,below:.0015,backInset:.035,gap:.003,clear:.0008})
  }),
  // (the heaviest character, 10,446 triangles: its long mouth gets a fifth more, not a quarter)
- dog:mouth({share:.2,
+ // (the heaviest character: at the common 4 mm and 30-triangle teeth its game mesh went 92
+ // triangles over the 12,000 cap, round 3; its sixteen game teeth are four-sided)
+ dog:mouth({share:.2,toothSides:{low:4},
   lip:{x:.195,y:1.3736,line:[[.06,1.386],[.075,1.3847],[.09,1.3835],[.105,1.3816],[.12,1.3793],[.135,1.377],[.15,1.3754],[.165,1.3744],[.18,1.3738],[.195,1.3736],[.21,1.3749],[.225,1.3763]],smile:0,width:.04},
   corner:{x:.079,z:.2,zOpen:.02},hinge:[-.035,1.43],
   band:{z0:.033,z1:.063},
   cavity:{back:.03,width:.028,floor:.008},
-  cheeks:{window:.015},
   teeth:[incisors('upper',6,.013,.0024,.0026,.004),canines('upper',.0295,.0033,.0065),
    incisors('lower',6,.012,.0023,.0025,.004),canines('lower',.019,.0031,.006)],
   tongue:tongue(.022)

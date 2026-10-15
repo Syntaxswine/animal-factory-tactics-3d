@@ -111,6 +111,32 @@ function goat(x,y,z){
  return d;
 }
 
+// The speaking heads' own fields for the goat and the donkey: their approved sculpts less the
+// ellipsoid each carves on either side of the snout, outside the painted nostrils (the user, on
+// the first painted mouths: "an extra nostril on the side"). The meshes made from those carves
+// are holed (seen through: the approved goat's skull 14 mm2, the donkey's 32 mm2), and with a
+// mouth inside the head its teeth showed through them. The approved characters keep them.
+function goatSpeaking(x,y,z){
+ const f=1.38+(y-1.38)/1.25;
+ let d=E(x,y,z,[-.056,1.302,0],[.085,.129,.080]);
+ d=blend(d,E(x,f,z,[-.006,1.442,0],[.090,.088,.081]),.028);
+ d=blend(d,E(x,f,z,[.018,1.394,0],[.080,.065,.085]),.018);
+ d=blend(d,C(x,f,z,[.038,1.458,0],[.163,1.402,0],.057,.040),.017);
+ d=blend(d,E(x,f,z,[.174,1.399,0],[.038,.029,.049]),.009);
+ d=blend(d,C(x,f,z,[.009,1.368,0],[.149,1.364,0],.041,.030),.009);
+ for(const s of [-1,1]){
+  d=blend(d,E(x,f,z,[-.065,1.480,s*.117],[.041,.029,.073]),.015);
+  d=Math.max(d,-E(x,f,z,[-.048,1.495,s*.126],[.030,.019,.049]));
+  d=blend(d,E(x,f,z,[.011,1.404,s*.065],[.039,.036,.026]),.012);
+  d=blend(d,E(x,f,z,[.040,1.458,s*.065],[.040,.013,.020]),.012);
+  d=-blend(-d,E(x,f,z,[.048,1.445,s*.085],[.026,.014,.015]),.004);
+  const path=goatHorns[s===-1?0:1];let horn=Infinity;for(let i=0;i<20;i++)horn=Math.min(horn,C(x,y,z,path[i],path[i+1],.033*(1-i/20)+.0015,.033*(1-(i+1)/20)+.0015));
+  d=blend(d,horn,.012);
+ }
+ d+=.0035*Math.exp(-(((f-1.378)/.004)**2))*THREE.MathUtils.smoothstep(x,.105,.15);
+ return d;
+}
+
 // build-skunk-worker.mjs
 function skunk(x,y,z){
  let d=E(x,y,z,[-.057,1.302,0],[.083,.121,.080]);
@@ -158,6 +184,20 @@ function donkey(x,y,z){let d=E(x,y,z,[-.055,1.272,0],[.083,.113,.078]);
  d=blend(d,E(x,y,z,[.017,1.410,s*.071],[.036,.014,.020]),.009);
  d=Math.max(d,-E(x,y,z,[.027,1.397,s*.087],[.026,.014,.016]));
  d=Math.max(d,-E(x,y,z,[.204,1.338,s*.052],[.019,.014,.014]));
+ const t=(y-1.44)/.21,zz=z-s*(.061+.055*t),xx=x+.058+.025*t;
+ const ear=E(xx,y,zz,[0,1.535,0],[.023,.117,.033]);d=blend(d,ear,.009);
+ d=Math.max(d,-E(xx-.018,y,zz,[0,1.543,0],[.016,.089,.023]));
+ }
+ d+=.0024*Math.exp(-1*((y-1.302)/.004)**2)*smooth(x,.14,.19);return d;}
+
+function donkeySpeaking(x,y,z){let d=E(x,y,z,[-.055,1.272,0],[.083,.113,.078]);
+ d=blend(d,E(x,y,z,[-.040,1.371,0],[.099,.103,.087]),.027);
+ d=blend(d,C(x,y,z,[.004,1.398,0],[.154,1.328,0],.070,.059),.021);
+ d=blend(d,E(x,y,z,[.175,1.326,0],[.060,.048,.072]),.013);
+ d=blend(d,C(x,y,z,[-.001,1.304,0],[.155,1.294,0],.060,.041),.019);
+ for(const s of [-1,1]){d=blend(d,E(x,y,z,[-.007,1.343,s*.063],[.045,.044,.023]),.014);
+ d=blend(d,E(x,y,z,[.017,1.410,s*.071],[.036,.014,.020]),.009);
+ d=Math.max(d,-E(x,y,z,[.027,1.397,s*.087],[.026,.014,.016]));
  const t=(y-1.44)/.21,zz=z-s*(.061+.055*t),xx=x+.058+.025*t;
  const ear=E(xx,y,zz,[0,1.535,0],[.023,.117,.033]);d=blend(d,ear,.009);
  d=Math.max(d,-E(xx-.018,y,zz,[0,1.543,0],[.016,.089,.023]));
@@ -329,10 +369,10 @@ const none={kind:'none',map:p=>p};
 // its tool made (author, then 10k). `targets` are triangle counts, `tolerance` world units.
 export const HEADS=[
  {id:'horse',file:'horse-10k-data.json',part:'unified skull jaw neck and ears',field:horse,min:[-.23,1.11,-.155],max:[.315,1.68,.155],step:.0045,place:greyHorse,author:{target:6500,tolerance:.0025},low:{target:2500,tolerance:.008}},
- {id:'goat',file:'goat-10k-data.json',part:'unified goat skull ears and swept horns',field:goat,min:[-.39,1.11,-.20],max:[.25,1.70,.20],step:.0055,place:lift(1.65,1.634281039237976),author:{target:7800,tolerance:.006},low:{target:2800,tolerance:.015}},
+ {id:'goat',file:'goat-10k-data.json',part:'unified goat skull ears and swept horns',field:goat,speaking:goatSpeaking,min:[-.39,1.11,-.20],max:[.25,1.70,.20],step:.0055,place:lift(1.65,1.634281039237976),author:{target:7800,tolerance:.006},low:{target:2800,tolerance:.015}},
  {id:'bull',file:'bull-10k-data.json',part:'unified bull skull ears and short horns',field:bull,min:[-.23,1.10,-.26],max:[.27,1.70,.26],step:.0055,place:lift(1.65,1.648288369178772),author:{target:7800,tolerance:.006},low:{target:2720,tolerance:.015}},
  {id:'cow',file:'cow-10k-data.json',part:'unified cow skull ears and forehead tuft',field:cow,min:[-.23,1.10,-.26],max:[.27,1.70,.26],step:.0055,place:cowPlace(1.6124861240386963),author:{target:7140,tolerance:.006},low:{target:2460,tolerance:.015}},
- {id:'donkey',file:'donkey-10k-data.json',part:'unified donkey skull muzzle and long ears',field:donkey,min:[-.19,1.12,-.16],max:[.26,1.68,.16],step:.0045,place:none,revision:'donkey-neck',author:{target:7000,tolerance:.006},low:{target:2600,tolerance:.015}},
+ {id:'donkey',file:'donkey-10k-data.json',part:'unified donkey skull muzzle and long ears',field:donkey,speaking:donkeySpeaking,min:[-.19,1.12,-.16],max:[.26,1.68,.16],step:.0045,place:none,revision:'donkey-neck',author:{target:7000,tolerance:.006},low:{target:2600,tolerance:.015}},
  {id:'sheep',file:'sheep-10k-data.json',part:'unified sheep skull ears and wool',field:sheep,min:[-.22,1.16,-.30],max:[.23,1.70,.30],step:.0045,place:lift(1.65,1.6449997425079346),author:{target:7800,tolerance:.006},low:{target:2600,tolerance:.015}},
  {id:'skunk',file:'skunk-10k-data.json',part:'unified skunk skull rounded ears and muzzle',field:skunk,min:[-.19,1.15,-.16],max:[.22,1.69,.16],step:.0055,place:lift(1.65,1.647897720336914),author:{target:4500,tolerance:.006},low:{target:2000,tolerance:.008}},
  {id:'pig-foreman',file:'pig-foreman-10k-data.json',part:'unified pig skull folded ears and snout',field:pigForeman,min:[-.22,1.14,-.28],max:[.27,1.60,.28],step:.0045,place:none,earNormals:true,author:{target:5300,tolerance:.006},low:{target:2050,tolerance:.008}},
@@ -342,6 +382,9 @@ export const HEADS=[
  {id:'hen',file:'hen-10k-data.json',part:'short hooked beak',field:henBeak,min:[.08,1.38,-.074],max:[.30,1.49,.074],step:.0025,place:henPlace,head:{part:'head and feathered neck',field:henHead,min:[-.205,1.035,-.19],max:[.192,1.605,.19],step:.0045},author:{target:1500*.97,tolerance:.012},low:{target:650,tolerance:.0045}}
 ];
 export const HEAD=Object.fromEntries(HEADS.map(h=>[h.id,h]));
+// The field a speaking head is sculpted from: its approved head's (the goat's and the donkey's less
+// their side-nostril carves, see goatSpeaking).
+export const speakingField=head=>head.speaking??head.field;
 
 // Each character's registered paint sheet (four 0.925 x 1.85 views unless the frame says
 // otherwise) and how a placed point finds itself on it: the donkey was painted before its neck
