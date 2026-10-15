@@ -6,6 +6,7 @@ import {BiomeScene,mixedBiomeFill,OPEN_WOODLAND_PLANTS} from '../dist/tactics/bi
 import {foliageTreeAt} from '../dist/tactics/foliage-data.js';
 import {biomeMixAt,createMapGroundPaint} from '../dist/tactics/biome-map-paint.js';
 import {BIOME_FAMILIES} from '../dist/tactics/biome-foliage-data.js';
+import {biomeTreeModels} from '../dist/tactics/biome-tree-mix.js';
 import {generateEnvironments,localEnvironmentProfile} from '../dist/tactics/environment-regions.js';
 import {blank} from '../dist/tactics/overmap-model.js';
 import {blankMap,parseMap,passable} from '../dist/tactics/core/maps.js';
@@ -72,7 +73,7 @@ for(const family of Object.keys(BIOME_FAMILIES))test(`${family} uses the same sa
  try{assert.equal(biomes.rebuild(map,null,2),false);await biomes.loading;assert.equal(biomes.rebuild(map,null,2),true);assert.equal(errors.length,0);assert.equal(biomes.terrains.length,1);
   const t=biomes.terrains[0];assert.equal(t.stats.blockedCells,242);assert.ok(biomes.instances.length);for(const tree of t.trees)assert.ok(tree.bounds.max[0]<11.5,'Canopy must not cross the clear column');
   assert.ok(biomes.openTrees.length>0,'passable woodland includes scattered trees');
-  for(const tree of biomes.openTrees){assert.ok(BIOME_FAMILIES[family].trees.includes(tree.id));assert.ok(foliageTreeAt(map,tree.x,tree.y,tree.z));assert.equal(passable(map,tree),false);}
+  for(const tree of biomes.openTrees){assert.ok(biomeTreeModels(family).includes(tree.id));assert.ok(foliageTreeAt(map,tree.x,tree.y,tree.z));assert.equal(passable(map,tree),false);}
   const fallback=environmentVisuals(buildWorld(map),map);for(const tree of biomes.openTrees)assert.ok(fallback.some(b=>b.kind==='prop'&&b.source.x===tree.x&&b.source.y===tree.y),'trunk remains visible while atlases load or fail');
   assert.ok(!/shrub|scrub|broadleaf|marsh-leaves/.test(OPEN_WOODLAND_PLANTS[family]),'open understory is grass, reeds or ferns, not shrub clumps');
   const groups=biomes.terrains.map(t=>t.root);biomes.rebuild(map,null,2);assert.deepEqual(biomes.terrains.map(t=>t.root),groups,'unchanged maps reuse their geometry');

@@ -1,5 +1,6 @@
 import * as T from './vendor/three.module.js';
 import {BIOME_FAMILIES} from './biome-foliage-data.js';
+import {biomeTreeModels,selectBiomeTree} from './biome-tree-mix.js';
 import {BIOME_OBSTACLES,CELL_EDGES} from './biome-obstacle-data.js';
 import {random,field,createTerrainFill} from './biome-terrain-fill.js';
 import {createConnectedGroundSkin} from './biome-connected-ground.js';
@@ -97,11 +98,11 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
  // Crown-safe placement is unchanged: complete projected bounds lie inside
  // blocked cells at one height. A cheap second representation serves overview.
  const prototypes=[],world=new T.Matrix4(),translation=new T.Matrix4();
- for(const id of BIOME_FAMILIES[family].trees)for(let variant=0;variant<3;variant++)prototypes.push(plantFactory.create(id,{variant,mature:true,grey}));
+ for(const id of biomeTreeModels(family))for(let variant=0;variant<3;variant++)prototypes.push(plantFactory.create(id,{variant,mature:true,grey}));
  const treeStep=bog?10:family==='dry'?5:3.6,treeCandidates=[];
  if(plan.trees){for(const t of plan.trees)if(t.dense)treeCandidates.push({cx:t.x,cz:t.y,h:t.base,p:prototypes.find(p=>p.userData.id===t.id&&p.userData.variant===t.variant)});}
  else for(let z=3;z<plan.depth-3;z+=treeStep)for(let x=3;x<plan.width-3;x+=treeStep){
-  const n=Math.round(z*plan.width+x)+(plan.seed||0)+(plan.origin?.[0]||0)+(plan.origin?.[1]||0)*plan.width,p=prototypes[Math.floor(random(n)*prototypes.length)],bounds=p.userData.bounds,cx=x+(random(n+3)-.5)*2.2,cz=z+(random(n+7)-.5)*2.2,h=plan.heightAt(Math.floor(cx+.5),Math.floor(cz+.5));
+  const n=Math.round(z*plan.width+x)+(plan.seed||0)+(plan.origin?.[0]||0)+(plan.origin?.[1]||0)*plan.width,spec=selectBiomeTree(family,Math.round(x)+(plan.origin?.[0]||0),Math.round(z)+(plan.origin?.[1]||0),plan.seed||0),p=prototypes.find(p=>p.userData.id===spec.id&&p.userData.variant===spec.variant),bounds=p.userData.bounds,cx=x+(random(n+3)-.5)*2.2,cz=z+(random(n+7)-.5)*2.2,h=plan.heightAt(Math.floor(cx+.5),Math.floor(cz+.5));
   if(plan.includeAt&&!plan.includeAt(Math.floor(cx+.5),Math.floor(cz+.5))||plan.densityAt&&random(n+57)>plan.densityAt(Math.floor(cx+.5),Math.floor(cz+.5)))continue;
   if(random(n+17)<(bog?.40:family==='dry'?.28:.08))continue;
   if(!safe(cx+(bounds.min[0]+bounds.max[0])/2,cz+(bounds.min[2]+bounds.max[2])/2,(bounds.max[0]-bounds.min[0])/2,(bounds.max[2]-bounds.min[2])/2,h))continue;
@@ -114,8 +115,9 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
   const width=max[0]-min[0],depth=max[2]-min[2],height=max[1]-min[1],px=(min[0]+max[0])/2,pz=(min[2]+max[2])/2,pine=/pine|spruce|cypress/.test(p.userData.id),flat=/acacia|palm/.test(p.userData.id);
   chunk.treeHeight=Math.max(chunk.treeHeight||0,height);
   part(chunk,'far',trunk,paint('bark'),cx,h+height*.33,cz,.16,height*.66,.16);
-  if(pine){for(let i=0;i<3;i++){const s=1-i*.25;part(chunk,'far',cone,paint(snow?'snowPine':bog?'cypress':'pine'),px,h+height*(.36+i*.20),pz,width*s,height*.47,depth*s);}}
-  else {part(chunk,'far',proxyCrown,paint(bog?'wet':leaf),px,h+height*(flat?.82:.65),pz,width,height*(flat?.30:.69),depth);part(chunk,'far',proxyCrown,paint(leaf==='dry'?'dry':bog?'wet':leaf),px-width*.16,h+height*(flat?.82:.80),pz,width*.61,height*(flat?.27:.37),depth*.68);}
+  const treePaint=p.userData.materials.find(id=>id!=='bark'&&id!=='moss')||leaf;
+  if(pine){for(let i=0;i<3;i++){const s=1-i*.25;part(chunk,'far',cone,paint(treePaint),px,h+height*(.36+i*.20),pz,width*s,height*.47,depth*s);}}
+  else {part(chunk,'far',proxyCrown,paint(treePaint),px,h+height*(flat?.82:.65),pz,width,height*(flat?.30:.69),depth);part(chunk,'far',proxyCrown,paint(treePaint),px-width*.16,h+height*(flat?.82:.80),pz,width*.61,height*(flat?.27:.37),depth*.68);}
  }
  for(const chunk of chunks){
   for(const level of ['base','near','far'])for(const spec of chunk[level+'Batches'].values()){

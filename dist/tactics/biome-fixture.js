@@ -17,3 +17,17 @@ export function biomeFixture(){
  map.starts=[{x:113,y:115,z:0},{x:114,y:115,z:0},{x:113,y:116,z:0},{x:114,y:116,z:0}];map.exits=[{x:114,y:119,z:0}];
  return map;
 }
+
+// Enough room to see several actual tree designs together in one habitat.
+// Uses ordinary saved foliage cells and the shared tree/cover planner.
+export function biomeTreeMixFixture(family='temperate'){
+ if(!Object.values(BIOME_TERRAIN).includes(family))throw Error('Unknown tree biome: '+family);
+ const map=blankMap('Mixed woodland · '+family);map.foliage={};
+ for(let y=92;y<144;y++)for(let x=96;x<144;x++){
+  map.terrain[y][x]='ground-biome-'+family;
+  if(y<108)map.foliage[`${x},${y},0`]=[85,true];
+  else if(y>111&&x!==119&&x!==120)map.foliage[`${x},${y},0`]=[85,false];
+ }
+ map.starts=[{x:119,y:126,z:0},{x:120,y:126,z:0},{x:119,y:127,z:0},{x:120,y:127,z:0}];
+ map.exits=[{x:120,y:143,z:0}];return map;
+}
