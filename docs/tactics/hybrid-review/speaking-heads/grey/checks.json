@@ -2,17 +2,17 @@
  "stage": "grey",
  "level": "author",
  "base": "http://127.0.0.1:4499",
- "date": "2026-10-15T02:24:49.573Z",
+ "date": "2026-10-15T18:02:35.068Z",
  "characters": {
   "horse": {
    "id": "horse",
    "level": "author",
-   "triangles": 10716,
+   "triangles": 10428,
    "characterTriangles": 28886,
    "parts": [
     {
      "name": "unified skull jaw neck and ears (speaking)",
-     "triangles": 8700
+     "triangles": 8412
     },
     {
      "name": "upper teeth",
@@ -34,12 +34,12 @@
   "goat": {
    "id": "goat",
    "level": "author",
-   "triangles": 11202,
+   "triangles": 11206,
    "characterTriangles": 29586,
    "parts": [
     {
      "name": "unified goat skull ears and swept horns (speaking)",
-     "triangles": 9746
+     "triangles": 9750
     },
     {
      "name": "lower teeth",
@@ -57,12 +57,12 @@
   "bull": {
    "id": "bull",
    "level": "author",
-   "triangles": 11670,
+   "triangles": 11200,
    "characterTriangles": 29572,
    "parts": [
     {
      "name": "unified bull skull ears and short horns (speaking)",
-     "triangles": 10214
+     "triangles": 9744
     },
     {
      "name": "lower teeth",
@@ -80,12 +80,12 @@
   "cow": {
    "id": "cow",
    "level": "author",
-   "triangles": 10784,
+   "triangles": 10378,
    "characterTriangles": 29988,
    "parts": [
     {
      "name": "unified cow skull ears and forehead tuft (speaking)",
-     "triangles": 9328
+     "triangles": 8922
     },
     {
      "name": "lower teeth",
@@ -103,12 +103,12 @@
   "donkey": {
    "id": "donkey",
    "level": "author",
-   "triangles": 11158,
+   "triangles": 10760,
    "characterTriangles": 28898,
    "parts": [
     {
      "name": "unified donkey skull muzzle and long ears (speaking)",
-     "triangles": 9142
+     "triangles": 8744
     },
     {
      "name": "upper teeth",
@@ -130,12 +130,12 @@
   "sheep": {
    "id": "sheep",
    "level": "author",
-   "triangles": 11196,
+   "triangles": 11198,
    "characterTriangles": 30756,
    "parts": [
     {
      "name": "unified sheep skull ears and wool (speaking)",
-     "triangles": 9740
+     "triangles": 9742
     },
     {
      "name": "lower teeth",
@@ -153,12 +153,12 @@
   "skunk": {
    "id": "skunk",
    "level": "author",
-   "triangles": 8276,
+   "triangles": 7986,
    "characterTriangles": 29934,
    "parts": [
     {
      "name": "unified skunk skull rounded ears and muzzle (speaking)",
-     "triangles": 5980
+     "triangles": 5690
     },
     {
      "name": "upper teeth",
@@ -180,12 +180,12 @@
   "pig-foreman": {
    "id": "pig-foreman",
    "level": "author",
-   "triangles": 9604,
+   "triangles": 9420,
    "characterTriangles": 29978,
    "parts": [
     {
      "name": "unified pig skull folded ears and snout (speaking)",
-     "triangles": 7028
+     "triangles": 6844
     },
     {
      "name": "upper teeth",
@@ -207,12 +207,12 @@
   "pig-director": {
    "id": "pig-director",
    "level": "author",
-   "triangles": 11142,
+   "triangles": 10910,
    "characterTriangles": 29996,
    "parts": [
     {
      "name": "unified director skull folded ears and snout (speaking)",
-     "triangles": 8566
+     "triangles": 8334
     },
     {
      "name": "upper teeth",
@@ -261,12 +261,12 @@
   "dog": {
    "id": "dog",
    "level": "author",
-   "triangles": 10732,
+   "triangles": 10432,
    "characterTriangles": 29850,
    "parts": [
     {
      "name": "unified dog skull and upright ears (speaking)",
-     "triangles": 8156
+     "triangles": 7856
     },
     {
      "name": "upper teeth",
@@ -288,12 +288,12 @@
   "hen": {
    "id": "hen",
    "level": "author",
-   "triangles": 2508,
+   "triangles": 2410,
    "characterTriangles": 29952,
    "parts": [
     {
      "name": "short hooked beak (speaking)",
-     "triangles": 2172
+     "triangles": 2074
     },
     {
      "name": "tongue",

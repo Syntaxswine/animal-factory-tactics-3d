@@ -147,8 +147,8 @@ function partColors(mesh,colors,formLight){
 }
 
 // How much a fragment is the mouth's, and how deep in it: the inside (speechMouth, by depth under
-// the approved surface) and the skin stretched between the parted lips (the mouth's inner walls,
-// the corners), deepest midway between them (speechLower 0..1 across, where the lips part:
+// the approved surface) and the skin stretched between the parted lips (at the corners; rounds 3
+// and 4's lining, gone, the user's round 4), deepest midway between them (speechLower 0..1 across, where the lips part:
 // speechPart). Per fragment, so their long triangles shade evenly however they were reduced. Open,
 // the lips' faces near the corners (where the lips part only in part) are the mouth's too.
 // (the stretched skin is painted as deep as the mouth's back midway between the lips: it is the
@@ -157,7 +157,7 @@ const SLAB_DEPTH=.03;
 // (the stretched skin, and the lips' faces, take the mouth's paint over the jaw's first 2 degrees:
 // closed they lie folded in the crease, where the painted mouth line shows)
 const CHEEKS_SHOW=2*Math.PI/180;
-// The band between the parted lips (the mouth's inner walls, the corners) shades with its own normals, the open band's facings (speechBand, skinned
+// The band between the parted lips (at the corners) shades with its own normals, the open band's facings (speechBand, skinned
 // as the normal is), wherever a fragment is graded between the lips: blending in over the first and
 // last tenth of the way from one lip to the other, and over the lips' parting at the corners. A game
 // mesh's band is a few long triangles from one lip's edge to the other's: the lips' normals across
@@ -167,7 +167,7 @@ const CHEEKS_SHOW=2*Math.PI/180;
 const BAND=`(smoothstep(0.,.1,vSpeechLower)*(1.-smoothstep(.9,1.,vSpeechLower))*smoothstep(.2,.6,vSpeechPart))`;
 // The mouth's inside is lit as it lies in its own shadow, nearly evenly (its normal mostly toward
 // the eye, by how much it is the mouth's), so its depth paint, not a game mesh's facets, gives its
-// form (round 3: the inner walls' few long triangles at the game budget shaded as light streaks).
+// form (round 3: its lining's few long triangles at the game budget shaded as light streaks).
 const bandNormals=fragment=>fragment.replace('#include <normal_fragment_begin>',`#include <normal_fragment_begin>
   {float b=${BAND},l=length(vSpeechBand);if(b>0.&&l>1e-6)normal=normalize(mix(normal,vSpeechBand/l,b));
    float m,d;speechMouthAt(m,d);if(m>0.)normal=normalize(mix(normal,normalize(vViewPosition),.8*m));}`);

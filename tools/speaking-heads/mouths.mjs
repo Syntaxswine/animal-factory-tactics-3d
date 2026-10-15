@@ -24,8 +24,6 @@
 //           cheeks and no wider than `width` (narrowing by `taper` toward the back), `front`
 //           behind the front of the lips, in front of x `back`, never nearer the surface than
 //           `wallMin`, edges rounded over `round` (its back over `backRound`: a throat, not a wall);
-//           `inner`: the mouth's inner walls, that thick, inside the parted lips along the
-//           muzzle's sides (sculpt.mjs innerWall; a beak has none)
 //  pad      a ruminant's dental pad on the front of the roof: its bottom `bottom` above the cut,
 //           half-height, half-depth and half-width
 //  teeth    rows on an arch inside the lips: jaw, kind (incisor, canine), count, half (arc length
@@ -40,7 +38,7 @@ import {henGape} from './heads.mjs';
 
 const common={gap:.008,edge:.001,reach:.09,step:.0025,taper:.01,teethGap:.0008,
  band:{mid:.006,cheek:.034,z0:.04,z1:.07},
- cavity:{roof:.010,floor:.006,width:.03,taper:.2,wall:.010,front:.006,wallMin:.004,round:.004,backRound:.012,inner:.008}};
+ cavity:{roof:.010,floor:.006,width:.03,taper:.2,wall:.010,front:.006,wallMin:.004,round:.004,backRound:.012}};
 const mouth=o=>({...common,...o,band:{...common.band,...o.band},cavity:{...common.cavity,...o.cavity}});
 const incisors=(jaw,count,half,width,depth,tip=.0045,o={})=>({jaw,kind:'incisor',count,half,width,depth,tip,embed:.003,...o});
 const canines=(jaw,half,size,tip,o={})=>({jaw,kind:'canine',count:2,half,width:size,depth:size,tip,embed:.004,...o});
@@ -110,7 +108,8 @@ export const MOUTHS={
   // (the upper canines and incisors reached through the game mesh's thin closed lower lip, round 3)
   teeth:[incisors('upper',6,.009,.0019,.002,.003),canines('upper',.0215,.0026,.003),
    // (the lower canines reached 5 mm past the cut, through the game mesh's thin closed upper lip, round 3)
-   incisors('lower',4,.0055,.0018,.0019,.0037),canines('lower',.011,.0024,.0035)],
+   // (their crowns 3.5 mm at 12 degrees, under the 4 mm the others show, at 3.7: round 4)
+   incisors('lower',4,.0055,.0018,.0019,.0046),canines('lower',.011,.0024,.0035)],
   tongue:tongue(.016)
  }),
  'pig-foreman':mouth({
@@ -154,8 +153,10 @@ export const MOUTHS={
   // the lower mandible ends short of the upper's hooked tip: the gap ends there too
   corner:{x:.165,front:.222,open:.005,z:.2,zOpen:.01},hinge:[.165,1.4145],rigid:.006,
   band:{mid:.002,cheek:.002,z0:1,z1:2},
-  cavity:{back:.14,tip:.214,roof:.0035,floor:.0035,width:.012,wall:.003,front:.003,wallMin:null,round:.0015,backRound:.0015,inner:0},
-  tongue:tongue(.0055,{embed:.0008,rise:.0008,below:.0015,backInset:.035,gap:.003,clear:.0008})
+  cavity:{back:.14,tip:.214,roof:.0035,floor:.0035,width:.012,wall:.003,front:.003,wallMin:null,round:.0015,backRound:.0015},
+  // (its top below the gape all along: rising past it at the back, it showed through her closed
+  // gape, 8 mm2 on the game mesh, round 4)
+  tongue:tongue(.0055,{embed:.0008,rise:-.0005,below:.0015,backInset:.035,gap:.003,clear:.0008})
  }),
  // (the heaviest character, 10,446 triangles: its long mouth gets a fifth more, not a quarter)
  // (the heaviest character: at the common 4 mm and 30-triangle teeth its game mesh went 92

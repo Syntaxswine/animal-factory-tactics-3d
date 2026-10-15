@@ -7,51 +7,18 @@
 // front, the skin's folds through itself, and the jaw's weight along the profile jaw line.
 // Everything is in the character's rest space (metres).
 import fs from 'node:fs';
+import {sub,dot,cross,norm,vtx,CLOSED_FADE,pose,raster,closedVisibility} from './view.mjs';
+export {CLOSED_FADE,pose,raster,closedVisibility};
 
 export const IDS=['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog','hen'];
 const ROOT=new URL('../../dist/tactics/',import.meta.url);
 export const loadHead=(id,level='author')=>JSON.parse(fs.readFileSync(new URL(`speaking-heads/${id}-${level==='author'?'author':'10k'}.json`,ROOT),'utf8'));
 export const loadCharacter=(head,level)=>JSON.parse(fs.readFileSync(new URL(level==='author'?(head.species==='horse'?'horse-light-data.json':head.character.replace('10k','author')):head.character,ROOT),'utf8'));
 
-const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
-const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l);};
-const vtx=(P,i)=>[P[i*3],P[i*3+1],P[i*3+2]];
 
-// Every part posed with the jaw open `deg` degrees, as the runtime poses it (speaking-head.js): the
-// skin's closed shape blended in as the jaw closes (in full at 0, none from 2 degrees), then the
-// skin by its jaw weights, teeth and tongue rigid on their bones. Returns [{name, kind, bone, index,
-// P (Float64Array), jaw, inside, fold, lower, teeth, pi}].
-export const CLOSED_FADE=2;
-export function pose(head,deg){
- const [hx,hy]=head.jaw.hinge,a=deg*Math.PI/180,c=Math.cos(-a),s=Math.sin(-a),t=Math.min(1,Math.max(0,deg/CLOSED_FADE)),shut=1-t*t*(3-2*t);
- return head.parts.map((part,pi)=>{let P=part.position;const n=P.length/3,out=new Float64Array(n*3);
-  if(part.closed&&shut>0){P=Float64Array.from(P);part.closed.vertices.forEach((i,k)=>{for(let j=0;j<3;j++)P[i*3+j]+=shut*part.closed.offset[k*3+j];});}
-  for(let i=0;i<n;i++){const w=part.kind==='skin'?part.jaw[i]:part.bone==='jaw'?1:0,x=P[i*3],y=P[i*3+1],dx=x-hx,dy=y-hy;
-   out[i*3]=x+w*(hx+dx*c-dy*s-x);out[i*3+1]=y+w*(hy+dx*s+dy*c-y);out[i*3+2]=P[i*3+2];}
-  return {name:part.name,kind:part.kind,bone:part.bone,index:part.index,P:out,jaw:part.jaw,inside:part.inside,fold:part.fold,lower:part.lower,teeth:part.teeth,pi};});
-}
 // The mouth's middle at rest: the centroid of the skin's folding vertices (the lips' faces).
 export function mouthCentre(head){const s=head.parts[0];let c=[0,0,0],k=0;for(let i=0;i<s.fold.length;i++)if(s.fold[i]>.5){for(let j=0;j<3;j++)c[j]+=s.position[i*3+j];k++;}return c.map(v=>v/k);}
 
-// Orthographic z-buffer. view: {dir (eye -> subject), up, center, ppu (pixels per metre), w, h,
-// both}. Back faces are culled, as the renderer draws the parts (FrontSide; `both` draws them
-// too). Returns {depth (larger nearer), id (part index), tri, w, h, right, up}. Edge-on triangles
-// skipped.
-export function raster(parts,view){
- const {w,h,ppu,center}=view,d=norm(view.dir),right=norm(cross(d,view.up)),up=cross(right,d);
- const depth=new Float32Array(w*h).fill(-Infinity),id=new Int16Array(w*h).fill(-1),tri=new Int32Array(w*h).fill(-1);
- for(const part of parts){const P=part.P,n=P.length/3,sx=new Float64Array(n),sy=new Float64Array(n),sz=new Float64Array(n);
-  for(let i=0;i<n;i++){const v=[P[i*3]-center[0],P[i*3+1]-center[1],P[i*3+2]-center[2]];sx[i]=w/2+dot(v,right)*ppu;sy[i]=h/2-dot(v,up)*ppu;sz[i]=-dot(v,d);}
-  const ix=part.index;
-  for(let t=0;t<ix.length;t+=3){const a=ix[t],b=ix[t+1],e=ix[t+2];
-   const area=(sx[b]-sx[a])*(sy[e]-sy[a])-(sx[e]-sx[a])*(sy[b]-sy[a]);if(Math.abs(area)<1e-9||area>0&&!view.both)continue;
-   const x0=Math.max(0,Math.floor(Math.min(sx[a],sx[b],sx[e]))),x1=Math.min(w-1,Math.ceil(Math.max(sx[a],sx[b],sx[e])));
-   const y0=Math.max(0,Math.floor(Math.min(sy[a],sy[b],sy[e]))),y1=Math.min(h-1,Math.ceil(Math.max(sy[a],sy[b],sy[e])));
-   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const px=x+.5,py=y+.5;
-    const w0=((sx[b]-px)*(sy[e]-py)-(sx[e]-px)*(sy[b]-py))/area,w1=((sx[e]-px)*(sy[a]-py)-(sx[a]-px)*(sy[e]-py))/area,w2=1-w0-w1;
-    if(w0<-1e-9||w1<-1e-9||w2<-1e-9)continue;const z=w0*sz[a]+w1*sz[b]+w2*sz[e],k=y*w+x;if(z<=depth[k])continue;depth[k]=z;id[k]=part.pi;tri[k]=t/3;}}}
- return {depth,id,tri,w,h,right,up};
-}
 
 // Segment-triangle (Moller-Trumbore), endpoints excluded slightly; triangle-triangle by edges.
 function segTri(p,q,a,b,c){const e1=sub(b,a),e2=sub(c,a),dir=sub(q,p),pv=cross(dir,e2),det=dot(e1,pv);if(Math.abs(det)<1e-14)return false;const inv=1/det,tv=sub(p,a),u=dot(tv,pv)*inv;if(u<0||u>1)return false;const qv=cross(tv,e1),v=dot(dir,qv)*inv;if(v<0||u+v>1)return false;const t=dot(e2,qv)*inv;return t>1e-7&&t<1-1e-7;}
@@ -72,6 +39,7 @@ function closestOnTri(p,a,b,c){
 // A triangle of the outer skin: none of its vertices the mouth's (inside) or the lips' faces and
 // the cheeks between them (fold), which are the mouth's when it opens.
 const outerTri=(skin,t)=>{const I=skin.index;for(let k=0;k<3;k++){const i=I[t*3+k];if(skin.inside[i]>=.5||skin.fold[i]>=.5)return false;}return true;};
+const outerIndex=skin=>{const out=[];for(let t=0;t<skin.index.length/3;t++)if(outerTri(skin,t))out.push(skin.index[t*3],skin.index[t*3+1],skin.index[t*3+2]);return out;};
 export function solid(skin){
  const P=skin.P,I=skin.index,nt=I.length/3,T=[];
  for(let t=0;t<nt;t++){const v=[vtx(P,I[t*3]),vtx(P,I[t*3+1]),vtx(P,I[t*3+2])];T.push({v,min:[0,1,2].map(k=>Math.min(v[0][k],v[1][k],v[2][k])),max:[0,1,2].map(k=>Math.max(v[0][k],v[1][k],v[2][k])),outer:outerTri(skin,t)});}
@@ -88,40 +56,63 @@ export function solid(skin){
  return {inside,nearest};
 }
 
-// The lips' front edges at the middle (rest): the frontmost folding vertices of each side.
-export function lipTips(head){const s=head.parts[0],P=s.position;let up=-1,lo=-1,zmin=Infinity;
- // (nearest the middle: the lips' faces may keep no folding vertex at the middle itself)
- for(let i=0;i<P.length/3;i++)if(s.fold[i]>.5)zmin=Math.min(zmin,Math.abs(P[i*3+2]));const zr=Math.max(.008,zmin+.004);
- const near=i=>Math.abs(P[i*3+2])<=zr;
- for(let i=0;i<P.length/3;i++){if(s.fold[i]<.5||!near(i))continue;if(s.lower[i]<.5){if(up<0||P[i*3]>P[up*3])up=i;}else if(lo<0||P[i*3]>P[lo*3])lo=i;}
- return {up,lo};}
+// The lips' front edges at the middle (rest): the frontmost folding vertex of each side, each lip
+// looked for near the middle within its own reach (a game mesh's lips may keep no folding vertex
+// at the middle, and one lip's nearest can lie further out than the other's: round 3's one reach
+// for both found no upper lip on four game meshes, and the see-through instrument then drew
+// nothing and read 0). Throws if a lip has no folding vertex.
+export function lipTips(head){const s=head.parts[0],P=s.position,n=P.length/3,zmin=[Infinity,Infinity],side=i=>s.lower[i]<.5?0:1;
+ for(let i=0;i<n;i++)if(s.fold[i]>.5)zmin[side(i)]=Math.min(zmin[side(i)],Math.abs(P[i*3+2]));
+ const tip=[-1,-1];
+ for(let i=0;i<n;i++){if(s.fold[i]<.5)continue;const k=side(i);if(Math.abs(P[i*3+2])>Math.max(.008,zmin[k]+.004))continue;if(tip[k]<0||P[i*3]>P[tip[k]*3])tip[k]=i;}
+ if(tip[0]<0||tip[1]<0)throw Error(`${head.species}-${head.level}: no ${tip[0]<0?'upper':'lower'} lip's face to find its front edge by`);
+ return {up:tip[0],lo:tip[1]};}
 
-// See-through (mm^2): background seen through the head behind the mouth's front opening. The
-// front opening is the mouth's own and is filled as a wall: the strip between the lips' front
-// edges (each lip's frontmost face vertex per 2 mm of z, at rest, within 12 mm of the lips' front),
-// and a wall from lip tip to lip tip at the middle; background the border's flood fill cannot
-// reach is seen through the head. (Round 1's instrument walled the middle alone; with the mouth
-// open along the whole lip line, round 3, the front opening seen at a slant left slivers behind
-// that one wall.) az: 0 is exact profile, positive toward the rear; el: the eye's height, degrees
-// above the level (the game's camera is 30 degrees above, at any heading). Returns {mm2 (all of
-// it), largest (the largest one hole), ...}.
-export function seeThrough(head,deg,az=0,{ppu=4000,size=1000,el=0}={}){
- const parts=pose(head,deg),S=parts[0].P,{up,lo}=lipTips(head),tipU=vtx(S,up),tipL=vtx(S,lo),a=az*Math.PI/180,e=el*Math.PI/180;
- const center=[(tipU[0]+tipL[0])/2-.04,(tipU[1]+tipL[1])/2,0],R=raster(parts,{dir:[Math.sin(a)*Math.cos(e),-Math.sin(e),-Math.cos(a)*Math.cos(e)],up:[0,1,0],center,ppu,w:size,h:size}),w=R.w,h=R.h,mask=new Uint8Array(w*h);
- for(let k=0;k<w*h;k++)mask[k]=R.id[k]>=0?1:0;
- const proj=p=>{const v=sub(p,center);return [w/2+dot(v,R.right)*ppu,h/2-dot(v,R.up)*ppu];};
- // the front opening: the lips' front edges (each lip's frontmost face vertex per 2 mm of z, at
- // rest), within 12 mm of the lips' front, the strip between them filled
- const skin=head.parts[0],RP=skin.position,front=new Map();let xmax=-Infinity;
- for(let i=0;i<RP.length/3;i++){if(skin.fold[i]<.5||(skin.lower[i]>.02&&skin.lower[i]<.98))continue;xmax=Math.max(xmax,RP[i*3]);const key=Math.round(RP[i*3+2]/.002)+':'+(skin.lower[i]<.5?0:1),b=front.get(key);if(b===undefined||RP[i*3]>RP[b*3])front.set(key,i);}
- const zbs=[...new Set([...front.keys()].map(k=>+k.split(':')[0]))].sort((p,q)=>p-q).filter(zb=>{const u=front.get(zb+':0'),l=front.get(zb+':1');return u!==undefined&&l!==undefined&&RP[u*3]>xmax-.012&&RP[l*3]>xmax-.012;});
- const fill=(A,B,C)=>{const x0=Math.max(0,Math.floor(Math.min(A[0],B[0],C[0]))),x1=Math.min(w-1,Math.ceil(Math.max(A[0],B[0],C[0]))),y0=Math.max(0,Math.floor(Math.min(A[1],B[1],C[1]))),y1=Math.min(h-1,Math.ceil(Math.max(A[1],B[1],C[1])));
-  const d=(B[0]-A[0])*(C[1]-A[1])-(C[0]-A[0])*(B[1]-A[1]);if(Math.abs(d)<1e-9)return;
-  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const u=((B[0]-x)*(C[1]-y)-(C[0]-x)*(B[1]-y))/d,v=((C[0]-x)*(A[1]-y)-(A[0]-x)*(C[1]-y))/d;if(u>=-.01&&v>=-.01&&u+v<=1.02&&!mask[y*w+x])mask[y*w+x]=2;}};
- for(let k=1;k<zbs.length;k++){if(zbs[k]-zbs[k-1]>2)continue;const [u0,u1,l0,l1]=[front.get(zbs[k-1]+':0'),front.get(zbs[k]+':0'),front.get(zbs[k-1]+':1'),front.get(zbs[k]+':1')].map(i=>proj(vtx(S,i)));fill(u0,u1,l1);fill(u0,l1,l0);}
- const walls=[[tipU,tipL]];
- for(const path of walls)for(let q=1;q<path.length;q++){const [ax,ay]=proj(path[q-1]),[bx,by]=proj(path[q]),steps=Math.ceil(Math.hypot(bx-ax,by-ay))*2+1;
-  for(let s=0;s<=steps;s++){const x=Math.round(ax+(bx-ax)*s/steps),y=Math.round(ay+(by-ay)*s/steps);for(let dx=-2;dx<=2;dx++)for(let dy=-2;dy<=2;dy++){const X=x+dx,Y=y+dy;if(X>=0&&Y>=0&&X<w&&Y<h&&!mask[Y*w+X])mask[Y*w+X]=2;}}}
+// The mouth's front opening, as a curtain (round 4): the lips' edges (the outer skin's boundary
+// and each lip face's vertices next to it; a game mesh's reduction can take a lip's face into the
+// outer skin) in front of the cavity's front corners (the build's head.mouth.frontCorner, less
+// 2 mm), and each lip's front 2 mm at least (the skunk's cavity narrows to 3 mm across at its
+// front, and its game mesh's lower lip has no edge in front of that), every edge of one lip's drawn
+// to the other lip's (each end to that lip's nearest edge vertex at rest). Returns triangles over
+// the skin's vertices: drawn posed, both sides, it closes the front opening in every view as a
+// surface, where it is. (Round 3 filled a strip between the lips' frontmost face vertices per 2 mm
+// of z within 12 mm of the front, in the picture, wherever the background showed: on a flat-fronted
+// muzzle it covered 4 mm, not the opening, and it could close pockets of the background outside the
+// head.) `whole`: over the lips' whole edges, the sides too, a wall where rounds 3 and 4 stood the
+// lining (the open-sides test's falsifier).
+export function frontCurtain(head,{whole=false}={}){
+ const s=head.parts[0],P=s.position,I=s.index,n=P.length/3,x0=whole?-Infinity:head.mouth.frontCorner[0]-.002;
+ const outer=i=>s.fold[i]<.5&&s.inside[i]<.5,side=i=>s.lower[i]<=.02?0:s.lower[i]>=.98?1:-1,edge=new Uint8Array(n),rim=new Uint8Array(n),front=[-Infinity,-Infinity];
+ for(let t=0;t<I.length;t+=3){const v=[I[t],I[t+1],I[t+2]];if(!v.some(outer)||v.every(outer))continue;for(const i of v)if((outer(i)||s.fold[i]>.5)&&side(i)>=0){edge[i]=1;front[side(i)]=Math.max(front[side(i)],P[i*3]);}}
+ for(let i=0;i<n;i++)if(edge[i]&&P[i*3]>Math.min(x0,front[side(i)]-.002))rim[i]=1;
+ const of=[[],[]];for(let i=0;i<n;i++)if(rim[i])of[side(i)].push(i);
+ if(!of[0].length||!of[1].length)throw Error(`frontCurtain: ${head.species}-${head.level} has no ${of[0].length?'lower':'upper'} rim in front of its cavity's front corners`);
+ const nearest=(i,list)=>{let b=-1,d=Infinity;for(const j of list){const e=(P[i*3]-P[j*3])**2+(P[i*3+1]-P[j*3+1])**2+(P[i*3+2]-P[j*3+2])**2;if(e<d){d=e;b=j;}}return b;};
+ const partner=new Map();for(const k of [0,1])for(const i of of[k])partner.set(i,nearest(i,of[1-k]));
+ const out=[],seen=new Set();
+ for(let t=0;t<I.length;t+=3)for(let k=0;k<3;k++){const a=I[t+k],b=I[t+(k+1)%3];if(!rim[a]||!rim[b]||side(a)!==side(b))continue;const key=a<b?a+':'+b:b+':'+a;if(seen.has(key))continue;seen.add(key);
+  const pa=partner.get(a),pb=partner.get(b);out.push(a,b,pb);if(pa!==pb)out.push(a,pb,pa);}
+ return new Uint32Array(out);
+}
+
+// See-through (mm^2): background seen through the head behind the mouth's front opening, which is
+// the mouth's own and is closed by a curtain (frontCurtain); background the border's flood fill
+// cannot reach is seen through the head. Throws if the head is not in the frame: the lips' tips
+// both inside it and the skin over 2% of it (round 3's found no upper lip on four game meshes, drew
+// nothing and read 0). az: 0 is exact profile from the left (+z), 180 from the right, positive
+// toward the rear; el: the eye's height, degrees above the level (the game's camera is 30 degrees
+// above, at any heading). `outerOnly` draws the outer skin alone (no lips' faces, mouth, teeth or
+// tongue): what shows through it is the opening between the lips. Returns {mm2 (all of it),
+// largest (the largest one hole), ...}.
+export function seeThrough(head,deg,az=0,{ppu=4000,size=1000,el=0,outerOnly=false}={}){
+ const posed=pose(head,deg),S=posed[0].P,{up,lo}=lipTips(head),tipU=vtx(S,up),tipL=vtx(S,lo),a=az*Math.PI/180,e=el*Math.PI/180;
+ const parts=outerOnly?[{...posed[0],index:outerIndex(head.parts[0])}]:posed;
+ if(!head.mouth?.frontCorner)throw Error(`seeThrough: ${head.species}-${head.level} has no front corner (rebuild it)`);
+ const curtain={name:'front opening',kind:'curtain',index:frontCurtain(head),P:S,pi:parts.length,both:true};
+ const center=[(tipU[0]+tipL[0])/2-.04,(tipU[1]+tipL[1])/2,0],R=raster([...parts,curtain],{dir:[Math.sin(a)*Math.cos(e),-Math.sin(e),-Math.cos(a)*Math.cos(e)],up:[0,1,0],center,ppu,w:size,h:size}),w=R.w,h=R.h,mask=new Uint8Array(w*h);
+ let skinPixels=0;for(let k=0;k<w*h;k++){mask[k]=R.id[k]<0?0:R.id[k]===curtain.pi?2:1;if(R.id[k]===0)skinPixels++;}
+ const proj=p=>{const v=sub(p,center);return [w/2+dot(v,R.right)*ppu,h/2-dot(v,R.up)*ppu];},framed=p=>{const [x,y]=proj(p);return x>=0&&y>=0&&x<w&&y<h;};
+ if(skinPixels<w*h*.02||!framed(tipU)||!framed(tipL))throw Error(`seeThrough: ${head.species}-${head.level} at ${deg}°, ${az}° round, ${el}° up: the head is not in the frame (${skinPixels} pixels of skin)`);
  const seen=new Uint8Array(w*h),stack=[];for(let x=0;x<w;x++)stack.push(x,(h-1)*w+x);for(let y=0;y<h;y++)stack.push(y*w,y*w+w-1);
  while(stack.length){const k=stack.pop();if(seen[k]||mask[k])continue;seen[k]=1;const x=k%w,y=(k-x)/w;if(x>0)stack.push(k-1);if(x<w-1)stack.push(k+1);if(y>0)stack.push(k-w);if(y<h-1)stack.push(k+w);}
  let holes=0;for(let k=0;k<w*h;k++)if(!mask[k]&&!seen[k])holes++;
@@ -132,22 +123,26 @@ export function seeThrough(head,deg,az=0,{ppu=4000,size=1000,el=0}={}){
  return {mm2:holes/(ppu*ppu)*1e6,largest:largest/(ppu*ppu)*1e6,mask,seen,R,parts};
 }
 
-// Closed (jaw 0): the most tooth and tongue area (mm^2) any of 120 directions around the face sees,
-// and the most mouth interior (skin whose three vertices are all inside .5), at 10 px/mm over 9 cm
-// about the mouth, back faces culled as the renderer culls them (round 2: at 4 px/mm, drawing back
-// faces, it saw none of the leaks the renderer showed). The hen's head part (her beak sits in it) is
-// drawn too.
-export function closedVisibility(head,level,{ppu=10000,size=900,occluder=null}={}){
- const parts=pose(head,0),skin=head.parts[0];
- if(occluder)parts.push({name:'occluder',kind:'occluder',index:occluder.index,P:Float64Array.from(occluder.position),pi:parts.length});
- const interior=new Uint8Array(skin.index.length/3);for(let t=0;t<interior.length;t++)interior[t]=Math.min(skin.inside[skin.index[t*3]],skin.inside[skin.index[t*3+1]],skin.inside[skin.index[t*3+2]])>.5?1:0;
- const center=mouthCentre(head);let worst={teeth:0},worstInterior={interior:0};
- for(let el=-60;el<=45;el+=15)for(let az=-105;az<=105;az+=15){const e=[Math.cos(el*Math.PI/180)*Math.cos(az*Math.PI/180),Math.sin(el*Math.PI/180),Math.cos(el*Math.PI/180)*Math.sin(az*Math.PI/180)];
-  const R=raster(parts,{dir:e.map(v=>-v),up:[0,1,0],center,ppu,w:size,h:size});let teeth=0,inner=0;
-  for(let k=0;k<R.id.length;k++){const pi=R.id[k];if(pi<0)continue;const kind=parts[pi].kind;if(kind==='teeth'||kind==='tongue')teeth++;else if(pi===0&&interior[R.tri[k]])inner++;}
-  const mm=1e6/(ppu*ppu);if(teeth*mm>worst.teeth)worst={teeth:teeth*mm,az,el};if(inner*mm>worstInterior.interior)worstInterior={interior:inner*mm,az,el};}
- return {teeth:worst,interior:worstInterior};
+// Holes in the head (mm^2): where the first surface on the line of sight, back faces drawn, is seen
+// from behind, so the eye looks into the head through a hole, a crack or an inside-out triangle,
+// whatever the renderer then shows there, culling back faces (the background, or the inside of the
+// mouth beyond: a hole punched in a cheek, seen from above, shows the mouth's floor). Seen from
+// outside, a closed skin's first surface faces the eye. The mouth is open at its sides and front
+// (the user, round 4): a line of sight through it meets the mouth's inside, which faces it, or
+// nothing, so no curtain is needed. Throws if the head is not in the frame, as seeThrough. Returns
+// {mm2, largest (the largest one hole, 4-connected), mask, R}.
+export function holesThrough(head,deg,az=0,{ppu=4000,size=1000,el=0}={}){
+ const parts=pose(head,deg),S=parts[0].P,{up,lo}=lipTips(head),tipU=vtx(S,up),tipL=vtx(S,lo),a=az*Math.PI/180,e=el*Math.PI/180;
+ const view={dir:[Math.sin(a)*Math.cos(e),-Math.sin(e),-Math.cos(a)*Math.cos(e)],up:[0,1,0],center:[(tipU[0]+tipL[0])/2-.04,(tipU[1]+tipL[1])/2,0],ppu,w:size,h:size};
+ const R=raster(parts,{...view,both:true}),w=R.w,h=R.h,mask=new Uint8Array(w*h);
+ let skinPixels=0,n=0;for(let k=0;k<w*h;k++){if(R.id[k]===0)skinPixels++;if(R.back[k]){mask[k]=1;n++;}}
+ const proj=p=>{const v=sub(p,view.center);return [w/2+dot(v,R.right)*ppu,h/2-dot(v,R.up)*ppu];},framed=p=>{const [x,y]=proj(p);return x>=0&&y>=0&&x<w&&y<h;};
+ if(skinPixels<w*h*.02||!framed(tipU)||!framed(tipL))throw Error(`holesThrough: ${head.species}-${head.level} at ${deg}°, ${az}° round, ${el}° up: the head is not in the frame (${skinPixels} pixels of skin)`);
+ const done=new Uint8Array(w*h);let largest=0;for(let k0=0;k0<w*h;k0++){if(!mask[k0]||done[k0])continue;let c=0;const st=[k0];done[k0]=1;
+  while(st.length){const k=st.pop();c++;const x=k%w,y=(k-x)/w;for(const j of [x>0?k-1:-1,x<w-1?k+1:-1,y>0?k-w:-1,y<h-1?k+w:-1])if(j>=0&&mask[j]&&!done[j]){done[j]=1;st.push(j);}}largest=Math.max(largest,c);}
+ return {mm2:n/(ppu*ppu)*1e6,largest:largest/(ppu*ppu)*1e6,mask,R};
 }
+
 
 // Teeth and tongue against the posed skin: for each tooth (and the tongue), how many of its vertices
 // lie inside the skin's solid (rooted when any), and those outside whose nearest skin is outer skin,
@@ -186,8 +181,9 @@ export function partsCrossSkin(head,deg,{cell=.004}={}){
 // at 16 points in each triangle: the vertex normal and the band normal skinned as the GPU skins them
 // (the rest normal turned by the jaw's weight), interpolated, and blended to the band's by
 // smoothstep(0,.1,lower) * smoothstep(1,.9,lower) * smoothstep(.2,.6,part). Fragments the renderer
-// lights evenly as the mouth's inside (its mouth factor at least .5, so their normal is at least
-// 40% the eye's: speaking-head.js, round 3) are left out: they cannot stripe.
+// lights as the mouth's inside (its mouth factor at least .5) are left out: speaking-head.js pulls
+// their normals at least 40% of the way to the eye (a normal turned wholly away still faces away,
+// but round 3's review's light-only renders found the inside lit evenly).
 // Returns {area (m^2), over30, over60, over90}.
 export function mouthShading(head,deg){
  const S=head.parts[0],P=pose(head,deg)[0].P,a=-deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a),nrm=v=>{const l=Math.hypot(...v)||1;return v.map(x=>x/l);};

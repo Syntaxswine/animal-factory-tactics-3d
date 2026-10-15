@@ -2,8 +2,8 @@
 // Photographs the speaking heads in the real renderer (tactics/speaking-heads.html) and writes the
 // review evidence to docs/tactics/hybrid-review/speaking-heads/<stage>/:
 //  - <id>.png      the approved head and the speaking head closed, open 12 and 24 degrees, from
-//                  the side, three-quarter, front and the game's camera (grey: the authoring mesh;
-//                  paint: the game mesh)
+//                  the side (left and right), three-quarter, front and the game's camera (left and
+//                  right) (grey: the authoring mesh; paint: the game mesh)
 //  - overview.png  every character, three-quarter, closed and open 12 degrees
 //  - checks.json   per character: triangles, paint coverage, page errors (round 2: a screen
 //                  difference between the closed heads was dropped, as round 1 showed it could not
@@ -39,13 +39,15 @@ try{
  const look=stage==='grey'?{grey:true,painted:false}:{grey:false,painted:true};
  for(const id of IDS){
   const before=errors.length;await page.evaluate(([id,level])=>speakingHeads.load(id,level),[id,level]);
+  // (each from the character's left, and the side and the game's camera from its right too: the
+  // character turned, the viewer's Turn in degrees: 180 for the side, -90 for the game's camera, which looks from the front-left; round 3's defects hid on the side its photographs left out)
   const rows=[];
-  for(const view of ['side','three','front','game']){const row=[];
-   for(const [k,jaw] of [0,12,24].entries()){const img=await shot({...look,coverage:false,wire:false,weights:false,view,scale:'portrait',jaw,heading:0});
+  for(const [view,heading] of [['side',0],['side',180],['three',0],['front',0],['game',0],['game',-90]]){const row=[];
+   for(const [k,jaw] of [0,12,24].entries()){const img=await shot({...look,coverage:false,wire:false,weights:false,view,scale:'portrait',jaw,heading});
     if(k===0)row.push(crop(img,W/4,H/2,TILE));row.push(crop(img,3*W/4,H/2,TILE));}
    rows.push(row);}
   const sheet=grid(rows);fs.writeFileSync(new URL(`${id}.png`,dir),encodePNG(sheet));
-  overview.push([rows[1][0],rows[1][1],rows[1][2]]);
+  overview.push([rows[2][0],rows[2][1],rows[2][2]]);
   const record={...(await page.evaluate(()=>speakingHeads.diagnostics()))};
   if(stage==='paint'){for(const jaw of [0,12]){await page.evaluate(o=>speakingHeads.set(o),{view:'three',scale:'close',jaw,painted:true,grey:false});record['coverage, jaw '+jaw]=await page.evaluate(()=>speakingHeads.coverage());}}
   record.pageErrors=errors.slice(before);checks.characters[id]=record;console.log(id,JSON.stringify(record));
