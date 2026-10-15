@@ -1,0 +1,53 @@
+{
+  "sourceHashFormat": "SHA256 of raw UTF-8 source bytes",
+  "sourceHashes": {
+    "foliage-screen-surface.js": "b2dff4c50bf5236f0330a5bf59fb320ebdaa78283b0c1ad16c7b8984e9d4811f",
+    "foliage-screen-scene.js": "e44d8c3676b00f270e2033fcdd1e45a5580b4eef9e7c583d3adf6184a2f95cf2",
+    "foliage-screen-paint.js": "a14cb24ab2325bbc63722c36ad08f7c9c8a6622494287953348eff5ee01dded0",
+    "biome-scene.js": "b8c2bd86575055686362fff986533c254e69c6f7ae093030274b7a456003a89f"
+  },
+  "fullSuite": {
+    "note": "Final RGB-only paint was followed by the focused rerun below.",
+    "failed": 0,
+    "passed": 2452,
+    "command": "npm run check"
+  },
+  "focusedAfterFinalPaint": {
+    "failed": 0,
+    "passed": 12,
+    "command": "node --test tests/foliage-skins.test.mjs tests/foliage-screen-coverage.test.mjs"
+  },
+  "additionalSeedCoverage": {
+    "cases": 2025,
+    "note": "Independent read-only source diagnostic; geometry and alpha unchanged by final RGB paint.",
+    "seeds": [
+      1,
+      57,
+      174,
+      999,
+      1337
+    ],
+    "failed": 0
+  },
+  "assetAudit": "passed after final paint",
+  "build": "passed after final paint",
+  "browserContexts": {
+    "errors": 0,
+    "finalPaintViews": 24,
+    "finalPackagedPaintViews": 2,
+    "initialViews": 60
+  },
+  "editorToPlaytest": {
+    "source": "passed",
+    "regions": 7,
+    "packaged": "passed",
+    "squadModels": 4
+  },
+  "finalBattleRuns": 4,
+  "independentReview": {
+    "holds": [],
+    "scope": "Rendering correction ready for architect review",
+    "score": "9/10"
+  },
+  "canonicalIntegration": "not merged by this task"
+}

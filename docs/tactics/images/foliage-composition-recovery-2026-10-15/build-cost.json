@@ -1,0 +1,25 @@
+{
+  "baselineRef": "50cf262",
+  "cells": 1157,
+  "baselineMs": [
+    28.47840000000008,
+    30.07389999999998,
+    29.3596,
+    25.943799999999896,
+    25.103200000000015,
+    29.393699999999967,
+    25.771199999999908
+  ],
+  "currentMs": [
+    12.049600000000055,
+    11.995700000000056,
+    11.7029,
+    12.897100000000023,
+    11.028799999999933,
+    12.573299999999904,
+    11.632800000000088
+  ],
+  "baselineMedianMs": 28.47840000000008,
+  "currentMedianMs": 11.995700000000056,
+  "note": "Warm CPU screenSurface generation for the seven-region fixture. Not display FPS or a full-sector battle benchmark."
+}

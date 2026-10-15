@@ -19,4 +19,5 @@ for(const scope of ['base','3D'])test(`the ${scope} tactics Pages build lists ev
  }
  assert.deepEqual(missing,[]);
  for(const file of ['flame-effect.js','flame-nozzles.js','flame-art.html','flame-art-review.js'])assert.ok(listed.has(file),file);
+ if(scope==='3D')for(const file of ['foliage-skins-review.html','foliage-skins-review.js','foliage-context-fixture.js'])assert.ok(listed.has(file),'Native horse foliage review must ship '+file);
 });

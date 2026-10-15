@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-15",
+  "base": "59707c7be0e0cb557b8397046f95432df6e0b1f3",
+  "branch": "work/foliage-canopy-polish",
+  "sourceSha256": {
+    "dist/tactics/foliage-screen-surface.js": "e62b677a7f23d0aa452513980be22fa305c27cf69abece950358be55c404f7b5",
+    "dist/tactics/foliage-screen-paint.js": "2527c1357796241cb6c3ab2f08423d2c4832f0b5de88c0076bc22ab303c20b3c",
+    "dist/assets/environment/biome-foliage/manifest.json": "6e9f84a7c98757dcabf2c52d705ad852f59a28890e0ef51607cfe64273fe8505",
+    "tests/foliage-skins.test.mjs": "6f76fe4b72cb41eeac8356bb211d0c54a8af10edd210a564e66484862b73c456",
+    "tools/check-foliage-skins.mjs": "02ac4511099b6b4b031709088949d37f732a8b69bc0bf4706ac1efea44c5373b",
+    "tools/check-foliage-canopy-cost.mjs": "65d810c1e2d160ff534308d26e990a8483f77b682a11855d7ac68cfc1707717f"
+  },
+  "affectedTests": {
+    "passed": 150,
+    "failed": 0,
+    "log": "tests.log"
+  },
+  "assetAudit": {
+    "passed": true,
+    "log": "asset-audit.log"
+  },
+  "build": {
+    "passed": true,
+    "command": "npm run build:tactics-3d",
+    "log": "build.log"
+  },
+  "browser": {
+    "visualViews": 12,
+    "errors": [],
+    "report": "after-report.json",
+    "sourceAndPackagedRoundTrips": true,
+    "integrationReport": "integration-report.json"
+  },
+  "review": {
+    "score": "9/10",
+    "scope": "Independent code, visual and rebuild-cost review",
+    "rebuildCostResolved": true
+  },
+  "limits": [
+    "Full canonical test suite not repeated for this localized follow-up.",
+    "Fixture render and CPU-generation samples are not sustained full wooded-sector battle performance.",
+    "Artist branch delivery; canonical integration remains with the architect."
+  ]
+}

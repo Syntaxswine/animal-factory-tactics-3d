@@ -1,0 +1,354 @@
+{
+  "baselineRef": "50cf262",
+  "sourceHashes": {
+    "baseline": {
+      "foliage-screen-surface.js": "e62b677a7f23d0aa452513980be22fa305c27cf69abece950358be55c404f7b5",
+      "foliage-screen-scene.js": "407229af8755d67911cce8c13e3f66c4419cab7f0824bd1476d94bb72093692b",
+      "foliage-screen-paint.js": "2527c1357796241cb6c3ab2f08423d2c4832f0b5de88c0076bc22ab303c20b3c",
+      "biome-scene.js": "75de9fbc2b8e0688d24d78895b32a1ba8a60112e0ff5b245341bfce8fa321a0f"
+    },
+    "current": {
+      "foliage-screen-surface.js": "b2dff4c50bf5236f0330a5bf59fb320ebdaa78283b0c1ad16c7b8984e9d4811f",
+      "foliage-screen-scene.js": "38358f98189152b05358adadd900aa7495c071a4e436d5dc26d395b030ef9d68",
+      "foliage-screen-paint.js": "2527c1357796241cb6c3ab2f08423d2c4832f0b5de88c0076bc22ab303c20b3c",
+      "biome-scene.js": "b8c2bd86575055686362fff986533c254e69c6f7ae093030274b7a456003a89f"
+    }
+  },
+  "fixture": "Generated flat 240×240 map using tutorial study foliage regions; not the authored tutorial map.",
+  "method": "Ordinary editor save/reload and Playtest; four squad models; standard difficulty fog and unchanged camera. Freeze the three screen art modules plus BiomeScene per run. Measured draw CPU and RAF intervals in headless Edge; not guaranteed display FPS or sustained combat performance. No gl.finish.",
+  "checks": [
+    {
+      "family": "temperate",
+      "tag": "baseline",
+      "loadMs": 23325,
+      "roundTrip": true,
+      "ordinaryPlaytest": true,
+      "savedFoliageCells": 43947,
+      "blockedFoliageCells": 31569,
+      "samples": 120,
+      "drawCpuMs": {
+        "min": 18.400000005960464,
+        "median": 20.100000008940697,
+        "p95": 23.100000008940697,
+        "max": 27.80000001192093
+      },
+      "rafIntervalMs": {
+        "min": 16.5,
+        "median": 16.700000000000728,
+        "p95": 50,
+        "max": 66.70000000000073
+      },
+      "drawCalls": {
+        "min": 424,
+        "median": 424,
+        "p95": 424,
+        "max": 424
+      },
+      "submittedTriangles": {
+        "min": 579502,
+        "median": 579502,
+        "p95": 579502,
+        "max": 579502
+      },
+      "units": 4,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 289,
+        "openWoodlandTrees": 48,
+        "blockedCells": 31569,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 4533,
+            "large": 405,
+            "litter": 3983,
+            "paintedLogs": 310,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 7,
+            "activePages": 7,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": true,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 979200,
+            "bogBytes": 0,
+            "textureBytes": 28051030,
+            "canvasBytes": 20303872,
+            "workerBaseBytes": 3810304,
+            "generations": 7,
+            "generationMs": 1070.800000011921,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "diagnostics": [],
+      "view": {
+        "x": 534.8,
+        "y": -2772.896875,
+        "zoom": 1.15,
+        "turn": 0
+      },
+      "difficulty": "standard",
+      "seenCells": 829,
+      "paused": false,
+      "webgl": {
+        "renderer": "WebKit WebGL"
+      },
+      "textureCount": 45
+    },
+    {
+      "family": "temperate",
+      "tag": "current",
+      "loadMs": 20281,
+      "roundTrip": true,
+      "ordinaryPlaytest": true,
+      "savedFoliageCells": 43947,
+      "blockedFoliageCells": 31569,
+      "samples": 120,
+      "drawCpuMs": {
+        "min": 19.599999994039536,
+        "median": 21.899999991059303,
+        "p95": 23.900000005960464,
+        "max": 26.399999991059303
+      },
+      "rafIntervalMs": {
+        "min": 16.400000000001455,
+        "median": 16.799999999999272,
+        "p95": 50.100000000000364,
+        "max": 66.79999999999927
+      },
+      "drawCalls": {
+        "min": 350,
+        "median": 350,
+        "p95": 350,
+        "max": 350
+      },
+      "submittedTriangles": {
+        "min": 496894,
+        "median": 496894,
+        "p95": 496894,
+        "max": 496894
+      },
+      "units": 4,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 289,
+        "openWoodlandTrees": 48,
+        "blockedCells": 31569,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 4533,
+            "large": 405,
+            "litter": 3983,
+            "paintedLogs": 310,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 7,
+            "activePages": 7,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": true,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 979200,
+            "bogBytes": 0,
+            "textureBytes": 28051030,
+            "canvasBytes": 20303872,
+            "workerBaseBytes": 3810304,
+            "generations": 7,
+            "generationMs": 1046.4000000059605,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "diagnostics": [],
+      "view": {
+        "x": 534.8,
+        "y": -2772.896875,
+        "zoom": 1.15,
+        "turn": 0
+      },
+      "difficulty": "standard",
+      "seenCells": 829,
+      "paused": false,
+      "webgl": {
+        "renderer": "WebKit WebGL"
+      },
+      "textureCount": 45
+    },
+    {
+      "family": "snow",
+      "tag": "baseline",
+      "loadMs": 24006,
+      "roundTrip": true,
+      "ordinaryPlaytest": true,
+      "savedFoliageCells": 43947,
+      "blockedFoliageCells": 31569,
+      "samples": 120,
+      "drawCpuMs": {
+        "min": 17.799999997019768,
+        "median": 24.299999997019768,
+        "p95": 26.799999997019768,
+        "max": 27.400000005960464
+      },
+      "rafIntervalMs": {
+        "min": 16.299999999999272,
+        "median": 33.29999999999927,
+        "p95": 66.69999999999891,
+        "max": 66.70000000000073
+      },
+      "drawCalls": {
+        "min": 388,
+        "median": 388,
+        "p95": 388,
+        "max": 388
+      },
+      "submittedTriangles": {
+        "min": 487946,
+        "median": 487946,
+        "p95": 487946,
+        "max": 487946
+      },
+      "units": 4,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 289,
+        "openWoodlandTrees": 48,
+        "blockedCells": 31569,
+        "paint": [
+          {
+            "regions": 102,
+            "brushBeds": 0,
+            "large": 445,
+            "litter": 3851,
+            "paintedLogs": 346,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 7,
+            "activePages": 7,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": true,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 979200,
+            "bogBytes": 0,
+            "textureBytes": 28051030,
+            "canvasBytes": 20303872,
+            "workerBaseBytes": 3810304,
+            "generations": 7,
+            "generationMs": 431.99999998509884,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "diagnostics": [],
+      "view": {
+        "x": 534.8,
+        "y": -2772.896875,
+        "zoom": 1.15,
+        "turn": 0
+      },
+      "difficulty": "standard",
+      "seenCells": 830,
+      "paused": false,
+      "webgl": {
+        "renderer": "WebKit WebGL"
+      },
+      "textureCount": 44
+    },
+    {
+      "family": "snow",
+      "tag": "current",
+      "loadMs": 25762,
+      "roundTrip": true,
+      "ordinaryPlaytest": true,
+      "savedFoliageCells": 43947,
+      "blockedFoliageCells": 31569,
+      "samples": 120,
+      "drawCpuMs": {
+        "min": 20.700000002980232,
+        "median": 27.299999997019768,
+        "p95": 29.200000002980232,
+        "max": 30.200000002980232
+      },
+      "rafIntervalMs": {
+        "min": 16.5,
+        "median": 33.29999999999927,
+        "p95": 66.70000000000073,
+        "max": 83.5
+      },
+      "drawCalls": {
+        "min": 302,
+        "median": 302,
+        "p95": 302,
+        "max": 302
+      },
+      "submittedTriangles": {
+        "min": 428558,
+        "median": 428558,
+        "p95": 428558,
+        "max": 428558
+      },
+      "units": 4,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 289,
+        "openWoodlandTrees": 48,
+        "blockedCells": 31569,
+        "paint": [
+          {
+            "regions": 102,
+            "brushBeds": 0,
+            "large": 445,
+            "litter": 3851,
+            "paintedLogs": 346,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 7,
+            "activePages": 7,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": true,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 979200,
+            "bogBytes": 0,
+            "textureBytes": 28051030,
+            "canvasBytes": 20303872,
+            "workerBaseBytes": 3810304,
+            "generations": 7,
+            "generationMs": 398.5,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "diagnostics": [],
+      "view": {
+        "x": 534.8,
+        "y": -2772.896875,
+        "zoom": 1.15,
+        "turn": 0
+      },
+      "difficulty": "standard",
+      "seenCells": 830,
+      "paused": false,
+      "webgl": {
+        "renderer": "WebKit WebGL"
+      },
+      "textureCount": 44
+    }
+  ],
+  "errors": []
+}

@@ -1,5 +1,7 @@
 # Painterly foliage screens and restored tree presentation
 
+After canonical approval: [broader canopy grouping and snow polish](FOLIAGE-CANOPY-POLISH-2026-10-15.md) addresses the two remaining localized art notes, with unchanged texture storage and comparable rebuild cost.
+
 Follow-up: [actual tree-model mixing within each habitat](TREE-MODEL-MIX-2026-10-14.md) implements the user's later clarification. The measurements below record the earlier `6ef88ba` skin/detail pass.
 
 Artist branch: `work/foliage-skins`, based on coder handoff `1119290` / integration `e0102b3`. The architect owns canonical integration. This delivery does not merge the older artist branch or change the unrelated loading screen.
