@@ -1,0 +1,234 @@
+{
+  "method": "Headless Edge, 1500×1000. Ordinary UI drag for the whole rectangle; controller brush commands clear the routes. Live standard-fog battle, four squad models, no gl.finish. RAF is not a guarantee of sustained combat FPS.",
+  "checks": [
+    {
+      "tag": "source-temperate-woodland-100",
+      "family": "temperate",
+      "density": 100,
+      "growth": "woodland",
+      "uiRectangle": true,
+      "undoRedo": true,
+      "saveReload": true,
+      "ordinaryPlaytest": true,
+      "samples": 90,
+      "drawCpuMs": {
+        "median": 12.199999988079071,
+        "p95": 14.400000005960464
+      },
+      "rafIntervalMs": {
+        "median": 16.699999999999818,
+        "p95": 16.800000000000182
+      },
+      "drawCalls": {
+        "median": 277,
+        "p95": 277
+      },
+      "submittedTriangles": {
+        "median": 978736,
+        "p95": 978736
+      },
+      "units": 4,
+      "trees": 143,
+      "diagnostics": [],
+      "difficulty": "standard",
+      "seenCells": 1691,
+      "view": {
+        "x": 953.4,
+        "y": -3593.996875,
+        "zoom": 1.15,
+        "turn": 0
+      }
+    },
+    {
+      "tag": "source-wetlands-thicket-100",
+      "family": "wetlands",
+      "density": 100,
+      "growth": "thicket",
+      "uiRectangle": true,
+      "undoRedo": true,
+      "saveReload": true,
+      "ordinaryPlaytest": true,
+      "samples": 90,
+      "drawCpuMs": {
+        "median": 13.799999982118607,
+        "p95": 15.200000017881393
+      },
+      "rafIntervalMs": {
+        "median": 16.69999999999891,
+        "p95": 16.900000000001455
+      },
+      "drawCalls": {
+        "median": 417,
+        "p95": 417
+      },
+      "submittedTriangles": {
+        "median": 719776,
+        "p95": 719776
+      },
+      "units": 4,
+      "trees": 73,
+      "diagnostics": [],
+      "difficulty": "standard",
+      "seenCells": 1159,
+      "view": {
+        "x": 953.4,
+        "y": -3593.996875,
+        "zoom": 1.15,
+        "turn": 0
+      }
+    },
+    {
+      "tag": "source-wetlands-woodland-65",
+      "family": "wetlands",
+      "density": 65,
+      "growth": "woodland",
+      "uiRectangle": true,
+      "undoRedo": true,
+      "saveReload": true,
+      "ordinaryPlaytest": true,
+      "samples": 90,
+      "drawCpuMs": {
+        "median": 12.400000005960464,
+        "p95": 13.800000011920929
+      },
+      "rafIntervalMs": {
+        "median": 16.699999999999818,
+        "p95": 16.800000000000182
+      },
+      "drawCalls": {
+        "median": 301,
+        "p95": 301
+      },
+      "submittedTriangles": {
+        "median": 2068284,
+        "p95": 2068284
+      },
+      "units": 4,
+      "trees": 102,
+      "diagnostics": [],
+      "difficulty": "standard",
+      "seenCells": 2035,
+      "view": {
+        "x": 953.4,
+        "y": -3593.996875,
+        "zoom": 1.15,
+        "turn": 0
+      }
+    },
+    {
+      "tag": "source-wetlands-woodland-100",
+      "family": "wetlands",
+      "density": 100,
+      "growth": "woodland",
+      "uiRectangle": true,
+      "undoRedo": true,
+      "saveReload": true,
+      "ordinaryPlaytest": true,
+      "samples": 90,
+      "drawCpuMs": {
+        "median": 12.199999988079071,
+        "p95": 13.300000011920929
+      },
+      "rafIntervalMs": {
+        "median": 16.699999999999818,
+        "p95": 16.800000000000182
+      },
+      "drawCalls": {
+        "median": 303,
+        "p95": 303
+      },
+      "submittedTriangles": {
+        "median": 3106416,
+        "p95": 3106416
+      },
+      "units": 4,
+      "trees": 143,
+      "diagnostics": [],
+      "difficulty": "standard",
+      "seenCells": 1689,
+      "view": {
+        "x": 953.4,
+        "y": -3593.996875,
+        "zoom": 1.15,
+        "turn": 0
+      }
+    },
+    {
+      "tag": "packaged-temperate-woodland-100",
+      "family": "temperate",
+      "density": 100,
+      "growth": "woodland",
+      "uiRectangle": true,
+      "undoRedo": true,
+      "saveReload": true,
+      "ordinaryPlaytest": true,
+      "samples": 90,
+      "drawCpuMs": {
+        "median": 12.199999988079071,
+        "p95": 13.400000005960464
+      },
+      "rafIntervalMs": {
+        "median": 16.699999999999818,
+        "p95": 16.800000000000182
+      },
+      "drawCalls": {
+        "median": 277,
+        "p95": 277
+      },
+      "submittedTriangles": {
+        "median": 978736,
+        "p95": 978736
+      },
+      "units": 4,
+      "trees": 143,
+      "diagnostics": [],
+      "difficulty": "standard",
+      "seenCells": 1691,
+      "view": {
+        "x": 953.4,
+        "y": -3593.996875,
+        "zoom": 1.15,
+        "turn": 0
+      }
+    },
+    {
+      "tag": "packaged-wetlands-thicket-100",
+      "family": "wetlands",
+      "density": 100,
+      "growth": "thicket",
+      "uiRectangle": true,
+      "undoRedo": true,
+      "saveReload": true,
+      "ordinaryPlaytest": true,
+      "samples": 90,
+      "drawCpuMs": {
+        "median": 13.5,
+        "p95": 15.199999988079071
+      },
+      "rafIntervalMs": {
+        "median": 16.700000000000728,
+        "p95": 16.80000000000109
+      },
+      "drawCalls": {
+        "median": 417,
+        "p95": 417
+      },
+      "submittedTriangles": {
+        "median": 719776,
+        "p95": 719776
+      },
+      "units": 4,
+      "trees": 73,
+      "diagnostics": [],
+      "difficulty": "standard",
+      "seenCells": 1159,
+      "view": {
+        "x": 953.4,
+        "y": -3593.996875,
+        "zoom": 1.15,
+        "turn": 0
+      }
+    }
+  ],
+  "errors": []
+}

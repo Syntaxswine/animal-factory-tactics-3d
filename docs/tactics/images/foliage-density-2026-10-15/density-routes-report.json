@@ -1,0 +1,875 @@
+{
+  "sourceHashes": {
+    "foliage-density-fixture.js": "60f26573f5e5c1aadf2f35c10fb7c348024fc41d507138957b90e913dddd7810",
+    "foliage-skins-review.js": "d28381e6919b7bfbc63168840dae5392c9c4d36d074b5f689ff60218aa5f835d",
+    "foliage-data.js": "37d5f37955e1415259b2b4833aa46e3ffc0d8993a141e7942e745cc28042bde6",
+    "foliage-obstacles.js": "2968741679167536f94bbb1aaf63f6203cffa35f65900ade03d666406a4c9937",
+    "biome-scene.js": "b8c2bd86575055686362fff986533c254e69c6f7ae093030274b7a456003a89f",
+    "foliage-screen-surface.js": "8e452f6138a481e5b6a4bdbad2403d196939ea7bdc2d5d76490fe0d25ae02292"
+  },
+  "errors": [],
+  "views": [
+    {
+      "mode": "density",
+      "angle": "normal",
+      "grid": false,
+      "family": "temperate",
+      "treeModels": {
+        "wetland-willow": 28,
+        "temperate-broadleaf": 63,
+        "dry-scrub-tree": 14,
+        "temperate-pine": 38
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          148,
+          0,
+          104
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          148,
+          1.3,
+          101
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 92,
+      "triangles": 1174216,
+      "textures": 12,
+      "estimatedTextureBytes": 58777739,
+      "finiteMaskBytes": 0,
+      "renderSubmissionMedianMs": 0.3999999761581421,
+      "synchronizedFrameMedianMs": 0.5,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "woodland",
+      "frame": "corridor",
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 143,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 143,
+        "openWoodlandTrees": 143,
+        "blockedCells": 0,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 0,
+            "large": 0,
+            "litter": 0,
+            "paintedLogs": 0,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 0,
+            "activePages": 0,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": false,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 0,
+            "bogBytes": 0,
+            "textureBytes": 0,
+            "canvasBytes": 0,
+            "workerBaseBytes": 0,
+            "generations": 0,
+            "generationMs": 0,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "woodland-temperate-corridor-normal-grid0-100",
+      "physicalTrees": 143
+    },
+    {
+      "mode": "density",
+      "angle": "normal",
+      "grid": true,
+      "family": "temperate",
+      "treeModels": {
+        "wetland-willow": 28,
+        "temperate-broadleaf": 63,
+        "dry-scrub-tree": 14,
+        "temperate-pine": 38
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          148,
+          0,
+          104
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          148,
+          1.3,
+          101
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 93,
+      "triangles": 1174216,
+      "textures": 12,
+      "estimatedTextureBytes": 58777739,
+      "finiteMaskBytes": 0,
+      "renderSubmissionMedianMs": 0.5999999940395355,
+      "synchronizedFrameMedianMs": 0.7999999821186066,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "woodland",
+      "frame": "corridor",
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 143,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 143,
+        "openWoodlandTrees": 143,
+        "blockedCells": 0,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 0,
+            "large": 0,
+            "litter": 0,
+            "paintedLogs": 0,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 0,
+            "activePages": 0,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": false,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 0,
+            "bogBytes": 0,
+            "textureBytes": 0,
+            "canvasBytes": 0,
+            "workerBaseBytes": 0,
+            "generations": 0,
+            "generationMs": 0,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "woodland-temperate-corridor-normal-grid1-100",
+      "physicalTrees": 143
+    },
+    {
+      "mode": "density",
+      "angle": "normal",
+      "grid": false,
+      "family": "jungle",
+      "treeModels": {
+        "temperate-broadleaf": 30,
+        "jungle-canopy": 66,
+        "jungle-palm": 47
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          148,
+          0,
+          104
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          148,
+          1.3,
+          101
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 108,
+      "triangles": 1675648,
+      "textures": 12,
+      "estimatedTextureBytes": 58777739,
+      "finiteMaskBytes": 0,
+      "renderSubmissionMedianMs": 0.5999999940395355,
+      "synchronizedFrameMedianMs": 0.7999999821186066,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "woodland",
+      "frame": "corridor",
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 143,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 143,
+        "openWoodlandTrees": 143,
+        "blockedCells": 0,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 0,
+            "large": 0,
+            "litter": 0,
+            "paintedLogs": 0,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 0,
+            "activePages": 0,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": false,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 0,
+            "bogBytes": 0,
+            "textureBytes": 0,
+            "canvasBytes": 0,
+            "workerBaseBytes": 0,
+            "generations": 0,
+            "generationMs": 0,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "woodland-jungle-corridor-normal-grid0-100",
+      "physicalTrees": 143
+    },
+    {
+      "mode": "density",
+      "angle": "normal",
+      "grid": true,
+      "family": "jungle",
+      "treeModels": {
+        "temperate-broadleaf": 30,
+        "jungle-canopy": 66,
+        "jungle-palm": 47
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          148,
+          0,
+          104
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          148,
+          1.3,
+          101
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 109,
+      "triangles": 1675648,
+      "textures": 12,
+      "estimatedTextureBytes": 58777739,
+      "finiteMaskBytes": 0,
+      "renderSubmissionMedianMs": 0.699999988079071,
+      "synchronizedFrameMedianMs": 0.9000000059604645,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "woodland",
+      "frame": "corridor",
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 143,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 143,
+        "openWoodlandTrees": 143,
+        "blockedCells": 0,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 0,
+            "large": 0,
+            "litter": 0,
+            "paintedLogs": 0,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 0,
+            "activePages": 0,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": false,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 0,
+            "bogBytes": 0,
+            "textureBytes": 0,
+            "canvasBytes": 0,
+            "workerBaseBytes": 0,
+            "generations": 0,
+            "generationMs": 0,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "woodland-jungle-corridor-normal-grid1-100",
+      "physicalTrees": 143
+    },
+    {
+      "mode": "density",
+      "angle": "normal",
+      "grid": false,
+      "family": "dry",
+      "treeModels": {
+        "temperate-pine": 30,
+        "dry-acacia": 66,
+        "dry-scrub-tree": 47
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          148,
+          0,
+          104
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          148,
+          1.3,
+          101
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 79,
+      "triangles": 1146368,
+      "textures": 12,
+      "estimatedTextureBytes": 58777739,
+      "finiteMaskBytes": 0,
+      "renderSubmissionMedianMs": 0.5999999940395355,
+      "synchronizedFrameMedianMs": 0.699999988079071,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "woodland",
+      "frame": "corridor",
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 143,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 143,
+        "openWoodlandTrees": 143,
+        "blockedCells": 0,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 0,
+            "large": 0,
+            "litter": 0,
+            "paintedLogs": 0,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 0,
+            "activePages": 0,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": false,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 0,
+            "bogBytes": 0,
+            "textureBytes": 0,
+            "canvasBytes": 0,
+            "workerBaseBytes": 0,
+            "generations": 0,
+            "generationMs": 0,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "woodland-dry-corridor-normal-grid0-100",
+      "physicalTrees": 143
+    },
+    {
+      "mode": "density",
+      "angle": "normal",
+      "grid": true,
+      "family": "dry",
+      "treeModels": {
+        "temperate-pine": 30,
+        "dry-acacia": 66,
+        "dry-scrub-tree": 47
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          148,
+          0,
+          104
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          148,
+          1.3,
+          101
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 80,
+      "triangles": 1146368,
+      "textures": 12,
+      "estimatedTextureBytes": 58777739,
+      "finiteMaskBytes": 0,
+      "renderSubmissionMedianMs": 0.5999999940395355,
+      "synchronizedFrameMedianMs": 0.7999999821186066,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "woodland",
+      "frame": "corridor",
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 143,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 143,
+        "openWoodlandTrees": 143,
+        "blockedCells": 0,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 0,
+            "large": 0,
+            "litter": 0,
+            "paintedLogs": 0,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 0,
+            "activePages": 0,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": false,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 0,
+            "bogBytes": 0,
+            "textureBytes": 0,
+            "canvasBytes": 0,
+            "workerBaseBytes": 0,
+            "generations": 0,
+            "generationMs": 0,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "woodland-dry-corridor-normal-grid1-100",
+      "physicalTrees": 143
+    },
+    {
+      "mode": "density",
+      "angle": "normal",
+      "grid": false,
+      "family": "wetlands",
+      "treeModels": {
+        "wetland-willow": 53,
+        "wetland-cypress": 63,
+        "temperate-broadleaf": 27
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          148,
+          0,
+          104
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          148,
+          1.3,
+          101
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 130,
+      "triangles": 3985868,
+      "textures": 12,
+      "estimatedTextureBytes": 58777739,
+      "finiteMaskBytes": 0,
+      "renderSubmissionMedianMs": 0.7999999821186066,
+      "synchronizedFrameMedianMs": 1,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "woodland",
+      "frame": "corridor",
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 143,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 143,
+        "openWoodlandTrees": 143,
+        "blockedCells": 0,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 0,
+            "large": 0,
+            "litter": 0,
+            "paintedLogs": 0,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 0,
+            "activePages": 0,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": false,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 0,
+            "bogBytes": 0,
+            "textureBytes": 0,
+            "canvasBytes": 0,
+            "workerBaseBytes": 0,
+            "generations": 0,
+            "generationMs": 0,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "woodland-wetlands-corridor-normal-grid0-100",
+      "physicalTrees": 143
+    },
+    {
+      "mode": "density",
+      "angle": "normal",
+      "grid": true,
+      "family": "wetlands",
+      "treeModels": {
+        "wetland-willow": 53,
+        "wetland-cypress": 63,
+        "temperate-broadleaf": 27
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          148,
+          0,
+          104
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          148,
+          1.3,
+          101
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 131,
+      "triangles": 3985868,
+      "textures": 12,
+      "estimatedTextureBytes": 58777739,
+      "finiteMaskBytes": 0,
+      "renderSubmissionMedianMs": 0.7999999821186066,
+      "synchronizedFrameMedianMs": 1,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "woodland",
+      "frame": "corridor",
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 143,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 143,
+        "openWoodlandTrees": 143,
+        "blockedCells": 0,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 0,
+            "large": 0,
+            "litter": 0,
+            "paintedLogs": 0,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 0,
+            "activePages": 0,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": false,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 0,
+            "bogBytes": 0,
+            "textureBytes": 0,
+            "canvasBytes": 0,
+            "workerBaseBytes": 0,
+            "generations": 0,
+            "generationMs": 0,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "woodland-wetlands-corridor-normal-grid1-100",
+      "physicalTrees": 143
+    },
+    {
+      "mode": "density",
+      "angle": "normal",
+      "grid": false,
+      "family": "snow",
+      "treeModels": {
+        "temperate-pine": 30,
+        "snow-spruce": 66,
+        "snow-alpine-pine": 47
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          148,
+          0,
+          104
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          148,
+          1.3,
+          101
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 97,
+      "triangles": 546112,
+      "textures": 12,
+      "estimatedTextureBytes": 58777739,
+      "finiteMaskBytes": 0,
+      "renderSubmissionMedianMs": 0.5999999940395355,
+      "synchronizedFrameMedianMs": 0.800000011920929,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "woodland",
+      "frame": "corridor",
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 143,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 143,
+        "openWoodlandTrees": 143,
+        "blockedCells": 0,
+        "paint": [
+          {
+            "regions": 102,
+            "brushBeds": 0,
+            "large": 0,
+            "litter": 0,
+            "paintedLogs": 0,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 0,
+            "activePages": 0,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": false,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 0,
+            "bogBytes": 0,
+            "textureBytes": 0,
+            "canvasBytes": 0,
+            "workerBaseBytes": 0,
+            "generations": 0,
+            "generationMs": 0,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "woodland-snow-corridor-normal-grid0-100",
+      "physicalTrees": 143
+    },
+    {
+      "mode": "density",
+      "angle": "normal",
+      "grid": true,
+      "family": "snow",
+      "treeModels": {
+        "temperate-pine": 30,
+        "snow-spruce": 66,
+        "snow-alpine-pine": 47
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          148,
+          0,
+          104
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          148,
+          1.3,
+          101
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 98,
+      "triangles": 546112,
+      "textures": 12,
+      "estimatedTextureBytes": 58777739,
+      "finiteMaskBytes": 0,
+      "renderSubmissionMedianMs": 0.699999988079071,
+      "synchronizedFrameMedianMs": 0.9000000059604645,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "woodland",
+      "frame": "corridor",
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 143,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 143,
+        "openWoodlandTrees": 143,
+        "blockedCells": 0,
+        "paint": [
+          {
+            "regions": 102,
+            "brushBeds": 0,
+            "large": 0,
+            "litter": 0,
+            "paintedLogs": 0,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 0,
+            "activePages": 0,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": false,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 0,
+            "bogBytes": 0,
+            "textureBytes": 0,
+            "canvasBytes": 0,
+            "workerBaseBytes": 0,
+            "generations": 0,
+            "generationMs": 0,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "woodland-snow-corridor-normal-grid1-100",
+      "physicalTrees": 143
+    }
+  ]
+}

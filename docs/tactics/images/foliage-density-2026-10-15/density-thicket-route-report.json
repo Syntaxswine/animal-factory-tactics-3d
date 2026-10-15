@@ -1,0 +1,185 @@
+{
+  "sourceHashes": {
+    "foliage-density-fixture.js": "60f26573f5e5c1aadf2f35c10fb7c348024fc41d507138957b90e913dddd7810",
+    "foliage-skins-review.js": "d28381e6919b7bfbc63168840dae5392c9c4d36d074b5f689ff60218aa5f835d",
+    "foliage-data.js": "37d5f37955e1415259b2b4833aa46e3ffc0d8993a141e7942e745cc28042bde6",
+    "foliage-obstacles.js": "2968741679167536f94bbb1aaf63f6203cffa35f65900ade03d666406a4c9937",
+    "biome-scene.js": "b8c2bd86575055686362fff986533c254e69c6f7ae093030274b7a456003a89f",
+    "foliage-screen-surface.js": "8e452f6138a481e5b6a4bdbad2403d196939ea7bdc2d5d76490fe0d25ae02292"
+  },
+  "errors": [],
+  "views": [
+    {
+      "mode": "density",
+      "angle": "normal",
+      "grid": false,
+      "family": "wetlands",
+      "treeModels": {
+        "wetland-willow": 26,
+        "temperate-broadleaf": 14,
+        "wetland-cypress": 33
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          148,
+          0,
+          104
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          148,
+          1.3,
+          101
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 213,
+      "triangles": 425730,
+      "textures": 26,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.2000000178813934,
+      "synchronizedFrameMedianMs": 1.5999999940395355,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "thicket",
+      "frame": "corridor",
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 73,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 73,
+        "openWoodlandTrees": 0,
+        "blockedCells": 8463,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 0,
+            "large": 126,
+            "litter": 1108,
+            "paintedLogs": 100,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 6,
+            "activePages": 6,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": true,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 979200,
+            "bogBytes": 232324,
+            "textureBytes": 24591492,
+            "canvasBytes": 17534976,
+            "workerBaseBytes": 3810304,
+            "generations": 6,
+            "generationMs": 558.7999999821186,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "thicket-wetlands-corridor-normal-grid0-100",
+      "physicalTrees": 73
+    },
+    {
+      "mode": "density",
+      "angle": "normal",
+      "grid": true,
+      "family": "wetlands",
+      "treeModels": {
+        "wetland-willow": 26,
+        "temperate-broadleaf": 14,
+        "wetland-cypress": 33
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          148,
+          0,
+          104
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          148,
+          1.3,
+          101
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 214,
+      "triangles": 425730,
+      "textures": 26,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.100000023841858,
+      "synchronizedFrameMedianMs": 1.5,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "thicket",
+      "frame": "corridor",
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 73,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 73,
+        "openWoodlandTrees": 0,
+        "blockedCells": 8463,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 0,
+            "large": 126,
+            "litter": 1108,
+            "paintedLogs": 100,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 6,
+            "activePages": 6,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": true,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 979200,
+            "bogBytes": 232324,
+            "textureBytes": 24591492,
+            "canvasBytes": 17534976,
+            "workerBaseBytes": 3810304,
+            "generations": 6,
+            "generationMs": 593.4000000059605,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "thicket-wetlands-corridor-normal-grid1-100",
+      "physicalTrees": 73
+    }
+  ]
+}
