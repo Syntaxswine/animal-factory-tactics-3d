@@ -1,13 +1,24 @@
-export const combatOverrides={'engine.js':'Shared aimed-shot, burst recoil, leg injury and suppression rules.'};
+export const combatOverrides={'engine.js':'Shared aimed-shot, burst recoil, leg injury and suppression rules; manual targeting evaluates a free turn without changing detection.'};
 export function adaptCoreCombat(name,data){
  if(name!=='engine.js')return data;
  let s=data.toString();
  const replace=(a,b)=>{if(s.split(a).length!==2)throw Error('Combat adapter anchor changed: '+a);s=s.replace(a,b);};
  s="import {injuryMovement,turnAP,woundLeg,accuracyPenalty,roundChance,incomingFire,recoverAim} from '../combat-state.js';\n"+s;
+ replace('export const canSee=(s,a,b)=>perceive(s,a,b)===2;',`export const canSee=(s,a,b)=>perceive(s,a,b)===2;
+// Detection keeps the actual facing. A manually aimed shot can turn toward a
+// currently identified squad contact for free, but still needs the shooter's
+// own unobstructed view and recognition. Queries never turn or reveal anyone;
+// attack commits the facing when it fires. AI and overwatch retain their cones.
+export function canAimAt(s,a,b){
+ if(!a||!b)return false;
+ if(a.team!=='squad')return canSee(s,a,b);
+ return squad(s).some(p=>canSee(s,p,b))&&canSee(s,{...a,heading:headingTo(a,b)},b);
+}`);
+ replace("else if(!inCone(a,b))reason='Outside personal sight cone';", "else if(a.team!=='squad'&&!inCone(a,b))reason='Outside personal sight cone';");
+ replace("else if(!canSee(s,a,b))reason='Not identified: face the target';", "else if(!canAimAt(s,a,b))reason='Selected merc has not identified this target';");
  replace('MOVEMENT_MODES[movementModeOf(u)].apMultiplier;','MOVEMENT_MODES[movementModeOf(u)].apMultiplier*injuryMovement(u);');
  replace("q.kind==='cliff'?8:","q.kind==='cliff'?8*injuryMovement(u):");
  s=s.replaceAll("n.kind==='cliff'?8:","n.kind==='cliff'?8*injuryMovement(g):");
- replace("Not identified: face the target","Selected merc has not identified this target");
  replace('playerThreat(s,g)&&g.alert&&threatens(s,g)),contact=', "playerThreat(s,g)&&g.alert&&threatens(s,g)&&(!s.rules?.awareness||['player','enemy'].includes(s.phase)||squad(s).some(p=>canSee(s,p,g)||canSee(s,g,p)))),contact=");
  replace('-coverPenalty-(rounds>1?10:0)', '-coverPenalty-(melee?0:accuracyPenalty(a))');
  replace("if(heldWeaponJammed(a))reason=", "if(a.pinned&&aiming.level!=='hip')reason='Pinned: only hip fire available';else if(heldWeaponJammed(a))reason=");

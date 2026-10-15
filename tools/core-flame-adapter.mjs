@@ -29,7 +29,7 @@ function finishFireRound(s){`);
  once('if(w.incendiary)ignite(s,victim);', "if(w.incendiary){if(victim.hp<=0)recordBurn(s,victim,'ash');ignite(s,victim);(event.burns??=[]).push(victim.id);}");
  once('if(WEAPONS[a.weapon].blast)return explosivePreview',`if(WEAPONS[a.weapon].incendiary){
   const p=flamePreview(s,a,b,WEAPONS[a.weapon],combatCosts(s));
-  if(!b.ground&&!canSee(s,a,b))return {...p,ok:false,reason:'Target not visible'};
+  if(!b.ground&&!canAimAt(s,a,b))return {...p,ok:false,reason:'Target not visible'};
   return p;
  }
  if(WEAPONS[a.weapon].blast)return explosivePreview`);

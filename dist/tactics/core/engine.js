@@ -167,6 +167,15 @@ export function geometricPerceive(s,a,b){const cap=sightRange(a,b),d=distance(a,
 export function perceive(s,a,b){return awarenessPerception(s,a,b,geometricPerceive(s,a,b),visibleZones);}
 export const glimpsed=(s,a,b)=>perceive(s,a,b)>=1;
 export const canSee=(s,a,b)=>perceive(s,a,b)===2;
+// Detection keeps the actual facing. A manually aimed shot can turn toward a
+// currently identified squad contact for free, but still needs the shooter's
+// own unobstructed view and recognition. Queries never turn or reveal anyone;
+// attack commits the facing when it fires. AI and overwatch retain their cones.
+export function canAimAt(s,a,b){
+ if(!a||!b)return false;
+ if(a.team!=='squad')return canSee(s,a,b);
+ return squad(s).some(p=>canSee(s,p,b))&&canSee(s,{...a,heading:headingTo(a,b)},b);
+}
 // Awareness rolls are cached until movement or a new turn; UI refresh never rerolls.
 export function detectionChance(s,a,b){
  if(!canSee(s,a,b))return 0;
@@ -293,7 +302,7 @@ export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel
  }
  if(WEAPONS[a.weapon].incendiary){
   const p=flamePreview(s,a,b,WEAPONS[a.weapon],combatCosts(s));
-  if(!b.ground&&!canSee(s,a,b))return {...p,ok:false,reason:'Target not visible'};
+  if(!b.ground&&!canAimAt(s,a,b))return {...p,ok:false,reason:'Target not visible'};
   return p;
  }
  if(WEAPONS[a.weapon].blast)return explosivePreview(s,a,b,WEAPONS[a.weapon]);
@@ -306,7 +315,7 @@ export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel
  const cover=!melee&&coverAgainst(s,a,b),heightCover=!melee&&levelOf(b)>levelOf(a)&&(a.x!==b.x||a.y!==b.y),coverPenalty=cover?25:heightCover?15:0,rangePenalty=melee?0:Math.max(0,levelOf(b)-levelOf(a)),effectiveRange=Math.max(0,w.range-rangePenalty);
  const chance=Math.max(supportsAim(w)?5:10,Math.min(95,weaponAccuracy(a)+(melee?10:0)+(w.accuracy||0)+aim.accuracy+aiming.accuracy-(melee?0:Math.max(0,range+rangePenalty-3)/Math.max(1,w.range-3)*(w.rangeLoss??25))-coverPenalty-(melee?0:accuracyPenalty(a))));
  let reason='';
- if(a.pinned&&aiming.level!=='hip')reason='Pinned: only hip fire available';else if(heldWeaponJammed(a))reason='Weapon jammed: clear jam with Reload';else if(a.burningTurns>0)reason='On fire: running in panic';else if(melee&&zone!=='torso')reason='Aimed shots require a firearm';else if(!visible)reason='Target not visible';else if(!inCone(a,b))reason='Outside personal sight cone';else if(range>effectiveRange)reason='Out of range';else if(!lineOfSight(s,a,b))reason='Line of fire blocked';else if(!canSee(s,a,b))reason='Selected merc has not identified this target';else if(!melee&&!zoneVisible(s,a,b,zone))reason=AIM_ZONES[zone].label+' hidden by cover';else if(w.mag&&a.ammo[a.weapon]<rounds)reason='Reload required';else if(combatCosts(s)&&a.ap<cost)reason='Not enough AP';
+ if(a.pinned&&aiming.level!=='hip')reason='Pinned: only hip fire available';else if(heldWeaponJammed(a))reason='Weapon jammed: clear jam with Reload';else if(a.burningTurns>0)reason='On fire: running in panic';else if(melee&&zone!=='torso')reason='Aimed shots require a firearm';else if(!visible)reason='Target not visible';else if(a.team!=='squad'&&!inCone(a,b))reason='Outside personal sight cone';else if(range>effectiveRange)reason='Out of range';else if(!lineOfSight(s,a,b))reason='Line of fire blocked';else if(!canAimAt(s,a,b))reason='Selected merc has not identified this target';else if(!melee&&!zoneVisible(s,a,b,zone))reason=AIM_ZONES[zone].label+' hidden by cover';else if(w.mag&&a.ammo[a.weapon]<rounds)reason='Reload required';else if(combatCosts(s)&&a.ap<cost)reason='Not enough AP';
  let obstruction=null;
  if(!reason&&!melee&&!w.incendiary){const path=bulletTrajectory(s,a,b,{accurate:true,zone,reach:w.range*1.5},()=>0);if(path.unitId!==b.id){const unit=s.units.find(u=>u.id===path.unitId);obstruction=unit?{kind:'unit',id:unit.id,name:unit.name,friendly:unit.team===a.team}:{kind:path.kind};}}
  return {ok:!reason,reason,cost,rounds,aimLevel:aiming.level,chance:Math.round(chance),shotChances:Array.from({length:rounds},(_,i)=>roundChance(chance,i)),cover,heightCover,coverPenalty,rangePenalty,damage:damageAfterResistance(b,Math.round(weaponDamage(w,range)*aim.damage)),rawDamage:Math.round(weaponDamage(w,range)*aim.damage),pellets:w.pellets||1,zone,range:effectiveRange,tankChance:melee?0:tankExplosionChance(b,zone),obstruction};

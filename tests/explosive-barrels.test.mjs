@@ -37,7 +37,7 @@ test('barrel aim uses normal probability, three AP levels, and rejects blocked/r
  assert.deepEqual(ps.map(p=>p.cost),[6,9,12]);assert.ok(ps.every(p=>p.ok));assert.ok(ps[2].chance>ps[0].chance);
  assert.equal(shotForecast(s,a,b,ps[0])[0].selected,ps[0].chance);assert.equal(barrelSight(s,a,b),true);
  const before=[a.ap,a.ammo.rifle];s.edges['e:17:20']='wall-brick';assert.equal(barrelSight(s,a,b),false);assert.equal(attack(s,a,b),false);assert.deepEqual([a.ap,a.ammo.rifle],before);
- s.edges={};a.heading=180;assert.equal(previewAttack(s,a,b).ok,false);a.heading=0;s.props=[];assert.match(previewAttack(s,a,b).reason,/destroyed/);
+ s.edges={};a.heading=180;assert.equal(previewAttack(s,a,b).ok,true,'manual aim can turn toward a revealed barrel');a.heading=0;s.props=[];assert.match(previewAttack(s,a,b).reason,/destroyed/);
 });
 test('a hit shares tank lethal centre and five-tile fire, respects water, charges once and removes collision',()=>{
  for(const water of [false,true]){const {s,a,b}=fixture({water}),ap=a.ap,ammo=a.ammo.rifle;

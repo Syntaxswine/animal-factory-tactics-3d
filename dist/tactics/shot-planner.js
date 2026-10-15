@@ -1,4 +1,4 @@
-import {previewAttack,WEAPONS,canSee,combatCosts} from './core/engine.js';
+import {previewAttack,WEAPONS,canAimAt,combatCosts} from './core/engine.js';
 import {bulletTrajectory,shotgunTrajectories} from './core/projectiles.js';
 import {AIM_LEVELS,supportsAim} from './aim-levels.js';
 import {METRES_PER_TILE,roundChance} from './combat-state.js';
@@ -8,7 +8,7 @@ import {barrelSight} from './barrel-targeting.js';
 // The accurate branch is weighted exactly. Failed shots sample the conditional
 // D20 distribution used by live roll-margin ballistics, including natural 1s.
 export function shotForecast(s,a,b,p,{samples=96}={}){
- if(!Number.isFinite(p.chance)||!supportsAim(WEAPONS[a.weapon])||!(b.barrel?barrelSight(s,a,b):canSee(s,a,b)))return null;
+ if(!Number.isFinite(p.chance)||!supportsAim(WEAPONS[a.weapon])||!(b.barrel?barrelSight(s,a,b):canAimAt(s,a,b)))return null;
  const w=WEAPONS[a.weapon];let seed=0x9e3779b9;
  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
  const result=[];

@@ -8,7 +8,7 @@ import {accuracyPenalty,roundChance} from './combat-state.js';
 import {heldWeaponJammed} from './loot-policy.js';
 
 export function barrelSight(s,a,b){
- if(!a||!b||!presentBarrel(s,b)||s.difficulty!=='easy'&&!s.seen.has(barrelKey(b))||!inCone(a,b))return false;
+ if(!a||!b||!presentBarrel(s,b)||s.difficulty!=='easy'&&!s.seen.has(barrelKey(b))||a.team!=='squad'&&!inCone(a,b))return false;
  const origin={x:a.x,y:a.y,h:unitBaseHeight(a)+muzzleHeight(a)},d={x:b.x-a.x,y:b.y-a.y,h:unitBaseHeight(b)+.4-origin.h};
  const range=Math.hypot(d.x,d.y,d.h);if(!range)return false;
  return traceProjectile(s,a,origin,d,range+.01).propId===b.id;
@@ -24,7 +24,7 @@ export function previewBarrelAttack(s,a,b,w,charges,burst=false,aimLevel='hip'){
  else if(a.pinned&&aiming.level!=='hip')reason='Pinned: only hip fire available';
  else if(heldWeaponJammed(a))reason='Weapon jammed: clear jam with Reload';
  else if(a.burningTurns)reason='On fire: running in panic';
- else if(!barrelSight(s,a,b))reason='Line of fire blocked or outside personal sight cone';
+ else if(!barrelSight(s,a,b))reason=a.team==='squad'?'Barrel unseen or line of fire blocked':'Line of fire blocked or outside personal sight cone';
  else if(range>effectiveRange)reason='Out of range';
  else if(a.ammo[a.weapon]<rounds)reason='Reload required';
  else if(charges&&a.ap<cost)reason='Not enough AP';

@@ -31,7 +31,7 @@ import {unitBaseHeight} from './tower-geometry.js';
 import {illuminationAt} from './awareness.js';
 import {FrameClock,formatClock,timeOfDay,turnBased} from './game-clock.js';
 import {startEncounterClock,tickEncounterClock,settleEncounterRounds} from './encounter-clock.js';
-import {createGame,move,stepMovement,previewAttack,attack,attackGround,groundTarget,equip,equipCost,reload,endTurn,stepEnemy,stepInvestigation,canControl,canSee,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts,MOVEMENT_MODES,movementModeOf,movementCost,effectiveStealth} from './core/engine.js';
+import {createGame,move,stepMovement,previewAttack,attack,attackGround,groundTarget,equip,equipCost,reload,endTurn,stepEnemy,stepInvestigation,canControl,canAimAt,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts,MOVEMENT_MODES,movementModeOf,movementCost,effectiveStealth} from './core/engine.js';
 import {loadBattleMap} from './battle-map.js';
 import {BattleRenderer} from './battle-renderer.js';
 import {projectBattlePoint,battleFloorPoint,rotateBattleView,focusBattleView,overviewBattleView} from './isometric-camera.js';
@@ -262,7 +262,7 @@ function updateTargetCursor(now){
  if(now-lastHoverCheck<80)return;lastHoverCheck=now;
  const bounds=canvas.getBoundingClientRect(),x=hoverPointer.x-bounds.left,y=hoverPointer.y-bounds.top;
  const id=renderer.pick(x,y,width,height,level),guard=state.units.find(u=>u.id===id);
- if(guard?.team==='guard'&&guard.hp>0&&!guard.away&&state.detected.has(guard.id))canvas.dataset.targetCursor=canSee(state,selected(),guard)?'red':'grey';
+ if(guard?.team==='guard'&&guard.hp>0&&!guard.away&&state.detected.has(guard.id))canvas.dataset.targetCursor=canAimAt(state,selected(),guard)?'red':'grey';
  else{const barrel=id===null?renderer.pickScenery(x,y,width,height,level):null;if(barrel)canvas.dataset.targetCursor=(barrel.structure?previewAttack(state,selected(),barrel).ok:barrelSight(state,selected(),barrel))?'red':'grey';else delete canvas.dataset.targetCursor;}
 }
 let walkingCacheKey='',walkingCache=[];
