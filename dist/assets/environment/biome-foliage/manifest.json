@@ -3016,7 +3016,7 @@
     "dist/tactics/foliage-obstacles.js": "ea7e80d8a3d54c2d47d1bb0ad6192dc456d0777649c57e90f46eba746e31e19b",
     "dist/tactics/biome-terrain.js": "8ae5735f547127f20757f61699833fabd839d33b99b546de447eb1f8eafeae2b",
     "dist/tactics/foliage-screen-paint.js": "a14cb24ab2325bbc63722c36ad08f7c9c8a6622494287953348eff5ee01dded0",
-    "dist/tactics/foliage-screen-surface.js": "b2dff4c50bf5236f0330a5bf59fb320ebdaa78283b0c1ad16c7b8984e9d4811f",
+    "dist/tactics/foliage-screen-surface.js": "8e452f6138a481e5b6a4bdbad2403d196939ea7bdc2d5d76490fe0d25ae02292",
     "dist/tactics/foliage-screen-scene.js": "e44d8c3676b00f270e2033fcdd1e45a5580b4eef9e7c583d3adf6184a2f95cf2",
     "dist/tactics/biome-scene.js": "d484c7338d9985ffe0f108d2133b7867cf7a72668c58636f81797a7de4091d80",
     "dist/tactics/biome-atlas-lod.js": "877304c162ec30aa771a35fac67bc40a9847ed38bd9c663129ae58b7fb4fe415",

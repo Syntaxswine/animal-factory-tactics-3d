@@ -1,0 +1,49 @@
+{
+  "checks": [
+    {
+      "tag": "source",
+      "roundTrip": true,
+      "ordinaryPlaytest": true,
+      "units": 4,
+      "regions": 7,
+      "materials": [
+        "thicket:temperate",
+        "thicket-fringe:temperate",
+        "thicket-fringe:wood",
+        "thicket:jungle",
+        "thicket-fringe:jungle",
+        "thicket:snow",
+        "thicket-fringe:snow",
+        "thicket:dry",
+        "thicket-fringe:dry",
+        "thicket:wetlands",
+        "thicket-fringe:wetlands"
+      ],
+      "rafMedianMs": 16.69999998807907,
+      "rafP95Ms": 17.400000005960464
+    },
+    {
+      "tag": "packaged",
+      "roundTrip": true,
+      "ordinaryPlaytest": true,
+      "units": 4,
+      "regions": 7,
+      "materials": [
+        "thicket:temperate",
+        "thicket-fringe:temperate",
+        "thicket-fringe:wood",
+        "thicket:jungle",
+        "thicket-fringe:jungle",
+        "thicket:snow",
+        "thicket-fringe:snow",
+        "thicket:dry",
+        "thicket-fringe:dry",
+        "thicket:wetlands",
+        "thicket-fringe:wetlands"
+      ],
+      "rafMedianMs": 16.700000017881393,
+      "rafP95Ms": 19.900000005960464
+    }
+  ],
+  "errors": []
+}

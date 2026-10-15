@@ -1,0 +1,45 @@
+{
+  "baseline": "c4e60ab",
+  "sourceHashes": {
+    "foliage-screen-surface.js": "8e452f6138a481e5b6a4bdbad2403d196939ea7bdc2d5d76490fe0d25ae02292",
+    "foliage-screen-scene.js": "e44d8c3676b00f270e2033fcdd1e45a5580b4eef9e7c583d3adf6184a2f95cf2",
+    "foliage-screen-paint.js": "a14cb24ab2325bbc63722c36ad08f7c9c8a6622494287953348eff5ee01dded0",
+    "biome-scene.js": "b8c2bd86575055686362fff986533c254e69c6f7ae093030274b7a456003a89f"
+  },
+  "focusedTests": {
+    "passed": 161,
+    "failed": 0,
+    "scope": "Foliage, biome, mature-tree and packaging tests; full unrelated suite not rerun."
+  },
+  "hollowCoverage": {
+    "actualHollows": 8,
+    "cases": 144,
+    "alphaTestedRays": 5904,
+    "minimumCoverage": 0.902,
+    "maxContiguousMissUnderTiles": 0.2,
+    "allowedContiguousMissTiles": 0.4
+  },
+  "browserViews": 60,
+  "browserErrors": 0,
+  "packagedSourcesMatch": true,
+  "editorRoundTripAndPlaytest": [
+    "source",
+    "packaged"
+  ],
+  "build": "passed",
+  "assetAudit": "passed",
+  "review": {
+    "score": "9/10",
+    "scope": "Approved composition with fewer openings",
+    "remaining": "Steep overhead views still show some inherited repeated wood and thin leaf cards."
+  },
+  "copsePockets": {
+    "firstDraft": 6,
+    "final": 4
+  },
+  "diagnosticHelpersExited": 6,
+  "retainedPreview": {
+    "port": 4476,
+    "expiresAt": "2026-10-15T23:23:18.609Z"
+  }
+}

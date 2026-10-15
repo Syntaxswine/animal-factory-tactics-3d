@@ -10,6 +10,7 @@ import {decodePNG} from '../tools/png-rgba.mjs';
 import {biomePlans} from '../dist/tactics/biome-gameplay.js';
 import {traceFoliage} from '../dist/tactics/foliage-obstacles.js';
 import {createFoliageScreens} from '../dist/tactics/foliage-screen-scene.js';
+import {screenSurface} from '../dist/tactics/foliage-screen-surface.js';
 import {createScreenMaterials,SCREEN_PANELS} from '../dist/tactics/foliage-screen-paint.js';
 import {atlasRect} from '../dist/tactics/biome-foliage-paint.js';
 
@@ -38,6 +39,15 @@ function finiteHit(point,lookup){
  const radius=s.lobes[2].radius[0],q=((point.x-x)**2+(point.z-z)**2)/(radius*radius),top=s.base+s.height-.75+.75*Math.sqrt(Math.max(0,1-q));
  return point.y<=top+.04&&point.y>=s.base-.04;
 }
+function renderedHit(raycaster,meshes,lookup,lod){
+ for(const hit of raycaster.intersectObjects(meshes,false)){
+  const material=hit.object.material;
+  if(material.name.startsWith('thicket:')){if(finiteHit(hit.point,lookup))return true;continue;}
+  if(!material.name.startsWith('thicket-fringe:'))return true;
+  if(finiteHit(hit.point,lookup)&&alphaAt(material.name.slice('thicket-fringe:'.length),hit.uv,lod)>=.28)return true;
+ }
+ return false;
+}
 test('actual leaf alpha and visible LOD do not expose a character-sized gap through dense strips',()=>{
 const textures=[new T.Texture(),new T.Texture()],materials=createScreenMaterials(...textures),bark=new T.MeshStandardMaterial(),raycaster=new T.Raycaster(),results=[];
 try{
@@ -53,13 +63,7 @@ try{
       const offset=-4+i/15,cx=7+(width-1)/2,cz=7.5,start=new T.Vector3(cx-dz*offset-dx*12,height,cz+dx*offset-dz*12),end=new T.Vector3(cx-dz*offset+dx*12,height,cz+dx*offset+dz*12);
       if(!traceFoliage(plan.obstacles,start.toArray(),end.toArray(),'sight','world')){gap=0;continue;}tests++;
       raycaster.set(start,new T.Vector3(dx,0,dz));raycaster.near=0;raycaster.far=24;
-      const hits=raycaster.intersectObjects(meshes,false);let found=false;
-      for(const hit of hits){
-       const material=hit.object.material;
-       if(material.name.startsWith('thicket:')){if(finiteHit(hit.point,lookup)){found=true;break;}continue;}
-       if(!material.name.startsWith('thicket-fringe:')){found=true;break;}
-       if(finiteHit(hit.point,lookup)&&alphaAt(material.name.slice('thicket-fringe:'.length),hit.uv,lod)>=.28){found=true;break;}
-      }
+      const found=renderedHit(raycaster,meshes,lookup,lod);
       if(found){covered++;gap=0;}else{gap++;longestGap=Math.max(gap,longestGap);if(misses.length<8)misses.push(Number(offset.toFixed(3)));}
      }
      results.push({family,width,density:1,lod:label,atlasMip:lod,direction,height,tests,covered,coverage:tests?Number((covered/tests).toFixed(3)):null,longestMissSpan:Number((longestGap/15).toFixed(3)),missOffsets:misses});
@@ -75,4 +79,53 @@ for(const r of results){
  if(r.height>=1.2)assert.ok(r.longestMissSpan<=.4,JSON.stringify(r));
  if(r.width===1&&r.direction==='x'&&r.height===1.8)assert.ok(r.coverage>=.95,JSON.stringify(r));
 }
+});
+
+test('real enclosed hollows retain torso and head sight coverage through their own rims at every LOD',t=>{
+ const textures=[new T.Texture(),new T.Texture()],materials=createScreenMaterials(...textures),bark=new T.MeshStandardMaterial(),raycaster=new T.Raycaster(),results=[];
+ let hollowCount=0;
+ try{
+  for(const family of ['temperate','jungle','dry','wetlands']){
+   const map={terrain:Array.from({length:28},()=>Array(28).fill('ground-biome-'+family)),upper:[{},{}],props:[],foliage:{}};
+   for(let z=2;z<26;z++)for(let x=2;x<26;x++)map.foliage[`${x},${z},0`]=[1,true,family==='wetlands'?'wetland-v1':'thicket-v1'];
+   const plan=biomePlans(map)[0],surface=screenSurface(plan),lookup=new Map(plan.obstacles.screens.map(s=>[s.x+','+s.y,s]));
+   assert.ok(surface.hollows.length>0,`${family}: the test must exercise generated hollows`);
+   // Keep every ray local to a hollow. The unchanged outer wall of the copse
+   // must not conceal a gap created by moving its interior leaves aside.
+   const hollows=surface.hollows.filter(h=>{
+    const margin=Math.max(h.rx,h.rz)*1.5+.75+Math.min(h.rx,h.rz)*.8+.5;
+    return h.x-margin>2.5&&h.x+margin<24.5&&h.z-margin>2.5&&h.z+margin<24.5;
+   });
+   assert.ok(hollows.length>=2,`${family}: expected at least two isolated interior hollow probes`);
+   hollowCount+=hollows.length;
+   const scene=createFoliageScreens(plan,{plantMaterials:{bark},screenMaterials:materials});scene.root.position.y=.008;scene.root.updateMatrixWorld(true);
+   try{
+    for(const [label,ppu,lod]of [['near',32,2],['far',12,4],['distant',8,4]]){
+     scene.update(ppu);const meshes=[];scene.root.traverseVisible(o=>{if(o.isMesh)meshes.push(o);});
+     for(const h of hollows){
+      const u=[h.c,h.sn],v=[-h.sn,h.c],major=h.rx>=h.rz?u:v,minor=h.rx>=h.rz?v:u;
+      const directions=[['major',...major],['minor',...minor],['diagonal',(major[0]+minor[0])*Math.SQRT1_2,(major[1]+minor[1])*Math.SQRT1_2]];
+      const halfLength=Math.max(h.rx,h.rz)*1.5+.75,halfWidth=Math.min(h.rx,h.rz)*.8,step=halfWidth/20;
+      for(const [direction,dx,dz]of directions)for(const height of [1.2,1.8]){
+       let covered=0,gap=0,longestGap=0;
+       for(let i=0;i<=40;i++){
+        const offset=-halfWidth+i*step,start=new T.Vector3(h.x-dz*offset-dx*halfLength,h.base+height,h.z+dx*offset-dz*halfLength),end=new T.Vector3(h.x-dz*offset+dx*halfLength,h.base+height,h.z+dx*offset+dz*halfLength);
+        assert.ok(traceFoliage(plan.obstacles,start.toArray(),end.toArray(),'sight','world'),`${family}: decorative hollows must remain opaque in the rules`);
+        raycaster.set(start,new T.Vector3(dx,0,dz));raycaster.near=0;raycaster.far=halfLength*2;
+        if(renderedHit(raycaster,meshes,lookup,lod)){covered++;gap=0;}else{gap++;longestGap=Math.max(gap,longestGap);}
+       }
+       results.push({family,hollow:[h.x,h.z],direction,height,lod:label,coverage:covered/41,longestMissSpan:longestGap*step});
+      }
+     }
+    }
+   }finally{scene.dispose();}
+  }
+ }finally{bark.dispose();for(const m of Object.values(materials))m.dispose();textures.forEach(t=>t.dispose());}
+ // Interior leaves can have small isolated pinholes. Apply the same
+ // character-width limit used for multi-cell strips, not the separate 95%
+ // requirement for a one-cell outer screen.
+ for(const result of results){
+  assert.ok(result.longestMissSpan<=.4,JSON.stringify(result));
+ }
+ t.diagnostic(`${hollowCount} actual hollows; ${results.length} local direction/height/LOD checks; ${results.length*41} alpha-tested rays; minimum coverage ${(Math.min(...results.map(r=>r.coverage))*100).toFixed(1)}%`);
 });

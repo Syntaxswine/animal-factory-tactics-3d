@@ -23,6 +23,41 @@ export function screenClumpAt(x,z,seed){
  }return best;
 }
 
+// A few enclosed hollows give the eye a rest inside a busy stand. They belong
+// to the planting, not the map: roots, solid deadfall and sight volumes remain.
+// Growing sites use world coordinates and an irregular oval rather than a
+// repeated round hole in every clump. Thin screens never receive a hollow.
+function screenHollows(plan,cells,lookup){
+ const [ox,oz]=plan.origin||[0,0],spacing=7,sites=new Map(),hollows=[];
+ if(!cells.length)return {hollows,at:()=>null};
+ let minX=Infinity,minZ=Infinity,maxX=-Infinity,maxZ=-Infinity;
+ for(const s of cells){minX=Math.min(minX,s.x);maxX=Math.max(maxX,s.x);minZ=Math.min(minZ,s.y);maxZ=Math.max(maxZ,s.y);}
+ const shape=(h,x,z)=>{const dx=x-h.x,dz=z-h.z,u=(dx*h.c+dz*h.sn)/h.rx,v=(-dx*h.sn+dz*h.c)/h.rz,a=Math.atan2(v,u),r=1+.12*Math.sin(a*3+h.phase)+.07*Math.sin(a*5-h.phase);return Math.hypot(u,v)/r;};
+ for(let v=Math.floor((minZ+oz)/spacing);v<=Math.floor((maxZ+oz)/spacing);v++)for(let u=Math.floor((minX+ox)/spacing);u<=Math.floor((maxX+ox)/spacing);u++){
+  const n=groundHash(u,v,plan.seed+1801);
+  // Keep about 70% of the first draft's sites, without shifting the survivors.
+  if(n>.72||groundHash(u,v,plan.seed+1867)>.70)continue;
+  const x=u*spacing+1.4+groundHash(u,v,plan.seed+1811)*4.2-ox,z=v*spacing+1.4+groundHash(u,v,plan.seed+1823)*4.2-oz,owner=lookup.get(`${Math.floor(x+.5)},${Math.floor(z+.5)}`);
+  if(!owner||owner.family!==plan.family)continue;
+  const angle=groundHash(u,v,plan.seed+1831)*Math.PI,rx=.95+n*.45,rz=1.25+groundHash(u,v,plan.seed+1847)*.85;
+  const h={x,z,base:owner.base,rx,rz,c:Math.cos(angle),sn:Math.sin(angle),phase:n*Math.PI*2},reach=Math.ceil(Math.max(rx,rz)+1.2);let enclosed=true;
+  for(let dz=-reach;dz<=reach&&enclosed;dz++)for(let dx=-reach;dx<=reach;dx++){
+   const cx=Math.floor(x+.5)+dx,cz=Math.floor(z+.5)+dz;
+   if(shape(h,cx,cz)>1.55)continue;
+   const s=lookup.get(cx+','+cz);if(!s||s.family!==plan.family||s.base!==h.base){enclosed=false;break;}
+  }
+  if(enclosed){sites.set(u+','+v,h);hollows.push(h);}
+ }
+ const at=(x,z,base)=>{
+  const u=Math.floor((x+ox)/spacing),v=Math.floor((z+oz)/spacing);let found=null,q=Infinity;
+  for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){
+   const h=sites.get(`${u+dx},${v+dz}`);if(!h||h.base!==base)continue;
+   const d=shape(h,x,z);if(d<q&&d<1.8){q=d;found=h;}
+  }return found?{h:found,q}:null;
+ };
+ return {hollows,at};
+}
+
 // Cosmetic plants for the existing sight ellipsoids. No rule, seed, preset or
 // collider is authored here. Solid lobes and overlapping leaf fans are clipped
 // by the same finite envelope in the shader.
@@ -35,9 +70,13 @@ export function screenSurface(plan){
   const g=chunks.get(`${Math.floor(s.x/SCREEN_CHUNK_SIZE)},${Math.floor(s.y/SCREEN_CHUNK_SIZE)}`),group=screenComposition(plan,s.x,s.y),n=groundHash(s.x,s.y,plan.seed+719);
   const snow=plan.family==='snow';
   for(let i=0;i<(snow?4:2);i++){
-   const angle=group.angle+i*Math.PI/2,c=Math.cos(angle),sn=Math.sin(angle),points=[],bottom=s.base+(snow?(i<2?.74:1.38):.42),top=s.base+(snow&&i<2?1.62:2.23)+n*.13,width=1.65;
-   for(const vertical of [0,1])for(const side of [-1,1]){const along=side*width/2,depth=(vertical-.5)*(snow?.78:.25);points.push(s.x+along*c-depth*sn,bottom+(top-bottom)*vertical,s.y+along*sn+depth*c);}
-   for(const target of [g.fringe,g.far,g.distant]){const a=target.position.length/3;target.position.push(...points);target.uv.push(.12,.08,.88,.08,.12,.92,.88,.92);target.index.push(a,a+1,a+2,a+2,a+1,a+3);}
+   const angle=group.angle+i*Math.PI/2,c=Math.cos(angle),sn=Math.sin(angle),points=[],uv=[],bottom=s.base+(snow?(i<2?.74:1.38):.42),originalTop=s.base+(snow&&i<2?1.62:2.23)+n*.13,top=originalTop+(snow?0:Math.max(0,group.mass-.35)*1.25),width=1.65;
+   // Keep the eye-height band in place. Only the upper tips sway inward with
+   // the wider clump, so the outer silhouette varies without a sight slit.
+   const edge=directions.reduce((p,[dx,dz])=>surface.exposed(s,dx,dz)?[p[0]+dx,p[1]+dz]:p,[0,0]),tip=snow?0:.10+group.mass*.28;
+   const rows=snow?[bottom,top]:[bottom,s.base+1.94,top];
+   for(let row=0;row<rows.length;row++)for(const side of [-1,1]){const vertical=Math.min(1,(rows[row]-bottom)/(originalTop-bottom)),along=side*width/2,depth=(vertical-.5)*(snow?.78:.25),inset=row===rows.length-1?tip:0;points.push(s.x+along*c-depth*sn-edge[0]*inset,rows[row],s.y+along*sn+depth*c-edge[1]*inset);uv.push(side<0?.12:.88,.08+.84*vertical);}
+   for(const target of [g.fringe,g.far,g.distant]){const a=target.position.length/3;target.position.push(...points);target.uv.push(...uv);for(let row=0;row<rows.length-1;row++){const k=a+row*2;target.index.push(k,k+1,k+2,k+2,k+1,k+3);}}
   }
  }
  return surface;
@@ -169,6 +208,7 @@ function snowScreenSurface(plan){
 function rootedScreenSurface(plan){
  const lookup=new Map(plan.obstacles.screens.filter(s=>s.z===plan.level).map(s=>[s.x+','+s.y,s]));
  const cells=[...lookup.values()].filter(s=>s.family===plan.family),chunks=new Map(),[ox,oz]=plan.origin||[0,0];
+ const planting=screenHollows(plan,cells,lookup);
  const roofAt=(x,z,base,owner=lookup.get(`${Math.floor(x+.5)},${Math.floor(z+.5)}`))=>{
   if(!owner||owner.base!==base)return base;
   let top=base;for(const l of owner.lobes){const q=1-((x-l.center[0])/l.radius[0])**2-((z-l.center[2])/l.radius[2])**2;if(q>=0)top=Math.max(top,l.center[1]+l.radius[1]*Math.sqrt(q));}return top;
@@ -198,14 +238,17 @@ function rootedScreenSurface(plan){
   if(!wet&&s.family!=='snow'){
    // Low rooted bramble, interrupted by larger leaf sprays. No high closed
    // canopy connects these bases, so the real terrain remains visible.
-   if(n<.62){const h=.36+group.mass*.55;
+   const hollow=planting.at(cx,cz,s.base);
+   if(n<.62&&(!hollow||hollow.q>1.2)){const h=.36+group.mass*.55;
     crown(g,s,cx,cz,s.base+h,spanX*(.34+n*.13),h,spanZ*(.34+n*.13),group.angle,.93+group.tone*.12);
    }
   }else if(wet){
    // Curved reed blades reveal water at their feet. Their broad middle leaves
    // overlap at eye height, while tapered tips give the stand an uneven crown.
    for(let i=0;i<14;i++){
-    const a=i*2.399+group.angle,r=.16+(i%3)*.08,bx=x+Math.cos(a)*r,bz=z+Math.sin(a)*r,h=Math.min(...members.map(s=>s.height))*(.70+(i%4)*.08),width=.035+(i%3)*.014,start=g.position.length/3;
+    const a=i*2.399+group.angle,r=.16+(i%3)*.08;let bx=x+Math.cos(a)*r,bz=z+Math.sin(a)*r;
+    const hollow=planting.at(bx,bz,s.base);if(hollow&&hollow.q<1.12){const factor=1.12/Math.max(.02,hollow.q);bx=hollow.h.x+(bx-hollow.h.x)*factor;bz=hollow.h.z+(bz-hollow.h.z)*factor;}
+    const h=Math.min(...members.map(s=>s.height))*(.70+(i%4)*.08),width=.035+(i%3)*.014,start=g.position.length/3;
     for(let row=0;row<5;row++)for(const side of [-1,1]){
      const t=row/4,bend=Math.sin(t*Math.PI*.8)*.42,spread=Math.sin(t*Math.PI)*width,px=bx+Math.cos(a)*bend-Math.sin(a)*side*spread,pz=bz+Math.sin(a)*bend+Math.cos(a)*side*spread;
      vertex(g,[px,s.base+.025+h*t,pz],[-Math.cos(a)*.65,.4,-Math.sin(a)*.65],s.base,.88+group.tone*.24);
@@ -215,10 +258,23 @@ function rootedScreenSurface(plan){
   }
   const count=Math.max(4,Math.ceil(members.length*.85)),rootCount=Math.max(2,Math.ceil(members.length/3));
   for(let i=0;i<count+rootCount;i++){
-   const root=i>=count,lod=i%4===3?2:i%4===2?1:0,angle=group.angle+i*1.047+(n-.5)*.8,c=Math.cos(angle),sn=Math.sin(angle),member=members[(i*5)%members.length],j=groundHash(member.x+ox,member.y+oz,plan.seed+i*17);
-   const px=member.x+(j-.5)*.45,pz=member.y+(groundHash(member.x+ox,member.y+oz,plan.seed+i*31)-.5)*.45;
-   const width=root?1.65:wet?1.9:2.1+j*.55,bottom=s.base+(root?.025:wet?.05:.70+j*.2),top=root?s.base+1.48:s.base+(wet?2.14+group.mass*.35:1.65+group.mass*1.4+j*.2);
-   const lean=(i%2?1:-1)*(root?.25:wet?.45:.65+j*.4),points=[];
+   const root=i>=count,lod=i%4===3?2:i%4===2?1:0,member=members[(i*5)%members.length],j=groundHash(member.x+ox,member.y+oz,plan.seed+i*17);
+   let px=member.x+(j-.5)*.45,pz=member.y+(groundHash(member.x+ox,member.y+oz,plan.seed+i*31)-.5)*.45,angle=group.angle+i*1.047+(n-.5)*.8;
+   const pocket=planting.at(px,pz,s.base);
+   // Only the decorative root painting yields in the quiet centre. The scene
+   // still renders every physical cover branch and its supporting fine stems.
+   if(root&&pocket?.q<.78)continue;
+   const hollow=!root&&pocket,rim=hollow?Math.max(0,Math.min(1,(1.5-hollow.q)/.7)):0;
+   if(hollow){
+    const {h,q}=hollow,factor=Math.max(1,(.98+j*.28)/Math.max(.02,q));px=h.x+(px-h.x)*factor;pz=h.z+(pz-h.z)*factor;
+    // Turn existing fans partway around the hollow, with overlapping tips
+    // and unequal setbacks. A complete upright ring would look like a fence.
+    const dx=px-h.x,dz=pz-h.z,u=(dx*h.c+dz*h.sn)/(h.rx*h.rx),v=(-dx*h.sn+dz*h.c)/(h.rz*h.rz);
+    const tangent=Math.atan2(u*h.sn+v*h.c,u*h.c-v*h.sn)+Math.PI/2,turn=Math.atan2(Math.sin(tangent-angle),Math.cos(tangent-angle));
+    angle+=turn*rim*(.72+j*.20);
+   }
+   const c=Math.cos(angle),sn=Math.sin(angle),width=root?1.65:(wet?1.9:2.1+j*.55)*(1-rim*.16),bottom=s.base+(root?.025:wet?.05:.70+j*.2),top=root?s.base+1.48:s.base+(wet?2.08+group.mass*.85+j*.22:1.65+group.mass*1.4+j*.2)-rim*j*.23;
+   const lean=(i%2?1:-1)*(root?.25:(wet?.45:.65+j*.4)*(1-rim*.76)),points=[];
    for(const row of [0,1,2])for(const side of [-1,1]){
     const fraction=row/2,along=side*width*.5,depth=(fraction-.5)*lean;
     points.push([px+along*c-depth*sn,bottom+(top-bottom)*fraction,pz+along*sn+depth*c]);
@@ -226,5 +282,5 @@ function rootedScreenSurface(plan){
    card(root?[g.roots]:[g.fringe,...(lod<2?[g.far]:[]),...(lod<1?[g.distant]:[])],points,(n+i*.37)%1>.5);
   }
  }
- return {chunks:[...chunks.values()],cells,roofAt,exposed};
+ return {chunks:[...chunks.values()],cells,roofAt,exposed,hollows:planting.hollows};
 }
