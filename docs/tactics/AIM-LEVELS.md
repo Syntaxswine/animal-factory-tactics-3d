@@ -10,6 +10,8 @@ Precision aim applies to bullet weapons, including shotguns. Melee, thrown explo
 
 Detection uses the character's current facing. Manual targeting evaluates the view after a free turn toward a character currently identified by the squad. The shooter still needs their own clear sightline and recognition; an ally cannot grant a shot through a wall, a hidden body part, or an unidentified concealed target. Selecting or hovering a target changes no heading, awareness, AP, time, or random state. Firing commits the turn and charges only the selected shot's normal AP cost.
 
+Right-click a tile and choose **Face this direction** to turn the primary selected merc without moving or spending AP. This uses the existing turn action, immediately refreshing detection and cancelling reserved overwatch without refunding it. The menu names the merc who will turn and disables the action while moving, busy, unable to act, or already facing that direction.
+
 The crosshair, shot estimates and attack validation share `canAimAt`. Direct flame targeting uses the same rule; revealed barrels also allow a free turn while preserving their physical obstruction checks. Guards and reserved overwatch retain their actual facing and detection rules. This change applies only to the generated 3D core, leaving the original 2D fork intact.
 
 `tests/targeting-sight.test.mjs` covers rear-facing guide targeting, execution cost, pure previews, unknown contacts, walls, doors, window sills, concealment, overwatch and revealed barrels.

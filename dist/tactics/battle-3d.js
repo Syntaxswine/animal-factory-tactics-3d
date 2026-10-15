@@ -31,7 +31,7 @@ import {unitBaseHeight} from './tower-geometry.js';
 import {illuminationAt} from './awareness.js';
 import {FrameClock,formatClock,timeOfDay,turnBased} from './game-clock.js';
 import {startEncounterClock,tickEncounterClock,settleEncounterRounds} from './encounter-clock.js';
-import {createGame,move,stepMovement,previewAttack,attack,attackGround,groundTarget,equip,equipCost,reload,endTurn,stepEnemy,stepInvestigation,canControl,canAimAt,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts,MOVEMENT_MODES,movementModeOf,movementCost,effectiveStealth} from './core/engine.js';
+import {createGame,move,stepMovement,previewAttack,attack,attackGround,groundTarget,equip,equipCost,reload,endTurn,stepEnemy,stepInvestigation,canControl,canAimAt,turnTo,headingTo,bearingOffset,WEAPONS,stanceOf,STANCES,alive,moveGroup,combatCosts,MOVEMENT_MODES,movementModeOf,movementCost,effectiveStealth} from './core/engine.js';
 import {loadBattleMap} from './battle-map.js';
 import {BattleRenderer} from './battle-renderer.js';
 import {projectBattlePoint,battleFloorPoint,rotateBattleView,focusBattleView,overviewBattleView} from './isometric-camera.js';
@@ -195,6 +195,8 @@ function contextChoices(info,merc){
  }else{
   const warning=walkingWarning(walkingRoutes({...state,queue:[]},[...selectedIds],u,point));
   entries.push(entry('move','Move here',warning?'⚠':'↗',{kind:'move',point},free&&canControl(state,u),'',warning));
+  const facing=bearingOffset(u,point)<1e-8;
+  entries.push(entry('face','Face this direction','↻',{kind:'face',point},ready&&!facing,facing?'Already facing this direction.':'','Free · '+u.name));
   entries.push(entry('ground-shot','Shoot at this tile','⊕',{kind:'ground-shot',point},ready&&!!WEAPONS[u.weapon].mag,!WEAPONS[u.weapon].mag?'Equip a firearm or area weapon.':'','Plan with '+WEAPONS[u.weapon].name));
  }
  if(info.loot.length){
@@ -222,6 +224,7 @@ function runContextAction(a){
  }
  action(()=>{if(a.kind==='equip')return equip(state,selected(),a.weapon);if(a.kind==='reload')return reload(state,selected());if(a.kind==='interact')return performInteraction(state,selected(),a.entry.kind,a.entry.target);
   if(a.kind==='cliff')return move(state,selected(),a.point.x,a.point.y,a.point.z);
+  if(a.kind==='face')return turnTo(state,selected(),headingTo(selected(),a.point));
   if(a.kind==='move')return selectedIds.size>1?moveGroup(state,[...selectedIds],selected(),a.point.x,a.point.y,a.point.z):move(state,selected(),a.point.x,a.point.y,a.point.z);return false;});
 }
 canvas.addEventListener('contextmenu',e=>{
