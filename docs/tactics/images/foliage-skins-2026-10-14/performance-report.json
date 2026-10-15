@@ -1,0 +1,45 @@
+{
+  "errors": [],
+  "views": [
+    {
+      "mode": "mixed",
+      "angle": "normal",
+      "camera": {
+        "focus": [
+          123,
+          0,
+          117
+        ],
+        "ppu": 14
+      },
+      "drawCalls": 200,
+      "triangles": 263592,
+      "textures": 41,
+      "estimatedTextureBytes": 56035787,
+      "finiteMaskBytes": 5529600,
+      "renderSubmissionMedianMs": 2.0999999940395355,
+      "synchronizedFrameMedianMs": 3.100000001490116,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "dense",
+      "angle": "normal",
+      "camera": {
+        "focus": [
+          153,
+          1.8,
+          102
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 84,
+      "triangles": 158250,
+      "textures": 26,
+      "estimatedTextureBytes": 56035787,
+      "finiteMaskBytes": 5529600,
+      "renderSubmissionMedianMs": 0.6999999955296516,
+      "synchronizedFrameMedianMs": 1.2000000029802322,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    }
+  ]
+}

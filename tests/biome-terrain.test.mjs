@@ -26,3 +26,16 @@ test('snow drifts have broad coherent heights and no per-cell crown geometry',()
 test('LOD is exclusive, uses orthographic scale, and follows a translated region',()=>{
  const s=setup('temperate');try{const {terrain}=s,focus=new T.Vector3(28,0,34),camera=new T.OrthographicCamera(-12,12,9,-9,.1,1000);terrain.root.position.set(200,0,-300);focus.add(terrain.root.position);camera.position.copy(focus).add(new T.Vector3(200,300,200));camera.lookAt(focus);camera.updateProjectionMatrix();terrain.update(camera,{focus,ppu:40});assert(terrain.stats.visibleChunks<9);assert(terrain.stats.detailedChunks>0);for(const c of terrain.chunks)assert.notEqual(c.near.visible,c.far.visible);terrain.update(camera,{focus,ppu:2});assert.equal(terrain.stats.detailedChunks,0);assert.equal(terrain.stats.shadowChunks,0);terrain.update(camera,{focus,ppu:40,trees:false});assert(terrain.treeInstances.every(m=>!m.parent.visible));}finally{s.dispose();}
 });
+
+test('normal overview retains authored tree crowns; only tiny projected trees use proxies',()=>{
+ const s=setup('temperate');try{
+  const {terrain}=s,focus=new T.Vector3(28,0,34),camera=new T.OrthographicCamera(-34,34,23,-23,.1,1000);
+  camera.position.copy(focus).add(new T.Vector3(200,300,200));camera.lookAt(focus);camera.updateProjectionMatrix();
+  const before=JSON.stringify(terrain.trees);
+  // Test first load, not a near view's retained hysteresis state.
+  terrain.update(camera,{focus,ppu:14});const visible=terrain.chunks.filter(c=>c.inView&&c.treeHeight);
+  assert.ok(visible.length);for(const c of visible){assert.equal(c.near.visible,true);assert.equal(c.far.visible,false);}
+  terrain.update(camera,{focus,ppu:2});for(const c of terrain.chunks){assert.equal(c.near.visible,false);assert.equal(c.far.visible,true);}
+  assert.equal(JSON.stringify(terrain.trees),before,'LOD never moves or scales trees');
+ }finally{s.dispose();}
+});

@@ -112,6 +112,7 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
   trees.push({id:p.userData.id,x:cx,y:h,z:cz,bounds:{min,max}});const chunk=chunkAt(Math.floor(cx+.5),Math.floor(cz+.5));p.updateMatrixWorld(true);translation.makeTranslation(cx,h,cz);
   p.traverse(m=>{if(!m.isMesh)return;world.multiplyMatrices(translation,m.matrixWorld);batch(chunk,'near',m.geometry,m.material,world);});
   const width=max[0]-min[0],depth=max[2]-min[2],height=max[1]-min[1],px=(min[0]+max[0])/2,pz=(min[2]+max[2])/2,pine=/pine|spruce|cypress/.test(p.userData.id),flat=/acacia|palm/.test(p.userData.id);
+  chunk.treeHeight=Math.max(chunk.treeHeight||0,height);
   part(chunk,'far',trunk,paint('bark'),cx,h+height*.33,cz,.16,height*.66,.16);
   if(pine){for(let i=0;i<3;i++){const s=1-i*.25;part(chunk,'far',cone,paint(snow?'snowPine':bog?'cypress':'pine'),px,h+height*(.36+i*.20),pz,width*s,height*.47,depth*s);}}
   else {part(chunk,'far',proxyCrown,paint(bog?'wet':leaf),px,h+height*(flat?.82:.65),pz,width,height*(flat?.30:.69),depth);part(chunk,'far',proxyCrown,paint(leaf==='dry'?'dry':bog?'wet':leaf),px-width*.16,h+height*(flat?.82:.80),pz,width*.61,height*(flat?.27:.37),depth*.68);}
@@ -135,7 +136,8 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
    const inView=frustum.intersectsBox(worldBounds.copy(c.bounds).applyMatrix4(root.matrixWorld));c.inView=inView;c.distance=distance;
    // Orthographic distance does not shrink a visible tree. Keep every visible
    // block detailed at close scale, including the far edge of a low-angle view.
-   c.nearActive=ppu>(c.nearActive?12:16)&&(inView||distance<(c.nearActive?52:44));const shadows=ppu>12&&distance<28;
+   const treePixels=ppu*(c.treeHeight||0);
+   c.nearActive=treePixels>(c.nearActive?22:26)&&(inView||distance<(c.nearActive?52:44));const shadows=ppu>12&&distance<28;
    c.near.visible=showTrees&&c.nearActive;c.far.visible=showTrees&&!c.nearActive;
    for(const m of c.meshes){m.castShadow=shadows&&c.shadowKnown!==false&&m.name!=='Saved tutorial terrain'&&m.name!=='Distant trees';m.userData.noShadow=!m.castShadow;}
    if(inView){visible++;if(c.near.visible)detailed++;}if(shadows)shadowed++;

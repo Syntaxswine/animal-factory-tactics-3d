@@ -22,7 +22,7 @@ function installCoordinates(shader){
 // Derive ground LOD before fract() introduces a discontinuity at tile edges.
 // Clamp its footprint to the atlas inset, retaining mip filtering without
 // sampling neighboring panels or turning tile boundaries into bright lines.
-function sampler(rect,ground=false){return `uniform vec3 bmFarPaint;vec3 bmPaint(vec2 p){vec2 span=vec2(${rect.size.join(',')}),continuous=${ground?'vBiomePosition.xz/'+GROUND_TILE_SIZE.toFixed(1):'p'},pixels=vec2(textureSize(map,0));vec2 dx=dFdx(continuous)*span*pixels,dy=dFdy(continuous)*span*pixels;float footprint=log2(max(.0001,max(length(dx),length(dy)))),lod=clamp(footprint,0.,4.);return mix(textureLod(map,vec2(${rect.origin.join(',')})+bmMirror(p)*span,lod).rgb,bmFarPaint,smoothstep(3.5,5.5,footprint));}`;}
+function sampler(rect,ground=false){return `uniform vec3 bmFarPaint;vec3 bmPaint(vec2 p){vec2 span=vec2(${rect.size.join(',')}),continuous=${ground?'vBiomePosition.xz/'+GROUND_TILE_SIZE.toFixed(1):'p'},pixels=vec2(textureSize(map,0));vec2 dx=dFdx(continuous)*span*pixels,dy=dFdy(continuous)*span*pixels;float footprint=log2(max(.0001,max(length(dx),length(dy)))),lod=clamp(footprint,0.,4.);return mix(textureLod(map,vec2(${rect.origin.join(',')})+bmMirror(p)*span,lod).rgb,bmFarPaint,smoothstep(${ground?'3.5,5.5':'6.,8.'},footprint));}`;}
 export function createBiomeMaterials(textures){
  const result={};
  for(const [id,spec]of Object.entries(BIOME_PAINT)){

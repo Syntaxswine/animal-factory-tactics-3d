@@ -1,3 +1,4 @@
+import {SCREEN_ATLAS,FRINGE_ATLAS,SCREEN_PANELS} from '../dist/tactics/foliage-screen-paint.js';
 import {BIOME_TERRAIN} from '../dist/tactics/biome-gameplay-data.js';
 import {TRUCK_PAINT} from '../dist/tactics/canvas-truck-paint.js';
 import {RAMP_PROPS} from '../dist/tactics/cliff-ramps.js';
@@ -127,6 +128,15 @@ for(const [directory,suffix,width,height]of [['biome-ground-sprites','sprites',2
 const biomeManifest=JSON.parse(await readFile(new URL('assets/environment/biome-foliage/manifest.json',root)));
 assert.deepEqual(Object.keys(biomeManifest.families).sort(),Object.keys(BIOME_FAMILIES).sort());
 for(const [id,family]of Object.entries(BIOME_TERRAIN)){assert(GROUNDS.includes(id));assert(BIOME_GROUNDS[family]);assert.deepEqual(biomeManifest.ground.families[family],biomeGround.families[family]);}
+const screenManifest=JSON.parse(await readFile(new URL('assets/environment/foliage-screens/manifest.json',root)));
+assert.deepEqual(screenManifest.panels,SCREEN_PANELS);
+for(const [url,channels]of [[SCREEN_ATLAS,2],[FRINGE_ATLAS,6]]){
+ const file=url.replace('../assets/environment/',''),asset=screenManifest.assets[file.split('/').at(-1)];
+ assert(asset);assert.equal(asset.width,1536);assert.equal(asset.height,1024);
+ active.add(file);await checkPNG('assets/environment/'+file,asset.width,asset.height,channels);
+ assert.equal(createHash('sha256').update(await readFile(new URL('assets/environment/'+file,root))).digest('hex'),asset.sha256,file);
+ await readFile(new URL('assets/environment/foliage-screens/'+asset.prompt,root));
+}
 await readFile(new URL('assets/environment/biome-foliage/'+biomeManifest.ground.manifest,root));
 const connected=JSON.parse(await readFile(new URL('assets/environment/connected-ground/manifest.json',root)));
 assert.equal(connected.tilesAcross,8);assert.equal(connected.tilesDown,8);assert.equal(connected.pixelsPerTile,64);

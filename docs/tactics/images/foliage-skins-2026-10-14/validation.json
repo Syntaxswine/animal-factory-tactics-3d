@@ -1,0 +1,64 @@
+{
+  "recordedAt": "2026-10-15T00:27:27.015Z",
+  "branch": "work/foliage-skins",
+  "base": "1119290",
+  "review": {
+    "score": "9/10",
+    "scope": "Independent visual and code review; broader canonical integration belongs to the architect"
+  },
+  "fullProjectRun": {
+    "command": "npm run check",
+    "tests": 2357,
+    "passed": 2355,
+    "failed": 2,
+    "logSHA256": "ea6551c492d15f2de4efd1dcb944c6ad608d7daf938ae452b7b13699fe1192ca",
+    "initialFailures": [
+      "Connected-ground source fingerprint stale after tree shader edit",
+      "3D review page incorrectly listed in base Pages build"
+    ],
+    "resolution": "Both fixed. Failure files rerun 13/13; final affected suite 140/140. Full project suite was not rerun after delivery-only fixes."
+  },
+  "finalAffectedRun": {
+    "tests": 140,
+    "passed": 140,
+    "failed": 0,
+    "scope": "All biome-*, foliage-*, foliage and tactics-pages-files test files",
+    "logSHA256": "96a940d093bbf98373c21ce5816191d2db35294fd76eb6c56f7f6623c682d8b8"
+  },
+  "assetAudit": {
+    "command": "node tools/check-assets.mjs",
+    "passed": true,
+    "logSHA256": "cd382a980cac2c736b74cc04f7e56828240997c78094f57c2ed01fbecaa3f5e1"
+  },
+  "build": {
+    "command": "npm run build:tactics-3d",
+    "passed": true,
+    "logSHA256": "5c4cac9ffdf0483a54c7c65c002b23c6c1f2176f7fd0948edb0091a33279a7a1"
+  },
+  "browser": {
+    "sourceAndPackagedOrdinaryPlaytest": true,
+    "saveLoadRoundTrip": true,
+    "errors": [],
+    "report": "integration-report.json",
+    "allViewReport": "after-report.json",
+    "isolatedPerformanceReport": "performance-report.json"
+  },
+  "groundExports": {
+    "allFivePixelIdentical": true,
+    "report": "ground-provenance.json"
+  },
+  "sourceSHA256": {
+    "dist/tactics/biome-terrain.js": "804210ae413dff44525c7be5c4b16fb478ea74aa236c743357beaa0bc54acaf4",
+    "dist/tactics/biome-foliage-paint.js": "add6527e4b1e3af85510b95de74b7ea85fd9ead2267a38f78ef7f9dd297b83d1",
+    "dist/tactics/biome-scene.js": "781e5b2d5bea5e9e81f30b391625af1b6f0fcb984e6c65b208784185c40e59b3",
+    "dist/tactics/foliage-screen-scene.js": "407229af8755d67911cce8c13e3f66c4419cab7f0824bd1476d94bb72093692b",
+    "dist/tactics/foliage-screen-paint.js": "7b10b01773a46fe9f8b93b4fa924fe34b8a1de00656f50f26ab507dd5319ac15",
+    "dist/tactics/foliage-screen-surface.js": "9e29c82c13ea1c3dabe224458694fd07c29b169a70bcd992b9aed772111cf302",
+    "dist/tactics/foliage-skins-review.js": "5902d92078a7837bf44fcb0c67b76ec2a81ca1ec5d2c8d19ef68742bc346dcfd",
+    "dist/tactics/foliage-skins-review.html": "11af833d6e063a651b0ea4a853d2bae100e4677f91e854df1598420a458f9b55",
+    "tools/build-tactics-pages.mjs": "33c212f97e8b4958384ca248a638f1c339c9a7f19029893bbc0b37c32e517688",
+    "tools/build-tactics-3d.mjs": "826d2bf6d7652e58c8dcd1e4f9ce1b077c606ec0b42ad3e86189fc1dd9aaa857",
+    "tools/check-assets.mjs": "e84db867ccd9e39e7c68de1aeda98d53091cd096e9073776849383b5c02c5b94"
+  },
+  "sourceHashFormat": "SHA-256 of UTF-8 text with LF line endings"
+}
