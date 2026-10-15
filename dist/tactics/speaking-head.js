@@ -85,9 +85,13 @@ export function rigSpeakingHead(worker,head){
  if(skinData.band)skinData.band.vertices.forEach((i,k)=>band.set(skinData.band.normal.slice(k*3,k*3+3),i*3));
  g.setAttribute('speechBand',new THREE.Float32BufferAttribute(band,3));
  // The closed shape (tools/build-speaking-heads.mjs closeCrease): the lips' edges laid on the crease,
- // as a morph target the jaw blends in over its last CHEEKS_SHOW of closing.
+ // as a morph target the jaw blends in over its last CHEEKS_SHOW of closing; with it, the lips' faces
+ // at the crease take the approved surface's normal (closedNormal, build-speaking-heads.mjs
+ // closedNormals: with their open facings, closed, they glinted along the crease).
  if(skinData.closed?.vertices.length){const d=new Float32Array(n*3);skinData.closed.vertices.forEach((i,k)=>d.set(skinData.closed.offset.slice(k*3,k*3+3),i*3));
-  g.morphAttributes.position=[new THREE.Float32BufferAttribute(d,3)];g.morphTargetsRelative=true;skin.updateMorphTargets();skin.morphTargetInfluences[0]=1;}
+  g.morphAttributes.position=[new THREE.Float32BufferAttribute(d,3)];
+  if(skinData.closedNormal?.vertices.length){const dn=new Float32Array(n*3);skinData.closedNormal.vertices.forEach((i,k)=>dn.set(skinData.closedNormal.offset.slice(k*3,k*3+3),i*3));g.morphAttributes.normal=[new THREE.Float32BufferAttribute(dn,3)];}
+  g.morphTargetsRelative=true;skin.updateMorphTargets();skin.morphTargetInfluences[0]=1;}
  // The skin's weights at the vertex nearest a point (of those on one side of the mouth).
  const nearest=(p,keep=()=>true)=>{let best=-1,d=Infinity;for(let i=0;i<n;i++){if(!keep(i))continue;const e=(P.getX(i)-p.x)**2+(P.getY(i)-p.y)**2+(P.getZ(i)-p.z)**2;if(e<d){d=e;best=i;}}return weightsOf(a,best);};
  // Hair on the face (the goat's beard) grows from the skin, so it takes the skin's weights where

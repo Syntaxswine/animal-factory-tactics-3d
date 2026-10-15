@@ -130,7 +130,8 @@ export function seeThrough(head,deg,az=0,{ppu=4000,size=1000,el=0,outerOnly=fals
 // outside, a closed skin's first surface faces the eye. The mouth is open at its sides and front
 // (the user, round 4): a line of sight through it meets the mouth's inside, which faces it, or
 // nothing, so no curtain is needed. Throws if the head is not in the frame, as seeThrough. Returns
-// {mm2, largest (the largest one hole, 4-connected), mask, R}.
+// {mm2, largest (the largest one hole, 4-connected), background (of mm2, where the renderer, culling,
+// shows the background: seen through the head), largestBackground, mask, R}.
 export function holesThrough(head,deg,az=0,{ppu=4000,size=1000,el=0}={}){
  const parts=pose(head,deg),S=parts[0].P,{up,lo}=lipTips(head),tipU=vtx(S,up),tipL=vtx(S,lo),a=az*Math.PI/180,e=el*Math.PI/180;
  const view={dir:[Math.sin(a)*Math.cos(e),-Math.sin(e),-Math.cos(a)*Math.cos(e)],up:[0,1,0],center:[(tipU[0]+tipL[0])/2-.04,(tipU[1]+tipL[1])/2,0],ppu,w:size,h:size};
@@ -138,9 +139,11 @@ export function holesThrough(head,deg,az=0,{ppu=4000,size=1000,el=0}={}){
  let skinPixels=0,n=0;for(let k=0;k<w*h;k++){if(R.id[k]===0)skinPixels++;if(R.back[k]){mask[k]=1;n++;}}
  const proj=p=>{const v=sub(p,view.center);return [w/2+dot(v,R.right)*ppu,h/2-dot(v,R.up)*ppu];},framed=p=>{const [x,y]=proj(p);return x>=0&&y>=0&&x<w&&y<h;};
  if(skinPixels<w*h*.02||!framed(tipU)||!framed(tipL))throw Error(`holesThrough: ${head.species}-${head.level} at ${deg}°, ${az}° round, ${el}° up: the head is not in the frame (${skinPixels} pixels of skin)`);
- const done=new Uint8Array(w*h);let largest=0;for(let k0=0;k0<w*h;k0++){if(!mask[k0]||done[k0])continue;let c=0;const st=[k0];done[k0]=1;
-  while(st.length){const k=st.pop();c++;const x=k%w,y=(k-x)/w;for(const j of [x>0?k-1:-1,x<w-1?k+1:-1,y>0?k-w:-1,y<h-1?k+w:-1])if(j>=0&&mask[j]&&!done[j]){done[j]=1;st.push(j);}}largest=Math.max(largest,c);}
- return {mm2:n/(ppu*ppu)*1e6,largest:largest/(ppu*ppu)*1e6,mask,R};
+ // (where any is, what the renderer shows there: drawn again, culled, only then)
+ const C=n?raster(parts,view):null,bg=new Uint8Array(w*h);let nb=0;if(C)for(let k=0;k<w*h;k++)if(mask[k]&&C.id[k]<0){bg[k]=1;nb++;}
+ const largestOf=m=>{const done=new Uint8Array(w*h);let largest=0;for(let k0=0;k0<w*h;k0++){if(!m[k0]||done[k0])continue;let c=0;const st=[k0];done[k0]=1;
+  while(st.length){const k=st.pop();c++;const x=k%w,y=(k-x)/w;for(const j of [x>0?k-1:-1,x<w-1?k+1:-1,y>0?k-w:-1,y<h-1?k+w:-1])if(j>=0&&m[j]&&!done[j]){done[j]=1;st.push(j);}}largest=Math.max(largest,c);}return largest/(ppu*ppu)*1e6;};
+ return {mm2:n/(ppu*ppu)*1e6,largest:n?largestOf(mask):0,background:nb/(ppu*ppu)*1e6,largestBackground:nb?largestOf(bg):0,mask,R};
 }
 
 

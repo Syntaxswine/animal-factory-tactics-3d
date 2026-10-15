@@ -41,6 +41,11 @@ const POSED=12*Math.PI/180;
 // incisors came out coarser on four heads, 0.9 to 8.4 mm² of incisor showing closed). Checked at
 // 5 px/mm, to half the bar.
 const SHOWN_CLOSED={ppu:5000,bar:.25,reach:[.004,.007,.01]};
+// A beak's game mesh keeps its authoring vertices within BEAK_ROOT of the line through the hinge
+// across the beak: reduced freely there, a lower mandible's triangles stood up through the upper's
+// base as a fin a centimetre tall, and 9.2 mm² of her tongue showed through her closed beak (round
+// 4's review; round 3's beak, its reduction locked round inside-out triangles, had neither).
+const BEAK_ROOT=.01;
 
 function cleanFaces(indices){const faces=new Map();for(let i=0;i<indices.length;i+=3){const key=Array.from(indices.subarray(i,i+3)).sort((a,b)=>a-b).join(':');if(!faces.has(key))faces.set(key,[]);faces.get(key).push(i);}
  const clean=[];for(const starts of faces.values())if(starts.length===1)clean.push(...indices.subarray(starts[0],starts[0]+3));return new Uint32Array(clean);}
@@ -212,6 +217,50 @@ function openNormals(position,m,normal,hinge){
  for(let i=0;i<position.length/3;i++){if(!mouth(i))continue;const r=at(i);if(r)out.set(r,i*3);}
  return out;
 }
+// The outer skin's normals about the mouth are the approved surface's: the approved field's gradient
+// at the vertex's rest position in sculpt space, carried to where it is written (the placement, and
+// the donkey's neck revision) as a normal is carried, by the inverse transpose of the map's Jacobian.
+// The sculpt's own there are the expanded field's at the lips' sharp edges, and a mesh's normals (the
+// cow's, the director's, the donkey's after its revision) fold into the crease: within 15 mm of it 10
+// to 105 outer vertices a mesh were over 45 degrees off the approved surface, and shaded the closed
+// crease and the open lips' edges as whiskers, glints and the donkey's white fangs at its corners
+// (round 4's review). Within `near` of the lips' faces at rest, blending back to the sculpt's own by
+// `far` (beyond, the sculpt's own are the approved surface's but on the cow, the director and the
+// donkey, whose tools' mesh normals they keep).
+const MOUTH_NORMALS={near:.02,far:.035};
+function outerNormals(m,normal,field,toWritten){
+ const R=m.rest,n=R.length/3,out=normal.slice(),{near,far}=MOUTH_NORMALS,cell=far,grid=new Map();
+ for(let i=0;i<n;i++)if(m.fold[i]>.5){const k=[0,1,2].map(j=>Math.floor(R[i*3+j]/cell)).join();if(!grid.has(k))grid.set(k,[]);grid.get(k).push(i);}
+ const toLips=p=>{let d=Infinity;const c=p.map(v=>Math.floor(v/cell));for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(let e=-1;e<=1;e++){const l=grid.get([c[0]+a,c[1]+b,c[2]+e].join());if(l)for(const i of l)d=Math.min(d,Math.hypot(R[i*3]-p[0],R[i*3+1]-p[1],R[i*3+2]-p[2]));}return d;};
+ for(let i=0;i<n;i++){if(m.fold[i]>.5||m.inside[i]>=.5)continue;const p=[R[i*3],R[i*3+1],R[i*3+2]],w=1-THREE.MathUtils.smoothstep(toLips(p),near,far);if(w<=0)continue;
+  const at=written(field,toWritten,p);if(!at)continue;
+  const v=[0,1,2].map(k=>normal[i*3+k]*(1-w)+at[k]*w),l=Math.hypot(...v);if(l>1e-9)out.set(v.map(x=>x/l),i*3);}
+ return out;
+}
+// Closed, the lips' faces at the crease are the approved surface: where the closed shape lays them
+// at the surface (within CLOSED_NORMALS.none of it), they take its normal as the jaw closes, as a
+// morph of the normals with the closed shape (`closedNormal`, offsets from the written normals, as
+// `closed` is from the rest pose). Open they keep their open facings (openNormals): closed, those
+// glinted white along the cow's crease where a face's triangle reaches the surface (round 4's review).
+const CLOSED_NORMALS={full:.001,none:.003};
+function closedNormals(m,normal,field,toWritten){
+ const C=m.closed,vertices=[],offset=[];
+ for(let i=0;i<C.length/3;i++){if(m.fold[i]<=.5)continue;const w=1-THREE.MathUtils.smoothstep(m.depth[i],CLOSED_NORMALS.full,CLOSED_NORMALS.none);if(w<=0)continue;
+  const at=written(field,toWritten,[C[i*3],C[i*3+1],C[i*3+2]]);if(!at)continue;
+  const base=[0,1,2].map(k=>+normal[i*3+k].toFixed(5)),v=base.map((x,k)=>x*(1-w)+at[k]*w),l=Math.hypot(...v);if(l<1e-9)continue;
+  vertices.push(i);offset.push(...v.map((x,k)=>+(x/l-base[k]).toFixed(5)));}
+ return {vertices,offset};
+}
+// The approved surface's normal where it is written: `toWritten` maps a placed rest position to the
+// sculpt space (`at`) and a sculpt-space point to where it is written (`map`).
+function written(field,toWritten,p){
+ const x=toWritten.at(p),e=1e-4,g=[0,1,2].map(k=>{const a=x.slice(),b=x.slice();a[k]+=e;b[k]-=e;return field(...a)-field(...b);});if(Math.hypot(...g)<1e-12)return null;
+ const h=1e-5,J=[0,1,2].map(k=>{const a=x.slice(),b=x.slice();a[k]+=h;b[k]-=h;const fa=toWritten.map(a),fb=toWritten.map(b);return [0,1,2].map(j=>(fa[j]-fb[j])/(2*h));});// J[k][j] = d written_j / d x_k: the rows of J^T
+ // solve J^T n = g (J^T's rows are J[k]): Cramer's rule
+ const d3=(a,b,c)=>a[0]*(b[1]*c[2]-b[2]*c[1])-a[1]*(b[0]*c[2]-b[2]*c[0])+a[2]*(b[0]*c[1]-b[1]*c[0]),D=d3(J[0],J[1],J[2]);if(Math.abs(D)<1e-12)return null;
+ const col=(j,v)=>J.map((row,k)=>row.map((x,c)=>c===j?v[k]:x)),nn=[0,1,2].map(j=>d3(...col(j,g))/D),l=Math.hypot(...nn);
+ return nn.map(x=>x/l);
+}
 // The band between the parted lips: every triangle graded from one lip to the other (its vertices'
 // lower not all at one lip: the skin stretched between them where they meet at the mouth's
 // corners) shades with the band's own normals, its triangles' facings with the jaw open
@@ -232,9 +281,10 @@ const placeAll=(place,P)=>{const o=new Float32Array(P.length);for(let i=0;i<P.le
 
 // The sculpted skin, placed and welded (its `position` stays where it was sculpted: open).
 // Normals: the sculpt's own (the expanded space's: the mouth's surfaces as they are when open,
-// the approved surface as its tool had it). The cow's and the director's tools recomputed theirs
-// from the placed mesh: theirs are the placed rest mesh's on the approved surface and the placed
-// open mesh's in the mouth.
+// the approved surface as its tool had it away from the mouth). The cow's and the director's tools
+// recomputed theirs from the placed mesh: theirs are the placed rest mesh's on the approved surface
+// and the placed open mesh's in the mouth. When written, the outer skin about the mouth takes the
+// approved surface's own (outerNormals) and the mouth its open facings (openNormals).
 function prepare(S,place,M){
  const P=S.skin.attributes.position.array,N=S.skin.attributes.normal.array,n=P.length/3;
  const rest=placeAll(place,S.rest);let normal=N.slice();
@@ -285,12 +335,13 @@ for(const head of HEADS){
   ...(S.tongue?[(()=>{const m=tonguePart(level);return {kind:'tongue',name:'tongue',bone:'jaw',position:m.rest,index:m.index};})()]:[])]});
  for(const level of ['author','low']){const L=head[level],from=level==='author'?skin:(()=>{const {errorWorld,errors,sourceTriangles,tries,locked,closed,...m}=levels.author.skin;return m;})();
   if(process.env.SPEAKING_DUMP&&level==='low')fs.writeFileSync(process.env.SPEAKING_DUMP+`/${head.id}-author-source.json`,JSON.stringify({open:Array.from(from.position),outer:Array.from(from.outer),lower:Array.from(from.lower),index:Array.from(from.index)}));
-  let near=[];
+  // (the hinge's line across a beak, every 5 mm: see BEAK_ROOT)
+  let near=M.rigid&&level==='low'?Array.from({length:13},(_,k)=>[hingeAt[0],hingeAt[1],(k-6)*.005]):[];
   for(let attempt=0;;attempt++){
    const sk=reduce(from,[{target:L.target,tolerance:L.tolerance},{target:L.target*(M.share??MOUTH_SHARE),tolerance:MOUTH_TOLERANCE[level]}],['jaw','inside','lower','fold','rest','posed'],ATTRIBUTE_WEIGHT[level],{lockBy:level==='author'?'crease':null,hinge:hingeAt,
     // (a beak's mandible turns about its root inside the head part, through the upper mandible's
     // base, by construction past 12 degrees: locking that only kept her game mesh over budget)
-    degrees:M.rigid?[0,6,12]:[0,6,12,24],lockNear:near,nearReach:SHOWN_CLOSED.reach[attempt-1]??0});
+    degrees:M.rigid?[0,6,12]:[0,6,12,24],lockNear:near,nearReach:M.rigid?BEAK_ROOT:SHOWN_CLOSED.reach[attempt-1]??0});
    // closed, each lip's outer skin reaches the crease: the closed shape (see closeCrease)
    sk.closed=sk.rest.slice();const c=closeCrease(sk,sk.closed,G,head,place,Infinity);if(process.env.SPEAKING_DEBUG)console.log(`  crease ${level}: ${c.rims} rims and ${c.edges} edge vertices onto it; ${c.inverted} triangles inside-out at it, ${c.moved} outer vertices onto it (${c.left} out of reach) in ${c.rounds} rounds, ${c.zipped} moves onto one line`);
    levels[level]={skin:sk};
@@ -310,10 +361,12 @@ for(const head of HEADS){
    // sculpt's through the reduction and its coarse mouth shaded as stripes, round 2; at the lips' rims
    // the sculpt's are the field's gradient at a sharp edge, and the authoring mesh's rims shaded up to
    // 17% over 60 degrees off their triangles, round 4)
+   if(extra.kind==='skin')nor=outerNormals(m,nor,head.speaking??head.field,{at:p=>place.unmap(p),map:x=>toSheet(x)});
    if(extra.kind==='skin')nor=openNormals(position,m,nor,toSheet([M.hinge[0],M.hinge[1],0]));
    if(head.earNormals&&extra.kind==='skin'){const averaged=meshNormals(position,m.index);nor=nor.slice();for(let i=0;i<position.length;i+=3){const [x,y,z]=[position[i],position[i+1],position[i+2]];if(Math.abs(z)>.135&&y>1.38&&x<.04)nor.set(averaged.subarray(i,i+3),i);}}
    const o={name,position:round(position,6),normal:round(nor,5),index:Array.from(m.index),triangles:m.index.length/3,...extra};
    if(extra.kind==='skin')o.band=bandNormals(position,m,toSheet([M.hinge[0],M.hinge[1],0]));
+   if(extra.kind==='skin')o.closedNormal=closedNormals(m,nor,head.speaking??head.field,{at:p=>place.unmap(p),map:x=>toSheet(x)});
    if(head.revision){o.paintPosition=round(m.rest,6);o.paintNormal=round(m.normal,5);}
    partOut.push(o);};
   const sk=levels[level].skin;

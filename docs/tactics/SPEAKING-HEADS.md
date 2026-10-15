@@ -1,13 +1,13 @@
 # Speaking heads
 
-**Status (October 15, 2026): review round 3 of 5 scored the grey sculpt 6/10 (`hybrid-review/speaking-heads/reviews/round-3.md`); this is the rework, for review round 4. The mouth opens as a wedge along the whole lip line (round 3), open at its sides and its front, its roof and floor the mouth's inside, crimson: from the side it is seen through between the lips, as the hen's beak is (the user's sketch, round 4; rounds 3 and 4 stood a lining inside the lips along the sides, which the user had removed). The heads are meshed with a corrected copy of the characters' mesher, which turned triangles inside-out at the field's sharp edges. Steps 1–3 are rebuilt for all twelve characters; step 4, the paint, works but is not reviewed. Known defects are listed under Not done. Nothing here changes a character in the game.**
+**Status (October 15, 2026): review round 4 of 5 scored the grey sculpt 7/10 (`hybrid-review/speaking-heads/reviews/round-4.md`); this is the rework, for review round 5. The mouth opens as a wedge along the whole lip line (round 3), open at its sides and its front, its roof and floor the mouth's inside, crimson: from the side it is seen through between the lips, as the hen's beak is (the user's sketch, round 4; rounds 3 and 4 stood a lining inside the lips along the sides, which the user had removed). The heads are meshed with a corrected copy of the characters' mesher, which turned triangles inside-out at the field's sharp edges. Steps 1–3 are rebuilt for all twelve characters; step 4, the paint, works but is not reviewed. Known defects are listed under Not done. Nothing here changes a character in the game.**
 
 Each character's approved head, sculpted to speak:
 - its lips part along its painted mouth line, from the painted corners: open, the mouth is a wedge from its corners forward, across the whole muzzle;
 - behind them, a mouth: a cavity, crimson inside, with teeth, a tongue and a ruminant's dental pad; open, the wedge between the lips is open at its sides and front, its roof and floor the mouth's inside;
 - its lower jaw is weighted to a jaw bone at the jaw joint.
 
-Closed, a speaking head is the approved head: its outer skin lies on the approved surface (within the sculpt's own meshing error, 1.5 mm, by test), and the lips meet in a crease along the painted line. Open it with one number, the jaw's angle.
+Closed, a speaking head is the approved head: its outer skin lies on the approved surface (within the sculpt's own meshing error, 1.5 mm, by test), and shades as it, its normals about the mouth the approved surface's own (by test; until round 5 they were not, and the closed crease showed whiskers and glints), and the lips meet in a crease along the painted line. Open it with one number, the jaw's angle.
 
 Open `tactics/speaking-heads.html`. Each character's approved head is on the left and its speaking head on the right, at either mesh level, with a jaw slider, a spoken line, a tilt, and paint, grey, wireframe, coverage and jaw-weight modes. Below them is the reference sheet: the mouth planned on the character's registered paint.
 
@@ -108,12 +108,12 @@ The characters' heads were sculpted as signed-distance fields in their build too
 - Every vertex sculpted there maps back to rest space by the same shift; the slab's onto the cut. So a closed speaking head is the approved head: the lips' faces fold onto the cut and meet in a crease along the lip line.
 - **The lips' edges at rest**: each lip face's edge row (its vertices next to the outer skin) moves out onto the approved surface's section at the cut, as far as turns none of its triangles inside-out, and the sculpted (open) shape moves with it. Round 3 moved the rest pose alone, and in full: 1 to 2% of the lips' edge triangles turned inside-out at rest (30 to 60 mm² a head), and the reductions, which work on the open shape, folded more.
 
-**The mesher.** The heads are sculpted by marching tetrahedra in `tools/speaking-heads/surface.mjs`, a copy of the characters' own mesher (`dist/tactics/grey-surface.js` `sculptSurface`: the same grid, tetrahedra, vertices and triangles) with one change: each triangle faces from its tetrahedron's inside corners toward its outside corners, as the field's linear surface in that tetrahedron separates them. The shared mesher winds a triangle to agree with the field's gradient at its first vertex. At a sharp edge of the field (a lip's edge, the slab's faces, a wedge thinner than the grid) that gradient can be more than 90° off the triangle's own facing, so the triangle comes out inside-out and the renderer culls it. Through such triangles the open mouths showed the inside of the head and the background beyond it, more from the right than the left, because the tetrahedra's diagonals run one way: round 3's review's one-sided holes. On round 4's first build (with the lining, measured by round 3's flood-filled instrument), the largest holes from the game's camera were 23 mm² (the bull's corner), 12 mm² (the donkey) and 6 mm² (the horse) before this change, and 0.1 mm² at most on those heads after it. The reductions also keep fewer triangles, since they no longer work around inside-out ones: on that build the game skins came out 280 to 720 triangles lighter. The approved characters were meshed with the shared mesher, which is not changed (its rule is a finding for whoever next rebuilds them).
+**The mesher.** The heads are sculpted by marching tetrahedra in `tools/speaking-heads/surface.mjs`, a copy of the characters' own mesher (`dist/tactics/grey-surface.js` `sculptSurface`: the same grid, tetrahedra, vertices and triangles) with one change: each triangle faces from its tetrahedron's inside corners toward its outside corners, as the field's linear surface in that tetrahedron separates them. The shared mesher winds a triangle to agree with the field's gradient at its first vertex. At a sharp edge of the field (a lip's edge, the slab's faces, a wedge thinner than the grid) that gradient can be more than 90° off the triangle's own facing, so the triangle comes out inside-out and the renderer culls it. Through such triangles the open mouths showed the inside of the head and the background beyond it: round 3's review's holes. (The flips lean to the right, 1.2 to 2.2 times by area on 10 of 12 heads, as the tetrahedra's diagonals run one way, but round 4's review found round 3's heads' back faces seen first nearly as large from the left: the mesher explains the holes, not why round 3's review found them one-sided.) On round 4's first build (with the lining, measured by round 3's flood-filled instrument), the largest holes from the game's camera were 23 mm² (the bull's corner), 12 mm² (the donkey) and 6 mm² (the horse) before this change, and 0.1 mm² at most on those heads after it. The reductions also keep fewer triangles, since they no longer work around inside-out ones: on that build the game skins came out 280 to 720 triangles lighter. The approved characters were meshed with the shared mesher, which is not changed (its rule is a finding for whoever next rebuilds them).
 
 Inside:
 - **The cavity** behind the lips: from `floor` below the cut to `roof` above it, `front` behind the lips' front, never nearer the surface than `wallMin`, its edges rounded and its back rounded over 1.2 cm into a throat, within `width` of the middle (narrowing toward the back) and `wall` inside the outer skin.
 - **A dental pad** on the front of the roof for the cattle, goat and sheep: their lower incisors close against it.
-- **Teeth**: lathed incisors (spade-shaped, their roots a little over half as wide as their crowns) and canines (tapering to a point), on arches inside the lips: the cavity's outline at the cut moved inward (the true inward offset, rounded to 4 mm where a narrow snout's mouth comes to a point). Each is rooted in the gum as built, a millimetre inside a thin chin at most, and reaches past the cut by `tip`. Procumbent lower incisors lean straight back from their tips. Each row is as wide as leaves a hair between neighbours at every height; no two teeth touch (the build refuses).
+- **Teeth**: lathed incisors (spade-shaped, their roots a little over half as wide as their crowns) and canines (tapering to a point), on arches inside the lips: the cavity's outline at the cut moved inward (the true inward offset, rounded to 4 mm where a narrow snout's mouth comes to a point). Each is rooted in the gum as built, a millimetre inside a thin chin at most, and reaches past the cut by `tip`. Procumbent lower incisors lean straight back from their tips. (The skunk's lower incisors reach 4.6 mm past the cut, not 3.7: at 3.7 their crowns showed 3.5 mm at 12°, under the 4 mm bar the others meet, round 4.) Each row is as wide as leaves a hair between neighbours at every height; no two teeth touch (the build refuses).
 - **The tongue** lies on the floor behind the lower teeth, its top below the cut at the tip rising toward the back, its section an ellipse (domed), its tip rounded in plan over as much of its length as it is wide (the bull's, 7 cm wide, read as a pink slab across the open mouth: now 5.6 cm).
 
 **The jaw's weight**: the mandible (below the lip line, above the jaw line read every millimetre off the head's own profile, in front of the line from the jaw's angle up to its joint) is rigid; the throat behind and below it blends; behind the corners the cheeks blend across the lip line; in front of them everything goes over to each lip's own side over `corner.open`, a lip's face with its lip's edge. Round 3 put the faces wholly on their own sides everywhere; near the corners they then left their lips' blended edges, and at speech the open jaw turned some 330 triangles inside-out about the horse's corners (924 mm²): the grey combs at the back of every wedge (round 3's review). The slab's skin (at the corners) is graded from the upper lip to the lower in its middle half only (`SLAB_GRADE`). Graded across the whole slab, its vertices near the lips' faces, which the grid samples irregularly where other skin meets them (round 4's lining did), took 0 to 0.15 at random, and the open jaw drew them into a sawtooth along every lip.
@@ -126,8 +126,10 @@ The hen is the exception: her head and beak are separate parts, and only her bea
 - **The skin is simplified where it was sculpted, the open space, with its shape closed and open as attributes**: the rest positions and the positions with the jaw open 12° count at full weight, and the jaw's weight, the inside, the side of the lips and the fold too, so the reduction keeps them.
 - **Pinches and crossings are prevented.** Where a collapse pinches a thin wall into edges shared by four triangles, or folds the outer skin through itself (closed, at 6°, 12° and 24°; a beak to 12°, past which its mandible turns through the upper one's base by construction), posed as the head is written (rest to the micrometre, jaw weights to 1e-4), the vertices there are locked and the reduction done again.
 - **The lips meet closed: a closed shape.** The authoring mesh keeps the lips' edge rows whole (locked) all along the lip line. The game mesh cannot spend its mouth's few triangles on them: holding them, its gums and floor gave way by up to 7 mm. Reduced, the two lips' faces leave the crease differently, and where the cut meets the approved surface at a shallow angle, the lip's tip is thinner than the sculpt's grid: the band between the lip's outer skin and its rim is the lip's top when open, but inside-out closed, and the renderer culls it, so the teeth showed through (round 2: up to 24 mm²). So each skin carries a **closed shape**, a morph target the runtime blends in over the jaw's last 2° of closing, every moved vertex on the approved surface's section at the cut (C) or the approved surface: the lips' rims onto C; then the outer skin's whole boundary, its vertices in triangles that are not all outer skin, onto C too (a game mesh's reduction takes rims into the outer skin, and along the sides, with the lips parting the whole lip line, its upper lips kept edges 0.2 to 1.9 mm above the crease, at places straight into the cavity: the real renderer showed up to 23 mm² of teeth through the pig director's closed lips, at eye level); then, round by round, the outer vertices of any crease triangle still inside-out against the approved surface (at most 8 mm away, the cow's lower lip under her overhang); last, each lip's vertices on C onto the other lip's chords (the nearest point within 1 mm), so the two lips' creases are one line. Moved in the rest pose itself, they folded the open lips through themselves (the bull, 97 crossings); as a closed shape they lie in the crease only while it is closed. (Round 2's half-millimetre overlap of the faces passed an instrument that drew back faces and leaked in the renderer.)
-- **Closed, no tooth shows.** After each level's reduction and its closed shape, the build looks at the closed head from the test's 120 directions (`view.mjs` `closedVisibility`, at 5 px/mm) and, where a tooth or the tongue shows over 0.25 mm² (half the test's bar), reduces the level again with the source's vertices kept within 4, then 7, then 10 mm of every triangle of it seen. With the lining gone, four game meshes' lips over the incisors first came out coarser: the horse's, the sheep's, the bull's and the skunk's showed 0.9 to 8.4 mm² of incisor closed, the skunk's standing 1 mm through its lip. Kept, the horse's, the bull's and the sheep's game meshes cost 10 to 64 triangles more; the skunk's is 18 lighter. `view.mjs` (the posing, the z-buffer and the closed views it shares with the tests' instruments) is in the source hash.
+- **Closed, no tooth shows.** After each level's reduction and its closed shape, the build looks at the closed head from the test's 120 directions (`view.mjs` `closedVisibility`, at 5 px/mm) and, where a tooth or the tongue shows over 0.25 mm² (half the test's bar), reduces the level again with the source's vertices kept within 4, then 7, then 10 mm of every triangle of it seen. With the lining gone, four game meshes' lips over the incisors first came out coarser: the horse's, the sheep's, the bull's and the skunk's showed 0.9 to 8.4 mm² of incisor closed by the test's instrument at 10 px/mm (1.1, 2.0, 1.5 and 8.6 mm² by the build's at 5 px/mm), the skunk's standing 1 mm through its lip. Kept, the horse's, the bull's and the sheep's game meshes cost 10 to 64 triangles more; the skunk's is 18 lighter. `view.mjs` (the posing, the z-buffer and the closed views it shares with the tests' instruments) is in the source hash.
 - **The game mesh's mouth is coarse, but not webbed.** At the game mesh's mouth tolerance of 8 mm, with the jaw's weight counted at 6 mm a full change, a few long floor triangles reached from the front to a corner's half-weighted vertex and rose across the open mouth, hiding the tongue (1 to 47% seen on the game meshes, round 3). The game mesh's mouth is simplified to 4 mm, and the jaw's weight counts 20 mm a full change, as in the authoring mesh. In round 3 that put the dog and the bull at 11,996 and 11,978 triangles, and the user raised the speaking character's cap from 11,500 to 12,000 ("i'm ok with raising the cap, but we really dont need a lot of detain inside the mouth"). With round 4's mesher the reductions no longer work around inside-out triangles, and every game mesh but the goat's (4 triangles heavier) is lighter than round 3's, by 80 to 870 triangles (table below; the dog's speaking character, the heaviest, is 11,728). The dog, the heaviest character, keeps its four-sided game teeth (`toothSides`).
+- **Normals about the mouth are the approved surface's.** Within 20 mm of the lips' faces (blending back to the sculpt's own by 35 mm) the outer skin takes the approved surface's normal: the approved field's gradient at the vertex's rest position, carried to where it is written (the placement, and the donkey's neck revision) by the inverse transpose of the map's Jacobian (`outerNormals`). The sculpt's own there were the expanded field's at the lips' sharp edges, and the cow's, the director's and the donkey's mesh normals folded into the crease: within 15 mm of it 10 to 105 outer vertices a mesh were over 45° off the approved surface, and shaded the closed crease and the open lips' edges with whiskers (the pig director), a glint line (the cow) and white fangs at the corners (the donkey's game mesh), in grey at portrait scale and in the game's lit paint (round 4's review). Closed, the lips' faces where the closed shape lays them at the surface (within 3 mm of it) take the approved surface's normal too, as a morph of the normals with the closed shape (`closedNormal`): with their open facings they glinted along the cow's closed crease.
+- **A beak keeps its root.** The hen's game mesh keeps its authoring vertices within 1 cm of the hinge's line across the beak (`BEAK_ROOT`): reduced freely there, a lower mandible's triangles stood up through the upper's base as a fin a centimetre tall, and more of her tongue showed through her closed beak (round 4's review). It costs her game beak 70 triangles.
 - **Normals for the mouth.** Each mesh's mouth (its lips' faces and inside) takes its own normals, its triangles' facings with the jaw open 6°, turned back to rest by each vertex's weight. The game mesh's kept the dense sculpt's normals through the reduction and its coarse triangles shaded as stripes (round 2). The authoring mesh's did the same until round 4; at the lips' rims they are the field's gradient at a sharp edge, and the rims shaded up to 17% of their area over 60° off their triangles. The skin between the parted lips (at the corners) has normals of its own, the band's (`bandNormals`): a vertex on a lip's edge keeps its own normal for the lip and has the band's for the band, and the runtime blends to the band's where a fragment is graded between the lips.
 - **Vertices a hair apart in every pose become one** where the surface stays closed.
 - **Teeth and the tongue are made, not reduced**: closed lathes, 140 (a tooth) and 336 triangles in the authoring mesh, 30 (the dog's 24) and 72 in the game mesh.
@@ -149,7 +151,7 @@ Triangles, as built (a tooth 140 in the authoring mesh, 30 in the game mesh, the
 | pig director | 10,910 = 8334 + 2240 + 336 | 3,634 = 3082 + 480 + 72 | 11,482 (was 9,998) | 518 |
 | rabbit | 9,892 = 8996 + 560 + 336 | 3,302 = 3110 + 120 + 72 | 10,968 (was 10,156) | 1032 |
 | dog | 10,432 = 7856 + 2240 + 336 | 3,532 = 3076 + 384 + 72 | 11,728 (was 10,446) | 272 |
-| hen | 2,410 = 2074 + 0 + 336 | 966 = 894 + 0 + 72 | 10,664 (was 10,348) | 1336 |
+| hen | 2,410 = 2074 + 0 + 336 | 1,036 = 964 + 0 + 72 | 10,734 (was 10,348) | 1266 |
 
 ### 4. Painterly skin
 
@@ -188,91 +190,85 @@ speech.setJaw(jawAt(t,{start,open:SPEECH_OPEN[profile.id],syllables}));    // ra
 - **Lifetime:** the rig belongs to the speaking character for its life. `speech.dispose()` releases the teeth and tongue; `worker.dispose()` releases the rest.
 - **Speech:** `jawAt` opens the jaw once a syllable, wider for stressed ones. `SPEECH_OPEN` parts the lips about 2.5 cm at the front at full stress (4.5–8.6°, by the jaw's lever).
 
-## Round 3 → round 4
+## Round 4 → round 5
 
-Round 3 (6/10) found two things blocking painting, and during round 4 the user redirected the mouth's inside twice (Direction). What changed, finding by finding:
+Round 4 (7/10, `hybrid-review/speaking-heads/reviews/round-4.md`) found one thing blocking painting. What changed, finding by finding:
 
-- **The user's direction: the sides open, the roof and floor crimson.** Round 3's lining (the user's "flaps") is gone from every head, and so is round 4's first answer to it, the lining run to the cavity's front corner, which the user saw as "opaque walls on the side of the mouth that should be open space" and sketched away. The open mouth is the wedge's roof and floor, crimson, joined at the corners; its sides and front are open (step 2). In exact profile at 24°, 76 to 92% of the opening between the lips shows the background from either side, the rest teeth and tongue (the rabbit's mouth, across the front of her face, the least), by test; the lining showed none.
-- **MUST-FIX 1, see-through at eye level** (round 3's review: 16 to 17 cm² of background through the pig director's mouth in exact profile). Answered by the user's direction: in exact profile the open mouth is seen through between the lips, as the hen's beak is. What the open head must not show is its own inside through a hole, a crack or an inside-out triangle, and the instrument for that is new (MUST-FIX 2). It finds slivers of 1.1 to 9.4 mm² on 17 of the 24 meshes where the eye meets a surface from behind first. Those looked at (the horse's and the cow's from the game's camera, the dog's game mesh at 24°) are triangles of the lips' faces near the corners, where the jaw's weight blends, turned inside-out as the jaw opens, and the dog's cheeks at its corners: held as known at what they measure (Not done). Round 3's holes were the mesher's inside-out triangles (step 2), gone.
-- **MUST-FIX 2, the see-through instrument vacuous and one-sided.**
-  - `lipTips` looks for each lip within its own reach and throws if a lip has no face. Both instruments throw if the head is not in the frame (both lips' tips inside it, the skin over 2% of it); round 3's read 0 on four game meshes while drawing nothing.
-  - `holesThrough` draws the head with back faces and counts where the eye's first surface is seen from behind: there it looks into the head, whatever the renderer then shows. A line of sight through the open mouth meets the mouth's inside, which faces it, or nothing, so the mouth's openings need no curtain. Round 3's instrument and round 4's first counted background the border's flood fill could not reach, the front opening closed by a curtain over the lips' edges: with the sides open that counts the open mouth itself (7 to 35 mm² from the game's camera through the goat's game mesh and the skunk's, by design), and a hole that shows the mouth's inside, not the background, counts nothing.
-  - The test looks in exact profile from either side at speech, 12° and 24°, and from the game's camera every 15° all round, and holds the largest one to 1 mm², the known meshes to what they measure. It can fail, by test: a hole 12 mm across punched in the horse's cheek reads 150 mm² from the game's camera, where the mouth's floor shows through it; three of the floor's triangles turned inside-out read 79 mm²; a head it cannot see throws.
-  - From the character's right, round 3's review found single holes of 3.1 to 12.8 mm² (the donkey's 12.8, the dog's 8.9, the pig foreman's 5.9, the horse's 4.6, the sheep's 3.4): the mesher's inside-out triangles, worse on one side than the other because the tetrahedra's diagonals run one way.
-  - `seeThrough`, with its curtain, now measures the open sides: the background through the head against the background through the outer skin alone (`outerOnly`). A wall over the lips' whole edges, standing in the opening as the lining did, leaves none of the horse's opening seen through, by test.
-- **S1, the box.** The lining is gone. The tongue's card-like front and the cavity's flat roof are not changed; the mouth's inside is to stay coarse (the user).
-- **S2, ragged lip edges and the corners' combs.** Three causes, each fixed (step 2):
-  - the mesher's inside-out triangles along the lips' edges;
-  - the faces left behind by their lips' blended edges near the corners: round 3's rule, the combs. On the same sculpt it turned some 330 triangles inside-out about the horse's corners at speech.
-  - the slab graded linearly across the faces' junction with the lining: a sawtooth.
+- **MUST-FIX 1, the lips' outer skin shaded with streaks.** Closed, whiskers ran along the pig director's crease, a glint line along the cow's, and white fangs stood at the donkey game mesh's corners. Open, the same fringe ran along the lips' edges. It showed in grey at portrait scale and in the game's lit paint; the viewer's default paint is unlit and hid it. Both causes are fixed in the build (step 3, "Normals about the mouth"):
+  - The outer skin about the mouth takes the approved surface's own normals. Within 15 mm of the crease no outer vertex is now more than 0.1° off them, on any mesh. Round 4 had 10 to 105 a mesh over 45°, up to 167°.
+  - Closed, the lips' faces at the crease take them too, as a morph of the normals with the closed shape: at most 0.1° off. The cow's last specks, which stayed with its teeth hidden, were those faces lit by their open facings.
+  - A test holds both to 20°, against the approved surface's normal computed independently of the build: the gradient of the approved field, pulled back to where the head is written, with the donkey's neck revision inverted by Newton's method. It can fail: the outer skin turned 30°, and the closed faces given back their open facings, both show, by test.
+  - Photographed before and after, in grey at portrait and close scale and in the game's lit paint at 620 and 1,500 px a unit: the whiskers, the glint line and the fangs are gone, closed and open.
+- **S1, the box and the card tongue from the front.** Not changed: the mouth's inside is to stay coarse (the user).
+- **S2, the rim sawtooth on the authoring meshes.** Not changed (Not done). The streaks over it are gone; the sawtooth is geometry.
+- **S3, the hen's game beak.** It keeps its root (step 3), and the fin is gone. Closed, it shows 5.7 mm² of tongue (round 4: 8.3 by the test's instrument, 9.21 in round 4's review's renderer; round 3: 2.31) and 4.1 mm² of background through its slit; her approved beak shows 33 mm² through its gape. It costs 70 triangles: her speaking character is 10,734.
+- **S4, the open bar's views.** `holesThrough` now looks from 216 views a mesh (6 groups):
+  - every 15° all round at eye level, at speech, at 12° and at 24°;
+  - from the game's camera, 30° above, at speech;
+  - from 15° and 30° below at speech;
+  - through the closed shape's fade at 0.5°, 1° and 1.5°, every 30°, at eye level and from 30° above.
 
-  Round 3 also moved the lips' edge rows onto the crease in the rest pose alone, in full, which turned 1 to 2% of the edge triangles inside-out. Now each moves only as far as turns none, and the open shape moves with it.
-- **S3, closed.** The closed instrument frames every view on the whole crease, and counts background through the closed head as well as teeth. Round 3's fixed 9 cm field missed the dog's corners; a tooth put through its crease there now reads 6.9 mm², by test. Closed, no mammal mesh shows more than 0.02 mm² of tooth or 0.02 mm² of background, from 120 directions at 10 px/mm. That includes round 3's cow's and bull's game meshes (0.99 and 0.63 mm² of tooth in round 3's review's renderer). With the lining gone, four game meshes first came out with their lips over the incisors coarser, and showed 0.9 to 8.4 mm² of incisor closed (the skunk's standing 1 mm through its lip): the build now looks at each closed head from the test's directions and reduces again with the lips kept round any tooth it sees (step 3).
-- **S4, the stripe test held no head.** It now holds every mesh but one, the skunk's game mesh, held as known at its measured share (10% of the lips' rims; Not done). Both meshes' mouths take normals from their own triangles (step 3). The light-only renders show the inside lit evenly and a thin fringe along the lips' edges.
-- **S5, the closed crease at close range.** Not changed. At 5 px/mm in grey the crease is faceted where the approved surface is smooth; painted at portrait scale it is under a pixel.
-- **S6, the hen.**
-  - Her tongue's top stays below her gape (step 2): her closed authoring beak shows 0.05 mm² of it (round 3: 0.9 by instrument, 1.36 in round 3's review's renderer).
-  - Her game beak is coarser with round 4's mesher: 894 triangles, against 1,304 in round 3, when its reduction locked its way round inside-out triangles. It shows 8.3 mm² of tongue closed.
-  - Both beaks show a slit along the gape, as her approved beak does (Not done).
-- **S7, the game meshes' crowns.** Met: the game meshes' incisor crowns are 4.1 mm at the least (the pig foreman's), by test; round 3's were 3.6 to 3.9 mm on five of them.
+  It also reports what the renderer shows through each sliver. Background shows through none, on any mesh, from any view: by test, a gate with no exceptions. The slivers themselves, with the mouth's inside seen through them, measure 1.1 to 17.8 mm² on 21 meshes over these views (round 4: 17 meshes, at its 30 views). They are held at what they measure (Not done).
+- **S5, the open-sides bar.** It is now 70%. A wall over the back half of the lip line, where round 3 stood its flaps, reads 54% on the horse and fails it, by test (57 to 62% on the pig director, the dog and the goat). The least head is the rabbit's, 76%.
+- **S6, the closed-teeth guard.** Unchanged. Its first readings are now given in both rigs (step 3).
+- **S7, teeth against the lips' inner faces, and the skunk's game tongue.** Unchanged, held by the user's guidance.
 - **The nits:**
-  - **N1.** The tests' todo texts are re-measured.
-  - **N2.** Round 3's claim of 350 to 750 more triangles is gone (step 3).
-  - **N3.** No closed case is held as known.
-  - **N4.** No head has a lining.
-  - **N5.** `mouthShading`'s comment says what the renderer does.
-  - **N6.** The horse game mesh's nostril is not addressed.
-- **Round 3's false claims:**
-  - **1.** The lining closing exact profile: the lining is gone, by the user's direction; exact profile is open by design.
-  - **2 and 3.** The camera instrument and its table: see MUST-FIX 2. The table below is the test's own views.
-  - **4.** Every head meeting the bars: the known cases are listed under Not done.
-  - **5.** KNOWN's holes: there are none; the slivers are held as known (`backFirst`).
-  - **6.** The closed leaks: see S3.
-  - **7.** The box: see S1.
-  - **8.** The hen: see S6.
-  - **9.** The pig director's walls: see N4.
-  - **10.** The triangle counts: see N2.
-  - **11.** The todo texts: see N1.
+  - **N1.** The evidence sheets now photograph the widest speech opening too, and from below.
+  - **N2.** The guard's first readings are given at the build's 5 px/mm as well as the test's 10 px/mm.
+  - **N3.** The dead `known('closed')` branches are gone.
+  - **N4.** Headings are named in the viewer's terms (front, side, from below).
+  - **N5.** The goat's and donkey's side nostrils are still the user's to answer.
+- **Round 4's false or overstated claims:**
+  1. **S2 "each fixed".** The streaks are fixed in round 5; the rim sawtooth is not (Not done).
+  2. **"Under a pixel when painted".** False, as the review showed in grey and in the game's lit paint. Fixed in round 5, and the claim is gone.
+  3. **"Closed, a speaking head is the approved head".** True in shading now too, by test.
+  4. **"Teeth and tongue fill the rest".** The lips' own faces, seen obliquely, cover 8 to 22% of the opening, and teeth and tongue 0.6 to 2.1% (round 4's review).
+  5. **The shading bar's scope.** Now stated: the lips' faces and the band. The outer skin is held by the normals test.
+  6. **"Held to what they measure".** That was at the test's views only; they are now 216 a mesh.
+  7. **The one-sided holes.** The mesher explains round 3's holes, not why they were one-sided (step 2).
+  8. **`prepare`'s comment on normals.** Corrected.
+  9. **The skunk's lower incisors.** Their 4.6 mm reach is now stated (step 2).
 
 The acceptance numbers, measured on both meshes at the test's own views (`measure.mjs`; the heads posed as the runtime poses them, the closed shape blended in at 0°, drawn as the renderer draws them):
 
-| Head, mesh | Open sides: the opening between the lips seen through in exact profile at 24° (the less of either side) | The head’s inside seen first (a hole, crack or inside-out triangle), the largest one, mm²: exact profile either side (speech, 12°, 24°) / the game’s camera all round (speech) | Closed: teeth or tongue / background through, mm² (10 px/mm) | Through the outer skin: closed (most, mm) / open (triangles) / unrooted teeth | Through a lip’s face, open | Incisor crown at 12° (least, mm) | Tongue seen from the front at 12° | Mouth shading over 60° off (worst of 6°, 12°) | Outer skin crossing itself at 6°/12°/24° | Jaw line under 0.9 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| horse, authoring | 92% | 0.25 / 2.38 | 0.00 / 0.00 | 0.00 / 0 / 0 | 4 | 5.6 | 70% | 0% | 0 / 0 / 0 | 0 |
-| horse, game | 88% | 5.00 / 2.06 | 0.00 / 0.00 | 0.00 / 1 / 0 | 3 | 5.6 | 70% | 1% | 0 / 0 / 0 | 0 |
-| goat, authoring | 84% | 0.00 / 0.38 | 0.00 / 0.00 | 0.00 / 0 / 0 | 0 | 6.1 | 80% | 0% | 0 / 0 / 0 | 0 |
-| goat, game | 87% | 3.75 / 0.88 | 0.00 / 0.00 | 0.00 / 0 / 0 | 6 | 5.5 | 86% | 0% | 0 / 0 / 0 | 0 |
-| bull, authoring | 91% | 0.44 / 2.69 | 0.00 / 0.00 | 0.00 / 0 / 0 | 3 | 5.7 | 88% | 0% | 0 / 0 / 0 | 0 |
-| bull, game | 86% | 1.63 / 1.44 | 0.01 / 0.00 | 0.00 / 1 / 0 | 7 | 6.0 | 71% | 0% | 0 / 0 / 0 | 0 |
-| cow, authoring | 90% | 0.50 / 2.94 | 0.00 / 0.00 | 0.00 / 0 / 0 | 8 | 4.8 | 81% | 0% | 0 / 0 / 0 | 0 |
-| cow, game | 88% | 6.06 / 8.63 | 0.00 / 0.00 | 0.00 / 1 / 0 | 4 | 4.9 | 42% | 1% | 0 / 0 / 0 | 0 |
-| donkey, authoring | 89% | 0.25 / 1.06 | 0.00 / 0.00 | 0.00 / 0 / 0 | 0 | 8.7 | 69% | 0% | 0 / 0 / 2 | 0 |
-| donkey, game | 86% | 0.69 / 1.25 | 0.01 / 0.00 | 0.00 / 2 / 0 | 2 | 7.8 | 46% | 0% | 0 / 0 / 0 | 0 |
-| sheep, authoring | 91% | 1.75 / 2.63 | 0.00 / 0.00 | 0.00 / 0 / 0 | 0 | 5.7 | 78% | 0% | 0 / 0 / 0 | 0 |
-| sheep, game | 83% | 0.06 / 0.19 | 0.02 / 0.00 | 0.00 / 0 / 0 | 1 | 5.7 | 83% | 1% | 0 / 0 / 0 | 0 |
-| skunk, authoring | 88% | 0.69 / 1.13 | 0.00 / 0.00 | 0.00 / 0 / 0 | 6 | 4.7 | 86% | 1% | 0 / 0 / 0 | 0 |
-| skunk, game | 90% | 3.38 / 1.88 | 0.02 / 0.02 | 0.00 / 0 / 0 | 5 | 4.7 | 23% | 10% | 0 / 0 / 0 | 0 |
-| pig foreman, authoring | 91% | 0.19 / 2.69 | 0.00 / 0.00 | 0.00 / 0 / 0 | 2 | 5.8 | 89% | 1% | 0 / 0 / 0 | 0 |
-| pig foreman, game | 89% | 0.06 / 0.06 | 0.00 / 0.00 | 0.00 / 2 / 0 | 4 | 4.1 | 91% | 0% | 0 / 0 / 0 | 0 |
-| pig director, authoring | 92% | 0.81 / 2.38 | 0.00 / 0.00 | 0.00 / 0 / 0 | 1 | 6.3 | 73% | 0% | 0 / 0 / 0 | 0 |
-| pig director, game | 91% | 0.75 / 2.81 | 0.00 / 0.01 | 0.00 / 1 / 0 | 4 | 4.7 | 75% | 0% | 0 / 0 / 0 | 0 |
-| rabbit, authoring | 76% | 0.31 / 0.19 | 0.00 / 0.00 | 0.00 / 0 / 0 | 0 | 6.9 | 83% | 0% | 0 / 0 / 0 | 0 |
-| rabbit, game | 80% | 0.63 / 0.38 | 0.00 / 0.00 | 0.00 / 0 / 0 | 3 | 6.1 | 86% | 0% | 0 / 0 / 0 | 0 |
-| dog, authoring | 91% | 0.25 / 1.38 | 0.00 / 0.00 | 0.00 / 0 / 0 | 2 | 5.3 | 87% | 0% | 0 / 0 / 0 | 0 |
-| dog, game | 84% | 9.38 / 0.50 | 0.00 / 0.00 | 0.00 / 1 / 0 | 1 | 5.4 | 77% | 0% | 0 / 0 / 0 | 0 |
-| hen, authoring | – (her whole gape is her front opening) | 0.69 / 0.06 | 0.05 / 3.16 | 0.00 / 1 / 0 | 0 | – | 0% (from 30° above) | 0% | 0 / 0 / – | – |
-| hen, game | – (her whole gape is her front opening) | 0.94 / 0.06 | 8.27 / 2.32 | 0.00 / 1 / 0 | 0 | – | 0% (from 30° above) | 0% | 0 / 0 / – | – |
+| Head, mesh | Open sides: the opening between the lips seen through in exact profile at 24° (the less of either side) | The head’s inside seen first (a hole, crack or inside-out triangle), the largest one, mm², all round: eye level (speech, 12°, 24°) / above (30°) / below (15°, 30°) / closing (0.5–1.5°) | Normals off the approved surface: outer skin about the mouth / closed faces at the crease (most, degrees) | Closed: teeth or tongue / background through, mm² (10 px/mm) | Through the outer skin: closed (most, mm) / open (triangles) / unrooted teeth | Through a lip’s face, open | Incisor crown at 12° (least, mm) | Tongue seen from the front at 12° | Mouth shading over 60° off (worst of 6°, 12°) | Outer skin crossing itself at 6°/12°/24° | Jaw line under 0.9 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| horse, authoring | 92% | 4.69 / 2.38 / 2.44 / 1.31 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 0 / 0 | 4 | 5.6 | 70% | 0% | 0 / 0 / 0 | 0 |
+| horse, game | 88% | 5.63 / 2.06 / 2.19 / 1.50 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 1 / 0 | 3 | 5.6 | 70% | 1% | 0 / 0 / 0 | 0 |
+| goat, authoring | 84% | 0.44 / 0.38 / 0.31 / 0.44 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 0 / 0 | 0 | 6.1 | 80% | 0% | 0 / 0 / 0 | 0 |
+| goat, game | 87% | 3.75 / 0.88 / 1.50 / 0.81 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 0 / 0 | 6 | 5.5 | 86% | 0% | 0 / 0 / 0 | 0 |
+| bull, authoring | 91% | 4.56 / 2.69 / 7.38 / 2.00 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 0 / 0 | 3 | 5.7 | 88% | 0% | 0 / 0 / 0 | 0 |
+| bull, game | 86% | 3.13 / 1.44 / 2.38 / 1.94 | 0.0 / 0.0 | 0.01 / 0.00 | 0.00 / 1 / 0 | 7 | 6.0 | 71% | 0% | 0 / 0 / 0 | 0 |
+| cow, authoring | 90% | 2.94 / 2.94 / 3.31 / 2.13 | 0.0 / 0.1 | 0.00 / 0.00 | 0.00 / 0 / 0 | 8 | 4.8 | 81% | 0% | 0 / 0 / 0 | 0 |
+| cow, game | 88% | 13.38 / 8.63 / 7.94 / 5.75 | 0.0 / 0.1 | 0.00 / 0.00 | 0.00 / 1 / 0 | 4 | 4.9 | 42% | 1% | 0 / 0 / 0 | 0 |
+| donkey, authoring | 89% | 1.75 / 1.06 / 1.56 / 1.00 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 0 / 0 | 0 | 8.7 | 69% | 0% | 0 / 0 / 2 | 0 |
+| donkey, game | 86% | 1.75 / 1.25 / 2.88 / 1.50 | 0.0 / 0.0 | 0.01 / 0.00 | 0.00 / 2 / 0 | 2 | 7.8 | 46% | 0% | 0 / 0 / 0 | 0 |
+| sheep, authoring | 91% | 2.94 / 2.63 / 2.88 / 1.63 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 0 / 0 | 0 | 5.7 | 78% | 0% | 0 / 0 / 0 | 0 |
+| sheep, game | 83% | 0.06 / 0.19 / 0.44 / 6.56 | 0.0 / 0.0 | 0.02 / 0.00 | 0.00 / 0 / 0 | 1 | 5.7 | 83% | 1% | 0 / 0 / 0 | 0 |
+| skunk, authoring | 88% | 7.44 / 1.13 / 17.75 / 7.06 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 0 / 0 | 6 | 4.7 | 86% | 1% | 0 / 0 / 0 | 0 |
+| skunk, game | 90% | 3.44 / 1.88 / 2.88 / 1.50 | 0.0 / 0.0 | 0.02 / 0.02 | 0.00 / 0 / 0 | 5 | 4.7 | 23% | 10% | 0 / 0 / 0 | 0 |
+| pig foreman, authoring | 91% | 8.81 / 2.69 / 3.00 / 1.81 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 0 / 0 | 2 | 5.8 | 89% | 1% | 0 / 0 / 0 | 0 |
+| pig foreman, game | 89% | 0.81 / 0.06 / 0.19 / 3.44 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 2 / 0 | 4 | 4.1 | 91% | 0% | 0 / 0 / 0 | 0 |
+| pig director, authoring | 92% | 1.56 / 2.38 / 3.19 / 1.50 | 0.0 / 0.1 | 0.00 / 0.00 | 0.00 / 0 / 0 | 1 | 6.3 | 73% | 0% | 0 / 0 / 0 | 0 |
+| pig director, game | 91% | 2.88 / 2.81 / 3.13 / 2.56 | 0.0 / 0.0 | 0.00 / 0.01 | 0.00 / 1 / 0 | 4 | 4.7 | 75% | 0% | 0 / 0 / 0 | 0 |
+| rabbit, authoring | 76% | 0.31 / 0.19 / 0.25 / 0.19 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 0 / 0 | 0 | 6.9 | 83% | 0% | 0 / 0 / 0 | 0 |
+| rabbit, game | 80% | 0.81 / 0.38 / 0.38 / 1.69 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 0 / 0 | 3 | 6.1 | 86% | 0% | 0 / 0 / 0 | 0 |
+| dog, authoring | 91% | 0.31 / 1.38 / 1.63 / 1.00 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 0 / 0 | 2 | 5.3 | 87% | 0% | 0 / 0 / 0 | 0 |
+| dog, game | 84% | 10.06 / 0.50 / 1.19 / 0.19 | 0.0 / 0.0 | 0.00 / 0.00 | 0.00 / 1 / 0 | 1 | 5.4 | 77% | 0% | 0 / 0 / 0 | 0 |
+| hen, authoring | – (her whole gape is her front opening) | 0.75 / 0.06 / 0.06 / 0.25 | 0.1 / 0.0 | 0.05 / 3.16 | 0.00 / 1 / 0 | 0 | – | 0% (from 30° above) | 0% | 0 / 0 / – | – |
+| hen, game | – (her whole gape is her front opening) | 0.06 / 0.06 / 0.06 / 1.13 | 0.1 / 0.0 | 5.69 / 4.11 | 0.00 / 1 / 0 | 0 | – | 0% (from 30° above) | 0% | 0 / 0 / – | – |
 
 The bars, held by `tests/speaking-heads.test.mjs`:
-- **Open sides:** in exact profile at 24°, from either side, at least half the opening between the lips (the background through the outer skin alone) shows the background through the head: teeth and tongue fill the rest. The hen is excepted: her front opening, which the instrument closes, is her whole gape.
-- **The head's inside:** no hole, crack or inside-out triangle seen, the largest one at most 1 mm², in exact profile from either side at speech, 12° and 24°, and from the game's camera (30° above) every 15° all round at the widest speech. The known meshes are held to what they measure.
-- **Closed:** at most 0.5 mm² of tooth or tongue, and of background through the head, from any of 120 directions, each framed on the whole crease.
-- **Teeth through the outer skin:** none closed (outside the skin's solid on its outer side, beyond 0.05 mm, half a pixel at 10 px/mm) or open (crossing its triangles), and every tooth rooted, closed and at 6°, 12° and 24°.
-- **Crowns:** incisor crowns at least 4 mm at 12° (the authoring mesh).
-- **Tongue:** at least 30% of it seen from the front at 12° (the authoring mesh).
-- **Self-crossing:** no outer skin crossing itself at 6°, 12° and 24° (a beak to 12°).
-- **Shading:** no more than 6% of the lips' rims shading over 60° off their triangles.
-- **Jaw line:** no jaw-line column under 0.9 (the authoring mesh).
+- **Open sides.** In exact profile at 24°, from either side, at least 70% of the opening between the lips shows the background, measured against the background through the outer skin alone. The lips' own faces, seen obliquely, and the teeth and tongue fill the rest. The hen is excepted: her front opening, which the instrument closes, is her whole gape.
+- **Nothing through the head.** No background is seen through the head from any of the 216 views above. The largest one sliver of the head's inside seen first (a hole, crack or inside-out triangle) is at most 1 mm²; the known meshes are held to what they measure.
+- **Normals.** The outer skin within 15 mm of the crease, and closed the lips' faces at the crease, are within 20° of the approved surface's normal.
+- **Closed.** At most 0.5 mm² of tooth or tongue, and of background through the head, from any of 120 directions, each framed on the whole crease.
+- **Teeth through the outer skin.** None closed (outside the skin's solid on its outer side, beyond 0.05 mm, half a pixel at 10 px/mm) and none open (crossing its triangles). Every tooth is rooted, closed and at 6°, 12° and 24°.
+- **Crowns.** Incisor crowns of at least 4 mm at 12°, on both meshes.
+- **Tongue.** At least 30% of it seen from the front at 12° (the authoring mesh).
+- **Self-crossing.** No outer skin crosses itself at 6°, 12° and 24° (a beak to 12°).
+- **Shading.** No more than 6% of the open mouth's lips' faces and the band between them shade over 60° off their triangles.
+- **Jaw line.** No jaw-line column under 0.9 (the authoring mesh).
 
 Every head meets them except those held as known (Not done).
 
@@ -285,7 +281,8 @@ Every head meets them except those held as known (Not done).
 - **The painted mouth line:** each mouth parts on it. `mouths.mjs` is the fit to the traces, the fit is within 2.5 mm (rms) of the painted line, and a line moved 4 mm fails it.
 - **Closed:** the outer skin lies on the approved surface (within the meshing error), and the lips are on their own sides.
 - **The acceptance numbers,** on both meshes, by the instruments in the tree. They pose the heads as the runtime does (the closed shape blended in at 0°) and draw them as the renderer does (back faces culled):
-  - open, the mouth open at its sides in exact profile (a wall standing in the opening fails it), and no hole, crack or inside-out triangle seen, in exact profile from either side or from the game's camera all round. That instrument can fail: a hole punched in a cheek and a patch of the floor turned inside-out show, and a head it cannot see throws.
+  - open, the mouth open at its sides in exact profile (a wall standing in the opening fails it, and one over the back half of the lip line), no background seen through the head and no hole, crack or inside-out triangle seen, all round at eye level, from above and below and as the jaw closes. That instrument can fail: a hole punched in a cheek and a patch of the floor turned inside-out show, the hole shows the background from the side, and a head it cannot see throws.
+  - the outer skin about the mouth, and closed the lips' faces at the crease, shading as the approved surface: their normals against its own, computed independently of the build (and turned normals fail it).
   - closed, no tooth or tongue and no background, framed on the whole crease. A tooth put through the dog's crease at its corner shows.
   - teeth and tongue in the skin at every opening: rooted, through the outer skin neither closed nor open, incisor crowns showing.
   - the tongue seen from the front.
@@ -295,25 +292,26 @@ Every head meets them except those held as known (Not done).
 - **Known defects** are held as todo tests, so they show in every run: the cases in `KNOWN` (Not done), each at the bar the others meet (the slivers are also held to what they measure, so none grows unseen); the hen's closed beak and tongue; the skunk's game tongue; teeth against the lips' inner faces.
 - **The rest:** the budgets; the head takes the skull's place and nothing else changes; the jaw turns about its joint; the beard rides the jaw; `jawAt` and `SPEECH_OPEN`.
 
-The suite takes about three minutes, most of it the closed views framed on the whole crease and the open views drawn twice.
+The suite takes about six minutes, most of it the open views (216 a mesh) and the closed views framed on the whole crease.
 
-`tools/speaking-heads-review.mjs --stage=grey|paint` photographs every character in the real renderer and writes the evidence in `hybrid-review/speaking-heads/<stage>/`. The views are the side from the character's left and right, three-quarter, front, and the game's camera from its left and right; the poses are closed, 12° and 24°. It needs the page served and a Playwright with Edge (`PLAYWRIGHT_PATH`).
+`tools/speaking-heads-review.mjs --stage=grey|paint` photographs every character in the real renderer and writes the evidence in `hybrid-review/speaking-heads/<stage>/`. The views are the side from the character's left and right, three-quarter, front, below, and the game's camera from its left and right; the poses are closed, the widest speech, 12° and 24°. It needs the page served and a Playwright with Edge (`PLAYWRIGHT_PATH`).
 
 ## Not done
 
 - **Known defects, held as todo tests** (`KNOWN` in the test file, as measured; every other head is held to the bar):
-  - open, the head's inside is seen first through slivers of 1.1 to 9.4 mm² on 17 of the 24 meshes: those looked at are triangles of the lips' faces near the corners, where the jaw's weight blends, turned inside-out as the jaw opens, the largest on the game meshes (the cow's 8.6 mm² from the game's camera; the dog's 9.4 mm² at its corners' cheeks in exact profile at 24°, past any speech opening). Each is held to what it measures;
+  - open, the head's inside is seen first through slivers of 1.1 to 17.8 mm² on 21 of the 24 meshes, over the hole test's 216 views; no background shows through any. Those looked at are triangles of the lips' faces near the corners, where the jaw's weight blends, turned inside-out as the jaw opens; the largest are the skunk's authoring mesh's from below at speech (17.8 mm²), the cow's game mesh's at 24° from the front (13.4) and the dog's game mesh's at its corners' cheeks at 24° (10.1), the last two past any speech opening. Each is held to what it measures;
   - open, teeth or the tongue cross 1 or 2 triangles of the outer skin at the lips on seven game meshes (the horse's, the bull's, the cow's, the donkey's, the pig foreman's, the pig director's and the dog's) and the hen's beak;
   - the donkey's authoring mesh's outer skin crosses itself at 24° (2 pairs), past any speech opening;
   - the skunk's game mesh's lips' rims shade over 60° off their triangles on 10% of their area: in the light-only renders, a thin fringe along the lips' edges;
   - inside the open mouth, which is to stay coarse (the user: "we really dont need a lot of detain inside the mouth"): teeth and tongue graze the lips' inner faces on all eleven mammals (up to 8 triangles on a mesh), and the skunk's game mesh shows 23% of the tongue from the front at 12°.
 - **The hen.**
-  - Closed, her beak leaves a slit along the gape from the side, as her approved beak does: 3.2 and 2.3 mm² of background through it (authoring, game).
-  - Through the game mesh's coarse gape, 8.3 mm² of her tongue shows closed.
+  - Closed, her beak leaves a slit along the gape from the side, as her approved beak does (33 mm² through its own): 3.2 and 4.1 mm² of background through it (authoring, game).
+  - Through the game mesh's gape, 5.7 mm² of her tongue shows closed (round 3: 2.3 in round 4's review's renderer).
   - Her tongue hides open behind her upper mandible's hook, and her lower mandible's tip shows from the front.
   - She is the one character with a speaking use, the intro's radio room, where she is far away and hardly visible (the user).
 - **The tongue and the cavity from the front** (round 3's S1): from the front the tongue's rise reads as a card and the cavity's roof is flat.
-- **The pig director's chin (S7)** and **the closed crease at close range in grey (S5)**.
+- **The rim sawtooth** (round 4's S2): along the authoring meshes' lips the outer skin's and the faces' triangles interleave, so at close range (6 px/mm) the rim is a saw blade with teeth 3 to 4 mm wide, worst on the pig director; about 2 px at portrait scale. In exact profile the silhouette is clean (0.5 mm, p95).
+- **The pig director's chin** (round 3's S7).
 - **The rabbit's painted trace** stops at 6 cm across her face (N3); her crease runs to 7.25 cm.
 - **The shared mesher.** `dist/tactics/grey-surface.js` winds triangles by the field's gradient at one vertex, which fails at sharp edges (step 2). The approved characters were meshed with it; whoever next rebuilds them should know.
 - **Visemes.** A speaking head has one degree of freedom, its jaw. Lip shapes (wide, round, closed for m/b/p) would be morph targets on the same mesh.
