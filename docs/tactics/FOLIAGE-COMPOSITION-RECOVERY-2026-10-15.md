@@ -2,6 +2,44 @@
 
 Follow-up on `work/foliage-canopy-polish`, replacing the raised-canopy direction in `50cf262`. The user and architect preferred the landscape composition in `85da0d8`: distinct vegetation, visible low ground and wetland water. The broader snow paint remains useful and is retained.
 
+## Latest follow-up: breathing spaces after `c4e60ab`
+
+The user requested small visual resting places within the dense planting, using the old bog as a composition reference. These are **ground/water pockets inside impassable growth**, not new walkable clearings. The copse's saved map and its large clearing are unchanged.
+
+Temperate, jungle, dry and wetland planting now frame sparse, irregular enclosed hollows. Existing leaf fans turn partway around each hollow with unequal setbacks and overlapping tips; low shrub cores and cosmetic root cards yield near the centre. The physical cover branches and their fine supporting stems remain. Upper boundary tips vary in height and lean, while the original body-height foliage band stays in place. The temperate colour treatment, snow geometry and paint, mixed trees, finite sight envelopes, fog and projectile rules are preserved.
+
+After reviewing the live draft, the user requested about 30% fewer openings. A separate deterministic thinning step retains 70% of eligible sites without moving the survivors. In the unchanged copse fixture this reduces **six pockets to four**. It adds no texture images, shadow casters or gameplay obstacles.
+
+| Temperate | Wetlands |
+| --- | --- |
+| ![Temperate copse with fewer quiet pockets](images/foliage-breathing-spaces-2026-10-15/copse-temperate-normal-grid0.jpg) | ![Wetland reeds framing small enclosed pockets](images/foliage-breathing-spaces-2026-10-15/copse-wetlands-normal-grid0.jpg) |
+
+Elevated grid views show the unchanged boundaries in [temperate](images/foliage-breathing-spaces-2026-10-15/copse-temperate-high-grid1.jpg) and [wetlands](images/foliage-breathing-spaces-2026-10-15/copse-wetlands-high-grid1.jpg). The same pass was checked in [jungle](images/foliage-breathing-spaces-2026-10-15/copse-jungle-normal-grid0.jpg), [dry grassland](images/foliage-breathing-spaces-2026-10-15/copse-dry-normal-grid0.jpg) and [unchanged snow](images/foliage-breathing-spaces-2026-10-15/copse-snow-normal-grid0.jpg).
+
+Validation for this follow-up:
+
+- **161 focused tests passed**, including foliage sight/cover, map preservation, spatial chunks, biome art, disposal and packaging. The full unrelated suite was not rerun.
+- New coverage checks probe **eight actual interior hollows**, with 144 direction/height/LOD cases and 5,904 rays against real geometry and atlas alpha. Rays stop before the copse's outer boundary, so that boundary cannot conceal a defective hollow. All meet the existing 0.4-tile contiguous-gap limit. A dry hollow has isolated pinholes below 0.2 tile; minimum sampled coverage is 90.2%. The stricter one-tile outer-screen checks remain intact.
+- **60 browser views passed**: all five habitats, copse and strip, three angles, grid on/off. No page or asset errors. [Context report](images/foliage-breathing-spaces-2026-10-15/context-report.json).
+- Source and packaged **save → reload → ordinary Playtest passed**, with four squad models and seven foliage regions. Build and asset audit passed; the packaged art modules match the captured source hashes. [Integration report](images/foliage-breathing-spaces-2026-10-15/integration-report.json).
+- Independent review: **9/10 for the user-approved composition with fewer openings**. Steep overhead views still expose some inherited repetitive wood and thin leaf cards. This is a localized art improvement, not a claim that those limitations are solved.
+
+Compared with `c4e60ab`, the normal copse keeps the same draw calls and texture storage: 148 calls for temperate and 220 for wetlands. Submitted triangles increase from 373,076 to 373,416 and from 1,077,626 to 1,078,094 respectively, including shadows. Warm surface generation for the 1,157-cell fixture measures 12.81 ms before / 16.31 ms after. The [generation report](images/foliage-breathing-spaces-2026-10-15/build-cost.json) measures construction cost only; no frame-rate improvement is claimed.
+
+The [validation record](images/foliage-breathing-spaces-2026-10-15/validation.json) includes source hashes and check scope. All six browser helpers created for this follow-up exited. The existing review server retains its fixed shutdown at **2026-10-15 23:23 UTC**. This feature branch does not deploy Pages.
+
+### Architect review of `8368a81`
+
+Approved against canonical `a1f13cc`. The restrained pockets break up the mass without cutting apparent routes through it. They read most clearly in wetlands and elevated views; at the usual three-quarter camera they add subtle variation. Keep this approximate size and frequency. The existing repeated wood and thin leaf cards remain more conspicuous from steep overhead angles; those deserve localized polish rather than more or larger openings.
+
+Independent integration checks: **163 focused tests passed**, including the 144 local hollow coverage cases / 5,904 alpha-tested rays, foliage movement/sight/cover, biome rendering and deployment-module checks. Asset audit and Pages build passed. The unrelated full suite was not repeated. The actual nonempty snow copse has identical Float32 geometry to canonical; the only raw-number difference is roundoff in the upper UV coordinate (`0.92` versus `0.9199999999999999`). No snow appearance change is introduced.
+
+An interleaved warm generation comparison on the 1,157-cell fixture measured **11.12 ms before / 13.34 ms after**. This is a small construction cost, not a gameplay frame-time measurement. The artist's unchanged draw-call/texture counts and small submitted-triangle increase are consistent with the implementation: existing fans are repositioned, with no new materials or per-frame hollow calculation.
+
+Browser review covered normal and elevated wetlands and elevated temperate, including the movement grid. The packaged wetland preview also rendered the new pockets without warning/error log entries. Saved movement, sight and projectile rules remain unchanged; these are enclosed visual pockets within blocked growth.
+
+**The remaining sections record the earlier `c4e60ab` delivery and its baseline measurements.**
+
 ## Shape and composition
 
 Temperate, jungle and dry thickets now use separate low shrub bases, overlapping leaf sprays and fine rooted stems. Jittered growing sites group several tiles into uneven clumps. The former continuous high roof and vertical perimeter are removed. Wetlands use curved reeds with visible water at their feet. Broad world-space colour groups break up the temperate fans without changing their alpha coverage.
