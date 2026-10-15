@@ -2984,11 +2984,16 @@
   },
   "sourceHashFormat": "SHA-256 of UTF-8 text with LF line endings",
   "sources": {
+    "dist/tactics/biome-terrain.js": "804210ae413dff44525c7be5c4b16fb478ea74aa236c743357beaa0bc54acaf4",
+    "dist/tactics/foliage-screen-paint.js": "7b10b01773a46fe9f8b93b4fa924fe34b8a1de00656f50f26ab507dd5319ac15",
+    "dist/tactics/foliage-screen-surface.js": "9e29c82c13ea1c3dabe224458694fd07c29b169a70bcd992b9aed772111cf302",
+    "dist/tactics/foliage-screen-scene.js": "407229af8755d67911cce8c13e3f66c4419cab7f0824bd1476d94bb72093692b",
+    "dist/tactics/biome-scene.js": "781e5b2d5bea5e9e81f30b391625af1b6f0fcb984e6c65b208784185c40e59b3",
     "dist/tactics/biome-atlas-lod.js": "877304c162ec30aa771a35fac67bc40a9847ed38bd9c663129ae58b7fb4fe415",
     "dist/tactics/biome-foliage-data.js": "05c500352b3ecef1be47b1341e700d0099e720f1f42680eb4787a5d5a7e482f4",
     "dist/tactics/biome-foliage-models.js": "51f8f91e3a61b2fbb64c2e93e54698e06f34deeb0b040f5e11ee77a4fb8032bf",
     "dist/tactics/biome-plant-parts.js": "fccc60ca74f51ae22b517351c1887ce4355f1b983fb1e916f23ca65efc9a6e6c",
-    "dist/tactics/biome-foliage-paint.js": "5ad79a2a31e181d8c60cfc4835676def24075f3ba0e5fc8eed3c16e473b2f37c",
+    "dist/tactics/biome-foliage-paint.js": "add6527e4b1e3af85510b95de74b7ea85fd9ead2267a38f78ef7f9dd297b83d1",
     "dist/tactics/foliage-models.js": "e179c77117a69cb56aa1144105f7ba2eb00878c3158d023cc82a097e775530b6",
     "dist/tactics/environment-geometry.js": "82e34231b7acd7b8f04499a5d68a95e772b875b7f3d22b6b844d5a0bc212238b"
   }

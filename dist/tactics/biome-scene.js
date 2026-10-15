@@ -1,4 +1,5 @@
 import {createFoliageScreens} from './foliage-screen-scene.js';
+import {SCREEN_ATLAS,FRINGE_ATLAS,createScreenMaterials} from './foliage-screen-paint.js';
 import * as T from './vendor/three.module.js';
 import {BIOME_TEXTURES,BIOME_FAMILIES} from './biome-foliage-data.js';
 import {configureBiomeTexture,createBiomeMaterials} from './biome-foliage-paint.js';
@@ -28,9 +29,9 @@ export class BiomeScene{
  }
  load(){
   if(this.loading||this.ready||this.failed)return;
-  const urls={...BIOME_TEXTURES,obstacles:'../assets/environment/biome-obstacles/paint-atlas-v1.png'};
+  const urls={...BIOME_TEXTURES,screens:SCREEN_ATLAS,fringe:FRINGE_ATLAS,obstacles:'../assets/environment/biome-obstacles/paint-atlas-v1.png'};
   this.loading=Promise.all(Object.entries(urls).map(async([key,url])=>{const t=await this.loader.loadAsync(url);if(this.disposed){t.dispose();return;}this.textures[key]=configureBiomeTexture(t);})).then(()=>{
-   if(this.disposed)return;this.materials=createBiomeMaterials(this.textures);this.obstacleMaterials=createBiomeObstacleMaterials(this.textures.obstacles);this.factory=createBiomePlantFactory(this.materials);this.ready=true;this.onReady();
+   if(this.disposed)return;this.materials=createBiomeMaterials(this.textures);this.screenMaterials=createScreenMaterials(this.textures.screens,this.textures.fringe);this.obstacleMaterials=createBiomeObstacleMaterials(this.textures.obstacles);this.factory=createBiomePlantFactory(this.materials);this.ready=true;this.onReady();
   }).catch(e=>{if(this.disposed)return;this.failed=true;this.onError(Error('Biome assets: '+e.message));});
  }
  layer(level,size){
@@ -73,7 +74,7 @@ export class BiomeScene{
     const z=plan.level;if(!paints.has(z)){const paint=createMapGroundPaint(map,z,this.textures.ground);paints.set(z,paint);this.paints.push(paint);}
     if(!fills.has(z))fills.set(z,mixedBiomeFill(plan,map));
     const terrain=createBiomeTerrain(plan,plan.family,{ground:paints.get(z).ground,cliff:null,plantMaterials:Object.fromEntries(Object.entries(this.materials).map(([k,m])=>[k,this.material(m,z,size)])),obstacleMaterials:Object.fromEntries(Object.entries(this.obstacleMaterials).map(([k,m])=>[k,this.material(m,z,size)])),plantFactory:factory(z),paintSeed:biomeSeed(map),fill:fills.get(z),onPaintReady:()=>this.onReady(),decorateMaterial:m=>this.decorate(m,z,size),groundSkinOptions:{maxResident:Math.max(1,Math.floor(16/plans.length)),...(plan.cells.length?{}:{canvasFactory:()=>null})}});
-    terrain.screens=createFoliageScreens(plan,{plantMaterials:this.materials,obstacleMaterials:this.obstacleMaterials,decorate:m=>this.material(m,z,size)});terrain.root.add(terrain.screens.root);
+    terrain.screens=createFoliageScreens(plan,{plantMaterials:this.materials,screenMaterials:this.screenMaterials,decorate:m=>this.material(m,z,size)});terrain.root.add(terrain.screens.root);
     terrain.level=z;terrain.root.position.y=.008;this.root.add(terrain.root);this.terrains.push(terrain);
     const prototypes=[0,1,2].map(variant=>factory(z).create(OPEN_WOODLAND_PLANTS[plan.family],{variant}));
     const trees=BIOME_FAMILIES[plan.family].trees.flatMap(id=>[0,1,2].map(variant=>factory(z).create(id,{variant})));
@@ -105,7 +106,7 @@ export class BiomeScene{
  batchPlant(batches,plant,x,y,z,level,scale,yaw=0){
   plant.updateMatrixWorld(true);const low=plant.userData.category==='low',transform=new T.Matrix4().compose(new T.Vector3(x,y,z),new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),yaw),new T.Vector3(scale,scale,scale));plant.traverse(m=>{if(!m.isMesh)return;const key=`${Math.floor(x/24)},${Math.floor(z/24)}:${level}:${low}:${m.geometry.uuid}:${m.material.uuid}`;if(!batches.has(key))batches.set(key,{geometry:m.geometry,material:m.material,matrices:[],level,low});batches.get(key).matrices.push(new T.Matrix4().multiplyMatrices(transform,m.matrixWorld));});
  }
- update(camera,focus,ppu){for(const t of this.terrains)if(t.root.visible)t.update(camera,{focus,ppu});for(const m of this.instances){m.visible=m.userData.biomeLevel<=this.level&&(!m.userData.low||ppu>=9);const p=m.boundingSphere?.center,near=p&&p.distanceTo(focus)<28;m.castShadow=m.visible&&ppu>12&&!!near&&m.userData.shadowKnown;m.userData.noShadow=!m.castShadow;}}
+ update(camera,focus,ppu){for(const t of this.terrains)if(t.root.visible){t.update(camera,{focus,ppu});t.screens?.update(ppu);}for(const m of this.instances){m.visible=m.userData.biomeLevel<=this.level&&(!m.userData.low||ppu>=9);const p=m.boundingSphere?.center,near=p&&p.distanceTo(focus)<28;m.castShadow=m.visible&&ppu>12&&!!near&&m.userData.shadowKnown;m.userData.noShadow=!m.castShadow;}}
  stats(){return {ready:this.ready,regions:this.terrains.length,trees:this.openTrees.length+this.terrains.reduce((n,t)=>n+t.trees.length,0),openWoodlandTrees:this.openTrees.length,blockedCells:this.terrains.reduce((n,t)=>n+t.stats.blockedCells,0),paint:this.terrains.map(t=>t.groundSkin.stats)};}
- dispose(){if(this.disposed)return;this.disposed=true;this.clear();this.factory?.dispose();for(const m of Object.values(this.materials||{}))m.dispose();for(const m of Object.values(this.obstacleMaterials||{}))m.dispose();for(const t of Object.values(this.textures))t.dispose();this.root.removeFromParent();}
+ dispose(){if(this.disposed)return;this.disposed=true;this.clear();this.factory?.dispose();for(const m of Object.values(this.materials||{}))m.dispose();for(const m of Object.values(this.screenMaterials||{}))m.dispose();for(const m of Object.values(this.obstacleMaterials||{}))m.dispose();for(const t of Object.values(this.textures))t.dispose();this.root.removeFromParent();}
 }

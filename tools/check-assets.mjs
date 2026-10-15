@@ -4,6 +4,8 @@ import {GUARDHOUSE_MACHINE_PAINT} from '../dist/tactics/guardhouse-machines.js';
 import {BIOME_TERRAIN} from '../dist/tactics/biome-gameplay-data.js';
 import {BIOME_FAMILIES,BIOME_TEXTURES,BIOME_GROUNDS} from '../dist/tactics/biome-foliage-data.js';
 import {OBSTACLE_ATLAS} from '../dist/tactics/biome-obstacle-data.js';
+import {SCREEN_ATLAS,FRINGE_ATLAS,SCREEN_PANELS} from '../dist/tactics/foliage-screen-paint.js';
+import {createHash} from 'node:crypto';
 import {TRUCK_PAINT} from '../dist/tactics/canvas-truck-paint.js';
 import {RAMP_PROPS} from '../dist/tactics/cliff-ramps.js';
 import {BANK_PROPS} from '../dist/tactics/ramp-banks.js';
@@ -102,6 +104,15 @@ assert.deepEqual(Object.keys(biomeManifest.families).sort(),Object.keys(BIOME_FA
 for(const [id,family]of Object.entries(BIOME_TERRAIN)){assert(GROUNDS.includes(id));assert(BIOME_GROUNDS[family]);assert(biomeManifest.ground.families[family]?.length===4);}
 const biomePNGs=[[BIOME_TEXTURES.original,1254,1254],[BIOME_TEXTURES.foliage,1774,887],[BIOME_TEXTURES.ground,1536,1024],[OBSTACLE_ATLAS,1536,1024],['../assets/environment/biome-foliage/reference-v1.png',1536,1024],['../assets/environment/biome-obstacles/reference-v1.png',2172,724]];
 for(const [url,w,h]of biomePNGs){const file=url.replace('../assets/environment/','');active.add(file);await checkPNG('assets/environment/'+file,w,h,2);}
+const screenManifest=JSON.parse(await readFile(new URL('assets/environment/foliage-screens/manifest.json',root)));
+assert.deepEqual(screenManifest.panels,SCREEN_PANELS);
+for(const [url,channels]of [[SCREEN_ATLAS,2],[FRINGE_ATLAS,6]]){
+ const file=url.replace('../assets/environment/',''),asset=screenManifest.assets[file.split('/').at(-1)];
+ assert(asset);assert.equal(asset.width,1536);assert.equal(asset.height,1024);
+ active.add(file);await checkPNG('assets/environment/'+file,asset.width,asset.height,channels);
+ assert.equal(createHash('sha256').update(await readFile(new URL('assets/environment/'+file,root))).digest('hex'),asset.sha256,file);
+ await readFile(new URL('assets/environment/foliage-screens/'+asset.prompt,root));
+}
 await readFile(new URL('assets/environment/biome-foliage/'+biomeManifest.ground.manifest,root));
 for(const [family,files]of Object.entries(biomeManifest.ground.families)){assert(BIOME_GROUNDS[family]);assert.deepEqual(files,Array.from({length:4},(_,i)=>family+'/ground-'+i+'.png'));for(const name of files){const file='biome-foliage/ground-tiles/'+name;active.add(file);await checkPNG('assets/environment/'+file,512,512);}}
 const groundSprites=JSON.parse(await readFile(new URL('assets/environment/biome-ground-sprites/manifest.json',root)));
