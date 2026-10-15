@@ -13,7 +13,10 @@
 //   speech.setJaw(jawAt(t,line));                              // radians open
 //
 // The rig is part of the speaking character for its life (like the fitted neck layers in
-// horse-light-model.js): dispose() releases the teeth and tongue, the worker the rest.
+// horse-light-model.js): dispose() releases the teeth and tongue, the worker the rest but its
+// skeleton, which the jaw bone joins: a mammal's worker (createLightHorse's and its kin's) leaves
+// that, and its bone texture, to its caller (skeleton.dispose(), as speaking-heads-viewer.js does;
+// the hen's disposes hers).
 import * as THREE from './vendor/three.module.js';
 
 export const speakingHeadFile=(id,level='10k')=>`./speaking-heads/${id}-${level}.json`;

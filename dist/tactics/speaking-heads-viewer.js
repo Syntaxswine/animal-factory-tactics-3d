@@ -20,7 +20,12 @@ const lineLength=.3+LINE.reduce((t,s)=>t+s[1],0)+.8;
 
 let current=null,saying=null,generation=0;
 const authorFile=p=>p.id==='horse'?'horse-light-data.json':p.file.replace('10k','author');
-function release(c){if(!c)return;for(const w of [c.original,c.speaking])scene.remove(w.root);c.speech.dispose();c.paints.forEach(p=>p.dispose());c.weightMaterial.dispose();c.original.dispose();c.speaking.dispose();}
+// (and every skeleton the pair's meshes are bound to, with its bone texture: the workers' own
+// dispose() leaves the mammals' skeletons, createLightHorse's and its kin's, to their callers, and
+// each character change kept two; the hen's disposes hers, and a second dispose is harmless)
+function release(c){if(!c)return;const skeletons=new Set();for(const w of [c.original,c.speaking])w.root.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});
+ for(const w of [c.original,c.speaking])scene.remove(w.root);c.speech.dispose();c.paints.forEach(p=>p.dispose());c.weightMaterial.dispose();c.original.dispose();c.speaking.dispose();
+ for(const skeleton of skeletons)skeleton.dispose();}
 async function load(){
  const id=$('animal').value,level=$('level').value,profile=ANIMAL_MOTION_CATALOG.find(p=>p.id===id),mine=++generation;
  $('status').textContent='Loading '+profile.label+'…';$('error').textContent='';
@@ -57,7 +62,15 @@ function applyModes(){
  for(const m of new Set([...c.original.parts,...c.speaking.parts,...c.speech.mouthParts].map(p=>p.material)))m.wireframe=wire;
  c.paints.forEach(p=>p.setDebug($('coverage').checked));
 }
-function render(){
+// One animation loop: render() draws once (controls, loads, resizes and the tools call it), and while
+// a line is said tick() draws each frame, one request pending at a time. (Before, render() asked for
+// its next frame whenever a line was being said, and every control, load and resize then started a
+// loop of its own: five redraws while speaking left six, each drawing both panes; the architect's
+// review, 15 October 2026. tools/speaking-heads-viewer-check.mjs counts them.)
+let frame=0;
+function tick(){frame=0;draw();if(saying)frame=requestAnimationFrame(tick);}
+function render(){draw();if(saying&&!frame)frame=requestAnimationFrame(tick);if(!saying&&frame){cancelAnimationFrame(frame);frame=0;}}
+function draw(){
  const c=current;if(!c)return;applyModes();
  const heading=+$('heading').value,scale=$('scale').value,view=VIEWS[$('view').value],ppu=SCALES[scale];
  for(const w of [c.original,c.speaking])w.pose('neutral',heading);
@@ -76,7 +89,6 @@ function render(){
  $('left-label').textContent=`APPROVED HEAD · ${total.toLocaleString()} CHARACTER TRIANGLES`;
  $('right-label').textContent=`SPEAKING HEAD · ${speakingTotal.toLocaleString()} (+${(speakingTotal-total).toLocaleString()})`;
  $('status').textContent=`${c.profile.label}, ${c.level==='10k'?'game mesh':'authoring mesh'}: ${c.head.parts.map(p=>`${p.name} ${p.triangles.toLocaleString()}`).join(' · ')}. Jaw joint (${c.head.jaw.hinge.map(v=>v.toFixed(3)).join(', ')}); open ${(angle*180/Math.PI).toFixed(1)}°. ${ppu} CSS px/unit.`;
- if(saying)requestAnimationFrame(render);
 }
 
 // The reference sheet: the paint sheet's side and front views around the mouth, with its plan.
@@ -102,7 +114,9 @@ async function drawSheet(reference){
 for(const id of ['animal','level'])$(id).addEventListener('input',load);
 for(const id of ['view','scale','heading','elevation','jaw','painted','grey','wire','coverage','weights'])$(id).addEventListener('input',render);
 $('say').addEventListener('click',()=>{saying=saying?null:performance.now();$('say').textContent=saying?'Stop':'Say a line';render();});
-new ResizeObserver(()=>render()).observe(host);
+const resized=new ResizeObserver(()=>render());resized.observe(host);
+// Leaving the page releases the viewer: the loop, the pair on show and the renderer.
+addEventListener('pagehide',()=>{saying=null;if(frame)cancelAnimationFrame(frame);frame=0;resized.disconnect();release(current);current=null;renderer.dispose();},{once:true});
 
 // Screen-space paint coverage of the speaking head (right pane), by the coverage colours.
 function coverage(){const previous=$('coverage').checked;$('coverage').checked=true;render();const gl=renderer.getContext(),w=gl.drawingBufferWidth,h=gl.drawingBufferHeight,px=new Uint8Array(w*h*4);gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,px);
@@ -150,5 +164,8 @@ function traceMouth(view='side',{ppu=5000,reach=.025,before=.07,half=.06}={}){
 }
 window.speakingHeads={get current(){return current;},load:async(id,level='10k')=>{$('animal').value=id;$('level').value=level;await load();},render,coverage,capture,traceMouth,
  set(options){for(const [k,v] of Object.entries(options)){const el=$(k);if(el.type==='checkbox')el.checked=v;else el.value=v;}render();},
- diagnostics(){const c=current;return {id:c.id,level:c.level,triangles:c.head.triangles,characterTriangles:c.data.triangles,parts:c.head.parts.map(p=>({name:p.name,triangles:p.triangles})),bones:c.speech.skin.skeleton.bones.length,jawParent:c.speech.jaw.parent?.name};}};
+ diagnostics(){const c=current;return {id:c.id,level:c.level,triangles:c.head.triangles,characterTriangles:c.data.triangles,parts:c.head.parts.map(p=>({name:p.name,triangles:p.triangles})),bones:c.speech.skin.skeleton.bones.length,jawParent:c.speech.jaw.parent?.name};},
+ // (what the renderer holds, and whether a frame is pending: a character change must not grow the
+ // one, and the other is one request at most)
+ resources(){return {...renderer.info.memory,programs:renderer.info.programs?.length??0,framePending:Boolean(frame),saying:Boolean(saying)};}};
 await load();window.speakingHeadsReady=true;
