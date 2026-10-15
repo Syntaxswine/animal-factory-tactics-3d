@@ -20,20 +20,26 @@
  output{font:13px/1 ui-monospace,monospace;color:var(--muted);min-width:7ch}
  #shots button{font-size:13px;padding:2px 8px}
  #status{color:var(--muted);font-size:13px;margin-top:8px}
+ #caption{min-height:1.45em;text-align:center;margin:8px 0}
+ #voice-status{color:var(--muted);font-size:13px;margin:8px 0}
 </style>
 </head>
 <body>
 <header><h1>Intro — the whole sequence</h1><p class="sub">Storyboard 01–12 as sprites: the approach and ambush (ambush-player.js), then the hit, the drop and the crash (proof.js), in one timeline.</p></header>
 <main>
  <canvas id="view" width="1600" height="900"></canvas>
+ <p id="caption"></p>
+ <audio id="voice" preload="auto"></audio>
  <div class="bar">
   <button id="play" aria-pressed="false">Play</button>
   <button id="restart">Restart</button>
+  <button id="mute" aria-pressed="false">Mute voice</button>
   <input id="time" type="range" step="0.01" aria-label="Time">
   <output id="clock">—</output>
   <select id="speed" aria-label="Speed"><option value="1">1×</option><option value="0.5">0.5×</option><option value="0.25">0.25×</option></select>
  </div>
  <div class="bar" id="shots"></div>
+ <p id="voice-status">Bright hen · placeholder voice</p>
  <p id="status">Loading…</p>
 </main>
 <script type="module">
@@ -42,29 +48,37 @@
 import {SHOTS} from './ambush.js';
 import {loadAmbushAssets,createAmbush,PROOF_START,PROOF_END} from './ambush-player.js';
 import {KEYFRAME_TIMES} from './proof.js';
+import {createIntroVoice,HEN_VOICE} from './voice.js';
 const q=new URLSearchParams(location.search),$=id=>document.getElementById(id),status=$('status');
+const voice=createIntroVoice($('voice'),{onUnavailable:message=>{$('voice-status').textContent=message;},onAvailable:()=>{$('voice-status').textContent=HEN_VOICE.label;}});
 try{
  const t0=performance.now(),A=await loadAmbushAssets(),player=createAmbush($('view'),A),slider=$('time'),START=SHOTS[0].from,END=PROOF_END;
  slider.min=START;slider.max=END;
- let t=Number(q.get('t')??START),playing=false,last=0;
- const draw=()=>{const r=player.render(t);slider.value=t;$('clock').textContent=t.toFixed(2)+' s';return r;};
- const frame=now=>{if(!playing)return;const dt=Math.min(.1,(now-last)/1000)*Number($('speed').value);last=now;t+=dt;if(t>=END){t=END;setPlaying(false);}draw();if(playing)requestAnimationFrame(frame);};
- const setPlaying=v=>{playing=v;$('play').textContent=v?'Pause':'Play';$('play').setAttribute('aria-pressed',v);if(v){if(t>=END)t=START;last=performance.now();requestAnimationFrame(frame);}};
+ const initial=Number(q.get('t')??START);
+ let t=Number.isFinite(initial)?Math.max(START,Math.min(END,initial)):START,playing=false,last=0,raf=0,muted=false;
+ const syncVoice=()=>voice.sync(t,{playing,rate:Number($('speed').value),muted});
+ const draw=()=>{const r=player.render(t);slider.value=t;$('clock').textContent=t.toFixed(2)+' s';$('caption').textContent=t>=HEN_VOICE.start&&t<HEN_VOICE.start+HEN_VOICE.duration?HEN_VOICE.text:'';syncVoice();return r;};
+ const frame=now=>{raf=0;if(!playing)return;const dt=Math.min(.1,(now-last)/1000)*Number($('speed').value);last=now;t+=dt;if(t>=END){t=END;setPlaying(false);}draw();if(playing)raf=requestAnimationFrame(frame);};
+ const setPlaying=v=>{cancelAnimationFrame(raf);raf=0;playing=v;$('play').textContent=v?'Pause':'Play';$('play').setAttribute('aria-pressed',v);if(v){if(t>=END)t=START;last=performance.now();raf=requestAnimationFrame(frame);}syncVoice();};
  $('play').onclick=()=>setPlaying(!playing);$('restart').onclick=()=>{t=START;draw();setPlaying(true);};
  slider.oninput=()=>{t=Number(slider.value);setPlaying(false);draw();};
+ $('speed').onchange=()=>{last=performance.now();syncVoice();};
+ $('mute').onclick=()=>{muted=!muted;$('mute').textContent=muted?'Unmute voice':'Mute voice';$('mute').setAttribute('aria-pressed',muted);syncVoice();};
  // One button a shot (the storyboard's numbers), and the crash's keyframes.
  const jump=(label,at)=>{const b=document.createElement('button');b.textContent=label;b.onclick=()=>{t=at;setPlaying(false);draw();};$('shots').append(b);};
  for(const s of SHOTS)jump(`${s.id} ${s.title}`,s.from);
  for(const [k,at] of Object.entries(KEYFRAME_TIMES))jump(k==='0'?'close-up':'crash '+k,at);
- addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();setPlaying(!playing);}});
+ addEventListener('keydown',e=>{if(e.key===' '&&!e.target.closest('button,input,select,textarea,a,[contenteditable]')){e.preventDefault();setPlaying(!playing);}});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)setPlaying(false);});
+ addEventListener('pagehide',()=>setPlaying(false));
  // One pass over the timeline before reporting ready: the first draw of each
  // sheet and puff texture costs an upload, which stutters first playback.
  const w0=performance.now();for(let x=START;x<=END;x+=.1)player.render(x);const warm=Math.round(performance.now()-w0);
  draw();
  status.textContent=`${SHOTS.length} shots to ${PROOF_START} s, then the crash to ${END} s · warmed in ${warm} ms · ready in ${Math.round(performance.now()-t0)} ms`;
- window.intro={render:x=>{t=x;return draw();},ready:true,start:START,end:END,canvas:$('view')};
+ window.intro={render:x=>{setPlaying(false);t=x;return draw();},ready:true,start:START,end:END,canvas:$('view')};
  if(q.has('play'))setPlaying(true);
-}catch(e){status.textContent='Failed: '+e.message;window.intro={error:e.message};throw e;}
+}catch(e){voice.dispose();status.textContent='Failed: '+e.message;window.intro={error:e.message};throw e;}
 </script>
 </body>
 </html>

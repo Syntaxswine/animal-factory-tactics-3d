@@ -1,5 +1,35 @@
 # Intro, storyboard 01–07: approach, ambush and the cut into the crash
 
+## Bright hen placeholder voice — October 15, 2026
+
+The user selected **Bright hen** from Babble Lab for the handler's line. The
+whole-intro player now uses that exact voice-only WAV at **4.95 s**, with the
+existing 14-syllable beak timing and a subtitle. This is a placeholder, not
+approval of a final soundtrack. Music, effects and campaign-start integration
+remain separate work.
+
+The take lives in `dist/tactics/intro-sprites/audio/bright-hen.wav`; the adjacent
+voice and cue JSON files retain the generation settings and timing for a later
+replacement. Source: `babble-lab/audition/animal-factory/bright-hen.wav`, selected
+October 15. SHA-256:
+`4b02caa53544c7da12e6c8ce8888684ec9f125faf757a64f7620fd8796c53d06`.
+It is 2.93 s of mono 44.1 kHz PCM, 258,470 bytes. Playback gain is 0.7, close to
+the audition's default matched listening level. No radio filter or synthesis
+engine is added to the game.
+
+`voice.js` follows the player's timeline through pause, seek, restart, speed
+changes and mute; leaving or hiding the page pauses playback. Failed audio
+loads or blocked playback show a message while the animation remains usable.
+The Pages build already copies this folder, including the audio. The approved
+sprite sheets, crash renderer and still-image review page are unchanged.
+
+Validation: 41 intro tests pass, including audio timing, media failures, late
+play promises and repeated restarts. The asset audit and Pages build pass.
+Browser checks on the packaged player verified the 2.93 s WAV decodes, starts
+at the matching offset, and obeys pause, mute, speed changes and shot jumps,
+with no browser errors. This verifies integration, not a new artistic voice
+approval; the take was chosen by the user.
+
 **Status (October 14, 2026): round 3, the animation round, for the architect's review.**
 - Every shot animates at 20 fps.
 - Shot 07 cuts back to the aircraft at 19.4 s and hands over to the approved crash player ([INTRO-SPRITE-PROOF.md](INTRO-SPRITE-PROOF.md)) at 20.2 s.
