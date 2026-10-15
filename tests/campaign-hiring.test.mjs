@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {openingContent} from '../dist/tactics/campaign-opening.js';
-import {createCampaign,openCampaignSector,finishCampaignEncounter,splitCampaignGroup,advanceCampaign,orderCampaignTravel} from '../dist/tactics/campaign-model.js';
+import {createCampaign,openCampaignSector,finishCampaignEncounter,splitCampaignGroup,advanceCampaign,orderCampaignTravel,syncCampaignEncounter} from '../dist/tactics/campaign-model.js';
 import {campaignCandidates,campaignRoster,deploymentSectors,hireCampaignMerc,renewCampaignContract} from '../dist/tactics/campaign-hiring.js';
 import {refresh} from '../dist/tactics/core/engine.js';
 import {captureCampaign,restoreCampaign,checkpointTransition} from '../dist/tactics/campaign-save.js';
@@ -36,4 +36,22 @@ test('renewals extend the paid contract and strategic time honors its expiry',()
 });
 test('captured mercs stay captured and never acquire deceased records on defeat',()=>{
  const c=fresh(),s=defeat(c),u=s.units[0];u.casualty='captured';finishCampaignEncounter(c);assert.equal(c.characters[u.campaignId].unit.casualty,'captured');assert.notEqual(c.characters[u.campaignId].location.kind,'removed');assert.match(c.log.at(-1).text,/captured/);restoreCampaign(captureCampaign(c));
+});
+
+test('local encounter time expires a contract on peaceful ground without returning to the overmap',()=>{
+ const c=fresh(),candidate=campaignCandidates(c)[0],u=hireCampaignMerc(c,candidate.key,'day',70);
+ c.clock.minutes=u.contract.until-1;const s=openCampaignSector(c,70);s.clock.minutes++;
+ syncCampaignEncounter(c);
+ assert.equal(u.contract.expired,true);assert.equal(u.casualty,'quit');assert.equal(c.characters[u.campaignId].location.reason,'quit');
+ assert(!campaignRoster(c).includes(u));restoreCampaign(captureCampaign(c));
+});
+
+test('local combat marks an expired contract and lets the merc leave at the next safe synchronization',()=>{
+ const c=fresh(),candidate=campaignCandidates(c)[0],u=hireCampaignMerc(c,candidate.key,'day',70);
+ c.clock.minutes=u.contract.until-1;const s=openCampaignSector(c,70);s.phase='player';s.engaged=true;s.clock.minutes++;
+ syncCampaignEncounter(c);assert.equal(u.contract.expired,true);assert.equal(u.casualty,null);assert(campaignRoster(c).includes(u));
+ // The next synchronization must settle the previously marked contract.
+ s.phase='explore';s.engaged=false;syncCampaignEncounter(c);
+ assert.equal(u.casualty,'quit');assert.equal(c.characters[u.campaignId].location.reason,'quit');
+ assert.equal(c.log.filter(entry=>entry.text===u.name+"'s contract is up.").length,1);restoreCampaign(captureCampaign(c));
 });

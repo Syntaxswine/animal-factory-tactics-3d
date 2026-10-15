@@ -53,7 +53,7 @@ Diagnostics measure actual transformed vertices. This matters for the tilted wre
 
 Survivable diagnostics also report `exitLane`, a model-local box from `[-1.20, 0, 1.35]` to `[-0.20, 2.20, 3.35]`. It marks clear exterior space beside the opening, with `gameplayIntegrated: false`. It is not navigation, a character spawn volume or a complete passage test. `bodyBounds` excludes both overhead rotor parts and ground paint. The viewer offsets the horse beside this exit while retaining native character scale.
 
-These are static art assets and a comparison study. SAM gameplay, the intro cinematic, flight, rotor animation, boarding, squad spawning, destruction transitions, editor placement, ground occupancy and cover rules have not been added. For later placement, reserve the cabin/skids/tail or individual wreck components, not the entire rotor span. The wreck's separated pieces need individual occupancy/cover review.
+The model and comparison study remain static assets. The [October 11 scenery integration](SCENERY-INTEGRATION-2026-10-11.md) adds editor placement, gameplay rendering, physical movement/projectile/visibility collision and a command to set four squad starts beside the survivable crash. Its large placement reservation does not make the whole rotor span impassable. SAM gameplay, the intro cinematic, flight, rotor animation, boarding, animated evacuation and destruction transitions remain separate work. Placement in the user's authored tutorial clearing is still pending; the integration supplies a test fixture.
 
 ## Validation and review
 

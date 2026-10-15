@@ -1,5 +1,13 @@
 # Idle: standing and looking around
 
+For transferable corrections from the later draft v5, see the
+[clothing and skinning handoff](IDLE-SKINNING-V5-HANDOFF.md). That handoff does
+not change the v4 implementation documented here.
+Since October 9 the characters fit the cloth on their necks themselves
+([clothing and skinning](CLOTHING-SKINNING.md)); the idle sets that fit aside while it runs and fits
+the cloth to its own neck bone as described here, so its limits are unchanged (the fits table is
+re-keyed, the key hashing the weights).
+
 **Direction (the boss, 2026-10-08):** "great job on this. the next step will be idle animations.
 just standing and looking around."
 
@@ -512,7 +520,8 @@ finite number of seconds from 12 to 600; `eye` the world point between the eyes 
 catalog's `eye`; the horse's by default), within 0.5 m of the head joint; `refit` fits the character afresh
 instead of reading `idle-fits.js`. The worker must have the mammal bones (hips, spine, head, and both arms and
 legs down to the fingers and hooves), every part bound to one skeleton (the rig's own, or one a motion such as
-the game's walk has made); a rig already running an idle is refused until that one is disposed. It returns:
+the game's walk has made); a rig already running an idle is refused until that one is disposed (and its skin
+put back: see below). It returns:
 - `at(t)`: poses the rig, and returns the phase (look label), look, stance, weight, breath, feet, hips
   and chest;
 - `gaze(t)`: eye, direction, target point and the planned look;
@@ -529,7 +538,12 @@ frozen: `{length, gravity, neck}`. `lookLabel` names a look; `rigKey(worker)` ke
 
 The motion works in local +X space on any of the eleven mammal rigs. Like the throw, it owns the pose, the
 neck bone and its weight corrections while it runs; `dispose` returns the rig to its neutral pose, the
-skeleton its parts had and their weights.
+skeleton its parts had and their weights. The idle takes a skin hold (`skin-holds.js`), as the ladder motion
+does, and no other controller takes one yet. If a ladder made after the idle is still live when the idle is
+disposed, the skeleton and weights come back when the ladder is disposed instead, so those two may be disposed in
+either order; until then the neck bone stays bound, at rest, the skin and the pose are the ladder's, `rigKey`
+keeps the rig's own key, and a new idle is refused. While a ladder made after the idle is live, `at` and
+`poseHead` refuse (posing rewrites the support arm's skin). Any other controller that rewrites the skin must still be disposed newest first.
 
 ## Still open
 

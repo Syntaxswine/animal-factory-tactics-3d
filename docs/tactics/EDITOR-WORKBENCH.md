@@ -39,3 +39,31 @@ Checks: `tests/editor-land-brush.test.mjs` covers closure, access, protections, 
 The 3D encounter also draws all known scenery levels, including decorative roofs, plus every currently visible character, supply pile, light and fire. Fog, spotting and corpse visibility remain unchanged. The battlefield has level buttons 1–3 (also number keys), synchronized with the sidebar selector. The chosen level controls movement destinations, route previews and picking people, doors, barrels and supplies. Upper-floor scenery cannot redirect a ground-floor order; an explicit upper-floor order still needs a valid route. Level 4 remains decorative and is never a movement destination.
 
 Run `node --test tests/battle-renderer-visibility.test.mjs tests/multilevel-presentation.test.mjs` and `node tools/check-level-interaction.mjs` for stacked-floor visibility, fog, picking, optional editor cutaway and real movement via stairs. `node tools/check-editor-land-brush.mjs` checks synchronized land height, sculpting, ramp placement, undo/redo and persistence.
+
+## Rotation and placement preview handoff — October 9
+
+**Requested work; not implemented by this review.** The user has another builder improving the tile-type workflow. Coordinate these changes with that work, especially in `editor-workbench.js` and `editor-3d-tools.js`. The priority is to make orientation visible before placement and make rotation predictable without repeated trial placements.
+
+### Confirmed current behavior
+
+The canonical editor at `61eb29c` represents ordinary prop orientation with a `rotated` boolean. Pressing R toggles between two states; it cannot express distinct 180° and 270° facings. Cardinal ramps/banks, cliff masks, characters and diagonal-road variants already have their own directional handling. The placement preview in `editor-3d-scene.js` draws flat footprint cells and an arrow, rather than the actual object model.
+
+Q/E camera rotation already exists in `editor-3d.js` and works when the map has keyboard focus. In the packaged editor, Q changed camera preset 0 to 3 and E restored 0. After choosing an object, the object dropdown retained focus and Q/E was suppressed by the form-input guard. Check the deployed version as well as this focus behavior before treating the shortcut as absent.
+
+### Required behavior
+
+1. **Four placement orientations.** Directional objects must support 0°, 90°, 180° and 270°. Provide clockwise and counterclockwise controls; R and Shift+R are recommended placement shortcuts. Keep Q/E for the camera. Display the current orientation beside the chosen object. Symmetric geometry may look identical at some angles, but asymmetric models must retain all four facings. Preserve the existing directional semantics for ramps, cliff masks and road variants.
+2. **Preview the model being placed.** Prefer a translucent live model at the cursor, using the same geometry, materials, scale, anchor and height as the committed object. Update it immediately when the variant, orientation, layer or cursor position changes, even if the mouse remains still while a control changes. Show the occupied footprint and a clear blocked-placement reason. The preview must not modify the map, consume an undo step or leave geometry/resources behind when cancelled or replaced.
+3. **A useful panel preview is an acceptable first delivery.** If the cursor model needs another pass, put a model preview on the left panel showing its current orientation, direction/degrees and footprint. It must use the actual selected model and update immediately. This is the user's minimum useful improvement; record clearly whether a cursor preview is also delivered.
+4. **Reliable Q/E navigation.** Match gameplay's camera rotation direction and retain the camera center and editing layer. Choosing a tool or committing a variant choice must leave map shortcuts usable without an extra placement click. Preserve normal typing, keyboard selection in an open dropdown, accessibility and modal behavior. Reproject the preview after camera rotation without changing the object's world orientation.
+5. **Separate placement and selection edits.** Rotating a placement must not also rotate an unrelated selected object. Give an existing selection its own explicit, undoable rotation action. Keep selections and invalid edits stable and explain why a rotation is blocked.
+6. **Preserve orientation throughout the game.** Choose a single quarter-turn representation and migrate legacy maps (`rotated: false` → 0; `true` → 1). Carry it through rendering, footprints, collision, support/access geometry and directional attachments such as lights. Save/load, export/import, encounter serialization, copy settings, undo/redo, block capture/placement and editor playtest must preserve it. Rebuild generated core modules through their adapters and synchronization tool.
+
+### Acceptance checks
+
+- A directional hospital bed, workbench or suitable wall fixture can face all four directions; 180°/270° do not collapse into 0°/90°. A non-square prop's footprint, collision and support remain aligned with its model, including near a boundary or obstacle.
+- At every orientation and supported layer, the preview matches the object immediately after placement. Invalid placements are indicated before clicking. Switching models, layers or cameras leaves no stale preview or map edits.
+- Existing objects can be rotated, copied, undone/redone and passed through saves, exported maps, reusable blocks and playtest without losing orientation. Legacy maps retain their original appearance and access routes.
+- Q/E works after choosing tools and variants, in perspective and top view, with the same direction as gameplay. Text editing and open dropdown navigation continue to work without moving the camera. R/Shift+R rotates the intended placement or explicit selection only.
+
+Implementation touchpoints include `editor-3d-tools.js`, `editor-3d-controller.js`, `editor-3d-scene.js`, `editor-workbench.js`, `editor-3d-camera.js`, `core/environment.js`, `environment-visuals.js` and `hybrid-world.js`, plus their source adapters and serialization paths. Changing only the model's drawn angle would leave the footprint and gameplay geometry inconsistent.

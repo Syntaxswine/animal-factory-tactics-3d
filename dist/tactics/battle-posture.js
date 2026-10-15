@@ -29,10 +29,14 @@ export function createBattlePosture(worker,profile){
  if(profile.proneAim?.tuckHem)for(const part of worker.parts.filter(p=>p.name.includes('shirt'))){
   const a=part.geometry.attributes,smooth=(lo,hi,x)=>T.MathUtils.smoothstep(x,lo,hi);
   for(let i=0;i<a.position.count;i++){
-   const y=a.position.getY(i),z=a.position.getZ(i),side=z<0?-1:1,upper=worker.bones.indexOf(named['upperArm'+side]),lower=worker.bones.indexOf(named['forearm'+side]);let u=0,l=0;
-   for(let j=0;j<4;j++){const index=a.skinIndex.getComponent(i,j),weight=a.skinWeight.getComponent(i,j);if(index===upper)u+=weight;if(index===lower)l+=weight;}
+   const y=a.position.getY(i),z=a.position.getZ(i),side=z<0?-1:1,upper=worker.bones.indexOf(named['upperArm'+side]),lower=worker.bones.indexOf(named['forearm'+side]),hi=worker.bones.indexOf(hips),si=worker.bones.indexOf(spine);let u=0,l=0;const other=[];
+   for(let j=0;j<4;j++){const index=a.skinIndex.getComponent(i,j),weight=a.skinWeight.getComponent(i,j);if(index===upper)u+=weight;else if(index===lower)l+=weight;else if(weight>0&&index!==hi&&index!==si)other.push([index,weight]);}
    const keep=1-(1-smooth(1,1.12,y))*(1-smooth(.20,.26,Math.abs(z)));u*=keep;l*=keep;
-   const waist=smooth(.90,1.04,y),torso=Math.max(0,1-u-l);a.skinIndex.setXYZW(i,worker.bones.indexOf(hips),worker.bones.indexOf(spine),upper,lower);a.skinWeight.setXYZW(i,torso*(1-waist),torso*waist,u,l);
+   // Weight on any other bone (a collar's on the head, from the character's layer fit) stays as it is.
+   const held=other.reduce((s,[,x])=>s+x,0),waist=smooth(.90,1.04,y),torso=Math.max(0,1-u-l-held);
+   if(!other.length){a.skinIndex.setXYZW(i,hi,si,upper,lower);a.skinWeight.setXYZW(i,torso*(1-waist),torso*waist,u,l);}
+   else{const slots=[[hi,torso*(1-waist)],[si,torso*waist],[upper,u],[lower,l],...other].filter(([,x])=>x>1e-6).sort((p,q)=>q[1]-p[1]).slice(0,4),sum=slots.reduce((s,[,x])=>s+x,0)||1;while(slots.length<4)slots.push([0,0]);
+    a.skinIndex.setXYZW(i,...slots.map(([b])=>b));a.skinWeight.setXYZW(i,...slots.map(([,x])=>x/sum));}
   }a.skinIndex.needsUpdate=true;a.skinWeight.needsUpdate=true;
  }
  function rotation(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(q));root.updateMatrixWorld(true);}

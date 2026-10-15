@@ -3,8 +3,13 @@ import * as T from './vendor/three.module.js';
 import {createLadderPaintCorrection} from './ladder-paint.js';
 import {createLadderGrip} from './ladder-grip.js';
 import {createBattlePosture} from './battle-posture.js';
+import {holdSkin,disposeAbove} from './skin-holds.js';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z),ease=t=>{t=T.MathUtils.clamp(t,0,1);return t*t*(3-2*t);};
 const compiledRoutes=new Map();
+// Workers with a live ladder motion. Its gloves take the gripping hand's triangles, positions and weights for their own
+// and give them back at dispose, outside the skin hold, so a second ladder made over a live one would save the first's
+// glove as the hand and put it back for good if the first were disposed first: one live ladder per worker.
+const CLIMBING=new WeakSet();
 // Transfer numerical preparation from the background worker without rerunning its solver.
 export function exportLadderRoutes(){return [...compiledRoutes].map(([key,r])=>[key,{angles:r.angles,frames:Object.fromEntries(Object.entries(r.frames).map(([id,rows])=>[id,rows.map(f=>({pole:f.pole.toArray(),axis:f.axis.toArray()}))])),timing:r.timing?[...r.timing]:[]}]);}
 export function importLadderRoutes(rows){for(const [key,r]of rows){compiledRoutes.set(key,{angles:r.angles,frames:Object.fromEntries(Object.entries(r.frames).map(([id,frames])=>[id,frames.map(f=>({pole:new T.Vector3(...f.pole),axis:new T.Vector3(...f.axis)}))])),timing:new Map(r.timing)});}while(compiledRoutes.size>32)compiledRoutes.delete(compiledRoutes.keys().next().value);}
@@ -21,6 +26,7 @@ export function ladderRailSegments(d){const ys=d.exitWidth?[0,d.height,d.height+
 // integration owner supplies this frame's world transform and playback time.
 export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floor,{preparedOnly=false}={}){
  if(profile.unarmed)throw new Error('Hen wing contacts are not authored for ladder climbing');
+ if(CLIMBING.has(worker))throw new Error('This worker already has a live ladder motion, whose gloves hold its hands: dispose it first');
  const d={...definition,...(definition.hatch?{hatch:{...definition.hatch}}:{})},root=worker.root,bones=worker.bones,named=Object.fromEntries(bones.map(b=>[b.name,b]));
  if(profile.id.startsWith('pig')&&(d.exitWidth||d.width)<WIDE_LADDER_EXIT)throw new Error('Pig climbing requires the authored 0.94-wide flared exit; original narrow handholds do not fit');
  if(!supportsStow(worker.weapon?.id||'rifle'))throw new Error('Unsupported ladder equipment');
@@ -32,7 +38,10 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
  const rest=new Map(bones.map(b=>[b,b.getWorldPosition(V())])),saved=worker.parts.map(p=>({p,si:p.geometry.attributes.skinIndex.clone(),sw:p.geometry.attributes.skinWeight.clone()}));
  createBattlePosture(worker,['dog','rabbit'].includes(profile.id)?{...profile,proneAim:{...profile.proneAim,tuckHem:false}}:profile); // Approved hem/pastern corrections only.
  // Preserve the inner sleeve corridor while keeping medial shirt on torso.
- if(['dog','rabbit'].includes(profile.id))for(const part of worker.parts.filter(p=>p.name.includes('shirt'))){const a=part.geometry.attributes;for(let i=0;i<a.position.count;i++){const p=V().fromBufferAttribute(a.position,i),side=p.z<0?-1:1,upper=named['upperArm'+side],lower=named['forearm'+side],axis=rest.get(lower).clone().sub(rest.get(upper)),t=T.MathUtils.clamp(p.clone().sub(rest.get(upper)).dot(axis)/axis.lengthSq(),0,1.2),distance=p.distanceTo(rest.get(upper).clone().addScaledVector(axis,t)),corridor=(1-T.MathUtils.smoothstep(distance,.095,.13))*T.MathUtils.smoothstep(Math.abs(p.z),profile.id==='dog'?.215:.24,profile.id==='dog'?.235:.27);let u=0,l=0;for(let j=0;j<4;j++){const b=bones[a.skinIndex.getComponent(i,j)],w=a.skinWeight.getComponent(i,j);if(b===upper)u+=w;if(b===lower)l+=w;}const medial=profile.id==='rabbit'?T.MathUtils.smoothstep(Math.abs(p.z),.21,.25):1,total=Math.max((u+l)*medial,corridor),elbow=1-T.MathUtils.smoothstep(p.y,.98,1.06);a.skinIndex.setXYZW(i,bones.indexOf(named.spine),bones.indexOf(upper),bones.indexOf(lower),0);a.skinWeight.setXYZW(i,1-total,total*(1-elbow),total*elbow,0);}a.skinWeight.needsUpdate=a.skinIndex.needsUpdate=true;}
+ if(['dog','rabbit'].includes(profile.id))for(const part of worker.parts.filter(p=>p.name.includes('shirt'))){const a=part.geometry.attributes;for(let i=0;i<a.position.count;i++){const p=V().fromBufferAttribute(a.position,i),side=p.z<0?-1:1,upper=named['upperArm'+side],lower=named['forearm'+side],axis=rest.get(lower).clone().sub(rest.get(upper)),t=T.MathUtils.clamp(p.clone().sub(rest.get(upper)).dot(axis)/axis.lengthSq(),0,1.2),distance=p.distanceTo(rest.get(upper).clone().addScaledVector(axis,t)),corridor=(1-T.MathUtils.smoothstep(distance,.095,.13))*T.MathUtils.smoothstep(Math.abs(p.z),profile.id==='dog'?.215:.24,profile.id==='dog'?.235:.27);let u=0,l=0;const other=[];for(let j=0;j<4;j++){const b=bones[a.skinIndex.getComponent(i,j)],w=a.skinWeight.getComponent(i,j);if(b===upper)u+=w;else if(b===lower)l+=w;else if(w>0&&b!==named.spine&&b!==named.hips)other.push([a.skinIndex.getComponent(i,j),w]);}const medial=profile.id==='rabbit'?T.MathUtils.smoothstep(Math.abs(p.z),.21,.25):1,total=Math.max((u+l)*medial,corridor),elbow=1-T.MathUtils.smoothstep(p.y,.98,1.06);
+  // Weight on any other bone (the collar's on the head, from the character's layer fit) stays as it is.
+  if(!other.length){a.skinIndex.setXYZW(i,bones.indexOf(named.spine),bones.indexOf(upper),bones.indexOf(lower),0);a.skinWeight.setXYZW(i,1-total,total*(1-elbow),total*elbow,0);}
+  else{const k=1-other.reduce((n,[,x])=>n+x,0),slots=[[bones.indexOf(named.spine),(1-total)*k],[bones.indexOf(upper),total*(1-elbow)*k],[bones.indexOf(lower),total*elbow*k],...other].filter(([,x])=>x>1e-6).sort((x,y)=>y[1]-x[1]).slice(0,4),sum=slots.reduce((n,[,x])=>n+x,0)||1;while(slots.length<4)slots.push([0,0]);a.skinIndex.setXYZW(i,...slots.map(([b])=>b));a.skinWeight.setXYZW(i,...slots.map(([,x])=>x/sum));}}a.skinWeight.needsUpdate=a.skinIndex.needsUpdate=true;}
  // The compact foreman's central rear seat belongs to the pelvis, not one
  // thigh chosen by the sign of a nearly-zero Z coordinate.
  if(profile.id==='pig-foreman')for(const part of worker.parts.filter(p=>p.name.includes('trousers'))){const a=part.geometry.attributes,hip=bones.indexOf(named.hips);for(let i=0;i<a.position.count;i++){const x=a.position.getX(i),y=a.position.getY(i),z=Math.abs(a.position.getZ(i)),blend=(1-T.MathUtils.smoothstep(x,-.18,-.07))*(1-T.MathUtils.smoothstep(z,.025,.11))*T.MathUtils.smoothstep(y,.50,.58)*(1-T.MathUtils.smoothstep(y,.70,.80));if(blend===0)continue;const weights=new Map([[hip,blend]]);for(let j=0;j<4;j++){const k=a.skinIndex.getComponent(i,j);weights.set(k,(weights.get(k)||0)+a.skinWeight.getComponent(i,j)*(1-blend));}const rows=[...weights].filter(([,w])=>w>0).sort((a,b)=>b[1]-a[1]).slice(0,4),sum=rows.reduce((v,[,w])=>v+w,0);while(rows.length<4)rows.push([0,0]);a.skinIndex.setXYZW(i,...rows.map(([k])=>k));a.skinWeight.setXYZW(i,...rows.map(([,w])=>w/sum));}a.skinWeight.needsUpdate=a.skinIndex.needsUpdate=true;}
@@ -117,7 +126,7 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
   l.routeAngle=angle;return candidate(angle);
  }
  function applyPose(progress,{direction='up',heading=0,origin=[0,0,0]}={}){
-  if(disposed)throw new Error('Ladder motion is disposed');checkFrame();
+  if(disposed)throw new Error('Ladder motion is disposed');held();checkFrame();
   if(!supportsStow(worker.weapon?.id||'rifle'))throw new Error('Unsupported ladder equipment');
   if(d.hatch&&(worker.weapon?.id||'rifle')!=='rifle')throw new Error('Wooden hatch equipment clearance currently supports the rifle only');
   if(!Number.isFinite(progress)||!Number.isFinite(heading)||!Array.isArray(origin)||origin.length!==3||!origin.every(Number.isFinite)||!['up','down'].includes(direction))throw new Error('Invalid ladder playback transform');
@@ -203,7 +212,7 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
  // Blend the temporary glove and shirt weights into an already posed
  // handoff. This preserves the ordinary actor at zero and the climb at one.
  function transition(amount){
-  if(disposed)throw new Error('Ladder motion is disposed');if(!Number.isFinite(amount))throw new Error('Invalid ladder transition amount');
+  if(disposed)throw new Error('Ladder motion is disposed');held();if(!Number.isFinite(amount))throw new Error('Invalid ladder transition amount');
   const w=T.MathUtils.clamp(amount,0,1);paintCorrection.set(w);
   for(const {p,si,sw,source,mixedSI,mixedSW}of transitionSkin){
    if(w===0){p.geometry.setAttribute('skinIndex',source.si);p.geometry.setAttribute('skinWeight',source.sw);continue;}
@@ -213,7 +222,17 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
   for(const {limb,asset}of grips){const point=root.worldToLocal(limb.c.localToWorld(limb.offset.clone())),quaternion=root.getWorldQuaternion(new T.Quaternion()).invert().multiply(limb.c.getWorldQuaternion(new T.Quaternion()));asset.update(point,quaternion,w,openGrips?1:0);}
   root.updateMatrixWorld(true);worker.skeleton.update();
  }
- function restore(mode='carry'){equipmentStow.restore();root.position.set(0,0,0);root.rotation.set(0,0,0);for(const {asset}of grips)asset.restore();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}worker.pose(mode);paintCorrection.set(false);root.position.copy(entry.position);root.quaternion.copy(entry.quaternion);result=null;root.updateMatrixWorld(true);worker.skeleton.update();}
+ // The worker's own weights, as saved before the ladder corrected them. Disposing puts them back through the skin hold
+ // (skin-holds.js): at once, or after a controller made later that holds the skin too (the idle), and built its own on
+ // the ladder's, is disposed as well. The gloves come off at dispose either way (reset). While such a controller holds
+ // the skin, the ladder may not put its weights on again.
+ const putBack=()=>{for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}};
+ let hold=null;const held=()=>{if(hold&&!hold.top)throw new Error('Ladder motion cannot put its weights on while the skin is held by '+disposeAbove(hold));};
+ // Off the ladder: the sling, the gloves and the paint come off; with `skin`, the worker's own weights go back on; with
+ // `pose`, the worker stands in `mode` at the entry. Disposed under a controller made later that holds the skin (the
+ // idle), the pose and the root are that controller's, and are left alone.
+ function reset(mode,skin,pose=true){equipmentStow.restore();if(pose){root.position.set(0,0,0);root.rotation.set(0,0,0);}for(const {asset}of grips)asset.restore();if(skin)putBack();if(pose)worker.pose(mode);paintCorrection.set(false);if(pose){root.position.copy(entry.position);root.quaternion.copy(entry.quaternion);}result=null;root.updateMatrixWorld(true);worker.skeleton.update();}
+ function restore(mode='carry'){if(disposed)throw new Error('Ladder motion is disposed');held();reset(mode,true);}
  // Solve the bend routes across the whole clip once. Adjacent samples may
  // move at most five degrees: a locally cheaper elbow solution cannot snap
  // across the rail when a contact is released. Playback still solves exact
@@ -239,7 +258,8 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
  const storedTiming=compiledRoutes.get(routeKey)?.timing;if(storedTiming)for(const [key,map]of storedTiming)timingMaps.set(key,map);
  if(d.hatch&&!storedTiming)for(const phase of phases.filter(p=>/Lift.*upper|Brace forward/.test(p.label))){const map=new Float64Array(257);let previous;for(let i=0;i<map.length;i++){const r=applyPose((phase.start+(phase.end-phase.start)*i/(map.length-1))/duration),l=limbs.find(l=>l.id===phase.id),current={point:l.c.getWorldPosition(V()),q:l.c.getWorldQuaternion(new T.Quaternion()),grasp:r.contacts.find(c=>c.id===l.id).grasp};if(previous)map[i]=map[i-1]+.02*phase.duration/(map.length-1)+current.point.distanceTo(previous.point)+.08*current.q.angleTo(previous.q)+.15*Math.abs(current.grasp-previous.grasp);previous=current;}timingMaps.set(phase.start,map);}
  if(d.hatch)compiledRoutes.get(routeKey).timing=timingMaps;
- restore('neutral');
- }catch(error){restore('neutral');equipmentStow.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}throw error;}
- return {grips:grips.map(g=>g.asset),duration:playbackDuration,definition:d,phases:playbackPhases.map(p=>({...p})),apply,diagnostics:()=>result,restore,transition,stow:()=>equipmentStow.apply(),stowBlend:w=>equipmentStow.blend(w),syncStow:()=>equipmentStow.sync(),get equipmentState(){return equipmentStow.state;},dispose(){if(disposed)return;restore('neutral');disposed=true;equipmentStow.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();for(const {p,si,sw}of saved){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}}};
+ reset('neutral',true);
+ }catch(error){reset('neutral',true);equipmentStow.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();putBack();throw error;}
+ hold=holdSkin(worker,'ladder motion',putBack);CLIMBING.add(worker);
+ return {grips:grips.map(g=>g.asset),duration:playbackDuration,definition:d,phases:playbackPhases.map(p=>({...p})),apply,diagnostics:()=>result,restore,transition,stow:()=>equipmentStow.apply(),stowBlend:w=>equipmentStow.blend(w),syncStow:()=>equipmentStow.sync(),get equipmentState(){return equipmentStow.state;},dispose(){if(disposed)return;disposed=true;CLIMBING.delete(worker);try{reset('neutral',false,hold.top);equipmentStow.dispose();paintCorrection.dispose();for(const {asset}of grips)asset.dispose();}finally{hold.release();}}};
 }

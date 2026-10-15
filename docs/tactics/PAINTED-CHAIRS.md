@@ -81,7 +81,8 @@ The design audit measured hip/body widths of approximately 0.527 for the horse, 
 - [ ] Give the shorter-legged foreman an appropriate adapter. The hen's wing/leg rig needs its own adapter rather than the literal mammal bone clip.
 - [ ] Author tail handling once per species that accommodates the closed wingback as well as the lower open-backed chairs. Neither the large hip-weighted skunk plume nor the hen's upright fan has been fitted to a native seated pose.
 - [ ] Check all outfits and any equipped/stowed weapons before claiming complete animation support.
-- [ ] Add editor/gameplay placement, occupied tiles, an adjacent approach/interaction cell and chair occupancy rules when integrating. A one-tile object bound alone is not a complete interaction footprint.
+- [x] Add editor/gameplay placement and occupied tiles: supplied by the [October 11 scenery integration](SCENERY-INTEGRATION-2026-10-11.md), with one-tile blocking and low cover.
+- [ ] Add an adjacent approach/interaction cell and seated-character occupancy rules. A one-tile object bound alone is not a complete sitting interaction footprint.
 
 ## Library and texture ownership
 
@@ -133,6 +134,13 @@ The solid-side and cylindrical-armrest refinement passed the same **six chair te
 Independent hostile subagent review of the refinement: **9/10**, no blocking findings. The reviewer inspected nine fresh views, including the closed wingback from front/rear/side, grey forms, alternate finishes, gameplay scale and a front comparison against the unscaled horse. Complete lower-chair heights measure 0.986–0.988; all shared anchors are unchanged. Six chair tests passed independently with no browser errors. The initial asset review also covered 28 live configurations and resource ownership. Current review and selected evidence are recorded in `hybrid-review/painted-chairs/`. These results certify assets and the shared furniture contract, not a completed sit/stand animation or playable chair integration.
 
 ## Branch and local preview
+
+Canonical integration on 9 October includes the seven chair commits through `5bd0e47`, with the atlas
+registered in the release asset check and both study viewers included in the base and 3D Pages builds.
+It also preserves the new fitted neck weights when the horse's motion adapter is installed. Fresh packaged
+browser checks covered the wingback and wooden seated poses and side lowering/rising poses with no console
+errors. This approves the collection and horse study; the gameplay and species checklist above remains open.
+See [the integration review](INTEGRATION-REVIEW-2026-10-09.md) for checks and evidence limits.
 
 `work/painted-chairs` starts at the preceding guardhouse-console commit `bba7416`. The feature branch does not deploy; Pages publishes `main`.
 

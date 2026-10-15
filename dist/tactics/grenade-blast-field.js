@@ -14,8 +14,8 @@ export function grenadeBlastLevel(state,p){
  return Math.max(0,Math.min(3,p.z??Math.floor(p.h/GRENADE_FLOOR)));
 }
 export const blastCellKey=(x,y,z)=>z?`${x},${y},${z}`:`${x},${y}`;
-export function grenadeBlastField(state,shot){
- const origin=resolvedGrenadeBlast(shot),old=shot.event.grenade.scenery;
+export function grenadeBlastField(state,shot,origin=resolvedGrenadeBlast(shot)){
+ const old=shot.event.grenade?.scenery;
  let scenery=state;
  if(old){
   scenery={...state,map:(state.map||state.terrain).map(r=>[...r]),upper:structuredClone(state.upper||[{},{}]),edges:{...state.edges,...old.edges},props:[...(state.props||[]),...(old.props||[])]};

@@ -1,9 +1,5 @@
-import {HELICOPTER_PAINT,HELICOPTER_REFERENCE} from '../dist/tactics/utility-helicopter.js';
-import {CHAIR_PAINT} from '../dist/tactics/painted-chairs.js';
-import {GUARDHOUSE_MACHINE_PAINT} from '../dist/tactics/guardhouse-machines.js';
+import {SCREEN_ATLAS,FRINGE_ATLAS,SCREEN_PANELS} from '../dist/tactics/foliage-screen-paint.js';
 import {BIOME_TERRAIN} from '../dist/tactics/biome-gameplay-data.js';
-import {BIOME_FAMILIES,BIOME_TEXTURES,BIOME_GROUNDS} from '../dist/tactics/biome-foliage-data.js';
-import {OBSTACLE_ATLAS} from '../dist/tactics/biome-obstacle-data.js';
 import {TRUCK_PAINT} from '../dist/tactics/canvas-truck-paint.js';
 import {RAMP_PROPS} from '../dist/tactics/cliff-ramps.js';
 import {BANK_PROPS} from '../dist/tactics/ramp-banks.js';
@@ -16,8 +12,14 @@ import {surfacePixels,materialKind} from '../dist/tactics/hybrid-materials.js';
 import {TRELLIS_KIND,TRELLIS_ARCH_KIND} from '../dist/tactics/bridge-trellis.js';
 import {CARGO_ATLAS} from '../dist/tactics/painted-cargo.js';
 import {PAINTED_ATLAS} from '../dist/tactics/painted-environment-scene.js';
+import {GUARDHOUSE_MACHINE_PAINT} from '../dist/tactics/guardhouse-machines.js';
+import {CHAIR_PAINT} from '../dist/tactics/painted-chairs.js';
+import {HELICOPTER_PAINT,HELICOPTER_REFERENCE} from '../dist/tactics/utility-helicopter.js';
 import {STRATEGIC_SITE_ATLAS} from '../dist/tactics/strategic-sites.js';
 import {FOLIAGE_ATLAS,FOLIAGE_MATERIALS} from '../dist/tactics/foliage-materials.js';
+import {BIOME_FAMILIES,BIOME_GROUNDS,BIOME_TEXTURES} from '../dist/tactics/biome-foliage-data.js';
+import {OBSTACLE_ATLAS} from '../dist/tactics/biome-obstacle-data.js';
+import {createHash} from 'node:crypto';
 import {PROPS,EDGES,GROUNDS} from '../dist/tactics/environment.js';
 import {CHARACTER_SPECIES,ARMED_WEAPONS,characterArt} from '../dist/tactics/character-art.js';
 import {readFile,readdir} from 'node:fs/promises';
@@ -94,23 +96,51 @@ for(const {file} of Object.values(ROOM_SURFACES))active.add(file);
 for(const file of active)await readFile(new URL('assets/environment/'+file,root));
 const cargoAtlas=CARGO_ATLAS.replace('../assets/environment/','');active.add(cargoAtlas);await checkPNG('assets/environment/'+cargoAtlas,1536,1024,2);
 const studyAtlas=PAINTED_ATLAS.replace('../assets/environment/','');active.add(studyAtlas);await checkPNG('assets/environment/'+studyAtlas,1254,1254,2);
+const consoleAtlas=GUARDHOUSE_MACHINE_PAINT.replace('../assets/environment/','');active.add(consoleAtlas);await checkPNG('assets/environment/'+consoleAtlas,1254,1254,2);
+const chairAtlas=CHAIR_PAINT.replace('../assets/environment/','');active.add(chairAtlas);await checkPNG('assets/environment/'+chairAtlas,1254,1254,2);
+for(const [asset,width,height]of [[HELICOPTER_PAINT,1774,887],[HELICOPTER_REFERENCE,1536,1024]]){const file=asset.replace('../assets/environment/','');active.add(file);await checkPNG('assets/environment/'+file,width,height,2);}
 const foliageAtlas=FOLIAGE_ATLAS.replace('../assets/environment/','');active.add(foliageAtlas);await checkPNG('assets/environment/'+foliageAtlas,1254,1254,2);
-// Biome grounds are procedural. Validate their declared paint dependencies and
-// reusable tile families explicitly; the final orphan check still covers every PNG.
+// Study assets stay separate from gameplay terrain IDs, but still pass the
+// same image audit. Keep the unattached-file rejection below for stray files.
+assert.equal(BIOME_TEXTURES.original,FOLIAGE_ATLAS);
+for(const [asset,width,height]of [
+ [BIOME_TEXTURES.foliage,1774,887],[BIOME_TEXTURES.ground,1536,1024],
+ [OBSTACLE_ATLAS,1536,1024],
+ ['../assets/environment/biome-foliage/reference-v1.png',1536,1024],
+ ['../assets/environment/biome-obstacles/reference-v1.png',2172,724]
+]){const file=asset.replace('../assets/environment/','');active.add(file);await checkPNG('assets/environment/'+file,width,height,2);}
+const biomeGround=JSON.parse(await readFile(new URL('assets/environment/biome-foliage/ground-tiles/tiles.json',root)));
+assert.deepEqual(Object.keys(biomeGround.families).sort(),Object.keys(BIOME_GROUNDS).sort());
+assert.equal(biomeGround.pixels,512);
+for(const [family,files]of Object.entries(biomeGround.families)){
+ assert.deepEqual(files,[0,1,2,3].map(n=>family+'/ground-'+n+'.png'));
+ for(const name of files){const file='biome-foliage/ground-tiles/'+name;active.add(file);await checkPNG('assets/environment/'+file,512,512);}
+}
+for(const [directory,suffix,width,height]of [['biome-ground-sprites','sprites',2048,1024],['connected-ground','joined-tiles',512,512]]){
+ const sheets=JSON.parse(await readFile(new URL('assets/environment/'+directory+'/manifest.json',root)));
+ assert.deepEqual(sheets.assets.map(a=>a.family).sort(),Object.keys(BIOME_FAMILIES).sort());
+ for(const asset of sheets.assets){
+  assert.equal(asset.file,asset.family+'-'+suffix+'.png');const file=directory+'/'+asset.file;active.add(file);
+  await checkPNG('assets/environment/'+file,width,height);
+  assert.equal(createHash('sha256').update(await readFile(new URL('assets/environment/'+file,root))).digest('hex'),asset.sha256,file+' differs from its manifest');
+ }
+}
 const biomeManifest=JSON.parse(await readFile(new URL('assets/environment/biome-foliage/manifest.json',root)));
 assert.deepEqual(Object.keys(biomeManifest.families).sort(),Object.keys(BIOME_FAMILIES).sort());
-for(const [id,family]of Object.entries(BIOME_TERRAIN)){assert(GROUNDS.includes(id));assert(BIOME_GROUNDS[family]);assert(biomeManifest.ground.families[family]?.length===4);}
-const biomePNGs=[[BIOME_TEXTURES.original,1254,1254],[BIOME_TEXTURES.foliage,1774,887],[BIOME_TEXTURES.ground,1536,1024],[OBSTACLE_ATLAS,1536,1024],['../assets/environment/biome-foliage/reference-v1.png',1536,1024],['../assets/environment/biome-obstacles/reference-v1.png',2172,724]];
-for(const [url,w,h]of biomePNGs){const file=url.replace('../assets/environment/','');active.add(file);await checkPNG('assets/environment/'+file,w,h,2);}
+for(const [id,family]of Object.entries(BIOME_TERRAIN)){assert(GROUNDS.includes(id));assert(BIOME_GROUNDS[family]);assert.deepEqual(biomeManifest.ground.families[family],biomeGround.families[family]);}
+const screenManifest=JSON.parse(await readFile(new URL('assets/environment/foliage-screens/manifest.json',root)));
+assert.deepEqual(screenManifest.panels,SCREEN_PANELS);
+for(const [url,channels]of [[SCREEN_ATLAS,2],[FRINGE_ATLAS,6]]){
+ const file=url.replace('../assets/environment/',''),asset=screenManifest.assets[file.split('/').at(-1)];
+ assert(asset);assert.equal(asset.width,1536);assert.equal(asset.height,1024);
+ active.add(file);await checkPNG('assets/environment/'+file,asset.width,asset.height,channels);
+ assert.equal(createHash('sha256').update(await readFile(new URL('assets/environment/'+file,root))).digest('hex'),asset.sha256,file);
+ await readFile(new URL('assets/environment/foliage-screens/'+asset.prompt,root));
+}
 await readFile(new URL('assets/environment/biome-foliage/'+biomeManifest.ground.manifest,root));
-for(const [family,files]of Object.entries(biomeManifest.ground.families)){assert(BIOME_GROUNDS[family]);assert.deepEqual(files,Array.from({length:4},(_,i)=>family+'/ground-'+i+'.png'));for(const name of files){const file='biome-foliage/ground-tiles/'+name;active.add(file);await checkPNG('assets/environment/'+file,512,512);}}
-const groundSprites=JSON.parse(await readFile(new URL('assets/environment/biome-ground-sprites/manifest.json',root)));
-assert.deepEqual(groundSprites.assets.map(a=>a.family).sort(),Object.keys(BIOME_FAMILIES).sort());
-for(const asset of groundSprites.assets){assert.equal(asset.file,asset.family+'-sprites.png');const file='biome-ground-sprites/'+asset.file;active.add(file);await checkPNG('assets/environment/'+file,2048,1024);}
-for(const [url,w,h]of [[HELICOPTER_PAINT,1774,887],[HELICOPTER_REFERENCE,1536,1024],[CHAIR_PAINT,1254,1254],[GUARDHOUSE_MACHINE_PAINT,1254,1254]]){const file=url.replace('../assets/environment/','');active.add(file);await checkPNG('assets/environment/'+file,w,h,2);}
 const connected=JSON.parse(await readFile(new URL('assets/environment/connected-ground/manifest.json',root)));
-assert.equal(connected.tilesAcross,8);assert.equal(connected.tilesDown,8);assert.equal(connected.pixelsPerTile,64);assert.deepEqual(connected.assets.map(a=>a.family).sort(),Object.keys(BIOME_FAMILIES).sort());
-for(const a of connected.assets){assert.equal(a.file,a.family+'-joined-tiles.png');assert.equal(a.tiles.length,64);const file='connected-ground/'+a.file;active.add(file);await checkPNG('assets/environment/'+file,512,512);}
+assert.equal(connected.tilesAcross,8);assert.equal(connected.tilesDown,8);assert.equal(connected.pixelsPerTile,64);
+for(const asset of connected.assets)assert.equal(asset.tiles.length,64);
 const siteManifest=JSON.parse(await readFile(new URL('assets/environment/strategic-sites/manifest.json',root)));
 assert.equal(STRATEGIC_SITE_ATLAS,'../assets/environment/strategic-sites/'+siteManifest.atlas);
 assert.deepEqual([...new Set(siteManifest.assets.map(a=>a.reference))].sort(),['reference-radar.png','reference-radio.png','reference-sam.png']);
