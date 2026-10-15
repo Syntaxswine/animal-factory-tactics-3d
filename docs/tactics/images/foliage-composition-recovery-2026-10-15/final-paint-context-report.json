@@ -1,0 +1,947 @@
+{
+  "sourceHashes": {
+    "foliage-screen-surface.js": "b2dff4c50bf5236f0330a5bf59fb320ebdaa78283b0c1ad16c7b8984e9d4811f",
+    "foliage-screen-scene.js": "e44d8c3676b00f270e2033fcdd1e45a5580b4eef9e7c583d3adf6184a2f95cf2",
+    "foliage-screen-paint.js": "a14cb24ab2325bbc63722c36ad08f7c9c8a6622494287953348eff5ee01dded0",
+    "biome-scene.js": "b8c2bd86575055686362fff986533c254e69c6f7ae093030274b7a456003a89f"
+  },
+  "errors": [],
+  "views": [
+    {
+      "mode": "strip",
+      "angle": "normal",
+      "grid": false,
+      "family": "temperate",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 38,
+      "triangles": 31104,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.5,
+      "synchronizedFrameMedianMs": 0.7999999970197678,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "strip",
+      "angle": "normal",
+      "grid": true,
+      "family": "temperate",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 39,
+      "triangles": 31104,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.6000000089406967,
+      "synchronizedFrameMedianMs": 0.9000000059604645,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "strip",
+      "angle": "reverse",
+      "grid": false,
+      "family": "temperate",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 38,
+      "triangles": 31104,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.5,
+      "synchronizedFrameMedianMs": 0.800000011920929,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "strip",
+      "angle": "reverse",
+      "grid": true,
+      "family": "temperate",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 39,
+      "triangles": 31104,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.5,
+      "synchronizedFrameMedianMs": 0.800000011920929,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "strip",
+      "angle": "high",
+      "grid": false,
+      "family": "temperate",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 34,
+      "triangles": 26496,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.4000000059604645,
+      "synchronizedFrameMedianMs": 0.7000000029802322,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "strip",
+      "angle": "high",
+      "grid": true,
+      "family": "temperate",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 35,
+      "triangles": 26496,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.5,
+      "synchronizedFrameMedianMs": 0.7999999970197678,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "strip",
+      "angle": "normal",
+      "grid": false,
+      "family": "snow",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 41,
+      "triangles": 32696,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.5999999940395355,
+      "synchronizedFrameMedianMs": 1,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "strip",
+      "angle": "normal",
+      "grid": true,
+      "family": "snow",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 42,
+      "triangles": 32696,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.6000000089406967,
+      "synchronizedFrameMedianMs": 1.0999999940395355,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "strip",
+      "angle": "reverse",
+      "grid": false,
+      "family": "snow",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 41,
+      "triangles": 32696,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.6000000089406967,
+      "synchronizedFrameMedianMs": 1,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "strip",
+      "angle": "reverse",
+      "grid": true,
+      "family": "snow",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 42,
+      "triangles": 32696,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.699999988079071,
+      "synchronizedFrameMedianMs": 1.1000000089406967,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "strip",
+      "angle": "high",
+      "grid": false,
+      "family": "snow",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 33,
+      "triangles": 28088,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.5999999940395355,
+      "synchronizedFrameMedianMs": 1,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "strip",
+      "angle": "high",
+      "grid": true,
+      "family": "snow",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 34,
+      "triangles": 28088,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.5999999940395355,
+      "synchronizedFrameMedianMs": 1,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "copse",
+      "angle": "normal",
+      "grid": false,
+      "family": "temperate",
+      "treeModels": {
+        "temperate-pine": 3,
+        "temperate-broadleaf": 5,
+        "wetland-willow": 2
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          122
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119,
+          1,
+          118
+        ],
+        "ppu": 20
+      },
+      "drawCalls": 148,
+      "triangles": 373076,
+      "textures": 19,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.2999999970197678,
+      "synchronizedFrameMedianMs": 1.6000000089406967,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "copse",
+      "angle": "normal",
+      "grid": true,
+      "family": "temperate",
+      "treeModels": {
+        "temperate-pine": 3,
+        "temperate-broadleaf": 5,
+        "wetland-willow": 2
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          122
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119,
+          1,
+          118
+        ],
+        "ppu": 20
+      },
+      "drawCalls": 149,
+      "triangles": 373076,
+      "textures": 19,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.2999999970197678,
+      "synchronizedFrameMedianMs": 1.5,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "copse",
+      "angle": "reverse",
+      "grid": false,
+      "family": "temperate",
+      "treeModels": {
+        "temperate-pine": 3,
+        "temperate-broadleaf": 5,
+        "wetland-willow": 2
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          122
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119,
+          1,
+          118
+        ],
+        "ppu": 20
+      },
+      "drawCalls": 148,
+      "triangles": 373076,
+      "textures": 19,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.199999988079071,
+      "synchronizedFrameMedianMs": 1.5,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "copse",
+      "angle": "reverse",
+      "grid": true,
+      "family": "temperate",
+      "treeModels": {
+        "temperate-pine": 3,
+        "temperate-broadleaf": 5,
+        "wetland-willow": 2
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          122
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119,
+          1,
+          118
+        ],
+        "ppu": 20
+      },
+      "drawCalls": 149,
+      "triangles": 373076,
+      "textures": 19,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.5,
+      "synchronizedFrameMedianMs": 1.7999999970197678,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "copse",
+      "angle": "high",
+      "grid": false,
+      "family": "temperate",
+      "treeModels": {
+        "temperate-pine": 3,
+        "temperate-broadleaf": 5,
+        "wetland-willow": 2
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          122
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119,
+          1,
+          118
+        ],
+        "ppu": 20
+      },
+      "drawCalls": 131,
+      "triangles": 362612,
+      "textures": 19,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.2999999970197678,
+      "synchronizedFrameMedianMs": 1.7000000029802322,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "copse",
+      "angle": "high",
+      "grid": true,
+      "family": "temperate",
+      "treeModels": {
+        "temperate-pine": 3,
+        "temperate-broadleaf": 5,
+        "wetland-willow": 2
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          122
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119,
+          1,
+          118
+        ],
+        "ppu": 20
+      },
+      "drawCalls": 132,
+      "triangles": 362612,
+      "textures": 19,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.1000000089406967,
+      "synchronizedFrameMedianMs": 1.4000000059604645,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "copse",
+      "angle": "normal",
+      "grid": false,
+      "family": "snow",
+      "treeModels": {
+        "snow-alpine-pine": 3,
+        "snow-spruce": 5,
+        "temperate-pine": 2
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          122
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119,
+          1,
+          118
+        ],
+        "ppu": 20
+      },
+      "drawCalls": 132,
+      "triangles": 221118,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.1000000089406967,
+      "synchronizedFrameMedianMs": 1.5,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "copse",
+      "angle": "normal",
+      "grid": true,
+      "family": "snow",
+      "treeModels": {
+        "snow-alpine-pine": 3,
+        "snow-spruce": 5,
+        "temperate-pine": 2
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          122
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119,
+          1,
+          118
+        ],
+        "ppu": 20
+      },
+      "drawCalls": 133,
+      "triangles": 221118,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.2999999970197678,
+      "synchronizedFrameMedianMs": 1.7000000029802322,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "copse",
+      "angle": "reverse",
+      "grid": false,
+      "family": "snow",
+      "treeModels": {
+        "snow-alpine-pine": 3,
+        "snow-spruce": 5,
+        "temperate-pine": 2
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          122
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119,
+          1,
+          118
+        ],
+        "ppu": 20
+      },
+      "drawCalls": 131,
+      "triangles": 220918,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.0999999940395355,
+      "synchronizedFrameMedianMs": 1.5,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "copse",
+      "angle": "reverse",
+      "grid": true,
+      "family": "snow",
+      "treeModels": {
+        "snow-alpine-pine": 3,
+        "snow-spruce": 5,
+        "temperate-pine": 2
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          122
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119,
+          1,
+          118
+        ],
+        "ppu": 20
+      },
+      "drawCalls": 132,
+      "triangles": 220918,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.0999999940395355,
+      "synchronizedFrameMedianMs": 1.4000000059604645,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "copse",
+      "angle": "high",
+      "grid": false,
+      "family": "snow",
+      "treeModels": {
+        "snow-alpine-pine": 3,
+        "snow-spruce": 5,
+        "temperate-pine": 2
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          122
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119,
+          1,
+          118
+        ],
+        "ppu": 20
+      },
+      "drawCalls": 110,
+      "triangles": 206920,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.9000000059604645,
+      "synchronizedFrameMedianMs": 1.2999999970197678,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "copse",
+      "angle": "high",
+      "grid": true,
+      "family": "snow",
+      "treeModels": {
+        "snow-alpine-pine": 3,
+        "snow-spruce": 5,
+        "temperate-pine": 2
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          122
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119,
+          1,
+          118
+        ],
+        "ppu": 20
+      },
+      "drawCalls": 111,
+      "triangles": 206920,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1,
+      "synchronizedFrameMedianMs": 1.5,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    }
+  ]
+}

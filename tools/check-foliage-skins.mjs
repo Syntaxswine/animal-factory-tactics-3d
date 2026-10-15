@@ -11,6 +11,13 @@ const report={errors:[],views:[]};
 try{
  browser=await chromium.connect(server.wsEndpoint());const page=await browser.newPage({viewport:{width:1040,height:920}});
  page.on('pageerror',e=>report.errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))report.errors.push(m.text());});
+ if(process.env.REVIEW_COMPOSITION_REF){
+  report.compositionReference={ref:process.env.REVIEW_COMPOSITION_REF,modules:['biome-scene.js','biome-terrain.js'],note:'Historical composition modules on the same current fixture and assets; reference capture only.'};
+  for(const file of report.compositionReference.modules){
+   const body=execFileSync('git',['-c','safe.directory='+project,'show',`${report.compositionReference.ref}:dist/tactics/${file}`],{cwd:project,encoding:'utf8'});
+   await page.route('**/tactics/'+file,route=>route.fulfill({status:200,contentType:'text/javascript',body}));
+  }
+ }
  // Compare this localized canopy pass at the exact same map/camera without
  // changing the user's preview checkout. Only the two art modules are replaced.
  if(process.env.REVIEW_BASELINE_REF){

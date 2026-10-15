@@ -1,0 +1,85 @@
+{
+  "sourceHashes": {
+    "foliage-screen-surface.js": "b2dff4c50bf5236f0330a5bf59fb320ebdaa78283b0c1ad16c7b8984e9d4811f",
+    "foliage-screen-scene.js": "e44d8c3676b00f270e2033fcdd1e45a5580b4eef9e7c583d3adf6184a2f95cf2",
+    "foliage-screen-paint.js": "a14cb24ab2325bbc63722c36ad08f7c9c8a6622494287953348eff5ee01dded0",
+    "biome-scene.js": "b8c2bd86575055686362fff986533c254e69c6f7ae093030274b7a456003a89f"
+  },
+  "errors": [],
+  "views": [
+    {
+      "mode": "strip",
+      "angle": "normal",
+      "grid": false,
+      "family": "temperate",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 38,
+      "triangles": 31104,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.5,
+      "synchronizedFrameMedianMs": 0.7999999970197678,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    },
+    {
+      "mode": "strip",
+      "angle": "normal",
+      "grid": false,
+      "family": "snow",
+      "treeModels": {},
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          119
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Ordinary saved map fields; no renderer-only placement or collision overrides.",
+      "camera": {
+        "focus": [
+          119.5,
+          1,
+          118.5
+        ],
+        "ppu": 32
+      },
+      "drawCalls": 41,
+      "triangles": 32696,
+      "textures": 18,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.699999988079071,
+      "synchronizedFrameMedianMs": 1.0999999940395355,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets."
+    }
+  ]
+}

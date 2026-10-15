@@ -1,5 +1,7 @@
 # Foliage canopy and snow polish
 
+**Superseded visual direction:** the subsequent user/architect review rejected the raised canopy composition. See [Foliage composition recovery](FOLIAGE-COMPOSITION-RECOVERY-2026-10-15.md). The measurements and review below describe the earlier pass and remain as historical evidence.
+
 Artist follow-up on `work/foliage-canopy-polish`, based on approved canonical `59707c7`. This addresses the two localized art notes in the October 14 integration review. It is ready for architect integration; it does not change the intro.
 
 ## Visual changes

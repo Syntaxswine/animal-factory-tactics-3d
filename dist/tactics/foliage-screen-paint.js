@@ -9,6 +9,7 @@ const FIELD_GLSL=`
  float screenHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
  float screenField(vec2 p){vec2 cell=floor(p),t=fract(p);t=t*t*(3.-2.*t);return mix(mix(screenHash(cell),screenHash(cell+vec2(1.,0.)),t.x),mix(screenHash(cell+vec2(0.,1.)),screenHash(cell+1.),t.x),t.y);}
  float screenGroupAt(vec2 p){return .72*screenField(p*.18)+.28*screenField(p*.41+7.);}
+ vec3 temperateGroupPaint(vec2 p){float group=smoothstep(.24,.76,screenField(p*.095+vec2(11.,37.)));return mix(vec3(1.08,.97,.84),vec3(.77,1.07,.86),group)*mix(.89,1.08,group);}
 `;
 
 // Dedicated paint: changing a thicket must not repaint the spaced woodland trees.
@@ -19,7 +20,7 @@ export function createScreenMaterials(texture,fringeTexture){
  for(const [family,panel]of Object.entries(SCREEN_PANELS)){
   const rect=atlasRect(panel),wood=atlasRect(SCREEN_PANELS.wood);
   const material=new T.MeshStandardMaterial({map:texture,roughness:1,side:T.DoubleSide,vertexColors:true});
-  material.name='thicket:'+family;material.customProgramCacheKey=()=>`foliage-screen-paint-v2-${family}`;
+  material.name='thicket:'+family;material.customProgramCacheKey=()=>`foliage-screen-paint-v3-${family}`;
   const average=panelAverage(texture,panel);
   material.onBeforeCompile=s=>{
    s.uniforms.screenFarPaint={value:average};
@@ -53,6 +54,7 @@ export function createScreenMaterials(texture,fringeTexture){
     vec3 screenColor=screenSample(p.zy)*screenWeights.x+screenSample(p.xz)*screenWeights.y+screenSample(p.xy)*screenWeights.z;
     float screenGroup=screenGroupAt(vScreenWorld.xz);
     screenColor=mix(screenFarPaint,screenColor,${family==='snow'?'.64':'.70'}+.24*screenGroup);
+    ${family==='temperate'?'screenColor*=temperateGroupPaint(vScreenWorld.xz);':''}
     ${family==='snow'?`float snowBed=smoothstep(.26,.70,screenGroup),snowTop=max(screenWeights.y,smoothstep(1.25,1.9,vScreenHeight)*.38);
     vec3 snowBody=mix(vec3(.36,.405,.38),vec3(.68,.71,.66),.45+.55*screenField(vScreenWorld.xz*.27+19.))+(screenColor-screenFarPaint)*.20;
     screenColor=mix(screenColor,snowBody,snowBed*snowTop*.50);`:''}
@@ -64,14 +66,15 @@ export function createScreenMaterials(texture,fringeTexture){
  }
  if(fringeTexture)for(const [family,panel]of Object.entries(SCREEN_PANELS)){
   const {origin,size:span}=atlasRect(panel);
-  const m=new T.MeshStandardMaterial({map:fringeTexture,roughness:1,side:T.DoubleSide,alphaTest:.28,alphaToCoverage:true});m.name='thicket-fringe:'+family;m.customProgramCacheKey=()=>`foliage-fringe-v2-${family}`;
+  const m=new T.MeshStandardMaterial({map:fringeTexture,roughness:1,side:T.DoubleSide,alphaTest:.28,alphaToCoverage:true});m.name='thicket-fringe:'+family;m.customProgramCacheKey=()=>`foliage-fringe-v3-${family}`;
   m.onBeforeCompile=s=>{
-   if(family==='snow'){
+   if(family==='snow'||family==='temperate'){
     s.vertexShader='varying vec3 vBoughWorld;\n'+s.vertexShader;
     s.vertexShader=s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n vBoughWorld=(modelMatrix*vec4(transformed,1.)).xyz;');
     s.fragmentShader='varying vec3 vBoughWorld;\n'+FIELD_GLSL+s.fragmentShader;
    }
    s.fragmentShader=s.fragmentShader.replace('#include <map_fragment>',`vec2 fringeUV=vec2(${origin})+clamp(vMapUv,0.,1.)*vec2(${span});vec2 fringePixels=vec2(textureSize(map,0));float fringeLOD=clamp(log2(max(.0001,max(length(dFdx(fringeUV)*fringePixels),length(dFdy(fringeUV)*fringePixels)))),0.,4.);vec4 fringePaint=textureLod(map,fringeUV,fringeLOD);
+    ${family==='temperate'?'fringePaint.rgb*=temperateGroupPaint(vBoughWorld.xz);':''}
     ${family==='snow'?`fringePaint.rgb=mix(vec3(.28,.33,.30),fringePaint.rgb,.82);
     vec3 boughSnow=mix(vec3(.36,.405,.38),vec3(.68,.71,.66),.45+.55*screenField(vBoughWorld.xz*.27+19.));
     fringePaint.rgb=mix(fringePaint.rgb,boughSnow,smoothstep(.26,.70,screenGroupAt(vBoughWorld.xz))*.45*(1.-smoothstep(.1,.95,vMapUv.y)));`:''}
