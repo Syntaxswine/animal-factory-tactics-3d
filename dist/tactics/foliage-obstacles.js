@@ -1,6 +1,6 @@
 import {foliageAt,foliageRule,foliageTreeAt,foliageTreeSpaceAvailable,foliageOccupied} from './foliage-data.js';
 import {biomeFamilyAt,biomeSeed} from './biome-family.js';
-import {BIOME_FAMILIES} from './biome-foliage-data.js';
+import {selectBiomeTree} from './biome-tree-mix.js';
 import {biomePlantParts,BIOME_TREE_GROUNDING} from './biome-plant-parts.js';
 import {segmentBox} from './hybrid-geometry.js';
 import {groundHash} from './biome-ground-composition.js';
@@ -90,7 +90,7 @@ export function buildFoliageObstacles(m){
   }
  }
  for(const t of candidates){
-  const {x,y,z,family,simBase,base,dense}=t,choice=Math.floor(groundHash(x+origin[0],y+origin[1],seed+z*911+587)*6),id=BIOME_FAMILIES[family].trees[Math.floor(choice/3)],variant=choice%3,scale=dense?1.8:1;
+  const {x,y,z,family,simBase,base,dense}=t,{id,variant}=selectBiomeTree(family,x+origin[0],y+origin[1],seed+z*911),scale=dense?1.8:1;
   trees.push({...t,id,variant,scale});
   for(const [i,p]of biomePlantParts(id,variant).entries())if(p.paint==='bark'&&p.shape!=='biome-buttress'&&p.size[0]>=.07){
    const points=partBeam(p).map(q=>rotate(q,variant*.45)).map(q=>[x+q[0]*scale,base+(q[1]+BIOME_TREE_GROUNDING[id][variant])*scale,y+q[2]*scale]);

@@ -2,6 +2,7 @@ import {createFoliageScreens} from './foliage-screen-scene.js';
 import {SCREEN_ATLAS,FRINGE_ATLAS,createScreenMaterials} from './foliage-screen-paint.js';
 import * as T from './vendor/three.module.js';
 import {BIOME_TEXTURES,BIOME_FAMILIES} from './biome-foliage-data.js';
+import {biomeTreeModels} from './biome-tree-mix.js';
 import {configureBiomeTexture,createBiomeMaterials} from './biome-foliage-paint.js';
 import {createBiomeObstacleMaterials} from './biome-obstacle-paint.js';
 import {createBiomePlantFactory} from './biome-foliage-models.js';
@@ -77,7 +78,7 @@ export class BiomeScene{
     terrain.screens=createFoliageScreens(plan,{plantMaterials:this.materials,screenMaterials:this.screenMaterials,decorate:m=>this.material(m,z,size)});terrain.root.add(terrain.screens.root);
     terrain.level=z;terrain.root.position.y=.008;this.root.add(terrain.root);this.terrains.push(terrain);
     const prototypes=[0,1,2].map(variant=>factory(z).create(OPEN_WOODLAND_PLANTS[plan.family],{variant}));
-    const trees=BIOME_FAMILIES[plan.family].trees.flatMap(id=>[0,1,2].map(variant=>factory(z).create(id,{variant})));
+    const trees=biomeTreeModels(plan.family).flatMap(id=>[0,1,2].map(variant=>factory(z).create(id,{variant})));
     const treeSpecs=new Map(plan.trees.map(t=>[`${t.x},${t.y}`,t]));
     for(const c of plan.passableCells()){
      if(plan.treeAt(c.x,c.y)){
