@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../dist/tactics/vendor/three.module.js';
-import {WallXray,xrayWall,xrayRadius,pickWallDoor,xrayThroughLevel} from '../dist/tactics/wall-xray.js';
+import {WallXray,xrayWall,xrayRadius,xrayOuterRadius,pickWallDoor,xrayThroughLevel} from '../dist/tactics/wall-xray.js';
 import {wallXrayFixture} from '../dist/tactics/wall-xray-fixture.js';
 import {createGame,move,stepMovement} from '../dist/tactics/core/engine.js';
 import {personVisible} from '../dist/tactics/battle-visibility.js';
@@ -10,6 +10,24 @@ import {visibleLoot} from '../dist/tactics/battle-inventory.js';
 function chunk(){const mesh=new T.InstancedMesh(new T.BoxGeometry(1,2,.12),new T.MeshStandardMaterial(),2);mesh.setMatrixAt(0,new T.Matrix4().makeTranslation(0,1,0));mesh.setMatrixAt(1,new T.Matrix4().makeTranslation(3,1,0));mesh.computeBoundingSphere();mesh.userData.boxes=[{id:'edge:s:0:0:door',kind:'wall',source:{edge:'s:0:0'}},{id:'edge:s:3:0:1:door',kind:'wall',source:{edge:'s:3:0:1'}}];return mesh;}
 test('cursor radius tracks zoom and drawing-buffer scale, leaving disables the effect',()=>{
  const x=new WallXray();try{x.setPointer(30,40);x.update(200,100,1,2);assert.deepEqual(x.uniforms.xrayCenter.value.toArray(),[60,120]);assert.equal(x.uniforms.xrayRadius.value,xrayRadius(1)*2);assert.equal(x.uniforms.xrayActive.value,true);x.update(200,100,2,1);assert.equal(x.uniforms.xrayRadius.value,xrayRadius(1)*2);for(const p of [[-1,20],[201,20],[20,101],[null,null],[NaN,10]]){x.setPointer(...p);x.update(200,100,1);assert.equal(x.uniforms.xrayActive.value,false);}}finally{x.dispose();}
+});
+
+test('feather adds two-thirds to the clear radius at every zoom and pixel density',()=>{
+ const x=new WallXray(),source=new T.MeshStandardMaterial();
+ try{
+  const material=x.material(source),shader={uniforms:{},fragmentShader:T.ShaderLib.standard.fragmentShader};material.onBeforeCompile(shader);
+  assert.equal(material.transparent,true);assert.equal(material.depthWrite,source.depthWrite);assert.equal(source.transparent,false);
+  assert.equal(shader.uniforms.xrayOuterRadius,x.uniforms.xrayOuterRadius);
+  assert.equal(x.wireMaterial.uniforms.xrayOuterRadius,x.uniforms.xrayOuterRadius);
+  for(const zoom of [.08,1,3])for(const dpr of [1,2]){
+   x.setPointer(40,50);x.update(320,240,zoom,dpr);
+   assert.equal(x.uniforms.xrayRadius.value,xrayRadius(zoom)*dpr);
+   assert.equal(x.uniforms.xrayOuterRadius.value,xrayOuterRadius(zoom)*dpr);
+   assert.ok(Math.abs(x.uniforms.xrayOuterRadius.value/x.uniforms.xrayRadius.value-5/3)<1e-12);
+  }
+  assert.match(shader.fragmentShader,/gl_FragColor\.a\*=cursorXrayOpacity/);
+  assert.match(shader.fragmentShader,/smoothstep\(xrayRadius,xrayOuterRadius,/);
+ }finally{x.dispose();source.dispose();}
 });
 
 test('selected level is the cutaway floor: lower walls and the supporting slab remain solid',()=>{
