@@ -1,3 +1,4 @@
+import {invalidateMapGeometry} from '../map-geometry-cache.js';
 import {planStructureBlast,commitStructureDamage} from '../structure-damage.js';
 import {structureInfo} from '../structure-health.js';
 import {grenadePreview,grenadeTrajectory} from '../grenade-ballistics.js';
@@ -64,7 +65,7 @@ export function detonate(s,impact,w){
  }
  let destroyed=0;
  // Near surfaces breach first. Floors and surviving structures shield the space beyond.
- for(const c of candidates.sort((a,b)=>a.dist-b.dist))if(blastClear(s,impact,c.point)){c.remove();destroyed++;}
+ for(const c of candidates.sort((a,b)=>a.dist-b.dist))if(blastClear(s,impact,c.point)){c.remove();invalidateMapGeometry(s);destroyed++;}
  const hits=[];
  for(const u of s.units){if(u.away||u.casualty==='quit'||!(u.hp>0||['bleeding','stable'].includes(u.casualty)))continue;/* away: crossed the map edge; quit: left the squad; no body here */const point={x:u.x,y:u.y,h:unitBaseHeight(u)+.8},dist=Math.hypot(u.x-impact.x,u.y-impact.y,point.h-impact.h);if(dist<radius&&blastClear(s,impact,point))hits.push({unit:u,damage:Math.max(1,Math.round(w.damage*(1-dist/radius)))});}
  const barrels=s.props.filter(isExplosiveBarrel).filter(p=>{

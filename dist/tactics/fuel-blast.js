@@ -1,3 +1,4 @@
+import {invalidateMapGeometry} from './map-geometry-cache.js';
 import {blastStrategicSites} from './strategic-site-damage.js';
 import {inBounds,terrainAt,levelOf} from './core/maps.js';
 import {unitBaseHeight} from './tower-geometry.js';
@@ -33,7 +34,7 @@ export function detonateBarrels(s,targets,hooks,source=null){
  const pending=targets.map(p=>typeof p==='string'?p:barrelId(p)),blasts=[];
  for(let i=0;i<pending.length;i++){
   const prop=s.props.find(p=>isExplosiveBarrel(p)&&barrelId(p)===pending[i]);if(!prop)continue;
-  s.props=s.props.filter(p=>p!==prop);
+  s.props=s.props.filter(p=>p!==prop);invalidateMapGeometry(s);
   const result=applyFuelBlast(s,prop,hooks,source),sequence=(s.fireAnimationSequence??0)+1;s.fireAnimationSequence=sequence;
   const receipt={sequence,kind:'barrel',prop:{...prop},route:[{x:prop.x,y:prop.y,z:prop.z||0}],fires:result.fires};
   (s.fireAnimations??=[]).push(receipt);if(s.fireAnimations.length>128)s.fireAnimations.splice(0,s.fireAnimations.length-128);

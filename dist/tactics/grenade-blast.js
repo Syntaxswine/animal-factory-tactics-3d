@@ -5,6 +5,7 @@ import {isExplosiveBarrel,barrelId} from './explosive-barrels.js';
 import {isStrategicSite,intactSite,siteSamples,siteId,destroyStrategicSite} from './strategic-site-rules.js';
 import {planStructureBlast,commitStructureDamage} from './structure-damage.js';
 import {structureInfo,mergeScenery} from './structure-health.js';
+import {invalidateMapGeometry} from './map-geometry-cache.js';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.h-b.h);
 export function detonateGrenade(s,impact){
  const radius=GRENADE.blast,world=grenadeWorld(s),clear=(end,id=null)=>{const h=sweepGrenade(world,impact,end,0);return !h||h.t>=.995||id!==null&&h.propId===id;},hits=[],barrels=[],sites=[],removeEdges=new Set(),removeProps=new Set(),removeTiles=[];
@@ -30,6 +31,7 @@ export function detonateGrenade(s,impact){
  for(const key of removeEdges){delete s.edges[key];if(s.edgeLocks)delete s.edgeLocks[key];}
  s.props=s.props.filter(p=>!removeProps.has(p));
  for(const {x,y,z}of removeTiles)if(z)s.upper[z-1][`${x},${y}`]='floor';else map[y][x]='ground-gravel';
+ if(removeEdges.size||removeProps.size||removeTiles.length)invalidateMapGeometry(s);
  const receipts=sites.map(p=>destroyStrategicSite(s,p,{cause:'explosive'})).filter(Boolean);
  return {hits,barrels,sites:receipts,before,structures:structural.receipts,blast:{kind:'grenade',grenade:true,x:impact.x,y:impact.y,z:impact.z,h:impact.h,radius,destroyed:structural.destroyed+removeEdges.size+removeProps.size+removeTiles.length+receipts.length}};
 }

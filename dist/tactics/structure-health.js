@@ -1,4 +1,5 @@
 import {cliffSupportAt} from './cliff-support.js';
+import {invalidateMapGeometry} from './map-geometry-cache.js';
 
 export const STRUCTURE_HP=Object.freeze({thin:75,light:100,heavy:200});
 const floorKinds=new Set(['floor','bridge','ground-wood-planks','ground-concrete','ground-tiles','ground-asphalt']);
@@ -51,6 +52,7 @@ export function damageStructure(s,target,amount){
    }
   }
  }
+ if(hp===0)invalidateMapGeometry(s);
  return {id:info.id,kind:info.kind,type:info.type,maxHp:info.maxHp,hp,damage,destroyed:hp===0,before};
 }
 

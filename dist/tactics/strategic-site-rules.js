@@ -1,3 +1,4 @@
+import {invalidateMapGeometry} from './map-geometry-cache.js';
 import {SITE_DATA} from './strategic-site-data.js';
 
 export const SITE_NAMES=Object.freeze({radio:'Radio tower',radar:'Radar tower',sam:'SAM site'});
@@ -79,7 +80,7 @@ export const siteSamples=p=>siteData(p)?.samples.map(q=>sitePoint(p,q))||[];
 export function destroyStrategicSite(state,target,{cause='trigger'}={}){
  if(!['trigger','flame','explosive'].includes(cause))return null;
  const id=typeof target==='string'?target:target&&siteId(target),p=(state.props||[]).find(q=>intactSite(q)&&siteId(q)===id);if(!p)return null;
- const wreck={...p,kind:p.kind+'-destroyed'};state.props=state.props.map(q=>q===p?wreck:q);
+ const wreck={...p,kind:p.kind+'-destroyed'};state.props=state.props.map(q=>q===p?wreck:q);invalidateMapGeometry(state);
  return {id,name:siteRule(p).name,cause,before:{...p},after:{...wreck}};
 }
 // Interaction is at the actual control equipment, not any empty footprint tile.

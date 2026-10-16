@@ -1,6 +1,7 @@
 import {terrainAt,passable,blockedEdge} from './core/maps.js';
 import {propCells,floorTerrain} from './core/environment.js';
 import {emptyScenery} from './structure-health.js';
+import {invalidateMapGeometry} from './map-geometry-cache.js';
 const key=p=>`${p.x},${p.y},${p.z||0}`;
 const present=u=>!u.away&&!['quit','captured'].includes(u.casualty);
 
@@ -20,6 +21,7 @@ export function settleStructureCollapse(s,receipts,{fatal=()=>{}}={}){
   const [axis,a,b,c='0']=edge.split(':'),p={x:Number(a),y:Number(b),z:Number(c)},q={...p,x:p.x+(axis==='e'?1:0),y:p.y+(axis==='s'?1:0)};
   if(p.z>0&&(unsupported(p)||unsupported(q))&&!floorTerrain(terrainAt(s,p.x,p.y,p.z))&&!floorTerrain(terrainAt(s,q.x,q.y,q.z))){before.edges[edge]=kind;delete s.edges[edge];delete s.structureHealth?.['edge:'+edge];delete s.edgeLocks?.[edge];}
  }
+ invalidateMapGeometry(s);
  const movers=(s.units||[]).filter(u=>present(u)&&!u.towerPost&&!u.cliffSupport&&unsupported({x:Math.round(u.x),y:Math.round(u.y),z:u.z||0}));
  const occupied=p=>(s.units||[]).some(u=>present(u)&&u.hp>0&&!u.towerPost&&!movers.includes(u)&&Math.round(u.x)===p.x&&Math.round(u.y)===p.y&&(u.z||0)===p.z);
  const landings=new Map(),reserved=new Set();

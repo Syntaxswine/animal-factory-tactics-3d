@@ -1,3 +1,4 @@
+import {trackMapGeometry} from './map-geometry-cache.js';
 import {localEnvironmentProfile} from './environment-regions.js';
 import {createGame,refresh,alive,incapacitated,abandonCasualties,walkable} from './core/engine.js';
 import {neighbors,tileKey,validateMap} from './core/maps.js';
@@ -25,7 +26,7 @@ export function sectorRecord(c,index){return c.sectors[index]??= {initialized:fa
 export function groupMembers(c,g){return g.memberIds.map(id=>c.characters[id].unit);}
 export function travelState(c,g){return {...g.travel,clock:{...c.clock},members:groupMembers(c,g)};}
 export function bindCampaign(c){
- for(const [index,sector]of Object.entries(c.sectors))if(sector.state)bindSectorInventory(sector.state,{present:u=>u&&atSector(c,u.campaignId,+index)&&c.characters[u.campaignId]?.unit===u,contested:()=>c.incidents.some(i=>i.sector===+index&&i.status==='pending')});
+ for(const [index,sector]of Object.entries(c.sectors))if(sector.state)bindSectorInventory(trackMapGeometry(sector.state),{present:u=>u&&atSector(c,u.campaignId,+index)&&c.characters[u.campaignId]?.unit===u,contested:()=>c.incidents.some(i=>i.sector===+index&&i.status==='pending')});
  return c;
 }
 function register(c,u,id,location){

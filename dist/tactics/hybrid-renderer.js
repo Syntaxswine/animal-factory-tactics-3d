@@ -11,6 +11,7 @@ import {FOLIAGE_ATLAS,FOLIAGE_MATERIALS,paintFoliageMaterial} from './foliage-ma
 import * as THREE from './vendor/three.module.js';
 import {LoadingTracker,trackLoadingManager} from './loading-tracker.js';
 import {buildWorld,GAME_CAMERA,toWorld} from './hybrid-world.js';
+import {MapGeometryCache} from './map-geometry-cache.js';
 import {hybridWorld} from './hybrid-combat.js';
 import {surfacePixels,materialKind} from './hybrid-materials.js';
 import {spriteVertex,alphaBounds,weaponLandmarks} from './hybrid-sprites.js';
@@ -50,6 +51,7 @@ const key=(x,y,z)=>z?`${x},${y},${z}`:`${x},${y}`;
 function known(box,seen){if(!seen)return true;const p=box.source;if(p.edge){const [axis,x,y,z=0]=p.edge.split(':');return seen.has(key(+x,+y,+z))||seen.has(key(+x+(axis==='e'?1:0),+y+(axis==='s'?1:0),+z));}return seen.has(key(p.x,p.y,p.z||0));}
 export class HybridRenderer{
  constructor(onReady=()=>{}){
+  this.mapGeometry=new MapGeometryCache(buildWorld);
   this.renderer=new THREE.WebGLRenderer({antialias:false,alpha:true,preserveDrawingBuffer:true});this.renderer.setPixelRatio(1);this.renderer.outputColorSpace=THREE.SRGBColorSpace;
   this.scene=new THREE.Scene();this.camera=new THREE.OrthographicCamera();this.scene.add(new THREE.HemisphereLight(0xfff3d8,0x52634d,2));const sun=new THREE.DirectionalLight(0xffe2ac,2);sun.position.set(-4,9,5);this.scene.add(sun);
   this.loading=new LoadingTracker();
@@ -95,7 +97,7 @@ export class HybridRenderer{
   const camera=this.camera;
   if(this.width!==width||this.height!==height){this.renderer.setSize(width,height,false);this.width=width;this.height=height;}
   setBattleCamera(camera,view,width,height,editor?0:level);
-  let world;if(state.geometryMode==='hybrid')world=hybridWorld(state);else{const signature=JSON.stringify([state.terrain,state.upper,state.edges,state.props,state.stairs,state.foliage]);if(signature!==this.mapSignature){this.mapSignature=signature;this.editorWorld=buildWorld(state);}world=this.editorWorld;}
+  const world=state.geometryMode==='hybrid'?hybridWorld(state):this.mapGeometry.get(state);
   const renderLevel=showAllLevels?3:level,seen=editor?null:state.seen,wallDefinition=state.definition?.edges,floorDefinition=state.definition?.upper,breaches=state.breaches??state.definition?.breaches,rebuild=this.world!==world||this.seenCount!==seen?.size||this.renderLevel!==renderLevel||this.wallDefinition!==wallDefinition||this.floorDefinition!==floorDefinition||this.breaches!==breaches;if(rebuild){this.rebuild(world,seen,renderLevel,state);this.world=world;this.seenCount=seen?.size;this.renderLevel=renderLevel;this.wallDefinition=wallDefinition;this.floorDefinition=floorDefinition;this.breaches=breaches;}this.level=level;
   const focus=battleFloorPoint(view,width/2,height/2,level);const cursor=this.wallXray?.pointer,hover=cursor?{...battleFloorPoint(view,cursor.x,cursor.y,level),z:level}:null;this.biomes.cutawayTargets=editor?[]:battleFoliageTargets(state,state.units.map(u=>this.displayUnit?{...this.displayUnit(this.state?.units.find(v=>v.id===u.id)||u),presentationLevel:u.presentationLevel}:u),this.foliageSelectedIds||new Set([state.selected]),hover,this.foliageRoutes,level);this.biomes.update(camera,new THREE.Vector3(focus.x,0,focus.y),28*Math.sqrt(2)*view.zoom);
   const units=editor?[...state.starts.map((p,i)=>({...p,id:i,species:['horse','goat','donkey','sheep'][i],weapon:'rifle',hp:100,team:'squad'})),...state.guards.map((p,i)=>({...p,id:i+4,hp:100,team:'guard'}))]:state.units;
@@ -109,5 +111,5 @@ export class HybridRenderer{
  }
  animateMaterials(time){for(const m of this.materials.values())if(m.userData.waterTime)m.userData.waterTime.value=time;}
  stats(){return {biomes:this.biomes.stats(),meshes:this.structures.children.length,actors:this.actors.size,cachedPoses:this.textures.size,textures:this.renderer.info.memory.textures,geometries:this.renderer.info.memory.geometries,calls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,drawTimes:[...this.drawTimes||[]],diagnostics:[...this.diagnostics],unsupported:this.world?.diagnostics||[]};}
- dispose(){this.biomes.dispose();this.environmentPaint.dispose();this.disposed=true;for(const mesh of this.structures.children)mesh.dispose();for(const mesh of this.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}for(const t of this.textures.values())t.dispose();this.textures.clear();this.actors.clear();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.materials.clear();this.chunks?.clear();this.world=null;this.editorWorld=null;this.scene.clear();for(const geometry of Object.values(this.geometries))geometry.dispose();this.renderer.dispose();}
+ dispose(){this.biomes.dispose();this.environmentPaint.dispose();this.disposed=true;for(const mesh of this.structures.children)mesh.dispose();for(const mesh of this.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}for(const t of this.textures.values())t.dispose();this.textures.clear();this.actors.clear();for(const m of this.materials.values()){if(m.map!==this.foliageTexture)m.map.dispose();m.dispose();}this.foliageTexture?.dispose();this.materials.clear();this.chunks?.clear();this.world=null;this.mapGeometry.clear();this.scene.clear();for(const geometry of Object.values(this.geometries))geometry.dispose();this.renderer.dispose();}
 }

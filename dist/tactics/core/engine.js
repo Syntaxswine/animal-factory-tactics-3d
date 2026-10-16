@@ -1,3 +1,4 @@
+import {invalidateMapGeometry,trackMapGeometry} from '../map-geometry-cache.js';
 import {patrolDestination} from '../character-patrol.js';
 import {synchronizeFoliage} from '../foliage-obstacles.js';
 import {projectileStructureDamage,commitStructureDamage} from '../structure-damage.js';
@@ -118,7 +119,7 @@ export function createGame(seed=1947,definition=factoryMap(),detect=true,difficu
  if(definition.name==='Factory test')s.loot[0].items.push({type:'weapon',kind:'flamethrower',rounds:4},{type:'ammo',kind:'flamethrower',count:4});
  if(options.statSystem){s.rules.statSystem=true;for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id],authored={...(u.team==='squad'?options.cast?.[u.id]?.stats:{}),...source?.stats};if(Number.isFinite(source?.perception)&&!Number.isFinite(authored.perception))authored.perception=source.perception;initializeStats(u,authored);starterTools(u);}}
  if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id];if(source?.towerPost)u.towerPost=structuredClone(source.towerPost);u.perception=u.stats?u.stats.perception:Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}
- if(detect)refresh(s);log(s,`Local map ready / ${definition.guards.length} guards.`);return s;
+ trackMapGeometry(s);if(detect)refresh(s);log(s,`Local map ready / ${definition.guards.length} guards.`);return s;
 }
 // Visibility and projectiles share solid geometry, but bodies do not occlude sight.
 export function zoneVisible(s,a,b,zone='torso'){a={...a,cliffSupport:rampSupportAt(s,a)||a.cliffSupport};b={...b,cliffSupport:rampSupportAt(s,b)||b.cliffSupport};
@@ -522,7 +523,7 @@ function fleeTurn(s,g,target){
 export function stabilizePreview(s,medic,patient){const cost=medicalCost(medic);let reason='';if(!canControl(s,medic)||s.queue.length)reason='Cannot act now';else if(!s.units.includes(patient)||patient.team!=='squad'||patient.casualty!=='bleeding'||patient.bleedTurns<=0)reason='Choose a bleeding teammate';else if(!medic.medkits)reason='No medkits remaining';else if(levelOf(medic)!==levelOf(patient)||Math.abs(medic.x-patient.x)+Math.abs(medic.y-patient.y)!==1||blockedEdge(s,medic,patient))reason='Stand beside the casualty with an open edge';else if(combatCosts(s)&&medic.ap<cost)reason='Not enough AP';return {ok:!reason,reason,cost};}
 export function stabilize(s,medic,patient){const p=stabilizePreview(s,medic,patient);if(!p.ok)return false;if(combatCosts(s))medic.ap-=p.cost;medic.medkits--;patient.casualty='stable';patient.bleedTurns=0;beginRecovery(s,patient);const thanks=helped(patient,medic);if(s.rules?.social)stabilizedPartner(medic,patient);if(thanks)log(s,patient.name+': '+thanks);log(s,medic.name+' stabilized '+patient.name+'.');refresh(s);return true;}
 export function cutPreview(s,u,edge){let reason='';const cost=4;if(!canControl(s,u)||s.queue.length)reason='Cannot act now';else if(!u.wireCutters)reason='Wire cutters required';else if(!u.slots.includes('wireCutters'))reason='Equip wire cutters in a held slot';else if(s.edges[edge]!=='fence-chainlink')reason='Choose a chain-link fence';else if(!edgeCells(edge).some(p=>p.x===u.x&&p.y===u.y&&levelOf(p)===levelOf(u)))reason='Stand beside the fence';else if(combatCosts(s)&&u.ap<cost)reason='Not enough AP';return {ok:!reason,reason,cost};}
-export function cutFence(s,u,edge){const p=cutPreview(s,u,edge);if(!p.ok)return false;if(combatCosts(s))u.ap-=p.cost;s.edges[edge]='fence-cut';u.overwatch=null;log(s,u.name+' cut a passable opening in the fence.');refresh(s);return true;}
+export function cutFence(s,u,edge){const p=cutPreview(s,u,edge);if(!p.ok)return false;if(combatCosts(s))u.ap-=p.cost;s.edges[edge]='fence-cut';invalidateMapGeometry(s);u.overwatch=null;log(s,u.name+' cut a passable opening in the fence.');refresh(s);return true;}
 
 export function moveGroup(s,ids,leader,x,y,z=levelOf(leader)){
  const members=[...new Set(ids)].map(id=>unit(s,id));if(!members.length||!members.includes(leader)||members.some(u=>!canControl(s,u)||levelOf(u)!==levelOf(leader)))return false;

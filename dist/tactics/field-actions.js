@@ -1,4 +1,5 @@
 import {intactSite,siteControlPoint,siteRule,destroyStrategicSite} from './strategic-site-rules.js';
+import {invalidateMapGeometry} from './map-geometry-cache.js';
 import {toolCount,consumeTool} from './inventory-tools.js';
 import {canControl,combatCosts,refresh,emitNoise,stabilize,stabilizePreview} from './core/engine.js';
 import {edgeCells,blockedEdge} from './core/maps.js';
@@ -49,7 +50,7 @@ export function performInteraction(s,u,kind,target){
  else if(kind==='heal'){u.medkits--;target.hp+=p.amount;if(target.hp>=target.maxHp)delete target.legWound;result='treated '+target.name+': +'+p.amount+' HP.';}
  else if(kind==='sabotage'){const receipt=destroyStrategicSite(s,target,{cause:'trigger'});result='sabotaged '+receipt.name+'.';emitNoise(s,u,20);}
  else if(kind==='repair'){consumeTool(u,'repairKit');target.condition=(target.condition??100)+p.amount;result='repaired '+target.kind+': '+target.condition+'%'+(target.condition===100?' / working.':' / still offline.');}
- else {s.interactionSeed=(Math.imul((s.interactionSeed??s.seed)>>>0,1664525)+1013904223)>>>0;const success=s.interactionSeed/4294967296*100<p.chance;if(success){delete s.edgeLocks[target];s.edges[target]=EDGES[s.edges[target]].opensTo;}if(kind==='force')emitNoise(s,u,20);result=(success?'opened the locked door.':'failed to open the lock.');}
+ else {s.interactionSeed=(Math.imul((s.interactionSeed??s.seed)>>>0,1664525)+1013904223)>>>0;const success=s.interactionSeed/4294967296*100<p.chance;if(success){delete s.edgeLocks[target];s.edges[target]=EDGES[s.edges[target]].opensTo;invalidateMapGeometry(s);}if(kind==='force')emitNoise(s,u,20);result=(success?'opened the locked door.':'failed to open the lock.');}
  if(!combatCosts(s)&&s.clock){advanceEncounterTime(s,p.minutes,false);recoverStamina({...s,units:s.units.filter(v=>v!==u)},p.minutes);s.awarenessSeconds=(s.awarenessSeconds||0)+60*p.minutes;}
  s.log.unshift(u.name+' '+result);refresh(s);return true;
 }

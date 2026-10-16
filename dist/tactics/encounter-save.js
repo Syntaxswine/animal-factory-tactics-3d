@@ -1,3 +1,4 @@
+import {trackMapGeometry} from './map-geometry-cache.js';
 import {validPatrolState} from './character-patrol.js';
 import {spotlightErrors} from './light-sources.js';
 import {localEnvironmentErrors} from './environment-regions.js';
@@ -49,5 +50,5 @@ export function restoreEncounter(record){
  if(record?.format!=='animal-factory-tactics-3d'||record.version!==SAVE_VERSION)throw Error('This save uses an unsupported format or version.');
  const s=structuredClone(record.state);validateSavedState(s);s.effect=null;s.queue=[];delete s.fireAnimations;delete s.fireAnimationSequence;delete s.towerTraversal;delete s.cliffTraversals;delete s.cliffTraversalSequence;delete s.roofTraversals;delete s.roofTraversalSequence;delete s.shouting;delete s.sealed;
  // Prime the observer without advancing time, refilling resources or recomputing awareness.
- observeRoundTime(s.clock,s);return s;
+ observeRoundTime(s.clock,s);return trackMapGeometry(s);
 }

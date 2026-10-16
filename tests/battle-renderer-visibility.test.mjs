@@ -4,14 +4,15 @@ import * as T from '../dist/tactics/vendor/three.module.js';
 import {BattleRenderer} from '../dist/tactics/battle-renderer.js';
 import {BattleCombat} from '../dist/tactics/battle-combat.js';
 import {HybridRenderer} from '../dist/tactics/hybrid-renderer.js';
-import {toWorld} from '../dist/tactics/hybrid-world.js';
+import {toWorld,buildWorld} from '../dist/tactics/hybrid-world.js';
+import {MapGeometryCache} from '../dist/tactics/map-geometry-cache.js';
 
 // Exercise both renderer draw stages with the real presentation clock. Only
 // WebGL, model loading and effects are replaced; visibility/picking are real.
 function renderer(){
  const r=Object.create(BattleRenderer.prototype),world={boxes:[]};
  Object.assign(r,{camera:new T.OrthographicCamera(),actors:new Map(),models:new Map(),materials:new Map(),
-  renderer:{setSize(){},getPixelRatio:()=>1,render(){},domElement:{}},editorWorld:world,world,level:0,
+  renderer:{setSize(){},getPixelRatio:()=>1,render(){},domElement:{}},mapGeometry:new MapGeometryCache(buildWorld),world,level:0,
   rebuild(){},prune(){},biomes:{update(){}},loot:{sync(){}},sites:{hit:()=>null},motion:{update(){},sample:u=>u},traversal:{observe(){}},combat:new BattleCombat(),
   fire:{entries:new Map(),observe(){},display:u=>u},grenades:{scenery:s=>s},tankEffects:{observe(){},pendingProps:()=>[]},shotEffects:{hide(){}},flameEffects:{hide(){}},
   actor(u){let mesh=this.actors.get(u.id);if(!mesh){mesh=new T.Mesh(new T.BoxGeometry(.5,1,.5));this.actors.set(u.id,mesh);}mesh.position.fromArray(toWorld(u));mesh.position.y+=.5;mesh.updateMatrixWorld(true);return mesh;}
@@ -21,7 +22,7 @@ function renderer(){
 for(const weapon of ['rifle','flamethrower'])test(`${weapon}: visible casualties remain drawn before impact without revealing hidden guards`,()=>{
  const a={id:0,x:0,y:0,team:'squad',species:'horse',weapon,hp:100},b={id:1,x:2,y:0,team:'guard',hp:70},hidden={id:2,x:3,y:0,team:'guard',hp:70};
  const state={units:[a,b,hidden],map:[],props:[],detected:new Set([1]),visible:new Set(['0,0','2,0']),seen:new Set(['0,0','2,0','3,0'])},r=renderer();
- r.mapSignature=JSON.stringify([state.map,state.upper,state.edges,state.props,state.stairs]);r.seenCount=state.seen.size;
+ r.seenCount=state.seen.size;
  const ctx={drawImage(){}},args=[{x:250,y:250,zoom:1},500,500,0];
  const draw=now=>{r.presentationNow=now;return r.draw(ctx,state,...args).map(p=>p.id);};
  try{
