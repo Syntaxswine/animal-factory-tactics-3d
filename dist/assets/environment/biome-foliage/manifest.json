@@ -3013,7 +3013,7 @@
   "sourceHashFormat": "SHA-256 of UTF-8 text with LF line endings",
   "sources": {
     "dist/tactics/biome-tree-mix.js": "405ec7c70010ae2dec927b9144479b376e5cbae72a65fece64b26b9d6d674abf",
-    "dist/tactics/foliage-obstacles.js": "fda4ebb9656618cf7e378ce300d6f5aede9ef799f7455e81a8438c231b61312f",
+    "dist/tactics/foliage-obstacles.js": "8d8dc0df54e953fd743ef0c120b97fa387e7bdbce44e78ee3a19be575572121c",
     "dist/tactics/biome-terrain.js": "75e1b0bc5ad3492c2cd7049d0c2f250a8037f05ab3808da5362138856ea87395",
     "dist/tactics/foliage-screen-paint.js": "a14cb24ab2325bbc63722c36ad08f7c9c8a6622494287953348eff5ee01dded0",
     "dist/tactics/foliage-screen-surface.js": "8e452f6138a481e5b6a4bdbad2403d196939ea7bdc2d5d76490fe0d25ae02292",

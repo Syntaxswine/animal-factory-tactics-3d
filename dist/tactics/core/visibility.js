@@ -1,3 +1,4 @@
+import {MapGeometryCache} from '../map-geometry-cache.js';
 import {helicopterRayHit} from '../scenery-rules.js';
 import {isHelicopter} from '../scenery-catalog.js';
 import {foliageSignature,synchronizeFoliage,traceFoliage} from '../foliage-obstacles.js';
@@ -10,14 +11,15 @@ import {W,H,LEVELS,levelOf,terrainAt} from './maps.js';
 import {EDGES,propCells,PROPS} from './environment.js';
 export const TERRAIN_RANGE=75,CHARACTER_RANGE=60;
 const N=W*H,index=(x,y,z)=>z*N+y*W+x,caches=new WeakMap();
-function scene(s){const signature=foliageSignature(s);let c=caches.get(s);if(c?.signature===signature)return c;
+function scene(s){let cache=caches.get(s);if(!cache){cache=new MapGeometryCache(buildScene);caches.set(s,cache);}return cache.get(s);}
+function buildScene(s){const signature=foliageSignature(s);let c;
  const floors=new Uint8Array(N*LEVELS),tall=new Float32Array(N*LEVELS),east=new Uint8Array(N*LEVELS),south=new Uint8Array(N*LEVELS),holes=new Uint8Array(N*LEVELS);
  for(let y=0;y<H;y++)for(let x=0;x<W;x++)tall[index(x,y,0)]=s.map[y][x]==='wall'?2.7:s.map[y][x]==='crate'?.8:0;
  for(let z=1;z<LEVELS;z++)for(const [k,t]of Object.entries(s.upper[z-1])){const [x,y]=k.split(',').map(Number);floors[index(x,y,z)]=1;tall[index(x,y,z)]=t==='wall'?2.7:t==='crate'?.8:0;}
  for(const p of s.props||[]){const rule=PROPS[p.kind],height=rule?.tall?2.7:rule?.solid&&rule.cover>0?.8:0;for(const q of propCells(p))tall[index(q.x,q.y,q.z)]=Math.max(tall[index(q.x,q.y,q.z)],height);}
  for(const p of s.stairs||[])holes[index(p.x,p.y,p.z+1)]=1;
  for(const [k,v]of Object.entries(s.edges)){const [axis,x,y,z=0]=k.split(':'),rule=EDGES[v];if(+x>=0&&+y>=0&&rule?.opaque)(axis==='e'?east:south)[index(+x,+y,+z)]=rule.window?2:1;}
- c={helicopters:(s.props||[]).filter(isHelicopter),sites:(s.props||[]).filter(isStrategicSite),hasWoodland:!!Object.keys(s.foliage||{}).length||signature.includes('woodland'),signature,floors,tall,east,south,holes,foliage:synchronizeFoliage(s),observers:new Map()};caches.set(s,c);return c;
+ c={helicopters:(s.props||[]).filter(isHelicopter),sites:(s.props||[]).filter(isStrategicSite),hasWoodland:!!Object.keys(s.foliage||{}).length||signature.includes('woodland'),signature,floors,tall,east,south,holes,foliage:synchronizeFoliage(s),observers:new Map()};return c;
 }
 // Cached grid traversal of the same .8-unit cover / 2.7-unit walls used by projectiles.
 // Reveal the destination surface itself; only intervening volumes hide a terrain tile.

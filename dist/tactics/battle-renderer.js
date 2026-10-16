@@ -31,6 +31,7 @@ import {BattleFire} from './battle-fire.js';
 import {BattleTankEffects} from './battle-tank-effects.js';
 import {motionPreference} from './settings-3d.js';
 import {barrelTarget,presentBarrel} from './explosive-barrels.js';
+import {CharacterBatches,CHARACTER_PICK_LAYER} from './character-batches.js';
 
 // Reuse only the environment/camera presentation. No hybrid combat mode.
 export class BattleRenderer extends HybridRenderer {
@@ -68,7 +69,7 @@ export class BattleRenderer extends HybridRenderer {
    for(const part of worker.parts)part.material=paint.material;
    const root=new T.Group();root.add(worker.root);
    const posture=createBattlePosture(worker,profile),locomotion=createWorkerLocomotion(worker,profile);
-   this.models.set(unit.id,{worker,paint,root,profile,locomotion,posture,cap});this.actors.set(unit.id,root);this.scene.add(root);
+   this.models.set(unit.id,{worker,paint,root,profile,locomotion,posture,cap,batches:new CharacterBatches(worker,root)});this.actors.set(unit.id,root);this.scene.add(root);
   }catch(error){cap?.dispose();paint?.dispose();worker?.dispose();this.loading.fail(error);this.diagnostics.push(error.message);if(this.traversal?.active?.event.unitId===unit.id)this.traversal.finish();}
   finally{this.loading.end();if(generation===this.generation)this.onReady();}
  }
@@ -137,9 +138,9 @@ export class BattleRenderer extends HybridRenderer {
   if(model.aimWarning){const i=this.diagnostics.indexOf(model.aimWarning);if(i>=0)this.diagnostics.splice(i,1);model.aimWarning=null;}
   if(result&&!result.supported){model.aimWarning=`${unit.name||unit.species}: firing animation unavailable (${result.reason}); shot outcome unchanged.`;this.diagnostics.push(model.aimWarning);}
  }
- prune(){this.sceneryAssets.update((this.presentationNow??performance.now())/1000,this.camera,{reducedMotion:!!this.reducedMotion?.matches});this.grenades.update(this.combat.active,this.state,this.camera);this.tankEffects.draw(this.camera);} // Runs after posing, before rendering.
+ prune(){this.sceneryAssets.update((this.presentationNow??performance.now())/1000,this.camera,{reducedMotion:!!this.reducedMotion?.matches});this.grenades.update(this.combat.active,this.state,this.camera);this.tankEffects.draw(this.camera);for(const model of this.models.values())if(model.root.visible)model.batches.sync();} // Runs after posing, before rendering.
  pick(x,y,width,height,level=this.presentationLevel??this.level,{selectBody=false}={}){
-  const ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
+  const ray=new T.Raycaster();ray.layers.enable(CHARACTER_PICK_LAYER);ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
   const barrel=[this.paintedEnvironment.barrelHit(ray,level),this.sites.hit(ray,level)].filter(Boolean).sort((a,b)=>a.distance-b.distance)[0],onLevel=id=>(this.state.units.find(u=>u.id===id)?.z||0)===level;
   const roots=[...this.actors.entries()].filter(([id,root])=>root.visible&&onLevel(id));
   for(const hit of ray.intersectObjects(roots.map(([,root])=>root),true)){
@@ -199,7 +200,7 @@ export class BattleRenderer extends HybridRenderer {
   this.motion.clear();
   this.grenades.dispose();this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();this.fire.dispose();this.tankEffects.dispose();
   this.paintedEnvironment.dispose();
-  for(const {worker,paint,root,equipment,locomotion,cap,draw}of this.models.values()){this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
+  for(const {worker,paint,root,equipment,locomotion,cap,draw,batches}of this.models.values()){batches.dispose();this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();
  }
 }

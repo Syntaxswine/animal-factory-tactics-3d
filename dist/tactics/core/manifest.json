@@ -44,7 +44,7 @@
       "upstreamSha256": "f8b2afc98c686cd892189d17f4fe7cb7ae7c16b8d8f2f8609ca78cf8b3192674"
     },
     "visibility.js": {
-      "reason": "The helicopter shields sight through its body while leaving rotor overhang open. Invalidate terrain visibility when foliage changes. Strategic-site geometry shields terrain without making the entire reserved area opaque.",
+      "reason": "Reuse terrain sight geometry across live actor updates, retaining content checks for mutable editor maps. The helicopter shields sight through its body while leaving rotor overhang open. Invalidate terrain visibility when foliage changes. Strategic-site geometry shields terrain without making the entire reserved area opaque.",
       "upstreamSha256": "17d3de4a6aca835dc176ac3fcc9f460fb12aae83bf5d2c0154b29a789ed5dc48"
     },
     "woodland.js": {
@@ -74,7 +74,7 @@
     "projectiles.js": "efcd953cfaf4d7ca680c254c89af4b9abdeceb17a18738813289317fe350d51f",
     "recruits.js": "5e4495962cdad3d0b57f0d1784bddbf54fa785e6e00a9ae932cfb7dbbbeeb81b",
     "sector-rules.js": "d20ee872471a503a60ac706655b19f9ba9857c41882dd6cc6a08d61e3572132a",
-    "visibility.js": "b630a4058ee7639f3c5fd3a20ad723fb4d97c463ad4e83ba6ac2671ab25a56f5",
+    "visibility.js": "97d0c7801f640cfff9d895e57d9db760d8cdd2ecfd78f35a41f59f094b8e7776",
     "woodland.js": "9ec3ae7a46e4a484151d1a2f4c567f48ffca359248c8bacca47e4083b2d4c58f",
     "world.js": "f3f516f61b837f5bd3df582d04b5b2d15b54e461ce109e64acdce42cc27de6fe"
   }

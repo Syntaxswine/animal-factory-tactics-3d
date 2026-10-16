@@ -5,6 +5,7 @@ import {biomePlantParts,BIOME_TREE_GROUNDING} from './biome-plant-parts.js';
 import {segmentBox} from './hybrid-geometry.js';
 import {groundHash} from './biome-ground-composition.js';
 import {TREE_COVER,treeCoverOf} from './foliage-tree-cover.js';
+import {MapGeometryCache,invalidateMapGeometry} from './map-geometry-cache.js';
 
 // These are physical world heights, with the same local silhouette conversion
 // used by battle-shot-effects. Floor/ledge bases are converted independently.
@@ -12,8 +13,19 @@ const SCALE=1.65/1.8,CHUNK=8,caches=new WeakMap();
 const keyOf=m=>m.terrain||m.map;
 export function treePlacementRank(m){const origin=m.environment?.origin?.map(n=>n*240)||[0,0],seed=biomeSeed(m);return t=>groundHash(t.x+origin[0],t.y+origin[1],seed+631+t.z*911);}
 export function foliageSignature(m){const d=m.definition||m;return JSON.stringify([keyOf(m),m.upper,m.coverOccupiedProps||m.props,m.foliage,m.environment,m.edges,m.stairs,m.climbs,d.starts,d.guards,d.exits]);}
-export function invalidateFoliage(m){caches.delete(keyOf(m));}
-export function synchronizeFoliage(m){const signature=foliageSignature(m),old=caches.get(keyOf(m));if(old?.signature!==signature)caches.set(keyOf(m),{signature,scene:!Object.keys(m.foliage||{}).length&&!signature.includes('"woodland')?{boxes:[],worldBoxes:[],index:new Map(),worldIndex:new Map(),trees:[],screens:[],wood:[]}:buildFoliageObstacles(m)});return caches.get(keyOf(m)).scene;}
+export function invalidateFoliage(m){caches.delete(keyOf(m));invalidateMapGeometry(m);}
+export function synchronizeFoliage(m){
+ let cached=caches.get(keyOf(m));
+ if(!cached){cached={geometry:new MapGeometryCache(map=>{
+  // Rendering removes separately painted props but preserves their complete
+  // occupancy list. Switching back to the simulation is not a forest edit.
+  // Check foliage's own inputs after a generic cache miss before rebuilding it.
+  const signature=foliageSignature(map);if(signature===cached.signature)return cached.scene;
+  const scene=!Object.keys(map.foliage||{}).length&&!signature.includes('"woodland')?{boxes:[],worldBoxes:[],index:new Map(),worldIndex:new Map(),trees:[],screens:[],wood:[]}:buildFoliageObstacles(map);
+  cached.signature=signature;return scene;
+ })};caches.set(keyOf(m),cached);}
+ cached.scene=cached.geometry.get(m);return cached.scene;
+}
 export function foliageObstacles(m){return caches.get(keyOf(m))?.scene||synchronizeFoliage(m);}
 
 export function foliageSegment(start,end,b){

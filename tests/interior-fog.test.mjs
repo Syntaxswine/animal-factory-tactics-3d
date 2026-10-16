@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../dist/tactics/vendor/three.module.js';
-import {blankMap,stampRoom,setTerrain} from '../dist/tactics/core/maps.js';
+import {blankMap,stampRoom,setTerrain,openDoorBetween} from '../dist/tactics/core/maps.js';
+import {invalidateMapGeometry} from '../dist/tactics/map-geometry-cache.js';
 import {createGame,refresh} from '../dist/tactics/core/engine.js';
 import {startEncounterClock} from '../dist/tactics/encounter-clock.js';
 import {captureEncounter,restoreEncounter} from '../dist/tactics/encounter-save.js';
@@ -17,6 +18,10 @@ function fixture(){
  state.units[0].heading=0;state.seen.clear();refresh(state);startEncounterClock(state);
  return {map,state,cells:interiorCells(state)};
 }
+
+// Scripted edits to live encounters use the same invalidation contract as the
+// gameplay door/destruction actions. Editor fixtures remain freely mutable.
+function setLiveDoor(state,kind){state.edges['e:9:11']=kind;invalidateMapGeometry(state);refresh(state);}
 
 test('rooms follow walls and door/window boundaries, not floor colors, props, fences or open platforms',()=>{
  const {map}=fixture();stampRoom(map,22,8,3,4,1);map.edges['e:21:10:1']='window-concrete';
@@ -35,24 +40,24 @@ test('a closed door conceals the room on Easy; an actual doorway sightline revea
  try{
   fog.update(state,world);assert.equal(fog.meshes.get(0).count,42);assert.equal(fog.material.color.getHex(),0);assert.equal(fog.meshes.get(0).castShadow,false);assert.equal(fog.meshes.get(0).userData.noShadow,true);
   assert.equal(terrainKnown({...state,concealedInteriors:fog.hidden},'12,11'),false);assert.equal(terrainKnown({...state,concealedInteriors:fog.hidden},'239,239'),true);
-  state.edges['e:9:11']='doorway-concrete-open';refresh(state);fog.update(state,{});
+  assert(openDoorBetween(state,{x:9,y:11},{x:10,y:11}));refresh(state);fog.update(state,{});
   assert(state.visible.has('12,11'));assert(!fog.hidden.has('12,11'));assert(fog.hidden.size<42&&fog.hidden.size>0,'unseen corners must stay concealed');
-  state.edges['e:9:11']='door-wood-closed';refresh(state);assert(!state.visible.has('12,11'));fog.update(state,{});assert(!fog.hidden.has('12,11'),'explored scenery stays revealed after the door closes');
+  setLiveDoor(state,'door-wood-closed');assert(!state.visible.has('12,11'));fog.update(state,{});assert(!fog.hidden.has('12,11'),'explored scenery stays revealed after the door closes');
  }finally{fog.dispose();}
 });
 
 test('windows use the existing aperture and LOS checks; a distant open door does not reveal a room by itself',()=>{
- const {state,cells}=fixture();state.edges['e:9:11']='window-brick';refresh(state);
+ const {state,cells}=fixture();setLiveDoor(state,'window-brick');
  assert(state.visible.has('12,11'));assert(!concealedInteriorCells(cells,state).some(p=>p.key==='12,11'));
- state.units[0].x=150;state.units[0].y=150;state.edges['e:9:11']='doorway-concrete-open';state.seen.clear();refresh(state);
+ state.units[0].x=150;state.units[0].y=150;state.seen.clear();setLiveDoor(state,'doorway-concrete-open');
  assert.equal(concealedInteriorCells(cells,state).length,42);
- state.units[0].x=12;state.units[0].y=11;state.edges['e:9:11']='door-wood-closed';refresh(state);
+ state.units[0].x=12;state.units[0].y=11;setLiveDoor(state,'door-wood-closed');
  assert(state.visible.has('12,11'),'being inside also reveals the interior');
 });
 
 test('rooms on different floors reveal separately and exploration survives save/load without new save fields',()=>{
  const {state}=fixture();stampRoom(state.definition,10,8,7,6,1);state.upper=structuredClone(state.definition.upper);Object.assign(state.edges,Object.fromEntries(Object.keys(state.definition.edges).filter(k=>k.endsWith(':1')).map(k=>[k,'wall-brick'])));
- state.edges['e:9:11']='window-concrete';refresh(state);const cells=interiorCells(state),before=concealedInteriorCells(cells,state).map(p=>p.key);
+ setLiveDoor(state,'window-concrete');const cells=interiorCells(state),before=concealedInteriorCells(cells,state).map(p=>p.key);
  assert(!before.includes('12,11'));assert(before.includes('12,11,1'));
  const restored=restoreEncounter(captureEncounter(state));assert.deepEqual(concealedInteriorCells(interiorCells(restored),restored).map(p=>p.key),before);
 });
