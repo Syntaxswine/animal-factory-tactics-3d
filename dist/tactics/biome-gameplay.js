@@ -8,9 +8,10 @@ import {biomeFamilyAt,biomeSeed} from './biome-family.js';
 export function biomeEnabled(map){return !!(map.environment||map.foliage||map.props?.some(p=>biomeTree(p.kind))||(map.terrain||map.map||[]).some(row=>row.some(t=>BIOME_TERRAIN[t]||t==='woodland'||t==='woodland-dense'))||(map.upper||[]).some(layer=>Object.values(layer).some(t=>BIOME_TERRAIN[t]||t==='woodland'||t==='woodland-dense')));}
 // The map's overlay remains the sole authority for movement. Art never writes a
 // generated study mask back into the map or turns decorative plants into walls.
-export function biomePlans(map){
+export function biomePlans(map,obstacles){
  if(!biomeEnabled(map))return [];
- const obstacles=synchronizeFoliage(map),terrain=map.terrain||map.map,width=terrain[0].length,depth=terrain.length,plans=[];
+ obstacles??=synchronizeFoliage(map);
+ const terrain=map.terrain||map.map,width=terrain[0].length,depth=terrain.length,plans=[];
  const occupied=foliageOccupied(map);
  const ledges=new Set((map.props||[]).filter(p=>p.kind==='cliff-ledge'&&(p.cliffMask??15)===15).map(p=>`${p.x},${p.y},${(p.z||0)+1}`));
  const origin=map.environment?.origin?.map(n=>n*240)||[0,0];

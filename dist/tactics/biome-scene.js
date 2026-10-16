@@ -38,9 +38,9 @@ export function mixedBiomeFill(plan,map){
  return {height,distance:(x,y)=>get(plan.family).distance(x,y),color:(x,y)=>biomeMixAt(map,x,y,plan.level).reduce((rgb,p)=>{const c=get(p.family).color(x,y);return rgb.map((v,i)=>v+c[i]*p.weight);},[0,0,0]),normal(x,y){const e=.08,dx=(height(x+e,y)-height(x-e,y))/(2*e),dy=(height(x,y+e)-height(x,y-e))/(2*e),n=Math.hypot(dx,1,dy);return [-dx/n,1/n,-dy/n];}};
 }
 export class BiomeScene{
- constructor(scene,loader,onReady=()=>{},onError=()=>{}){
+ constructor(scene,loader,onReady=()=>{},onError=()=>{},{planSource=biomePlans}={}){
   this.root=new T.Group();this.root.name='Gameplay biomes';scene.add(this.root);this.loader=loader;this.onReady=onReady;this.onError=onError;
-  this.terrains=[];this.openTrees=[];this.paints=[];this.instances=[];this.layerMaterials=new Map();this.layers=new Map();this.textures={};this.signature=null;this.ready=false;this.disposed=false;
+  this.terrains=[];this.openTrees=[];this.paints=[];this.instances=[];this.layerMaterials=new Map();this.layers=new Map();this.textures={};this.signature=null;this.ready=false;this.disposed=false;this.planSource=planSource;
  }
  load(){
   if(this.loading||this.ready||this.failed)return;
@@ -83,7 +83,7 @@ export class BiomeScene{
   const definition=map.definition||map,signature=JSON.stringify([map.terrain||map.map,map.upper,map.coverOccupiedProps||map.props,map.foliage,map.environment,map.edges,map.stairs,map.climbs,definition.starts,definition.guards,definition.exits]);
   const size=(map.terrain||map.map).length;
   if(signature!==this.signature){
-   this.clear();this.signature=signature;const plans=biomePlans(map),fills=new Map(),paints=new Map(),batches=new Map();
+   this.clear();this.signature=signature;const plans=this.planSource(map),fills=new Map(),paints=new Map(),batches=new Map();
    const factory=level=>({create:(id,opts)=>{const p=this.factory.create(id,opts);p.traverse(m=>{if(m.isMesh)m.material=this.material(m.material,level,size);});return p;}});
    for(const plan of plans){
     const z=plan.level;if(!paints.has(z)){const paint=createMapGroundPaint(map,z,this.textures.ground);paints.set(z,paint);this.paints.push(paint);}
