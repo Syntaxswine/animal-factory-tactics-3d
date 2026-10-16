@@ -2,6 +2,45 @@
 
 This study tests the map maker's existing density rules at larger scale. It is based on canonical `ee8308b`, including the approved foliage composition. It does not change tree spacing, model selection, foliage physics, fog or gameplay density rules.
 
+## Architect integration review of `b18c14e`
+
+Approved as a density-comparison and editor-workflow addition against canonical
+`ee8308b`. The large fills make repetition and cost much easier to assess. The
+tree mix reads well, and reserved paths and clearings stay legible. The most
+useful next art change is to group the small plants into irregular patches with
+quiet ground between them. Uniform reed spacing and the brown tufts on snow
+remain conspicuous at maximum density. Preserve the approved thicket pockets
+and the exact movement, sight and substantial-wood cover rules.
+
+Independent validation: **170 focused tests passed**, covering all habitat
+density fixtures, physical cover, sight, foliage brushes, editor history,
+rendering and deployment dependencies. Asset audit and the Pages build passed.
+The unrelated full suite was not rerun. Browser review used the packaged
+maximum temperate and wetland woodland views and maximum wetland thickets.
+The editor link opened the expected 240 × 240 map; ordinary Save, Load selected
+and Playtest worked, with four merc models visible. The popup logged two
+Electron host preload errors, with no game-module error; the loaded scene and
+controls remained usable. Reusing its consumed Playtest URL in another page
+correctly requested a fresh launch from the editor.
+
+The packaged comparison reproduces **1,459,408** submitted triangles for
+temperate woodland and **4,952,348** for wetland woodland at 100%, including
+shadows. The extra small wetland plants are the priority for cheaper distant
+representations and less uniform coverage. These static counts and the
+builder's short live samples do not establish sustained whole-sector FPS.
+
+The integration also corrects the review panel's **texture-memory estimate**.
+Connected-ground overview/detail textures and boundary maps are bound through
+shader uniforms, so scanning ordinary material properties omitted them. They
+are now counted once by texture identity, and their contribution is shown as
+`groundPaintTextureBytes`. The same packaged wetland-thicket clearing changes
+from **59,699,339** to **91,674,553 estimated texture bytes**. The approximately
+31.98 MB difference was already allocated; this is an accounting correction,
+not a rendering-cost increase. All eight requested paint pages were complete.
+The estimate still excludes driver allocations, shadow targets, geometry
+buffers and CPU paint copies. The original reports below retain the builder's
+measurements; their old texture estimates precede this correction.
+
 ## Open the comparison
 
 `tactics/foliage-skins-review.html?view=density&family=temperate&density=100&frame=clearing`
