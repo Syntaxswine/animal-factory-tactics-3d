@@ -160,7 +160,7 @@ export class InspectionScene {
    const ring=new T.RingGeometry(.43,.54,16),materials={};this.previewTreeGeometry.push(ring);
    for(const [kind,color]of Object.entries({added:0x56ef96,retained:0xffd67d,removed:0xff5a4a})){materials[kind]=new T.MeshBasicMaterial({color,depthTest:false,side:T.DoubleSide});this.previewTreeMaterials.push(materials[kind]);}
    for(const t of result.trees){const mark=new T.Mesh(ring,materials[t.change]);mark.rotation.x=-Math.PI/2;mark.position.set(t.x,t.base+.09,t.y);mark.renderOrder=25;this.previewTrees.add(mark);
-    if(t.change==='added'&&this.biomes.factory){const tree=this.biomes.factory.create(t.id,{variant:t.variant,mature:true});tree.position.set(t.x,t.base,t.y);tree.traverse(m=>{if(m.isMesh){m.castShadow=false;m.raycast=()=>{};}});this.previewTrees.add(tree);}
+    if(t.change==='added'&&this.biomes.factory){const tree=this.biomes.factory.create(t.id,{variant:t.variant,mature:t.dense});tree.position.set(t.x,t.base,t.y);tree.traverse(m=>{if(m.isMesh){m.castShadow=false;m.raycast=()=>{};}});this.previewTrees.add(tree);}
    }
   }
   const geometry=new T.PlaneGeometry(.98,.98),material=new T.MeshBasicMaterial({color:result.ok?0x91ddba:0xff6655,transparent:true,opacity:.4,depthTest:false,side:T.DoubleSide});
