@@ -60,7 +60,10 @@ function partBeam(p){
  const axis=[sy*sx*cz-cy*sz,cx*cz,cy*sx*cz+sy*sz];
  return [-1,1].map(sign=>p.position.map((v,i)=>v+axis[i]*p.size[1]*sign/2));
 }
-export function buildFoliageObstacles(m){
+// Alternate mixes are opt-in art studies. synchronizeFoliage always builds the
+// current saved-map rules; a study must keep its obstacle set out of that cache.
+export function buildFoliageObstacles(m,{denseTreeMix='current'}={}){
+ if(!['current','mixed','trees'].includes(denseTreeMix))throw Error('Unknown dense tree mix');
  const terrain=keyOf(m)||[],width=terrain[0]?.length||0,depth=terrain.length,trees=[],screens=[],wood=[],worldBoxes=[],boxes=[],origin=m.environment?.origin?.map(n=>n*240)||[0,0],seed=biomeSeed(m);
  const ledges=new Set((m.props||[]).filter(p=>p.kind==='cliff-ledge'&&(p.cliffMask??15)===15).map(p=>`${p.x},${p.y},${(p.z||0)+1}`));
  const bases=(x,y,z)=>ledges.has(`${x},${y},${z}`)?[(z-1)*3+2,(z-1)*2.12+2]:[z*3,z*2.12];
@@ -68,7 +71,7 @@ export function buildFoliageObstacles(m){
   b.foliageVolume=true;b.kind='foliage';b.material=b.blocksShot?'wood':'foliage';b.center=b.min.map((v,i)=>(v+b.max[i])/2);b.size=b.max.map((v,i)=>v-b.min[i]);worldBoxes.push(b);
   const cv=p=>[p[0],simBase+(p[1]-worldBase)/SCALE,p[2]],s={...b,min:cv(b.min),max:cv(b.max)};if(b.beam)s.beam={a:cv(b.beam.a),b:cv(b.beam.b),radius:b.beam.radius};if(b.lobes)s.lobes=b.lobes.map(l=>({center:cv(l.center),radius:[l.radius[0],l.radius[1]/SCALE,l.radius[2]]}));boxes.push(s);
  }
- const candidates=[],occupied=foliageOccupied(m);
+ const candidates=[],infill=[],occupied=foliageOccupied(m);
  for(let z=0;z<=Math.min(2,m.upper?.length||0);z++)for(let y=0;y<depth;y++)for(let x=0;x<width;x++){
   const c=foliageAt(m,x,y,z);if(!c||occupied.has(`${x},${y},${z}`))continue;const rule=foliageRule(m,x,y,z),family=rule.family||biomeFamilyAt(m,x,y,z),[simBase,base]=bases(x,y,z),id=`foliage:${x},${y},${z}`,source={x,y,z};
   if(rule.opaque){
@@ -84,10 +87,20 @@ export function buildFoliageObstacles(m){
   if(!c[1]&&foliageTreeAt(m,x,y,z))candidates.push({x,y,z,family,simBase,base,dense:false});
   else if(c[1]){
    const wx=x+origin[0],wy=y+origin[1],gx=Math.floor(wx/9),gy=Math.floor(wy/9);
-   if(wx!==gx*9+3+Math.floor(groundHash(gx,gy,seed+83+z*911)*3)||wy!==gy*9+3+Math.floor(groundHash(gx,gy,seed+197+z*911)*3))continue;
+   const current=wx===gx*9+3+Math.floor(groundHash(gx,gy,seed+83+z*911)*3)&&wy===gy*9+3+Math.floor(groundHash(gx,gy,seed+197+z*911)*3),ix=Math.floor(wx/3),iy=Math.floor(wy/3),extra=denseTreeMix!=='current'&&wx===ix*3+Math.floor(groundHash(ix,iy,seed+419+z*911)*3)&&wy===iy*3+Math.floor(groundHash(ix,iy,seed+521+z*911)*3);
+   if(!current&&!extra)continue;
    let safe=true;for(let dy=-3;dy<=3&&safe;dy++)for(let dx=-3;dx<=3;dx++){const other=foliageAt(m,x+dx,y+dy,z);if(!other?.[1]||bases(x+dx,y+dy,z)[1]!==base){safe=false;break;}}
-   if(safe&&foliageTreeSpaceAvailable(m,x,y,z,3))candidates.push({x,y,z,family,simBase,base,dense:true});
+   if(safe&&foliageTreeSpaceAvailable(m,x,y,z,3))(current?candidates:infill).push({x,y,z,family,simBase,base,dense:true});
   }
+ }
+ // Keep every existing tree. Fill the same ranked pool as tree cover rises, so
+ // comparison changes cannot shuffle old trees or crowd trunks into paths.
+ const rank=t=>groundHash(t.x+origin[0],t.y+origin[1],seed+631+t.z*911);
+ infill.sort((a,b)=>rank(a)-rank(b)||a.z-b.z||a.y-b.y||a.x-b.x);
+ for(const t of infill){
+  if(denseTreeMix==='mixed'&&rank(t)>.30)break;
+  if(candidates.some(c=>c.z===t.z&&Math.hypot(c.x-t.x,c.y-t.y)<2.6))continue;
+  candidates.push(t);
  }
  for(const t of candidates){
   const {x,y,z,family,simBase,base,dense}=t,{id,variant}=selectBiomeTree(family,x+origin[0],y+origin[1],seed+z*911),scale=dense?1.8:1;

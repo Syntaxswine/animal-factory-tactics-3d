@@ -1,0 +1,194 @@
+{
+  "sourceHashes": {
+    "foliage-composition-fixture.js": "720b2f9558a7f9f9d4d1bfbacc5fd7ee5257b1cac9fa170e1fbaeeb1e7b7f286",
+    "foliage-density-fixture.js": "60f26573f5e5c1aadf2f35c10fb7c348024fc41d507138957b90e913dddd7810",
+    "foliage-skins-review.js": "b1dca6bd2388f1d3994e938c0f0e35598f40df22a80306de32bf37cd274ed081",
+    "foliage-skins-review.html": "763f105141af0922fe0d8fa062c8e6ded1f4b8887a6c38428049e0ee56eca92d",
+    "foliage-obstacles.js": "07bf314ccd6906c28e489fa5a6a22a3d23e0568d70657d0cedb5835ed2734daa",
+    "biome-gameplay.js": "0f62c9787bd9bd0c3182b727d1f11d991a6ab16ff2b5b90b114896fbffe404a1",
+    "biome-scene.js": "6e5d38e4bd3825f96a5b395205b996578bc160b2ff2b1b8a0d6a1285d271ed6e"
+  },
+  "errors": [],
+  "views": [
+    {
+      "mode": "composition",
+      "angle": "normal",
+      "grid": false,
+      "family": "wetlands",
+      "treeModels": {
+        "wetland-willow": 26,
+        "temperate-broadleaf": 14,
+        "wetland-cypress": 33
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          127
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Private composition preview: art and tree cover share one obstacle set. Editor opens the original planting; preview mixes are not saved.",
+      "camera": {
+        "focus": [
+          119.5,
+          1.3,
+          119.5
+        ],
+        "ppu": 6.25
+      },
+      "drawCalls": 359,
+      "triangles": 556398,
+      "textures": 24,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 1.4000000059604645,
+      "synchronizedFrameMedianMs": 1.699999988079071,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "thicket",
+      "frame": "overview",
+      "layers": "both",
+      "mix": "current",
+      "previewOnly": true,
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 73,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 73,
+        "openWoodlandTrees": 0,
+        "blockedCells": 8463,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 0,
+            "large": 126,
+            "litter": 1108,
+            "paintedLogs": 100,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 4,
+            "activePages": 4,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": true,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 979200,
+            "bogBytes": 232324,
+            "textureBytes": 17207770,
+            "canvasBytes": 11997184,
+            "workerBaseBytes": 3810304,
+            "generations": 4,
+            "generationMs": 497.39999997615814,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "wetlands-overview-normal-grid0-current-both",
+      "ordinaryTrees": 73,
+      "physicalTrees": 73
+    },
+    {
+      "mode": "composition",
+      "angle": "normal",
+      "grid": false,
+      "family": "wetlands",
+      "treeModels": {
+        "wetland-willow": 173,
+        "temperate-broadleaf": 75,
+        "wetland-cypress": 145
+      },
+      "horse": {
+        "nativeSize": true,
+        "position": [
+          120,
+          0,
+          127
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "context": "Private composition preview: art and tree cover share one obstacle set. Editor opens the original planting; preview mixes are not saved.",
+      "camera": {
+        "focus": [
+          119.5,
+          1.3,
+          119.5
+        ],
+        "ppu": 6.25
+      },
+      "drawCalls": 375,
+      "triangles": 970870,
+      "textures": 24,
+      "estimatedTextureBytes": 59699339,
+      "finiteMaskBytes": 921600,
+      "renderSubmissionMedianMs": 0.9000000059604645,
+      "synchronizedFrameMedianMs": 1.100000023841858,
+      "frameNote": "CPU submission and gl.finish; not display FPS. Texture estimate includes owned finite masks; excludes driver/shadow targets.",
+      "density": 100,
+      "growth": "thicket",
+      "frame": "overview",
+      "layers": "both",
+      "mix": "trees",
+      "previewOnly": true,
+      "fillSize": [
+        96,
+        96
+      ],
+      "paintedCells": 8463,
+      "trees": 393,
+      "stats": {
+        "ready": true,
+        "regions": 1,
+        "trees": 393,
+        "openWoodlandTrees": 0,
+        "blockedCells": 8463,
+        "paint": [
+          {
+            "regions": 103,
+            "brushBeds": 0,
+            "large": 126,
+            "litter": 1108,
+            "paintedLogs": 100,
+            "addedTriangles": 0,
+            "seed": 173,
+            "residentPages": 4,
+            "activePages": 4,
+            "pendingPages": 0,
+            "overviewReady": true,
+            "worker": true,
+            "workerTerminated": false,
+            "error": null,
+            "maxResidentPages": 16,
+            "edgeBytes": 979200,
+            "bogBytes": 232324,
+            "textureBytes": 17207770,
+            "canvasBytes": 11997184,
+            "workerBaseBytes": 3810304,
+            "generations": 4,
+            "generationMs": 425.90000000596046,
+            "mode": "connected world painting"
+          }
+        ]
+      },
+      "tag": "wetlands-overview-normal-grid0-trees-both",
+      "ordinaryTrees": 73,
+      "physicalTrees": 393
+    }
+  ]
+}
