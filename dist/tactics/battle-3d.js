@@ -1,3 +1,4 @@
+import {drawFoliageHover} from './battle-foliage-focus.js';
 import {sectorLoading} from './sector-loading.js';
 import {prepareSectorView} from './loading-tracker.js';
 import {BattleContextMenu,inspectBattleTile} from './battle-context-menu.js';
@@ -125,7 +126,7 @@ async function prepareView(){await prepareSectorView(renderer,()=>{ctx.clearRect
 async function loadEncounterSave(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{if(campaign){const restored=await campaign.load(id);if(restored)installState(restored);}else{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);installState(restored);}if(state)await prepareView();}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}}
 async function quickSave(){try{await saveGame('quick');message('Quicksave saved.');}catch(e){message('Could not save: '+e.message);}}
 async function quickLoad(){try{await loadGame('quick');}catch(e){message('Could not load: '+e.message);}}
-function autosave(){saveGame('auto').catch(e=>{autoDisabled=true;if(campaign)userPaused=true;sync();message('Autosave failed: '+e.message+' Use Save / Load to retry.');});}
+function autosave(){if(new URLSearchParams(location.search).get('study')==='tree-cover')return;saveGame('auto').catch(e=>{autoDisabled=true;if(campaign)userPaused=true;sync();message('Autosave failed: '+e.message+' Use Save / Load to retry.');});}
 function sync(){
  settleEncounterRounds(state);campaign?.update();const combat=turnBased(state);if(combat!==lastClockCombat){frameClock.reset();lastClockCombat=combat;}syncClock();
  if(cliffViewState!==state){cliffViewState=state;cliffViewId=0;}const traversal=state.cliffTraversals?.at(-1);if(traversal&&traversal.id>cliffViewId){cliffViewId=traversal.id;if(traversal.unitId===state.selected){level=selected().z||0;$('floor').value=level;}}
@@ -285,6 +286,7 @@ function showWalkingRoute(){
  if(hoverPointer&&!contextMenu.open&&!canvas.dataset.targetCursor){const bounds=canvas.getBoundingClientRect(),p=battleFloorPoint(view,hoverPointer.x-bounds.left,hoverPointer.y-bounds.top,level);goal={x:Math.round(p.x),y:Math.round(p.y),z:level};}
  const key=JSON.stringify([state.revision,state.phase,state.selected,level,[...selectedIds],goal,state.queue,state.fires,state.units.filter(u=>selectedIds.has(u.id)).map(u=>[u.x,u.y,u.z,u.ap,u.stance,u.running,u.sneaking,u.legWound])]);
  if(key!==walkingCacheKey){walkingCacheKey=key;walkingCache=walkingRoutes(state,[...selectedIds],selected(),goal);}
+ drawFoliageHover(ctx,{...state,concealedInteriors:renderer.interiorFog?.hidden},goal,project,level);
  showWalkingWarning(walkingWarning(walkingCache));
  drawWalkingRoutes(ctx,walkingCache,project,level,view.zoom,turnBased(state));
 }
@@ -332,7 +334,7 @@ function frame(now){
   defeatFlow.tick(state,now,{suspended:document.hidden||savePanel.open,busy:storageBusy||campaign?.busy});
   const elapsed=frameClock.sample(now,{paused:paused(),mode:turnBased(state)});presentationTime+=elapsed;renderer.presentationNow=presentationTime;tickEncounterClock(state,elapsed,{paused:paused()||renderer.traversal.busy});syncClock();
   if(!paused()&&!renderer.busy&&presentationTime-lastStep>stepDelay){lastStep=presentationTime;stepDelay=queuedMovementDuration(state);if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);renderer.captureCombat(state);sync();}
-  ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);updateTargetCursor(now);showGuardSight(now);showWalkingRoute();if(!overviewMode){flamePlanner.draw(ctx,state,project,view.zoom);grenadePlanner.draw(ctx,state,project,view.zoom);}
+  renderer.foliageSelectedIds=selectedIds;renderer.foliageRoutes=walkingCache;ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);updateTargetCursor(now);showGuardSight(now);showWalkingRoute();if(!overviewMode){flamePlanner.draw(ctx,state,project,view.zoom);grenadePlanner.draw(ctx,state,project,view.zoom);}
   if(!paused()&&pickupOrder.pending){const u=state.units.find(u=>u.id===pickupOrder.pending.id),sample=u&&renderer.motion.sample(u),walking=sample&&Math.hypot(sample.x-u.x,sample.y-u.y)>.03;const result=pickupOrder.update(state,{busy:renderer.busy||walking});if(result?.ready)characterScreen.show(result.id,{pile:result.pile});else if(result?.stopped)message(result.reason);}
   if(lastLadderPreparing!==renderer.traversal.preparing||lastUIBusy!==renderer.busy||lastUIDiagnostics!==renderer.diagnostics.join('\n')){lastLadderPreparing=renderer.traversal.preparing;lastUIBusy=renderer.busy;sync();}
   for(const u of state.units.filter(v=>v.team==='squad'&&alive(v)&&(v.z||0)===level)){
@@ -349,5 +351,6 @@ function frame(now){
 // Read-only inspection hooks for browser regression checks.
 window.battle3d={get state(){return state;},get level(){return level;},get renderer(){return renderer;},get clock(){return state.clock;},get paused(){return paused();},get picks(){return picks;},get walkingPreview(){return walkingCache;},get flamePreview(){return flamePlanner.preview;},get grenadePreview(){return grenadePlanner.preview;},get contextMenu(){return contextMenu;},get pickupOrder(){return pickupOrder.pending;},get selectedIds(){return [...selectedIds];},project,view};
 await prepareView();
+if(new URLSearchParams(location.search).get('study')==='tree-cover'){const {installFoliagePerformanceReview}=await import('./foliage-performance-review.js');installFoliagePerformanceReview(window.battle3d);}
 document.addEventListener('sector-ready',()=>{frameClock.reset();lastUI='';sync();});
 requestAnimationFrame(frame);

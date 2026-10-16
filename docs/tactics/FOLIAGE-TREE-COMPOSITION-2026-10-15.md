@@ -1,5 +1,9 @@
 # Trees versus brush — October 15, 2026
 
+Follow-up: [saved-map/editor integration and gameplay measurements](TREE-MIX-INTEGRATION-2026-10-16.md).
+The study-only boundaries below describe this earlier review; the follow-up
+records the saved settings, cutaways and remaining performance limits.
+
 The user meant **the amount of tree canopy relative to brush** when asking to test higher density. The preceding density study tested the editor's existing sampling percentage instead. In impassable thickets that percentage changes decorative growth but leaves the tree population fixed. This follow-up makes the intended comparison explicit.
 
 ## Open the study

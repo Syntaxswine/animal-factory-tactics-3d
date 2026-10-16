@@ -1,0 +1,29 @@
+[
+  {
+    "step": "undo",
+    "status": "Undone.",
+    "metrics": "4 modeled starts · load 3336 ms · scenery 1047 ms · 168 geometries / 38 textures"
+  },
+  {
+    "step": "redo",
+    "metrics": "4 modeled starts · load 3336 ms · scenery 1028 ms · 168 geometries / 38 textures"
+  },
+  {
+    "step": "undo",
+    "status": "Undone.",
+    "metrics": "4 modeled starts · load 3336 ms · scenery 956 ms · 168 geometries / 38 textures"
+  },
+  {
+    "step": "redo",
+    "metrics": "4 modeled starts · load 3336 ms · scenery 1027 ms · 168 geometries / 38 textures"
+  },
+  {
+    "step": "undo",
+    "status": "Undone.",
+    "metrics": "4 modeled starts · load 3336 ms · scenery 1017 ms · 168 geometries / 38 textures"
+  },
+  {
+    "step": "redo",
+    "metrics": "4 modeled starts · load 3336 ms · scenery 996 ms · 168 geometries / 38 textures"
+  }
+]

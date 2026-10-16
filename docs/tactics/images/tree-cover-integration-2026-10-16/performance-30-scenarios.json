@@ -1,0 +1,2612 @@
+[
+  {
+    "family": "jungle",
+    "mix": "brush-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "a5663a61fd7423213a6ba7cff29edde4948175c8caa1f3793c632fc96c112e26",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 2002,
+      "median": 22.69999998807907,
+      "p95": 27.700000017881393,
+      "p99": 33.20000001788139
+    },
+    "displayCadenceMs": {
+      "samples": 2002,
+      "median": 24.5,
+      "p95": 34.400000005960464,
+      "p99": 63.69999998807907
+    },
+    "gpuMs": {
+      "samples": 177,
+      "median": 16.161792,
+      "p95": 21.94944,
+      "p99": 54.218752
+    },
+    "drawCalls": {
+      "samples": 2002,
+      "median": 2676,
+      "p95": 3051,
+      "p99": 3081
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 2002,
+      "median": 5304127,
+      "p95": 5970763,
+      "p99": 5980875
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.09999999403953552
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.5
+      }
+    },
+    "memory": {
+      "geometryBytes": 27466556,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 264,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 71,
+    "diagnostics": [],
+    "coldLoadMs": 118,
+    "measuredAt": "2026-10-16T04:02:09.926Z"
+  },
+  {
+    "family": "jungle",
+    "mix": "mixed-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "a5663a61fd7423213a6ba7cff29edde4948175c8caa1f3793c632fc96c112e26",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1906,
+      "median": 23,
+      "p95": 29.900000005960464,
+      "p99": 35.30000001192093
+    },
+    "displayCadenceMs": {
+      "samples": 1906,
+      "median": 24.900000005960464,
+      "p95": 36.5,
+      "p99": 98.5
+    },
+    "gpuMs": {
+      "samples": 168,
+      "median": 16.606208,
+      "p95": 23.453696,
+      "p99": 26.74176
+    },
+    "drawCalls": {
+      "samples": 1906,
+      "median": 2783,
+      "p95": 3206,
+      "p99": 3270
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1906,
+      "median": 5627019,
+      "p95": 6520407,
+      "p99": 6564739
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.09999999403953552
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.5999999940395355
+      }
+    },
+    "memory": {
+      "geometryBytes": 27617980,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 264,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 198,
+    "diagnostics": [],
+    "coldLoadMs": 145.40000000596046,
+    "measuredAt": "2026-10-16T04:03:23.016Z"
+  },
+  {
+    "family": "jungle",
+    "mix": "trees-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "a5663a61fd7423213a6ba7cff29edde4948175c8caa1f3793c632fc96c112e26",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1844,
+      "median": 24,
+      "p95": 31.099999994039536,
+      "p99": 35.5
+    },
+    "displayCadenceMs": {
+      "samples": 1844,
+      "median": 25.80000001192093,
+      "p95": 37.400000005960464,
+      "p99": 97.69999998807907
+    },
+    "gpuMs": {
+      "samples": 163,
+      "median": 17.132544,
+      "p95": 24.50432,
+      "p99": 28.296192
+    },
+    "drawCalls": {
+      "samples": 1844,
+      "median": 2817,
+      "p95": 3246,
+      "p99": 3310
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1844,
+      "median": 6157151,
+      "p95": 7188827,
+      "p99": 7297479
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.4000000059604645
+      }
+    },
+    "memory": {
+      "geometryBytes": 27831228,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 264,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 380,
+    "diagnostics": [],
+    "coldLoadMs": 129.7000000178814,
+    "measuredAt": "2026-10-16T04:04:36.249Z"
+  },
+  {
+    "family": "temperate",
+    "mix": "brush-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1930,
+      "median": 22.400000005960464,
+      "p95": 28.19999998807907,
+      "p99": 35.900000005960464
+    },
+    "displayCadenceMs": {
+      "samples": 1930,
+      "median": 24.19999998807907,
+      "p95": 36.099999994039536,
+      "p99": 52.19999998807907
+    },
+    "gpuMs": {
+      "samples": 168,
+      "median": 15.663104,
+      "p95": 21.628928,
+      "p99": 30.968832
+    },
+    "drawCalls": {
+      "samples": 1930,
+      "median": 2657,
+      "p95": 3021,
+      "p99": 3064
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1930,
+      "median": 5006126,
+      "p95": 6090974,
+      "p99": 6094546
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.10000002384185791,
+        "p95": 0.20000001788139343,
+        "p99": 0.4000000059604645
+      }
+    },
+    "memory": {
+      "geometryBytes": 27483396,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 263,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 71,
+    "diagnostics": [],
+    "coldLoadMs": 143.40000000596046,
+    "measuredAt": "2026-10-16T04:05:51.890Z"
+  },
+  {
+    "family": "temperate",
+    "mix": "mixed-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1817,
+      "median": 24.600000023841858,
+      "p95": 30.80000001192093,
+      "p99": 34.29999998211861
+    },
+    "displayCadenceMs": {
+      "samples": 1817,
+      "median": 26.400000005960464,
+      "p95": 39.599999994039536,
+      "p99": 104.5
+    },
+    "gpuMs": {
+      "samples": 160,
+      "median": 16.74752,
+      "p95": 23.670784,
+      "p99": 30.85824
+    },
+    "drawCalls": {
+      "samples": 1817,
+      "median": 2759,
+      "p95": 3159,
+      "p99": 3217
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1817,
+      "median": 5734994,
+      "p95": 6712182,
+      "p99": 6723174
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.5
+      }
+    },
+    "memory": {
+      "geometryBytes": 27639172,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 263,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 198,
+    "diagnostics": [],
+    "coldLoadMs": 140.09999999403954,
+    "measuredAt": "2026-10-16T04:07:04.664Z"
+  },
+  {
+    "family": "temperate",
+    "mix": "trees-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1948,
+      "median": 22.599999994039536,
+      "p95": 28.799999982118607,
+      "p99": 32
+    },
+    "displayCadenceMs": {
+      "samples": 1948,
+      "median": 24.399999976158142,
+      "p95": 36.19999998807907,
+      "p99": 107.59999999403954
+    },
+    "gpuMs": {
+      "samples": 172,
+      "median": 16.111616,
+      "p95": 22.018048,
+      "p99": 26.81856
+    },
+    "drawCalls": {
+      "samples": 1948,
+      "median": 2767,
+      "p95": 3195,
+      "p99": 3250
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1948,
+      "median": 6444906,
+      "p95": 7521430,
+      "p99": 7559786
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.4000000059604645
+      }
+    },
+    "memory": {
+      "geometryBytes": 27853252,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 263,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 380,
+    "diagnostics": [],
+    "coldLoadMs": 135.09999999403954,
+    "measuredAt": "2026-10-16T04:08:17.594Z"
+  },
+  {
+    "family": "snow",
+    "mix": "brush-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 2171,
+      "median": 20.599999994039536,
+      "p95": 24.299999982118607,
+      "p99": 28.400000005960464
+    },
+    "displayCadenceMs": {
+      "samples": 2171,
+      "median": 22.100000023841858,
+      "p95": 29.69999998807907,
+      "p99": 41.900000005960464
+    },
+    "gpuMs": {
+      "samples": 193,
+      "median": 13.719552,
+      "p95": 18.308096,
+      "p99": 20.164608
+    },
+    "drawCalls": {
+      "samples": 2171,
+      "median": 2272,
+      "p95": 2575,
+      "p99": 2590
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 2171,
+      "median": 5134908,
+      "p95": 6220970,
+      "p99": 6236394
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.09999999403953552
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.10000002384185791,
+        "p95": 0.29999998211860657,
+        "p99": 0.4000000059604645
+      }
+    },
+    "memory": {
+      "geometryBytes": 30359700,
+      "estimatedTextureBytes": 178353291,
+      "geometries": 244,
+      "textures": 54,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 71,
+    "diagnostics": [],
+    "coldLoadMs": 138.2000000178814,
+    "measuredAt": "2026-10-16T04:09:32.585Z"
+  },
+  {
+    "family": "snow",
+    "mix": "mixed-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 2199,
+      "median": 20.5,
+      "p95": 24.80000001192093,
+      "p99": 27.899999976158142
+    },
+    "displayCadenceMs": {
+      "samples": 2199,
+      "median": 22.19999998807907,
+      "p95": 28.69999998807907,
+      "p99": 50
+    },
+    "gpuMs": {
+      "samples": 195,
+      "median": 14.836736,
+      "p95": 20.058112,
+      "p99": 23.61344
+    },
+    "drawCalls": {
+      "samples": 2199,
+      "median": 2401,
+      "p95": 2717,
+      "p99": 2749
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 2199,
+      "median": 5959106,
+      "p95": 6880554,
+      "p99": 6960402
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.09999999403953552
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.10000002384185791,
+        "p95": 0.30000001192092896,
+        "p99": 0.4000000059604645
+      }
+    },
+    "memory": {
+      "geometryBytes": 30523156,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 244,
+      "textures": 55,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 198,
+    "diagnostics": [],
+    "coldLoadMs": 131.40000000596046,
+    "measuredAt": "2026-10-16T04:10:44.408Z"
+  },
+  {
+    "family": "snow",
+    "mix": "trees-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 2175,
+      "median": 20.599999994039536,
+      "p95": 25.200000017881393,
+      "p99": 27.599999994039536
+    },
+    "displayCadenceMs": {
+      "samples": 2175,
+      "median": 22.19999998807907,
+      "p95": 29.099999994039536,
+      "p99": 45.400000005960464
+    },
+    "gpuMs": {
+      "samples": 193,
+      "median": 14.5408,
+      "p95": 20.241408,
+      "p99": 27.173888
+    },
+    "drawCalls": {
+      "samples": 2175,
+      "median": 2421,
+      "p95": 2739,
+      "p99": 2771
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 2175,
+      "median": 6666698,
+      "p95": 7818238,
+      "p99": 7908698
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.29999998211860657,
+        "p99": 0.5
+      }
+    },
+    "memory": {
+      "geometryBytes": 30774932,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 244,
+      "textures": 55,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 380,
+    "diagnostics": [],
+    "coldLoadMs": 130.59999999403954,
+    "measuredAt": "2026-10-16T04:11:55.955Z"
+  },
+  {
+    "family": "dry",
+    "mix": "brush-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 2155,
+      "median": 20.80000001192093,
+      "p95": 26,
+      "p99": 29
+    },
+    "displayCadenceMs": {
+      "samples": 2155,
+      "median": 22.400000005960464,
+      "p95": 29.799999982118607,
+      "p99": 42.60000002384186
+    },
+    "gpuMs": {
+      "samples": 191,
+      "median": 15.65184,
+      "p95": 20.773888,
+      "p99": 29.26592
+    },
+    "drawCalls": {
+      "samples": 2155,
+      "median": 2638,
+      "p95": 2996,
+      "p99": 3032
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 2155,
+      "median": 5268769,
+      "p95": 6111669,
+      "p99": 6125093
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.5
+      }
+    },
+    "memory": {
+      "geometryBytes": 27441588,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 262,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 71,
+    "diagnostics": [],
+    "coldLoadMs": 140.59999999403954,
+    "measuredAt": "2026-10-16T04:13:11.139Z"
+  },
+  {
+    "family": "dry",
+    "mix": "mixed-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1898,
+      "median": 24.400000005960464,
+      "p95": 28.700000017881393,
+      "p99": 34.69999998807907
+    },
+    "displayCadenceMs": {
+      "samples": 1898,
+      "median": 26.099999994039536,
+      "p95": 36.19999998807907,
+      "p99": 109.5
+    },
+    "gpuMs": {
+      "samples": 168,
+      "median": 17.236992,
+      "p95": 22.429696,
+      "p99": 28.096512
+    },
+    "drawCalls": {
+      "samples": 1898,
+      "median": 2727,
+      "p95": 3086,
+      "p99": 3137
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1898,
+      "median": 5796797,
+      "p95": 6658789,
+      "p99": 6715137
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.09999999403953552
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.30000001192092896
+      }
+    },
+    "memory": {
+      "geometryBytes": 27572852,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 262,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 198,
+    "diagnostics": [],
+    "coldLoadMs": 157.09999999403954,
+    "measuredAt": "2026-10-16T04:14:23.560Z"
+  },
+  {
+    "family": "dry",
+    "mix": "trees-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1836,
+      "median": 24.30000001192093,
+      "p95": 29.099999994039536,
+      "p99": 32.80000001192093
+    },
+    "displayCadenceMs": {
+      "samples": 1836,
+      "median": 25.900000005960464,
+      "p95": 36,
+      "p99": 95.59999999403954
+    },
+    "gpuMs": {
+      "samples": 158,
+      "median": 17.355776,
+      "p95": 22.742016,
+      "p99": 58.728448
+    },
+    "drawCalls": {
+      "samples": 1836,
+      "median": 2733,
+      "p95": 3090,
+      "p99": 3148
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1836,
+      "median": 6316389,
+      "p95": 7322891,
+      "p99": 7386901
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.09999999403953552
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.4000000059604645
+      }
+    },
+    "memory": {
+      "geometryBytes": 27758964,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 262,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 380,
+    "diagnostics": [],
+    "coldLoadMs": 137.2000000178814,
+    "measuredAt": "2026-10-16T04:15:37.187Z"
+  },
+  {
+    "family": "wetlands",
+    "mix": "brush-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1990,
+      "median": 21.799999982118607,
+      "p95": 27.69999998807907,
+      "p99": 30.69999998807907
+    },
+    "displayCadenceMs": {
+      "samples": 1990,
+      "median": 23.400000005960464,
+      "p95": 32.89999997615814,
+      "p99": 68.80000001192093
+    },
+    "gpuMs": {
+      "samples": 176,
+      "median": 16.142336,
+      "p95": 22.509568,
+      "p99": 24.88832
+    },
+    "drawCalls": {
+      "samples": 1990,
+      "median": 2714,
+      "p95": 3116,
+      "p99": 3151
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1990,
+      "median": 5903382,
+      "p95": 6892982,
+      "p99": 6914950
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.09999999403953552
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.30000001192092896
+      }
+    },
+    "memory": {
+      "geometryBytes": 33633684,
+      "estimatedTextureBytes": 178585615,
+      "geometries": 265,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 71,
+    "diagnostics": [],
+    "coldLoadMs": 136.19999998807907,
+    "measuredAt": "2026-10-16T04:16:50.905Z"
+  },
+  {
+    "family": "wetlands",
+    "mix": "mixed-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1951,
+      "median": 23.099999994039536,
+      "p95": 29.099999994039536,
+      "p99": 31.599999994039536
+    },
+    "displayCadenceMs": {
+      "samples": 1951,
+      "median": 25,
+      "p95": 34.60000002384186,
+      "p99": 94.69999998807907
+    },
+    "gpuMs": {
+      "samples": 173,
+      "median": 16.738304,
+      "p95": 23.25504,
+      "p99": 29.41952
+    },
+    "drawCalls": {
+      "samples": 1951,
+      "median": 2803,
+      "p95": 3250,
+      "p99": 3306
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1951,
+      "median": 6589318,
+      "p95": 7782026,
+      "p99": 7807310
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.4000000059604645
+      }
+    },
+    "memory": {
+      "geometryBytes": 33826324,
+      "estimatedTextureBytes": 182277477,
+      "geometries": 265,
+      "textures": 57,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 198,
+    "diagnostics": [],
+    "coldLoadMs": 135.5,
+    "measuredAt": "2026-10-16T04:18:02.580Z"
+  },
+  {
+    "family": "wetlands",
+    "mix": "trees-v1",
+    "layout": "fill",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 3774407301,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1875,
+      "median": 23.80000001192093,
+      "p95": 30.700000017881393,
+      "p99": 34.20000001788139
+    },
+    "displayCadenceMs": {
+      "samples": 1875,
+      "median": 25.600000023841858,
+      "p95": 37,
+      "p99": 96.2000000178814
+    },
+    "gpuMs": {
+      "samples": 166,
+      "median": 17.449984,
+      "p95": 25.448448,
+      "p99": 27.291648
+    },
+    "drawCalls": {
+      "samples": 1875,
+      "median": 2827,
+      "p95": 3278,
+      "p99": 3335
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1875,
+      "median": 7476522,
+      "p95": 8926542,
+      "p99": 9030398
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.09999999403953552
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.4000000059604645
+      }
+    },
+    "memory": {
+      "geometryBytes": 34105300,
+      "estimatedTextureBytes": 182277477,
+      "geometries": 265,
+      "textures": 57,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 16,
+        "shadows": 0
+      }
+    ],
+    "trees": 380,
+    "diagnostics": [],
+    "coldLoadMs": 130.69999998807907,
+    "measuredAt": "2026-10-16T04:19:14.283Z"
+  },
+  {
+    "family": "jungle",
+    "mix": "brush-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1766,
+      "median": 30.200000017881393,
+      "p95": 34.599999994039536,
+      "p99": 38.80000001192093
+    },
+    "displayCadenceMs": {
+      "samples": 1766,
+      "median": 31.700000017881393,
+      "p95": 36.39999997615814,
+      "p99": 45.79999998211861
+    },
+    "gpuMs": {
+      "samples": 155,
+      "median": 15.732736,
+      "p95": 20.610048,
+      "p99": 25.556992
+    },
+    "drawCalls": {
+      "samples": 1766,
+      "median": 2457,
+      "p95": 3039,
+      "p99": 3041
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1766,
+      "median": 3913245,
+      "p95": 4392976,
+      "p99": 4402696
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.29999998211860657,
+        "p95": 0.4000000059604645,
+        "p99": 0.699999988079071
+      }
+    },
+    "memory": {
+      "geometryBytes": 63477396,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 504,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 17,
+        "shadows": 0
+      }
+    ],
+    "trees": 239,
+    "diagnostics": [],
+    "coldLoadMs": 148.59999999403954,
+    "measuredAt": "2026-10-16T04:20:29.610Z"
+  },
+  {
+    "family": "jungle",
+    "mix": "mixed-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1602,
+      "median": 33.39999997615814,
+      "p95": 38.900000005960464,
+      "p99": 47.20000001788139
+    },
+    "displayCadenceMs": {
+      "samples": 1602,
+      "median": 34.900000005960464,
+      "p95": 41.20000001788139,
+      "p99": 58.599999994039536
+    },
+    "gpuMs": {
+      "samples": 141,
+      "median": 16.503808,
+      "p95": 22.061056,
+      "p99": 26.036224
+    },
+    "drawCalls": {
+      "samples": 1602,
+      "median": 2557,
+      "p95": 3074,
+      "p99": 3076
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1602,
+      "median": 4168849,
+      "p95": 4707456,
+      "p99": 4713132
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.20000001788139343,
+        "p95": 0.4000000059604645,
+        "p99": 0.5
+      }
+    },
+    "memory": {
+      "geometryBytes": 63978516,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 504,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 20,
+        "shadows": 0
+      }
+    ],
+    "trees": 662,
+    "diagnostics": [],
+    "coldLoadMs": 149.60000002384186,
+    "measuredAt": "2026-10-16T04:21:45.333Z"
+  },
+  {
+    "family": "jungle",
+    "mix": "trees-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1590,
+      "median": 33.30000001192093,
+      "p95": 39.900000005960464,
+      "p99": 49.69999998807907
+    },
+    "displayCadenceMs": {
+      "samples": 1590,
+      "median": 34.80000001192093,
+      "p95": 42,
+      "p99": 67.69999998807907
+    },
+    "gpuMs": {
+      "samples": 140,
+      "median": 17.028096,
+      "p95": 24.713216,
+      "p99": 26.303488
+    },
+    "drawCalls": {
+      "samples": 1590,
+      "median": 2584,
+      "p95": 3091,
+      "p99": 3094
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1590,
+      "median": 4342531,
+      "p95": 5015405,
+      "p99": 5022388
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.09999999403953552
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.20000001788139343,
+        "p95": 0.4000000059604645,
+        "p99": 0.4000000059604645
+      }
+    },
+    "memory": {
+      "geometryBytes": 64716948,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 504,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 22,
+        "shadows": 0
+      }
+    ],
+    "trees": 1281,
+    "diagnostics": [],
+    "coldLoadMs": 146.90000000596046,
+    "measuredAt": "2026-10-16T04:23:00.930Z"
+  },
+  {
+    "family": "temperate",
+    "mix": "brush-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1624,
+      "median": 32.60000002384186,
+      "p95": 39.099999994039536,
+      "p99": 45
+    },
+    "displayCadenceMs": {
+      "samples": 1624,
+      "median": 34.099999994039536,
+      "p95": 41.400000005960464,
+      "p99": 51.60000002384186
+    },
+    "gpuMs": {
+      "samples": 143,
+      "median": 15.970304,
+      "p95": 21.875712,
+      "p99": 26.114048
+    },
+    "drawCalls": {
+      "samples": 1624,
+      "median": 2446,
+      "p95": 3042,
+      "p99": 3046
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1624,
+      "median": 3962373,
+      "p95": 4460011,
+      "p99": 4467383
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.4000000059604645,
+        "p99": 1
+      }
+    },
+    "memory": {
+      "geometryBytes": 63527900,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 500,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 17,
+        "shadows": 0
+      }
+    ],
+    "trees": 239,
+    "diagnostics": [],
+    "coldLoadMs": 155.5,
+    "measuredAt": "2026-10-16T04:24:16.063Z"
+  },
+  {
+    "family": "temperate",
+    "mix": "mixed-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1553,
+      "median": 33.900000005960464,
+      "p95": 40.70000001788139,
+      "p99": 50.10000002384186
+    },
+    "displayCadenceMs": {
+      "samples": 1553,
+      "median": 35.5,
+      "p95": 43,
+      "p99": 72.2000000178814
+    },
+    "gpuMs": {
+      "samples": 137,
+      "median": 16.93184,
+      "p95": 23.330816,
+      "p99": 35.181568
+    },
+    "drawCalls": {
+      "samples": 1553,
+      "median": 2525,
+      "p95": 3070,
+      "p99": 3074
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1553,
+      "median": 4236605,
+      "p95": 4800540,
+      "p99": 4809296
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.20000001788139343,
+        "p95": 0.4000000059604645,
+        "p99": 0.4000000059604645
+      }
+    },
+    "memory": {
+      "geometryBytes": 64039452,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 500,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 20,
+        "shadows": 0
+      }
+    ],
+    "trees": 662,
+    "diagnostics": [],
+    "coldLoadMs": 149.30000001192093,
+    "measuredAt": "2026-10-16T04:25:31.397Z"
+  },
+  {
+    "family": "temperate",
+    "mix": "trees-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1577,
+      "median": 34,
+      "p95": 38.69999998807907,
+      "p99": 45.099999994039536
+    },
+    "displayCadenceMs": {
+      "samples": 1577,
+      "median": 35.5,
+      "p95": 41,
+      "p99": 50.900000005960464
+    },
+    "gpuMs": {
+      "samples": 139,
+      "median": 16.794624,
+      "p95": 22.25152,
+      "p99": 24.052736
+    },
+    "drawCalls": {
+      "samples": 1577,
+      "median": 2551,
+      "p95": 3084,
+      "p99": 3088
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1577,
+      "median": 4570737,
+      "p95": 5192816,
+      "p99": 5210856
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.4000000059604645,
+        "p99": 1.199999988079071
+      }
+    },
+    "memory": {
+      "geometryBytes": 64789532,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 500,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 21,
+        "shadows": 0
+      }
+    ],
+    "trees": 1281,
+    "diagnostics": [],
+    "coldLoadMs": 161.09999999403954,
+    "measuredAt": "2026-10-16T04:26:46.575Z"
+  },
+  {
+    "family": "snow",
+    "mix": "brush-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1867,
+      "median": 28.599999994039536,
+      "p95": 32.69999998807907,
+      "p99": 37.10000002384186
+    },
+    "displayCadenceMs": {
+      "samples": 1867,
+      "median": 30.099999994039536,
+      "p95": 34.400000005960464,
+      "p99": 45
+    },
+    "gpuMs": {
+      "samples": 164,
+      "median": 13.955072,
+      "p95": 17.729536,
+      "p99": 19.033088
+    },
+    "drawCalls": {
+      "samples": 1867,
+      "median": 2173,
+      "p95": 2734,
+      "p99": 2737
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1867,
+      "median": 4074657,
+      "p95": 4583642,
+      "p99": 4591445
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.09999999403953552
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.20000001788139343,
+        "p95": 0.4000000059604645,
+        "p99": 0.5
+      }
+    },
+    "memory": {
+      "geometryBytes": 75852612,
+      "estimatedTextureBytes": 178353291,
+      "geometries": 412,
+      "textures": 54,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 17,
+        "shadows": 0
+      }
+    ],
+    "trees": 239,
+    "diagnostics": [],
+    "coldLoadMs": 152.69999998807907,
+    "measuredAt": "2026-10-16T04:28:00.765Z"
+  },
+  {
+    "family": "snow",
+    "mix": "mixed-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1728,
+      "median": 30.599999994039536,
+      "p95": 35.099999994039536,
+      "p99": 42.400000005960464
+    },
+    "displayCadenceMs": {
+      "samples": 1728,
+      "median": 32.19999998807907,
+      "p95": 37.30000001192093,
+      "p99": 45.900000005960464
+    },
+    "gpuMs": {
+      "samples": 152,
+      "median": 14.98624,
+      "p95": 20.253696,
+      "p99": 25.440256
+    },
+    "drawCalls": {
+      "samples": 1728,
+      "median": 2255,
+      "p95": 2767,
+      "p99": 2768
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1728,
+      "median": 4347713,
+      "p95": 4895656,
+      "p99": 4900854
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.699999988079071,
+        "p99": 1
+      }
+    },
+    "memory": {
+      "geometryBytes": 76402572,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 412,
+      "textures": 55,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 19,
+        "shadows": 0
+      }
+    ],
+    "trees": 662,
+    "diagnostics": [],
+    "coldLoadMs": 144,
+    "measuredAt": "2026-10-16T04:29:14.798Z"
+  },
+  {
+    "family": "snow",
+    "mix": "trees-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1723,
+      "median": 31,
+      "p95": 34.70000001788139,
+      "p99": 38.900000005960464
+    },
+    "displayCadenceMs": {
+      "samples": 1723,
+      "median": 32.5,
+      "p95": 36.79999998211861,
+      "p99": 48.89999997615814
+    },
+    "gpuMs": {
+      "samples": 152,
+      "median": 14.94528,
+      "p95": 19.1488,
+      "p99": 21.9904
+    },
+    "drawCalls": {
+      "samples": 1723,
+      "median": 2267,
+      "p95": 2784,
+      "p99": 2788
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1723,
+      "median": 4612379,
+      "p95": 5230734,
+      "p99": 5239581
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.20000001788139343,
+        "p95": 0.5,
+        "p99": 0.5
+      }
+    },
+    "memory": {
+      "geometryBytes": 77184132,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 412,
+      "textures": 55,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 20,
+        "shadows": 0
+      }
+    ],
+    "trees": 1281,
+    "diagnostics": [],
+    "coldLoadMs": 150,
+    "measuredAt": "2026-10-16T04:30:29.400Z"
+  },
+  {
+    "family": "dry",
+    "mix": "brush-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1772,
+      "median": 30.099999994039536,
+      "p95": 34,
+      "p99": 38.900000005960464
+    },
+    "displayCadenceMs": {
+      "samples": 1772,
+      "median": 31.599999994039536,
+      "p95": 36,
+      "p99": 54.5
+    },
+    "gpuMs": {
+      "samples": 156,
+      "median": 15.798272,
+      "p95": 20.34176,
+      "p99": 36.791296
+    },
+    "drawCalls": {
+      "samples": 1772,
+      "median": 2436,
+      "p95": 3024,
+      "p99": 3025
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1772,
+      "median": 3969853,
+      "p95": 4462035,
+      "p99": 4469528
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 1.2000000178813934
+      }
+    },
+    "memory": {
+      "geometryBytes": 63451596,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 500,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 17,
+        "shadows": 0
+      }
+    ],
+    "trees": 239,
+    "diagnostics": [],
+    "coldLoadMs": 146.5,
+    "measuredAt": "2026-10-16T04:31:44.247Z"
+  },
+  {
+    "family": "dry",
+    "mix": "mixed-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1584,
+      "median": 33.80000001192093,
+      "p95": 38,
+      "p99": 41.79999998211861
+    },
+    "displayCadenceMs": {
+      "samples": 1584,
+      "median": 35.400000005960464,
+      "p95": 39.900000005960464,
+      "p99": 53.80000001192093
+    },
+    "gpuMs": {
+      "samples": 139,
+      "median": 16.564224,
+      "p95": 21.59616,
+      "p99": 28.127232
+    },
+    "drawCalls": {
+      "samples": 1584,
+      "median": 2497,
+      "p95": 3045,
+      "p99": 3046
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1584,
+      "median": 4203085,
+      "p95": 4740056,
+      "p99": 4748940
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.20000001788139343,
+        "p95": 0.4000000059604645,
+        "p99": 0.5
+      }
+    },
+    "memory": {
+      "geometryBytes": 63887436,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 500,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 20,
+        "shadows": 0
+      }
+    ],
+    "trees": 662,
+    "diagnostics": [],
+    "coldLoadMs": 150.90000000596046,
+    "measuredAt": "2026-10-16T04:32:59.478Z"
+  },
+  {
+    "family": "dry",
+    "mix": "trees-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1621,
+      "median": 32.69999998807907,
+      "p95": 37.19999998807907,
+      "p99": 40.900000005960464
+    },
+    "displayCadenceMs": {
+      "samples": 1621,
+      "median": 34.19999998807907,
+      "p95": 39.400000005960464,
+      "p99": 51.5
+    },
+    "gpuMs": {
+      "samples": 143,
+      "median": 16.75776,
+      "p95": 22.10816,
+      "p99": 32.909312
+    },
+    "drawCalls": {
+      "samples": 1621,
+      "median": 2511,
+      "p95": 3054,
+      "p99": 3055
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1621,
+      "median": 4471961,
+      "p95": 5059700,
+      "p99": 5069268
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.20000001788139343,
+        "p95": 0.4000000059604645,
+        "p99": 1.2000000178813934
+      }
+    },
+    "memory": {
+      "geometryBytes": 64526540,
+      "estimatedTextureBytes": 182045153,
+      "geometries": 500,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 21,
+        "shadows": 0
+      }
+    ],
+    "trees": 1281,
+    "diagnostics": [],
+    "coldLoadMs": 150.30000001192093,
+    "measuredAt": "2026-10-16T04:34:14.792Z"
+  },
+  {
+    "family": "wetlands",
+    "mix": "brush-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1582,
+      "median": 33.70000001788139,
+      "p95": 37.400000005960464,
+      "p99": 41.30000001192093
+    },
+    "displayCadenceMs": {
+      "samples": 1582,
+      "median": 35.400000005960464,
+      "p95": 39.5,
+      "p99": 49.400000005960464
+    },
+    "gpuMs": {
+      "samples": 139,
+      "median": 17.934336,
+      "p95": 23.284736,
+      "p99": 27.648
+    },
+    "drawCalls": {
+      "samples": 1582,
+      "median": 2542,
+      "p95": 3060,
+      "p99": 3068
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1582,
+      "median": 4386675,
+      "p95": 4949143,
+      "p99": 4965684
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.4000000059604645
+      }
+    },
+    "memory": {
+      "geometryBytes": 87190964,
+      "estimatedTextureBytes": 178585615,
+      "geometries": 508,
+      "textures": 56,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 17,
+        "shadows": 0
+      }
+    ],
+    "trees": 239,
+    "diagnostics": [],
+    "coldLoadMs": 150.69999998807907,
+    "measuredAt": "2026-10-16T04:35:28.778Z"
+  },
+  {
+    "family": "wetlands",
+    "mix": "mixed-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1532,
+      "median": 34.60000002384186,
+      "p95": 38.19999998807907,
+      "p99": 45.79999998211861
+    },
+    "displayCadenceMs": {
+      "samples": 1532,
+      "median": 36.29999998211861,
+      "p95": 40.5,
+      "p99": 68.80000001192093
+    },
+    "gpuMs": {
+      "samples": 135,
+      "median": 18.876416,
+      "p95": 22.150144,
+      "p99": 24.502272
+    },
+    "drawCalls": {
+      "samples": 1532,
+      "median": 2613,
+      "p95": 3092,
+      "p99": 3094
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1532,
+      "median": 4747639,
+      "p95": 5375800,
+      "p99": 5384884
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.19999998807907104,
+        "p95": 0.30000001192092896,
+        "p99": 0.4000000059604645
+      }
+    },
+    "memory": {
+      "geometryBytes": 87842740,
+      "estimatedTextureBytes": 182277477,
+      "geometries": 508,
+      "textures": 57,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 19,
+        "shadows": 0
+      }
+    ],
+    "trees": 662,
+    "diagnostics": [],
+    "coldLoadMs": 152.90000000596046,
+    "measuredAt": "2026-10-16T04:36:42.515Z"
+  },
+  {
+    "family": "wetlands",
+    "mix": "trees-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+      "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+      "foliage-performance-review.js": "bbcc90fb6b7f6f2915dfd1cb1ae0b2a4f359eddc32f06350559fad747a4d530d",
+      "foliage-review-fixture.js": "ddba33c9c7752d9f11174f7f66c2dc95332dc046ab3daa11ff220095d7e56973",
+      "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+    },
+    "difficulty": "easy",
+    "seed": 1781834633,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 1430,
+      "median": 37.599999994039536,
+      "p95": 42,
+      "p99": 49.5
+    },
+    "displayCadenceMs": {
+      "samples": 1430,
+      "median": 39.20000001788139,
+      "p95": 44.30000001192093,
+      "p99": 115
+    },
+    "gpuMs": {
+      "samples": 126,
+      "median": 19.06688,
+      "p95": 24.170496,
+      "p99": 25.765888
+    },
+    "drawCalls": {
+      "samples": 1430,
+      "median": 2641,
+      "p95": 3123,
+      "p99": 3125
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 1430,
+      "median": 5052571,
+      "p95": 5899388,
+      "p99": 5902552
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.29999998211860657,
+        "p95": 0.4000000059604645,
+        "p99": 0.5
+      }
+    },
+    "memory": {
+      "geometryBytes": 88789356,
+      "estimatedTextureBytes": 182277477,
+      "geometries": 508,
+      "textures": 57,
+      "note": "CPU geometry buffers and estimated texture pixels, including ground pages. Excludes driver allocations and shadow/render targets."
+    },
+    "chunks": [
+      {
+        "detail": 21,
+        "shadows": 0
+      }
+    ],
+    "trees": 1281,
+    "diagnostics": [],
+    "coldLoadMs": 149.09999999403954,
+    "measuredAt": "2026-10-16T04:37:56.635Z"
+  }
+]

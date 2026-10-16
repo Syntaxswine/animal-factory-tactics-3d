@@ -12,8 +12,8 @@ function renderer(){
  const r=Object.create(BattleRenderer.prototype),world={boxes:[]};
  Object.assign(r,{camera:new T.OrthographicCamera(),actors:new Map(),models:new Map(),materials:new Map(),
   renderer:{setSize(){},getPixelRatio:()=>1,render(){},domElement:{}},editorWorld:world,world,level:0,
-  rebuild(){},prune(){},biomes:{update(){}},loot:{sync(){}},sites:{hit:()=>null},motion:{update(){}},traversal:{observe(){}},combat:new BattleCombat(),
-  fire:{observe(){},display:u=>u},grenades:{scenery:s=>s},tankEffects:{observe(){},pendingProps:()=>[]},shotEffects:{hide(){}},flameEffects:{hide(){}},
+  rebuild(){},prune(){},biomes:{update(){}},loot:{sync(){}},sites:{hit:()=>null},motion:{update(){},sample:u=>u},traversal:{observe(){}},combat:new BattleCombat(),
+  fire:{entries:new Map(),observe(){},display:u=>u},grenades:{scenery:s=>s},tankEffects:{observe(){},pendingProps:()=>[]},shotEffects:{hide(){}},flameEffects:{hide(){}},
   actor(u){let mesh=this.actors.get(u.id);if(!mesh){mesh=new T.Mesh(new T.BoxGeometry(.5,1,.5));this.actors.set(u.id,mesh);}mesh.position.fromArray(toWorld(u));mesh.position.y+=.5;mesh.updateMatrixWorld(true);return mesh;}
  });
  return r;
@@ -35,6 +35,14 @@ for(const weapon of ['rifle','flamethrower'])test(`${weapon}: visible casualties
   state.visible.delete('2,0');assert.deepEqual(draw(800),[0],'Explored terrain does not reveal a currently unseen corpse');
   state.units=[a,hidden];assert.deepEqual(HybridRenderer.prototype.draw.call(r,ctx,{...state,terrain:state.map},...args).map(p=>p.id),[0],'The legacy renderer still applies its own detection gate');
  }finally{for(const mesh of r.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}}
+});
+
+test('foliage focus follows the selected friendly display sample without leaking a hidden guard',()=>{
+ const u={id:0,x:2,y:3,z:0,team:'squad',hp:100},hidden={id:1,x:7,y:3,z:0,team:'guard',hp:100},r=renderer();
+ const state={units:[u,hidden],selected:0,map:[],props:[],detected:new Set(),visible:new Set(['2,3']),seen:new Set(['2,3'])};
+ r.motion.sample=p=>({...p,x:p.x-.4,y:p.y-.2});
+ try{r.draw({drawImage(){}},state,{x:250,y:250,zoom:1},500,500,0);assert.equal(r.biomes.cutawayTargets.length,1);assert.equal(r.biomes.cutawayTargets[0].position[0],1.6);assert.equal(r.biomes.cutawayTargets[0].position[2],2.8);assert.equal(r.actors.has(1),false);}
+ finally{for(const mesh of r.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}}
 });
 
 test('battle draws every level, keeps fog gates, and only picks people on the interaction level',()=>{

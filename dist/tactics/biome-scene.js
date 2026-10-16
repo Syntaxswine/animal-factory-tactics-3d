@@ -1,3 +1,5 @@
+import {BIOME_OBSTACLES} from './biome-obstacle-data.js';
+import {FoliageCutaway} from './foliage-cutaway.js';
 import {createFoliageScreens} from './foliage-screen-scene.js';
 import {SCREEN_ATLAS,FRINGE_ATLAS,createScreenMaterials} from './foliage-screen-paint.js';
 import * as T from './vendor/three.module.js';
@@ -40,7 +42,7 @@ export function mixedBiomeFill(plan,map){
 export class BiomeScene{
  constructor(scene,loader,onReady=()=>{},onError=()=>{},{planSource=biomePlans}={}){
   this.root=new T.Group();this.root.name='Gameplay biomes';scene.add(this.root);this.loader=loader;this.onReady=onReady;this.onError=onError;
-  this.terrains=[];this.openTrees=[];this.paints=[];this.instances=[];this.layerMaterials=new Map();this.layers=new Map();this.textures={};this.signature=null;this.ready=false;this.disposed=false;this.planSource=planSource;
+  this.cutaway=new FoliageCutaway();this.cutawayTargets=[];this.inspection='both';this.vegetation=[];this.terrains=[];this.openTrees=[];this.paints=[];this.instances=[];this.layerMaterials=new Map();this.layers=new Map();this.textures={};this.signature=null;this.ready=false;this.disposed=false;this.planSource=planSource;
  }
  load(){
   if(this.loading||this.ready||this.failed)return;
@@ -72,8 +74,9 @@ export class BiomeScene{
    `).replace('#include <opaque_fragment>','outgoingLight*=biomeDim;\n#include <opaque_fragment>');
   };return material;
  }
- material(base,level,size){const key=base.uuid+':'+level;if(!this.layerMaterials.has(key)){const m=base.clone();m.onBeforeCompile=base.onBeforeCompile;m.customProgramCacheKey=base.customProgramCacheKey;this.layerMaterials.set(key,this.decorate(m,level,size));}return this.layerMaterials.get(key);}
+ material(base,level,size,vegetation=true){const key=base.uuid+':'+level+':'+vegetation;if(!this.layerMaterials.has(key)){const m=base.clone();m.onBeforeCompile=base.onBeforeCompile;m.customProgramCacheKey=base.customProgramCacheKey;this.decorate(m,level,size);this.layerMaterials.set(key,vegetation?this.cutaway.decorate(m,level,base===this.materials?.bark):m);}return this.layerMaterials.get(key);}
  clear(){
+  this.cutaway.clear();this.vegetation=[];
   for(const t of this.terrains){t.screens?.dispose();t.dispose();}this.terrains=[];this.openTrees=[];for(const m of this.instances){m.removeFromParent();m.dispose();}this.instances=[];
   for(const p of this.paints)p.dispose();this.paints=[];for(const m of this.layerMaterials.values())m.dispose();this.layerMaterials.clear();for(const l of this.layers.values())l.texture.dispose();this.layers.clear();this.signature=null;
  }
@@ -88,7 +91,7 @@ export class BiomeScene{
    for(const plan of plans){
     const z=plan.level;if(!paints.has(z)){const paint=createMapGroundPaint(map,z,this.textures.ground);paints.set(z,paint);this.paints.push(paint);}
     if(!fills.has(z))fills.set(z,mixedBiomeFill(plan,map));
-    const terrain=createBiomeTerrain(plan,plan.family,{ground:paints.get(z).ground,cliff:null,plantMaterials:Object.fromEntries(Object.entries(this.materials).map(([k,m])=>[k,this.material(m,z,size)])),obstacleMaterials:Object.fromEntries(Object.entries(this.obstacleMaterials).map(([k,m])=>[k,this.material(m,z,size)])),plantFactory:factory(z),paintSeed:biomeSeed(map),fill:fills.get(z),onPaintReady:()=>this.onReady(),decorateMaterial:m=>this.decorate(m,z,size),groundSkinOptions:{maxResident:Math.max(1,Math.floor(16/plans.length)),...(plan.cells.length?{}:{canvasFactory:()=>null})}});
+    const terrain=createBiomeTerrain(plan,plan.family,{ground:paints.get(z).ground,cliff:null,surfaceMaterial:this.material(plan.family==='snow'?this.materials.snow:this.obstacleMaterials[BIOME_OBSTACLES[plan.family].paint],z,size,false),plantMaterials:Object.fromEntries(Object.entries(this.materials).map(([k,m])=>[k,this.material(m,z,size)])),obstacleMaterials:Object.fromEntries(Object.entries(this.obstacleMaterials).map(([k,m])=>[k,this.material(m,z,size)])),plantFactory:factory(z),paintSeed:biomeSeed(map),fill:fills.get(z),onPaintReady:()=>this.onReady(),decorateMaterial:m=>this.decorate(m,z,size),groundSkinOptions:{maxResident:Math.max(1,Math.floor(16/plans.length)),...(plan.cells.length?{}:{canvasFactory:()=>null})}});
     terrain.screens=createFoliageScreens(plan,{plantMaterials:this.materials,screenMaterials:this.screenMaterials,decorate:m=>this.material(m,z,size)});terrain.root.add(terrain.screens.root);
     terrain.level=z;terrain.root.position.y=.008;this.root.add(terrain.root);this.terrains.push(terrain);
     const prototypes=[0,1,2].map(variant=>factory(z).create(OPEN_WOODLAND_PLANTS[plan.family],{variant}));
@@ -111,6 +114,11 @@ export class BiomeScene{
    }
    for(const {geometry,material,matrices,level,low}of batches.values()){const mesh=new T.InstancedMesh(geometry,material,matrices.length);matrices.forEach((m,i)=>mesh.setMatrixAt(i,m));mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingBox();mesh.computeBoundingSphere();mesh.receiveShadow=true;Object.assign(mesh.userData,{biomeLevel:level,low});this.root.add(mesh);this.instances.push(mesh);}
   }
+  if(!this.vegetation.length){
+   const mark=(m,z,kind)=>{m.userData.foliageKind=kind;this.vegetation.push(m);this.cutaway.attachShadow(m,z);};
+   for(const t of this.terrains){for(const m of t.treeInstances)mark(m,t.level,'trees');for(const c of t.chunks)for(const m of c.meshes)if(m.isInstancedMesh&&!t.treeInstances.includes(m))mark(m,t.level,'brush');t.screens?.root.traverse(m=>{if(m.isMesh)mark(m,t.level,'brush');});}
+   for(const m of this.instances)mark(m,m.userData.biomeLevel,m.userData.low?'brush':'trees');
+  }
   for(const [z,l]of this.layers){const data=l.texture.image.data;for(let y=0;y<size;y++)for(let x=0;x<size;x++){const key=z?`${x},${y},${z}`:`${x},${y}`;data[y*size+x]=editor||((!seen||seen.has(key))&&!map.concealedInteriors?.has(key))?255:0;}l.texture.needsUpdate=true;l.dim.value=dim&&z<selectedLevel?.38:1;}
   // Fragment fog also governs shadows: a shared batch with unknown ground must
   // not project hidden crowns into the visible part of the map.
@@ -121,7 +129,7 @@ export class BiomeScene{
  batchPlant(batches,plant,x,y,z,level,scale,yaw=0){
   plant.updateMatrixWorld(true);const low=plant.userData.category==='low',transform=new T.Matrix4().compose(new T.Vector3(x,y,z),new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),yaw),new T.Vector3(scale,scale,scale));plant.traverse(m=>{if(!m.isMesh)return;const key=`${Math.floor(x/24)},${Math.floor(z/24)}:${level}:${low}:${m.geometry.uuid}:${m.material.uuid}`;if(!batches.has(key))batches.set(key,{geometry:m.geometry,material:m.material,matrices:[],level,low});batches.get(key).matrices.push(new T.Matrix4().multiplyMatrices(transform,m.matrixWorld));});
  }
- update(camera,focus,ppu){for(const t of this.terrains)if(t.root.visible){t.update(camera,{focus,ppu});t.screens?.update(ppu,focus);}for(const m of this.instances){m.visible=m.userData.biomeLevel<=this.level&&(!m.userData.low||ppu>=9);const p=m.boundingSphere?.center,near=p&&p.distanceTo(focus)<28;m.castShadow=m.visible&&ppu>12&&!!near&&m.userData.shadowKnown;m.userData.noShadow=!m.castShadow;}}
+ update(camera,focus,ppu){this.cutaway.update(camera,this.cutawayTargets);for(const m of this.vegetation)if(m.userData.inspectionVisible!==undefined)m.visible=m.userData.inspectionVisible;for(const t of this.terrains)if(t.root.visible){t.update(camera,{focus,ppu});t.screens?.update(ppu,focus);}for(const m of this.instances){m.visible=m.userData.biomeLevel<=this.level&&(!m.userData.low||ppu>=9);const p=m.boundingSphere?.center,near=p&&p.distanceTo(focus)<28;m.castShadow=m.visible&&ppu>12&&!!near&&m.userData.shadowKnown;m.userData.noShadow=!m.castShadow;}for(const m of this.vegetation){m.userData.inspectionVisible=m.visible;if(this.inspection!=='both'&&this.inspection!==m.userData.foliageKind)m.visible=false;}}
  stats(){return {ready:this.ready,regions:this.terrains.length,trees:this.openTrees.length+this.terrains.reduce((n,t)=>n+t.trees.length,0),openWoodlandTrees:this.openTrees.length,blockedCells:this.terrains.reduce((n,t)=>n+t.stats.blockedCells,0),paint:this.terrains.map(t=>t.groundSkin.stats)};}
- dispose(){if(this.disposed)return;this.disposed=true;this.clear();this.factory?.dispose();for(const m of Object.values(this.materials||{}))m.dispose();for(const m of Object.values(this.screenMaterials||{}))m.dispose();for(const m of Object.values(this.obstacleMaterials||{}))m.dispose();for(const t of Object.values(this.textures))t.dispose();this.root.removeFromParent();}
+ dispose(){if(this.disposed)return;this.disposed=true;this.clear();this.cutaway.dispose();this.factory?.dispose();for(const m of Object.values(this.materials||{}))m.dispose();for(const m of Object.values(this.screenMaterials||{}))m.dispose();for(const m of Object.values(this.obstacleMaterials||{}))m.dispose();for(const t of Object.values(this.textures))t.dispose();this.root.removeFromParent();}
 }

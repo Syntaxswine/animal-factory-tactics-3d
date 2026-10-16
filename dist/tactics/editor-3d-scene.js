@@ -116,12 +116,13 @@ export class InspectionScene {
  }
  setOptions(options){Object.assign(this.options,options);this.rebuild();}
  select(selection){
+  this.foliageSelection=selection?.cells;
   const points=[],h=this.options.level*D.floorSpacing+.045;
   if(selection?.type==='edge'){for(const edge of selection.edges||[selection.edge]){const [axis,x,y]=edge.split(':'),a=+x,b=+y;points.push(...(axis==='e'?[new T.Vector3(a+.5,h,b-.5),new T.Vector3(a+.5,h,b+.5)]:[new T.Vector3(a-.5,h,b+.5),new T.Vector3(a+.5,h,b+.5)]));}}
   else for(const p of selection?.cells||[]){const corners=[[-.5,-.5],[.5,-.5],[.5,.5],[-.5,.5]];for(let i=0;i<4;i++){const a=corners[i],b=corners[(i+1)%4];points.push(new T.Vector3(p.x+a[0],h,p.y+a[1]),new T.Vector3(p.x+b[0],h,p.y+b[1]));}}
   this.highlight.geometry.dispose();this.highlight.geometry=new T.BufferGeometry().setFromPoints(points);this.changed();
  }
- draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.biomes.update(this.camera,new T.Vector3(view.x,0,view.y),height/(view.span||24));this.lights.update(this.document?.map,this.visibleLevel,this.previewMinutes??mapStartMinutes(this.document?.map),this.reducedMotion?.matches?null:performance.now()/1000,true);this.daylight.update(this.previewMinutes??mapStartMinutes(this.document?.map),this.camera,0,true);this.sceneryAssets.update(performance.now()/1000,this.camera,{reducedMotion:!!this.reducedMotion?.matches});this.lights.render(this.renderer,this.camera);}
+ draw(view,width,height){this.renderer.setSize(width,height,false);setInspectionCamera(this.camera,{...view,level:this.options.level},width,height);this.updateFoliageFocus();this.biomes.update(this.camera,new T.Vector3(view.x,0,view.y),height/(view.span||24));this.lights.update(this.document?.map,this.visibleLevel,this.previewMinutes??mapStartMinutes(this.document?.map),this.reducedMotion?.matches?null:performance.now()/1000,true);this.daylight.update(this.previewMinutes??mapStartMinutes(this.document?.map),this.camera,0,true);this.sceneryAssets.update(performance.now()/1000,this.camera,{reducedMotion:!!this.reducedMotion?.matches});this.lights.render(this.renderer,this.camera);}
  pick(x,y,width,height){return floorPoint(this.camera,x,y,width,height,this.options.level);}
  projectTile(p,width,height){const v=new T.Vector3(p.x,(p.z||0)*D.floorSpacing+.08,p.y).project(this.camera);return {x:(v.x+1)*width/2,y:(1-v.y)*height/2,visible:v.z>=-1&&v.z<=1};}
  pickCharacter(x,y,width,height){
@@ -142,13 +143,29 @@ export class InspectionScene {
   for(const p of this.document?.map.props||[]){if(p.kind!=='cliff-ledge'||(p.cliffMask??15)!==15||(p.z||0)!==this.options.level)continue;const h=(p.z||0)*D.floorSpacing,hit=raycaster.ray.intersectBox(new T.Box3(new T.Vector3(p.x-.5,h,p.y-.5),new T.Vector3(p.x+.5,h+2,p.y+.5)),new T.Vector3());if(!hit)continue;const d=hit.distanceTo(raycaster.ray.origin);if(d<distance){distance=d;nearest={x:p.x+Math.max(-.49,Math.min(.49,hit.x-p.x)),y:p.y+Math.max(-.49,Math.min(.49,hit.z-p.y)),z:p.z||0};}}
   return nearest;
  }
+ updateFoliageFocus(){
+  const cells=this.foliageSelection||[],targets=[];
+  if(cells.length){const xs=cells.map(p=>p.x),ys=cells.map(p=>p.y),x=(Math.min(...xs)+Math.max(...xs))/2,y=(Math.min(...ys)+Math.max(...ys))/2;targets.push({id:'selection',position:[x,this.options.level*D.floorSpacing+.3,y],level:this.options.level,radius:Math.min(6,Math.max(1.5,Math.hypot(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys))*.55+1))});}
+  if(this.foliageHover)targets.push({id:'hover',position:[this.foliageHover.x,this.options.level*D.floorSpacing+.25,this.foliageHover.y],level:this.options.level,radius:1.6});
+  this.biomes.cutawayTargets=targets;
+ }
  preview(result){
+  if(this.previewTrees){this.previewTrees.traverse(m=>{if(m.isInstancedMesh)m.dispose();});this.previewTrees.removeFromParent();for(const g of this.previewTreeGeometry)g.dispose();for(const m of this.previewTreeMaterials)m.dispose();this.previewTrees=null;this.previewTreeGeometry=[];this.previewTreeMaterials=[];}
   if(this.previewArrow){this.previewArrow.removeFromParent();this.previewArrow.line.material.dispose();this.previewArrow.cone.material.dispose();this.previewArrow=null;}
   if(this.previewMesh){this.previewMesh.removeFromParent();this.previewMesh.geometry.dispose();this.previewMesh.material.dispose();this.previewMesh.dispose();this.previewMesh=null;}
   if(!result){this.select(null);return;}
   const cells=result.cells||[],z=this.options.level;
+  if(result.trees?.length){
+   this.previewTrees=new T.Group();this.previewTreeGeometry=[];this.previewTreeMaterials=[];this.scene.add(this.previewTrees);
+   const ring=new T.RingGeometry(.43,.54,16),materials={};this.previewTreeGeometry.push(ring);
+   for(const [kind,color]of Object.entries({added:0x56ef96,retained:0xffd67d,removed:0xff5a4a})){materials[kind]=new T.MeshBasicMaterial({color,depthTest:false,side:T.DoubleSide});this.previewTreeMaterials.push(materials[kind]);}
+   for(const t of result.trees){const mark=new T.Mesh(ring,materials[t.change]);mark.rotation.x=-Math.PI/2;mark.position.set(t.x,t.base+.09,t.y);mark.renderOrder=25;this.previewTrees.add(mark);
+    if(t.change==='added'&&this.biomes.factory){const tree=this.biomes.factory.create(t.id,{variant:t.variant,mature:true});tree.position.set(t.x,t.base,t.y);tree.traverse(m=>{if(m.isMesh){m.castShadow=false;m.raycast=()=>{};}});this.previewTrees.add(tree);}
+   }
+  }
   const geometry=new T.PlaneGeometry(.98,.98),material=new T.MeshBasicMaterial({color:result.ok?0x91ddba:0xff6655,transparent:true,opacity:.4,depthTest:false,side:T.DoubleSide});
   const mesh=new T.InstancedMesh(geometry,material,cells.length),matrix=new T.Matrix4();cells.forEach((p,i)=>{matrix.makeRotationX(-Math.PI/2);matrix.setPosition(p.x,(p.z??z)*D.floorSpacing+.06,p.y);mesh.setMatrixAt(i,matrix);});mesh.renderOrder=19;mesh.frustumCulled=false;this.scene.add(mesh);this.previewMesh=mesh;
+  if(result.protectedCells?.length){const g=new T.PlaneGeometry(.86,.86),mat=new T.MeshBasicMaterial({color:0xe68a5b,wireframe:true,depthTest:false}),marks=new T.InstancedMesh(g,mat,result.protectedCells.length);this.previewTrees||=new T.Group();this.previewTreeGeometry||=[];this.previewTreeMaterials||=[];this.scene.add(this.previewTrees);this.previewTreeGeometry.push(g);this.previewTreeMaterials.push(mat);result.protectedCells.forEach((p,i)=>{matrix.makeRotationX(-Math.PI/2);matrix.setPosition(p.x,z*D.floorSpacing+.07,p.y);marks.setMatrixAt(i,matrix);});marks.renderOrder=24;this.previewTrees.add(marks);}
   if(result.orientation&&cells.length){const x=cells.reduce((n,p)=>n+p.x,0)/cells.length,y=cells.reduce((n,p)=>n+p.y,0)/cells.length;this.previewArrow=new T.ArrowHelper(new T.Vector3(result.orientation[0],0,result.orientation[1]),new T.Vector3(x,z*D.floorSpacing+.12,y),1.6,0xffe5a5,.4,.25);for(const part of [this.previewArrow.line,this.previewArrow.cone]){part.material.depthTest=false;part.renderOrder=21;}this.scene.add(this.previewArrow);}
   this.highlight.material.color.setHex(result.ok?0xffe5a5:0xff6655);this.select(result.edges?.length?{type:'edge',edges:result.edges}:{cells});
  }

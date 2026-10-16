@@ -26,11 +26,11 @@ export function terrainCellOutline(plan,x,z){
 }
 function geometry(positions,colors,normals){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));if(colors)g.setAttribute('color',new T.Float32BufferAttribute(colors,3));if(normals)g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));else g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();return g;}
 
-export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obstacleMaterials,plantFactory,grey=false,groundSprites=true,paintSeed,onPaintReady,edgeBlend=true,fill:providedFill,groundSkinOptions={},decorateMaterial=m=>m}){
+export function createBiomeTerrain(plan,family,{ground,cliff,surfaceMaterial,plantMaterials,obstacleMaterials,plantFactory,grey=false,groundSprites=true,paintSeed,onPaintReady,edgeBlend=true,fill:providedFill,groundSkinOptions={},decorateMaterial=m=>m}){
  if(!BIOME_OBSTACLES[family])throw Error('Unknown terrain biome');
  const root=new T.Group(),owned=new Set(),instances=[],treeInstances=[],chunks=[],denseMeshes=[],groundMeshes=[],trees=[],fill=providedFill||createTerrainFill(plan,family,{softEdge:edgeBlend}),bog=family==='wetlands',snow=family==='snow';root.name='Spatial biome terrain';
  const own=g=>(owned.add(g),g),crown=own(new T.SphereGeometry(.5,8,4)),proxyCrown=own(new T.IcosahedronGeometry(.5,0)),trunk=own(new T.CylinderGeometry(.5,.5,1,5)),cone=own(new T.ConeGeometry(.5,1,6)),rimMaterial=new T.LineBasicMaterial({color:0x5f513c});
- const original=grey?plantMaterials.grey:snow?plantMaterials.snow:obstacleMaterials[BIOME_OBSTACLES[family].paint],fillMaterial=original.clone();fillMaterial.onBeforeCompile=original.onBeforeCompile;fillMaterial.customProgramCacheKey=original.customProgramCacheKey;fillMaterial.vertexColors=true;
+ const original=grey?plantMaterials.grey:snow?plantMaterials.snow:obstacleMaterials[BIOME_OBSTACLES[family].paint],fillMaterial=(surfaceMaterial||original).clone();fillMaterial.onBeforeCompile=(surfaceMaterial||original).onBeforeCompile;fillMaterial.customProgramCacheKey=(surfaceMaterial||original).customProgramCacheKey;fillMaterial.vertexColors=true;
  const groundSkin=createConnectedGroundSkin(plan,family,{seed:paintSeed,onChange:onPaintReady,underlay:ground,edgeBlend,...groundSkinOptions,...(grey?{canvasFactory:()=>null}:{})}),fillMaterials=[];groundSkin.setEnabled(groundSprites);
  const leaf=family==='jungle'?'jungle':family==='temperate'?'leaves':snow?'snow':'dry',paint=id=>grey?plantMaterials.grey:(plantMaterials[id]||obstacleMaterials[id]),object=new T.Object3D();
  const cols=Math.ceil(plan.width/BIOME_CHUNK_SIZE);
@@ -140,7 +140,7 @@ export function createBiomeTerrain(plan,family,{ground,cliff,plantMaterials,obst
    // block detailed at close scale, including the far edge of a low-angle view.
    const treePixels=ppu*(c.treeHeight||0);
    c.nearActive=treePixels>(c.nearActive?22:26)&&(inView||distance<(c.nearActive?52:44));const shadows=ppu>12&&distance<28;
-   c.near.visible=showTrees&&c.nearActive;c.far.visible=showTrees&&!c.nearActive;
+   c.group.visible=inView||shadows;c.near.visible=showTrees&&c.nearActive;c.far.visible=showTrees&&!c.nearActive;
    for(const m of c.meshes){m.castShadow=shadows&&c.shadowKnown!==false&&m.name!=='Saved tutorial terrain'&&m.name!=='Distant trees';m.userData.noShadow=!m.castShadow;}
    if(inView){visible++;if(c.near.visible)detailed++;}if(shadows)shadowed++;
   }

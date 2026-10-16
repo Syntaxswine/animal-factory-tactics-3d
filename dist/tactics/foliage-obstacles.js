@@ -4,11 +4,13 @@ import {selectBiomeTree} from './biome-tree-mix.js';
 import {biomePlantParts,BIOME_TREE_GROUNDING} from './biome-plant-parts.js';
 import {segmentBox} from './hybrid-geometry.js';
 import {groundHash} from './biome-ground-composition.js';
+import {TREE_COVER,treeCoverOf} from './foliage-tree-cover.js';
 
 // These are physical world heights, with the same local silhouette conversion
 // used by battle-shot-effects. Floor/ledge bases are converted independently.
 const SCALE=1.65/1.8,CHUNK=8,caches=new WeakMap();
 const keyOf=m=>m.terrain||m.map;
+export function treePlacementRank(m){const origin=m.environment?.origin?.map(n=>n*240)||[0,0],seed=biomeSeed(m);return t=>groundHash(t.x+origin[0],t.y+origin[1],seed+631+t.z*911);}
 export function foliageSignature(m){const d=m.definition||m;return JSON.stringify([keyOf(m),m.upper,m.coverOccupiedProps||m.props,m.foliage,m.environment,m.edges,m.stairs,m.climbs,d.starts,d.guards,d.exits]);}
 export function invalidateFoliage(m){caches.delete(keyOf(m));}
 export function synchronizeFoliage(m){const signature=foliageSignature(m),old=caches.get(keyOf(m));if(old?.signature!==signature)caches.set(keyOf(m),{signature,scene:!Object.keys(m.foliage||{}).length&&!signature.includes('"woodland')?{boxes:[],worldBoxes:[],index:new Map(),worldIndex:new Map(),trees:[],screens:[],wood:[]}:buildFoliageObstacles(m)});return caches.get(keyOf(m)).scene;}
@@ -60,10 +62,11 @@ function partBeam(p){
  const axis=[sy*sx*cz-cy*sz,cx*cz,cy*sx*cz+sy*sz];
  return [-1,1].map(sign=>p.position.map((v,i)=>v+axis[i]*p.size[1]*sign/2));
 }
-// Alternate mixes are opt-in art studies. synchronizeFoliage always builds the
-// current saved-map rules; a study must keep its obstacle set out of that cache.
-export function buildFoliageObstacles(m,{denseTreeMix='current'}={}){
- if(!['current','mixed','trees'].includes(denseTreeMix))throw Error('Unknown dense tree mix');
+// Explicit study overrides never enter the ordinary saved-map cache.
+export function buildFoliageObstacles(m,{denseTreeMix=null,treesOnly=false}={}){
+ if(denseTreeMix!==null&&!['current','mixed','trees'].includes(denseTreeMix))throw Error('Unknown dense tree mix');
+ const override=denseTreeMix===null?null:({current:'brush-v1',mixed:'mixed-v1',trees:'trees-v1'})[denseTreeMix];
+ const hasExtra=override?override!=='brush-v1':Object.values(m.foliage||{}).some(c=>TREE_COVER[treeCoverOf(c)]?.rank>=0);
  const terrain=keyOf(m)||[],width=terrain[0]?.length||0,depth=terrain.length,trees=[],screens=[],wood=[],worldBoxes=[],boxes=[],origin=m.environment?.origin?.map(n=>n*240)||[0,0],seed=biomeSeed(m);
  const ledges=new Set((m.props||[]).filter(p=>p.kind==='cliff-ledge'&&(p.cliffMask??15)===15).map(p=>`${p.x},${p.y},${(p.z||0)+1}`));
  const bases=(x,y,z)=>ledges.has(`${x},${y},${z}`)?[(z-1)*3+2,(z-1)*2.12+2]:[z*3,z*2.12];
@@ -74,7 +77,7 @@ export function buildFoliageObstacles(m,{denseTreeMix='current'}={}){
  const candidates=[],infill=[],occupied=foliageOccupied(m);
  for(let z=0;z<=Math.min(2,m.upper?.length||0);z++)for(let y=0;y<depth;y++)for(let x=0;x<width;x++){
   const c=foliageAt(m,x,y,z);if(!c||occupied.has(`${x},${y},${z}`))continue;const rule=foliageRule(m,x,y,z),family=rule.family||biomeFamilyAt(m,x,y,z),[simBase,base]=bases(x,y,z),id=`foliage:${x},${y},${z}`,source={x,y,z};
-  if(rule.opaque){
+  if(rule.opaque&&!treesOnly){
    const variation=groundHash(x+origin[0],y+origin[1],seed+43),height=rule.height*(1+.45*variation),lobes=[[.32,.50,.86],[1.10,.92,.89],[height-.75,.75,.86+.12*variation]].map(([h,ry,r])=>({center:[x,base+h,y],radius:[r,ry,r]}));
    const screen={id:id+':screen',source,family,height,base,x,y,z,lobes,blocksSight:true,blocksShot:false,min:[x-.5,base,y-.5],max:[x+.5,base+height,y+.5]};screens.push(screen);add(screen,simBase,base);
    // Crossing substantial deadfall supplies real cover below the leaf screen.
@@ -87,24 +90,29 @@ export function buildFoliageObstacles(m,{denseTreeMix='current'}={}){
   if(!c[1]&&foliageTreeAt(m,x,y,z))candidates.push({x,y,z,family,simBase,base,dense:false});
   else if(c[1]){
    const wx=x+origin[0],wy=y+origin[1],gx=Math.floor(wx/9),gy=Math.floor(wy/9);
-   const current=wx===gx*9+3+Math.floor(groundHash(gx,gy,seed+83+z*911)*3)&&wy===gy*9+3+Math.floor(groundHash(gx,gy,seed+197+z*911)*3),ix=Math.floor(wx/3),iy=Math.floor(wy/3),extra=denseTreeMix!=='current'&&wx===ix*3+Math.floor(groundHash(ix,iy,seed+419+z*911)*3)&&wy===iy*3+Math.floor(groundHash(ix,iy,seed+521+z*911)*3);
+   const current=wx===gx*9+3+Math.floor(groundHash(gx,gy,seed+83+z*911)*3)&&wy===gy*9+3+Math.floor(groundHash(gx,gy,seed+197+z*911)*3),ix=Math.floor(wx/3),iy=Math.floor(wy/3),extra=hasExtra&&wx===ix*3+Math.floor(groundHash(ix,iy,seed+419+z*911)*3)&&wy===iy*3+Math.floor(groundHash(ix,iy,seed+521+z*911)*3);
    if(!current&&!extra)continue;
    let safe=true;for(let dy=-3;dy<=3&&safe;dy++)for(let dx=-3;dx<=3;dx++){const other=foliageAt(m,x+dx,y+dy,z);if(!other?.[1]||bases(x+dx,y+dy,z)[1]!==base){safe=false;break;}}
    if(safe&&foliageTreeSpaceAvailable(m,x,y,z,3))(current?candidates:infill).push({x,y,z,family,simBase,base,dense:true});
   }
  }
- // Keep every existing tree. Fill the same ranked pool as tree cover rises, so
- // comparison changes cannot shuffle old trees or crowd trunks into paths.
- const rank=t=>groundHash(t.x+origin[0],t.y+origin[1],seed+631+t.z*911);
+ // Reserve a complete potential population before applying saved cell tiers.
+ // Neighbouring mix edits cannot free a candidate slot and shuffle other trees.
+ const rank=treePlacementRank(m);
  infill.sort((a,b)=>rank(a)-rank(b)||a.z-b.z||a.y-b.y||a.x-b.x);
+ const slots=new Map(),slotKey=(x,y,z)=>x+','+y+','+z;
+ const reserve=t=>{const k=slotKey(Math.floor(t.x/3),Math.floor(t.y/3),t.z);if(!slots.has(k))slots.set(k,[]);slots.get(k).push(t);};
+ candidates.forEach(reserve);
  for(const t of infill){
-  if(denseTreeMix==='mixed'&&rank(t)>.30)break;
-  if(candidates.some(c=>c.z===t.z&&Math.hypot(c.x-t.x,c.y-t.y)<2.6))continue;
-  candidates.push(t);
+  let near=false;const gx=Math.floor(t.x/3),gy=Math.floor(t.y/3);
+  for(let y=gy-1;y<=gy+1&&!near;y++)for(let x=gx-1;x<=gx+1;x++)if(slots.get(slotKey(x,y,t.z))?.some(c=>Math.hypot(c.x-t.x,c.y-t.y)<2.6)){near=true;break;}
+  if(near)continue;reserve(t);
+  const mix=override||treeCoverOf(foliageAt(m,t.x,t.y,t.z));
+  if(rank(t)<=(TREE_COVER[mix]?.rank??-1))candidates.push(t);
  }
  for(const t of candidates){
   const {x,y,z,family,simBase,base,dense}=t,{id,variant}=selectBiomeTree(family,x+origin[0],y+origin[1],seed+z*911),scale=dense?1.8:1;
-  trees.push({...t,id,variant,scale});
+  trees.push({...t,id,variant,scale});if(treesOnly)continue;
   for(const [i,p]of biomePlantParts(id,variant).entries())if(p.paint==='bark'&&p.shape!=='biome-buttress'&&p.size[0]>=.07){
    const points=partBeam(p).map(q=>rotate(q,variant*.45)).map(q=>[x+q[0]*scale,base+(q[1]+BIOME_TREE_GROUNDING[id][variant])*scale,y+q[2]*scale]);
    add(beamBox(...points,p.size[0]*scale/2,{id:`foliage:${x},${y},${z}:trunk:${i}`,source:{x,y,z},family,blocksSight:true,blocksShot:true}),simBase,base);

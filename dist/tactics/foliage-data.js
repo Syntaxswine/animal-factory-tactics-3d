@@ -1,6 +1,7 @@
 import {FOLIAGE_PRESETS,validFoliagePreset} from './foliage-presets.js';
 import {biomeFamilyAt} from './biome-family.js';
-// Foliage is an overlay: each cell stores [density percent, blocks walking, optional preset ID].
+import {validTreeCover} from './foliage-tree-cover.js';
+// [density percent, blocks walking, optional preset ID, optional tree-cover version].
 // Ground remains authoritative for the plants' habitat and survives clearing.
 import {BIOME_TERRAIN} from './biome-gameplay-data.js';
 import {PROPS} from './environment.js';
@@ -49,7 +50,8 @@ export function foliageErrors(map,size=240){
  if(!map.foliage||typeof map.foliage!=='object'||Array.isArray(map.foliage))return ['Invalid foliage overlay.'];
  for(const [key,value]of Object.entries(map.foliage)){
   const [x,y,z]=key.split(',').map(Number);
-  if(key!==foliageKey(x,y,z)||![x,y,z].every(Number.isInteger)||x<0||y<0||x>=size||y>=size||z<0||z>2||!Array.isArray(value)||![2,3].includes(value.length)||(value.length===3&&!validFoliagePreset(value[2],value[1]))||!Number.isInteger(value[0])||value[0]<1||value[0]>100||typeof value[1]!=='boolean'||!foliageGround(foliageTerrain(map,x,y,z)))return ['Invalid foliage cell: '+key];
+  if(key!==foliageKey(x,y,z)||![x,y,z].every(Number.isInteger)||x<0||y<0||x>=size||y>=size||z<0||z>2||!Array.isArray(value)||![2,3,4].includes(value.length)||(value.length>=3&&!validFoliagePreset(value[2],value[1]))||!Number.isInteger(value[0])||value[0]<1||value[0]>100||typeof value[1]!=='boolean'||!foliageGround(foliageTerrain(map,x,y,z)))return ['Invalid foliage cell: '+key];
+  if(value.length===4&&!validTreeCover(value[3],value[2]))return ['Invalid foliage tree cover at '+key+': '+String(value[3])+' requires a supported dense-thicket preset.'];
  }
  return [];
 }

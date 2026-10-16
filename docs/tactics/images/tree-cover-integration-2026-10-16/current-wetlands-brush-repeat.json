@@ -1,0 +1,91 @@
+{
+  "family": "wetlands",
+  "mix": "brush-v1",
+  "layout": "sector",
+  "durationSeconds": 60,
+  "visibility": "visible",
+  "hiddenFrames": 0,
+  "resolution": [
+    1236,
+    394.40625
+  ],
+  "dpr": 1,
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+  "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "sources": {
+    "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+    "biome-scene.js": "88080952bc07dc4e49970f1b7d0976afcb9d3895ce32ad2ac65efafdd816ea18",
+    "biome-terrain.js": "95429ffe20ce12fcc86e8c474cb01c77d29e67cdea1ab62f933d95fb589e1995",
+    "foliage-performance-review.js": "47b5a1eac80b1b3c00aba00a63a62dd39158e832acd3d594821fa5985ad6f303",
+    "foliage-review-fixture.js": "1150caaf8e64cc59ff14b60aedc8b67d61df7bdb8f36bef5bc0d1deae5dbc89c",
+    "hybrid-renderer.js": "7c71ff540095f082b6291ece7704fcbc85372c7f621d3ca86e2c6f9739621178"
+  },
+  "difficulty": "easy",
+  "seed": 1781834633,
+  "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+  "cpuDrawMs": {
+    "samples": 1720,
+    "median": 31,
+    "p95": 36,
+    "p99": 40.5
+  },
+  "displayCadenceMs": {
+    "samples": 1720,
+    "median": 32.599999994039536,
+    "p95": 38.20000001788139,
+    "p99": 47.69999998807907
+  },
+  "gpuMs": {
+    "samples": 152,
+    "median": 16.848896,
+    "p95": 20.813824,
+    "p99": 28.460032
+  },
+  "drawCalls": {
+    "samples": 1720,
+    "median": 2542,
+    "p95": 3067,
+    "p99": 3068
+  },
+  "submittedTrianglesIncludingShadowAndLightPasses": {
+    "samples": 1720,
+    "median": 4386615,
+    "p95": 4952564,
+    "p99": 4965088
+  },
+  "queriesCost": {
+    "sight": {
+      "samples": 50,
+      "median": 0,
+      "p95": 0.09999999403953552,
+      "p99": 0.10000002384185791
+    },
+    "path": {
+      "samples": 50,
+      "median": 0.20000001788139343,
+      "p95": 0.4000000059604645,
+      "p99": 0.5999999940395355
+    }
+  },
+  "memory": {
+    "geometryBytes": 87191084,
+    "estimatedTextureBytes": 179507215,
+    "groundPaintTextureBytes": 35667076,
+    "finiteMaskBytes": 921600,
+    "estimatedShadowColorBytes": 41943040,
+    "groundPaintCPUBytes": 29651968,
+    "geometries": 508,
+    "textures": 56,
+    "note": "Deduplicated texture pixels including ground uniforms and finite masks. Geometry is CPU buffers. Shadow color targets and CPU paint buffers are separate estimates; driver allocations, depth buffers and temporary uploads are excluded."
+  },
+  "chunks": [
+    {
+      "detail": 17,
+      "shadows": 0
+    }
+  ],
+  "trees": 239,
+  "diagnostics": [],
+  "coldLoadMs": 135.59999999403954,
+  "measuredAt": "2026-10-16T18:48:28.159Z"
+}

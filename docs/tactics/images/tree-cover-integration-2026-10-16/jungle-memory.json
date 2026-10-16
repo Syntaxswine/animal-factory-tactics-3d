@@ -1,0 +1,11 @@
+{
+  "geometryBytes": 27829812,
+  "estimatedTextureBytes": 168199307,
+  "groundPaintTextureBytes": 24359168,
+  "finiteMaskBytes": 921600,
+  "estimatedShadowColorBytes": 41943040,
+  "groundPaintCPUBytes": 21345280,
+  "geometries": 209,
+  "textures": 49,
+  "note": "Deduplicated texture pixels including ground uniforms and finite masks. Geometry is CPU buffers. Shadow color targets and CPU paint buffers are separate estimates; driver allocations, depth buffers and temporary uploads are excluded."
+}
