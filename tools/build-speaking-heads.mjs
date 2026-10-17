@@ -15,7 +15,7 @@ import {mouthPlan} from './speaking-heads/plan.mjs';
 import {MOUTHS} from './speaking-heads/mouths.mjs';
 import {placement,measurePlacement} from './speaking-heads/place.mjs';
 import {sculptSpeaking,toothMesh,tongueMesh} from './speaking-heads/sculpt.mjs';
-import {closedVisibility,holesThrough,partsCrossSkin,crownExposure} from './speaking-heads/view.mjs';
+import {closedVisibility,holesThrough,partsCrossSkin,crownExposure,closestOnTri} from './speaking-heads/view.mjs';
 import {SPEECH_OPEN} from '../dist/tactics/speaking-head.js';
 const simplify=createRequire(import.meta.url)('./vendor/meshoptimizer/meshopt_simplifier.cjs');await simplify.ready;
 const only=process.argv.find(a=>a.startsWith('--only='))?.slice(7).split(',');
@@ -289,27 +289,53 @@ function openNormals(position,m,normal,hinge){
 // crease and the open lips' edges as whiskers, glints and the donkey's white fangs at its corners
 // (round 4's review). Within `near` of the lips' faces at rest, blending back to the sculpt's own by
 // `far` (beyond, the sculpt's own are the approved surface's but on the cow, the director and the
-// donkey, whose tools' mesh normals they keep).
+// donkey, whose tools' mesh normals they keep). On those three the approved surface's normal is the
+// approved skull's own (`approvedAt`: see approvedMeshNormals).
 const MOUTH_NORMALS={near:.02,far:.035};
-function outerNormals(m,normal,field,toWritten){
+function outerNormals(m,normal,field,toWritten,approvedAt){
  const R=m.rest,n=R.length/3,out=normal.slice(),{near,far}=MOUTH_NORMALS,cell=far,grid=new Map();
  for(let i=0;i<n;i++)if(m.fold[i]>.5){const k=[0,1,2].map(j=>Math.floor(R[i*3+j]/cell)).join();if(!grid.has(k))grid.set(k,[]);grid.get(k).push(i);}
  const toLips=p=>{let d=Infinity;const c=p.map(v=>Math.floor(v/cell));for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(let e=-1;e<=1;e++){const l=grid.get([c[0]+a,c[1]+b,c[2]+e].join());if(l)for(const i of l)d=Math.min(d,Math.hypot(R[i*3]-p[0],R[i*3+1]-p[1],R[i*3+2]-p[2]));}return d;};
  for(let i=0;i<n;i++){if(m.fold[i]>.5||m.inside[i]>=.5)continue;const p=[R[i*3],R[i*3+1],R[i*3+2]],w=1-THREE.MathUtils.smoothstep(toLips(p),near,far);if(w<=0)continue;
-  const at=written(field,toWritten,p);if(!at)continue;
+  const at=approvedAt?approvedAt(toWritten.map(toWritten.at(p))):written(field,toWritten,p);if(!at)continue;
   const v=[0,1,2].map(k=>normal[i*3+k]*(1-w)+at[k]*w),l=Math.hypot(...v);if(l>1e-9)out.set(v.map(x=>x/l),i*3);}
  return out;
 }
+// The cow's, the donkey's and the pig director's approved heads shade with their meshes' own normals
+// (their tools': the cow's and the director's recomputed from the placed mesh, the donkey's after its
+// neck revision), up to 12 to 31 degrees off the approved field's near the mouth. Given the field's
+// there, their closed mouths shaded further from the approved heads in grey (round 5's review,
+// SHOULD-FIX 4: the cow from its right at 1500, 412 -> 636 px off the approved head). Theirs is the
+// approved skull's normal at the nearest point of its mesh (its vertices' normals across the
+// triangle, as it is drawn), at the same level, where it is written.
+function approvedMeshNormals(head,level){
+ const file=level==='author'?head.file.replace('10k','author'):head.file,data=JSON.parse(fs.readFileSync(new URL('../dist/tactics/'+file,import.meta.url),'utf8'));
+ const s=data.parts.find(p=>p.name===head.part);if(!s)throw Error(`${file}: no part "${head.part}"`);
+ const P=s.position,N=s.normal,I=s.index,v=i=>[P[i*3],P[i*3+1],P[i*3+2]];
+ return q=>{let best=Infinity,hit=null;
+  for(let t=0;t<I.length;t+=3){const a=v(I[t]),b=v(I[t+1]),c=v(I[t+2]),p=closestOnTri(q,a,b,c),d=Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2]);if(d<best){best=d;hit={t,a,b,c,p};}}
+  // (barycentric weights of the nearest point in its triangle)
+  const {t,a,b,c,p}=hit,e0=[0,1,2].map(k=>b[k]-a[k]),e1=[0,1,2].map(k=>c[k]-a[k]),e2=[0,1,2].map(k=>p[k]-a[k]),d=(x,y)=>x[0]*y[0]+x[1]*y[1]+x[2]*y[2];
+  const d00=d(e0,e0),d01=d(e0,e1),d11=d(e1,e1),d20=d(e2,e0),d21=d(e2,e1),den=d00*d11-d01*d01||1,wb=(d11*d20-d01*d21)/den,wc=(d00*d21-d01*d20)/den,wa=1-wb-wc;
+  const n=[0,1,2].map(k=>N[I[t]*3+k]*wa+N[I[t+1]*3+k]*wb+N[I[t+2]*3+k]*wc),l=Math.hypot(...n);return l<1e-9?null:n.map(x=>x/l);};
+}
 // Closed, the lips' faces at the crease are the approved surface: where the closed shape lays them
-// at the surface (within CLOSED_NORMALS.none of it), they take its normal as the jaw closes, as a
-// morph of the normals with the closed shape (`closedNormal`, offsets from the written normals, as
-// `closed` is from the rest pose). Open they keep their open facings (openNormals): closed, those
-// glinted white along the cow's crease where a face's triangle reaches the surface (round 4's review).
+// at the surface (within CLOSED_NORMALS.none of it, by the approved field where they lie closed),
+// they take its normal as the jaw closes, as a morph of the normals with the closed shape
+// (`closedNormal`, offsets from the written normals, as `closed` is from the rest pose); and so do
+// the outer skin's vertices the closed shape moves (up to 8 mm), where they lie closed. Open they
+// keep their open facings (openNormals): closed, those glinted white along the cow's crease where a
+// face's triangle reaches the surface (round 4's review). Weighted by a face's depth at rest (round
+// 5), a game mesh's rims, which the closed shape snaps onto the crease from deeper, kept their open
+// facings, 8 to 165 a mammal mesh over 20 degrees off, and the outer vertices it moves their rest
+// normals, up to 57 degrees off: hairline whiskers on the pig director's game mesh at close-up
+// (round 5's review, SHOULD-FIX 1).
 const CLOSED_NORMALS={full:.001,none:.003};
-function closedNormals(m,normal,field,toWritten){
- const C=m.closed,vertices=[],offset=[];
- for(let i=0;i<C.length/3;i++){if(m.fold[i]<=.5)continue;const w=1-THREE.MathUtils.smoothstep(m.depth[i],CLOSED_NORMALS.full,CLOSED_NORMALS.none);if(w<=0)continue;
-  const at=written(field,toWritten,[C[i*3],C[i*3+1],C[i*3+2]]);if(!at)continue;
+function closedNormals(m,normal,field,toWritten,approvedAt){
+ const C=m.closed,R=m.rest,vertices=[],offset=[];
+ for(let i=0;i<C.length/3;i++){const p=[C[i*3],C[i*3+1],C[i*3+2]],moved=p[0]!==R[i*3]||p[1]!==R[i*3+1]||p[2]!==R[i*3+2];
+  const w=m.fold[i]>.5?1-THREE.MathUtils.smoothstep(Math.abs(field(...toWritten.at(p))),CLOSED_NORMALS.full,CLOSED_NORMALS.none):moved&&m.inside[i]<.5?1:0;if(w<=0)continue;
+  const at=approvedAt?approvedAt(toWritten.map(toWritten.at(p))):written(field,toWritten,p);if(!at)continue;
   const base=[0,1,2].map(k=>+normal[i*3+k].toFixed(5)),v=base.map((x,k)=>x*(1-w)+at[k]*w),l=Math.hypot(...v);if(l<1e-9)continue;
   vertices.push(i);offset.push(...v.map((x,k)=>+(x/l-base[k]).toFixed(5)));}
  return {vertices,offset};
@@ -426,19 +452,19 @@ for(const head of HEADS){
    near=near.concat(shown);folds=folds.concat(f.points);crossed=crossed.concat(x.points.map(p=>({p,r:SHOWN_CLOSED.reach[attempt]})));crowned=crowned.concat(k.points.map(p=>({p,r:SHOWN_CLOSED.reach[attempt]})));}}
  function record(level){
   const toSheet=p=>{const q=place.map(p);return head.revision?donkeyNeck(q):q;};
-  const partOut=[];
+  const partOut=[],approvedAt=place.meshNormals||head.revision?approvedMeshNormals(head,level):null;
   const write=(name,m,extra)=>{const position=head.revision?(()=>{const a=new Float32Array(m.rest.length);for(let i=0;i<a.length;i+=3)a.set(donkeyNeck([m.rest[i],m.rest[i+1],m.rest[i+2]]),i);return a;})():m.rest;
    let nor=m.normal;if(head.revision)nor=meshNormals(position,m.index);
    // (the mouth's normals are the reduced mesh's own, opened 6 degrees: the game mesh kept the dense
    // sculpt's through the reduction and its coarse mouth shaded as stripes, round 2; at the lips' rims
    // the sculpt's are the field's gradient at a sharp edge, and the authoring mesh's rims shaded up to
    // 17% over 60 degrees off their triangles, round 4)
-   if(extra.kind==='skin')nor=outerNormals(m,nor,head.speaking??head.field,{at:p=>place.unmap(p),map:x=>toSheet(x)});
+   if(extra.kind==='skin')nor=outerNormals(m,nor,head.speaking??head.field,{at:p=>place.unmap(p),map:x=>toSheet(x)},approvedAt);
    if(extra.kind==='skin')nor=openNormals(position,m,nor,toSheet([M.hinge[0],M.hinge[1],0]));
    if(head.earNormals&&extra.kind==='skin'){const averaged=meshNormals(position,m.index);nor=nor.slice();for(let i=0;i<position.length;i+=3){const [x,y,z]=[position[i],position[i+1],position[i+2]];if(Math.abs(z)>.135&&y>1.38&&x<.04)nor.set(averaged.subarray(i,i+3),i);}}
    const o={name,position:round(position,6),normal:round(nor,5),index:Array.from(m.index),triangles:m.index.length/3,...extra};
    if(extra.kind==='skin')o.band=bandNormals(position,m,toSheet([M.hinge[0],M.hinge[1],0]));
-   if(extra.kind==='skin')o.closedNormal=closedNormals(m,nor,head.speaking??head.field,{at:p=>place.unmap(p),map:x=>toSheet(x)});
+   if(extra.kind==='skin')o.closedNormal=closedNormals(m,nor,head.speaking??head.field,{at:p=>place.unmap(p),map:x=>toSheet(x)},approvedAt);
    if(head.revision){o.paintPosition=round(m.rest,6);o.paintNormal=round(m.normal,5);}
    partOut.push(o);};
   const sk=levels[level].skin;

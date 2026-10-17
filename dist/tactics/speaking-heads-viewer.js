@@ -5,7 +5,9 @@ import {GAME_CAMERA} from './hybrid-world.js';
 import {speakingHeadFile,withSpeakingHead,rigSpeakingHead,jawAt,speechOpen} from './speaking-head.js';
 
 // The approved head (left) and its speaking head (right) at the same mesh level, under one
-// camera, each with the character's registered paint (createAnimalPaint, as the game paints).
+// camera, each with the character's registered paint (createAnimalPaint, as the game paints): flat,
+// or lit by the scene as the battle paints its units (Lit; round 5's review, SHOULD-FIX 5: the
+// lit evidence was photographed on another renderer, whose paint fell back to flat colours).
 const $=id=>document.getElementById(id),host=$('scene'),params=new URLSearchParams(location.search);
 const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x383838);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;host.append(renderer.domElement);
 const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera();scene.add(new THREE.HemisphereLight(0xfff9ec,0x737775,2));const key=new THREE.DirectionalLight(0xfff2dc,2.3);key.position.set(3,5,4);scene.add(key);const fill=new THREE.DirectionalLight(0xffffff,.7);fill.position.set(-2,2,-3);scene.add(fill);
@@ -13,6 +15,7 @@ const loader=new THREE.TextureLoader(),json=r=>{if(!r.ok)throw Error(r.url+' '+r
 for(const p of ANIMAL_MOTION_CATALOG)$('animal').append(new Option(p.label,p.id));
 for(const [id,value] of [['animal',params.get('animal')],['level',params.get('level')],['view',params.get('view')],['scale',params.get('scale')],['elevation',params.get('elevation')]])if(value)$(id).value=value;
 if(params.has('jaw'))$('jaw').value=params.get('jaw');
+if(params.has('lit'))$('lit').checked=params.get('lit')!=='0';
 
 // A line to say (the intro handler's): [syllable, seconds, stress].
 const LINE=[['your',.2,.6],['mis',.17,1],['sion',.19,.6],['is',.15,.5],['to',.13,.45],['take',.24,1],['out',.26,.9],[null,.1,0],['the',.12,.45],['cen',.2,1],['tral',.17,.6],['re',.17,.7],['lay',.24,.8],['sta',.22,1],['tion',.3,.55]];
@@ -32,7 +35,7 @@ async function load(){
  try{
   const [data,head]=await Promise.all([fetch('./'+(level==='10k'?profile.file:authorFile(profile))).then(json),fetch(speakingHeadFile(id,level)).then(json)]);
   const original=profile.create(data),speaking=profile.create(withSpeakingHead(data,head)),speech=rigSpeakingHead(speaking,head);
-  const paints=await Promise.all([createAnimalPaint(renderer,original,profile,loader),createAnimalPaint(renderer,speaking,profile,loader)]);
+  const lit=$('lit').checked,paints=await Promise.all([createAnimalPaint(renderer,original,profile,loader,'normal',lit),createAnimalPaint(renderer,speaking,profile,loader,'normal',lit)]);
   speech.applyPaint(paints[1]);
   // Framing: the head (its skin's box) and the mouth (the middle of its lips' faces: the vertices
   // that fold shut at rest).
@@ -111,7 +114,7 @@ async function drawSheet(reference){
  sheetContext.fillStyle='#000a';sheetContext.fillRect(0,0,240,30);sheetContext.fillRect(half,0,240,30);sheetContext.fillStyle='#fff';sheetContext.font='18px system-ui';sheetContext.fillText('Side (painted sheet)',10,21);sheetContext.fillText('Front (painted sheet)',half+10,21);
 }
 
-for(const id of ['animal','level'])$(id).addEventListener('input',load);
+for(const id of ['animal','level','lit'])$(id).addEventListener('input',load);
 for(const id of ['view','scale','heading','elevation','jaw','painted','grey','wire','coverage','weights'])$(id).addEventListener('input',render);
 $('say').addEventListener('click',()=>{saying=saying?null:performance.now();$('say').textContent=saying?'Stop':'Say a line';render();});
 const resized=new ResizeObserver(()=>render());resized.observe(host);
@@ -163,7 +166,8 @@ function traceMouth(view='side',{ppu=5000,reach=.025,before=.07,half=.06}={}){
  return points.reverse();
 }
 window.speakingHeads={get current(){return current;},load:async(id,level='10k')=>{$('animal').value=id;$('level').value=level;await load();},render,coverage,capture,traceMouth,
- set(options){for(const [k,v] of Object.entries(options)){const el=$(k);if(el.type==='checkbox')el.checked=v;else el.value=v;}render();},
+ // (a character, a mesh level or Lit loads the pair again: resolve it before capturing)
+ async set(options){let again=false;for(const [k,v] of Object.entries(options)){const el=$(k),was=el.type==='checkbox'?el.checked:el.value;if(el.type==='checkbox')el.checked=v;else el.value=v;if(['animal','level','lit'].includes(k)&&was!==(el.type==='checkbox'?el.checked:el.value))again=true;}if(again)await load();render();},
  diagnostics(){const c=current;return {id:c.id,level:c.level,triangles:c.head.triangles,characterTriangles:c.data.triangles,parts:c.head.parts.map(p=>({name:p.name,triangles:p.triangles})),bones:c.speech.skin.skeleton.bones.length,jawParent:c.speech.jaw.parent?.name};},
  // (what the renderer holds, and whether a frame is pending: a character change must not grow the
  // one, and the other is one request at most)

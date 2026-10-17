@@ -215,7 +215,12 @@ function gum(G,x,z,up){const y0=G.refY(x,z);let y=y0;const step=up?.0002:-.0002;
 // The teeth, set in the mouth as sculpted: each row on its arch (the upper incisors just inside
 // the lips, the lower behind them), each tooth rooted `embed` into the gum as built and reaching
 // past the cut by `tip`. A row: {jaw, kind, count, half (arc length to the outer teeth), width,
-// depth (half-sizes along and across the arch), tip, embed, inset (extra, inward), lean}.
+// depth (half-sizes along and across the arch), tip, embed, inset (extra, inward), lean, vary}.
+// vary (0 by default, up to 1): each tooth a little longer, wider or narrower, and turned on the
+// arch, by a fixed sequence (VARY, offset by row), so the row is less even (the architect's review,
+// 15 October 2026: "make the tooth row less mechanical"). Longer only: a crown is never shorter.
+const VARY=[{long:.14,wide:-.06,turn:.10},{long:0,wide:.08,turn:-.06},{long:.08,wide:-.10,turn:.04},{long:.20,wide:.04,turn:-.12},
+ {long:.04,wide:-.04,turn:.08},{long:.12,wide:.10,turn:-.03},{long:.02,wide:-.08,turn:.12},{long:.17,wide:.02,turn:-.09}];
 export function teethLayout(M,G){
  const rows=M.teeth||[],out=[],gap=M.teethGap??.0008;
  const upperDepth=Math.max(0,...rows.filter(r=>r.jaw==='upper'&&r.kind!=='canine').map(r=>r.depth));
@@ -240,24 +245,25 @@ export function teethLayout(M,G){
   const rootWidth=row.kind==='canine'?1:incisorWidth(0);
   let wide=row.width;for(let i=1;i<at.length;i++){const a=inner(at[i-1]),b=inner(at[i]);
    wide=Math.min(wide,Math.hypot(at[i].x-at[i-1].x,at[i].z-at[i-1].z)/2-.00025,(Math.hypot(b.x-a.x,b.z-a.z)/2-.00025)/rootWidth);}
-  const first=out.length;
+  const first=out.length,vary=row.vary||0;
   for(let i=0;i<row.count;i++){
-   const {x,z,out:o}=at[i],across=[o[0],0,o[1]];
+   const {x,z,out:o0}=at[i],V=VARY[(i+3*k)%VARY.length],turn=vary*V.turn,o=[o0[0]*Math.cos(turn)-o0[1]*Math.sin(turn),o0[0]*Math.sin(turn)+o0[1]*Math.cos(turn)],across=[o[0],0,o[1]];
    const g=gum(G,x,z,up);if(g===null)throw Error(`${row.jaw} ${row.kind} ${i}: no gum above or below it`);
-   const ref=G.refY(x,z),tip=up?ref-row.tip:ref+row.tip,r=inner(at[i]);
+   const ref=G.refY(x,z),long=row.tip*(1+vary*V.long),tip=up?ref-long:ref+long,r=inner(at[i]);
    // (rooted no deeper than keeps the root's side a millimetre inside the head: a thin chin)
    const rootR=Math.max(row.kind==='canine'?row.width:incisorWidth(0)*row.width,row.depth)+.001;let embed=row.embed??.003;
    while(embed>.001&&G.head(r.x,up?g+embed:g-embed,r.z)>-rootR)embed-=.0002;
    const root=up?g+embed:g-embed;
-   out.push({row:k,jaw:row.jaw,kind:row.kind||'incisor',root:[r.x,root,r.z],tip:[x,tip,z],across,w:wide,d:row.depth});
+   out.push({row:k,jaw:row.jaw,kind:row.kind||'incisor',root:[r.x,root,r.z],tip:[x,tip,z],across,w:wide*(1+vary*V.wide),d:row.depth});
   }
   // Where the gum or the cut slopes, neighbours stand at different heights and their axes draw
   // nearer between tip and root: the row is no wider than leaves a hair between them there too.
-  const teeth=out.slice(first),fits=w=>teeth.every((a,i)=>i===0||heights(teeth[i-1],a).every(y=>{const {d,u,fa,fb}=apart(teeth[i-1],a,y);
-   return d>=reach({...teeth[i-1],w},u,fa)+reach({...a,w},u,fb)+.0005;}));
-  if(!fits(teeth[0].w)){let lo=0,hi=teeth[0].w;for(let k=0;k<20;k++){const m=(lo+hi)/2;if(fits(m))lo=m;else hi=m;}
+  // (each tooth's width as a share of the row's, its own variation)
+  const teeth=out.slice(first),share=teeth.map(t=>t.w/wide),fits=w=>teeth.every((a,i)=>i===0||heights(teeth[i-1],a).every(y=>{const {d,u,fa,fb}=apart(teeth[i-1],a,y);
+   return d>=reach({...teeth[i-1],w:w*share[i-1]},u,fa)+reach({...a,w:w*share[i]},u,fb)+.0005;}));
+  if(!fits(wide)){let lo=0,hi=wide;for(let k=0;k<20;k++){const m=(lo+hi)/2;if(fits(m))lo=m;else hi=m;}
    if(lo<.4*row.width)throw Error(`${row.jaw} ${row.kind}s: only ${(lo*2000).toFixed(1)} mm wide fit side by side (${(row.width*2000).toFixed(1)} mm asked)`);
-   for(const t of teeth)t.w=lo;}
+   teeth.forEach((t,i)=>t.w=lo*share[i]);}
  });
  // No two teeth may touch.
  for(let i=0;i<out.length;i++)for(let j=i+1;j<out.length;j++){const a=out[i],b=out[j];

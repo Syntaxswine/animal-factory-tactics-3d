@@ -187,6 +187,20 @@ test('the speech test can fail: a patch of a lip\'s face turned over, and inciso
 // background through the head against the background through the outer skin alone (`extra`, a
 // part drawn with the head; the outer skin is drawn without it).
 const SIDES_OPEN=.7; // (round 4's .5 passed a flap over the back half of the lip line, 51 to 59%: round 4's review)
+// Each mesh's own share as built (the lesser side), less SIDES_SLACK: a ratchet, not a bar. 70%
+// passed a flap over the back 40% of the lip line on 9 of 22 mammal meshes, and the rabbit's mouth,
+// across her face, no back flap can fail (round 5's review, SHOULD-FIX 6). Measured per column
+// along the lip line, as the review proposed, the lips' faces alone cover runs of 1 to 21% of the
+// opening's length at its corners, where they meet, and a back-40% wall's runs read 22 to 38%: no
+// bar parts them. A back-40% wall takes 12 to 25 points off every other mesh's share and none off
+// the rabbit's; a wall over her front 20% takes 22 to 68.
+const SIDES_SLACK=.05,SIDES_SEEN={
+ 'horse-author':0.91, 'horse-10k':0.80, 'goat-author':0.83, 'goat-10k':0.87,
+ 'bull-author':0.91, 'bull-10k':0.89, 'cow-author':0.89, 'cow-10k':0.87,
+ 'donkey-author':0.89, 'donkey-10k':0.90, 'sheep-author':0.89, 'sheep-10k':0.80,
+ 'skunk-author':0.85, 'skunk-10k':0.85, 'pig-foreman-author':0.91, 'pig-foreman-10k':0.81,
+ 'pig-director-author':0.92, 'pig-director-10k':0.93, 'rabbit-author':0.76, 'rabbit-10k':0.79,
+ 'dog-author':0.91, 'dog-10k':0.79};
 const sidesOpen=(data,az,extra=null)=>{const d=extra?{...data,parts:[...data.parts,extra]}:data;return seeThrough(d,24,az).mm2/seeThrough(d,24,az,{outerOnly:true}).mm2;};
 test('open, the mouth is open at its sides: in exact profile from either side at 24 degrees, at least 70% of the opening between the lips shows the background',()=>{
  // (the lips' own faces, seen obliquely, cover 8 to 22% of it, the rabbit's the most, her mouth
@@ -194,16 +208,24 @@ test('open, the mouth is open at its sides: in exact profile from either side at
  // showed none of it, from either side, on every mammal mesh. The hen's beak is excepted: her front
  // opening, which seeThrough closes, is her whole gape)
  for(const head of HEADS.filter(h=>h.id!=='hen'))for(const level of LEVELS){const data=built(head.id,level);
-  for(const az of [0,180]){const share=sidesOpen(data,az);assert.ok(share>=SIDES_OPEN,`${head.id}-${level} from the ${az?'right':'left'} at 24°: ${(share*100).toFixed(0)}% of the opening between the lips seen through`);}}
+  for(const az of [0,180]){const share=sidesOpen(data,az),own=SIDES_SEEN[`${head.id}-${level}`];assert.ok(own,`${head.id}-${level}: no share recorded`);
+   assert.ok(share>=own-SIDES_SLACK,`${head.id}-${level} from the ${az?'right':'left'} at 24°: ${(share*100).toFixed(0)}% seen through, under its own ${(own*100).toFixed(0)}% as built, less ${SIDES_SLACK*100} points`);
+   assert.ok(share>=SIDES_OPEN,`${head.id}-${level} from the ${az?'right':'left'} at 24°: ${(share*100).toFixed(0)}% of the opening between the lips seen through`);}}
 });
-test('the open-sides measure can fail: a wall standing in the opening, as round 4 stood the lining, shows none of it, and one over the back half of the lip line, as round 3 stood it, under 70%',()=>{
- // (the curtain over the lips' whole edges, drawn on both sides, posed with the skin; cut to the
- // triangles behind the middle of the lip line, from the corner to the lips' front edge)
- const data=built('horse','author'),s=data.parts[0],P=s.position,c=Array.from(frontCurtain(data,{whole:true}));
- let corner=Infinity;for(let i=0;i<s.fold.length;i++)if(s.fold[i]>.5)corner=Math.min(corner,P[i*3]);const mid=(corner+P[lipTips(data).up*3])/2;
- const wall=keep=>{const index=[];for(let t=0;t<c.length;t+=3){const v=[c[t],c[t+1],c[t+2]];if(!keep(v))continue;index.push(...v,v[0],v[2],v[1]);}return {name:'wall',kind:'skin',jaw:s.jaw,inside:s.inside,fold:s.fold,lower:s.lower,position:P,index};};
- const open=sidesOpen(data,0),walled=sidesOpen(data,0,wall(()=>true)),half=sidesOpen(data,0,wall(v=>v.every(i=>P[i*3]<mid)));
- assert.ok(open>=SIDES_OPEN&&walled<.1&&half<SIDES_OPEN,`the horse from the left at 24°: ${(open*100).toFixed(0)}% seen through, ${(walled*100).toFixed(0)}% with the wall, ${(half*100).toFixed(0)}% with its back half`);
+// A wall over the curtain's triangles (the lips' whole edges, drawn on both sides, posed with the
+// skin) whose vertices all lie behind `share` of the lip line from its corner (or, with front, in
+// front of that much from its front).
+function lipWall(data,share,front=false){const s=data.parts[0],P=s.position,c=Array.from(frontCurtain(data,{whole:true}));
+ let corner=Infinity;for(let i=0;i<s.fold.length;i++)if(s.fold[i]>.5)corner=Math.min(corner,P[i*3]);const tip=P[lipTips(data).up*3],index=[];
+ const keep=front?v=>v.every(i=>P[i*3]>tip-share*(tip-corner)):v=>v.every(i=>P[i*3]<corner+share*(tip-corner));
+ for(let t=0;t<c.length;t+=3){const v=[c[t],c[t+1],c[t+2]];if(!keep(v))continue;index.push(...v,v[0],v[2],v[1]);}
+ return {name:'wall',kind:'skin',jaw:s.jaw,inside:s.inside,fold:s.fold,lower:s.lower,position:P,index};}
+test('the open-sides measure can fail: a wall standing in the whole opening shows none of it; one over the back 40% of the lip line, as round 3 stood its flaps, fails every mammal mesh but the rabbit, and one across her front corners fails hers',()=>{
+ const horse=built('horse','author'),walled=sidesOpen(horse,0,lipWall(horse,Infinity));
+ assert.ok(walled<.1,`the horse from the left at 24° with the wall: ${(walled*100).toFixed(0)}% seen through`);
+ for(const head of HEADS.filter(h=>h.id!=='hen'))for(const level of LEVELS){const data=built(head.id,level),rabbit=head.id==='rabbit';
+  const share=sidesOpen(data,0,rabbit?lipWall(data,.2,true):lipWall(data,.4)),own=SIDES_SEEN[`${head.id}-${level}`];
+  assert.ok(share<own-SIDES_SLACK,`${head.id}-${level} from the left at 24° with a wall ${rabbit?'over her front 20%':'over the back 40%'}: ${(share*100).toFixed(0)}% seen through, its own ${(own*100).toFixed(0)}%`);}
 });
 test('the hole instrument can fail: a hole punched in a cheek and a patch of the mouth\'s floor turned inside-out show, and a head it cannot see throws',()=>{
  // (the hole 4 to 7 cm above the lips, where the head behind the cheek is solid: from the game's
@@ -313,50 +335,77 @@ test('the jaw carries the whole mandible: weight at least 0.9 along the jaw line
  const flap=jawLine(dog),back=flap.filter(p=>p.x<mid);assert.ok(back.filter(p=>p.w<.9).length>back.length*.8,`a flap: ${back.filter(p=>p.w<.9).length} of ${back.length} columns under 0.9`);
 });
 
-// The approved surface's normal where a head is written, computed here without the build's own
-// carrying of normals: the gradient, in written space, of the approved field at the sculpt point
-// written there (the placement undone; the donkey's neck revision undone by Newton's method).
-function approvedNormal(head){
+// The approved surface where a head is written, computed here without the build's own carrying of
+// normals: the approved field at the sculpt point written there (the placement undone; the donkey's
+// neck revision undone by Newton's method), and its gradient in written space. On the cow, the
+// donkey and the pig director, whose approved heads shade with their meshes' own normals (their
+// tools'; round 5's review, SHOULD-FIX 4), the normal is the approved skull's at the nearest point.
+function approvedSurface(head,level){
  const place=placement(head),field=head.speaking??head.field,e=1e-4;
  const unrevise=y=>{let x=[y[0],y[1]-.11,y[2]];for(let it=0;it<30;it++){const f=donkeyNeck(x),r=f.map((v,k)=>v-y[k]);if(Math.hypot(...r)<1e-12)break;
   const h=1e-6,c=[0,1,2].map(k=>{const a=x.slice();a[k]+=h;return donkeyNeck(a).map((v,j)=>(v-f[j])/h);}),A=[0,1,2].map(j=>[c[0][j],c[1][j],c[2][j]]);
   const det=m=>m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0]),D=det(A);
   x=x.map((v,k)=>v-det(A.map((row,j)=>row.map((u,col)=>col===k?r[j]:u)))/D);}return x;};
  const phi=y=>field(...place.unmap(head.revision?unrevise(y):y));
- return y=>{const g=[0,1,2].map(k=>{const a=y.slice(),b=y.slice();a[k]+=e;b[k]-=e;return phi(a)-phi(b);}),l=Math.hypot(...g);return l<1e-12?null:g.map(v=>v/l);};
+ if(place.meshNormals||head.revision){const s=read(level==='author'?head.file.replace('10k','author'):head.file).parts.find(p=>p.name===head.part),P=s.position,N=s.normal,I=s.index,v=i=>[P[i*3],P[i*3+1],P[i*3+2]];
+  // (its vertices' normals across the nearest point's triangle, as it is drawn: weights of the
+  // nearest point by Voronoi region, after Ericson)
+  const weights=(q,a,b,c)=>{const sub=(x,y)=>[x[0]-y[0],x[1]-y[1],x[2]-y[2]],dot=(x,y)=>x[0]*y[0]+x[1]*y[1]+x[2]*y[2];
+   const ab=sub(b,a),ac=sub(c,a),ap=sub(q,a),d1=dot(ab,ap),d2=dot(ac,ap);if(d1<=0&&d2<=0)return [1,0,0];
+   const bp=sub(q,b),d3=dot(ab,bp),d4=dot(ac,bp);if(d3>=0&&d4<=d3)return [0,1,0];
+   const vc=d1*d4-d3*d2;if(vc<=0&&d1>=0&&d3<=0){const t=d1/(d1-d3);return [1-t,t,0];}
+   const cp=sub(q,c),d5=dot(ab,cp),d6=dot(ac,cp);if(d6>=0&&d5<=d6)return [0,0,1];
+   const vb=d5*d2-d1*d6;if(vb<=0&&d2>=0&&d6<=0){const t=d2/(d2-d6);return [1-t,0,t];}
+   const va=d3*d6-d5*d4;if(va<=0&&(d4-d3)>=0&&(d5-d6)>=0){const t=(d4-d3)/((d4-d3)+(d5-d6));return [0,1-t,t];}
+   const den=1/(va+vb+vc);return [1-(vb+vc)*den,vb*den,vc*den];};
+  return {phi,normal:y=>{let best=Infinity,hit=null;for(let t=0;t<I.length;t+=3){const a=v(I[t]),b=v(I[t+1]),c=v(I[t+2]),w=weights(y,a,b,c),d=[0,1,2].reduce((s,k)=>s+(a[k]*w[0]+b[k]*w[1]+c[k]*w[2]-y[k])**2,0);if(d<best){best=d;hit=[t,w];}}
+   const [t,w]=hit,n=[0,1,2].map(k=>N[I[t]*3+k]*w[0]+N[I[t+1]*3+k]*w[1]+N[I[t+2]*3+k]*w[2]),l=Math.hypot(...n);return n.map(x=>x/l);}};}
+ return {phi,normal:y=>{const g=[0,1,2].map(k=>{const a=y.slice(),b=y.slice();a[k]+=e;b[k]-=e;return phi(a)-phi(b);}),l=Math.hypot(...g);return l<1e-12?null:g.map(v=>v/l);}};
 }
 // The outer skin within 15 mm of the lips' faces (fold < .5, inside < .5), and closed the lips' faces
-// the closed shape lays at the surface (depth at most 1 mm), against it: the most degrees off.
+// the closed shape lays at the surface (within 1 mm of it where they lie closed) and the outer
+// vertices it moves (where they lie closed), against it: the most degrees off. (Round 5's selected
+// the faces by their depth at rest, the build's own weighting, and checked no moved outer vertex:
+// it missed the game meshes' rims the closed shape snaps onto the crease from deeper, and outer
+// vertices up to 57 degrees off where they lie closed; round 5's review, SHOULD-FIX 1.)
 function normalsOff(head,data){
- const s=data.parts[0],P=s.position,N=s.normal,n=s.fold.length,at=approvedNormal(head),folds=[];
+ const s=data.parts[0],P=s.position,N=s.normal,n=s.fold.length,{phi,normal:at}=approvedSurface(head,data.level),folds=[];
  for(let i=0;i<n;i++)if(s.fold[i]>.5)folds.push([P[i*3],P[i*3+1],P[i*3+2]]);
  const near=p=>folds.some(q=>Math.hypot(q[0]-p[0],q[1]-p[1],q[2]-p[2])<.015);
  const off=(v,g)=>Math.acos(Math.max(-1,Math.min(1,(v[0]*g[0]+v[1]*g[1]+v[2]*g[2])/Math.hypot(...v))))*180/Math.PI;
- const out={outer:{n:0,worst:0},closed:{n:0,worst:0}};
+ const out={outer:{n:0,worst:0},closed:{n:0,worst:0},moved:{n:0,worst:0}};
  for(let i=0;i<n;i++){if(s.fold[i]>.5||s.inside[i]>=.5)continue;const p=[P[i*3],P[i*3+1],P[i*3+2]];if(!near(p))continue;const g=at(p);if(!g)continue;
   out.outer.n++;out.outer.worst=Math.max(out.outer.worst,off([N[i*3],N[i*3+1],N[i*3+2]],g));}
  const moved=new Map();(s.closed?.vertices||[]).forEach((i,k)=>moved.set(i,s.closed.offset.slice(k*3,k*3+3)));
  const cn=new Map();(s.closedNormal?.vertices||[]).forEach((i,k)=>cn.set(i,s.closedNormal.offset.slice(k*3,k*3+3)));
- for(let i=0;i<n;i++){if(s.fold[i]<=.5||s.depth[i]>.001)continue;const d=moved.get(i)||[0,0,0],p=[0,1,2].map(k=>P[i*3+k]+d[k]),g=at(p);if(!g)continue;
-  const dn=cn.get(i)||[0,0,0];out.closed.n++;out.closed.worst=Math.max(out.closed.worst,off([0,1,2].map(k=>N[i*3+k]+dn[k]),g));}
+ for(let i=0;i<n;i++){const face=s.fold[i]>.5;if(!face&&(s.inside[i]>=.5||!moved.has(i)))continue;
+  const d=moved.get(i)||[0,0,0],p=[0,1,2].map(k=>P[i*3+k]+d[k]);if(face&&Math.abs(phi(p))>.001)continue;const g=at(p);if(!g)continue;
+  const dn=cn.get(i)||[0,0,0],o=face?out.closed:out.moved;o.n++;o.worst=Math.max(o.worst,off([0,1,2].map(k=>N[i*3+k]+dn[k]),g));}
  return out;
 }
 const NORMALS_BAR=20; // degrees
-test('the outer skin about the mouth, and closed the lips\' faces at the crease, shade as the approved surface: their normals within 20 degrees of its own',()=>{
+test('the outer skin about the mouth, and closed the lips\' faces at the crease and the outer skin the closed shape moves, shade as the approved head: their normals within 20 degrees of its own',()=>{
  // (round 4's review: within 15 mm of the crease 10 to 105 outer vertices a mesh were over 45
  // degrees off the approved surface, the expanded field's normals at the lips' sharp edges, and
  // shaded the closed crease and the open lips' edges as whiskers, glints and the donkey's white
  // fangs; the lips' faces at the closed crease, with their open facings, glinted along the cow's)
  for(const head of HEADS)for(const level of LEVELS){const o=normalsOff(head,built(head.id,level));
   assert.ok(o.outer.n>20&&o.outer.worst<=NORMALS_BAR,`${head.id}-${level}: outer skin about the mouth up to ${o.outer.worst.toFixed(1)}° off the approved surface (${o.outer.n} vertices)`);
-  assert.ok(o.closed.worst<=NORMALS_BAR,`${head.id}-${level}: closed, the lips' faces at the crease up to ${o.closed.worst.toFixed(1)}° off (${o.closed.n} vertices)`);}
+  assert.ok(o.closed.worst<=NORMALS_BAR,`${head.id}-${level}: closed, the lips' faces at the crease up to ${o.closed.worst.toFixed(1)}° off (${o.closed.n} vertices)`);
+  assert.ok(o.moved.worst<=NORMALS_BAR,`${head.id}-${level}: closed, the outer skin the closed shape moves up to ${o.moved.worst.toFixed(1)}° off (${o.moved.n} vertices)`);}
 });
-test('the normals check can fail: the outer skin about the mouth turned 30 degrees, and the closed faces given back their open facings, show',()=>{
+test('the normals check can fail: the outer skin about the mouth turned 30 degrees, the closed faces given back their open facings, and the outer skin the closed shape moves its rest normals, show',()=>{
  const head=HEAD['pig-director'],data=built('pig-director','author'),s=data.parts[0],N=Float32Array.from(s.normal),c=Math.cos(Math.PI/6),sn=Math.sin(Math.PI/6);
  for(let i=0;i<s.fold.length;i++){if(s.fold[i]>.5||s.inside[i]>=.5)continue;const [x,y,z]=[N[i*3],N[i*3+1],N[i*3+2]];N.set([x,y*c-z*sn,y*sn+z*c],i*3);}
  const turned=normalsOff(head,{...data,parts:[{...s,normal:N},...data.parts.slice(1)]}),open=normalsOff(head,{...data,parts:[{...s,closedNormal:null},...data.parts.slice(1)]});
  assert.ok(turned.outer.worst>25,`the outer skin turned 30°: ${turned.outer.worst.toFixed(1)}° off`);
  assert.ok(open.closed.n>0&&open.closed.worst>NORMALS_BAR,`the closed faces with their open facings: ${open.closed.worst.toFixed(1)}° off (${open.closed.n} vertices)`);
+ // (the goat's game mesh, its closed normals kept for its lips' faces only: round 5's had its moved
+ // outer vertices up to 57 degrees off where they lie closed)
+ const goat=built('goat','10k'),gs=goat.parts[0],faces={vertices:[],offset:[]};
+ gs.closedNormal.vertices.forEach((i,k)=>{if(gs.fold[i]>.5){faces.vertices.push(i);faces.offset.push(...gs.closedNormal.offset.slice(k*3,k*3+3));}});
+ const rest=normalsOff(HEAD.goat,{...goat,parts:[{...gs,closedNormal:faces},...goat.parts.slice(1)]});
+ assert.ok(rest.moved.n>0&&rest.moved.worst>NORMALS_BAR,`the goat's moved outer skin with its rest normals: ${rest.moved.worst.toFixed(1)}° off (${rest.moved.n} vertices)`);
 });
 
 // The known defects, at the same bars (see KNOWN).

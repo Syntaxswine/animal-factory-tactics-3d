@@ -51,7 +51,7 @@ export const MOUTHS={
   corner:{x:.168,z:.2,zOpen:.02},hinge:[-.035,1.43],
   band:{z0:.04,z1:.07},
   cavity:{back:.05,width:.035},
-  teeth:[incisors('upper',6,.022,.0042,.0034),incisors('lower',6,.021,.004,.0032)],
+  teeth:[incisors('upper',6,.022,.0042,.0034,.0045,{vary:1}),incisors('lower',6,.021,.004,.0032,.0045,{vary:1})],
   tongue:tongue(.027)
  }),
  goat:mouth({
