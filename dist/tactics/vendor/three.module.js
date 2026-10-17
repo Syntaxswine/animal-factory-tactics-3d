@@ -2359,6 +2359,7 @@ function WebGLCapabilities( gl, extensions, parameters, utils ) {
 
 	const maxTextures = gl.getParameter( gl.MAX_TEXTURE_IMAGE_UNITS );
 	const maxVertexTextures = gl.getParameter( gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS );
+	const maxCombinedTextures = gl.getParameter( gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS );
 	const maxTextureSize = gl.getParameter( gl.MAX_TEXTURE_SIZE );
 	const maxCubemapSize = gl.getParameter( gl.MAX_CUBE_MAP_TEXTURE_SIZE );
 
@@ -2387,6 +2388,7 @@ function WebGLCapabilities( gl, extensions, parameters, utils ) {
 
 		maxTextures: maxTextures,
 		maxVertexTextures: maxVertexTextures,
+		maxCombinedTextures: maxCombinedTextures,
 		maxTextureSize: maxTextureSize,
 		maxCubemapSize: maxCubemapSize,
 
@@ -10615,9 +10617,11 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		const textureUnit = textureUnits;
 
-		if ( textureUnit >= capabilities.maxTextures ) {
+		// Units are shared by both stages (including vertex bone textures).
+		// The GL linker still enforces each stage's own sampler limit.
+		if ( textureUnit >= capabilities.maxCombinedTextures ) {
 
-			console.warn( 'THREE.WebGLTextures: Trying to use ' + textureUnit + ' texture units while this GPU supports only ' + capabilities.maxTextures );
+			console.warn( 'THREE.WebGLTextures: Trying to use ' + ( textureUnit + 1 ) + ' combined texture units while this GPU supports only ' + capabilities.maxCombinedTextures );
 
 		}
 

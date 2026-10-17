@@ -51,6 +51,7 @@ export function createModelPaint(renderer,horse,texture,{species='horse',frame=P
  idMaterials.forEach(m=>m.dispose());
  const debug={value:0},gripForearm={value:0};
  const material=sceneLighting?new THREE.MeshStandardMaterial({roughness:1}):new THREE.MeshBasicMaterial({toneMapped:false});
+ material.userData.textureBudget={fragment:4+Number(!!earTexture)+Number(!!tailTexture)+Object.values(paintLayers?.uniforms||{}).filter(u=>u.value?.isTexture).length,vertex:1};
  material.onBeforeCompile=shader=>{
   Object.assign(shader.uniforms,{uModelPaint:{value:texture},uPaintDepth:{value:target.depthTexture},uPaintParts:{value:target.texture},uPaintMask:{value:mask},uPaintDebug:debug,uGripForearm:gripForearm});
   if(paintLayers)Object.assign(shader.uniforms,paintLayers.uniforms);
