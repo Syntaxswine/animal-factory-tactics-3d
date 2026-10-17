@@ -44,8 +44,8 @@ test('batched lighting restores materials, visibility and render targets after r
  for(const fail of [false,true]){
   const passes=new LightRenderer(),scene=new T.Scene(),camera=new T.Camera(),material=new T.MeshStandardMaterial({emissive:0xff0000,emissiveIntensity:.4}),mesh=new T.Mesh(new T.BoxGeometry(),material);scene.add(mesh);
   const lamps=Array.from({length:10},()=>new T.PointLight());scene.add(...lamps);const ambient=new T.AmbientLight();scene.add(ambient);
-  let target=null,calls=0;const renderer={autoClear:true,getDrawingBufferSize:v=>v.set(64,64),getRenderTarget:()=>target,setRenderTarget:t=>target=t,render(s){calls++;if(s===scene)assert.ok(lamps.filter(l=>l.visible).length<=4);if(fail&&calls===2)throw Error('render failed');}};
-  if(fail)assert.throws(()=>passes.render(renderer,scene,camera,lamps));else {passes.render(renderer,scene,camera,lamps);assert.equal(calls,4);}
+  let target=null,calls=0;const renderer={capabilities:{maxTextures:16,maxVertexTextures:16,maxCombinedTextures:32},shadowMap:{enabled:true},autoClear:true,getDrawingBufferSize:v=>v.set(64,64),getRenderTarget:()=>target,setRenderTarget:t=>target=t,render(s){calls++;if(s===scene)assert.ok(lamps.filter(l=>l.visible).length<=4);if(fail&&calls===2)throw Error('render failed');}};
+  if(fail)assert.throws(()=>passes.render(renderer,scene,camera,lamps));else {passes.render(renderer,scene,camera,lamps);assert.equal(calls,6);}
   assert.equal(target,null);assert.equal(renderer.autoClear,true);assert.equal(material.transparent,false);assert.equal(material.depthWrite,true);assert.equal(material.emissiveIntensity,.4);assert.ok(lamps.every(l=>l.visible));assert.ok(ambient.visible);
   passes.dispose();material.dispose();mesh.geometry.dispose();
  }

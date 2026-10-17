@@ -1,7 +1,9 @@
 import {stepMovement,stepEnemy,stepInvestigation,endTurn,attackGround,moveGroup} from './core/engine.js';
 import {projectBattlePoint} from './isometric-camera.js';
+import {captureEncounter} from './encounter-save.js';
 import {MapGeometryCache} from './map-geometry-cache.js';
 
+if(location.pathname.startsWith('/diagnose-'))await import('./gfx-diagnostics.js');
 window.perfLab={mark(){},step(){},before(){},after(){}};
 const warnings=[],originalWarn=console.warn;let warningCount=0,warningStack;console.warn=(...args)=>{warningCount++;if(!warningStack)warningStack=new Error().stack;if(warnings.length<20)warnings.push(args.map(String).join(' '));originalWarn(...args);};
 
@@ -17,12 +19,13 @@ const quantile=a=>{a=a.filter(Number.isFinite).sort((a,b)=>a-b);return {n:a.leng
 function stateRecord(s){return {seed:s.seed,phase:s.phase,round:s.round,revision:s.revision,enemyIndex:s.enemyIndex,units:s.units.map(u=>({id:u.id,x:u.x,y:u.y,z:u.z,hp:u.hp,ap:u.ap,heading:u.heading,ammo:u.ammo,stance:u.stance,state:u.state,patrolIndex:u.patrolIndex,npcFrightened:u.npcFrightened})),queue:s.queue,detected:[...s.detected].sort((a,b)=>a-b),seenCount:s.seen.size};}
 function resources(r){const textures=new Set(),geometry=new Set();let geometryBytes=0;const objects={};r.scene.traverse(o=>{objects[o.type]=(objects[o.type]||0)+1;if(o.geometry)geometry.add(o.geometry);if(o.instanceMatrix)geometryBytes+=o.instanceMatrix.array.byteLength;for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[])for(const t of Object.values(m))if(t?.isTexture)textures.add(t);});for(const g of geometry){for(const a of Object.values(g.attributes))geometryBytes+=a.array?.byteLength||0;geometryBytes+=g.index?.array.byteLength||0;}return {objects,geometryBytes,textures:r.renderer.info.memory.textures,geometries:r.renderer.info.memory.geometries,programs:r.renderer.info.programs.length,heap:performance.memory?{used:performance.memory.usedJSHeapSize,total:performance.memory.totalJSHeapSize,limit:performance.memory.jsHeapSizeLimit}:null};}
 export async function installInvestigation(api){
+ if(q.get('cones')==='0')document.getElementById('guard-cones').click();
  const r=api.renderer,s=api.state,gl=r.renderer.getContext(),info=r.renderer.info,ext=gl.getExtension('EXT_disjoint_timer_query_webgl2'),debug=gl.getExtension('WEBGL_debug_renderer_info');
  const panel=document.createElement('aside');panel.style.cssText='position:fixed;right:10px;top:70px;z-index:100;background:#16271fee;color:#f5e6b9;padding:10px;width:260px;font:12px system-ui';panel.innerHTML='<strong>Populated-sector investigation</strong><p id="perf-status">Preparing 24 people and foliage…</p><pre id="perf-result" style="white-space:pre-wrap;max-height:200px;overflow:auto"></pre>';document.body.append(panel);
  const status=panel.querySelector('p'),output=panel.querySelector('pre'),manifest=await(await fetch('/manifest')).json();
  const sourceHashes={};for(const name of ['performance-lab.js','performance-fixture.js','battle-3d.js','hybrid-renderer.js','battle-renderer.js','character-batches.js','foliage-obstacles.js','core/visibility.js','light-renderer.js']){const data=await(await fetch(new URL(name,import.meta.url))).arrayBuffer();sourceHashes[name]=[...new Uint8Array(await crypto.subtle.digest('SHA-256',data))].map(v=>v.toString(16).padStart(2,'0')).join('');}
- const rows=[],gpu=[],queries=[],checkpoints=[],events=[],memory=[],errors=[],longFrames=[],methodCosts={};let row,ready=false,done=false,start=0,last=0,nextTick=0,tick=0,frame=0,profiler=null,profileError=null,sampleInterval=null;
- const detailed=location.pathname.startsWith('/profile/'),gpuEnabled=q.get('gpu')!=='0',pending=[],restores=[],cacheAudits=[];let oracleFrames=0;
+ const actionSaves=[];const rows=[],gpu=[],queries=[],checkpoints=[],events=[],memory=[],errors=[],longFrames=[],methodCosts={};let row,ready=false,done=false,start=0,last=0,nextTick=0,tick=0,frame=0,profiler=null,profileError=null,sampleInterval=null;
+ const detailed=location.pathname.startsWith('/profile/')||location.pathname.startsWith('/profile-'),gpuEnabled=q.get('gpu')!=='0',pending=[],restores=[],cacheAudits=[];let oracleFrames=0;
  if(q.get('cacheAudit')==='1'){
   const original=MapGeometryCache.prototype.get,fields=['ground','upper','edges','stairs','climbs','canopies','foliage','environment','breaches','definition.edges','definition.upper','definition.breaches','definition.props','definition.stairs','starts','guards','exits','width','height'];
   MapGeometryCache.prototype.get=function(map){const old=this.entry,at=performance.now(),result=original.call(this,map),ms=performance.now()-at;
@@ -35,12 +38,12 @@ export async function installInvestigation(api){
  if(detailed){for(const name of ['actor','captureCombat','displayUnit','rebuild'])wrap(r,name,name);for(const [object,name]of [[r.biomes,'update'],[r.interiorFog,'update'],[r.motion,'update'],[r.daylight,'update']])wrap(object,name,object.constructor.name+'.'+name);}
  const mark=name=>{if(row)row.marks[name]=performance.now();};
  const pollQueries=()=>{if(!ext)return;const disjoint=gl.getParameter(ext.GPU_DISJOINT_EXT);if(disjoint){for(const p of queries)gl.deleteQuery(p.query);queries.length=0;events.push({event:'gpu-disjoint',frame});return;}while(queries.length&&gl.getQueryParameter(queries[0].query,gl.QUERY_RESULT_AVAILABLE)){const p=queries.shift();gpu.push({frame:p.frame,ms:gl.getQueryParameter(p.query,gl.QUERY_RESULT)/1e6});gl.deleteQuery(p.query);}};
- function scriptedStep(state,renderer,sync){if(!row||mode==='no-simulation'||fullTurn&&tick>0&&state.phase!=='enemy')return;const elapsed=performance.now()-start;if(elapsed+1e-6<nextTick||tick>=duration/500)return;nextTick+=500;const at=performance.now();tick++;let action;
+ function scriptedStep(state,renderer,sync){if(!row||mode==='no-simulation'||fullTurn&&tick>0&&state.phase!=='enemy')return;const elapsed=performance.now()-start;if(elapsed+1e-6<nextTick||tick>=duration/500)return;nextTick+=500;const at=performance.now();tick++;const u=state.units[state.enemyIndex],input={phase:state.phase,unit:u?{id:u.id,name:u.name,x:u.x,y:u.y,z:u.z,ap:u.ap,hp:u.hp,heading:u.heading,stance:u.stance,weapon:u.weapon}:null,seed:state.seed,revision:state.revision};globalThis.cpuDiagnostic?.begin();let action;
   if(state.queue.length){action='movement';stepMovement(state);}
   else if(state.phase==='enemy'){action='enemy';stepEnemy(state);}
   else if(state.phase==='player'){action='end-turn';endTurn(state);}
   else{action='investigation';stepInvestigation(state);if(tick%8===0){const alive=state.units.filter(u=>u.team==='squad'&&u.hp>0);if(alive.length)moveGroup(state,alive.map(u=>u.id),alive[0],tick%16?123:120,127,0);}}
-  row.simulationMs=performance.now()-at;renderer.captureCombat(state);sync();events.push({tick,action,ms:row.simulationMs});if(tick%10===0)checkpoints.push({tick,state:stateRecord(state)});
+  row.simulationMs=performance.now()-at;renderer.captureCombat(state);sync();events.push({tick,action,input,ms:row.simulationMs,costs:globalThis.cpuDiagnostic?.end()});if(q.get('verifyActions')==='1')actionSaves.push({tick,save:JSON.stringify(captureEncounter(state,0))});if(tick%10===0)checkpoints.push({tick,state:stateRecord(state)});
  }
  const lab={mark,step:scriptedStep,before(now){
   if(done)return false;if(!ready)return true;
@@ -77,7 +80,7 @@ export async function installInvestigation(api){
  async function finish(){
   status.textContent='Saving raw trace…';const trace=profiler?await profiler.stop():null;observer?.disconnect();for(let i=0;i<12&&queries.length;i++){await new Promise(resolve=>setTimeout(resolve,20));pollQueries();}for(const p of queries)gl.deleteQuery(p.query);for(const restore of restores)restore();
   const digest=async value=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(value))))].map(n=>n.toString(16).padStart(2,'0')).join('');
-  const result={label,mode,detailed,manifest,initialSeed:1947,fixtureHash:await digest(s.definition),browser:navigator.userAgent,gpu:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),resolution:[r.width,r.height],displayViewport:[innerWidth,innerHeight],dpr:r.renderer.getPixelRatio(),sampleInterval,profileError,duration,ticks:tick,summary:{raf:quantile(rows.slice(1).map(r=>r.raf)),cpu:quantile(rows.map(r=>r.cpu)),simulation:quantile(events.map(e=>e.ms)),gpu:quantile(gpu.map(g=>g.ms)),calls:quantile(rows.map(r=>r.calls)),triangles:quantile(rows.map(r=>r.triangles)),visibleActors:quantile(rows.map(r=>r.visibleActors)),alive:quantile(rows.map(r=>r.alive))},rows,gpuSamples:gpu,events,checkpoints,finalState:stateRecord(s),stateHash:await digest(stateRecord(s)),memory,longFrames,trace,commands:pending.command||null,diagnostics:r.diagnostics,errors,warnings,hiddenFrames:rows.filter(r=>r.hidden).length};
+  const result={graphics:globalThis.gfxDiagnostic?.report(),cpuProfile:globalThis.cpuDiagnostic?.report(),actionHashes:await Promise.all(actionSaves.map(async a=>({tick:a.tick,hash:await digest(a.save)}))),label,mode,detailed,manifest,initialSeed:1947,fixtureHash:await digest(s.definition),browser:navigator.userAgent,gpu:debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),resolution:[r.width,r.height],displayViewport:[innerWidth,innerHeight],dpr:r.renderer.getPixelRatio(),sampleInterval,profileError,duration,ticks:tick,summary:{raf:quantile(rows.slice(1).map(r=>r.raf)),cpu:quantile(rows.map(r=>r.cpu)),simulation:quantile(events.map(e=>e.ms)),gpu:quantile(gpu.map(g=>g.ms)),calls:quantile(rows.map(r=>r.calls)),triangles:quantile(rows.map(r=>r.triangles)),visibleActors:quantile(rows.map(r=>r.visibleActors)),alive:quantile(rows.map(r=>r.alive))},rows,gpuSamples:gpu,events,checkpoints,finalState:stateRecord(s),stateHash:await digest(stateRecord(s)),memory,longFrames,trace,commands:pending.command||null,diagnostics:r.diagnostics,errors,warnings,hiddenFrames:rows.filter(r=>r.hidden).length};
   const glErrors=[];for(let i=0;i<16;i++){const error=gl.getError();if(error===gl.NO_ERROR)break;glErrors.push(error);}
   Object.assign(result,{cacheAudits,fullTurn,fullTurnComplete:fullTurn&&s.phase==='player',sourceHashes,gpuSampling:gpuEnabled,warningCount,warningStack,longFrames:longFrames.filter(e=>e.startTime>=start),timeOrigin:performance.timeOrigin,measurementStartedAt:performance.timeOrigin+start,measurementEndedAt:Date.now(),oracleFrames,glErrors,glFailures:pending.glFailures,startupFailures,contextLost:gl.isContextLost(),textureUnitLimits:{fragment:gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),vertex:gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS),combined:gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS)}});
   if(q.get('verify')==='1'){
@@ -98,6 +101,14 @@ export async function installInvestigation(api){
   if(q.get('suite')==='cache'){
    const cases=['cache-baseline-1','cache-candidate-1','cache-candidate-2','cache-baseline-2','cache-baseline-3','cache-candidate-3'],index=cases.indexOf(label),next=cases[index+1];
    if(next){const version=next.includes('candidate')?'candidate':'baseline',params=new URLSearchParams({study:'tree-cover',suite:'cache',mode:'baseline',run:next,seconds:'20',gpu:'0'});location.href='/'+version+'/tactics/battle-3d.html?'+params;}
+  }
+  if(q.get('suite')==='paired'){
+   const size=q.get('size')||'normal',tag=q.get('tag'),a=q.get('a'),b=q.get('b'),cases=['a1','b1','b2','a2','a3','b3'].map(n=>tag+'-'+size+'-'+n),next=cases[cases.indexOf(label)+1];
+   if(next){const variant=next.split('-').at(-1).startsWith('a')?a:b,params=new URLSearchParams(q);params.set('run',next);location.href='/'+variant+'/tactics/battle-3d.html?'+params;}
+   else if(q.get('matrix')==='1'){
+    const cases=[['gfx','baseline','graphics-rgba'],['base','baseline','combat-rgba'],['corrected','graphics-rgba','combat-rgba']].flatMap(([tag,a,b])=>['normal','large'].map(size=>({tag,a,b,size}))),next=cases[cases.findIndex(c=>c.tag===tag&&c.size===size)+1];
+    if(next){const params=new URLSearchParams(q);for(const [k,v]of Object.entries(next))params.set(k,v);params.set('run',next.tag+'-'+next.size+'-a1');location.href='/'+next.a+'/tactics/battle-3d.html?'+params;}
+   }
   }
   if(q.get('suite')==='render'){
    const size=q.get('size')||'normal',cases=['baseline-1','candidate-1','candidate-2','baseline-2','baseline-3','candidate-3'].map(n=>'render-'+size+'-'+n),next=cases[cases.indexOf(label)+1];

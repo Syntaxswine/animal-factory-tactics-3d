@@ -145,7 +145,10 @@ export function createConnectedGroundSkin(plan,family,{seed=173,canvasFactory=ca
   worker=new Worker(new URL('./biome-ground-worker.js',import.meta.url),{type:'module'});
   worker.onmessage=({data})=>{
    if(disposed){closeImage(data.image);return;}
-   if(data.type==='overview'){closeImage(overview.image);overview.image=data.image;overview.needsUpdate=true;overviewReady=workerReady=true;}
+   // WebGL texture storage is immutable: the worker image is larger than the
+   // startup preview. Release the old allocation before replacing its source.
+   // Keep the Texture identity because every chunk already holds that uniform.
+   if(data.type==='overview'){overview.dispose();closeImage(overview.image);overview.image=data.image;overview.needsUpdate=true;overviewReady=workerReady=true;}
    else if(data.type==='page'){const c=inFlight;inFlight=null;if(c)accept(c,data.image,data.ms);else closeImage(data.image);}
    else if(data.type==='error'){error=data.message;}
    settle();onChange();pump();

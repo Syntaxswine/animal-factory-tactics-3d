@@ -1,0 +1,33 @@
+{
+  "rawHash": "9378450b50e7f98fc9f8882ee473a382c1f6cbd8c895241c0036fef48f460c0e",
+  "cases": [
+    {
+      "name": "horse normal",
+      "glError": 0,
+      "passes": [
+        3
+      ]
+    },
+    {
+      "name": "horse red-hats",
+      "glError": 0,
+      "passes": [
+        3
+      ]
+    },
+    {
+      "name": "hen normal",
+      "glError": 0,
+      "passes": [
+        3
+      ]
+    },
+    {
+      "name": "hen red-hats",
+      "glError": 0,
+      "passes": [
+        3
+      ]
+    }
+  ]
+}

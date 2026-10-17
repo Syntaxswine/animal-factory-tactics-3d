@@ -1,3 +1,4 @@
+import {MapGeometryCache} from './map-geometry-cache.js';
 import {drawFoliageHover} from './battle-foliage-focus.js';
 import {sectorLoading} from './sector-loading.js';
 import {prepareSectorView} from './loading-tracker.js';
@@ -271,13 +272,13 @@ function updateTargetCursor(now){
 }
 let walkingCacheKey='',walkingCache=[];
 function showWalkingWarning(text=''){const el=$('movement-warning');if(el.textContent!==text)el.textContent=text;el.hidden=!text;}
-let showGuardCones=true,coneCache=new Map(),coneWorld='',coneCheck=0;
+let showGuardCones=true;const coneGeometry=new MapGeometryCache(()=>new Map());
 $('guard-cones').onclick=()=>{showGuardCones=!showGuardCones;$('guard-cones').textContent='Guard cones: '+(showGuardCones?'On':'Off');$('guard-cones').setAttribute('aria-pressed',String(showGuardCones));};
 function showGuardSight(now){
  if(!showGuardCones||overviewMode)return;
- if(now-coneCheck>250){const signature=JSON.stringify([state.map,state.upper,state.edges,state.props]);if(signature!==coneWorld){coneCache.clear();coneWorld=signature;}coneCheck=now;}
+ const coneCache=coneGeometry.get(state);
  const guards=visibleConeGuards(state,level),cones=[];
- for(const u of guards){const key=JSON.stringify([u.x,u.y,u.z,u.heading,u.cone,u.species,u.stance,u.towerPost,u.towerElevation]);let entry=coneCache.get(u.id);if(!entry||entry.key!==key){entry={key,points:guardCone(state,u)};coneCache.set(u.id,entry);}cones.push(entry.points);}
+ for(const u of guards){const key=JSON.stringify([u.x,u.y,u.z,u.heading,u.cone,u.species,u.stance,u.towerPost,u.towerElevation,u.cliffSupport]);let entry=coneCache.get(u.id);if(!entry||entry.key!==key){entry={key,points:guardCone(state,u)};coneCache.set(u.id,entry);}cones.push(entry.points);}
  drawGuardCones(ctx,cones,project);
 }
 function showWalkingRoute(){

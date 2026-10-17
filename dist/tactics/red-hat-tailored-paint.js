@@ -8,6 +8,7 @@ export async function applyTailoredRedHat(renderer,material,texture,profile){
  const donor=profile.create(await response.json()),registration=createModelPaint(renderer,donor,texture,{species:profile.id,frame:profile.frame});
  const bird=profile.id==='hen',f=profile.frame,previous=material.onBeforeCompile,key=material.customProgramCacheKey;
  texture.colorSpace=T.SRGBColorSpace;
+ material.userData.textureBudget={fragment:(material.userData.textureBudget?.fragment||0)+2,vertex:material.userData.textureBudget?.vertex||0};
  material.customProgramCacheKey=()=>key.call(material)+'-tailored-red-hat-v1';
  material.onBeforeCompile=shader=>{
   previous(shader);Object.assign(shader.uniforms,{uFactionPaint:{value:texture},uFactionOwner:{value:registration.target.texture}});

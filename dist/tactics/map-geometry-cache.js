@@ -8,6 +8,7 @@ export function trackMapGeometry(m){const key=ground(m);if(!revisions.has(key))r
 // environment or breach data, before the next geometry query/draw. Unit movement,
 // HP, AP, clock, RNG and log revisions do not change the map.
 export function invalidateMapGeometry(m){const key=ground(m);if(revisions.has(key))revisions.set(key,revisions.get(key)+1);}
+export function mapGeometryRevision(m){return revisions.get(ground(m));}
 
 function inputs(m){
  const d=m.definition||m;

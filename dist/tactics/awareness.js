@@ -6,6 +6,7 @@ import {woodlandDepth} from './core/woodland.js';
 import {daylightAt} from './daylight.js';
 import {traceProjectile,targetHeight} from './core/projectiles.js';
 import {mapStartMinutes} from './game-clock.js';
+import {combatQuery} from './combat-queries.js';
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
 export const AWARENESS={suspicious:25,identified:100,decay:2,referencePerception:50};
 // Recognition has hysteresis: a known face does not become unknown at 99%.
@@ -29,15 +30,17 @@ export function spotlightReveals(s,observer,target,zones){
  });
 }
 export function illuminationAt(s,u,zone='torso'){
- const sun=daylightAt(s.clock?.minutes??mapStartMinutes(s.definition));
+ const minutes=s.clock?.minutes??mapStartMinutes(s.definition);
  const origin={x:u.x,y:u.y,h:unitBaseHeight(u)+targetHeight(u,zone)};
+ return combatQuery(s,'illumination',[minutes,origin.x,origin.y,origin.h].join(','),()=>{
+ const sun=daylightAt(minutes);
  const direction={x:sun.direction[0],y:sun.direction[2],h:sun.direction[1]};
  // Ambient visibility is deliberately separate from renderer exposure settings.
  let brightness=.12+.13*sun.strength+.75*sun.strength*(sun.strength>0&&clearRay(s,origin,direction,80)?1:0);
  for(const lamp of lightSources(s.props,s.clock?.minutes??mapStartMinutes(s.definition))){
   brightness+=lampStrength(s,lamp,origin);
  }
- return Math.min(1,brightness);
+ return Math.min(1,brightness);});
 }
 // Ordinary lit targets need no recognition roll, including at the cone edges.
 // Keep the overall species range, body-ray occlusion and a daylight-shade floor.

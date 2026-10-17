@@ -1,3 +1,4 @@
+import {withCombatQueries,combatQuery} from '../combat-queries.js';
 import {invalidateMapGeometry,trackMapGeometry} from '../map-geometry-cache.js';
 import {patrolDestination} from '../character-patrol.js';
 import {synchronizeFoliage} from '../foliage-obstacles.js';
@@ -126,8 +127,9 @@ export function zoneVisible(s,a,b,zone='torso'){a={...a,cliffSupport:rampSupport
  const origin={x:a.x,y:a.y,h:unitBaseHeight(a)+eyeHeight(a)},end=unitBaseHeight(b)+(b.hp===undefined?eyeHeight(b):targetHeight(b,zone));
  const direction={x:b.x-a.x,y:b.y-a.y,h:end-origin.h},length=Math.hypot(direction.x,direction.y,direction.h);
  if(length<1e-7)return true;
+ return combatQuery(s,'body-ray',[origin.x,origin.y,origin.h,b.x,b.y,end].join(','),()=>{
  const hit=traceProjectile(s,null,origin,direction,length,{purpose:'sight'});
- return hit.kind==='range'||hit.distance>=length-1e-7;
+ return hit.kind==='range'||hit.distance>=length-1e-7;});
 }
 export const visibleZones=(s,a,b)=>Object.keys(AIM_ZONES).filter(zone=>zoneVisible(s,a,b,zone));
 export function lineOfSight(s,a,b){return ['head','torso','legs','weapon'].some(zone=>zoneVisible(s,a,b,zone));}
@@ -202,7 +204,8 @@ export function notices(s,a,b){if(a.team==='guard'&&b.team==='squad'&&!playerThr
 }
 // Every trigger that can put several guards in Alert at once (a refresh's sightings, a gunshot's alarm ring) is one cascade: a listener that
 // declined a shout is not re-asked by the next guard the same trigger alerts.
-export function refresh(s){return cascade(s,()=>refreshNow(s));}
+export function refresh(s,...args){return withCombatQueries(s,()=>refreshQueryAction(s,...args));}
+function refreshQueryAction(s){return cascade(s,()=>refreshNow(s));}
 function refreshNow(s){synchronizeFoliage(s);settleCivilianFear(s);updateCliffSupports(s);
  updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});
  const oldDetected=s.detected,oldVisible=s.visible,oldGlimpses=s.glimpses||{};
@@ -274,7 +277,8 @@ export function move(s,u,x,y,z=levelOf(u)){
  if(!canMoveStamina(u,path[0])||s.phase==='player'&&path[0].cost>u.ap)return false;
  u.overwatch=null;s.queue=path.map(p=>({id:u.id,...p,goal:{x,y,z}}));return true;
 }
-export function stepMovement(s){
+export function stepMovement(s,...args){return withCombatQueries(s,()=>stepMovementQueryAction(s,...args));}
+function stepMovementQueryAction(s){
  if(!s.queue.length||!['explore','player','won'].includes(s.phase))return false;
  if(s.queue[0].group)return stepGroupMovement(s);
  let step=s.queue[0];const actor=unit(s,step.id);if(step.goal&&canControl(s,actor)){const goal=step.goal,path=navigationPath(s,actor,goal.x,goal.y,goal.z);if(!path?.length){s.queue=[];log(s,'Route stopped: destination reached or no discovered route remains.');return false;}s.queue=path.map(p=>({id:actor.id,...p,goal}));}step=s.queue.shift();const u=unit(s,step.id),currentStep=u&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===levelOf(step));if(!canControl(s,u)||!currentStep||!canMoveStamina(u,currentStep)||occupant(s,step.x,step.y,levelOf(step))||(s.phase==='player'&&u.ap<currentStep.cost)){s.queue=[];return false;}
@@ -379,7 +383,8 @@ function settleAttackStructures(s,event,source){
  if(event.grenade){for(const e of event.explosions)mergeScenery(event.grenade.scenery,e.before);mergeScenery(event.grenade.scenery,fallen.before);}
  for(const f of fallen.falls){const u=s.units.find(u=>u.id===f.id);if(u.hp<=0&&!event.downed.includes(u.id))event.downed.push(u.id);if(u.burningTurns||u.burnedRemains){recordBurn(s,u,u.hp>0?'ignite':'ash');(event.burns??=[]).push(u.id);}log(s,u.name+' fell to level '+(f.to.z+1)+'.');}
 }
-export function attack(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,aimLevel='hip'){
+export function attack(s,...args){return withCombatQueries(s,()=>attackQueryAction(s,...args));}
+function attackQueryAction(s,a,b,burst=false,byAI=false,zone='torso',reaction=false,aimLevel='hip'){
  if(s.queue.length)return false;
  if(reaction?!(s.phase==='enemy'&&a?.team==='squad'&&alive(a)&&!a.burningTurns&&a.overwatch?.weapon===a.weapon&&a.overwatch.heading===a.heading&&!burst&&zone==='torso'&&withinOverwatch(a,b)&&canSee(s,a,b)):byAI?!(s.phase==='enemy'&&a?.team==='guard'&&alive(a)&&!a.burningTurns):!canControl(s,a))return false;
  if(byAI&&!playerThreat(s,a))return false;const p=previewAttack(s,reaction?{...a,ap:WEAPONS[a.weapon].cost}:a,b,burst,zone,null,reaction?'hip':aimLevel);if(!p.ok)return false;a.overwatch=null;
@@ -483,12 +488,14 @@ const describeItem=i=>i.type==='weapon'?WEAPONS[i.kind].short+' ('+i.rounds+' lo
 export function searchPreview(s,u,pile){const cost=combatCosts(s)?SEARCH_COST:0;let reason='';if(!canControl(s,u)||s.queue.length)reason='Cannot act now';else if(!pile||!s.loot.includes(pile)||pileOpen(pile))reason='Nothing to search';else if(pile.container?.locked)reason='Container is locked';else if(!adjacentTo(s,u,pile))reason='Stand beside the body or container';else if(combatCosts(s)&&u.ap<cost)reason='Not enough AP';return {ok:!reason,reason,cost};}
 export function searchBody(s,u,pile){const p=searchPreview(s,u,pile);if(!p.ok)return false;u.ap-=p.cost;u.overwatch=null;pile.searched=true;const who=pile.container?.name||unit(s,pile.body)?.name||'the body';log(s,u.name+' searched '+who+': '+(pile.items.length?pile.items.map(describeItem).join(', '):'nothing worth taking')+'.');refresh(s);return true;}
 export function inventoryTransfer(s,u,index,mode,target=null){if(!canControl(s,u)||s.queue.length)return false;const near=p=>adjacentTo(s,u,p);if(mode==='take'){if(!s.loot.includes(target)||!near(target)||!pileOpen(target))return false;const item=target.items[index];if(!item||!accepts(u,item))return false;target.items.splice(index,1);receive(u,item);}else{syncWeapons(u);const item=u.pack[index];if(!item)return false;if(mode==='give'){if(!s.units.includes(target)||target===u||!alive(target)||target.team!=='squad'||!near(target)||!accepts(target,item))return false;receive(target,item);}else if(mode==='drop'){let pile=s.loot.find(p=>p.body===undefined&&p.x===u.x&&p.y===u.y&&levelOf(p)===levelOf(u));/* never into a closed body: a dropped item stays in the open */if(!pile){pile={x:u.x,y:u.y,z:levelOf(u),items:[]};s.loot.push(pile);}pile.items.push(item);}else return false;u.pack.splice(index,1);if(item.type==='weapon'){u.slots=u.slots.map(k=>k===item.kind?null:k);if(u.weapon===item.kind)u.weapon='hands';u.overwatch=null;}}log(s,'Inventory updated.');return true;}
-export function endTurn(s){if(s.phase!=='player'||s.queue.length)return false;s.engaged=false;for(const u of s.units)if(u.casualty==='bleeding'&&--u.bleedTurns<=0){u.casualty='dead';log(s,u.name+' died from blood loss.');if(s.fight)s.fight.casualty=true;if(s.rules?.social)for(const line of partnerLost(s.units,u,'dead'))log(s,line);}
+export function endTurn(s,...args){return withCombatQueries(s,()=>endTurnQueryAction(s,...args));}
+function endTurnQueryAction(s){if(s.phase!=='player'||s.queue.length)return false;s.engaged=false;for(const u of s.units)if(u.casualty==='bleeding'&&--u.bleedTurns<=0){u.casualty='dead';log(s,u.name+' died from blood loss.');if(s.fight)s.fight.casualty=true;if(s.rules?.social)for(const line of partnerLost(s.units,u,'dead'))log(s,line);}
  // Only a turn that began after the stabilization counts; the third such end runs the counter out, and the comrade stands when the next squad turn begins (stepEnemy), never for the guards' volley first.
  for(const u of s.units)if(recovering(u)&&s.round>u.recoveryFrom)u.recoveryTurns--;for(const u of s.units)panicRun(s,u);s.phase='enemy';s.enemyIndex=0;for(const g of guards(s)){recoverAim(g,()=>random(s));g.ap=g.burningTurns?0:turnAP(g);}log(s,'Guard turn.');return true;}
 // The bookkeeping of a new squad turn: fires burn down, recovered comrades stand, AP refills (the waiting crosser's too), stress settles.
 function newRound(s){recoverStamina(s,1,{combat:true});finishFireRound(s);settleRound(s);s.round++;for(const u of s.units)if(u.casualty==='stable'&&u.recoveryTurns<=0){u.casualty=null;u.hp=RECOVERY_HP;log(s,u.name+' is back on their feet / '+RECOVERY_HP+' HP, exhausted.');}for(const p of squad(s)){recoverAim(p,()=>random(s));p.ap=p.burningTurns?0:turnAP(p);p.overwatch=null;settleStress(p,2);}for(const p of s.units)if(p.team==='squad'&&p.away&&p.hp>0){recoverAim(p,()=>random(s));p.ap=turnAP(p);p.away.ap=p.ap;}/* a comrade waiting beyond the edge gets the new turn too */}
-export function stepEnemy(s){
+export function stepEnemy(s,...args){return withCombatQueries(s,()=>stepEnemyQueryAction(s,...args));}
+function stepEnemyQueryAction(s){
  if(s.phase!=='enemy')return false;
  const g=s.units[s.enemyIndex];
  if(!g){newRound(s);s.phase='player';refresh(s);log(s,`Squad turn / ${s.round}.`);return true;}
@@ -713,7 +720,8 @@ function realtimeStep(s,g,dest,quota,goals=fixGoals(s,dest)){
 // ticks and drop to Searching; searching guards visit the neighbouring report cells, sweeping at each, then stand down; a guard standing down
 // walks back to its post and rests, wary; a broken guard runs from the last threat for two rounds' worth of ticks. refresh() opens the fight
 // the moment an alert guard could reach the squad within two turns.
-export function stepInvestigation(s){if(['explore','won'].includes(s.phase)&&!s.engaged&&!s.fires?.length&&!guards(s).some(g=>playerThreat(s,g)&&active(g)))for(const g of guards(s))if(g.npcFrightened)g.npcFearTicks=Math.max(0,(g.npcFearTicks||0)-1);settleCivilianFear(s);
+export function stepInvestigation(s,...args){return withCombatQueries(s,()=>stepInvestigationQueryAction(s,...args));}
+function stepInvestigationQueryAction(s){if(['explore','won'].includes(s.phase)&&!s.engaged&&!s.fires?.length&&!guards(s).some(g=>playerThreat(s,g)&&active(g)))for(const g of guards(s))if(g.npcFrightened)g.npcFearTicks=Math.max(0,(g.npcFearTicks||0)-1);settleCivilianFear(s);
  if(!['explore','won'].includes(s.phase))return false;let acted=false;const quota={left:REALTIME_SEARCHES};
  for(const g of guards(s)){
   if(g.burningTurns)continue;
