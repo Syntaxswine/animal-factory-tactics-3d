@@ -72,6 +72,8 @@ On round 5's heads (9/10), "thank you, this looks much better. let me pass it on
 
 The review's three items, in its words: the mouth corners at ordinary speech openings ("inside-out lip-face slivers on 21 of 24 meshes, with some at speech angles, and one or two outer lip triangles intersected by mouth parts on seven game meshes plus the hen. Prioritize the ordinary 4.5–8.6 degree speech range and portrait front/three-quarter/low views. The donkey's separate 24-degree authoring-mesh intersection is outside normal speech and is lower priority"); one animation loop per viewer ("verify switching character/view/scale during speech never adds another loop"); and the skeletons disposed on character replacement ("release the viewer on page teardown. Validate repeated character changes without monotonic GPU resource growth"). Not blocking: at portrait size the horse's bright gum band and evenly spaced teeth draw more attention than the expression ("soften the exposed gum band and make the tooth row less mechanical"), and the goat's and donkey's nostril fills stay an open likeness decision.
 
+On the follow-up's open items (16 October 2026) the user chose from pictures: "show me two or more pictures side by side and i can tell you what i like most". On the side nostrils, with the marks painted out on two of them: "fill in the holes i have covered please". On the donkey's, "on this one the skin at the crease of the mouth needs a slight tweak too", and of the shapes offered for it, "this is a skins not lining up issue, no changes to the model need to be made." Of the fills, the goat's "3: 32 mm cover"; the donkey's, "keep refining. it needs to go up a little higher than 3 and the color should be lighter. i can photoshop a desired outcome if it helps", then a photoshopped target, then "E: 25 mm, 3 mm forward". Of the horse's paints, "B: dusky gum, ivory teeth"; of its tooth rows, "Uneven row".
+
 ## The workflow, step by step
 
 ### 1. Reference sheet
@@ -105,7 +107,7 @@ Fitted, every line is within 2 mm (rms) of its painted line along the side. Acro
 
 The characters' heads were sculpted as signed-distance fields in their build tools (`tools/build-<character>.mjs`, and `horse-grey-model.js` for the horse). `tools/speaking-heads/heads.mjs` holds verbatim copies of the twelve head sculpts, with the placement each tool gave its skull. The first test proves the copies: every vertex of every shipped authoring skull lies on its copied sculpt.
 
-**The goat's and donkey's side nostrils.** Their approved sculpts carve a hole on each side of the nose, outside the painted nostrils (the user's "extra nostril on the side"; the approved skulls are open there, 13.7 and 32.2 mm² of hole). With a mouth inside the head, the teeth showed through them. The speaking heads are sculpted from the approved fields less those two carves (`heads.mjs`: `goatSpeaking`, `donkeySpeaking`, one line each); the approved characters keep theirs. The user was asked whether to fill them and has not answered; it is one line to undo.
+**The goat's and donkey's side nostrils.** Their approved sculpts carve a hole on each side of the nose, outside the painted nostrils (the user's "extra nostril on the side"; the approved skulls are open there, 13.7 and 32.2 mm² of hole). With a mouth inside the head, the teeth showed through them. The speaking heads are sculpted from the approved fields less those two carves (`heads.mjs`: `goatSpeaking`, `donkeySpeaking`, one line each); the approved characters keep theirs. Shown the holes, the holes filled, and the pits meshed cleanly, the user asked for the marks left on the filled heads to be painted out too ("fill in the holes i have covered please"): the carves stay out, and paint covers the marks (step 4).
 
 `tools/speaking-heads/sculpt.mjs` opens a head for speech. In rest space (the head's own sculpt space) the speaking head is the approved head with a mouth inside it. The lips part in an **expanded space**, which is what gets sculpted:
 - **The cut** is the lip line's surface (a beak: the plane of its gape). Everything above it moves up by sigma (4 mm), everything below down by sigma; sigma tapers to nothing over a centimetre behind the corners.
@@ -192,6 +194,12 @@ What the paintings never saw is the inside of the mouth. `speaking-head.js` pain
 - teeth that darken toward their roots, and a tongue lighter along its top, with a groove.
 
 The inside is lit as it lies in its own shadow: nearly evenly, its normal mostly toward the eye, so its depth paint gives its form and a game mesh's facets do not. The grey sculpt shows the inside in the same crimson, so the open mouth reads as one there too. The lips' faces take the mouth's paint over the jaw's first 2° (`CHEEKS_SHOW`); closed, the crease's shadow falls on the faces only (round 2: the fold attribute interpolated across the outer skin's last triangles and darkened a 1–4 mm band). The colours are per character (`MOUTH_PAINT`).
+
+**Painted where it lies closed.** The paintings were registered on the closed head; a speaking skin is built open, its lips parted by the cut. Its paint is projected from the closed shape (`paintedClosed` in `withSpeakingHead`: the closed shape's offsets added to the skin's paint positions, and the closed normals' to its paint normals), so the painted lip line falls on the closed crease. Read at rest, the donkey's painted mouth line ran above its closed crease, a second line with a pale band between, from its left and the front (the user: "a skins not lining up issue"). By test, the skin's paint positions and normals are the closed shape's and its own shape is untouched (the donkey, the pig foreman, the hen); with the offsets left out, the donkey's are 7.1 mm off. The pig foreman's cream crescents at its closed game crease (round 5's review) do not come from this: they are its lower lip's outer skin at the crease, under its snout, where no painting sees it, filled with paint reused from beside it (Not done).
+
+**The horse's quieter mouth** (the architect's note; the user's choice of three). Its gum is a dusky rose (.56 .28 .28, the others' crimson .66 .20 .25) over a darker back (.30 .11 .11); its dark inner lip reaches from 5 to 18 mm deep before the gum shows (`lipDepth`; the others' 3 to 11 mm); its teeth are ivory (.87 .82 .69, to .64 .54 .42 at the roots), each a little older or younger than its neighbours, toward its roots' colour by a fixed sequence, and darker at its sides where it meets them (`toothShade` .6); its tongue is softer (.70 .42 .41). Photographed in the real viewer at the portrait (620 px/m) and close scales; the built-in paint renders the chosen picture to the pixel.
+
+**Paint covers.** Marks a speaking head does not want are painted over (`covers` in `MOUTH_PAINT`): each a sphere in paint space, on either side, filled with the paint a step along the skin, from the paintings the cover takes, with a soft edge (by default its outer 55%). The goat's side nostril mark is filled from 24 mm behind it (32 mm). The donkey's teardrop beside its nostril ring is the front painting's nostril, landing on the muzzle's side next to the side painting's, the ring: it is filled with the front painting's own cream from 30 mm toward the middle (25 mm, an 8 mm edge). Fills that took the side painting there showed its edge: the side painting stops 1 to 2 cm short of the muzzle's front, its last pixels a bright rim, and its 2 mm pixels showed as white steps; fills from all four paintings a step away (the first offered) came out darker than the muzzle, or pale with the teardrop's outline left. From the front the donkey's nostrils are now the rings at its muzzle's sides, as in the user's target. In the real viewer, the built-in covers render the pictures the user chose (the goat's identical, the donkey's within 1 pixel by 1 level).
 
 This session has no image-generation tool. The builder's step 4 paints over registered renders; here the mouth's interior is painted in code instead. A painted pass over registered renders (the viewer: open the jaw, grey mode, any view) is the one piece of the workflow left to a builder who can paint.
 
@@ -294,7 +302,7 @@ Round 5's viewer kept ten more textures a round: the five mammals' two skeletons
 
 ### Not blocking, not changed
 
-The horse's gum band and tooth row at portrait size, and the goat's and donkey's nostril fills (Not done).
+The horse's gum band: quieter, the user's choice (step 4). Its tooth row: Not done (the user chose an uneven row, a build change). The goat's and donkey's nostril fills: painted over, the user's choices (step 4).
 
 ### Round 5's false or overstated claims
 
@@ -441,11 +449,10 @@ The suite takes about six minutes, most of it the open views (216 a mesh) and th
 - **Visemes.** A speaking head has one degree of freedom, its jaw. Lip shapes (wide, round, closed for m/b/p) would be morph targets on the same mesh.
 - **Integration.** Nothing uses a speaking head yet. The intro's radio-room hen still has the beak split made for her line (`intro-sprites/room-set.js`); her speaking head would replace it.
 - **Step 4's painted pass and step 5's review.**
-- **The architect's art note** (not blocking): at portrait size the horse's bright red inside and evenly spaced white teeth draw more attention than the expression. Soften the exposed gum band and make the tooth row less mechanical, keeping the likeness and the jaw's motion.
-- **The goat's and donkey's nostril fills**, an open likeness decision, still the user's to answer (step 2).
+- **The architect's art note's tooth row** (not blocking): at portrait size the horse's evenly spaced teeth draw attention; make the tooth row less mechanical, keeping the likeness and the jaw's motion. The user chose an uneven row (a build change). The gum band is quieter (step 4).
 - **Round 5's review's should-fixes** (none blocks painting):
   - 1: weight the closed normals by where the closed shape lays a face, not its depth at rest, and select by that in the test (the game meshes' hairline whiskers at close-up);
-  - 3: project the skin's paint from the closed shape (the pig foreman's cream crescents at its closed game crease);
+  - 3, done: the skin's paint projected from the closed shape (step 4); the pig foreman's cream crescents remain, reused paint on its lower lip's outer skin under its snout;
   - 4: the cow's, donkey's and pig director's approved heads' own normals near the mouth;
   - 5: photograph the lit-paint evidence on the viewer's own renderer;
   - 6: an open-sides bar per column along the lip line, and a wall the rabbit can fail;

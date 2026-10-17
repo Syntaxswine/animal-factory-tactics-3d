@@ -31,10 +31,14 @@ export const SPEECH_OPEN={horse:.079,goat:.1092,bull:.0998,cow:.1116,donkey:.092
 // mouth, by depth below the approved surface, plus the teeth and tongue. The shaders work in
 // linear light, so they take linear() of these. The inside is a crimson that stays red deep in
 // (the user's reference, round 3: the back was near black, .17 .05 .05, and read as a hole).
+// lipDepth: the depths over which the inner lip turns to gum (by default 3 to 11 mm).
 const MOUTH={lip:[.44,.18,.17],gum:[.66,.20,.25],back:[.36,.07,.10],teeth:[.93,.89,.77],root:[.74,.64,.50],tongue:[.80,.42,.42]};
 export const MOUTH_PAINT={
- horse:{...MOUTH,lip:[.27,.18,.16]},donkey:{...MOUTH,lip:[.30,.24,.21]},
- goat:MOUTH,bull:{...MOUTH,lip:[.55,.30,.29]},cow:{...MOUTH,lip:[.55,.30,.29]},sheep:{...MOUTH,lip:[.30,.24,.22]},
+ // the horse's quieter (the architect's review, 15 October 2026: "soften the exposed gum band and
+ // make the tooth row less mechanical"; the user's choice of three, "B: dusky gum, ivory teeth")
+ horse:{...MOUTH,lip:[.27,.18,.16],gum:[.56,.28,.28],back:[.30,.11,.11],lipDepth:[.005,.018],teeth:[.87,.82,.69],root:[.64,.54,.42],toothShade:.6,tongue:[.70,.42,.41]},
+ donkey:{...MOUTH,lip:[.30,.24,.21],covers:[{at:[.225,1.338,.0335],r:.025,soft:.008,from:[0,0,-.030],views:[1,0,0]}]},
+ goat:{...MOUTH,covers:[{at:[.196,1.428,.037],r:.032,from:[-.024,-.004,.002]}]},bull:{...MOUTH,lip:[.55,.30,.29]},cow:{...MOUTH,lip:[.55,.30,.29]},sheep:{...MOUTH,lip:[.30,.24,.22]},
  skunk:{...MOUTH,lip:[.12,.10,.10]},dog:{...MOUTH,lip:[.10,.08,.07],gum:[.42,.20,.21]},
  'pig-foreman':{...MOUTH,lip:[.62,.31,.28],gum:[.70,.36,.35]},'pig-director':{...MOUTH,lip:[.64,.33,.30],gum:[.72,.38,.37]},
  rabbit:{...MOUTH,lip:[.66,.40,.39],gum:[.72,.42,.42]},
@@ -42,13 +46,46 @@ export const MOUTH_PAINT={
  hen:{...MOUTH,lip:[.80,.58,.26],gum:[.80,.47,.44],back:[.36,.13,.13],tongue:[.84,.50,.48]}
 };
 
+// Covers: painted marks the speaking head does not want, each a sphere in paint space (on either
+// side: z is mirrored) painted over with the paint a step along the skin (`from`), as the paintings
+// give it there (`views`: how much the front, the sides and the back each give; all by default),
+// fading out over the sphere's outer `soft` metres (by default its outer 55%). At most COVERS a
+// character. The user, on the goat's and the donkey's side nostrils (16 October 2026): "fill in
+// the holes i have covered please"; the goat's, "3: 32 mm cover". The donkey's teardrop is the
+// front painting's nostril, landing on the muzzle's side beside the side painting's (the ring): it
+// takes the front painting's own cream from 30 mm toward the middle. The side painting stops 1-2 cm
+// short of the muzzle there, its edge a bright rim, and every fill taking it showed the rim's steps
+// ("it needs to go up a little higher than 3 and the color should be lighter"; then the user's
+// photoshopped target, and of three fills, "E: 25 mm, 3 mm forward").
+const COVERS=4;
+function coverUniforms(list=[]){
+ if(list.length>COVERS)throw Error(`${list.length} paint covers, over the ${COVERS} a speaking head takes`);
+ const at=Array.from({length:COVERS},(_,k)=>new THREE.Vector4(...(list[k]?[...list[k].at,list[k].r]:[0,0,0,0])));
+ // (from: the step, and the soft edge's width)
+ const from=Array.from({length:COVERS},(_,k)=>new THREE.Vector4(...(list[k]?.from||[0,0,0]),list[k]?Math.max(1e-4,list[k].soft??.55*list[k].r):0));
+ const views=Array.from({length:COVERS},(_,k)=>new THREE.Vector3(...(list[k]?.views||[1,1,1])));
+ return {at:{value:at},from:{value:from},views:{value:views}};
+}
+
 // The character's data with its skull (the hen: its beak) replaced by the speaking skin, in the
 // skull's place in the part order, so the registered paint owns it as it owned the skull.
 export function withSpeakingHead(data,head){
  const at=data.parts.findIndex(p=>p.name===head.replaces);
  if(at<0)throw Error(`${data.species||'the character'} has no part "${head.replaces}" for its speaking head`);
- const skin=head.parts.find(p=>p.kind==='skin'),parts=data.parts.slice();parts[at]=skin;
+ const skin=head.parts.find(p=>p.kind==='skin'),parts=data.parts.slice();parts[at]=paintedClosed(skin);
  return {...data,parts,triangles:data.triangles-data.parts[at].triangles+skin.triangles,speakingHead:{level:head.level,triangles:head.triangles}};
+}
+// The registered paint is projected onto the skin where it lies closed, as the approved head lay
+// when it was painted: its paintPosition and paintNormal are the closed shape's (the donkey's
+// paintPosition is its sculpt's, before its neck revision, which only lifts its head, so the closed
+// offsets carry over). Projected at rest, the lips' rims lay tucked inside the crease, the
+// projection saw them hidden and filled them from other views: the user, on the donkey's closed
+// crease, "this is a skins not lining up issue" (round 5's review: the pig foreman's cream crescents).
+function paintedClosed(skin){
+ const P=Float32Array.from(skin.paintPosition||skin.position),N=Float32Array.from(skin.paintNormal||skin.normal);
+ (skin.closed?.vertices||[]).forEach((i,k)=>{for(let j=0;j<3;j++)P[i*3+j]+=skin.closed.offset[k*3+j];});
+ (skin.closedNormal?.vertices||[]).forEach((i,k)=>{for(let j=0;j<3;j++)N[i*3+j]+=skin.closedNormal.offset[k*3+j];});
+ return {...skin,paintPosition:Array.from(P),paintNormal:Array.from(N)};
 }
 
 const weightsOf=(a,i)=>{const w=new Map();for(let k=0;k<4;k++){const x=a.skinWeight.getComponent(i,k);if(x>0){const b=a.skinIndex.getComponent(i,k);w.set(b,(w.get(b)||0)+x);}}return w;};
@@ -109,7 +146,7 @@ export function rigSpeakingHead(worker,head){
   const top=[...w].sort((p,q)=>q[1]-p[1]).slice(0,4);while(top.length<4)top.push([0,0]);
   geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(Array.from({length:count},()=>top.map(([b])=>b)).flat(),4));
   geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(Array.from({length:count},()=>top.map(([,x])=>x)).flat(),4));
-  const mesh=new THREE.SkinnedMesh(geo,new THREE.MeshStandardMaterial({color:0x999999,roughness:.88}));mesh.name=part.name;mesh.frustumCulled=false;mesh.userData.speechKind=part.kind;
+  const mesh=new THREE.SkinnedMesh(geo,new THREE.MeshStandardMaterial({color:0x999999,roughness:.88}));mesh.name=part.name;mesh.frustumCulled=false;mesh.userData.speechKind=part.kind;if(part.teeth)mesh.userData.teeth=part.teeth;
   worker.root.add(mesh);mesh.bind(skeleton,skin.bindMatrix);mouthParts.push(mesh);
  }
  const grey=mouthParts.map(m=>m.material);let painted=[],skinMaterial=null;
@@ -126,9 +163,9 @@ export function rigSpeakingHead(worker,head){
  function applyPaint(paint,{species=head.species,sceneLighting=paint.material.isMeshStandardMaterial}={}){
   const colors=MOUTH_PAINT[species]||MOUTH;
   skinMaterial?.dispose();painted.forEach(m=>m.dispose());
-  skinMaterial=paint.material.clone();const base=paint.material;
-  skinMaterial.onBeforeCompile=(shader,renderer)=>{base.onBeforeCompile(shader,renderer);paintMouth(shader,colors,opening);};
-  skinMaterial.customProgramCacheKey=()=>base.customProgramCacheKey()+'|speaking-mouth-v13-'+species;
+  skinMaterial=paint.material.clone();const base=paint.material,covers=coverUniforms(colors.covers);skinMaterial.userData.speechCovers=covers;
+  skinMaterial.onBeforeCompile=(shader,renderer)=>{base.onBeforeCompile(shader,renderer);paintMouth(shader,colors,opening,covers);};
+  skinMaterial.customProgramCacheKey=()=>base.customProgramCacheKey()+'|speaking-mouth-v16-'+species;
   skin.material=skinMaterial;
   painted=mouthParts.map(mesh=>{const m=sceneLighting?new THREE.MeshStandardMaterial({vertexColors:true,roughness:mesh.userData.speechKind==='teeth'?.45:.7}):new THREE.MeshBasicMaterial({vertexColors:true,toneMapped:false});
    mesh.geometry.setAttribute('color',new THREE.Float32BufferAttribute(partColors(mesh,colors,!sceneLighting),3));mesh.material=m;return m;});
@@ -140,12 +177,22 @@ export function rigSpeakingHead(worker,head){
 
 // Teeth darken toward their roots in the gum; the tongue is lighter along its top, darker at its
 // edges and down its groove. Unlit paint carries a painted form light (from above and in front).
+// colors.toothShade (0 by default): each tooth a little older or younger than its neighbours,
+// toward its root's colour, and darker at its sides where it meets them (a row less even).
 const linear=c=>{const k=new THREE.Color().setRGB(c[0],c[1],c[2],THREE.SRGBColorSpace);return [k.r,k.g,k.b];};
+const TOOTH_AGE=[.15,.75,.05,.55,.95,.3,.65,0,.45,.85];
 function partColors(mesh,colors,formLight){
  const g=mesh.geometry,P=g.attributes.position,N=g.attributes.normal,count=P.count,out=new Float32Array(count*3);
  g.computeBoundingBox();const box=g.boundingBox,teeth=mesh.userData.speechKind==='teeth',upper=/upper/.test(mesh.name),L=new THREE.Vector3(.45,.75,.48).normalize(),n=new THREE.Vector3();
+ // (each tooth's age and its direction along the arch: its widest horizontal extent)
+ const shade=teeth&&colors.toothShade?colors.toothShade:0,toothOf=new Int32Array(count).fill(-1),along=[];
+ if(shade)(mesh.userData.teeth||[]).forEach((t,k)=>{let cx=0,cz=0;for(let i=t.first;i<t.first+t.count;i++){toothOf[i]=k;cx+=P.getX(i)/t.count;cz+=P.getZ(i)/t.count;}
+  let xx=0,xz=0,zz=0;for(let i=t.first;i<t.first+t.count;i++){const dx=P.getX(i)-cx,dz=P.getZ(i)-cz;xx+=dx*dx;xz+=dx*dz;zz+=dz*dz;}
+  const a=.5*Math.atan2(2*xz,xx-zz);along[k]=[Math.cos(a),Math.sin(a)];});
  for(let i=0;i<count;i++){n.fromBufferAttribute(N,i);const y=P.getY(i),z=P.getZ(i);let c;
-  if(teeth){const fromTip=upper?(y-box.min.y)/(box.max.y-box.min.y):(box.max.y-y)/(box.max.y-box.min.y);c=colors.teeth.map((v,k)=>v+(colors.root[k]-v)*THREE.MathUtils.smoothstep(fromTip,.35,1));}
+  if(teeth){const fromTip=upper?(y-box.min.y)/(box.max.y-box.min.y):(box.max.y-y)/(box.max.y-box.min.y),k=toothOf[i];
+   const age=k<0?0:shade*TOOTH_AGE[k%TOOTH_AGE.length]*.6,side=k<0?0:shade*.35*(n.x*along[k][0]+n.z*along[k][1])**2;
+   c=colors.teeth.map((v,j)=>(v+(colors.root[j]-v)*Math.max(age,THREE.MathUtils.smoothstep(fromTip,.35,1)))*(1-side));}
   else{const across=Math.abs(z)/Math.max(1e-4,Math.max(Math.abs(box.min.z),Math.abs(box.max.z))),groove=Math.exp(-((z/.004)**2))*Math.max(0,n.y);
    c=colors.tongue.map(v=>v*(1.08-.30*across**2-.18*groove)*(.85+.15*Math.max(0,n.y)));}
   if(formLight){const s=.72+.28*Math.max(0,n.dot(L));c=c.map(v=>v*s);}
@@ -194,17 +241,24 @@ function shadeGrey(shader,opening){
 }
 // The mouth inside the lips, drawn over the registered paint: the lip's own colour on its inner
 // face, then gum, darkening into the back of the mouth, with a painterly grain.
-function paintMouth(shader,c,opening){
+function paintMouth(shader,c,opening,covers){
  const v=a=>`vec3(${linear(a).map(x=>x.toFixed(4)).join(',')})`;
- mouthVertex(shader);shader.uniforms.uSpeechOpen=opening;
+ mouthVertex(shader);shader.uniforms.uSpeechOpen=opening;shader.uniforms.uSpeechCover=covers.at;shader.uniforms.uSpeechCoverFrom=covers.from;shader.uniforms.uSpeechCoverViews=covers.views;
  shader.fragmentShader=bandNormals(shader.fragmentShader).replace('#include <common>',`#include <common>
   ${mouthVaryings}
+  uniform vec4 uSpeechCover[${COVERS}],uSpeechCoverFrom[${COVERS}];uniform vec3 uSpeechCoverViews[${COVERS}];
   float speechHash(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453);}
   float speechNoise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
    return mix(mix(mix(speechHash(i),speechHash(i+vec3(1,0,0)),f.x),mix(speechHash(i+vec3(0,1,0)),speechHash(i+vec3(1,1,0)),f.x),f.y),mix(mix(speechHash(i+vec3(0,0,1)),speechHash(i+vec3(1,0,1)),f.x),mix(speechHash(i+vec3(0,1,1)),speechHash(i+vec3(1,1,1)),f.x),f.y),f.z);}`)
- .replace('if(uPaintDebug>.5)',`{float m,d;speechMouthAt(m,d);if(m>.001){
+ .replace('if(uPaintDebug>.5)',`for(int k=0;k<${COVERS};k++){if(uSpeechCover[k].w<=0.)continue;
+   // (a cover: within its radius, either side, the paint a step along the skin, from, as the
+   // paintings the cover takes give it there, each by how squarely it faces the surface)
+   vec3 side=vec3(1.,1.,p.z<0.?-1.:1.),q=vec3(p.x,p.y,abs(p.z));float w=1.-smoothstep(uSpeechCover[k].w-uSpeechCoverFrom[k].w,uSpeechCover[k].w,distance(q,uSpeechCover[k].xyz));if(w<=0.)continue;
+   vec3 f=p+uSpeechCoverFrom[k].xyz*side,vw=uSpeechCoverViews[k];vec4 s=vw.x*paintView(f,n,0.,false)+vw.y*(paintView(f,n,1.,false)+paintView(f,n,3.,false))+vw.z*paintView(f,n,2.,false);
+   if(s.a>.001)diffuseColor.rgb=mix(diffuseColor.rgb,s.rgb/s.a,w);}
+  {float m,d;speechMouthAt(m,d);if(m>.001){
    float deep=smoothstep(.004,.035,d);
-   vec3 mouth=mix(${v(c.lip)},${v(c.gum)},smoothstep(.003,.011,d));
+   vec3 mouth=mix(${v(c.lip)},${v(c.gum)},smoothstep(${(c.lipDepth||[.003,.011]).map(x=>x.toFixed(4)).join(',')},d));
    mouth=mix(mouth,${v(c.back)},deep*deep*(3.-2.*deep));
    float up=normalize(vPaintNormal).y*(1.-${BAND});
    mouth*=(.80+.20*clamp(up*.5+.5,0.,1.))*(.90+.20*speechNoise(vPaintPosition*220.));

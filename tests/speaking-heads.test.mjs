@@ -396,6 +396,22 @@ test('the speaking head takes the skull\'s place in the character, and nothing e
  assert.throws(()=>withSpeakingHead(read('cow-10k-data.json'),built('dog','10k')),/no part/);
 });
 
+// The user, on the donkey's closed mouth: "this is a skins not lining up issue, no changes to the
+// model need to be made". The paintings were registered on the closed head; the skin is built open.
+test('the speaking skin takes its paint where it lies closed, and keeps its own shape',()=>{
+ for(const id of ['donkey','pig-foreman','hen']){
+  const data=read(profileOf(id).file),head=built(id,'10k'),skin=head.parts.find(p=>p.kind==='skin');
+  const part=withSpeakingHead(data,head).parts.find(p=>p.name===skin.name);
+  assert.equal(part.position,skin.position,id+': the shape is the skin\'s own');
+  for(const [key,from,closed] of [['paintPosition',skin.paintPosition||skin.position,skin.closed],['paintNormal',skin.paintNormal||skin.normal,skin.closedNormal]]){
+   assert.ok(closed.vertices.length>30,id+': the closed shape moves the skin');
+   const at=new Map(closed.vertices.map((v,k)=>[v,k]));let worst=0;
+   for(let i=0;i<from.length/3;i++)for(let j=0;j<3;j++){const k=at.get(i);worst=Math.max(worst,Math.abs(part[key][i*3+j]-from[i*3+j]-(k===undefined?0:closed.offset[k*3+j])));}
+   assert.ok(worst<1e-6,`${id}: ${key} is the closed shape's (off by ${worst})`);
+  }
+ }
+});
+
 test('the jaw turns about its joint: lower lip, teeth and tongue follow, the crown and upper teeth stay',()=>{
  for(const id of ['cow','hen','pig-director','goat']){
   const {head,worker,speech}=speakingWorker(id);
