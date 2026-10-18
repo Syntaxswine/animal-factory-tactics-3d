@@ -86,6 +86,14 @@ hard outline and look like you can see through it to a scarf underneath it?"
   into the scarf sooner as the head bows. Raising the throat's base gave 30, or 15: the limit is
   the beard's weighting, which the idle shares with every hair, not the throat's height.
 
+- **Left as is: the strokes' direction.** The carried fur follows the sheet's rows, smoothed down
+  them, where the painter's strokes on the throat run diagonally, down and forward toward the chest.
+  A finer fill would read each stroke's direction from the fur behind the old outline and carry
+  it along its own line. The user: "the direction of the lines should all be going in the same
+  direction, but this is good enough". At game scale the strip is a few screen pixels: like the
+  ear in two impressions of the same Durer woodcut (the user's own and a museum's), a master's
+  nuance, seen under a loupe, which does not change what the average player sees.
+
 Evidence: `hybrid-review/goat-worker/throat-before-now.png` (before and now at portrait
 scale: the viewer's below preset, front, three-quarter and side) and `throat-line-zoom.png`
 (the user's spot, 4x). The 21 focused tests pass, and the 83 idle tests on the refitted table.
