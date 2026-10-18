@@ -31,7 +31,8 @@ model; the original sprite remains its existing single illustrated view.
 The built-in ImageGen tool painted the four registered neutral model views using
 the original goat sprite for identity and the approved horse skin for brushwork.
 The final asset is
-`dist/assets/characters/lowpoly-proof/goat-worker-model-paint-v1.png`.
+`dist/assets/characters/lowpoly-proof/goat-worker-model-paint-v1.png`, edited since
+at the throat in both profiles (The throat, below).
 The complete prompt is in `GOAT-MODEL-PAINT-PROMPT.txt`; the grey edit target is
 `hybrid-review/goat-worker/neutral-paint-reference.png`.
 
@@ -47,6 +48,47 @@ The coverage toggle distinguishes direct projection (green), reused paint
 (blue), and flat fallback (magenta). A low fallback percentage alone does not
 establish correct paint registration. Close inspection and turning remain
 necessary; the image generation can shift fine features slightly.
+
+## The throat (17 October 2026)
+
+Under the jaw, behind the beard, the throat showed a pale patch with a hard outline and
+the scarf's red in it. The user, circling it: "its this part here"; "why does it have a
+hard outline and look like you can see through it to a scarf underneath it?"
+
+- **Why.** The sculpt's throat was a flat front 2 to 2.5 cm behind where the profile
+  paintings draw it, square to the jaw. No painting covered that front: the front painting
+  shows the beard there, the profiles see it edge-on. Its paint was reused from all four
+  views, the back painting among them, whose scarf wraps the neck at that height: the
+  scarf seen through the neck. The reuse switched in at the front's sharp corners: the hard
+  outline.
+- **The sculpt** (the user: "modify the base sculpt to go out to the dimensions where the
+  patch are", and of two shapes, "1: rounded at the painted line"). One ellipsoid blended
+  into the neck and jaw rounds the throat out to the painted throat line
+  (`build-goat-worker.mjs`, and its copies in `tools/speaking-heads/heads.mjs`). The
+  triangle counts are unchanged.
+- **The skin** ("after you alter the sculpt you will have to spend some time reworking the
+  skins"):
+  - Both profile paintings carry the throat's shadowed fur forward over the new throat,
+    from 0.040 to 0.062 ahead of the neck's centre, with the old outline's last 2 px
+    (`tools/goat-throat-fur.py`, run on the sheet as generated).
+  - Reused paint comes only from the paintings that face the surface: the back painting no
+    longer paints the throat's front (`horse-model-paint.js`, the goat's weights).
+  - The profiles own the throat, as they own the eyes and horns: the front painting reached
+    its sides edge-on beside the beard and laid the beard's light painted outline along them
+    (the user: "right where the green line is you can still see a lighter colored line").
+  - The throat's front, still in no painting (the beard hides it from the front, the profiles
+    see it edge-on and the collar hides its base from them), reuses the profiles' throat fur
+    4 mm inside its crest and above the collar. It stays blue in the coverage display.
+
+- **The idle.** The goat's idle limits are refitted to its new rig (`node tools/fit-idle-rigs.mjs`,
+  `dist/tactics/idle-fits.js`): it nods down 25 degrees at most, not 35. The beard takes its
+  weights from the nearest point of the skull's surface, now the fuller throat's, and swings
+  into the scarf sooner as the head bows. Raising the throat's base gave 30, or 15: the limit is
+  the beard's weighting, which the idle shares with every hair, not the throat's height.
+
+Evidence: `hybrid-review/goat-worker/throat-before-now.png` (before and now at portrait
+scale: the viewer's below preset, front, three-quarter and side) and `throat-line-zoom.png`
+(the user's spot, 4x). The 21 focused tests pass, and the 83 idle tests on the refitted table.
 
 ## Review and reproduction
 

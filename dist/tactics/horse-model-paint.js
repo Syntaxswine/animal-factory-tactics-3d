@@ -165,7 +165,11 @@ export function createModelPaint(renderer,horse,texture,{species='horse',frame=P
     // smears their separately painted contours across the oblique surface.
     float eyeOwner=(1.0-smoothstep(.75,1.15,length((p.xy-vec2(.048,1.485))/vec2(.055,.040))))*smoothstep(.047,.065,abs(p.z));
     float hornOwner=smoothstep(1.54,1.57,p.y)*(1.0-smoothstep(-.055,-.025,p.x));
-    float owner=max(eyeOwner,hornOwner)*step(6.5,vPaintPart)*step(vPaintPart,7.5);
+    // (and the throat behind the beard: the front painting reaches its sides edge-on beside the
+    // beard and laid the beard's light painted outline along them: the user, "right where the
+    // green line is you can still see a lighter colored line")
+    float throatOwner=smoothstep(-.01,.01,p.x)*(1.0-smoothstep(.06,.075,p.x))*smoothstep(1.265,1.28,p.y)*(1.0-smoothstep(1.335,1.35,p.y))*(1.0-smoothstep(.045,.06,abs(p.z)));
+    float owner=max(max(eyeOwner,hornOwner),throatOwner)*step(6.5,vPaintPart)*step(vPaintPart,7.5);
     float sideView=p.z>0.0?1.0:3.0;
     facing=abs(view-sideView)<.1?mix(facing,1.0,owner):facing*(1.0-owner);`:''}
     vec2 local=vec2(across/${frame.width.toFixed(6)}+.5,(p.y-${frame.centerY.toFixed(6)})/${frame.height.toFixed(6)}+.5),uv=vec2((view+local.x)/4.0,local.y);
@@ -196,7 +200,10 @@ export function createModelPaint(renderer,horse,texture,{species='horse',frame=P
     if(abs(view-sideView)<.1){colorUV.x+=(view<2.0?-.006:.006)/(${frame.width.toFixed(6)}*4.0)*eyeOwner;colorUV.y-=.014/${frame.height.toFixed(6)}*eyeOwner;}`:''}
     vec3 color=texture2D(uModelPaint,colorUV).rgb;
     float valid=texture2D(uPaintMask,colorUV).r;
-    float weight=(direct?pow(max(0.0,facing),4.0)*visible:pow(max(.4,facing),2.0))*samePart*valid;
+    // (borrowed paint comes only from the paintings that face the surface: the goat's throat, in no
+    // painting, took the back painting's scarf, as if seen through the neck: the user, "why does it
+    // have a hard outline and look like you can see through it to a scarf underneath it?")
+    float weight=(direct?pow(max(0.0,facing),4.0)*visible:pow(max(.4,facing),2.0)${species==='goat'?'*step(-.05,facing)':''})*samePart*valid;
     ${species==='pig-foreman'?`// Hidden rear belt surfaces may reuse rear/side leather, never the
     // frontal buckle. Restrict the converse too to preserve the front artwork.
     if(!direct&&abs(vPaintPart-2.)<.1){
@@ -221,6 +228,10 @@ export function createModelPaint(renderer,horse,texture,{species='horse',frame=P
    vec3 fillPosition=p;
    ${species!=='hen'?`if(vPaintPart<2.5&&vPaintPart>1.5&&p.y<.86){float center=.12+clamp(.8-p.y,0.0,.67)*.17;fillPosition.z=mix(p.z,sign(p.z)*center,.16);}
    if(abs(vPaintPart-4.0)<.1||abs(vPaintPart-6.0)<.1)fillPosition.z=mix(p.z,sign(p.z)*.232,.18);`:''}
+   ${species==='goat'?`// The throat's front is in no painting: the beard hides it from the front, the profiles see
+   // it edge-on (on its crest their silhouette), the collar hides its base from them. It takes
+   // the profiles' throat fur 4 mm inside its crest, and above the collar.
+   if(abs(vPaintPart-7.)<.1&&p.x>0.&&abs(p.z)<.05)fillPosition=vec3(p.x-.004,max(p.y,1.292),p.z);`:''}
    vec4 fill=paintView(fillPosition,n,0.0,false)+paintView(fillPosition,n,2.0,false);
    ${species==='dog'||species==='rabbit'||species==='donkey'||species==='sheep'||species==='hen'||species==='goat'||bovine||species==='skunk'||species==='pig-foreman'||species==='pig-director'?`fill+=paintView(fillPosition,n,1.0,false)+paintView(fillPosition,n,3.0,false);`:''}
    float filled=smoothstep(.002,.025,fill.a);
