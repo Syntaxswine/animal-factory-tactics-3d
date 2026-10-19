@@ -170,6 +170,39 @@ Also open:
 - The thighs sink up to 8 cm into the sill during the hop.
 - The right sleeve brushes the wall's far face coming down.
 
+### 2026-10-19 (afternoon): the window roll is physics-paced; side vault and climb-over, first passes
+
+**Window.** The roll is no longer keyed:
+- From the chest-flat start, the curled body rolls about its floor contact. Its pace comes from energy
+  (1/2 I_P w^2 about the contact, plus gravity).
+- Where the contact jumps (mane, upper back, seat), the landing part takes an impact: angular momentum about the
+  new contact is kept, and the impact is softened over 40 ms.
+- A squat tuck (heels under the seat) brings the hooves to 0.7 cm off the floor as it sits up. The roll therefore
+  lands **in a crouch on both feet** and rises from there. This departs from the "up on one knee" in the chosen
+  option: catching on one foot needed the legs to unfold in 0.15 s, 4,667 N·m from a single seat contact.
+- Roll direction 78 degrees ends the roll on the tile centre with nothing in the wall.
+- Audit: back to the floor and the roll read 0%. The tip over the sill edge (a short fall onto the hands) and the
+  rise from the crouch do not pass yet.
+
+**Side vault** (`wall-vault.js`), over the proposed 1.0 m wall:
+- Both palms go on the top. The trunk pitches about 40 degrees and leans over the supporting left arm. The knees
+  tuck up, and the legs sweep over beside the right hand. It drops down the far side, lands and settles onto
+  the centre.
+- Seen from the far side, it reads as a side vault.
+- Open: the trailing thigh brushes up to 7 cm into the top. No balance planning yet.
+
+**Climb-over** (`wall-climb.js`), 2 m wall:
+- Jump to catch the top, hang with the hooves on the face (knees out), walk up, chest over, knee up, straddle the
+  16 cm top, other leg over while turning to face the wall, lower down the far face, let go, drop, turn onto the
+  tile.
+- The short arms are at their limit in the hang: the shoulders must be within about 0.2 m of the face to reach
+  a top 0.35 m above the head. The horse's long muzzle turns 40 degrees whenever it faces the wall up close.
+- Open: the legs still cut 6 to 8 cm into the top during the straddle, and the arms are 5 to 12 cm short at
+  the catch and hang. No balance planning yet.
+
+The study page has an obstacle selector. The waist-high wall is the game's own brick wall on that line, with its
+instanced boxes cut to 1.0 m.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

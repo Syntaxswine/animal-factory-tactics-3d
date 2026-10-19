@@ -35,13 +35,15 @@ export const frameToWorld=(tr,frame,p)=>frame==='world'?V(...p):frame==='pelvis'
 export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;const [ta,a]=keys[i],[tb,b]=keys[Math.min(keys.length-1,i+1)];
  const u=tb>ta?smooth((t-ta)/(tb-ta)):1,pa=frameToWorld(tr,a.f,a.p),pb=frameToWorld(tr,b.f,b.p),lerp=(x,y,k)=>x+(y-x)*k;
  const has=k=>k.hoof!==undefined,hp=has(a)?a.hoof:b.hoof,hq=has(b)?b.hoof:a.hoof,pal=k=>k.palm!==undefined;
- return {f:'world',p:pa.lerp(pb,u).toArray(),hoof:has(a)||has(b)?lerp(hp??0,hq??0,u):undefined,hoofW:lerp(has(a)?1:0,has(b)?1:0,u),heading:lerp(a.heading||0,b.heading||0,u),
+ // knee: an optional bend direction in the pelvis frame ([x, y, z], z mirrored per side), blended like the point.
+ const kn=k=>k.knee||[1,0,.25],knee=kn(a).map((v,j)=>lerp(v,kn(b)[j],u));
+ return {f:'world',p:pa.lerp(pb,u).toArray(),knee,hoof:has(a)||has(b)?lerp(hp??0,hq??0,u):undefined,hoofW:lerp(has(a)?1:0,has(b)?1:0,u),heading:lerp(a.heading||0,b.heading||0,u),
   palm:pal(a)||pal(b)?lerp(pal(a)?a.palm:b.palm,pal(b)?b.palm:a.palm,u):undefined,palmW:lerp(pal(a)?1:0,pal(b)?1:0,u)};}
 // The body pose for a trunk (hips, hipsQ, spineQ, headQ, chest, chestQ) and world limb targets. Knees bend
 // forward of the pelvis; elbows back and out from the chest, or toward elbowAway (world) while a palm is planted.
 // A palm is never placed below the floor.
 export function posedFrom(tr,limbs,{elbowAway=null}={}){const legs={},arms={};for(const s of [-1,1]){const l=limbs['leg'+s],a=limbs['arm'+s];
-  legs[s]={ankle:frameToWorld(tr,l.f,l.p).toArray(),pole:V(1,0,s*.25).applyQuaternion(tr.hipsQ).toArray(),q:l.hoof!==undefined?yawQ(l.heading||0).multiply(bodyQ(l.hoof*DEG)):null,w:l.hoofW??1};
+  const kn=l.knee||[1,0,.25];legs[s]={ankle:frameToWorld(tr,l.f,l.p).toArray(),pole:V(kn[0],kn[1],s*kn[2]).applyQuaternion(tr.hipsQ).toArray(),q:l.hoof!==undefined?yawQ(l.heading||0).multiply(bodyQ(l.hoof*DEG)):null,w:l.hoofW??1};
   const k=a.palm!==undefined?a.palmW??1:0,pole=V(-.3,-.2,s).applyQuaternion(tr.chestQ);if(elbowAway)pole.lerp(V(...elbowAway),k);const wrist=frameToWorld(tr,a.f,a.p);wrist.y=Math.max(wrist.y,.06);
   arms[s]={wrist:wrist.toArray(),pole:pole.toArray(),q:a.palm!==undefined?palmDown(a.palm):null,w:a.palmW??1};}
  return {hips:tr.hips.toArray(),hipsQ:tr.hipsQ,spineQ:tr.spineQ,headQ:tr.headQ,legs,arms};}

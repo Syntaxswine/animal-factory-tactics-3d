@@ -8,20 +8,21 @@ import {V,Q,DEG,clamp,track,spinTrack,bodyQ,yawQ,relQ,keyedLimb,posedFrom,create
 export const WALL=Object.freeze({edge:.5,half:.08,top:2.0});
 const TRUNK=[
  {t:0,label:'Ready',hips:[0,.80,0]},
- {t:.40,label:'Step in',hips:[.10,.79,0],pitch:5},
- {t:.65,label:'Crouch',hips:[.13,.62,0],pitch:18,flex:6,nod:-25},
- {t:.90,label:'Jump and catch',hips:[.22,1.12,0],pitch:-4,flex:-4,nod:-30},
- {t:1.15,label:'Hang',hips:[.19,1.06,0],pitch:-8,flex:-2,nod:-20},
- {t:1.55,label:'Walk up the face',hips:[.22,1.34,0],pitch:-14,flex:4,nod:-15},
- {t:1.95,label:'Chest over the top',hips:[.28,1.72,0],pitch:32,flex:14,nod:-5},
- {t:2.35,label:'Right knee up',hips:[.40,2.02,.04],pitch:62,roll:-18,flex:10,nod:-5},
- {t:2.75,label:'Straddle',hips:[.50,2.13,0],pitch:18,roll:-6,heading:-40,flex:6,nod:-8},
- {t:3.15,label:'Left leg over',hips:[.62,1.86,0],pitch:30,heading:-130,flex:10,nod:-10},
- {t:3.55,label:'Lower down the far face',hips:[.72,1.20,0],pitch:-6,heading:-180,flex:-2,nod:-20},
- {t:3.85,label:'Drop',hips:[.80,.76,0],pitch:6,heading:-180,flex:4,nod:-10},
- {t:4.10,label:'Absorb',hips:[.79,.66,0],pitch:18,heading:-180,flex:8,nod:-5},
- {t:4.40,label:'Stand',hips:[.82,.80,0],heading:-180},
- {t:4.90,label:'Turn onto the tile',hips:[1,.80,0],heading:-360},
+ {t:.40,label:'Step in',hips:[.10,.79,0],pitch:4,nod:-10},
+ {t:.62,label:'Crouch',hips:[.08,.62,0],pitch:14,flex:4,nod:-30,turn:40},
+ {t:.88,label:'Jump and catch',hips:[.25,1.20,0],pitch:-4,flex:-2,nod:-10,turn:40},
+ {t:1.12,label:'Hang',hips:[.25,1.14,0],pitch:-8,flex:-2,nod:-8,turn:40},
+ {t:1.52,label:'Walk up the face',hips:[.24,1.36,0],pitch:-12,flex:2,nod:-8,turn:40},
+ {t:1.92,label:'Chest over the top',hips:[.30,1.86,0],pitch:34,flex:14,nod:-5,turn:30},
+ {t:2.32,label:'Right knee up',hips:[.42,2.12,.04],pitch:62,roll:-18,flex:10,nod:-5,turn:15},
+ {t:2.72,label:'Straddle',hips:[.50,2.22,0],pitch:16,roll:-6,heading:-40,flex:6,nod:-8},
+ {t:3.12,label:'Left leg over',hips:[.66,1.96,0],pitch:30,heading:-130,flex:10,nod:-10,turn:-20},
+ {t:3.52,label:'Lower down the far face',hips:[.72,1.24,0],pitch:-6,heading:-180,flex:-2,nod:-8,turn:-40},
+ {t:3.62,label:'Let go',hips:[.73,1.20,0],pitch:-4,heading:-180,flex:-2,nod:-8,turn:-40},
+ {t:3.82,label:'Drop',hips:[.82,.80,0],pitch:6,heading:-180,flex:4,nod:-10,turn:-40},
+ {t:4.05,label:'Absorb',hips:[.90,.66,0],pitch:6,heading:-180,flex:6,nod:-5,turn:-40},
+ {t:4.35,label:'Stand',hips:[.88,.80,0],heading:-180,turn:-20},
+ {t:4.85,label:'Turn onto the tile',hips:[1,.80,0],heading:-360},
 ];
 export function createWallClimb(worker,profile={id:'horse'}){
  const body=createTraversalBody(worker),probe=createSurfaceProbe(worker,{stride:2}),D=TRUNK.at(-1).t;
@@ -32,12 +33,13 @@ export function createWallClimb(worker,profile={id:'horse'}){
  const restWrist=s=>body.at0('hand'+s).sub(body.at0('spine')).toArray(),ANKLE=body.at0('hoof1').y,top=WALL.top+.07;
  const foot=(x,z,hoof=0,heading=0)=>({f:'world',p:[x,ANKLE,z],hoof,heading});
  // A hoof set flat against the near or far face: sole toward the wall (toe up), ankle a hoof's depth out.
- const onFace=(near,y,z)=>({f:'world',p:[near?WALL.edge-WALL.half-.13:WALL.edge+WALL.half+.13,y,z],hoof:near?-80:-80,heading:near?0:180});
+ const onFace=(near,y,z)=>({f:'world',p:[near?WALL.edge-WALL.half-.12:WALL.edge+WALL.half+.12,y,z],hoof:-85,heading:near?0:180});
+ const OUT=[.25,0,1]; // knees out to the sides while the hooves are on a wall face
  const LIMB={
-  'leg-1':[[0,foot(-.035,-.232)],[.40,foot(-.035,-.20)],[.65,foot(-.035,-.20,15)],[.90,{f:'pelvis',p:[.10,-.62,-.13],hoof:20}],[1.15,onFace(true,.50,-.13)],[1.55,onFace(true,.82,-.13)],[1.95,onFace(true,1.14,-.13)],[2.35,onFace(true,1.40,-.13)],[2.75,{f:'pelvis',p:[-.04,-.55,-.14],hoof:20}],[2.95,{f:'world',p:[.50,2.34,-.18],hoof:40}],[3.15,{f:'world',p:[.74,1.55,-.16],hoof:20}],[3.55,onFace(false,.62,-.13)],[3.85,foot(.80,-.12)],[4.40,foot(.80,-.14)],[4.90,foot(1-.035,-.232)]],
-  leg1:[[0,foot(-.035,.232)],[.40,foot(.16,.14)],[.65,foot(.16,.14,15)],[.90,{f:'pelvis',p:[.10,-.62,.13],hoof:20}],[1.15,onFace(true,.62,.13)],[1.55,onFace(true,.98,.13)],[1.95,onFace(true,1.30,.13)],[2.35,{f:'world',p:[.50,2.30,.22],hoof:50}],[2.55,{f:'world',p:[.70,2.10,.20],hoof:30}],[2.75,{f:'pelvis',p:[.16,-.55,.14],hoof:20}],[3.15,{f:'world',p:[.76,1.45,.16],hoof:20}],[3.55,onFace(false,.74,.13)],[3.85,foot(.80,.14)],[4.40,foot(.80,.16)],[4.90,foot(1-.035,.232)]],
-  'arm-1':[[0,{f:'chest',p:restWrist(-1)}],[.40,{f:'chest',p:[.20,.15,-.30]}],[.65,{f:'chest',p:[.18,.30,-.28]}],[.90,{f:'world',p:[.48,top,-.18],palm:0}],[2.75,{f:'world',p:[.48,top,-.18],palm:0}],[3.15,{f:'world',p:[.52,top,-.20],palm:180}],[3.55,{f:'world',p:[.52,top,-.20],palm:180}],[3.80,{f:'chest',p:[.16,.20,-.30]}],[4.40,{f:'chest',p:restWrist(-1)}],[4.90,{f:'chest',p:restWrist(-1)}]],
-  arm1:[[0,{f:'chest',p:restWrist(1)}],[.40,{f:'chest',p:[.20,.15,.30]}],[.65,{f:'chest',p:[.18,.30,.28]}],[.90,{f:'world',p:[.48,top,.18],palm:0}],[2.75,{f:'world',p:[.48,top,.18],palm:0}],[3.15,{f:'world',p:[.52,top,.20],palm:180}],[3.55,{f:'world',p:[.52,top,.20],palm:180}],[3.80,{f:'chest',p:[.16,.20,.30]}],[4.40,{f:'chest',p:restWrist(1)}],[4.90,{f:'chest',p:restWrist(1)}]],
+  'leg-1':[[0,foot(-.035,-.232)],[.40,foot(-.035,-.20)],[.62,foot(-.035,-.20,15)],[.88,{f:'pelvis',p:[.02,-.62,-.13],hoof:20,knee:OUT}],[1.12,{...onFace(true,.46,-.16),knee:OUT}],[1.52,{...onFace(true,.80,-.16),knee:OUT}],[1.92,{...onFace(true,1.16,-.16),knee:OUT}],[2.32,{...onFace(true,1.42,-.16),knee:OUT}],[2.72,{f:'world',p:[.28,1.66,-.16],hoof:20}],[2.92,{f:'world',p:[.46,2.36,-.18],hoof:40}],[3.12,{f:'world',p:[.76,1.55,-.16],hoof:20}],[3.52,{...onFace(false,.56,-.16),knee:OUT}],[3.82,foot(.84,-.12)],[4.35,foot(.88,-.14)],[4.85,foot(1-.035,-.232)]],
+  leg1:[[0,foot(-.035,.232)],[.40,foot(.14,.14)],[.62,foot(.14,.14,15)],[.88,{f:'pelvis',p:[.02,-.62,.13],hoof:20,knee:OUT}],[1.12,{...onFace(true,.58,.16),knee:OUT}],[1.52,{...onFace(true,.96,.16),knee:OUT}],[1.92,{...onFace(true,1.30,.16),knee:OUT}],[2.32,{f:'world',p:[.50,2.30,.22],hoof:50}],[2.52,{f:'world',p:[.70,2.10,.20],hoof:30}],[2.72,{f:'world',p:[.72,1.66,.16],hoof:20}],[3.12,{f:'world',p:[.76,1.45,.16],hoof:20}],[3.52,{...onFace(false,.70,.16),knee:OUT}],[3.82,foot(.84,.14)],[4.35,foot(.88,.16)],[4.85,foot(1-.035,.232)]],
+  'arm-1':[[0,{f:'chest',p:restWrist(-1)}],[.40,{f:'chest',p:[.20,.15,-.30]}],[.62,{f:'chest',p:[.10,-.05,-.32]}],[.88,{f:'world',p:[.45,top,-.18],palm:0}],[2.72,{f:'world',p:[.46,top,-.18],palm:0}],[3.12,{f:'world',p:[.54,top,.20],palm:180}],[3.62,{f:'world',p:[.54,top,.20],palm:180}],[3.72,{f:'chest',p:[.10,.30,-.30]}],[3.90,{f:'chest',p:[.14,-.10,-.32]}],[4.35,{f:'chest',p:restWrist(-1)}],[4.85,{f:'chest',p:restWrist(-1)}]],
+  arm1:[[0,{f:'chest',p:restWrist(1)}],[.40,{f:'chest',p:[.20,.15,.30]}],[.62,{f:'chest',p:[.10,-.05,.32]}],[.88,{f:'world',p:[.45,top,.18],palm:0}],[2.72,{f:'world',p:[.46,top,.18],palm:0}],[3.12,{f:'world',p:[.54,top,-.20],palm:180}],[3.62,{f:'world',p:[.54,top,-.20],palm:180}],[3.72,{f:'chest',p:[.10,.30,.30]}],[3.90,{f:'chest',p:[.14,-.10,.32]}],[4.35,{f:'chest',p:restWrist(1)}],[4.85,{f:'chest',p:restWrist(1)}]],
  };
  const spec=t=>{const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posedFrom(tr,limbs);};
  const KEYS=TRUNK.map(k=>({t:k.t,label:k.label}));let state=null;
