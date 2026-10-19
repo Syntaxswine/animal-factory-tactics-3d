@@ -36,6 +36,10 @@ export function spinTrack(rows){
 export const MASS_SEGMENTS=Object.freeze([['pelvis','chest',16],['chest','neck',6],['neck','headTip',6],...[-1,1].flatMap(s=>[['pelvis','hip'+s,3],['chest','shoulder'+s,3.5],
  ['shoulder'+s,'elbow'+s,1.9],['elbow'+s,'wrist'+s,1.1],['wrist'+s,'palm'+s,.45],['hip'+s,'knee'+s,9.5],['knee'+s,'ankle'+s,3],['ankle'+s,'toe'+s,1]])]);
 export const BODY_MASS=MASS_SEGMENTS.reduce((m,s)=>m+s[2],0);
+// Point masses for inertia: each uniform rod as Simpson's three points (m/6, 2m/3, m/6), which is exact for its
+// moment of inertia about any axis.
+export function massPoints(P){const out=[];for(const [a,b,m]of MASS_SEGMENTS)out.push([P[a],m/6],[P[b],m/6],[P[a].clone().add(P[b]).multiplyScalar(.5),2*m/3]);return out;}
+export function inertiaAbout(points,origin,axis){let I=0;for(const [x,m]of points)I+=m*axis.clone().cross(x.clone().sub(origin)).lengthSq();return I;}
 const HEAD_TIP=[.14,.32,0],PALM=[.052,-.010,0],TOE=[.13,-.10,0];
 export function createTraversalBody(worker){
  // A limb asked past its reach is stretched straight toward the target, never thrown on mid-battle, and the
