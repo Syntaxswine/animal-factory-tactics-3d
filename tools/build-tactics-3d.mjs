@@ -2,6 +2,7 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
+for(const file of ['hedge-layout.js','painted-hedges.js','painted-hedges-study.html','painted-hedges-study.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['battle-entry.js','foliage-review-fixture.js','foliage-performance-review.js','editor-foliage-preview.js','editor-foliage-preview-worker.js','editor-foliage-preview-client.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['foliage-skins-review.html','foliage-skins-review.js','foliage-context-fixture.js','foliage-density-fixture.js','foliage-composition-fixture.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['biome-fixture.js','biome-atlas-lod.js','biome-obstacle-data.js','biome-obstacle-paint.js','biome-obstacles.js','biome-terrain-plan.js','biome-terrain.js','biome-terrain-fill.js','biome-ground-sprite-layout.js','biome-ground-sprites.js','biome-ground-composition.js','biome-ground-edge.js','biome-connected-ground.js','biome-ground-worker.js','biome-terrain-study.js','biome-terrain-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
@@ -58,3 +59,4 @@ checkModuleClosure(new URL('.pages-output/',root),['tactics/rpg-flight-study.js'
 checkModuleClosure(new URL('.pages-output/',root),['tactics/battle-entry.js','tactics/floor-breach-study.js','tactics/wall-breach-study.js','tactics/grenade-blast-study.js','tactics/strategic-sites-study.js','tactics/campaign-page.js','tactics/barrel-blast-study.js','tactics/tank-blast-study.js','tactics/painted-fire-study.js','tactics/helicoid-shot-study.js','tactics/battle-3d.js','tactics/editor-3d.js','tactics/title-3d.js','tactics/overmap.js','tactics/roof-mantle-study.js','tactics/ledge-descent-study.js','tactics/idle-study.js','tactics/armed-idle-study.js','tactics/grenade-throw-study.js']);
 
 checkModuleClosure(new URL('.pages-output/',root),['tactics/foliage-skins-review.js','tactics/editor-foliage-preview-worker.js']);
+checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-hedges-study.html']);
