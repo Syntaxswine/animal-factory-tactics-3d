@@ -246,6 +246,66 @@ Next, in order:
    Then a ballistic jump and drop.
 5. **Tests.** Write these checks into the repo (gate, collisions, reach, joint range) so nothing regresses unseen.
 
+### 2026-10-19 (night): every mammal fitted
+
+The user chose to fit every species before the physics pass ("Let's translate it to all species"). Ten of the eleven
+mammals share the horse's skeleton exactly. The pig foreman has shorter legs (hips 0.71 against 0.80, legs 0.59 against
+0.67). What differs is the surface, measured at rest:
+
+| | |
+|---|---|
+| tails | nine species: bull, cow, donkey, sheep, skunk, both pigs, rabbit, dog (the skunk's plume reaches 0.66 m behind) |
+| heads | the donkey's and the rabbit's ears stand 9 to 11 cm taller; sheep, cow, bull, goat and pig director spread ears or horns wider |
+| torso | the pigs' bellies reach 16 to 19 cm further forward, and they are 9 to 12 cm wider |
+
+As they were, the horse's keys put tails 14 to 23 cm into the floor in the roll, heads into the floor and sill, the pigs'
+bellies through the sill and walls, and the pig foreman's boots 6 cm off the floor at the end.
+
+`dist/tactics/traversal-fit.js` fits each crossing to the character as it is built (0.2 to 1.3 s):
+- **Keys scaled to the body.**
+  - A key held up by the legs scales to the character's legs.
+  - A key hanging from the hands keeps the shoulders where the horse's were.
+  - A deeper body stands back, feet and all, while it faces the obstacle, and lies higher on a sill.
+  - A wider body rolls farther from the wall.
+- **Clearance against the real, skinned surface.** Where the trunk, head or tail would go into the floor or the
+  obstacle, the least correction takes it out:
+  - The head turns within the neck, one turn per stretch of contact, with its eases checked too.
+  - The body bows from the hips for what the neck cannot clear.
+  - The trunk moves: straight back while approaching, the nearest way out over the obstacle, on once past it, and
+    down from under a lintel.
+  - The tail bends about its root. It follows from moment to moment, forward from the start and backward from the end,
+    so it leaves and rejoins the battle's own tail.
+- **Push-offs.** A foot or hand pushing off may leave its mark as the trunk rises (`lift`), a toe-off or a hand letting
+  go early.
+- **Tails given back.** Tails bend the way the game's tower tuck does, and are given back exactly when the crossing ends
+  or is cut short.
+
+What is left of species-specific contact, per the fit's own 20 ms check (trunk, head and tail; the horse's own defects
+are untouched for the physics and polish pass):
+
+| | window | side vault | climb |
+|---|---|---|---|
+| clean | horse, goat, bull, cow, sheep, skunk | all eleven | nine |
+| left | donkey and rabbit ears graze the lintel at the hop for about 20 ms (8 and 5 cm); the dog's ears 2 cm; the pigs' bellies 2.5 to 2.7 cm on the sill; a single 10 ms frame of the bull's and cow's tails in the sill and floor | | both pigs: their bellies keep them off the face, so their arms fall 24 to 27 cm short of the top. A pig needs its own hang. The dog's utility belt goes through the top as its legs go over |
+
+`tests/natural-traversal.test.mjs` builds every crossing on every mammal the way the battle builds a model. It checks
+that each one:
+- starts in the character's own stance and ends on the next tile's centre;
+- keeps the trunk, head and tail within about a centimetre of clear, with the gaps above named and capped so they can
+  only shrink;
+- gives the tail back exactly when cut short.
+
+A mutant that skips the tail restore fails it.
+
+The hen has no traversal skeleton (wings, no hands, no hips bone). `naturalTraversal(event, unit)` refuses it, and the
+battle keeps the simple traversal for it. The battle adapter now builds all three crossings: `window`, `low-wall` and
+`wall`.
+
+Next, in addition to the list above:
+1. **The hen.** Its own crossings (a wing-assisted hop), or keep the simple traversal. The user's call.
+2. **A pig hang** for the 2 m wall.
+3. **Long ears** under the lintel at the hop.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

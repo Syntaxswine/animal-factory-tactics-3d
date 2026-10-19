@@ -36,16 +36,18 @@ export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][
  const u=tb>ta?smooth((t-ta)/(tb-ta)):1,pa=frameToWorld(tr,a.f,a.p),pb=frameToWorld(tr,b.f,b.p),lerp=(x,y,k)=>x+(y-x)*k;
  const has=k=>k.hoof!==undefined,hp=has(a)?a.hoof:b.hoof,hq=has(b)?b.hoof:a.hoof,pal=k=>k.palm!==undefined;
  // knee: an optional bend direction in the pelvis frame ([x, y, z], z mirrored per side), blended like the point.
+ // lift: on a key a foot or hand pushes off from, how far the straightened limb may leave its mark until the next key
+ // (a toe-off as the trunk rises, a hand letting go early), without counting as a shortfall.
  const kn=k=>k.knee||[1,0,.25],knee=kn(a).map((v,j)=>lerp(v,kn(b)[j],u));
- return {f:'world',p:pa.lerp(pb,u).toArray(),knee,hoof:has(a)||has(b)?lerp(hp??0,hq??0,u):undefined,hoofW:lerp(has(a)?1:0,has(b)?1:0,u),heading:lerp(a.heading||0,b.heading||0,u),
+ return {f:'world',p:pa.lerp(pb,u).toArray(),knee,lift:a.lift||0,hoof:has(a)||has(b)?lerp(hp??0,hq??0,u):undefined,hoofW:lerp(has(a)?1:0,has(b)?1:0,u),heading:lerp(a.heading||0,b.heading||0,u),
   palm:pal(a)||pal(b)?lerp(pal(a)?a.palm:b.palm,pal(b)?b.palm:a.palm,u):undefined,palmW:lerp(pal(a)?1:0,pal(b)?1:0,u)};}
 // The body pose for a trunk (hips, hipsQ, spineQ, headQ, chest, chestQ) and world limb targets. Knees bend
 // forward of the pelvis; elbows back and out from the chest, or toward elbowAway (world) while a palm is planted.
 // A palm is never placed below the floor.
 export function posedFrom(tr,limbs,{elbowAway=null}={}){const legs={},arms={};for(const s of [-1,1]){const l=limbs['leg'+s],a=limbs['arm'+s];
-  const kn=l.knee||[1,0,.25];legs[s]={ankle:frameToWorld(tr,l.f,l.p).toArray(),pole:V(kn[0],kn[1],s*kn[2]).applyQuaternion(tr.hipsQ).toArray(),q:l.hoof!==undefined?yawQ(l.heading||0).multiply(bodyQ(l.hoof*DEG)):null,w:l.hoofW??1};
+  const kn=l.knee||[1,0,.25];legs[s]={ankle:frameToWorld(tr,l.f,l.p).toArray(),pole:V(kn[0],kn[1],s*kn[2]).applyQuaternion(tr.hipsQ).toArray(),q:l.hoof!==undefined?yawQ(l.heading||0).multiply(bodyQ(l.hoof*DEG)):null,w:l.hoofW??1,slack:l.lift||0};
   const k=a.palm!==undefined?a.palmW??1:0,pole=V(-.3,-.2,s).applyQuaternion(tr.chestQ);if(elbowAway)pole.lerp(V(...elbowAway),k);const wrist=frameToWorld(tr,a.f,a.p);wrist.y=Math.max(wrist.y,.06);
-  arms[s]={wrist:wrist.toArray(),pole:pole.toArray(),q:a.palm!==undefined?palmDown(a.palm):null,w:a.palmW??1};}
+  arms[s]={wrist:wrist.toArray(),pole:pole.toArray(),q:a.palm!==undefined?palmDown(a.palm):null,w:a.palmW??1,slack:a.lift||0};}
  return {hips:tr.hips.toArray(),hipsQ:tr.hipsQ,spineQ:tr.spineQ,headQ:tr.headQ,legs,arms};}
 const logq=q=>{const w=clamp(q.w,-1,1),s=Math.sqrt(1-w*w);return s<1e-9?V():V(q.x,q.y,q.z).multiplyScalar(2*Math.acos(w)/s);};
 const expq=r=>{const a=r.length();return a<1e-12?Q():Q().setFromAxisAngle(r.clone().divideScalar(a),a);};
@@ -113,17 +115,21 @@ export function createTraversalBody(worker){
  return {worker,root,bones,rest,at0,L,BEND,offsets,pose,points,com,rotate,world,warnings};
 }
 // The visible surface, skinned exactly (four weights, as three.js does) for a subset of every body mesh's
-// vertices: where the clothes, hooves and hands really are, for placing contacts.
-export function createSurfaceProbe(worker,{stride=2,include=()=>true}={}){
- const sets=worker.parts.filter(include).map(mesh=>{const g=mesh.geometry,pos=g.attributes.position,si=g.attributes.skinIndex,sw=g.attributes.skinWeight,n=Math.ceil(pos.count/stride),base=new Float32Array(n*3),bi=new Uint16Array(n*4),bw=new Float32Array(n*4),v=V();
-  for(let k=0,i=0;i<pos.count;i+=stride,k++){v.fromBufferAttribute(pos,i).applyMatrix4(mesh.bindMatrix);base[k*3]=v.x;base[k*3+1]=v.y;base[k*3+2]=v.z;for(let j=0;j<4;j++){bi[k*4+j]=si.getComponent(i,j);bw[k*4+j]=sw.getComponent(i,j);}}
-  return {mesh,n,base,bi,bw};});
+// vertices: where the clothes, hooves and hands really are, for placing contacts. bone[i] is the bone that carries
+// the most of point i (named in boneNames), so a fit can tell torso from head; vertex[i] is its index in its mesh.
+// keep(mesh, index) can drop single vertices (a tail but for its root).
+export function createSurfaceProbe(worker,{stride=2,include=()=>true,keep=()=>true}={}){
+ const sets=worker.parts.filter(include).map(mesh=>{const g=mesh.geometry,pos=g.attributes.position,si=g.attributes.skinIndex,sw=g.attributes.skinWeight,idx=[];for(let i=0;i<pos.count;i+=stride)if(keep(mesh,i))idx.push(i);
+  const n=idx.length,base=new Float32Array(n*3),bi=new Uint16Array(n*4),bw=new Float32Array(n*4),dom=new Uint16Array(n),vi=Uint32Array.from(idx),v=V();
+  idx.forEach((i,k)=>{v.fromBufferAttribute(pos,i).applyMatrix4(mesh.bindMatrix);base[k*3]=v.x;base[k*3+1]=v.y;base[k*3+2]=v.z;let most=-1;for(let j=0;j<4;j++){bi[k*4+j]=si.getComponent(i,j);bw[k*4+j]=sw.getComponent(i,j);if(bw[k*4+j]>most){most=bw[k*4+j];dom[k]=bi[k*4+j];}}});
+  return {mesh,n,base,bi,bw,dom,vi};});
  const count=sets.reduce((s,x)=>s+x.n,0),x=new Float32Array(count),y=new Float32Array(count),z=new Float32Array(count),part=new Uint8Array(count),m=new T.Matrix4(),post=new T.Matrix4();
- const names=sets.map(s=>s.mesh.name);
+ const names=sets.map(s=>s.mesh.name),bone=new Uint16Array(count),vertex=new Uint32Array(count),boneNames=(sets[0]?.mesh.skeleton.bones||[]).map(b=>b.name);
+ {let k0=0;for(const s of sets){bone.set(s.dom,k0);vertex.set(s.vi,k0);k0+=s.n;}}
  function update(){let k0=0;sets.forEach((s,pi)=>{const sk=s.mesh.skeleton,mats=sk.bones.map((b,i)=>new T.Matrix4().multiplyMatrices(b.matrixWorld,sk.boneInverses[i]).elements);post.multiplyMatrices(s.mesh.matrixWorld,s.mesh.bindMatrixInverse);const P=post.elements;
   for(let k=0;k<s.n;k++){const bx=s.base[k*3],by=s.base[k*3+1],bz=s.base[k*3+2];let vx=0,vy=0,vz=0;for(let j=0;j<4;j++){const w=s.bw[k*4+j];if(!w)continue;const e=mats[s.bi[k*4+j]];vx+=w*(e[0]*bx+e[4]*by+e[8]*bz+e[12]);vy+=w*(e[1]*bx+e[5]*by+e[9]*bz+e[13]);vz+=w*(e[2]*bx+e[6]*by+e[10]*bz+e[14]);}
    const i=k0+k;x[i]=P[0]*vx+P[4]*vy+P[8]*vz+P[12];y[i]=P[1]*vx+P[5]*vy+P[9]*vz+P[13];z[i]=P[2]*vx+P[6]*vy+P[10]*vz+P[14];part[i]=pi;}k0+=s.n;});return api;}
  // The lowest surface point among those accepted by keep(x,y,z,partName).
  function lowest(keep=()=>true){let best=null;for(let i=0;i<count;i++)if((!best||y[i]<best.y)&&keep(x[i],y[i],z[i],names[part[i]]))best={x:x[i],y:y[i],z:z[i],part:names[part[i]]};return best;}
- const api={count,x,y,z,part,names,update,lowest};return api;
+ const api={count,x,y,z,part,names,bone,vertex,boneNames,update,lowest};return api;
 }
