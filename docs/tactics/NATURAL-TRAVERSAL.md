@@ -18,6 +18,16 @@ should the side vault go over? The user chose **"Waist-high wall"**:
 > game (cover, sight, art, editor) goes to Codex as a handoff. The 2 m wall gets its own climb-over
 > animation.
 
+A second question followed the same day. These characters cannot tuck the chin far enough for a
+straight forward roll: the nod limit measured for the idle (`idle-fits.js`) is 0 to 35 degrees, and the
+pig director and the sheep have 0. A roll needs 60 to 90, and past the limit the jaw goes into the collar.
+The user chose **"Shoulder roll"**:
+
+> The real technique (parkour and military rolls go over a shoulder, never the head): one hand and
+> forearm down, the head turned away, roll diagonally across the back from shoulder to opposite hip,
+> come up on one knee on the next tile, then stand. The trunk does most of the turning, so the
+> stiff-necked pig director and sheep still clear.
+
 So there are three motions:
 1. **Window:** a head-first entry and roll that ends on the next tile.
 2. **Waist-high wall (new, about 1 m):** a side vault.
@@ -76,16 +86,37 @@ Consequences:
 - **2 m wall.** The top is 0.35 m above the head, and the standing palm reach is about 1.71 m. Getting
   over takes a jump to catch the top, then a pull-up and a leg over: a climb, not a vault.
 
+## What the window roll has to satisfy (found while building it)
+
+- **The head is the problem, not the back.** With the hands on the floor, the horse's head reaches the
+  floor about as soon as the hands do: the head extends about 0.5 m past the shoulders, and the palms reach
+  0.52 m. A roll clears only if the **chest lands flat on its back** with the neck lying back along the floor,
+  the spine curled about 40 degrees and the pelvis above. Rolled forward from there in the explorer, the back
+  of the neck touches first, and the head is 8 cm clear a quarter of the way through, 17 to 21 cm later.
+- **So the head points back at the window,** and the roll must run **along the wall** (68 degrees from straight
+  on), or the head hits the wall's far face. Rolling along the wall also keeps a 0.65 m roll on the tile, and
+  brings the character up out of the window's line.
+- **Coming down, the head turns about 35 degrees, and only one way.** Turned the other way, the long muzzle
+  runs into the wall's far face.
+- **The roll is computed, not keyed.** From the chest-flat start pose, the body turns step by step about
+  the point of its skinned surface that touches the floor. That is rolling, so it cannot slide or float.
+  The physics audit reads 0 N of phantom force through the roll.
+- **The short arms set the descent.** The hands reach the floor only once the shoulders are within
+  about 0.5 m of it. Hand targets come from where the shoulders really are at each key, so no arm is ever
+  asked past its reach (checked every 5 ms).
+
 ## The motions (plan)
 
-### Window: head-first entry and roll
+### Window: head-first entry and shoulder roll
 
-Step up to the sill. Lean over it on the belly while the hands reach down the far side. Then a
-**seesaw**: the trunk goes down and the legs rise behind, with the centre of mass kept over the sill
-until the hands reach the floor. The arms take the weight and bend, and the head tucks. The upper back
-meets the floor and the body **rolls** (a tucked forward roll, the legs coming over the sill). It comes
-up on the knees with the feet tucked behind, rocks back onto the feet and stands on the next tile's
-centre, facing on.
+Step up to the left part of the window and put the hands on the sill. Hop onto it on the belly and slide
+over head first while the hands reach down the far side. Then a **seesaw**: the trunk goes down and the
+legs rise behind, with the centre of mass kept over the sill until the hands reach the floor. On the way down
+the head turns away from the wall and the body twists toward the roll. The arms take the weight and bend.
+The upper back lands with the chest flat and the spine curled, and the body **rolls along the wall** across
+the tile, over the shoulder and down the back to the hip. It comes up on one knee, then stands on the next
+tile's centre, turning to face on. (The first plan was a tucked forward roll straight ahead, ending on both
+knees and rocking back. The neck limits ruled it out; see above.)
 
 ### Waist-high wall: side vault
 
@@ -106,6 +137,38 @@ Drop the last few centimetres, absorb, and step to the tile centre.
 - **Collisions with the obstacle:** the body's capsules against the sill, lintel and wall.
 - **The clothing census** (`tools/clothing-census.mjs`) through the extreme poses: tuck, inverted.
 - **Photographs from the real renderer**, in the game camera and close up.
+
+## Progress
+
+### 2026-10-19, first pass of the window (horse), work in progress
+
+The motion is `dist/tactics/window-dive.js`. It sits on `traversal-pose.js`, which holds the posing, limbs,
+the audit's mass model and the exact skinned surface probe. The battle adapter is `natural-traversal.js`.
+The study page is `tactics/traversal-study.html`, drawn by the game's renderer with the real brick window.
+`tools/photo-traversal.mjs` makes strips and videos of the study.
+
+phantom-wrench `rigs/traversal.mjs` per phase (max phantom force, share of body weight):
+
+| phase | force | |
+|---|---|---|
+| Step in | 21% | no balance planning yet |
+| Hands on the sill | 10% | |
+| Hop onto the sill | 0% | |
+| Slide over | 142% | the body is not resting on the sill |
+| Reach for the floor | 73% | |
+| Hands to the floor | 71% | |
+| Back to the floor | 0% | computed contact |
+| Roll | 0% | computed contact |
+| Roll onto the hip | 20% | |
+| Up on one knee | 918% | the get-up keys, and the hooves flip where a limb changes frame |
+| Stand on the tile | 170% | |
+
+Also open:
+- Velocity jumps where the keyed descent meets the computed roll (0.96 m/s at 2.40 s), and at its end.
+- The roll table is joined by straight lines.
+- The elbows reach 160 degrees and the left knee 168, past the rig's 150 and 155.
+- The thighs sink up to 8 cm into the sill during the hop.
+- The right sleeve brushes the wall's far face coming down.
 
 ## Integration
 
