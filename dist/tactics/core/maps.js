@@ -1,3 +1,5 @@
+import {boundaryClimbs} from '../climbing-routes.js';
+import {climbingMapErrors} from '../climbing.js';
 import {invalidateMapGeometry} from '../map-geometry-cache.js';
 import {localEnvironmentErrors} from '../environment-regions.js';
 import {spotlightErrors} from '../light-sources.js';
@@ -40,7 +42,7 @@ export function neighbors(m,p,stairs=stairSet(m),includeDiagonals=true){
  const z=levelOf(p),out=[];
  for(const b of [{x:p.x+1,y:p.y,z},{x:p.x-1,y:p.y,z},{x:p.x,y:p.y+1,z},{x:p.x,y:p.y-1,z}])if(passable(m,b)&&!parapetBlocks(m,p,b)&&(!blockedEdge(m,p,b)||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo&&!m.edgeLocks?.[edgeBetween(p,b)]))out.push({...b,cost:1});
  if(includeDiagonals)for(const dx of [-1,1])for(const dy of [-1,1]){const a={x:p.x+dx,y:p.y,z},b={x:p.x,y:p.y+dy,z},q={x:p.x+dx,y:p.y+dy,z};if(passable(m,a)&&passable(m,b)&&passable(m,q)&&!blockedEdge(m,p,a)&&!blockedEdge(m,p,b)&&!blockedEdge(m,a,q)&&!blockedEdge(m,b,q))out.push({...q,cost:1.5});}
- for(const dz of [-1,1])if(stairs.has(stairKey(p.x,p.y,Math.min(z,z+dz)))&&passable(m,{x:p.x,y:p.y,z:z+dz}))out.push({x:p.x,y:p.y,z:z+dz,cost:stairs.get(stairKey(p.x,p.y,Math.min(z,z+dz)))});for(const link of roofNeighbors(m,p))out.push(link);return out.filter(b=>rampMoveAllowed(m,p,b)&&siteMoveAllowed(m,p,b)&&helicopterMoveAllowed(m,p,b)).concat(rampLinks(m,p).filter(b=>passable(m,b)&&!blockedEdge(m,{...p,z:Math.max(levelOf(p),levelOf(b))},{...b,z:Math.max(levelOf(p),levelOf(b))})));
+ for(const dz of [-1,1])if(stairs.has(stairKey(p.x,p.y,Math.min(z,z+dz)))&&passable(m,{x:p.x,y:p.y,z:z+dz}))out.push({x:p.x,y:p.y,z:z+dz,cost:stairs.get(stairKey(p.x,p.y,Math.min(z,z+dz))),kind:stairs.get(stairKey(p.x,p.y,Math.min(z,z+dz)))===3?'ladder':'stairs',rusty:!!m.stairs?.find(q=>q.x===p.x&&q.y===p.y&&q.z===Math.min(z,z+dz))?.rusty});for(const link of roofNeighbors(m,p))out.push(link);out.push(...boundaryClimbs(m,p));return out.filter(b=>rampMoveAllowed(m,p,b)&&siteMoveAllowed(m,p,b)&&helicopterMoveAllowed(m,p,b)).concat(rampLinks(m,p).filter(b=>passable(m,b)&&!blockedEdge(m,{...p,z:Math.max(levelOf(p),levelOf(b))},{...b,z:Math.max(levelOf(p),levelOf(b))})));
 }
 
 // Marked roof edges connect an outdoor foothold to the adjacent upper platform.
@@ -64,7 +66,7 @@ export function stampRoom(m,x,y,w=7,h=6,z=0){
  for(let cx=x;cx<x+w;cx++){m.edges[edgeKey('s',cx,y-1,z)]='wall';m.edges[edgeKey('s',cx,y+h-1,z)]='wall';}
  m.edges[edgeKey('e',x-1,y+Math.floor(h/2),z)]='door';m.edges[edgeKey('s',x+Math.floor(w/2),y+h-1,z)]='door';return true;
 }
-export function addStairs(m,x,y,z,kind='stairs'){if(!inBounds(x,y,z)||z>=LEVELS-1)return false;setTerrain(m,x,y,z,'floor');setTerrain(m,x,y,z+1,'floor');if(!m.stairs.some(p=>p.x===x&&p.y===y&&p.z===z))m.stairs.push({x,y,z,kind});else m.stairs=m.stairs.map(p=>p.x===x&&p.y===y&&p.z===z?{...p,kind}:p);return true;}
+export function addStairs(m,x,y,z,kind='stairs'){if(!inBounds(x,y,z)||z>=LEVELS-1)return false;setTerrain(m,x,y,z,'floor');setTerrain(m,x,y,z+1,'floor');if(!m.stairs.some(p=>p.x===x&&p.y===y&&p.z===z))m.stairs.push({x,y,z,kind});else m.stairs=m.stairs.map(p=>p.x===x&&p.y===y&&p.z===z?{x:p.x,y:p.y,z:p.z,kind}:p);return true;}
 export function factoryMap(){
  const m=blankMap('Factory test');stampRoom(m,10,3,8,8);stampRoom(m,16,14,8,8);
  for(const [x,y]of [[7,6],[7,7],[5,12],[6,12],[9,15],[10,15],[13,5],[16,8],[13,12],[14,12],[20,6],[21,6],[20,18],[23,16],[23,19],[12,19],[7,20]])m.terrain[y][x]='crate';
@@ -106,7 +108,7 @@ export function validateMap(raw,{connectivity=true}={}){
  for(const p of raw.props||[]){const cells=propCells(p);if(cells.some(a=>cells.some(b=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y)===1&&blockedEdge(raw,a,b))))errors.push('A prop footprint crosses a wall or fence.');}
  const roofKeys=new Set();for(const p of raw.climbs||[]){const k=[p.x,p.y,p.z,p.dx,p.dy].join(',');if(roofKeys.has(k))errors.push('Duplicate roof climb.');roofKeys.add(k);if(!roofValid(raw,p))errors.push('Roof climbs need free endpoints, open headroom and an unobstructed upper edge.');}
  const stairKeys=new Set();for(const p of raw.stairs){const k=stairKey(p.x,p.y,p.z);if(stairKeys.has(k))errors.push('Duplicate stair connection.');stairKeys.add(k);if(!passable(raw,p)||!passable(raw,{...p,z:p.z+1}))errors.push(`Stairs at ${k} need walkable floors at both ends.`);}
- errors.push(...characterErrors(raw),...patrolMapErrors(raw,240,passable));for(const p of raw.starts)if(p.species!==undefined&&!SPECIES.includes(p.species)||p.weapon!==undefined&&!WEAPON_IDS.includes(p.weapon)||p.outfit!==undefined&&!['normal','red-hats'].includes(p.outfit)&&!(p.species==='donkey'&&p.outfit==='blue-hawaiian'))errors.push('Unsupported squad appearance or weapon.');const positions=new Set();for(const p of [...raw.starts,...raw.guards]){const k=tileKey(p.x,p.y,levelOf(p));if(positions.has(k))errors.push(`Overlapping unit starts at ${k}.`);positions.add(k);if(p.towerPost?!towerForUnit(raw,p):!passable(raw,p))errors.push(`Unit start needs a walkable floor or valid tower post at ${k}.`);}
+ errors.push(...climbingMapErrors(raw),...characterErrors(raw),...patrolMapErrors(raw,240,passable));for(const p of raw.starts)if(p.species!==undefined&&!SPECIES.includes(p.species)||p.weapon!==undefined&&!WEAPON_IDS.includes(p.weapon)||p.outfit!==undefined&&!['normal','red-hats'].includes(p.outfit)&&!(p.species==='donkey'&&p.outfit==='blue-hawaiian'))errors.push('Unsupported squad appearance or weapon.');const positions=new Set();for(const p of [...raw.starts,...raw.guards]){const k=tileKey(p.x,p.y,levelOf(p));if(positions.has(k))errors.push(`Overlapping unit starts at ${k}.`);positions.add(k);if(p.towerPost?!towerForUnit(raw,p):!passable(raw,p))errors.push(`Unit start needs a walkable floor or valid tower post at ${k}.`);}
  if(!passable(raw,raw.exits[0]))errors.push('Travel marker needs a walkable floor.');if(errors.length||!connectivity)return [...new Set(errors)];
  const targets=[...raw.starts,...raw.guards,...raw.exits,...raw.guards.flatMap(g=>g.patrol||[])].map(p=>towerForUnit(raw,p)?towerEntry(towerForUnit(raw,p)):p),missing=reachedTargets({...raw,edgeLocks:{}},targets);for(const p of targets)if(missing.has(index(p)))errors.push(`Unreachable start, marker or patrol waypoint at ${p.x},${p.y}, level ${levelOf(p)+1}. Add doors or stairs.`);return errors;
 }

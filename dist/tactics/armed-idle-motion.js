@@ -3,8 +3,9 @@ import {idleState,IDLE_LOADS,IDLE_MOODS} from './armed-idle-state.js';
 import {v,q,snapshot,restore,solveLimb} from './idle-rig-math.js';
 import {createHenIdleRig} from './hen-idle-rig.js';
 import {fitIdlePack} from './idle-pack-fit.js';
+import {BODY_MASS} from './character-mass.js';
 
-export const IDLE_BODY_MASS={horse:80,goat:60,bull:110,cow:80,donkey:75,sheep:65,skunk:55,'pig-foreman':95,'pig-director':115,rabbit:50,dog:75,hen:50};
+export const IDLE_BODY_MASS=BODY_MASS;
 export function fitIdleCarry(worker,profile,weapon){
  const c=weapon.carry||{position:[.24,1.005,.035],axis:[.20,.38,-.90],hands:[1,-1]},id=weapon.id,pig=profile.id.startsWith('pig-'),bird=profile.id==='hen',long=['rifle','assault','smg','shotgun','sniper','launcher','flamethrower'].includes(id);
  const carry={...c,position:[...c.position],axis:[...c.axis],hands:[...c.hands],handPoses:{...c.handPoses}};

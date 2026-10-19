@@ -1,6 +1,6 @@
-export const STAT_DEFINITIONS=[['strength','Strength'],['endurance','Endurance'],['dexterity','Dexterity'],['agility','Agility'],['intelligence','Intelligence'],['perception','Perception'],['mechanical','Mechanical'],['medical','Medical'],['firearms','Firearms'],['heavyWeapons','Heavy weapons'],['explosives','Explosives'],['leadership','Leadership'],['sneak','Sneak']];
-export const STAT_VERSION=1;
-export const BASE_STATS={strength:25,endurance:30,dexterity:35,agility:35,intelligence:40,perception:40,mechanical:15,medical:15,firearms:35,heavyWeapons:15,explosives:15,leadership:20,sneak:25};
+export const STAT_DEFINITIONS=[['strength','Strength'],['endurance','Endurance'],['dexterity','Dexterity'],['agility','Agility'],['intelligence','Intelligence'],['perception','Perception'],['mechanical','Mechanical'],['medical','Medical'],['firearms','Firearms'],['heavyWeapons','Heavy weapons'],['explosives','Explosives'],['leadership','Leadership'],['sneak','Sneak'],['climbing','Climbing']];
+export const STAT_VERSION=2;
+export const BASE_STATS={strength:25,endurance:30,dexterity:35,agility:35,intelligence:40,perception:40,mechanical:15,medical:15,firearms:35,heavyWeapons:15,explosives:15,leadership:20,sneak:25,climbing:50};
 export const GUARD_STATS={...BASE_STATS,strength:20,endurance:25,agility:30,firearms:40,heavyWeapons:35,perception:45};
 // Starting balance profiles, independent of species. Maps may override any value.
 export const MERC_STATS={
@@ -10,7 +10,9 @@ export const MERC_STATS={
  Vera:{strength:40,endurance:55,dexterity:65,agility:50,intelligence:85,perception:65,mechanical:25,medical:90,firearms:40,heavyWeapons:15,explosives:20,leadership:65,sneak:45}
 };
 export const statValue=(v,fallback=1)=>Math.max(1,Math.min(100,Math.round(Number.isFinite(v)?v:fallback)));
-export function normalizeStats(value={},base=BASE_STATS){return Object.fromEntries(STAT_DEFINITIONS.map(([key])=>[key,statValue(value?.[key],base[key])]));}
+export function normalizeStats(value={},base=BASE_STATS){return Object.fromEntries(STAT_DEFINITIONS.map(([key])=>[key,statValue(value?.[key],base[key]??BASE_STATS[key])]));}
+// Add only the new field to old saves. Never heal, refill AP, or conceal invalid values.
+export function migrateClimbing(u){if(u?.stats&&u.stats.climbing===undefined&&(u.statVersion??1)<2){u.stats.climbing=BASE_STATS.climbing;u.statVersion=STAT_VERSION;}return u;}
 export function weaponSkill(weapon){if(['hands','knife'].includes(weapon))return null;if(weapon==='grenade')return 'explosives';if(['hmg','rpg','launcher','flamethrower'].includes(weapon))return 'heavyWeapons';return 'firearms';}
 export function weaponAccuracy(u,weapon=u.weapon){if(!u.stats)return u.accuracy;const skill=weaponSkill(weapon),dex=statValue(u.stats.dexterity);return skill?statValue(u.stats[skill])*.75+dex*.25:dex;}
 export function effectiveSkill(u,key){if(!u.stats)return u[key]||0;return Math.min(100,statValue(u.stats[key])+(key==='medical'||key==='mechanical'?Math.floor(statValue(u.stats.intelligence)/10):0));}

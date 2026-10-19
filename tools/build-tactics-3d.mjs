@@ -2,7 +2,7 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
-for(const file of ['battle-entry.js','foliage-review-fixture.js','foliage-performance-review.js','editor-foliage-preview.js','editor-foliage-preview-worker.js','editor-foliage-preview-client.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+for(const file of ['climbing-fixture.js','character-mass.js','climbing.js','climbing-routes.js','fall-damage.js','simple-traversal.js','battle-entry.js','foliage-review-fixture.js','foliage-performance-review.js','editor-foliage-preview.js','editor-foliage-preview-worker.js','editor-foliage-preview-client.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['foliage-skins-review.html','foliage-skins-review.js','foliage-context-fixture.js','foliage-density-fixture.js','foliage-composition-fixture.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['biome-fixture.js','biome-atlas-lod.js','biome-obstacle-data.js','biome-obstacle-paint.js','biome-obstacles.js','biome-terrain-plan.js','biome-terrain.js','biome-terrain-fill.js','biome-ground-sprite-layout.js','biome-ground-sprites.js','biome-ground-composition.js','biome-ground-edge.js','biome-connected-ground.js','biome-ground-worker.js','biome-terrain-study.js','biome-terrain-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.cpSync(new URL('dist/assets/environment/biome-obstacles/',root),new URL('.pages-output/assets/environment/biome-obstacles/',root),{recursive:true});

@@ -28,7 +28,7 @@ import {nearbyLoot,visibleLoot} from './battle-inventory.js';
 import {nearbyInteractions,performInteraction} from './field-actions.js';
 import {createCharacterScreen} from './character-screen.js';
 import {AIM_LEVELS,shotAim,supportsAim} from './aim-levels.js';
-import {climbPreview,performClimb} from './ladder-actions.js';
+import {climbPreview,performClimb,performTraversal,nearbyBoundaryClimbs} from './ladder-actions.js';
 import {unitBaseHeight} from './tower-geometry.js';
 import {illuminationAt} from './awareness.js';
 import {FrameClock,formatClock,timeOfDay,turnBased} from './game-clock.js';
@@ -50,7 +50,7 @@ if(new URLSearchParams(location.search).has('editorPlaytest')){
  const back=document.createElement('button');back.id='return-editor';back.textContent='Return to editor';back.onclick=()=>{window.opener?.focus();window.close();};document.querySelector('header').append(back);
  document.querySelector('aside h1').textContent='Playtest: '+definition.name;
 }
-if(new URLSearchParams(location.search).get('study')==='wall-xray')document.querySelector('aside h1').textContent=definition.name;
+if(new URLSearchParams(location.search).get('study')==='wall-xray'||new URLSearchParams(location.search).get('study')==='climbing')document.querySelector('aside h1').textContent=definition.name;
 let cliffViewState=null,cliffViewId=0;
 let renderer,state,targetId=null,tileTarget=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false,lastLadderPreparing=false;
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
@@ -127,7 +127,7 @@ async function prepareView(){await prepareSectorView(renderer,()=>{ctx.clearRect
 async function loadEncounterSave(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{if(campaign){const restored=await campaign.load(id);if(restored)installState(restored);}else{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);installState(restored);}if(state)await prepareView();}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}}
 async function quickSave(){try{await saveGame('quick');message('Quicksave saved.');}catch(e){message('Could not save: '+e.message);}}
 async function quickLoad(){try{await loadGame('quick');}catch(e){message('Could not load: '+e.message);}}
-function autosave(){if(new URLSearchParams(location.search).get('study')==='tree-cover')return;saveGame('auto').catch(e=>{autoDisabled=true;if(campaign)userPaused=true;sync();message('Autosave failed: '+e.message+' Use Save / Load to retry.');});}
+function autosave(){if(new URLSearchParams(location.search).get('study')==='tree-cover'||new URLSearchParams(location.search).get('study')==='climbing')return;saveGame('auto').catch(e=>{autoDisabled=true;if(campaign)userPaused=true;sync();message('Autosave failed: '+e.message+' Use Save / Load to retry.');});}
 function sync(){
  settleEncounterRounds(state);campaign?.update();const combat=turnBased(state);if(combat!==lastClockCombat){frameClock.reset();lastClockCombat=combat;}syncClock();
  if(cliffViewState!==state){cliffViewState=state;cliffViewId=0;}const traversal=state.cliffTraversals?.at(-1);if(traversal&&traversal.id>cliffViewId){cliffViewId=traversal.id;if(traversal.unitId===state.selected){level=selected().z||0;$('floor').value=level;}}
@@ -140,7 +140,7 @@ function sync(){
  const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,level,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.name,v.species,v.outfit,v.weapon,v.slots,v.pack,v.away,v.hp,v.ap,Math.floor(v.stamina),v.medkits,v.pinned,v.legWound,heldWeaponJammed(v),v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,renderer.traversal.preparing,userPaused,paused()]);
  if(signature===lastUI)return;lastUI=signature;
  fieldPanel.replaceChildren();for(const entry of nearbyInteractions(state,u)){const b=document.createElement('button'),p=entry.preview;b.textContent=entry.label+' · '+(p.cost?p.cost+' AP':'1 min')+(p.chance!==undefined?' · '+p.chance+'%':'')+(p.amount>0?' · +'+Math.floor(p.amount):'');b.disabled=paused()||renderer.busy||!p.ok;b.title=p.reason||('Stamina cost: '+p.stamina);b.onclick=()=>action(()=>performInteraction(state,selected(),entry.kind,entry.target));fieldPanel.append(b);}
- for(const entry of nearbyCliffClimbs(state,u)){const b=document.createElement('button');b.textContent=entry.label+' · '+entry.cost+' AP';b.disabled=paused()||renderer.busy||!entry.ok;b.title=entry.reason||'Traverse this ledge';b.onclick=()=>action(()=>move(state,selected(),entry.to.x,entry.to.y,entry.to.z));fieldPanel.append(b);}
+ for(const entry of [...nearbyCliffClimbs(state,u),...nearbyBoundaryClimbs(state,u)]){const b=document.createElement('button');b.textContent=entry.label+' · '+(combatCosts(state)?entry.cost+' AP':'Free')+(entry.risk?' · '+entry.risk:'');b.disabled=paused()||renderer.busy||!entry.ok;b.title=entry.reason||'Traverse this ledge';b.onclick=()=>action(()=>performTraversal(state,selected(),entry.to));fieldPanel.append(b);}
  $('phase').textContent=(renderer.traversal.preparing?'Preparing ladder motion… · ':'')+`${state.phase==='explore'?'Exploration':state.phase==='player'?'Your turn':state.phase==='enemy'?'Guard turn':state.phase==='won'?'Encounter cleared':'Encounter ended'} · Round ${state.round}`;
  hud.render(state,selectedIds,{blocked:paused()||renderer.busy});
  $('light-exposure').textContent='Light on '+u.name+': '+Math.round(illuminationAt(state,u)*100)+'% · Perception '+(u.perception??50);
@@ -155,7 +155,7 @@ function sync(){
  for(const [key,aim] of Object.entries(AIM_LEVELS))$('aim-level').querySelector('[value='+key+']').textContent=aim.label+' · '+shotAim(WEAPONS[u.weapon],key,shotBurst).cost+' AP';
  $('aim-level').disabled=!supportsAim(WEAPONS[u.weapon]);
  $('fire').disabled=paused(true)||renderer.busy||!preview?.ok||!canControl(state,u)||!!state.queue.length;
- const climb=climbPreview(state,u,level);climbButton.hidden=!climb.ok&&!climb.destination;climbButton.textContent=climb.label+(combatCosts(state)?' · '+(climb.cost??3)+' AP':climb.kind==='tower'?' · 30 sec':'');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||(climb.kind==='roof'?'Climb this roof edge.':climb.kind==='tower'?'Use the stairs or ladder at the gold entrance ring.':'Use this ladder or stair connection.');
+ const climb=climbPreview(state,u,level);climbButton.hidden=!climb.ok&&!climb.destination;climbButton.textContent=climb.label+(combatCosts(state)?' · '+(climb.cost??3)+' AP':climb.kind==='tower'?' · 30 sec':'');climbButton.textContent+=(climb.risk?' · '+climb.risk:'');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||(climb.kind==='roof'?'Climb this roof edge.':climb.kind==='tower'?'Use the stairs or ladder at the gold entrance ring.':'Use this ladder or stair connection.');
  $('reload').textContent=heldWeaponJammed(u)?'Clear jam'+(combatCosts(state)?' · 3 AP':''):'Reload';
  $('reload').disabled=paused()||renderer.busy||!canControl(state,u)||!!state.queue.length||!WEAPONS[u.weapon].mag;
  $('end').disabled=paused()||renderer.busy||state.phase!=='player'||!!state.queue.length;
@@ -190,8 +190,8 @@ function contextChoices(info,merc){
   const w=WEAPONS[u.weapon],jam=heldWeaponJammed(u),canReload=jam||w.mag&&u.ammo[u.weapon]<w.mag&&reserve(u,u.weapon)>0;
   entries.push(entry('reload',jam?'Clear jam':'Reload','↻',{kind:'reload'},ready&&canReload&&(!combatCosts(state)||u.ap>=3),!canReload?'Magazine full or no matching ammunition.':'',combatCosts(state)?'3 AP':''));
   const interactions=nearbyInteractions(state,u).map(e=>entry('interact-'+e.kind,e.label,'✚',{kind:'interact',entry:e},free&&e.preview.ok,e.preview.reason,e.preview.cost?e.preview.cost+' AP':'1 minute'));
-  const climb=climbPreview(state,u,level);if(climb.ok)interactions.push(entry('climb',climb.label,'↟',{kind:'climb'},ready,'',combatCosts(state)?climb.cost+' AP':''));
-  for(const e of nearbyCliffClimbs(state,u))interactions.push(entry('cliff-'+e.to.x+'-'+e.to.y,e.label,'↟',{kind:'cliff',point:e.to},free&&e.ok,e.reason,e.cost+' AP'));
+  const climb=climbPreview(state,u,level);if(climb.destination)interactions.push(entry('climb',climb.label,'↟',{kind:'climb'},ready&&climb.ok,climb.reason,[combatCosts(state)?climb.cost+' AP':'',climb.risk].filter(Boolean).join(' · ')));
+  for(const e of [...nearbyCliffClimbs(state,u),...nearbyBoundaryClimbs(state,u)])interactions.push(entry('cliff-'+e.kind+'-'+e.to.x+'-'+e.to.y,e.label,'↟',{kind:'cliff',point:e.to},free&&e.ok,e.reason,(combatCosts(state)?e.cost+' AP':'Free')+(e.risk?' · '+e.risk:'')));
   entries.push(...interactions);
   if(state.queue.length)entries.push(entry('stop','Stop movement','■',{kind:'stop'},free));
  }else{
@@ -225,7 +225,7 @@ function runContextAction(a){
   if(paused()||renderer.busy)return;const p=pickupOrder.start(state,selected(),a.pile);message(p.ok?'Approaching items. The inventory will open when close enough.':p.reason);sync();return;
  }
  action(()=>{if(a.kind==='equip')return equip(state,selected(),a.weapon);if(a.kind==='reload')return reload(state,selected());if(a.kind==='interact')return performInteraction(state,selected(),a.entry.kind,a.entry.target);
-  if(a.kind==='cliff')return move(state,selected(),a.point.x,a.point.y,a.point.z);
+  if(a.kind==='cliff')return performTraversal(state,selected(),a.point);
   if(a.kind==='face')return turnTo(state,selected(),headingTo(selected(),a.point));
   if(a.kind==='move')return selectedIds.size>1?moveGroup(state,[...selectedIds],selected(),a.point.x,a.point.y,a.point.z):move(state,selected(),a.point.x,a.point.y,a.point.z);return false;});
 }

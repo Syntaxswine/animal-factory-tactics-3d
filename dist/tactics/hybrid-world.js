@@ -87,9 +87,9 @@ export function buildWorld(map){map=canopyPresentation(map);
  }
  for(const p of map.stairs||[]){
   const base=p.z*D.floorSpacing;
-  if(p.kind==='ladder'){
-   for(const y of [-.3,.3])box(`stairs:${p.x},${p.y},${p.z}:rail:${y}`,'stairs','metal',[p.x+.35,base+D.floorSpacing/2,p.y+y],[.07,D.floorSpacing,.07],{x:p.x,y:p.y,z:p.z});
-   for(let i=0;i<8;i++)box(`stairs:${p.x},${p.y},${p.z}:rung:${i}`,'stairs','metal',[p.x+.35,base+(i+.5)*D.floorSpacing/8,p.y],[.07,.055,.65],{x:p.x,y:p.y,z:p.z});continue;
+  if(p.kind==='ladder'){const ladderMaterial=p.rusty?'rust':'metal';
+   for(const y of [-.3,.3])box(`stairs:${p.x},${p.y},${p.z}:rail:${y}`,'stairs',ladderMaterial,[p.x+.35,base+D.floorSpacing/2,p.y+y],[.07,D.floorSpacing,.07],{x:p.x,y:p.y,z:p.z});
+   for(let i=0;i<8;i++)box(`stairs:${p.x},${p.y},${p.z}:rung:${i}`,'stairs',ladderMaterial,[p.x+.35,base+(i+.5)*D.floorSpacing/8,p.y],[.07,.055,.65],{x:p.x,y:p.y,z:p.z});continue;
   }
   // Open steel treads preserve a visible opening, with the same volumes for rays.
   for(let i=0;i<8;i++)box(`stairs:${p.x},${p.y},${p.z}:tread:${i}`,'stairs','metal',[p.x-.5+(i+.5)/8,base+(i+1)*D.floorSpacing/8-.025,p.y],[.1,.05,.8],{x:p.x,y:p.y,z:p.z});

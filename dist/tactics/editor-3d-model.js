@@ -38,7 +38,7 @@ export class InspectionDocument {
   if(unit&&['auto','unit'].includes(mode))return {...base,type:'unit',label:unit.role,data:unit,cells:[base]};
   if(availableProp&&['auto','prop'].includes(mode))return {...base,type:'prop',label:prop.kind,data:prop,cells:propCells(prop)};
   const access=[...this.map.stairs.map(p=>({...p,kind:p.kind||'stairs'})),...(this.map.climbs||[]).map(p=>({...p,kind:p.kind==='cliff'?'cliff climb':'roof climb'})),...this.map.exits.map(p=>({...p,kind:'Travel marker'}))].find(p=>p.x===x&&p.y===y&&((p.z||0)===z||(p.kind==='stairs'||p.kind==='ladder')&&(p.z||0)+1===z));
-  if(access&&['auto','access'].includes(mode))return {...base,type:'access',label:access.kind,data:access,cells:[base]};
+  if(access&&['auto','access'].includes(mode))return {...base,type:'access',label:(access.rusty?'Rusty ':'')+access.kind,data:access,cells:[base]};
   if(z&&this.map.breaches?.upper[z-1]?.[`${x},${y}`])return {...base,type:'tile',label:'Broken floor opening',data:{...base,terrain,broken:true,originalTerrain:this.map.breaches.upper[z-1][`${x},${y}`]},cells:[base]};
   return {...base,type:'tile',label:terrain==='void'?'Empty floor cell':terrain,data:{...base,terrain,...foliageAt(this.map,x,y,z)?{foliage:foliageAt(this.map,x,y,z),treeCover:TREE_COVER[treeCoverOf(foliageAt(this.map,x,y,z))].label}:{}},cells:[base]};
  }

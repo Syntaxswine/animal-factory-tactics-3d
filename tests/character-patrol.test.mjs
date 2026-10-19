@@ -36,8 +36,8 @@ test('invalid or obstructed waypoints reject atomically, block paths cannot esca
  const map=structuredClone(d.map);map.terrain[10][15]='water';d.replace(map);assert.throws(()=>d.setPatrol(id,[point(15)]),/walkable/);
  d.setPatrol(id,[point(30)]);assert.throws(()=>validateBlock(d.capture(0,0)),/inside/);
 });
-test('playtest validation reports a waypoint behind a sealed wall, but draft editing remains possible',()=>{
- const {d,id}=fixture(),map=structuredClone(d.map);Object.assign(map.edges,{'e:19:20':'wall','e:20:20':'wall','s:20:19':'wall','s:20:20':'wall'});d.replace(map);d.setPatrol(id,[point(20,20)]);
+test('playtest validation reports a waypoint inside a sealed roofed room, but draft editing remains possible',()=>{
+ const {d,id}=fixture(),map=structuredClone(d.map);Object.assign(map.edges,{'e:19:20':'wall','e:20:20':'wall','s:20:19':'wall','s:20:20':'wall'});map.upper[0]['20,20']='floor';d.replace(map);d.setPatrol(id,[point(20,20)]);
  assert.deepEqual(validateMap(d.map,{connectivity:false}),[]);assert(validateMap(d.map).some(e=>e.includes('patrol waypoint at 20,20')));
 });
 test('guards walk between flags, wait on the game clock and loop without charging squad AP',()=>{
