@@ -218,7 +218,7 @@ window, so the vault and the climb went through a scratch adapter with the same 
 |---|---|---|---|
 | gate | fails 7 of 8 checks | fails 6 of 8 | fails 7 of 8 |
 | phantom wrench over the limit | 1.77 s | 0.92 s | 1.20 s |
-| limb snaps within 1 ms | right elbow 72 m/s (2.45 s) | as the right hand lets go (1.0 s): right elbow 522 m/s, right knee 136 | 27: knees up to 416 m/s and elbows up to 553, at the catch, straddle, lowering, drop and stand |
+| limb speed (limit 8 m/s) | right elbow whips round at 72 m/s (2.45 s) | as the right hand lets go (1.0 s): the right elbow flips twice within 1 ms (up to 522 m/s); right knee 136 m/s | 25 flips within 1 ms: knees up to 416 m/s and elbows up to 553, at the catch, straddle, lowering, drop and stand |
 | position pops | palms 7.7 cm landing on the sill (0.73 s); legs 2.3 cm at the roll start (2.40); right palm 8.3 cm (2.47); head 3 cm at the sit-up (2.68) | right palm 1 cm | palms 6 to 7.5 cm at the catch and the drop |
 | body through itself | right upper arm 18.5 cm into the chest (2.39 s) | legs through the right arm, 11 cm (1.03 s) | thighs through each other, 15 cm, standing up (4.27 s) |
 | into the obstacle or the floor | right hoof 6.9 cm into the lintel (1.86 s); right forearm 8.6 cm into the floor mid-roll | seat and legs 7.8 cm into the top (0.94 s) | seat and legs 8.0 cm into the top (2.69 s) |
@@ -237,12 +237,12 @@ up, and that moves the computed roll by 24 ms (3.707 s on a bare worker, 3.683 s
 tuned on the battle's model, as the rig builds it, and numbers are quoted only from the instrument of record.
 
 Next, in order:
-1. **Window right arm.** Keep the right arm out of the chest and the floor, without the flip. Then re-audit the roll.
+1. **Window right arm.** Keep the right arm out of the chest and the floor, without the whip. Then re-audit the roll.
 2. **Window joins.** Make the joins continuous: the palms onto the sill, the roll start and the sit-up. Then tip over
    the sill as a pivot about its edge, keep the hooves under the lintel, and rise over the feet.
 3. **Vault.** Fix the release flip and route the legs outside the right arm, clear of the top. Then add flight from
    the push-off to the landing.
-4. **Climb.** Fix the limb poles (the 27 snaps), the reach at the catch and the lowering, and the legs over the top.
+4. **Climb.** Fix the limb poles (the 25 flips), the reach at the catch and the lowering, and the legs over the top.
    Then a ballistic jump and drop.
 5. **Tests.** Write these checks into the repo (gate, collisions, reach, joint range) so nothing regresses unseen.
 
