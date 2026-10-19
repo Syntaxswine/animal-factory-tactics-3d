@@ -12,7 +12,7 @@
       "upstreamSha256": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f"
     },
     "editor-model.js": {
-      "reason": "Author rusty ladders without changing the portable ladder geometry. Paint dense foliage with the same protected occupancy rules as other blocking terrain. Preserve the optional trusted sabotage action when placing a strategic site. Preserve donkey guide outfits and allow supported cliff tiles at water edges. Author tagged cliff links using supported adjacent levels. Assign permanent identities at character creation.",
+      "reason": "Persist hedge version and seed on new placements. Author rusty ladders without changing the portable ladder geometry. Paint dense foliage with the same protected occupancy rules as other blocking terrain. Preserve the optional trusted sabotage action when placing a strategic site. Preserve donkey guide outfits and allow supported cliff tiles at water edges. Author tagged cliff links using supported adjacent levels. Assign permanent identities at character creation.",
       "upstreamSha256": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262"
     },
     "engine.js": {
@@ -20,7 +20,7 @@
       "upstreamSha256": "7bfa4282d28d825f560af167866bf75ab0ecf810908ec58e4869c2b5d8fdd448"
     },
     "environment.js": {
-      "reason": "Add the five authored biome grounds as ordinary walkable terrain. Register helicopter and furnishing placements; only the helicopter body blocks standing movement. Recognize both foliage surfaces; dense thickets are not walkable floor. Register intact/wreck strategic sites with separate reserved footprints and standing passage masks. Register a separate targetable explosive barrel without changing ordinary drums. Register open timber trellis cover. Register visually identical climbable roof modules. Register cardinal cliff ramps. Register traversable diagonal roads and wooden plank flooring. Register authored light and cliff footprints and collision rules.",
+      "reason": "Register solid short and tall hedge cells; finite sight and wooden shot cover use the shared foliage queries. Add the five authored biome grounds as ordinary walkable terrain. Register helicopter and furnishing placements; only the helicopter body blocks standing movement. Recognize both foliage surfaces; dense thickets are not walkable floor. Register intact/wreck strategic sites with separate reserved footprints and standing passage masks. Register a separate targetable explosive barrel without changing ordinary drums. Register open timber trellis cover. Register visually identical climbable roof modules. Register cardinal cliff ramps. Register traversable diagonal roads and wooden plank flooring. Register authored light and cliff footprints and collision rules.",
       "upstreamSha256": "424fa8b3f1287ac42a84f24e853ed382dabfd51bae10940fe62caa2b460d123a"
     },
     "explosives.js": {
@@ -32,7 +32,7 @@
       "upstreamSha256": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f"
     },
     "maps.js": {
-      "reason": "Expose physical window, wall and ladder routes and validate ladder condition. Invalidate live geometry when terrain changes or a door opens; editable map clones keep content checks. Validate optional local environment fields while preserving older maps. Validate spotlight aim points and game-clock waits. Use baked helicopter movement clearance and validate authored squad facing. Validate authored patrol waypoints. Validate ground-preserving foliage overlays on all three levels and honor independent walking restrictions. Validate authored broken walls and floor holes. Validate ground-only strategic sites and follow their baked continuous passage links. Validate automatic-land ownership on import. Trace trellis gaps and beams with the shared sculpted profile. Validate nonwalkable fourth-level roof decoration. Derive roof climbs from marked roof footprints. Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks.",
+      "reason": "Validate versioned hedge placements and deterministic seeds. Expose physical window, wall and ladder routes and validate ladder condition. Invalidate live geometry when terrain changes or a door opens; editable map clones keep content checks. Validate optional local environment fields while preserving older maps. Validate spotlight aim points and game-clock waits. Use baked helicopter movement clearance and validate authored squad facing. Validate authored patrol waypoints. Validate ground-preserving foliage overlays on all three levels and honor independent walking restrictions. Validate authored broken walls and floor holes. Validate ground-only strategic sites and follow their baked continuous passage links. Validate automatic-land ownership on import. Trace trellis gaps and beams with the shared sculpted profile. Validate nonwalkable fourth-level roof decoration. Derive roof climbs from marked roof footprints. Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks.",
       "upstreamSha256": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73"
     },
     "progression.js": {
@@ -60,14 +60,14 @@
     "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
     "blocks.js": "7ffca06b0c1ec5a8d71c13b448bfd27d34ebb6e7a11591dcf5d46bc5e61edc59",
     "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
-    "editor-model.js": "af611879bc237343018acb068d6888ef2e15c4aa2bd27a9a21525a83dad35577",
+    "editor-model.js": "1a212c68ed533150432eef8921ef2dfc4c809c7ac702f5fafcad878c63a9b95c",
     "engine.js": "9b2690ab3527f67b79f1e0230f8176fe467f22e3b295ba44cd4126769b661cca",
-    "environment.js": "647f002ba5f02aab66e34a0261641891216614d1723fbe038b10b333de05a3f7",
+    "environment.js": "5c332516834e13452c2709666070814c1c8ab01ba904a36b9adc6d39b4a3d20a",
     "explosives.js": "443bee20e0c5fd8152dc493c9dd29a865f95e27f5d11b5f642fd5d724db3b541",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "8e63ac2c2783edf5e4884f31c687494dbc4910edbfe620299302911394c539cb",
-    "maps.js": "aeefeb6cd9e48ea4e190fa0aaccfd79d096e50454483f8bd2618ea26de2e80a8",
+    "maps.js": "642c0f17e2987bc90c95db8d85b8c5ecce17111befa351430e9ebfcdb013343d",
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",

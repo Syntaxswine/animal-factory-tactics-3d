@@ -1,3 +1,6 @@
+import {hedgeObstacles} from './hedge-obstacles.js';
+import {isHedge} from './hedge-data.js';
+import {hedgeSurfaceHit,compileHedgeSurface} from './hedge-surfaces.js';
 import {foliageAt,foliageRule,foliageTreeAt,foliageTreeSpaceAvailable,foliageOccupied} from './foliage-data.js';
 import {biomeFamilyAt,biomeSeed} from './biome-family.js';
 import {selectBiomeTree} from './biome-tree-mix.js';
@@ -21,7 +24,7 @@ export function synchronizeFoliage(m){
   // occupancy list. Switching back to the simulation is not a forest edit.
   // Check foliage's own inputs after a generic cache miss before rebuilding it.
   const signature=foliageSignature(map);if(signature===cached.signature)return cached.scene;
-  const scene=!Object.keys(map.foliage||{}).length&&!signature.includes('"woodland')?{boxes:[],worldBoxes:[],index:new Map(),worldIndex:new Map(),trees:[],screens:[],wood:[]}:buildFoliageObstacles(map);
+  const scene=!Object.keys(map.foliage||{}).length&&!signature.includes('"woodland')&&!(map.coverOccupiedProps||map.props||[]).some(isHedge)?{boxes:[],worldBoxes:[],index:new Map(),worldIndex:new Map(),trees:[],screens:[],wood:[]}:buildFoliageObstacles(map);
   cached.signature=signature;return scene;
  })};caches.set(keyOf(m),cached);}
  cached.scene=cached.geometry.get(m);return cached.scene;
@@ -29,6 +32,7 @@ export function synchronizeFoliage(m){
 export function foliageObstacles(m){return caches.get(keyOf(m))?.scene||synchronizeFoliage(m);}
 
 export function foliageSegment(start,end,b){
+ if(b.hedgeTree)return hedgeSurfaceHit(start,end,b);
  if(b.lobes){
   // Leaf masses are clipped to their painted tile; paths remain visibly open.
   let lo=0,hi=1;for(let i=0;i<3;i++){const d=end[i]-start[i];if(Math.abs(d)<1e-10){if(start[i]<b.min[i]||start[i]>b.max[i])return null;}else {let a=(b.min[i]-start[i])/d,c=(b.max[i]-start[i])/d;if(a>c)[a,c]=[c,a];lo=Math.max(lo,a);hi=Math.min(hi,c);}}if(lo>hi)return null;
@@ -83,8 +87,9 @@ export function buildFoliageObstacles(m,{denseTreeMix=null,treesOnly=false}={}){
  const ledges=new Set((m.props||[]).filter(p=>p.kind==='cliff-ledge'&&(p.cliffMask??15)===15).map(p=>`${p.x},${p.y},${(p.z||0)+1}`));
  const bases=(x,y,z)=>ledges.has(`${x},${y},${z}`)?[(z-1)*3+2,(z-1)*2.12+2]:[z*3,z*2.12];
  function add(b,simBase,worldBase){
+  if(b.triangles){b.hedgeTree=compileHedgeSurface(b.triangles);delete b.triangles;}
   b.foliageVolume=true;b.kind='foliage';b.material=b.blocksShot?'wood':'foliage';b.center=b.min.map((v,i)=>(v+b.max[i])/2);b.size=b.max.map((v,i)=>v-b.min[i]);worldBoxes.push(b);
-  const cv=p=>[p[0],simBase+(p[1]-worldBase)/SCALE,p[2]],s={...b,min:cv(b.min),max:cv(b.max)};if(b.beam)s.beam={a:cv(b.beam.a),b:cv(b.beam.b),radius:b.beam.radius};if(b.lobes)s.lobes=b.lobes.map(l=>({center:cv(l.center),radius:[l.radius[0],l.radius[1]/SCALE,l.radius[2]]}));boxes.push(s);
+  const cv=p=>[p[0],simBase+(p[1]-worldBase)/SCALE,p[2]],s={...b,min:cv(b.min),max:cv(b.max)};if(b.hedgeTree)s.hedgeSpace={base:worldBase,simBase,scale:SCALE};if(b.beam)s.beam={a:cv(b.beam.a),b:cv(b.beam.b),radius:b.beam.radius};if(b.lobes)s.lobes=b.lobes.map(l=>({center:cv(l.center),radius:[l.radius[0],l.radius[1]/SCALE,l.radius[2]]}));boxes.push(s);
  }
  const candidates=[],infill=[],occupied=foliageOccupied(m);
  for(let z=0;z<=Math.min(2,m.upper?.length||0);z++)for(let y=0;y<depth;y++)for(let x=0;x<width;x++){
@@ -130,5 +135,6 @@ export function buildFoliageObstacles(m,{denseTreeMix=null,treesOnly=false}={}){
    add(beamBox(...points,p.size[0]*scale/2,{id:`foliage:${x},${y},${z}:trunk:${i}`,source:{x,y,z},family,blocksSight:true,blocksShot:true}),simBase,base);
   }
  }
+ if(!treesOnly)for(const b of hedgeObstacles(m))add(b,b.simBase,b.base);
  return {boxes,worldBoxes,index:indexed(boxes),worldIndex:indexed(worldBoxes),trees,screens,wood};
 }

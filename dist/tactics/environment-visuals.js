@@ -1,3 +1,4 @@
+import {isHedge} from './hedge-data.js';
 import {localEnvironmentFamily} from './environment-regions.js';
 import {biomeTree} from './biome-gameplay-data.js';
 import {isStrategicSite} from './strategic-site-rules.js';
@@ -34,7 +35,7 @@ export function environmentVisuals(world,map,{biomes=false}={}){map=canopyPresen
  }
  const add=(id,source,kind,material,center,size,shape='box',rotation=[0,0,0])=>result.push({id,source,kind,material,center,size,shape,rotation});
  for(const p of [...(map.props||[]),...fallbackTrees]){
-  if(isCliff(p)||biomes&&biomeTree(p.kind))continue;
+  if(isHedge(p)||isCliff(p)||biomes&&biomeTree(p.kind))continue;
   const bank=bankInfo(p);if(bank){const id='prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind;add(id,{prop:id,x:p.x,y:p.y,z:p.z||0},'ramp-bank',bank.surface==='grass'?'ground-grass':'sand',[p.x,(p.z||0)*D.floorSpacing,p.y],[1,1,1],'rampbank-'+bank.side+'-'+bank.step);result.at(-1).yaw=BANK_YAW[bank.direction];continue;}
   if(isRamp(p)){const r=rampInfo(p),yaw={east:0,south:-Math.PI/2,west:Math.PI,north:Math.PI/2}[r.direction],center=[(r.low.x+r.high.x)/2,r.z*D.floorSpacing+1,(r.low.y+r.high.y)/2],source={x:p.x,y:p.y,z:p.z||0,prop:'prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind};
    if(r.surface.startsWith('wood')){for(const [i,part] of woodenRampParts(p,D.floorSpacing).entries())add(source.prop+':timber:'+i,source,'ramp',r.surface==='woodgold'?'ground-wood-planks':'wood',part.center,part.size,'box',part.rotation);continue;}

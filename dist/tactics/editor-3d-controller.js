@@ -1,3 +1,4 @@
+import {isHedge} from './hedge-data.js';
 import {spotlightPathError} from './spotlight-path.js';
 import {shiftPatrol,patrolError} from './character-patrol.js';
 import {paintFoliage} from './editor-foliage-brush.js';
@@ -39,7 +40,7 @@ export class EditingDocument extends InspectionDocument {
   let {tool,start,end=start,options={}}=command;const prefab=tool==='prefab'?STRUCTURE_PRESETS[options.preset]:null;if(tool==='prefab'&&!prefab)return {ok:false,error:'Choose a preset structure.'};if(prefab){tool='room';options={...options,width:prefab.width,height:prefab.height};}if(tool!=='land'&&start?.z===3)return previewCanopy(this.editor.map,command,this.size);
   if(!start||![start.x,start.y,start.z??0].every(Number.isInteger))return {ok:false,error:'Choose a map cell.'};
   if(this.block&&(['squad','exit'].includes(tool)||[start,end].some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24)))return {ok:false,error:'Keep block edits inside 24 × 24 tiles; squad and travel markers belong to full maps.'};
-  const breaking=['break-wall','break-floor'].includes(tool),foliage=['foliage-cover','clear-foliage'].includes(tool),shapeTool=breaking?(tool==='break-wall'?'wall':'floor'):foliage||['cliff','erase-cliff'].includes(tool)?'woodland':tool;
+  const hedge=tool==='prop'&&isHedge({kind:options.propKind}),breaking=['break-wall','break-floor'].includes(tool),foliage=['foliage-cover','clear-foliage'].includes(tool),shapeTool=hedge||tool==='erase-prop'?'woodland':breaking?(tool==='break-wall'?'wall':'floor'):foliage||['cliff','erase-cliff'].includes(tool)?'woodland':tool;
   const candidate=createEditor(this.editor.map),points=brushShape(shapeTool)?brushPoints(shapeTool,start,end):[start],cells=[],edges=[];
   if(tool==='cliff'&&points.length>CLIFF_LIMIT)return {ok:false,error:'Paint at most '+CLIFF_LIMIT+' cliff tiles at a time.'};
   if(!points.length)return {ok:false,error:'Choose a cell inside the map.'};
@@ -63,6 +64,10 @@ export class EditingDocument extends InspectionDocument {
     if(breaking){if(breakStructure(candidate.map,tool,{...p,z:start.z||0})){cells.push({...p,z:start.z||0});if(tool==='break-wall')edges.push(p.edge);}continue;}
     if(tool==='erase-tile'&&candidate.map.landPaint?.[`${p.x},${p.y}`]||['erase-cliff','erase-prop'].includes(tool)&&candidate.map.props.some(q=>q.landAuto&&q.x===p.x&&q.y===p.y&&(q.z||0)===(start.z||0)))throw Error('Use Land and choose Ground to lower painted terrain and rebuild its cliff edge.');
     let actualTool=tool==='npc'?'guard':tool,actualOptions=tool==='npc'?{...options,category:'npc'}:options;
+    if(hedge){
+     const existing=candidate.map.props.find(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(start.z||0));
+     if(isHedge(existing)){applyBrush(candidate,'erase-prop',p.x,p.y,'',{level:start.z||0});actualOptions={...options,hedgeSeed:options.hedgeSeed??existing.hedgeSeed};}
+    }
     if(['cliff','erase-cliff'].includes(tool)){
      const existing=candidate.map.props.find(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(start.z||0));
      if(isCliff(existing))applyBrush(candidate,'erase-prop',p.x,p.y,'',{level:start.z||0});
@@ -84,7 +89,7 @@ export class EditingDocument extends InspectionDocument {
    if(this.block){if(cells.some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24))return {ok:false,error:'The whole footprint must fit inside the block.',cells,edges};validateBlock(extractBlock(candidate.map));}
    if(candidate.map.edgeLocks)for(const key of Object.keys(candidate.map.edgeLocks))if(!EDGES[candidate.map.edges[key]]?.opensTo)delete candidate.map.edgeLocks[key];
    const errors=validateMap(candidate.map,{connectivity:false});
-   const named=(options.propKind||'').match(/north|east|south|west/)?.[0],orientation=named?({north:[0,-1],east:[1,0],south:[0,1],west:[-1,0]})[named]:['prop','roof-tile','room'].includes(tool)?options.rotated?[0,1]:[1,0]:null;return {ok:!errors.length,error:errors[0]||'',cells,edges,map:candidate.map,orientation};
+   const named=(options.propKind||'').match(/north|east|south|west/)?.[0],orientation=named?({north:[0,-1],east:[1,0],south:[0,1],west:[-1,0]})[named]:['prop','roof-tile','room'].includes(tool)?options.rotated?[0,1]:[1,0]:null;return {ok:!errors.length,error:errors[0]||'',cells,edges,map:candidate.map,hedgePreview:hedge||tool==='erase-prop',orientation:hedge?null:orientation};
   }catch(e){return {ok:false,error:e.message,cells:points,edges};}
  }
  apply(command){const result=this.preview(command);if(result.ok){replaceMap(this.editor,result.map);this.refresh();}return result;}

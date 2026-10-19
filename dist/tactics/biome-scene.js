@@ -1,3 +1,4 @@
+import {HedgeScene} from './hedge-scene.js';
 import {BIOME_OBSTACLES} from './biome-obstacle-data.js';
 import {FoliageCutaway} from './foliage-cutaway.js';
 import {createFoliageScreens} from './foliage-screen-scene.js';
@@ -42,7 +43,7 @@ export function mixedBiomeFill(plan,map){
 export class BiomeScene{
  constructor(scene,loader,onReady=()=>{},onError=()=>{},{planSource=biomePlans}={}){
   this.root=new T.Group();this.root.name='Gameplay biomes';scene.add(this.root);this.loader=loader;this.onReady=onReady;this.onError=onError;
-  this.cutaway=new FoliageCutaway();this.cutawayTargets=[];this.inspection='both';this.vegetation=[];this.terrains=[];this.openTrees=[];this.paints=[];this.instances=[];this.layerMaterials=new Map();this.layers=new Map();this.textures={};this.signature=null;this.ready=false;this.disposed=false;this.planSource=planSource;
+  this.hedges=new HedgeScene(scene,loader,onReady,onError);this.cutaway=new FoliageCutaway();this.cutawayTargets=[];this.inspection='both';this.vegetation=[];this.terrains=[];this.openTrees=[];this.paints=[];this.instances=[];this.layerMaterials=new Map();this.layers=new Map();this.textures={};this.signature=null;this.ready=false;this.disposed=false;this.planSource=planSource;
  }
  load(){
   if(this.loading||this.ready||this.failed)return;
@@ -81,7 +82,7 @@ export class BiomeScene{
   for(const p of this.paints)p.dispose();this.paints=[];for(const m of this.layerMaterials.values())m.dispose();this.layerMaterials.clear();for(const l of this.layers.values())l.texture.dispose();this.layers.clear();this.signature=null;
  }
  rebuild(map,seen,level,{editor=false,selectedLevel=level,dim=false}={}){
-  this.map=map;this.level=level;this.root.visible=biomeEnabled(map);if(!this.root.visible){if(this.signature)this.clear();return false;}
+  this.hedges.rebuild(map,seen,level,{editor,selectedLevel,dim});this.map=map;this.level=level;this.root.visible=biomeEnabled(map);if(!this.root.visible){if(this.signature)this.clear();return false;}
   if(!this.ready){this.load();return false;}
   const definition=map.definition||map,signature=JSON.stringify([map.terrain||map.map,map.upper,map.coverOccupiedProps||map.props,map.foliage,map.environment,map.edges,map.stairs,map.climbs,definition.starts,definition.guards,definition.exits]);
   const size=(map.terrain||map.map).length;
@@ -129,7 +130,7 @@ export class BiomeScene{
  batchPlant(batches,plant,x,y,z,level,scale,yaw=0){
   plant.updateMatrixWorld(true);const low=plant.userData.category==='low',transform=new T.Matrix4().compose(new T.Vector3(x,y,z),new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),yaw),new T.Vector3(scale,scale,scale));plant.traverse(m=>{if(!m.isMesh)return;const key=`${Math.floor(x/24)},${Math.floor(z/24)}:${level}:${low}:${m.geometry.uuid}:${m.material.uuid}`;if(!batches.has(key))batches.set(key,{geometry:m.geometry,material:m.material,matrices:[],level,low});batches.get(key).matrices.push(new T.Matrix4().multiplyMatrices(transform,m.matrixWorld));});
  }
- update(camera,focus,ppu){this.cutaway.update(camera,this.cutawayTargets);for(const m of this.vegetation)if(m.userData.inspectionVisible!==undefined)m.visible=m.userData.inspectionVisible;for(const t of this.terrains)if(t.root.visible){t.update(camera,{focus,ppu});t.screens?.update(ppu,focus);}for(const m of this.instances){m.visible=m.userData.biomeLevel<=this.level&&(!m.userData.low||ppu>=9);const p=m.boundingSphere?.center,near=p&&p.distanceTo(focus)<28;m.castShadow=m.visible&&ppu>12&&!!near&&m.userData.shadowKnown;m.userData.noShadow=!m.castShadow;}for(const m of this.vegetation){m.userData.inspectionVisible=m.visible;if(this.inspection!=='both'&&this.inspection!==m.userData.foliageKind)m.visible=false;}}
- stats(){return {ready:this.ready,regions:this.terrains.length,trees:this.openTrees.length+this.terrains.reduce((n,t)=>n+t.trees.length,0),openWoodlandTrees:this.openTrees.length,blockedCells:this.terrains.reduce((n,t)=>n+t.stats.blockedCells,0),paint:this.terrains.map(t=>t.groundSkin.stats)};}
- dispose(){if(this.disposed)return;this.disposed=true;this.clear();this.cutaway.dispose();this.factory?.dispose();for(const m of Object.values(this.materials||{}))m.dispose();for(const m of Object.values(this.screenMaterials||{}))m.dispose();for(const m of Object.values(this.obstacleMaterials||{}))m.dispose();for(const t of Object.values(this.textures))t.dispose();this.root.removeFromParent();}
+ update(camera,focus,ppu){this.hedges.update(camera,focus,ppu,this.cutawayTargets);this.cutaway.update(camera,this.cutawayTargets);for(const m of this.vegetation)if(m.userData.inspectionVisible!==undefined)m.visible=m.userData.inspectionVisible;for(const t of this.terrains)if(t.root.visible){t.update(camera,{focus,ppu});t.screens?.update(ppu,focus);}for(const m of this.instances){m.visible=m.userData.biomeLevel<=this.level&&(!m.userData.low||ppu>=9);const p=m.boundingSphere?.center,near=p&&p.distanceTo(focus)<28;m.castShadow=m.visible&&ppu>12&&!!near&&m.userData.shadowKnown;m.userData.noShadow=!m.castShadow;}for(const m of this.vegetation){m.userData.inspectionVisible=m.visible;if(this.inspection!=='both'&&this.inspection!==m.userData.foliageKind)m.visible=false;}}
+ stats(){return {hedges:this.hedges.stats(),ready:this.ready,regions:this.terrains.length,trees:this.openTrees.length+this.terrains.reduce((n,t)=>n+t.trees.length,0),openWoodlandTrees:this.openTrees.length,blockedCells:this.terrains.reduce((n,t)=>n+t.stats.blockedCells,0),paint:this.terrains.map(t=>t.groundSkin.stats)};}
+ dispose(){if(this.disposed)return;this.hedges.dispose();this.disposed=true;this.clear();this.cutaway.dispose();this.factory?.dispose();for(const m of Object.values(this.materials||{}))m.dispose();for(const m of Object.values(this.screenMaterials||{}))m.dispose();for(const m of Object.values(this.obstacleMaterials||{}))m.dispose();for(const t of Object.values(this.textures))t.dispose();this.root.removeFromParent();}
 }
