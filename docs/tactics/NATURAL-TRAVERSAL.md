@@ -38,8 +38,10 @@ audit of authored motion. It reports the force and torque that no contact in the
 
 ## What floats now
 
-Codex's climbing work, uncommitted in its own checkout on 2026-10-19, adds `dist/tactics/simple-traversal.js`:
-"Lightweight presentation for ordinary tile ladders, windows, wall vaults and slips".
+Codex's climbing work adds `dist/tactics/simple-traversal.js`:
+"Lightweight presentation for ordinary tile ladders, windows, wall vaults and slips". It was uncommitted when it was measured
+here, and was committed unchanged the same day (sha1 `40779bf`, in 1c99850 on Codex's `work/editor-3d`, not yet on `main`).
+Codex's notes there call these motions "candidates for an artist pass".
 
 | kind | duration | root path | body |
 |---|---|---|---|
@@ -99,8 +101,9 @@ Consequences:
 - **Coming down, the head turns about 35 degrees, and only one way.** Turned the other way, the long muzzle
   runs into the wall's far face.
 - **The roll is computed, not keyed.** From the chest-flat start pose, the body turns step by step about
-  the point of its skinned surface that touches the floor. That is rolling, so it cannot slide or float.
-  The physics audit reads 0 N of phantom force through the roll.
+  the point of its skinned surface that touches the floor. That is rolling, so it cannot slide or float,
+  as long as nothing else touches. (A first audit read 0 N through the roll. The committed version does not:
+  the right forearm sinks into the floor mid-roll. See the evening audit below.)
 - **The short arms set the descent.** The hands reach the floor only once the shoulders are within
   about 0.5 m of it. Hand targets come from where the shoulders really are at each key, so no arm is ever
   asked past its reach (checked every 5 ms).
@@ -182,7 +185,8 @@ Also open:
   option: catching on one foot needed the legs to unfold in 0.15 s, 4,667 N·m from a single seat contact.
 - Roll direction 78 degrees ends the roll on the tile centre with nothing in the wall.
 - Audit: back to the floor and the roll read 0%. The tip over the sill edge (a short fall onto the hands) and the
-  rise from the crouch do not pass yet.
+  rise from the crouch do not pass yet. **Corrected the same evening:** the committed version reads over the gate from
+  the hands to the floor through the rise. See below.
 
 **Side vault** (`wall-vault.js`), over the proposed 1.0 m wall:
 - Both palms go on the top. The trunk pitches about 40 degrees and leans over the supporting left arm. The knees
@@ -203,9 +207,49 @@ Also open:
 The study page has an obstacle selector. The waist-high wall is the game's own brick wall on that line, with its
 instanced boxes cut to 1.0 m.
 
+### 2026-10-19 (evening): full-rate audit of all three (horse)
+
+This is the instrument of record, run on the committed code (2beb2a4) through the battle contract:
+`node bin/phantom-wrench.mjs rigs/traversal.mjs --gate` (1 ms scan, 5 ms wrench sweep) and `bin/collisions.mjs`.
+The rig builds the battle's own model, with battle posture and locomotion. `natural-traversal.js` routes only the
+window, so the vault and the climb went through a scratch adapter with the same contract.
+
+| | window (3.68 s) | side vault (2.40 s) | climb (4.85 s) |
+|---|---|---|---|
+| gate | fails 7 of 8 checks | fails 6 of 8 | fails 7 of 8 |
+| phantom wrench over the limit | 1.77 s | 0.92 s | 1.20 s |
+| limb snaps within 1 ms | right elbow 72 m/s (2.45 s) | as the right hand lets go (1.0 s): right elbow 522 m/s, right knee 136 | 27: knees up to 416 m/s and elbows up to 553, at the catch, straddle, lowering, drop and stand |
+| position pops | palms 7.7 cm landing on the sill (0.73 s); legs 2.3 cm at the roll start (2.40); right palm 8.3 cm (2.47); head 3 cm at the sit-up (2.68) | right palm 1 cm | palms 6 to 7.5 cm at the catch and the drop |
+| body through itself | right upper arm 18.5 cm into the chest (2.39 s) | legs through the right arm, 11 cm (1.03 s) | thighs through each other, 15 cm, standing up (4.27 s) |
+| into the obstacle or the floor | right hoof 6.9 cm into the lintel (1.86 s); right forearm 8.6 cm into the floor mid-roll | seat and legs 7.8 cm into the top (0.94 s) | seat and legs 8.0 cm into the top (2.69 s) |
+| joint range (elbow 150, knee 155) | left elbow 160 | inside | elbows 165 and 162, right knee 159 |
+| reach | every limb reaches | right arm 1.4 cm short (1.0 s) | arms up to 12.5 cm short of the top (catch to walk-up); legs up to 13.6 cm short (lowering, drop) |
+
+Clean so far: the window's hop onto the sill, and the vault's load, spring and settle. The climb's hang, walk-up,
+chest-over, knee-up and lowering also read 0%, but they are not evidence yet. The hands are up to 12.5 cm short of
+the top there, and the rig lets any hand that touches the wall grip and pull.
+
+**The afternoon's 0% for the window roll was wrong for the committed code.** The roll fails at 20 ms and at 5 ms, with
+and without the battle posture. The right forearm sinks into the floor, so the body has no support there.
+
+There is also a side finding. `createBattlePosture` re-skins the horse's shirt (the tucked hem) when the battle sets
+up, and that moves the computed roll by 24 ms (3.707 s on a bare worker, 3.683 s in battle). So the motions must be
+tuned on the battle's model, as the rig builds it, and numbers are quoted only from the instrument of record.
+
+Next, in order:
+1. **Window right arm.** Keep the right arm out of the chest and the floor, without the flip. Then re-audit the roll.
+2. **Window joins.** Make the joins continuous: the palms onto the sill, the roll start and the sit-up. Then tip over
+   the sill as a pivot about its edge, keep the hooves under the lintel, and rise over the feet.
+3. **Vault.** Fix the release flip and route the legs outside the right arm, clear of the top. Then add flight from
+   the push-off to the landing.
+4. **Climb.** Fix the limb poles (the 27 snaps), the reach at the catch and the lowering, and the legs over the top.
+   Then a ballistic jump and drop.
+5. **Tests.** Write these checks into the repo (gate, collisions, reach, joint range) so nothing regresses unseen.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
 `{duration, climb: {skeleton, equipmentState}, apply(t) -> {worldRoot}, dispose()}`. That makes it a
-drop-in for the `window` and `wall` kinds. The waist-high wall needs a new edge kind, which is Codex's
-call. The proposal (geometry, cover, sight, route, art) goes in the handoff section of this doc.
+drop-in for the `window` and `wall` kinds. In Codex's tree the battle picks the motion in `battle-traversal.js`
+(`BattleTraversal.pose`: `simpleTraversal(event) ? createSimpleTraversal(...)`), so wiring is one branch there, once
+`work/editor-3d` is on `main`. The waist-high wall needs a new edge kind, which is Codex's call. The proposal (geometry, cover, sight, route, art) goes in the handoff section of this doc.
