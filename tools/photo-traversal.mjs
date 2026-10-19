@@ -14,7 +14,7 @@ const base=arg('base','http://127.0.0.1:4490'),view=arg('view','game'),animal=ar
 const browser=await chromium.launch({channel:'msedge'});
 const page=await browser.newPage({viewport:{width:w+60,height:h+260}});
 page.on('pageerror',e=>console.error('page:',e.message));
-await page.goto(`${base}/tactics/traversal-study.html?animal=${animal}&outfit=${outfit}&view=${view}`,{waitUntil:'load'});
+await page.goto(`${base}/tactics/traversal-study.html?obstacle=${arg('obstacle','window')}&animal=${animal}&outfit=${outfit}&view=${view}`,{waitUntil:'load'});
 await page.addStyleTag({content:`#viewport{width:${w}px!important;height:${h}px!important;min-height:0!important;flex:none!important}`});
 await page.waitForFunction(()=>window.traversalStudy?.ready,null,{timeout:120000});
 const err=await page.evaluate(()=>document.getElementById('error').textContent);if(err)console.error('study error:',err);

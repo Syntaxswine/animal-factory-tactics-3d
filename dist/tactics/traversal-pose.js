@@ -19,6 +19,32 @@ export function track(rows,pins={}){
   return a.p.map((x,j)=>h0*x+h5*b.p[j]+dt*(h1*a.v[j]+h4*b.v[j])+dt*dt*(h2*a.a[j]+h3*b.a[j]));};
 }
 export const smooth=x=>{x=clamp(x);return x*x*x*(10+x*(-15+6*x));};
+export const basisQ=(x,y)=>{const Y=V(...y).normalize(),X=V(...x).addScaledVector(Y,-V(...x).dot(Y)).normalize();return Q().setFromRotationMatrix(new T.Matrix4().makeBasis(X,Y,X.clone().cross(Y)));};
+// Palm on a surface: palm normal (+X of the hand) into the surface, wrist (+Y) back along the forearm, fingers
+// toward heading (degrees from +X toward +Z).
+export const palmDown=(heading=0)=>{const a=heading*DEG;return basisQ([0,-1,0],[-Math.cos(a),0,-Math.sin(a)]);};
+// Heading in degrees from +X toward +Z (the battle's map convention), as a turn about up.
+export const yawQ=deg=>Q().setFromAxisAngle(V(0,1,0),-deg*DEG);
+// A joint's turn relative to its parent: forward flex, side bend, twist (degrees).
+export const relQ=(flex=0,side=0,twist=0)=>Q().setFromAxisAngle(V(0,1,0),twist*DEG).multiply(Q().setFromAxisAngle(V(1,0,0),side*DEG)).multiply(bodyQ(flex*DEG));
+// Keyed limbs: per limb, [time, key] rows; a key is a point in a frame ('world', or 'pelvis' / 'chest': carried by
+// the trunk), with an optional hoof pitch (degrees, toe down) and heading, or a palm-down heading. Between keys in
+// different frames both are taken to world at the current time and blended; an orientation fades in or out (w)
+// where a key has none, so a hoof or hand never flips at a hand-over.
+export const frameToWorld=(tr,frame,p)=>frame==='world'?V(...p):frame==='pelvis'?V(...p).applyQuaternion(tr.hipsQ).add(tr.hips):V(...p).applyQuaternion(tr.chestQ).add(tr.chest);
+export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;const [ta,a]=keys[i],[tb,b]=keys[Math.min(keys.length-1,i+1)];
+ const u=tb>ta?smooth((t-ta)/(tb-ta)):1,pa=frameToWorld(tr,a.f,a.p),pb=frameToWorld(tr,b.f,b.p),lerp=(x,y,k)=>x+(y-x)*k;
+ const has=k=>k.hoof!==undefined,hp=has(a)?a.hoof:b.hoof,hq=has(b)?b.hoof:a.hoof,pal=k=>k.palm!==undefined;
+ return {f:'world',p:pa.lerp(pb,u).toArray(),hoof:has(a)||has(b)?lerp(hp??0,hq??0,u):undefined,hoofW:lerp(has(a)?1:0,has(b)?1:0,u),heading:lerp(a.heading||0,b.heading||0,u),
+  palm:pal(a)||pal(b)?lerp(pal(a)?a.palm:b.palm,pal(b)?b.palm:a.palm,u):undefined,palmW:lerp(pal(a)?1:0,pal(b)?1:0,u)};}
+// The body pose for a trunk (hips, hipsQ, spineQ, headQ, chest, chestQ) and world limb targets. Knees bend
+// forward of the pelvis; elbows back and out from the chest, or toward elbowAway (world) while a palm is planted.
+// A palm is never placed below the floor.
+export function posedFrom(tr,limbs,{elbowAway=null}={}){const legs={},arms={};for(const s of [-1,1]){const l=limbs['leg'+s],a=limbs['arm'+s];
+  legs[s]={ankle:frameToWorld(tr,l.f,l.p).toArray(),pole:V(1,0,s*.25).applyQuaternion(tr.hipsQ).toArray(),q:l.hoof!==undefined?yawQ(l.heading||0).multiply(bodyQ(l.hoof*DEG)):null,w:l.hoofW??1};
+  const k=a.palm!==undefined?a.palmW??1:0,pole=V(-.3,-.2,s).applyQuaternion(tr.chestQ);if(elbowAway)pole.lerp(V(...elbowAway),k);const wrist=frameToWorld(tr,a.f,a.p);wrist.y=Math.max(wrist.y,.06);
+  arms[s]={wrist:wrist.toArray(),pole:pole.toArray(),q:a.palm!==undefined?palmDown(a.palm):null,w:a.palmW??1};}
+ return {hips:tr.hips.toArray(),hipsQ:tr.hipsQ,spineQ:tr.spineQ,headQ:tr.headQ,legs,arms};}
 const logq=q=>{const w=clamp(q.w,-1,1),s=Math.sqrt(1-w*w);return s<1e-9?V():V(q.x,q.y,q.z).multiplyScalar(2*Math.acos(w)/s);};
 const expq=r=>{const a=r.length();return a<1e-12?Q():Q().setFromAxisAngle(r.clone().divideScalar(a),a);};
 // Orientation keys [t, quaternion] joined by cubic rotation-vector segments (C1): angular velocity flows through

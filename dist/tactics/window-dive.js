@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {V,Q,DEG,clamp,smooth,track,spinTrack,bodyQ,createTraversalBody,createSurfaceProbe,massPoints,inertiaAbout,BODY_MASS} from './traversal-pose.js';
+import {V,Q,DEG,clamp,smooth,track,spinTrack,bodyQ,yawQ,relQ,frameToWorld as toWorld,keyedLimb,posedFrom,createTraversalBody,createSurfaceProbe,massPoints,inertiaAbout,BODY_MASS} from './traversal-pose.js';
 // Head-first window entry and roll (docs/tactics/NATURAL-TRAVERSAL.md). Local frame: start on the tile at the
 // origin facing +X, the window on the edge at X = .5 (faces .42 and .58, sill top .85, opening top 1.55),
 // finish standing on the next tile's centre (1, 0, 0) facing on.
@@ -11,12 +11,6 @@ export const WINDOW={edge:.5,half:.08,sill:.85,top:1.55};
 // The roll's pace is not keyed: it starts spinning at omega (rad/s) and gravity, the contact and the impacts
 // where the contact jumps decide the rest (see rollDynamics).
 export const ROLL=Object.freeze({dir:78,start:2.40,flex:40,back:[.86,-.55],omega:2.2,maxTurn:150});
-const basisQ=(x,y)=>{const Y=V(...y).normalize(),X=V(...x).addScaledVector(Y,-V(...x).dot(Y)).normalize();return Q().setFromRotationMatrix(new T.Matrix4().makeBasis(X,Y,X.clone().cross(Y)));};
-// Palm on a surface: palm normal (+X of the hand) into the surface, wrist (+Y) back along the forearm, fingers
-// toward heading (degrees from +X toward +Z).
-const palmDown=(heading=0)=>{const a=heading*DEG;return basisQ([0,-1,0],[-Math.cos(a),0,-Math.sin(a)]);};
-const yawQ=deg=>Q().setFromAxisAngle(V(0,1,0),-deg*DEG);
-const relQ=(flex=0,side=0,twist=0)=>Q().setFromAxisAngle(V(0,1,0),twist*DEG).multiply(Q().setFromAxisAngle(V(1,0,0),side*DEG)).multiply(bodyQ(flex*DEG));
 // Keyed trunk before the roll: time, label, hips [x, y, z], pelvis pitch / roll / heading (degrees: pitch forward,
 // past 180 inverted; heading from +X toward +Z). The last keyed pose before the roll is built from the roll itself.
 const PRE=[
@@ -37,18 +31,12 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const body=createTraversalBody(worker),probe=createSurfaceProbe(worker,{stride:2});
  const shapePre=track(SHAPE_PRE);
  const chestOf=(hips,hipsQ,spineQ)=>({chestQ:hipsQ.clone().multiply(spineQ),chest:hips.clone().add(body.offsets.spine.clone().applyQuaternion(hipsQ))});
- const toWorld=(tr,frame,p)=>frame==='world'?V(...p):frame==='pelvis'?V(...p).applyQuaternion(tr.hipsQ).add(tr.hips):V(...p).applyQuaternion(tr.chestQ).add(tr.chest);
  const restWrist=s=>body.at0('hand'+s).sub(body.at0('spine')).toArray();
  const d=V(Math.cos(ROLL.dir*DEG),0,Math.sin(ROLL.dir*DEG)),axis=V(0,1,0).cross(d).normalize();
  // The rolling shape, in the trunk's own frames: a squat tuck (heels under the seat, so the hooves arrive at the
  // floor as the body sits up: 0.7 cm short, measured), arms in.
  const TUCK={'leg-1':[.06,-.33,-.14],leg1:[.06,-.33,.14],'arm-1':[.26,.05,-.28],arm1:[.26,.06,-.06]};
- const posed=(tr,limbs,palms={})=>{const legs={},arms={};for(const s of [-1,1]){const l=limbs['leg'+s],a=limbs['arm'+s];
-   legs[s]={ankle:toWorld(tr,l.f,l.p).toArray(),pole:V(1,0,s*.25).applyQuaternion(tr.hipsQ).toArray(),q:l.hoof!==undefined?yawQ(l.heading||0).multiply(bodyQ(l.hoof*DEG)):null,w:l.hoofW??1};
-   const chestPole=V(-.3,-.2,s).applyQuaternion(tr.chestQ),wallSafe=V(1,.15,0),k=palms[s]?.w??0;
-   const wrist=toWorld(tr,a.f,a.p);wrist.y=Math.max(wrist.y,.06); // a palm never goes through the floor
-   arms[s]={wrist:wrist.toArray(),pole:chestPole.lerp(wallSafe,k).toArray(),q:palms[s]?palmDown(palms[s].heading):null,w:palms[s]?.w??1};}
-  return {hips:tr.hips.toArray(),hipsQ:tr.hipsQ,spineQ:tr.spineQ,headQ:tr.headQ,legs,arms};};
+ const posed=(tr,limbs)=>posedFrom(tr,limbs,{elbowAway:[1,.15,0]});
  const tuckLimbs=Object.fromEntries(Object.entries(TUCK).map(([k,p])=>[k,{f:k.startsWith('leg')?'pelvis':'chest',p}]));
  const lowest=()=>{probe.update();return probe.lowest();};
  const shapeOf=row=>{const [flex,side,twist,nod,tilt,turn]=row;return {spineQ:relQ(flex,side,twist),headQ:relQ(nod,tilt,turn)};};
@@ -126,13 +114,7 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // which steps them into the stance on the tile centre.
  for(const s of [-1,1])LIMB['leg'+s].push([catchT,{f:'world',p:feet[s].toArray(),hoof:0,heading:ROLL.dir}],[kneelT+.15,{f:'world',p:feet[s].toArray(),hoof:0,heading:ROLL.dir}],[END,{f:'world',p:[1-.035,.12,s*.232],hoof:0,heading:0}]);
  for(const s of [-1,1])LIMB['arm'+s].push([kneelT,{f:'chest',p:restWrist(s)}],[END,{f:'chest',p:restWrist(s)}]);};buildLimbs();
- function limb(id,t,tr){const keys=LIMB[id];let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;const [ta,a]=keys[i],[tb,b]=keys[Math.min(keys.length-1,i+1)];
-  const u=tb>ta?smooth((t-ta)/(tb-ta)):1,pa=toWorld(tr,a.f,a.p),pb=toWorld(tr,b.f,b.p);
-  // An orientation fades in or out (w) where a key has none, so a hoof or hand never flips at a hand-over.
-  const has=k=>k.hoof!==undefined,hp=has(a)?a.hoof:b.hoof,hq=has(b)?b.hoof:a.hoof,pal=k=>k.palm!==undefined;
-  return {f:'world',p:pa.lerp(pb,u).toArray(),hoof:has(a)||has(b)?T.MathUtils.lerp(hp??0,hq??0,u):undefined,hoofW:T.MathUtils.lerp(has(a)?1:0,has(b)?1:0,u),heading:T.MathUtils.lerp(a.heading||0,b.heading||0,u),
-   palm:pal(a)||pal(b)?T.MathUtils.lerp(pal(a)?a.palm:b.palm,pal(b)?b.palm:a.palm,u):undefined,palmW:T.MathUtils.lerp(pal(a)?1:0,pal(b)?1:0,u)};}
- function spec(t){const tr=trunkAt(t),limbs={},palms={};for(const id of Object.keys(LIMB)){const L=limb(id,t,tr);limbs[id]=L;if(L.palm!==undefined&&id.startsWith('arm'))palms[+id.slice(3)]={heading:L.palm,w:L.palmW};}return posed(tr,limbs,palms);}
+ function spec(t){const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posed(tr,limbs);}
  const KEYS=[...PRE.map(k=>({t:k.t,label:k.label})),{t:ROLL.start,label:'Back to the floor'},{t:(ROLL.start+ROLL_END)/2,label:'Roll'},{t:ROLL_END,label:'Sit up'},{t:kneelT,label:'Rise from the crouch'},{t:END,label:'Stand on the tile'}];
  let state=null;
  const api={duration:D,keys:KEYS,body,probe,roll:{rows:rollRows,dir:ROLL.dir,start:ROLL.start,end:ROLL_END},
