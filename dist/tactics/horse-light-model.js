@@ -5,6 +5,8 @@ import {graphicPaintGLSL} from './horse-graphic-paint.js';
 export const LIGHT_ATLAS='../assets/characters/lowpoly-proof/horse-worker-light-atlas.png';
 const V=a=>new THREE.Vector3(...a),clamp=THREE.MathUtils.clamp,smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
 // Offline-reduced approved surfaces, real skeleton and normalized blended skin weights.
+// each mesh file's fitted skin weights (fitLayers, below), made with its first character
+const FITTED=new WeakMap();
 export function createLightHorse(data,texture=null){
  const root=new THREE.Group(),rig=new THREE.Group();root.add(rig);const bones=[],rest=[],lookup={};
  function bone(name,parent,world){world=data.bonePositions?.[name]||world;const b=new THREE.Bone();b.name=name;const i=bones.length;bones.push(b);lookup[name]=i;rest.push(V(world));if(parent!==null){bones[parent].add(b);b.position.copy(rest[i]).sub(rest[parent]);}else {rig.add(b);b.position.copy(rest[i]);}return i;}
@@ -96,18 +98,29 @@ export function createLightHorse(data,texture=null){
  // Clothes on the neck follow what they lie on (docs/tactics/CLOTHING-SKINNING.md: the idle study's v5 corrections, made
  // part of the character so that every motion has them). The weights above come from each part's name and height alone:
  // every layer round the neck is the chest's while the neck skin blends into the head, and hair is wholly the head's while
- // the neck it grows from is not, so as the head turns to aim or throw the skin slides through the collar and the mane
- // comes away from the neck. Measured on the rest surfaces (the geometry, as drawn). The idle's corrections at the arms
- // (the forearm's weight stripped from a shirt's sides, a sleeve's end glued to the forearm in it) are not made here:
- // through the game's throws they tore the sleeves at the elbow and the armpit, and the sleeve masks above were made for
- // those motions (the same doc).
+ // the neck it grows from is not, so as the head turns to aim or throw the skin slid through the collar and the mane came
+ // away from the neck. Measured on the rest surfaces (the geometry, as drawn), once per mesh file (FITTED). Only the share
+ // of a vertex's weight off the arms moves; its arm weights stay as its name gave them (the field reaches the horse's
+ // shoulders). Each changed vertex's name-rule weights are kept on its geometry (userData.layerFit: the vertices, and their
+ // four bone indices and weights), for whatever reads the rig by its names (the idle's key and neck bone, the casualty's
+ // contact sets, the fire's cards). The idle's corrections at the arms (the forearm's weight stripped from a shirt's sides,
+ // a sleeve's end glued to the forearm in it) are not made here: through the game's throws they tore the sleeves at the
+ // elbow and the armpit, and the sleeve masks above were made for those motions (the same doc).
  function fitLayers(){
   const skull=parts.find(m=>/unified/.test(m.name)&&/skull/.test(m.name));if(!skull)return;
   const at=(m,i)=>new THREE.Vector3().fromBufferAttribute(m.geometry.attributes.position,i),tri=new THREE.Triangle(),near=new THREE.Vector3(),bary=new THREE.Vector3();
+  const ARM=new Set(limbs.flatMap(l=>[l.sh,l.el,l.wr,l.finger]));
   // a vertex's weights as {bone: weight}, and back into the four slots (the largest four, renormalised)
   const weightsOf=(a,i)=>{const w={};for(let k=0;k<4;k++){const x=a.skinWeight.getComponent(i,k);if(x>0){const b=a.skinIndex.getComponent(i,k);w[b]=(w[b]||0)+x;}}return w;};
   const setWeights=(a,i,w)=>{const top=Object.entries(w).filter(([,x])=>x>1e-6).sort((p,q)=>q[1]-p[1]).slice(0,4),sum=top.reduce((s,[,x])=>s+x,0)||1;while(top.length<4)top.push([0,0]);a.skinIndex.setXYZW(i,...top.map(([b])=>+b));a.skinWeight.setXYZW(i,...top.map(([,x])=>x/sum));};
   const mix=(own,target,f)=>{const w={};for(const [b,x] of Object.entries(own))w[b]=(w[b]||0)+(1-f)*x;for(const [b,x] of Object.entries(target))w[b]=(w[b]||0)+f*x;return w;};
+  // what a vertex lies on sets only its share off the arms: its own arm weights stay, the rest takes the target's
+  // proportions off the arms
+  // into the four slots keeping the arm weights exactly: only the share off the arms is cut to the largest and renormalised
+  const setOffArms=(a,i,w)=>{const arm=Object.entries(w).filter(([b,x])=>ARM.has(+b)&&x>0),armSum=arm.reduce((s,[,x])=>s+x,0),rest=Object.entries(w).filter(([b,x])=>!ARM.has(+b)&&x>1e-6).sort((p,q)=>q[1]-p[1]).slice(0,4-arm.length),restSum=rest.reduce((s,[,x])=>s+x,0)||1,top=[...arm,...rest.map(([b,x])=>[b,x*(1-armSum)/restSum])];
+   while(top.length<4)top.push([0,0]);a.skinIndex.setXYZW(i,...top.map(([b])=>+b));a.skinWeight.setXYZW(i,...top.map(([,x])=>x));};
+  const offArms=(own,target)=>{const w={};let arm=0,rest=0;for(const [b,x] of Object.entries(own))if(ARM.has(+b)){w[b]=x;arm+=x;}for(const [b,x] of Object.entries(target))if(!ARM.has(+b))rest+=x;if(rest<1e-9)return own;
+   for(const [b,x] of Object.entries(target))if(!ARM.has(+b))w[b]=(w[b]||0)+x*(1-arm)/rest;return w;};
   // A part's surface, for what lies on it: its triangles in 4 cm cells, searched in growing shells for the point nearest
   // v (only one no higher than `top` by height(), when that is given, and only within `far`); it gives that point's
   // weights (its corners', in proportion) and squared distance.
@@ -123,27 +136,41 @@ export function createLightHorse(data,texture=null){
   // (the idle's), and the skull's median radius round it. Every layer on the neck (a collar, a neckerchief with its knot
   // and ends, the tops of a shirt, waistcoat, jacket, bib or braces) takes the weights of what it lies on: of the layer
   // under it, within 1.5 cm, or else of the skin under it, in full within 3 cm of the neck's radius and easing to its own
-  // weights 13 cm out, from the neck's base up (fading in from a tenth of the branch below it to a tenth above). The skin
+  // weights 13 cm out or at the shoulder joints, whichever is nearer (the horse's thick neck would reach past his: the
+  // shoulder cloth then moved with the head, and his fall settled 25 mm differently), from the neck's base up (fading in from a tenth of the branch below it to a tenth above). The skin
   // under a layer is the skull's nearest point no higher up the neck than the layer (1 cm, about a triangle, to spare):
   // the nearest point outright would put a collar's top edge on the jaw above it. Cloth with no skin that low under it
-  // keeps its own weights. Hair (a mane, a beard) takes in full the weights of the skin it grows from, at the nearest point.
+  // keeps its own weights. Hair takes the weights of the skin it grows from, at the nearest point, in full: a beard hangs
+  // off the throat, not the collar, as the head nods, and a mane runs down the crest as the head turns. Where the skin
+  // folds the mane folds with it (the prone aim bends the neck back 87 degrees, and the crest's skin folds through itself
+  // on the name rules' weights too); eased back to the head's weights off the skin, it sheared through itself in the
+  // throw and the mantle instead (the same doc).
   const offset=rest[head].clone().sub(rest[spine]),NECK=clamp(.75*offset.length(),.15,.22),AXIS=offset.clone().normalize(),B=rest[head].clone().addScaledVector(AXIS,-NECK);
   const heightOf=v=>v.clone().sub(B).dot(AXIS),radiusOf=v=>{const d=v.clone().sub(B);return d.addScaledVector(AXIS,-d.dot(AXIS)).length();};
   const radii=[];for(let i=0;i<skull.geometry.attributes.position.count;i++){const v=at(skull,i),u=heightOf(v)/NECK;if(u>.2&&u<.8)radii.push(radiusOf(v));}radii.sort((x,y)=>x-y);const R=radii[radii.length>>1]||.06;
-  const field=v=>(1-smooth(R+.03,R+.13,radiusOf(v)))*smooth(-.1,.1,heightOf(v)/NECK),skin=surfaceOf(skull,heightOf);
+  // the field eases out between 3 cm past the neck and 13 cm past it or the shoulder joints: a mesh whose shoulder joints
+  // lay within 3 cm of the neck would turn the easing inside out, so it is refused (none of the eleven comes near: the
+  // horse's are 4.7 cm clear of it)
+  const SH=Math.min(...limbs.map(l=>radiusOf(rest[l.sh]))),OUT=Math.min(R+.13,SH);if(!(OUT>R+.03))throw Error('the shoulder joints lie within 3 cm of the neck: the cloth fit has no room to ease out');
+  const field=v=>(1-smooth(R+.03,OUT,radiusOf(v)))*smooth(-.1,.1,heightOf(v)/NECK),skin=surfaceOf(skull,heightOf);
   const rank=m=>/mane|beard/.test(m.name)?0:/shirt/.test(m.name)?1:/trousers|overalls/.test(m.name)?2:/waistcoat|jacket/.test(m.name)?3:/collar|belt|pouch|cap/.test(m.name)?4:/neckerchief wrap/.test(m.name)?5:/neckerchief knot/.test(m.name)?6:/neckerchief/.test(m.name)?7:8;
   const layers=parts.filter(m=>m!==skull&&!/forearm and hand|hoof|boot|foot|tail/.test(m.name)).sort((x,y)=>rank(x)-rank(y)),under=[];
-  // Each changed vertex's name-rule weights are kept on its geometry (userData.layerFit: vertices, and their four bone
-  // indices and weights), for a motion that fits the neck its own way (the idle study's neck bone).
   for(const mesh of layers){const a=mesh.geometry.attributes,hair=/mane|beard/.test(mesh.name),plain=[];
-   const fit=(i,w)=>{plain.push(i,[0,1,2,3].map(k=>a.skinIndex.getComponent(i,k)),[0,1,2,3].map(k=>a.skinWeight.getComponent(i,k)));setWeights(a,i,w);};
-   for(let i=0;i<a.position.count;i++){const v=at(mesh,i),f=hair?1:field(v);if(f<=0)continue;
-    if(!hair){let best=null;for(const lies of under){const r=lies(v,Infinity,.015);if(r&&(!best||r.d2<best.d2))best=r;}if(best){fit(i,best.w);continue;}}
-    const r=hair?skin(v):skin(v,heightOf(v)+.01);if(r)fit(i,mix(weightsOf(a,i),r.w,f));}
+   const fit=(i,own,w)=>{const x=offArms(own,w);if(!Object.keys({...own,...x}).some(b=>Math.abs((own[b]||0)-(x[b]||0))>1e-6))return;
+    plain.push(i,[0,1,2,3].map(k=>a.skinIndex.getComponent(i,k)),[0,1,2,3].map(k=>a.skinWeight.getComponent(i,k)));setOffArms(a,i,x);};
+   for(let i=0;i<a.position.count;i++){const v=at(mesh,i),own=weightsOf(a,i);
+    if(hair){const r=skin(v);if(r)fit(i,own,r.w);continue;}
+    const f=field(v);if(f<=0)continue;let best=null;for(const lies of under){const r=lies(v,Infinity,.015);if(r&&(!best||r.d2<best.d2))best=r;}
+    if(best){fit(i,own,best.w);continue;}const r=skin(v,heightOf(v)+.01);if(r)fit(i,own,mix(own,r.w,f));}
    if(plain.length)mesh.geometry.userData.layerFit={vertices:Int32Array.from(plain.filter((_,k)=>k%3===0)),index:Uint16Array.from(plain.filter((_,k)=>k%3===1).flat()),weight:Float32Array.from(plain.filter((_,k)=>k%3===2).flat())};
    a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;if(!hair)under.push(surfaceOf(mesh));}
  }
- fitLayers();
+ // The fit depends only on the mesh file: the first character made from it fits, the rest copy (a battle makes one per unit).
+ // The cache holds copies, and each character gets its own copy of the weights and of the record, so nothing one character
+ // does to them reaches another.
+ const copyFit=f=>f&&{vertices:f.vertices.slice(),index:f.index.slice(),weight:f.weight.slice()},fitted=FITTED.get(data);
+ if(fitted)parts.forEach((m,k)=>{const a=m.geometry.attributes,f=fitted[k];a.skinIndex.array.set(f.index);a.skinWeight.array.set(f.weight);a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;if(f.layerFit)m.geometry.userData.layerFit=copyFit(f.layerFit);});
+ else{fitLayers();FITTED.set(data,parts.map(m=>({index:m.geometry.attributes.skinIndex.array.slice(),weight:m.geometry.attributes.skinWeight.array.slice(),layerFit:copyFit(m.geometry.userData.layerFit)||null})));}
  // HMG-only grasp corrective; neutral/other equipment restore the approved mesh.
  const gripHand=createGripHand(),supportLimb=limbs.find(l=>l.side===-1),supportArm=parts.find(p=>p.name==='forearm and hand -1');bones[supportLimb.wr].add(gripHand);const supportIndex=supportArm.geometry.index.clone(),trimmedIndex=[];for(let k=0;k<supportIndex.count;k+=3){const ids=[supportIndex.getX(k),supportIndex.getX(k+1),supportIndex.getX(k+2)];if(ids.every(i=>supportArm.geometry.attributes.position.getY(i)>.77))trimmedIndex.push(...ids);}const trimmedAttribute=new THREE.Uint16BufferAttribute(trimmedIndex,1),gripCuff=createGripCuff(supportArm,trimmedIndex,gripHand);
  const supportPosition=supportArm.geometry.attributes.position,gripPosition=supportPosition.clone();for(let i=0;i<gripPosition.count;i++){const y=gripPosition.getY(i),t=clamp((y-.77)/.13,0,1),factor=.64+.36*t*t*(3-2*t),cx=.061-(y-.79)*.19,cz=-.355+(y-.79)*.055;gripPosition.setXYZ(i,cx+(gripPosition.getX(i)-cx)*factor,y,cz+(gripPosition.getZ(i)-cz)*factor);}

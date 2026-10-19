@@ -18,13 +18,21 @@ export function createProneMotion(worker,profile){
  const rest=new Map(skeleton.bones.map(b=>[b,b.getWorldPosition(V())])),palm=V(.052,-.010,0),spineRest=rest.get(named.spine);
  // The lower shirt is tucked into the bib. Resting-arm weights pulled that
  // hidden hem out through the overalls when both elbows reached forward.
- const shirt=worker.parts.find(p=>p.name.includes('shirt')),a=shirt.geometry.attributes;
+ // A collar vertex the adapter gave back the character's fitted head share (clothing-weights.js) no longer has the
+ // adapter's slots; it takes the same tuck by bone, the share kept exactly.
+ const shirt=worker.parts.find(p=>p.name.includes('shirt')),a=shirt.geometry.attributes,hipsI=skeleton.bones.indexOf(named.hips),spineI=skeleton.bones.indexOf(named.spine);
  for(let i=0;i<a.position.count;i++){
-  const y=a.position.getY(i),z=Math.abs(a.position.getZ(i)),keep=1-(1-ease((y-1.0)/.12))*(1-ease((z-.20)/.06));
-  const upper=a.skinWeight.getZ(i)*keep,lower=a.skinWeight.getW(i)*keep,torso=1-upper-lower,waist=ease((y-.90)/.14);
-  a.skinWeight.setXYZW(i,torso*(1-waist),torso*waist,upper,lower);
+  const y=a.position.getY(i),z=Math.abs(a.position.getZ(i)),keep=1-(1-ease((y-1.0)/.12))*(1-ease((z-.20)/.06)),waist=ease((y-.90)/.14);
+  if(a.skinIndex.getX(i)===hipsI&&a.skinIndex.getY(i)===spineI){
+   const upper=a.skinWeight.getZ(i)*keep,lower=a.skinWeight.getW(i)*keep,torso=1-upper-lower;
+   a.skinWeight.setXYZW(i,torso*(1-waist),torso*waist,upper,lower);continue;}
+  const side=a.position.getZ(i)<0?-1:1,up=skeleton.bones.indexOf(named['upperArm'+side]),lo=skeleton.bones.indexOf(named['forearm'+side]),other=[];let u=0,l=0;
+  for(let k=0;k<4;k++){const b=a.skinIndex.getComponent(i,k),w=a.skinWeight.getComponent(i,k);if(b===up)u+=w;else if(b===lo)l+=w;else if(w>0&&b!==hipsI&&b!==spineI)other.push([b,w]);}
+  u*=keep;l*=keep;const held=other.reduce((s,[,x])=>s+x,0),torso=Math.max(0,1-u-l-held);
+  const rest=[[hipsI,torso*(1-waist)],[spineI,torso*waist],[up,u],[lo,l]].filter(([,x])=>x>0).sort((p,q)=>q[1]-p[1]).slice(0,4-other.length),sum=rest.reduce((s,[,x])=>s+x,0),slots=[...other,...rest.map(([b,x])=>[b,sum?x*(1-held)/sum:0])];
+  while(slots.length<4)slots.push([0,0]);a.skinIndex.setXYZW(i,...slots.map(([b])=>b));a.skinWeight.setXYZW(i,...slots.map(([,x])=>x));
  }
- a.skinWeight.needsUpdate=true;
+ a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;
  const limbs=[-1,1].map(side=>({side,shoulder:named['upperArm'+side],elbow:named['forearm'+side],hand:named['hand'+side],finger:named['fingers'+side],hip:named['thigh'+side],knee:named['shin'+side],ankle:named['hoof'+side]}));
  let state,heading=0,pitch=0,joints={},shot,shotKey='',contacts=[];
  function rotate(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(Q()).invert().multiply(q));root.updateMatrixWorld(true);}
