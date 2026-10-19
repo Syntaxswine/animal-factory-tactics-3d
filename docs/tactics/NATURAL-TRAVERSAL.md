@@ -297,14 +297,42 @@ that each one:
 
 A mutant that skips the tail restore fails it.
 
-The hen has no traversal skeleton (wings, no hands, no hips bone). `naturalTraversal(event, unit)` refuses it, and the
-battle keeps the simple traversal for it. The battle adapter now builds all three crossings: `window`, `low-wall` and
-`wall`.
+The hen has no traversal skeleton (wings, no hands, no hips bone), so she has her own crossings (below). The battle
+adapter builds all three crossings for every character: `window`, `low-wall` and `wall`.
 
 Next, in addition to the list above:
-1. **The hen.** Its own crossings (a wing-assisted hop), or keep the simple traversal. The user's call.
-2. **A pig hang** for the 2 m wall.
-3. **Long ears** under the lintel at the hop.
+1. **A pig hang** for the 2 m wall.
+2. **Long ears** under the lintel at the hop.
+
+### 2026-10-19 (late): the hen's own crossings
+
+The user: "Give the hen its own crossings: a wing-assisted hop up onto the sill or wall and down the other side."
+
+`dist/tactics/hen-crossing.js` builds them on the rig the hen's ladder and roof mantle already use
+(`createHenLadderMotion`). That rig adds thighs, gives the wings and legs IK, and can gather the tail fan and draw the
+apron and waist tie in. `hen-ladder-motion.js` now also exports `apron`, `tie` and `toes`.
+
+| | |
+|---|---|
+| window (2.72 s) | Crouch, then a wing-assisted hop with the head going in low and early. She lands on the sill sitting flat, the way a hen sits a perch: legs folded under, tail fan gathered, apron drawn in. She ducks through, leans over, launches off still flat, flies clear, comes upright once her rump has passed the far face, lands, folds her wings and settles. |
+| waist-high wall (2.70 s) | Crouch, hop up beating, perch upright on the top, hop off, flutter down clear of the wall, land. |
+| 2 m wall (3.44 s) | Crouch, spring, beat up the face, over the top, perch, hop off, clear the wall, glide down, flare and land. |
+
+Her height decides the window. She is 1.65 m to the comb, the comb is 0.88 above her pelvis, and the opening is 0.70
+tall: standing on the sill, her head would be at 2.05. Flat, she spans 0.86 to 1.54 between the sill (0.85) and the
+lintel (1.55). Her rump trails 0.3 to 0.5 m behind her, so on the way down she moves out from the wall before she drops
+below its top.
+
+Measured every 10 ms, her whole surface against the floor and the obstacle:
+- **Window:** her legs are 3.5 cm into the sill for 10 ms as she flies clear.
+- **Walls:** only the tail fan, in the last 0.2 s. As it spreads back to her standing pose it reaches 0.54 m behind
+  her, into the wall; any hen standing with her back to a wall does the same.
+
+The wings beat at 5 Hz during the hops. The test builds all three crossings on the hen. It checks the start and end
+stance, keeps her within 4 cm of clear (the tail fan's last 0.3 s excepted), and checks she is given back exactly when a
+crossing is cut short. A mutant that lifts her body on the sill fails it.
+
+Not done for the hen: the physics audit. A flapping bird needs the wings' push on the air in the rig.
 
 ## Integration
 

@@ -6,8 +6,9 @@ import {createAnimalPaint} from './animal-motion-paint.js';
 import {createWindowDive} from './window-dive.js';
 import {createWallVault,LOW_WALL} from './wall-vault.js';
 import {createWallClimb} from './wall-climb.js';
+import {createHenCrossing} from './hen-crossing.js';
 const $=id=>document.getElementById(id),host=$('viewport'),params=new URLSearchParams(location.search);
-for(const p of ANIMAL_MOTION_CATALOG.filter(p=>!p.unarmed)){const o=document.createElement('option');o.value=p.id;o.textContent=p.label;$('animal').append(o);}
+for(const p of ANIMAL_MOTION_CATALOG){const o=document.createElement('option');o.value=p.id;o.textContent=p.label;$('animal').append(o);}
 for(const id of ['obstacle','animal','outfit','view','speed'])if([...$(id).options].some(o=>o.value===params.get(id)))$(id).value=params.get(id);
 // A brick wall on the edge between columns 7 and 8, the window on row 7: the motion starts on tile (7, 7) facing +X.
 const ORIGIN=[7,0,7];
@@ -34,7 +35,7 @@ const VIEWS={game:{dir:[Math.sin(GAME_CAMERA.azimuth)*Math.cos(GAME_CAMERA.eleva
  side:{dir:[0,.12,1],ppu:0},along:{dir:[1,.18,-.05],ppu:0},close:{dir:[.75,.45,.9],ppu:0,close:true}};
 function draw(){if(disposed)return;const w=host.clientWidth||960,h=host.clientHeight||600,v=VIEWS[$('view').value];renderer.setSize(w,h,false);
  const focus=new T.Vector3(ORIGIN[0]+.5,.7,ORIGIN[2]+.15),ppu=v.ppu||Math.min(w/3.2,h/2.2)*(v.close?1.4:1);
- if(v.close&&motion){const c=motion.diagnostics()?.com;if(c)focus.set(ORIGIN[0]+c[0],Math.max(.5,c[1]),ORIGIN[2]+c[2]);}
+ if(v.close&&motion){const d=motion.diagnostics(),c=d?.com||d?.points?.pelvis;if(c)focus.set(ORIGIN[0]+c[0],Math.max(.5,c[1]),ORIGIN[2]+c[2]);}
  camera.left=-w/(2*ppu);camera.right=w/(2*ppu);camera.top=h/(2*ppu);camera.bottom=-h/(2*ppu);camera.near=.01;camera.far=100;camera.position.copy(focus).add(new T.Vector3(...v.dir).normalize().multiplyScalar(20));camera.up.set(0,1,0);camera.lookAt(focus);camera.updateProjectionMatrix();
  grid.visible=$('grid').checked;renderer.render(scene,camera);}
 function render(){if(!motion)return;const d=motion.apply(progress,{origin:ORIGIN,heading:0});for(const p of worker.parts)p.material=$('grey').checked?worker.grey:paint.material;draw();
@@ -43,7 +44,8 @@ function render(){if(!motion)return;const d=motion.apply(progress,{origin:ORIGIN
 async function load(){if(loading)return;loading=true;playing=false;$('play').textContent='Play';window.traversalStudy.ready=false;const animal=$('animal').value,outfit=$('outfit').value,kind=obstacle();
  try{disposeActor();profile=ANIMAL_MOTION_CATALOG.find(p=>p.id===animal);const res=await fetch(profile.file);if(!res.ok)throw Error(profile.label+' mesh failed to load');
   worker=profile.create(await res.json());paint=await createAnimalPaint(renderer,worker,profile,r.loader,outfit);for(const p of worker.parts){p.material=paint.material;p.castShadow=p.receiveShadow=true;}
-  motion=OBSTACLES[obstacle()].make(worker,profile);$('phases').replaceChildren();for(const p of motion.phases){const b=document.createElement('button');b.textContent=p.label;b.onclick=()=>window.traversalStudy.seek((p.start+p.end)/(2*motion.duration));$('phases').append(b);}
+  // The hen has wings and no hands: her own crossings (hen-crossing.js).
+  motion=profile.id==='hen'?createHenCrossing(worker,profile,obstacle()):OBSTACLES[obstacle()].make(worker,profile);$('phases').replaceChildren();for(const p of motion.phases){const b=document.createElement('button');b.textContent=p.label;b.onclick=()=>window.traversalStudy.seek((p.start+p.end)/(2*motion.duration));$('phases').append(b);}
   scene.add(worker.root);window.traversalStudy.ready=true;$('loading').hidden=true;render();}
  catch(e){$('error').textContent=e.message;console.error(e);}finally{loading=false;if(animal!==$('animal').value||outfit!==$('outfit').value||kind!==obstacle())load();}}
 window.traversalStudy={ready:false,renderer,scene,camera,get motion(){return motion;},get worker(){return worker;},seek(p){playing=false;$('play').textContent='Play';progress=T.MathUtils.clamp(p,0,1);return render();},render,draw,
