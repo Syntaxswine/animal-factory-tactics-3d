@@ -1,4 +1,4 @@
-import {V,Q,DEG,clamp,track,spinTrack,bodyQ,yawQ,relQ,keyedLimb,posedFrom,steadyPoles,steadyTurns,limbSample,createTraversalBody,createSurfaceProbe} from './traversal-pose.js';
+import {V,Q,DEG,clamp,track,spinTrack,angleTrack,bodyQ,yawQ,relQ,keyedLimb,posedFrom,steadyPoles,steadyTurns,limbSample,createTraversalBody,createSurfaceProbe} from './traversal-pose.js';
 import {bodyFit,createTailBend,createClearanceFit,edgeBoxes} from './traversal-fit.js';
 import {balanceTraversal,contactProbe} from './traversal-balance.js';
 // Climb over a 2 m wall (docs/tactics/NATURAL-TRAVERSAL.md). Local frame: start on the tile at the origin facing +X,
@@ -26,17 +26,17 @@ const TRUNK=[
  {t:2.305,label:'Chest over the top',grip:true,hips:[.30,1.86,0],pitch:34,flex:14,nod:-5,turn:30,hang:true},
  {t:2.705,label:'Right knee up',hips:[.42,2.20,.04],pitch:62,roll:-18,heading:-30,flex:10,nod:-5,turn:15},
  {t:3.065,label:'Straddle',hips:[.50,2.18,0],pitch:28,heading:-90,flex:6,nod:-12},
- {t:3.305,label:'Left knee up behind',hips:[.52,2.24,-.03],pitch:52,heading:-108,flex:12,nod:-14,turn:10},
+ {t:3.305,label:'Left knee up behind',hips:[.52,2.17,-.03],pitch:52,heading:-108,flex:12,nod:-14,turn:10},
  {t:3.625,label:'Left leg over',hips:[.72,2.05,.02],pitch:26,heading:-165,flex:10,nod:-10,turn:-20},
  {t:4.105,label:'Lower down the far face',grip:true,hips:[.72,1.24,0],pitch:-6,heading:-180,flex:-2,nod:-8,turn:-40,hang:true},
  {t:4.205,label:'Let go',grip:true,still:true,hips:[.73,1.20,0],pitch:-4,heading:-180,flex:-2,nod:-8,turn:-40,hang:true},
  {t:4.505,label:'Drop',hips:[.84,.86,0],pitch:4,heading:-180,flex:3,nod:-10,turn:-40,stand:true,fall:true},
  {t:4.685,label:'Absorb',hips:[.93,.64,0],pitch:8,heading:-180,flex:6,nod:-5,turn:-40,stand:true},
- {t:4.925,label:'Weight on the right foot',hips:[.91,.74,-.10],pitch:4,heading:-200,flex:3,turn:-30,stand:true},
- {t:5.145,label:'Left foot round',hips:[.95,.79,-.12],heading:-270,turn:-10,stand:true},
- {t:5.375,label:'Weight on the left foot',hips:[1.0,.80,-.12],heading:-300,stand:true},
- {t:5.595,label:'Right foot round',hips:[1.0,.80,-.11],heading:-345,stand:true},
- {t:5.825,label:'Turn onto the tile',hips:[1,.80,0],heading:-360,stand:true},
+ {t:4.95,label:'Weight on the right foot',hips:[.91,.74,-.10],pitch:4,heading:-200,flex:3,turn:-30,stand:true},
+ {t:5.27,label:'Left foot round',hips:[.95,.79,-.12],heading:-270,turn:-10,stand:true},
+ {t:5.52,label:'Weight on the left foot',hips:[1.0,.80,-.18],heading:-300,stand:true},
+ {t:5.84,label:'Right foot round',hips:[1.0,.80,-.15],heading:-345,stand:true},
+ {t:6.1,label:'Turn onto the tile',hips:[1,.80,0],heading:-360,stand:true},
 ];
 export function createWallClimb(worker,profile={id:'horse'}){
  const body=createTraversalBody(worker),tails=createTailBend(worker),probe=createSurfaceProbe(worker,{stride:2,keep:(m,i)=>!/tail/.test(m.name)||tails.isRoot(m.name,i)}),fitB=bodyFit(body,probe),back=fitB.back,D=TRUNK.at(-1).t;
@@ -59,7 +59,7 @@ export function createWallClimb(worker,profile={id:'horse'}){
  for(const [i,k] of keys.entries()){const top=k.launch||k.catch?keys.find(x=>x.apex!==undefined):k.fall?keys.slice(0,i).findLast(x=>x.still):null;
   if(k.apex!==undefined||k.still){pins[i]=[slope(i,0),0,slope(i,2)];accel[i]=[0,-g,0];}
   if(top){k.hips=[k.hips[0],top.hips[1]-g/2*(k.t-top.t)**2,k.hips[2]];pins[i]=[slope(i,0),-g*(k.t-top.t),slope(i,2)];accel[i]=[0,-g,0];}}
- const posTrack=track(keys.map(k=>[k.t,...k.hips]),pins,{accel}),rotTrack=spinTrack(keys.map(k=>[k.t,yawQ(k.heading||0).multiply(bodyQ((k.pitch||0)*DEG,(k.roll||0)*DEG))]));
+ const posTrack=track(keys.map(k=>[k.t,...k.hips]),pins,{accel}),rotTrack=angleTrack(keys.map(k=>[k.t,k.heading||0,k.pitch||0,k.roll||0]));
  const shape=track(keys.map(k=>[k.t,k.flex||0,k.side||0,k.twist||0,k.nod||0,k.tilt||0,k.turn||0]));
  let fit=null,steady=null,turnRef=null,balance=null;
  function trunkAt(t){const [flex,side,twist,nod,tilt,turn]=shape(clamp(t,0,D));let hips=V(...posTrack(t)),hipsQ=rotTrack(t),headQ=relQ(nod,tilt,turn);const spineQ=relQ(flex,side,twist);
@@ -77,20 +77,26 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // The far side faces the wall (heading -180): left foot and hand on +Z. The turn onto the tile steps the left foot
  // round behind the planted right, then the right round to its place (lifted mid-step); headings run on to -360.
  const land=(s,heading)=>({...stance(s,1),heading});
+ // A stepping hoof arrives over its mark, flat, before it sets down (coming down on the slant, its heel touched with the
+ // step still 6 cm from done, and slid).
+ const over=(s,heading)=>({f:'world',p:[fitB.foot(s,1)[0],ANKLE+.025,fitB.foot(s)[2]],hoof:0,heading});
  const HANG=[-1,0,.8]; // a gripping hand's elbow: back and out from the wall
  const LIMB={
   'leg-1':[[0,stance(-1)],[.4,foot(-.035-back,-.20)],[.62,foot(-.035-back,-.20,15)],[.995,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-1.03*fitB.leg,-.20],hoof:55,soft:.03}],[1.195,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-.95*fitB.leg,-.20],hoof:50}],[1.375,{f:'pelvis',p:[.02,-.62,-.13],hoof:20,knee:OUT}],[1.505,{...onFace(true,.46,-.16,1.505),knee:OUT}],[1.905,{...onFace(true,.80,-.16,1.905),knee:OUT}],[2.305,{...onFace(true,1.26,-.16,2.305),knee:OUT}],[2.705,{...onFace(true,1.56,-.16,2.705),knee:OUT}],
    [3.065,{f:'world',p:[.19,1.70,0],hoof:20,heading:-90}],[3.305,{f:'world',p:[.44,2.24,.62],hoof:10,heading:-108}],[3.485,{f:'world',p:[.68,2.12,.66],hoof:40,heading:-140,knee:SIDE}],[3.685,{f:'world',p:[.80,1.36,.20],hoof:20,heading:-170,knee:SIDE}],
-   [4.105,{...onFace(false,.56,.16,4.105),knee:OUT,lift:.3}],[4.205,{f:'pelvis',p:[-.06,body.offsets.thigh[-1].y-.95*fitB.leg,-.14],hoof:25,knee:OUT}],[4.375,{f:'pelvis',p:[-.06,body.offsets.thigh[-1].y-1.0*fitB.leg,-.14],hoof:25,soft:.03,knee:OUT}],[4.625,foot(.90,.14,0,-180)],[4.925,foot(.90,.14,0,-190)],[5.035,{f:'world',p:[.97,ANKLE+.07,-.02],hoof:-10,heading:-230}],[5.145,land(-1,-270)],[5.825,land(-1,-360)]],
+   [4.04,{...onFace(false,.56,.16,4.105),knee:OUT,lift:.3}],[4.205,{f:'pelvis',p:[-.06,body.offsets.thigh[-1].y-.95*fitB.leg,-.14],hoof:25,knee:OUT}],[4.375,{f:'pelvis',p:[-.06,body.offsets.thigh[-1].y-1.0*fitB.leg,-.14],hoof:25,soft:.03,knee:OUT}],[4.625,foot(.90,.14,0,-180)],[4.95,foot(.90,.14,0,-190)],[5.23,{...over(-1,-265),arc:.07}],[5.27,land(-1,-270)],[6.1,land(-1,-360)]],
   leg1:[[0,stance(1)],[.4,foot(.14-back,.14)],[.62,foot(.14-back,.14,15)],[.995,{f:'pelvis',p:[body.offsets.thigh[1].x+.01,body.offsets.thigh[1].y-1.03*fitB.leg,.14],hoof:55,soft:.03}],[1.195,{f:'pelvis',p:[body.offsets.thigh[1].x+.01,body.offsets.thigh[1].y-.95*fitB.leg,.14],hoof:50}],[1.375,{f:'pelvis',p:[.02,-.62,.13],hoof:20,knee:OUT}],[1.505,{...onFace(true,.58,.16,1.505),knee:OUT}],[1.905,{...onFace(true,.96,.16,1.905),knee:OUT}],[2.305,{...onFace(true,1.30,.16,2.305),knee:OUT}],[2.525,{f:'world',p:[.20,1.96,.36],hoof:-60,knee:OUT}],[2.705,{f:'world',p:[.52,2.16,.42],hoof:0,heading:-30}],[2.905,{f:'world',p:[.72,2.04,.30],hoof:30,heading:-60}],
    [3.065,{f:'world',p:[.81,1.70,0],hoof:20,heading:-90}],[3.485,{f:'world',p:[.80,1.58,-.10],hoof:20,heading:-140,knee:SIDE}],[3.685,{f:'world',p:[.80,1.36,-.16],hoof:20,heading:-170,knee:SIDE}],
-   [4.105,{...onFace(false,.70,-.16,4.105),knee:OUT,lift:.3}],[4.205,{f:'pelvis',p:[-.06,body.offsets.thigh[1].y-.95*fitB.leg,.16],hoof:25,knee:OUT}],[4.375,{f:'pelvis',p:[-.06,body.offsets.thigh[1].y-1.0*fitB.leg,.16],hoof:25,soft:.03,knee:OUT}],[4.625,foot(.90,-.16,0,-180)],[5.145,foot(.90,-.16,0,-270)],[5.375,foot(.90,-.16,0,-300)],[5.485,{f:'world',p:[.95,ANKLE+.07,.04],hoof:-10,heading:-330}],[5.595,land(1,-360)],[5.825,land(1,-360)]],
-  // The left hand holds from the catch until the left knee is up, then re-grips on the far side's left; the right lets go
+   [4.04,{...onFace(false,.70,-.16,4.105),knee:OUT,lift:.3}],[4.205,{f:'pelvis',p:[-.06,body.offsets.thigh[1].y-.95*fitB.leg,.16],hoof:25,knee:OUT}],[4.375,{f:'pelvis',p:[-.06,body.offsets.thigh[1].y-1.0*fitB.leg,.16],hoof:25,soft:.03,knee:OUT}],[4.625,foot(.90,-.16,0,-180)],[5.27,foot(.90,-.16,0,-270)],[5.52,foot(.90,-.16,0,-300)],[5.8,{...over(1,-355),arc:.07}],[5.84,land(1,-360)],[6.1,land(1,-360)]],
+  // The left hand holds from the catch until the left knee is up, then re-grips on the far side's left while the seat is
+ // still on the top; the right re-plants turned to the far side in the straddle (a palm turning 140 degrees where it lay
+ // touched the top at two points, and held the body alone on them while the left crossed: 37% of its weight of phantom
+ // push). The right lets go
   // once the chest is over and plants ahead before the right knee comes up beside it. Gripping, the elbows bend back
   // and out from the wall (bent down, the forearms lay across its near edge). The arms swing up ahead of the jump, in
   // front of the face, and come down onto the top (reaching straight for it, the forearms went 7 cm into the face).
-  'arm-1':[[0,{f:'chest',p:restWrist(-1)}],[.4,{f:'chest',p:[.20,.15,-.30]}],[.62,{f:'chest',p:[.10,-.05,-.32]}],[.86,{f:'chest',p:[.06,.40,-.26],elbow:HANG}],[1.115,{f:'chest',p:[.04,.56,-.22],elbow:HANG}],[1.265,{f:'world',p:[.45,top,-.18],palm:0,elbow:HANG}],[3.485,{f:'world',p:[.46,top,-.18],palm:0,elbow:HANG}],[3.545,{f:'world',p:[.50,top+.06,.04]}],[3.605,{f:'world',p:[.54,top,.20],palm:-180}],[4.175,{f:'world',p:[.54,top,.20],palm:-180,lift:.3}],[4.255,{f:'chest',p:[.11,.58,-.20]}],[4.505,{f:'chest',p:[.10,.56,-.21]}],[4.685,{f:'chest',p:[.14,-.05,-.32]}],[5.145,{f:'chest',p:[.16,-.26,-.20]}],[5.825,{f:'chest',p:restWrist(-1)}]],
-  arm1:[[0,{f:'chest',p:restWrist(1)}],[.4,{f:'chest',p:[.20,.15,.30]}],[.62,{f:'chest',p:[.10,-.05,.32]}],[.86,{f:'chest',p:[.06,.40,.26],elbow:HANG}],[1.115,{f:'chest',p:[.04,.56,.22],elbow:HANG}],[1.265,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.345,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.465,{f:'world',p:[.52,top+.06,0]}],[2.585,{f:'world',p:[.54,top,-.10],palm:-40}],[3.665,{f:'world',p:[.54,top,-.20],palm:-180}],[4.175,{f:'world',p:[.54,top,-.20],palm:-180,lift:.3}],[4.255,{f:'chest',p:[.11,.58,.20]}],[4.505,{f:'chest',p:[.10,.56,.21]}],[4.685,{f:'chest',p:[.14,-.05,.32]}],[5.145,{f:'chest',p:[.16,-.26,.20]}],[5.825,{f:'chest',p:restWrist(1)}]],
+  'arm-1':[[0,{f:'chest',p:restWrist(-1)}],[.4,{f:'chest',p:[.20,.15,-.30]}],[.62,{f:'chest',p:[.10,-.05,-.32]}],[.86,{f:'chest',p:[.06,.40,-.26],elbow:HANG}],[1.115,{f:'chest',p:[.04,.56,-.22],elbow:HANG}],[1.265,{f:'world',p:[.45,top,-.18],palm:0,elbow:HANG}],[3.485,{f:'world',p:[.46,top,-.18],palm:0,elbow:HANG}],[3.545,{f:'world',p:[.50,top+.06,.04]}],[3.605,{f:'world',p:[.54,top,.20],palm:-180}],[4.175,{f:'world',p:[.54,top,.20],palm:-180,lift:.3}],[4.255,{f:'chest',p:[.11,.58,-.20]}],[4.505,{f:'chest',p:[.10,.56,-.21]}],[4.685,{f:'chest',p:[.14,-.05,-.32]}],[4.95,{f:'chest',p:[.18,-.18,-.16]}],[5.27,{f:'chest',p:[.16,-.26,-.20]}],[6.1,{f:'chest',p:restWrist(-1)}]],
+  arm1:[[0,{f:'chest',p:restWrist(1)}],[.4,{f:'chest',p:[.20,.15,.30]}],[.62,{f:'chest',p:[.10,-.05,.32]}],[.86,{f:'chest',p:[.06,.40,.26],elbow:HANG}],[1.115,{f:'chest',p:[.04,.56,.22],elbow:HANG}],[1.265,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.345,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.465,{f:'world',p:[.52,top+.06,0]}],[2.585,{f:'world',p:[.54,top,-.10],palm:-40}],[3.00,{f:'world',p:[.54,top,-.10],palm:-40}],[3.06,{f:'world',p:[.56,top+.06,-.15]}],[3.12,{f:'world',p:[.54,top,-.20],palm:-180}],[3.665,{f:'world',p:[.54,top,-.20],palm:-180}],[4.175,{f:'world',p:[.54,top,-.20],palm:-180,lift:.3}],[4.255,{f:'chest',p:[.11,.58,.20]}],[4.505,{f:'chest',p:[.10,.56,.21]}],[4.685,{f:'chest',p:[.14,-.05,.32]}],[4.95,{f:'chest',p:[.18,-.18,.16]}],[5.27,{f:'chest',p:[.16,-.26,.20]}],[6.1,{f:'chest',p:restWrist(1)}]],
  };
  const spec=t=>{const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posedFrom(tr,limbs,{poles:steady?id=>steady(id,t):null,offsets:fit?.limb?id=>fit.limb(id,t):null,snaps:fit?.plant?id=>fit.plant(id,t):null,turns:turnRef?b=>turnRef(b,t):null});};
  // Fit this character's surface: trunk, head and tail out of the floor and the wall. The face is the way out until the

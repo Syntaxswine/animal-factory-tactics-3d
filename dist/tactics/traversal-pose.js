@@ -57,11 +57,15 @@ export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][
  // (1 - u)^3 and u^3 (a 2 mm step there read as 2,000 m/s^2). Mid-segment the leg's soft reach (zone) widens to 2 soft,
  // back to the exact one at both keys (stepped at the trunk key, a leg already near its reach jumped): a leg asked past
  // its reach stays bent, and a falling hoof slows onto the floor over about 3 zones of the hips' travel instead of
- // stopping in the last centimetre.
+ // stopping in the last centimetre. The zone is what it adds to the IK's exact soft reach (.015): taken as the larger
+ // of the two, it kinked where it passed it and the hoof jumped at 110 m/s^2.
  const sk=a.soft&&b.f==='world'&&b.plant===true?a:b.soft&&a.f==='world'&&a.plant===true?b:null;let p=pa.clone().lerp(pb,u),g=0,zone=0;
  if(sk){const W=sk===a?pb:pa,F=sk===a?pa:pb,s=sk.soft,d=(F.y-W.y)/s,top=W.y+s*(d>30?d:Math.log1p(Math.exp(d))),v=1-u,
    down=1/(1+Math.exp(Math.min(30,d)));g=down*(sk===a?1-v*v*v:1-u*u*u);
-  p=pa.clone().lerp(pb,sk===a?u+v*g:u*(1-g));p.y=top+(pa.y-top)*v*v*v+(pb.y-top)*u*u*u;zone=2*s*smooth(Math.min(u,v)/.25);}
+  p=pa.clone().lerp(pb,sk===a?u+v*g:u*(1-g));p.y=top+(pa.y-top)*v*v*v+(pb.y-top)*u*u*u;zone=Math.max(0,2*s-.015)*smooth(Math.min(u,v)/.25);}
+ // arc (metres): on a key, the end rises that much mid-way from the key before, 64 u^3 (1 - u)^3 (C2 at both keys): a
+ // step in one swing, where a mid-step key stopped the hoof in the air and the swing leg's turning read as 640 N·m.
+ if(b.arc){const q=tb>ta?clamp((t-ta)/(tb-ta))*(1-clamp((t-ta)/(tb-ta))):0;p.y+=b.arc*64*q*q*q;}
  return {f:'world',p:p.toArray(),knee,lift:a.lift||0,hoof:has(a)||has(b)?lerp(hp??0,hq??0,u):undefined,hoofW:lerp(has(a)?1:0,has(b)?1:0,u),heading:lerp(a.heading||0,b.heading||0,u),
   palm:pal(a)||pal(b)?lerp(pal(a)?a.palm:b.palm,pal(b)?b.palm:a.palm,u):undefined,palmW:lerp(pal(a)?1:0,pal(b)?1:0,u),
   elbow,elbowW:lerp(el(a)?1:0,el(b)?1:0,u),plantW:(w=>w+(1-w)*g)(lerp(a.plant?1:0,b.plant?1:0,u)),plant:[pn(a.plant),pn(b.plant),u],zone};}
@@ -126,6 +130,11 @@ const expq=r=>{const a=r.length();return a<1e-12?Q():Q().setFromAxisAngle(r.clon
 // Orientation keys [t, quaternion] joined by cubic rotation-vector segments (C1): angular velocity flows through
 // a key unless the rotation reverses there; the ends start and stop at rest. Pass w:[...] per key to pin a rate
 // (world angular velocity, rad/s) where a keyed stretch meets a computed one.
+// A trunk orientation keyed as heading, pitch and roll (degrees): each angle on its own quintic track (C2), composed as
+// yawQ(heading) x bodyQ(pitch, roll). spinTrack's cubic in the log of the turn steps the angular acceleration at every
+// key, and each key's change is taken about a different reference: the head and chest jerked sideways at a key of the
+// climb's turn onto the tile (headTip 55 m/s^2 within 2 ms; 42% of the body's weight of phantom push).
+export function angleTrack(rows){const tr=track(rows);return t=>{const [h,p,r]=tr(t);return yawQ(h).multiply(bodyQ(p*DEG,r*DEG));};}
 export function spinTrack(rows){
  const keys=rows.map(([t,q,w])=>({t,q:q.clone().normalize(),pin:w}));for(let i=1;i<keys.length;i++)if(keys[i].q.dot(keys[i-1].q)<0)keys[i].q.set(-keys[i].q.x,-keys[i].q.y,-keys[i].q.z,-keys[i].q.w);
  const d=keys.slice(1).map((k,i)=>logq(k.q.clone().multiply(keys[i].q.clone().invert())));
@@ -167,7 +176,7 @@ export function createTraversalBody(worker){
  // Two-bone limb: the elbow or knee bends toward pole, and the rest bend plane maps onto the posed one, so the
  // thigh and forearm turn with the pelvis and shoulder (no candy-wrapper twist). Throws outside native reach.
  let label='';
- function limb(a,b,c,target,pole,slack=0,zone=0){const ra=rest.get(a),rb=rest.get(b),rc=rest.get(c),start=a.getWorldPosition(V()),l1=ra.distanceTo(rb),l2=rb.distanceTo(rc),S=Math.max(SOFT,zone);let d=target.distanceTo(start);
+ function limb(a,b,c,target,pole,slack=0,zone=0){const ra=rest.get(a),rb=rest.get(b),rc=rest.get(c),start=a.getWorldPosition(V()),l1=ra.distanceTo(rb),l2=rb.distanceTo(rc),S=SOFT+zone;let d=target.distanceTo(start);
   if(d>l1+l2+slack+1e-6||d<Math.abs(l1-l2)-1e-6)warnings.push({bone:a.name,label,over:d-(l1+l2)});
   const knee0=l1+l2-S,x=(d-knee0)/S,tgt=d>knee0?start.clone().addScaledVector(target.clone().sub(start).normalize(),(d=l1+l2-S*(1+x)*Math.exp(-2*x))):target;
   const axis=tgt.clone().sub(start).normalize(),along=(l1*l1-l2*l2+d*d)/(2*d),side=pole.clone().addScaledVector(axis,-pole.dot(axis));if(side.lengthSq()<1e-12)side.copy(V(1,0,0).addScaledVector(axis,-axis.x));side.normalize();

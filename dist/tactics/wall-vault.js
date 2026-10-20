@@ -1,4 +1,4 @@
-import {V,Q,DEG,clamp,track,spinTrack,bodyQ,yawQ,relQ,frameToWorld,keyedLimb,posedFrom,steadyPoles,steadyTurns,limbSample,createTraversalBody,createSurfaceProbe} from './traversal-pose.js';
+import {V,Q,DEG,clamp,track,spinTrack,angleTrack,bodyQ,yawQ,relQ,frameToWorld,keyedLimb,posedFrom,steadyPoles,steadyTurns,limbSample,createTraversalBody,createSurfaceProbe} from './traversal-pose.js';
 import {bodyFit,createTailBend,createClearanceFit,edgeBoxes} from './traversal-fit.js';
 import {balanceTraversal,contactProbe} from './traversal-balance.js';
 // Side vault over a waist-high wall (docs/tactics/NATURAL-TRAVERSAL.md). Local frame: start on the tile at the
@@ -31,7 +31,7 @@ export function createWallVault(worker,profile={id:'horse'}){
  // fit moves it the rest of the way, so its short arms still reach the top.
  const body=createTraversalBody(worker),tails=createTailBend(worker),probe=createSurfaceProbe(worker,{stride:2,keep:(m,i)=>!/tail/.test(m.name)||tails.isRoot(m.name,i)}),fitB=bodyFit(body,probe),back=.6*fitB.back,palmX=.53-.5*fitB.back,D=TRUNK.at(-1).t;
  const keys=TRUNK.map(k=>({...k,hips:[k.hips[0]-(k.near?back:0),k.stand?fitB.stand(k.hips[1]):k.hips[1],k.hips[2]]}));
- const posTrack=track(keys.map(k=>[k.t,...k.hips])),rotTrack=spinTrack(keys.map(k=>[k.t,yawQ(k.heading||0).multiply(bodyQ((k.pitch||0)*DEG,(k.roll||0)*DEG))]));
+ const posTrack=track(keys.map(k=>[k.t,...k.hips])),rotTrack=angleTrack(keys.map(k=>[k.t,k.heading||0,k.pitch||0,k.roll||0]));
  const shape=track(keys.map(k=>[k.t,k.flex||0,k.side||0,k.twist||0,k.nod||0,k.tilt||0,k.turn||0]));
  let fit=null,steady=null,turnRef=null,balance=null;
  function trunkAt(t){const [flex,side,twist,nod,tilt,turn]=shape(clamp(t,0,D));let hips=V(...posTrack(t)),hipsQ=rotTrack(t),headQ=relQ(nod,tilt,turn);const spineQ=relQ(flex,side,twist);

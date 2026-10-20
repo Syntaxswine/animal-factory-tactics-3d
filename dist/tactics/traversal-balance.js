@@ -48,12 +48,16 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,fmax=FMAX,margin=
   else if(s.kind==='feet'){const r=edge(i);ry.push({at:i-1,c:acc,lo:(.3*r-1)*G*d2,hi:(.1+(fmax-.1)*r-1)*G*d2});}else if(s.kind==='grip')ry.push({at:i-1,c:acc,lo:(-fmax-1)*G*d2,hi:(fmax-1)*G*d2});}
  const Y=boxedPath(c0[1],wT,wJ,ry),ay=i=>i>0&&i<n-1?(Y.c[i+1]-2*Y.c[i]+Y.c[i-1])/d2:0;
  const out=[null,Y.c,null],res=[0,Y.res,0];
+ // A feet sample's box is the intersection of its neighbours' within two samples: a foot lifting a sample earlier than
+ // planned (moving the hips moves it) left the pressure point outside the one still down (41% of the body's weight).
+ const near=(i,j)=>samples[j]?.kind==='feet'?samples[j].box:null,boxAt=i=>{const b=samples[i].box.slice();for(let j=i-2;j<=i+2;j++){const o=near(i,j);if(!o)continue;b[0]=Math.max(b[0],o[0]);b[1]=Math.min(b[1],o[1]);b[2]=Math.max(b[2],o[2]);b[3]=Math.min(b[3],o[3]);}
+  return b[0]<=b[1]&&b[2]<=b[3]?b:samples[i].box;};
  for(const ax of [0,2]){const r=ends(ax);
   for(let i=1;i<n-1;i++){const s=samples[i];if(s.kind==='air'){r.push({at:i-1,c:acc,lo:0,hi:0});continue;}
    if(s.kind==='grip'){r.push({at:i-1,c:acc,lo:-fmax*G*d2,hi:fmax*G*d2});continue;}
    if(s.kind!=='feet')continue;const fy=Math.max(.3*G,ay(i)+G),h=Math.max(.2,Y.c[i]-(s.floor||0)),k=h/fy;
    // The pressure point also carries the body's turning: p_x = c_x - k a_x + dL_z / (M fy), p_z = c_z - k a_z - dL_x / (M fy).
-   const dl=s.dL?(ax?-s.dL[0]:s.dL[2])/(BODY_MASS*fy):0,lo=s.box[ax?2:0]+margin-dl,hi=s.box[ax?3:1]-margin-dl,mid=(s.box[ax?2:0]+s.box[ax?3:1])/2-dl;
+   const box=boxAt(i),dl=s.dL?(ax?-s.dL[0]:s.dL[2])/(BODY_MASS*fy):0,lo=box[ax?2:0]+margin-dl,hi=box[ax?3:1]-margin-dl,mid=(box[ax?2:0]+box[ax?3:1])/2-dl;
    r.push({at:i-1,c:[-k/d2,1+2*k/d2,-k/d2],lo:Math.min(lo,mid),hi:Math.max(hi,mid)},{at:i-1,c:acc,lo:-MU*fy*d2,hi:MU*fy*d2});}
   const P=boxedPath(c0[ax],wT,wJ,r);out[ax]=P.c;res[ax]=P.res;}
  const plan=Array.from(out[0],(x,i)=>[x,out[1][i],out[2][i]]);plan.residual=res;return plan;}
@@ -122,7 +126,7 @@ function turning(frames,dt){const n=frames.length,mid=(P,a,b)=>P[a].clone().add(
 // the torque of easing it out) and eases in and out over EASE of the contacts on either side, matching the turn, its
 // rate and its acceleration. w carries over between rounds (each adds what the last missed; delta, the largest, in
 // rad/s, says when it has settled).
-const EASE=.25,TURN_TOL=.02;
+const EASE=.25,TURN_TOL=.02,REFINE=2;
 function flightTurn(w,S,L,I,dt){
  const n=S.length,theta=Array.from({length:n},()=>[0,0,0]),nw=Array.from({length:n},()=>[0,0,0]);let delta=0;
  // a quintic from (p, v, a) at u = 0 to rest at zero at u = 1, over T
@@ -165,5 +169,12 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  for(let r=0;r<rounds&&!settled;r++){const {S,dL,L,I}=measure(),key=S.map(x=>x.kind).join();history.push(runs(S));
   if(!c0)c0=S.map(x=>x.c);const turn=flightTurn(w,S,L,I,dt);settled=key===last&&turn.delta<TURN_TOL;last=key;if(settled)break;
   samples=S.map((x,i)=>({...x,c:c0[i],dL:dL[i]}));plan=planCentre(samples,dt,options);w=turn.w;spin=turnAt(turn.theta,plan);
+  // The turn refined REFINE times on the flight samples alone, posed with the turn so far: by rounds alone, a flight's
+  // first samples never settled where the toe-off moved a sample each round (955 N·m at the push-off).
+  for(let k=0;k<REFINE&&S.some(x=>x.kind==='air');k++){const L2=L.map(x=>x.slice()),I2=I.slice();
+   for(let a=0;a<n;a++){if(S[a].kind!=='air')continue;let b=a;while(b+1<n&&S[b+1].kind==='air')b++;const lo=Math.max(0,a-1),hi=Math.min(n-1,b+1),frames=[];
+    for(let i=lo;i<=hi;i++){setShift(follow?follow.shift(times[i]):null);const P=pose(times[i]);frames.push(Object.fromEntries(KEEP.map(q=>[q,P[q].clone()])));}
+    const tu=turning(frames,dt);for(let i=a;i<=b;i++){L2[i]=tu.L[i-lo];I2[i]=tu.I[i-lo];}a=b;}
+   const t2=flightTurn(w,S,L2,I2,dt);w=t2.w;spin=turnAt(t2.theta,plan);}
   follow=followCentre(times,plan,(t,s)=>{setShift(V(...s));return com(pose(t)).toArray();},{base});}
  setMove(null);return {...follow,spin:spin||(()=>null),plan,samples,times,settled,history};}
