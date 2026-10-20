@@ -150,6 +150,9 @@ export class InspectionScene {
   this.biomes.cutawayTargets=targets;
  }
  preview(result){
+  if(!this.disposed&&this.document&&(result?.hedgePreview||this.hedgePreview)){
+   this.hedgePreview=!!(result?.ok&&result?.hedgePreview);this.biomes.hedges.rebuild(this.hedgePreview?result.map:this.document.map,null,this.visibleLevel,{editor:true,selectedLevel:this.options.level,dim:!this.options.showAllLevels});this.changed();
+  }
   if(this.previewTrees){this.previewTrees.traverse(m=>{if(m.isInstancedMesh)m.dispose();});this.previewTrees.removeFromParent();for(const g of this.previewTreeGeometry)g.dispose();for(const m of this.previewTreeMaterials)m.dispose();this.previewTrees=null;this.previewTreeGeometry=[];this.previewTreeMaterials=[];}
   if(this.previewArrow){this.previewArrow.removeFromParent();this.previewArrow.line.material.dispose();this.previewArrow.cone.material.dispose();this.previewArrow=null;}
   if(this.previewMesh){this.previewMesh.removeFromParent();this.previewMesh.geometry.dispose();this.previewMesh.material.dispose();this.previewMesh.dispose();this.previewMesh=null;}

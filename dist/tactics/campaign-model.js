@@ -1,3 +1,5 @@
+import {initializeDialogue,pinDialogue} from './dialogue-state.js';
+import {tutorialRoleErrors,tutorialCrateLoot} from './tutorial-mission.js';
 import {trackMapGeometry} from './map-geometry-cache.js';
 import {localEnvironmentProfile} from './environment-regions.js';
 import {createGame,refresh,alive,incapacitated,abandonCasualties,walkable} from './core/engine.js';
@@ -41,7 +43,7 @@ export function initializeSector(c,index){
  const sector=sectorRecord(c,index);if(sector.initialized)return sector;
  const assignment=c.assignments[index];if(!assignment)fail('No local map is assigned to this sector yet.');
  const s=createGame((c.seed+index)>>>0,assignment.map,false,c.difficulty,{cast:[],social:true,awareness:true,statSystem:true,rosterSeed:c.seed});startEncounterClock(s);s.clock={...c.clock};
- const residents=s.units;s.units=[];s.loot=structuredClone(assignment.map.campaignLoot||[]);
+ delete s.dialogue;const residents=s.units;s.units=[];s.loot=[...tutorialCrateLoot(assignment.map),...structuredClone(assignment.map.campaignLoot||[])];
  for(const [i,u]of residents.entries()){
   const authored=u.characterId||'guard_'+i,id=c.id+':sector:'+index+':'+authored;
   register(c,u,id,{kind:'sector',sector:index});sector.references[authored]=id;
@@ -54,7 +56,7 @@ export function resolveCharacterReference(c,sector,authoredId){
  return r&&r.location.kind==='sector'&&r.location.sector===sector&&!retired(r.unit)?r.unit:null;
 }
 export function createCampaign(content,{id='campaign_'+crypto.randomUUID(),difficulty='easy'}={}){
- const c={version:CAMPAIGN_VERSION,id,seed:content.seed,contentVersion:content.contentVersion,difficulty,revision:0,clock:createClock(),money:20000,overmap:structuredClone(content.overmap),assignments:structuredClone(content.assignments),sectors:{},characters:{},groups:[],active:null,incidents:[],nextIncident:1,nextGroup:2,nextUnitId:0,selectedGroup:'group-1',objectives:{},logistics:{weapons:0,forts:[],convoys:[],militia:{},militiaCost:500},log:[]};
+ const c={version:CAMPAIGN_VERSION,id,seed:content.seed,contentVersion:content.contentVersion,difficulty,revision:0,clock:createClock(),money:20000,overmap:structuredClone(content.overmap),assignments:structuredClone(content.assignments),sectors:{},characters:{},groups:[],active:null,incidents:[],nextIncident:1,nextGroup:2,nextUnitId:0,selectedGroup:'group-1',objectives:{},logistics:{weapons:0,forts:[],convoys:[],militia:{},militiaCost:500},log:[]};initializeDialogue(c,content.seed);for(const a of Object.values(c.assignments))for(const d of Object.values(a.map.dialogueDefinitions||{}))pinDialogue(c.dialogue,d);
  for(const [index,assignment]of Object.entries(c.assignments))if(c.overmap.environments&&!assignment.map.environment)assignment.map.environment=localEnvironmentProfile(c.overmap.environments,+index);
  validateAssignments(c);
  const initial=c.assignments[content.start].map,roster=createGame(c.seed,{...initial,guards:[]},false,difficulty,{social:true,awareness:true,statSystem:true,rosterSeed:c.seed}).units;
@@ -71,6 +73,7 @@ export function createCampaign(content,{id='campaign_'+crypto.randomUUID(),diffi
  return bindCampaign(c);
 }
 export function validateAssignments(c){
+ const roleErrors=tutorialRoleErrors({props:Object.values(c.assignments).flatMap(a=>a.map.props||[])});if(roleErrors.length)fail(roleErrors.join(' '));
  for(const [index,a]of Object.entries(c.assignments)){
   if(!c.overmap.sectors[index]||typeof a.templateId!=='string'||!a.templateId||typeof a.variant!=='string'||![0,90,180,270].includes(a.orientation)||!a.entries?.length)fail('Invalid sector assignment.');
   const errors=validateMap(a.map);if(errors.length)fail('Invalid '+a.map.name+': '+errors.join(' '));

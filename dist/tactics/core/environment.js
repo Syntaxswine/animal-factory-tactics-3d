@@ -1,3 +1,4 @@
+import {HEDGE_PROPS} from '../hedge-data.js';
 import {BIOME_TERRAIN} from '../biome-gameplay-data.js';
 import {SCENERY_PROPS,isHelicopter} from '../scenery-catalog.js';
 import {helicopterBlocked} from '../scenery-rules.js';
@@ -66,3 +67,5 @@ PROPS[EXPLOSIVE_BARREL]={...EXPLOSIVE_BARREL_RULE};
 Object.assign(PROPS,SITE_PROPS);
 
 Object.assign(PROPS,SCENERY_PROPS);
+
+Object.assign(PROPS,HEDGE_PROPS);

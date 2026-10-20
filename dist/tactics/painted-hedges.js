@@ -1,3 +1,4 @@
+import {hedgeCellSurfaces} from './hedge-surfaces.js';
 import * as T from './vendor/three.module.js';
 import {createHedgePlan,hedgeHash,HEDGE_CHUNK_SIZE} from './hedge-layout.js';
 import {createScreenMaterials,SCREEN_PANELS} from './foliage-screen-paint.js';
@@ -24,15 +25,6 @@ function smoothCoreNormals(buffers){
  // Analytic normals are inaccurate at a coarse clipped end-cap triangle.
  for(const {position:p,normal:n}of buffers)for(let i=0;i<p.length;i+=3){const v=sums.get(key(p,i)).clone().normalize();n[i]=v.x;n[i+1]=v.y;n[i+2]=v.z;}
 }
-function clipTriangle(points){
- const out=[],crossings=[];
- for(let i=0;i<3;i++){
-  const a=points[i],b=points[(i+1)%3];if(a.v>=0)out.push(a);
-  if((a.v>=0)!==(b.v>=0)){const t=a.v/(a.v-b.v),p={x:lerp(a.x,b.x,t),z:lerp(a.z,b.z,t),v:0,rim:true};out.push(p);crossings.push(p);}
- }
- return {points:out,crossings};
-}
-
 export function createPaintedHedges(cells,textures={},options={}){
  const plan=createHedgePlan(cells,options),root=new T.Group();root.name='painted-hedges';
  const paint=createScreenMaterials(textures.screen??null),materials=Object.values(paint),grey=new T.MeshStandardMaterial({color:0x8c9182,roughness:1,side:T.DoubleSide});materials.push(grey);
@@ -49,32 +41,14 @@ export function createPaintedHedges(cells,textures={},options={}){
  const buckets=new Map(),owned=[],meshes=[];let disposed=false,greyMode=false,detail=true;
  function bucket(c){const k=`${Math.floor(c.x/HEDGE_CHUNK_SIZE)},${Math.floor(c.z/HEDGE_CHUNK_SIZE)}`;if(!buckets.has(k))buckets.set(k,{core:buffer(),leaves:buffer(),wood:buffer()});return buckets.get(k);}
  function tint(x,z){const n=hedgeHash(Math.floor(x/3),Math.floor(z/3),plan.seed+41);return [.83+n*.12,.86+n*.11,.78+n*.10];}
- function topVertex(out,p,base){
-  // Clipped points approximate the contour by a chord. Give every point on
-  // that chord the rim height, avoiding tiny spikes at rounded end caps.
-  const h=p.rim?plan.rim(p.x,p.z,base):plan.surface(p.x,p.z,base);
-  vertex(out,[p.x,h,p.z],[0,1,0],[p.x,h-base],tint(p.x,p.z));
- }
- function side(out,a,b,base){
-  const fa=plan.sample(a.x,a.z,base),fb=plan.sample(b.x,b.z,base),radial=new T.Vector3((a.x-fa.cx)+(b.x-fb.cx),0,(a.z-fa.cz)+(b.z-fb.cz)).normalize();
-  const tiers=[[.60,.065],[1,.43],[1,null]],at=(p,f,t)=>[lerp(f.cx,p.x,t[0]),t[1]===null?plan.rim(p.x,p.z,base):base+f.height*t[1],lerp(f.cz,p.z,t[0])];
-  for(let i=0;i<2;i++){
-   const slope=i===0?-.4*(fa.radius+fb.radius)/(.365*(fa.height+fb.height)):0,normal=new T.Vector3(radial.x,slope,radial.z).normalize().toArray();
-   quad(out,[at(a,fa,tiers[i]),at(b,fb,tiers[i]),at(b,fb,tiers[i+1]),at(a,fa,tiers[i+1])],normal,tint((a.x+b.x)/2,(a.z+b.z)/2));
-  }
- }
  for(const c of plan.cells){
-  const out=bucket(c),steps=6;
-  for(let iz=0;iz<steps;iz++)for(let ix=0;ix<steps;ix++){
-   const x=c.x-.5+ix/steps,z=c.z-.5+iz/steps;
-   const p=[[x,z],[x+1/steps,z],[x+1/steps,z+1/steps],[x,z+1/steps]].map(([x,z])=>({x,z,v:plan.sample(x,z,c.base).value}));
-   for(const ids of [[0,2,1],[0,3,2]]){
-    const clip=clipTriangle(ids.map(i=>p[i]));for(let i=1;i<clip.points.length-1;i++)for(const point of [clip.points[0],clip.points[i],clip.points[i+1]])topVertex(out.core,point,c.base);
-    if(clip.crossings.length===2)side(out.core,...clip.crossings,c.base);
-   }
+  const out=bucket(c);
+  for(const points of hedgeCellSurfaces(plan,c).core){
+   const a=new T.Vector3(...points[0]),normal=new T.Vector3(...points[1]).sub(a).cross(new T.Vector3(...points[2]).sub(a)).normalize().toArray();
+   for(const p of points)vertex(out.core,p,normal,[p[0],p[1]-c.base],tint(p[0],p[2]));
   }
   // Small leaf sprays soften shoulders without hiding a neighboring clear tile.
-  const random=i=>hedgeHash(c.x*53+i,c.z,plan.seed+61);
+  const random=i=>hedgeHash(c.x*53+i,c.z,(c.seed??plan.seed)+61);
   for(let i=0;i<(c.kind==='tall'?26:18);i++){
    const angle=random(i*5)*Math.PI*2,dist=.28+random(i*5+1)*.10,x=c.x+Math.cos(angle)*dist,z=c.z+Math.sin(angle)*dist,f=plan.sample(x,z,c.base);
    if(f.distance<.16)continue;
@@ -94,11 +68,11 @@ export function createPaintedHedges(cells,textures={},options={}){
  }
  smoothCoreNormals([...buckets.values()].map(b=>b.core));
  for(const [chunk,data]of buckets)for(const [layer,material]of [['core',paint.temperate],['wood',paint.wood],['leaves',fringe]]){
-  if(!data[layer].position.length)continue;
+  if(options.chunk&&chunk!==options.chunk||!data[layer].position.length)continue;
   const g=geometry(data[layer]),mesh=new T.Mesh(g,material);mesh.name=`hedge:${chunk}:${layer}`;mesh.userData={layer,paint:material};mesh.castShadow=layer!=='leaves';mesh.receiveShadow=layer!=='leaves';root.add(mesh);owned.push(g);meshes.push(mesh);
  }
  root.updateMatrixWorld(true);
- const bounds=new T.Box3().setFromObject(root),contract={units:'world; 1 unit = 1 tile',coordinates:'Authored coordinates in root-local space; transform with root.matrixWorld after placement. Keep root scale at one.',placement:'study-only',cells:plan.cells.map(c=>({...c})),wood:plan.wood.map(b=>({a:[...b.a],b:[...b.b],radius:b.radius,tipRadius:b.radius*.72})),sight:'Use the finite core geometry for leaf screening; leaves are not solid projectile cover.',bounds:bounds.isEmpty()?null:{min:bounds.min.toArray(),max:bounds.max.toArray()}};
+ const bounds=new T.Box3().setFromObject(root),contract={units:'world; 1 unit = 1 tile',coordinates:'Authored coordinates in root-local space; transform with root.matrixWorld after placement. Keep root scale at one.',placement:'Saved hedge-short / hedge-tall props; renderer receives cells through hedgeGroups.',cells:plan.cells.map(c=>({...c})),wood:plan.wood.map(b=>({a:[...b.a],b:[...b.b],radius:b.radius,tipRadius:b.radius*.72})),sight:'Use the finite core geometry for leaf screening; leaves are not solid projectile cover.',bounds:bounds.isEmpty()?null:{min:bounds.min.toArray(),max:bounds.max.toArray()}};
  function update(){for(const m of meshes){m.visible=m.userData.layer!=='leaves'||(detail&&!greyMode);m.material=greyMode?grey:m.userData.paint;}}
  return {root,plan,contract,stats(){return {cells:plan.cells.length,chunks:buckets.size,meshes:meshes.length,triangles:owned.reduce((n,g)=>n+g.attributes.position.count/3,0),woodBeams:plan.wood.length};},setGrey(value){greyMode=!!value;update();},setDetail(value){detail=!!value;update();},dispose(){if(disposed)return;disposed=true;root.removeFromParent();for(const g of owned)g.dispose();for(const m of materials)m.dispose();root.clear();}};
 }

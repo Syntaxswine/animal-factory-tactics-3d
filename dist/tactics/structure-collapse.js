@@ -1,14 +1,15 @@
-import {terrainAt,passable,blockedEdge} from './core/maps.js';
+import {terrainAt} from './core/maps.js';
 import {propCells,floorTerrain} from './core/environment.js';
 import {emptyScenery} from './structure-health.js';
 import {invalidateMapGeometry} from './map-geometry-cache.js';
+import {findFallLanding,applyFallInjury} from './fall-damage.js';
 const key=p=>`${p.x},${p.y},${p.z||0}`;
 const present=u=>!u.away&&!['quit','captured'].includes(u.casualty);
 
 // This is a support check after an attack, not a building stability simulation.
-// Intact neighboring floor tiles keep their own HP. Falls do not spend AP or
-// replay traversal; a separate injury rule can be added without changing HP.
-export function settleStructureCollapse(s,receipts,{fatal=()=>{}}={}){
+// Intact neighboring floor tiles keep their own HP. An involuntary fall spends
+// no action AP; impact can injure the legs and reduce the surviving merc's AP.
+export function settleStructureCollapse(s,receipts,{fatal=(s,u)=>{u.hp=0;u.ap=0;u.casualty='dead';},hurt}={}){
  const holes=new Set(receipts.filter(r=>r.destroyed&&r.type!=='wall').flatMap(r=>r.before.tiles).filter(p=>!floorTerrain(terrainAt(s,p.x,p.y,p.z))).map(key)),before=emptyScenery(),falls=[];
  if(!holes.size)return {before,falls};
  const unsupported=p=>holes.has(key(p));
@@ -23,19 +24,14 @@ export function settleStructureCollapse(s,receipts,{fatal=()=>{}}={}){
  }
  invalidateMapGeometry(s);
  const movers=(s.units||[]).filter(u=>present(u)&&!u.towerPost&&!u.cliffSupport&&unsupported({x:Math.round(u.x),y:Math.round(u.y),z:u.z||0}));
- const occupied=p=>(s.units||[]).some(u=>present(u)&&u.hp>0&&!u.towerPost&&!movers.includes(u)&&Math.round(u.x)===p.x&&Math.round(u.y)===p.y&&(u.z||0)===p.z);
  const landings=new Map(),reserved=new Set();
  for(const u of movers){
-  const from={x:u.x,y:u.y,z:u.z||0},x=Math.round(u.x),y=Math.round(u.y);let to=null;
-  for(let z=from.z-1;z>=0;z--){
-   if(terrainAt(s,x,y,z)==='void')continue;
-   const p={x,y,z},choices=[p,...[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy])=>({x:x+dx,y:y+dy,z})).filter(q=>!blockedEdge(s,p,q))];
-   to=choices.find(q=>passable(s,q)&&!occupied(q)&&!reserved.has(key(q)))||null;break;
-  }
+  const from={x:u.x,y:u.y,z:u.z||0},to=findFallLanding(s,u,{x:Math.round(u.x),y:Math.round(u.y)},from.z,reserved,new Set(movers));
   u.overwatch=null;delete u.cliffSupport;s.queue=[];
   if(to){Object.assign(u,to);reserved.add(key(to));landings.set(u.id,to);}
   else{u.z=0;fatal(s,u);landings.set(u.id,{x:u.x,y:u.y,z:0});}
-  falls.push({id:u.id,from,to:{x:u.x,y:u.y,z:u.z||0}});
+  const height=from.z-(u.z||0),damage=to?applyFallInjury(s,u,height,hurt):0;
+  falls.push({id:u.id,from,to:{x:u.x,y:u.y,z:u.z||0},height,damage});
  }
  for(const p of s.loot||[]){
   if(landings.has(p.body)){Object.assign(p,landings.get(p.body));delete p.towerPost;continue;}

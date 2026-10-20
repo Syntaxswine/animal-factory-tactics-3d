@@ -1,0 +1,236 @@
+{
+  "guide": {
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "viewport": [
+      1280,
+      720
+    ],
+    "firstAudioMs": 115,
+    "portrait": {
+      "renderer": 1,
+      "draws": 75,
+      "drawP95Ms": 1.199999988079071,
+      "preparationMs": {
+        "context": 7.5,
+        "mesh": 5.799999952316284,
+        "rig": 3.400000035762787,
+        "projection": 20.599999964237213,
+        "uploadMax": 16.900000035762787,
+        "compile": 30.099999964237213,
+        "ready": 345.69999998807907
+      },
+      "geometries": 22,
+      "textures": 6,
+      "triangles": 13583,
+      "calls": 22,
+      "width": 260,
+      "height": 312
+    },
+    "audio": {
+      "workers": 1,
+      "pending": 0,
+      "cacheBytes": 321540,
+      "sources": 0,
+      "frames": 0,
+      "audioBytes": 0,
+      "status": "done"
+    },
+    "cueLagP95Ms": 17.14440806434836,
+    "longTasks": []
+  },
+  "nadia": {
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "viewport": [
+      1280,
+      720
+    ],
+    "firstAudioMs": 95,
+    "portrait": {
+      "renderer": 1,
+      "draws": 63,
+      "drawP95Ms": 0.699999988079071,
+      "preparationMs": {
+        "context": 6.199999988079071,
+        "mesh": 3,
+        "rig": 2.899999976158142,
+        "projection": 16.80000001192093,
+        "uploadMax": 16.5,
+        "compile": 29.600000023841858,
+        "ready": 462.89999997615814
+      },
+      "geometries": 15,
+      "textures": 9,
+      "triangles": 11556,
+      "calls": 15,
+      "width": 260,
+      "height": 312
+    },
+    "audio": {
+      "workers": 1,
+      "pending": 0,
+      "cacheBytes": 280036,
+      "sources": 0,
+      "frames": 0,
+      "audioBytes": 0,
+      "status": "done"
+    },
+    "cueLagP95Ms": 19.02403528564678,
+    "longTasks": []
+  },
+  "hen": {
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "viewport": [
+      1280,
+      720
+    ],
+    "firstAudioMs": 124,
+    "portrait": {
+      "renderer": 1,
+      "draws": 127,
+      "drawP95Ms": 0.800000011920929,
+      "preparationMs": {
+        "context": 6.199999988079071,
+        "mesh": 19.5,
+        "rig": 2.900000035762787,
+        "projection": 15.099999964237213,
+        "uploadMax": 16.69999998807907,
+        "compile": 27.19999998807907,
+        "ready": 612.1000000238419
+      },
+      "geometries": 14,
+      "textures": 12,
+      "triangles": 10996,
+      "calls": 14,
+      "width": 260,
+      "height": 312
+    },
+    "audio": {
+      "workers": 1,
+      "pending": 0,
+      "cacheBytes": 297256,
+      "sources": 0,
+      "frames": 0,
+      "audioBytes": 0,
+      "status": "done"
+    },
+    "cueLagP95Ms": 17.29718575425554,
+    "longTasks": []
+  },
+  "slow": {
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "viewport": [
+      1280,
+      720
+    ],
+    "firstAudioMs": 89,
+    "portrait": {
+      "renderer": 1,
+      "draws": 340,
+      "drawP95Ms": 0.699999988079071,
+      "preparationMs": {
+        "context": 6.199999988079071,
+        "mesh": 19.5,
+        "rig": 2.900000035762787,
+        "projection": 15.099999964237213,
+        "uploadMax": 16.69999998807907,
+        "compile": 27.19999998807907,
+        "ready": 612.1000000238419
+      },
+      "geometries": 14,
+      "textures": 12,
+      "triangles": 10996,
+      "calls": 14,
+      "width": 260,
+      "height": 312
+    },
+    "audio": {
+      "workers": 1,
+      "pending": 0,
+      "cacheBytes": 590984,
+      "sources": 0,
+      "frames": 0,
+      "audioBytes": 0,
+      "status": "done"
+    },
+    "cueLagP95Ms": 16.45594123602581,
+    "longTasks": []
+  },
+  "fast": {
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "viewport": [
+      1280,
+      720
+    ],
+    "firstAudioMs": 76,
+    "portrait": {
+      "renderer": 1,
+      "draws": 379,
+      "drawP95Ms": 0.7000000476837158,
+      "preparationMs": {
+        "context": 6.199999988079071,
+        "mesh": 19.5,
+        "rig": 2.900000035762787,
+        "projection": 15.099999964237213,
+        "uploadMax": 16.69999998807907,
+        "compile": 27.19999998807907,
+        "ready": 612.1000000238419
+      },
+      "geometries": 14,
+      "textures": 12,
+      "triangles": 10996,
+      "calls": 14,
+      "width": 260,
+      "height": 312
+    },
+    "audio": {
+      "workers": 1,
+      "pending": 0,
+      "cacheBytes": 150392,
+      "sources": 0,
+      "frames": 0,
+      "audioBytes": 0,
+      "status": "done"
+    },
+    "cueLagP95Ms": 12.64859287714687,
+    "longTasks": []
+  },
+  "warm": {
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "viewport": [
+      1280,
+      720
+    ],
+    "firstAudioMs": 1,
+    "portrait": {
+      "renderer": 1,
+      "draws": 154,
+      "drawP95Ms": 1.0999999642372131,
+      "preparationMs": {
+        "context": 12.300000011920929,
+        "mesh": 5.800000011920929,
+        "rig": 3.399999976158142,
+        "projection": 29.19999998807907,
+        "uploadMax": 18,
+        "compile": 29.899999976158142,
+        "ready": 362.5
+      },
+      "geometries": 22,
+      "textures": 6,
+      "triangles": 13583,
+      "calls": 22,
+      "width": 260,
+      "height": 312
+    },
+    "audio": {
+      "workers": 0,
+      "pending": 0,
+      "cacheBytes": 321540,
+      "sources": 0,
+      "frames": 0,
+      "audioBytes": 0,
+      "status": "done"
+    },
+    "cueLagP95Ms": 17.67604038058583,
+    "longTasks": []
+  }
+}

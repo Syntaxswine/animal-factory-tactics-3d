@@ -1,3 +1,7 @@
+import {tutorialCrateLoot} from '../tutorial-mission.js';
+import {initializeDialogue,ensureDialogueUnitIds,pinDialogue} from '../dialogue-state.js';
+import {climbingPreview,rollClimb} from '../climbing.js';
+import {failedClimbFall,cancelClimbOrders} from '../fall-damage.js';
 import {withCombatQueries,combatQuery} from '../combat-queries.js';
 import {invalidateMapGeometry,trackMapGeometry} from '../map-geometry-cache.js';
 import {patrolDestination} from '../character-patrol.js';
@@ -76,7 +80,14 @@ export const movementModeOf=u=>u?.sneaking?'sneak':u?.running?'run':'walk';
 export const movementMultiplier=u=>MOVEMENT_MODES[movementModeOf(u)].apMultiplier*injuryMovement(u);
 export const movementCost=u=>STANCES[stanceOf(u)].moveCost*movementMultiplier(u);
 export const effectiveStealth=u=>Math.min(100,Math.max(0,(u.stealth||0)+(u.sneaking?20:0)));
-export function movementNeighbors(s,u,p=u,stairs){if(towerForUnit(s,u))return [];return neighbors(s,p,stairs).concat(siteEscapeSteps(s,u,p)).filter(q=>(q.kind==='ramp'||levelOf(q)===levelOf(p)||stanceOf(u)==='standing')&&!(levelOf(q)===levelOf(p)&&q.x!==p.x&&q.y!==p.y&&[occupant(s,q.x,p.y,levelOf(p)),occupant(s,p.x,q.y,levelOf(p))].some(v=>v&&v!==u))).map(q=>({...q,cost:q.kind==='cliff'?8*injuryMovement(u):(q.kind==='ramp'||levelOf(q)===levelOf(p)?STANCES[stanceOf(u)].moveCost*q.cost:q.cost)*movementMultiplier(u)}));}
+function movementCosts(s,step){return s.phase==='player'||!!step.climb&&combatCosts(s);}
+export function movementStep(u,p,q,combat=false){
+ const climb=climbingPreview(u,q,combat);
+ if(climb&&(!climb.ok||stanceOf(u)!=='standing'))return null;
+ const cost=climb&&!climb.legacy?climb.cost:q.kind==='cliff'?8*injuryMovement(u):(q.kind==='ramp'||levelOf(q)===levelOf(p)?STANCES[stanceOf(u)].moveCost*q.cost:q.cost)*movementMultiplier(u);
+ return {...q,cost,...climb?{climb}: {}};
+}
+export function movementNeighbors(s,u,p=u,stairs){if(towerForUnit(s,u))return [];return neighbors(s,p,stairs).concat(siteEscapeSteps(s,u,p)).filter(q=>(q.kind==='ramp'||levelOf(q)===levelOf(p)||stanceOf(u)==='standing')&&!(levelOf(q)===levelOf(p)&&q.x!==p.x&&q.y!==p.y&&[occupant(s,q.x,p.y,levelOf(p)),occupant(s,p.x,q.y,levelOf(p))].some(v=>v&&v!==u))).map(q=>movementStep(u,p,q,combatCosts(s))).filter(Boolean);}
 export const key=tileKey;
 export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,unitBaseHeight(a)-unitBaseHeight(b));
 export const alive=u=>u.hp>0&&!u.away&&u.casualty!=='quit'; // A unit that crossed the map edge is off this map: not a target, not an occupant, not controllable here; a merc that quit (G5) has left the squad.
@@ -105,6 +116,7 @@ export const DEFAULT_CAST=[['Yakov','horse','assault'],['Anya','goat','rifle'],[
 export function createGame(seed=1947,definition=factoryMap(),detect=true,difficulty='standard',options={}){
  const errors=validateMap(definition);if(errors.length)throw Error(errors.join(' '));
  const s={difficulty:difficulty==='easy'?'easy':'standard',map:structuredClone(definition.terrain),upper:structuredClone(definition.upper),stairs:structuredClone(definition.stairs),climbs:structuredClone(definition.climbs||[]),props:structuredClone(definition.props||[]),canopies:structuredClone(definition.canopies||[]),sectors:structuredClone(definition.sectors),edges:{...definition.edges},...(definition.environment?{environment:structuredClone(definition.environment)}:{}),...(definition.foliage?{foliage:structuredClone(definition.foliage)}:{}),...(definition.breaches?{breaches:structuredClone(definition.breaches)}:{}),edgeLocks:structuredClone(definition.edgeLocks||{}),definition:structuredClone(definition),units:[],phase:'explore',round:0,selected:0,visible:new Set(),seen:new Set(),detected:new Set(),glimpses:{},log:[],seed,perceptionSeed:seed,revision:0,queue:[],enemyIndex:0,contacts:{},effect:null};
+ initializeDialogue(s,seed);for(const d of Object.values(definition.dialogueDefinitions||{}))pinDialogue(s.dialogue,d);
  const add=(team,name,species,x,y,weapon,z=0)=>spawnUnit(s,{team,name,species,x,y,z,weapon,medical:team==='squad'?[0,25,50,100][s.units.length]:0});
  const cast=options.cast?options.cast.map(c=>[c.name,c.species,c.weapon]):DEFAULT_CAST;
  definition.starts.forEach((p,i)=>{if(cast[i]){add('squad',cast[i][0],p.species||cast[i][1],p.x,p.y,p.weapon||cast[i][2],levelOf(p));if(p.heading!==undefined){const u=s.units.at(-1);u.heading=p.heading;const angle=p.heading*Math.PI/180;u.facing=Math.cos(angle)-Math.sin(angle)>=0?1:-1;}if(p.outfit)s.units.at(-1).outfit=p.outfit;applyRuntimeCharacter(s.units.at(-1),p);}});
@@ -120,7 +132,7 @@ export function createGame(seed=1947,definition=factoryMap(),detect=true,difficu
  if(definition.name==='Factory test')s.loot[0].items.push({type:'weapon',kind:'flamethrower',rounds:4},{type:'ammo',kind:'flamethrower',count:4});
  if(options.statSystem){s.rules.statSystem=true;for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id],authored={...(u.team==='squad'?options.cast?.[u.id]?.stats:{}),...source?.stats};if(Number.isFinite(source?.perception)&&!Number.isFinite(authored.perception))authored.perception=source.perception;initializeStats(u,authored);starterTools(u);}}
  if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id];if(source?.towerPost)u.towerPost=structuredClone(source.towerPost);u.perception=u.stats?u.stats.perception:Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}
- trackMapGeometry(s);if(detect)refresh(s);log(s,`Local map ready / ${definition.guards.length} guards.`);return s;
+ s.loot.push(...tutorialCrateLoot(definition));ensureDialogueUnitIds(s);trackMapGeometry(s);if(detect)refresh(s);log(s,`Local map ready / ${definition.guards.length} guards.`);return s;
 }
 // Visibility and projectiles share solid geometry, but bodies do not occlude sight.
 export function zoneVisible(s,a,b,zone='torso'){a={...a,cliffSupport:rampSupportAt(s,a)||a.cliffSupport};b={...b,cliffSupport:rampSupportAt(s,b)||b.cliffSupport};
@@ -281,8 +293,8 @@ export function stepMovement(s,...args){return withCombatQueries(s,()=>stepMovem
 function stepMovementQueryAction(s){
  if(!s.queue.length||!['explore','player','won'].includes(s.phase))return false;
  if(s.queue[0].group)return stepGroupMovement(s);
- let step=s.queue[0];const actor=unit(s,step.id);if(step.goal&&canControl(s,actor)){const goal=step.goal,path=navigationPath(s,actor,goal.x,goal.y,goal.z);if(!path?.length){s.queue=[];log(s,'Route stopped: destination reached or no discovered route remains.');return false;}s.queue=path.map(p=>({id:actor.id,...p,goal}));}step=s.queue.shift();const u=unit(s,step.id),currentStep=u&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===levelOf(step));if(!canControl(s,u)||!currentStep||!canMoveStamina(u,currentStep)||occupant(s,step.x,step.y,levelOf(step))||(s.phase==='player'&&u.ap<currentStep.cost)){s.queue=[];return false;}
- recordCliffTraversal(s,u,step);recordRoofTraversal(s,u,step);spendMovement(u,step);openDoorBetween(s,u,step);u.heading=headingTo(u,step);u.facing=(step.x-u.x)-(step.y-u.y)>=0?1:-1;u.x=step.x;u.y=step.y;u.z=levelOf(step);u.steps++;u.overwatch=null;emitNoise(s,u,u.sneaking?3:10);if(s.phase==='player')u.ap-=currentStep.cost;enterFire(s,u);refresh(s);return true;
+ let step=s.queue[0];const actor=unit(s,step.id);if(step.goal&&canControl(s,actor)){const goal=step.goal,path=navigationPath(s,actor,goal.x,goal.y,goal.z);if(!path?.length){s.queue=[];log(s,'Route stopped: destination reached or no discovered route remains.');return false;}s.queue=path.map(p=>({id:actor.id,...p,goal}));}step=s.queue.shift();const u=unit(s,step.id),currentStep=u&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===levelOf(step));if(!canControl(s,u)||!currentStep||!canMoveStamina(u,currentStep)||occupant(s,step.x,step.y,levelOf(step))||(movementCosts(s,currentStep)&&u.ap<currentStep.cost)){s.queue=[];return false;}
+ step=currentStep;if(!commitClimb(s,u,step)){refresh(s);return true;}recordSimpleTraversal(s,u,step);recordCliffTraversal(s,u,step);recordRoofTraversal(s,u,step);spendMovement(u,step);openDoorBetween(s,u,step);u.heading=headingTo(u,step);u.facing=(step.x-u.x)-(step.y-u.y)>=0?1:-1;u.x=step.x;u.y=step.y;u.z=levelOf(step);u.steps++;u.overwatch=null;emitNoise(s,u,u.sneaking?3:10);if(movementCosts(s,currentStep))u.ap-=currentStep.cost;enterFire(s,u);refresh(s);return true;
 }
 export function coverAgainst(s,a,b){
  const occupied=PROPS[propAt(s,b.x,b.y,levelOf(b))?.kind];
@@ -378,7 +390,7 @@ function appendBarrelBlasts(s,event,explosions,targets,source){
 }
 
 function settleAttackStructures(s,event,source){
- const receipts=[...(event.structures||[]),...event.explosions.flatMap(e=>e.structures||[])],fallen=settleStructureCollapse(s,receipts,{fatal:(s,u)=>combatDamage(s,u,Math.max(u.hp,1),true,source)});
+ const receipts=[...(event.structures||[]),...event.explosions.flatMap(e=>e.structures||[])],fallen=settleStructureCollapse(s,receipts,{hurt:(s,u,damage)=>combatDamage(s,u,damage,false,source),fatal:(s,u)=>combatDamage(s,u,Math.max(u.hp,1),true,source)});
  event.falls=fallen.falls;
  if(event.grenade){for(const e of event.explosions)mergeScenery(event.grenade.scenery,e.before);mergeScenery(event.grenade.scenery,fallen.before);}
  for(const f of fallen.falls){const u=s.units.find(u=>u.id===f.id);if(u.hp<=0&&!event.downed.includes(u.id))event.downed.push(u.id);if(u.burningTurns||u.burnedRemains){recordBurn(s,u,u.hp>0?'ignite':'ash');(event.burns??=[]).push(u.id);}log(s,u.name+' fell to level '+(f.to.z+1)+'.');}
@@ -516,13 +528,13 @@ function stepEnemyQueryAction(s){
  let best=null;
  if(stateOf(g)==='searching'){const path=boundedRoute(s,g,fixGoals(s,dest),REALTIME_NODES);if(path?.length)best=path;} // a searcher has no shot to line up: the bounded router is enough
  else for(const q of neighbors(s,dest)){if(!WEAPONS[g.weapon].mag&&distance(q,dest)>WEAPONS[g.weapon].range)continue;const path=pathTo(s,g,q.x,q.y,q.z);if(path?.length&&(!best||pathCost(path)<pathCost(best)))best=path;}
- if(best&&best[0].cost<=g.ap){const p=best[0];stepTo(s,g,p);g.ap-=p.cost;refresh(s);resolveOverwatch(s,g);return true;}
+ if(best&&best[0].cost<=g.ap){const p=best[0];stepTo(s,g,p);g.ap=Math.max(0,g.ap-p.cost);refresh(s);resolveOverwatch(s,g);return true;}
  g.ap=0;s.enemyIndex++;return true;
 }
 // Broken: run from the last threat while the AP lasts; fire only when cornered.
 function fleeTurn(s,g,target){
  const p=fleeStep(s,g);
- if(p&&p.cost<=g.ap){stepTo(s,g,p);g.ap-=p.cost;refresh(s);resolveOverwatch(s,g);return true;}
+ if(p&&p.cost<=g.ap){stepTo(s,g,p);g.ap=Math.max(0,g.ap-p.cost);refresh(s);resolveOverwatch(s,g);return true;}
  if(!p&&target){const zone=['torso','head','legs','weapon'].find(z=>previewAttack(s,g,target,false,z).ok);if(zone){attack(s,g,target,false,true,zone);return true;}}
  g.ap=0;s.enemyIndex++;return true;
 }
@@ -542,7 +554,7 @@ export function moveGroup(s,ids,leader,x,y,z=levelOf(leader)){
  for(const u of members){const gx=u.x+dx,gy=u.y+dy,candidates=[];for(let oy=-2;oy<=2;oy++)for(let ox=-2;ox<=2;ox++)candidates.push({x:gx+ox,y:gy+oy,z,d:ox*ox+oy*oy});candidates.sort((a,b)=>a.d-b.d);let found=null;for(const goal of candidates){if(reserved.has(key(goal.x,goal.y,z)))continue;const path=inBounds(goal.x,goal.y,z)?pathTo(planning,u,goal.x,goal.y,z):null;if(path&&(path.length||u.x===goal.x&&u.y===goal.y&&levelOf(u)===z)){if(s.phase==='player'&&path.length&&path[0].cost>u.ap)continue;found=goal;break;}}if(!found)return false;reserved.add(key(found.x,found.y,z));orders.push({id:u.id,goal:{x:found.x,y:found.y,z}});}
  if(orders.every(o=>{const u=unit(s,o.id);return u.x===o.goal.x&&u.y===o.goal.y&&levelOf(u)===z;}))return false;for(const u of members)u.overwatch=null;s.queue=[{group:orders}];log(s,'Group movement ordered for '+orders.length+' comrades.');return true;
 }
-function stepGroupMovement(s){const order=s.queue[0];let moved=false;for(const entry of order.group){const u=unit(s,entry.id),goal=entry.goal;if(!canControl(s,u)){s.queue=[];return moved;}if(u.x===goal.x&&u.y===goal.y&&levelOf(u)===goal.z)continue;const path=navigationPath(s,u,goal.x,goal.y,goal.z),step=path?.[0],valid=step&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===step.z);if(!valid||!canMoveStamina(u,valid)||occupant(s,step.x,step.y,step.z)||(s.phase==='player'&&u.ap<valid.cost)){s.queue=[];log(s,'Group stopped: route blocked or a comrade lacks AP.');return moved;}recordCliffTraversal(s,u,step);recordRoofTraversal(s,u,step);spendMovement(u,step);openDoorBetween(s,u,step);u.heading=headingTo(u,step);u.facing=(step.x-u.x)-(step.y-u.y)>=0?1:-1;u.x=step.x;u.y=step.y;u.z=step.z;u.steps++;u.overwatch=null;emitNoise(s,u,u.sneaking?3:10);if(s.phase==='player')u.ap-=valid.cost;enterFire(s,u);moved=true;refresh(s);if(s.queue[0]!==order)return moved;}
+function stepGroupMovement(s){const order=s.queue[0];let moved=false;for(const entry of order.group){const u=unit(s,entry.id),goal=entry.goal;if(!canControl(s,u)){s.queue=[];return moved;}if(u.x===goal.x&&u.y===goal.y&&levelOf(u)===goal.z)continue;const path=navigationPath(s,u,goal.x,goal.y,goal.z),step=path?.[0],valid=step&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===step.z);if(!valid||!canMoveStamina(u,valid)||occupant(s,step.x,step.y,step.z)||(movementCosts(s,valid)&&u.ap<valid.cost)){s.queue=[];log(s,'Group stopped: route blocked or a comrade lacks AP.');return moved;}if(!commitClimb(s,u,valid)){refresh(s);return true;}recordSimpleTraversal(s,u,valid);recordCliffTraversal(s,u,valid);recordRoofTraversal(s,u,valid);spendMovement(u,valid);openDoorBetween(s,u,step);u.heading=headingTo(u,step);u.facing=(step.x-u.x)-(step.y-u.y)>=0?1:-1;u.x=step.x;u.y=step.y;u.z=step.z;u.steps++;u.overwatch=null;emitNoise(s,u,u.sneaking?3:10);if(movementCosts(s,valid))u.ap-=valid.cost;enterFire(s,u);moved=true;refresh(s);if(s.queue[0]!==order)return moved;}
  if(order.group.every(e=>{const u=unit(s,e.id);return u.x===e.goal.x&&u.y===e.goal.y&&levelOf(u)===e.goal.z;}))s.queue=[];return moved;
 }
 
@@ -656,7 +668,7 @@ function fleeStep(s,g){const threat=g.threat||g.lastKnown;if(!threat)return null
  const options=movementNeighbors(s,g).filter(q=>levelOf(q)===levelOf(g)&&!occupant(s,q.x,q.y,levelOf(q))&&!onFire(s,q)&&distance(q,threat)>d0+1e-9);if(!options.length)return null;
  const allies=guards(s).filter(o=>o!==g),refuge=q=>Math.min(g.post?distance(q,g.post):Infinity,...allies.map(o=>distance(q,o)));
  return options.sort((a,b)=>refuge(a)-refuge(b)||distance(b,threat)-distance(a,threat))[0];}
-function stepTo(s,g,p){recordCliffTraversal(s,g,p);recordRoofTraversal(s,g,p);spendMovement(g,p);g.heading=headingTo(g,p);openDoorBetween(s,g,p);g.facing=(p.x-g.x)-(p.y-g.y)>=0?1:-1;g.x=p.x;g.y=p.y;g.z=levelOf(p);g.steps++;enterFire(s,g);}
+function stepTo(s,g,p){const live=movementNeighbors(s,g).find(q=>q.x===p.x&&q.y===p.y&&q.z===p.z);if(!live||!canMoveStamina(g,live))return false;Object.assign(p,live);if(!commitClimb(s,g,p,{guard:true}))return false;recordSimpleTraversal(s,g,p);recordCliffTraversal(s,g,p);recordRoofTraversal(s,g,p);spendMovement(g,p);g.heading=headingTo(g,p);openDoorBetween(s,g,p);g.facing=(p.x-g.x)-(p.y-g.y)>=0?1:-1;g.x=p.x;g.y=p.y;g.z=levelOf(p);g.steps++;enterFire(s,g);}
 function sweep(s,g,ticks){g.sweep=(g.sweep??ticks)-1;g.heading=(g.heading+90)%360;return g.sweep<=0;}
 // Rest at the post (or where the guard stands when the post cannot be reached), wary for the rest of the map.
 function settle(s,g,home=true){setState(s,g,'rest');g.wary=true;if(home&&g.post)g.heading=g.post.heading;bark(s,g,g.name+(home?' is back at post.':' settled where it stood.'),'rest');}
@@ -699,7 +711,7 @@ export function boundedRoute(s,g,goals,budget){if(towerForUnit(s,g))return null;
   if(goals.has(p.k))return trace(p.k);
   const hp=p.f-p.g;if(hp<bestH){bestH=hp;best=p;}
   // Lean expansion: the same legality as movementNeighbors (level changes need standing, no cutting a corner past a body) checked against the precomputed occupied set.
-  for(const n of neighbors(s,p,stairs).concat(siteEscapeSteps(s,g,p))){const same=n.kind==='ramp'||n.z===p.z;if(!same&&stanceOf(g)!=='standing')continue;if(same&&n.x!==p.x&&n.y!==p.y&&(occupied.has(key(n.x,p.y,p.z))||occupied.has(key(p.x,n.y,p.z))))continue;const k=key(n.x,n.y,n.z),c=p.g+(n.kind==='cliff'?8*injuryMovement(g):same?unit*n.cost:n.cost*movementMultiplier(g));if(occupied.has(k)||c>=(scores.get(k)??Infinity))continue;scores.set(k,c);const q={x:n.x,y:n.y,z:n.z,kind:n.kind,cost:n.kind==='cliff'?8*injuryMovement(g):same?unit*n.cost:n.cost*movementMultiplier(g)};parents.set(k,{parent:p.k,point:q});push({...q,k,g:c,f:c+h(q)});}}
+  for(const n of neighbors(s,p,stairs).concat(siteEscapeSteps(s,g,p))){const same=n.kind==='ramp'||n.z===p.z;if(!same&&stanceOf(g)!=='standing')continue;if(same&&n.x!==p.x&&n.y!==p.y&&(occupied.has(key(n.x,p.y,p.z))||occupied.has(key(p.x,n.y,p.z))))continue;const q=movementStep(g,p,n,combatCosts(s));if(!q||combatCosts(s)&&q.cost>turnAP(g))continue;const k=key(n.x,n.y,n.z),c=p.g+q.cost;if(occupied.has(k)||c>=(scores.get(k)??Infinity))continue;scores.set(k,c);parents.set(k,{parent:p.k,point:q});push({...q,k,g:c,f:c+h(q)});}}
  // Out of budget: head for the closest tile explored (partial route), or give up when nothing is closer than where the guard stands.
  return best===first||!Number.isFinite(bestH)?null:trace(best.k);
 }
@@ -787,7 +799,25 @@ function civilianStep(s,g,turn){
   // No reachable cover: stay low rather than walking toward the danger.
   if(!flee&&!cover){changed||=g.stance!=='kneeling';g.stance='kneeling';g.state='cowering';break;}
   g.stance='standing';g.state=flee?'broken':'seeking-cover';const p=flee?fleeStep(s,g):cover.first;
-  if(!p||turn&&p.cost>g.ap)break;stepTo(s,g,p);if(turn)g.ap-=p.cost;changed=true;
+  if(!p||turn&&p.cost>g.ap)break;stepTo(s,g,p);if(turn)g.ap=Math.max(0,g.ap-p.cost);changed=true;
  }
  if(turn)g.ap=0;return changed;
+}
+
+// A preview is pure. Only an accepted traversal consumes this independent roll.
+export function commitClimb(s,u,step,{paid=false,guard=false}={}){
+ const result=rollClimb(s,u,step);if(!result.checked&&!result.blocked)return true;
+ s.lastClimb={unitId:u.id,kind:step.kind,...result};
+ if(result.success)return true;
+ if(result.blocked){cancelClimbOrders(s,u);return false;}
+ if(!paid){spendMovement(u,step);if(!guard&&combatCosts(s))u.ap=Math.max(0,u.ap-step.cost);}
+ u.overwatch=null;u.route=null;cancelClimbOrders(s,u);
+ if(result.fall){const event=failedClimbFall(s,u,step,{hurt:(s,u,damage)=>combatDamage(s,u,damage),fatal:(s,u)=>combatDamage(s,u,Math.max(u.hp,1),true)});recordSimpleEvent(s,event);log(s,u.name+' fell: '+event.damage+' HP'+(result.criticalFailure?' (critical failure)':'')+'.');enterFire(s,u);}
+ else log(s,u.name+' could not complete the climb and returned safely.');
+ return false;
+}
+function recordSimpleEvent(s,event){s.simpleTraversal={...event,id:(s.simpleTraversal?.id||0)+1};s.simpleTraversals=[...(s.simpleTraversals||[]),s.simpleTraversal].slice(-64);}
+function recordSimpleTraversal(s,u,to){
+ if(!['window','wall','ladder'].includes(to.kind))return;
+ recordSimpleEvent(s,{unitId:u.id,kind:to.kind,from:{x:u.x,y:u.y,z:levelOf(u)},to:{x:to.x,y:to.y,z:levelOf(to)},running:!!to.climb?.running});
 }

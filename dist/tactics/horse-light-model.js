@@ -80,7 +80,8 @@ export function createLightHorse(data,texture=null){
   if(forcedPanel!==null)panel=forcedPanel;
   u=clamp(u,.02,.98);v=clamp(v,.02,.98);return {panel,uv:[(panel%4+.035+u*.93)/4,1-(Math.floor(panel/4)+.965-v*.93)/4],color};
  }
- for(const source of data.parts){const g=new THREE.BufferGeometry(),p=[],norm=[],paintP=[],paintN=[],uv=[],colors=[],skinIndex=[],skinWeight=[],index=[],split=new Map();
+ if(data.preparedParts){for(const part of data.preparedParts){const g=new THREE.BufferGeometry();for(const [key,a]of Object.entries(part.attributes))g.setAttribute(key,new THREE.BufferAttribute(a.array,a.itemSize,a.normalized));g.setIndex(new THREE.BufferAttribute(part.index,1));if(part.layerFit)g.userData.layerFit=part.layerFit;const m=new THREE.SkinnedMesh(g,material);m.name=part.name;m.frustumCulled=false;root.add(m);m.bind(skeleton);parts.push(m);}}
+ else for(const source of data.parts){const g=new THREE.BufferGeometry(),p=[],norm=[],paintP=[],paintN=[],uv=[],colors=[],skinIndex=[],skinWeight=[],index=[],split=new Map();
   // Split at material-panel boundaries without changing positions or skin weights.
   for(let k=0;k<source.index.length;k+=3){const ids=source.index.slice(k,k+3),center=[0,0,0];for(const i of ids)for(let a=0;a<3;a++)center[a]+=source.position[i*3+a]/3;
    const triangleUV=uvColor(source.name,center,[0,0,0]);
@@ -143,7 +144,7 @@ export function createLightHorse(data,texture=null){
    if(plain.length)mesh.geometry.userData.layerFit={vertices:Int32Array.from(plain.filter((_,k)=>k%3===0)),index:Uint16Array.from(plain.filter((_,k)=>k%3===1).flat()),weight:Float32Array.from(plain.filter((_,k)=>k%3===2).flat())};
    a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;if(!hair)under.push(surfaceOf(mesh));}
  }
- fitLayers();
+ if(!data.preparedParts)fitLayers();
  // HMG-only grasp corrective; neutral/other equipment restore the approved mesh.
  const gripHand=createGripHand(),supportLimb=limbs.find(l=>l.side===-1),supportArm=parts.find(p=>p.name==='forearm and hand -1');bones[supportLimb.wr].add(gripHand);const supportIndex=supportArm.geometry.index.clone(),trimmedIndex=[];for(let k=0;k<supportIndex.count;k+=3){const ids=[supportIndex.getX(k),supportIndex.getX(k+1),supportIndex.getX(k+2)];if(ids.every(i=>supportArm.geometry.attributes.position.getY(i)>.77))trimmedIndex.push(...ids);}const trimmedAttribute=new THREE.Uint16BufferAttribute(trimmedIndex,1),gripCuff=createGripCuff(supportArm,trimmedIndex,gripHand);
  const supportPosition=supportArm.geometry.attributes.position,gripPosition=supportPosition.clone();for(let i=0;i<gripPosition.count;i++){const y=gripPosition.getY(i),t=clamp((y-.77)/.13,0,1),factor=.64+.36*t*t*(3-2*t),cx=.061-(y-.79)*.19,cz=-.355+(y-.79)*.055;gripPosition.setXYZ(i,cx+(gripPosition.getX(i)-cx)*factor,y,cz+(gripPosition.getZ(i)-cz)*factor);}

@@ -30,6 +30,13 @@ function head(x,y,z){
   const path=hornPaths[s===-1?0:1];let horn=Infinity;for(let i=0;i<20;i++)horn=Math.min(horn,C(x,y,z,path[i],path[i+1],.033*(1-i/20)+.0015,.033*(1-(i+1)/20)+.0015));
   d=blend(d,horn,.012);
  }
+ // The throat, rounded and out to the painted throat line: the side paintings draw it 4 to 5 cm
+ // ahead of the neck's centre, where the sculpt had a flat front 2 to 2.5 cm behind it, square to
+ // the jaw. No painting covered that front: its paint, borrowed, was a pale wash with a hard
+ // outline and the back painting's scarf in it (the user, "its this part here"; "modify the base
+ // sculpt to go out to the dimensions where the patch are"; of two shapes, "1: rounded at the
+ // painted line").
+ d=blend(d,E(x,y,z,[.022,1.290,0],[.026,.040,.036]),.024);
  d+=.0035*Math.exp(-(((f-1.378)/.004)**2))*THREE.MathUtils.smoothstep(x,.105,.15);
  return d;
 }

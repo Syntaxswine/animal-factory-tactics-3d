@@ -1,4 +1,6 @@
 import {SCREEN_ATLAS,FRINGE_ATLAS,SCREEN_PANELS} from '../dist/tactics/foliage-screen-paint.js';
+import {HEDGE_PROPS} from '../dist/tactics/hedge-data.js';
+import {createPaintedHedges,SCREEN_ATLAS as HEDGE_SCREEN,FRINGE_ATLAS as HEDGE_FRINGE} from '../dist/tactics/painted-hedges.js';
 import {BIOME_TERRAIN} from '../dist/tactics/biome-gameplay-data.js';
 import {TRUCK_PAINT} from '../dist/tactics/canvas-truck-paint.js';
 import {RAMP_PROPS} from '../dist/tactics/cliff-ramps.js';
@@ -72,7 +74,16 @@ const artIds=[...Object.keys(PROPS),...new Set(Object.values(EDGES).map(r=>r.art
 // Procedural assets and roof aliases have real render paths, not independent PNGs.
 const proceduralProps=[...Object.keys(RAMP_PROPS),...Object.keys(BANK_PROPS)],proceduralEdges=[TRELLIS_KIND,TRELLIS_ARCH_KIND],proceduralGround=['ground-wood-planks',...Object.keys(BIOME_TERRAIN)],roofAliases=ROOF_KINDS.map(climbableRoofKind),nonRaster=new Set([...proceduralProps,...proceduralEdges,...proceduralGround,...roofAliases,...GAP_ROOF_KINDS,...DIAGONAL_ROADS]);
 assert(PROPS[EXPLOSIVE_BARREL]?.explosive);auditExplosiveBarrel();nonRaster.add(EXPLOSIVE_BARREL);
+for(const kind of Object.keys(HEDGE_PROPS))nonRaster.add(kind);
 assert.deepEqual(environment.assets.map(a=>a.id).sort(),artIds.filter(id=>!nonRaster.has(id)).sort());
+// Hedges use joined procedural meshes and the audited screen/fringe paint,
+// rather than a separate raster thumbnail for every connection pattern.
+assert.equal(HEDGE_SCREEN,SCREEN_ATLAS);assert.equal(HEDGE_FRINGE,FRINGE_ATLAS);
+for(const kind of Object.keys(HEDGE_PROPS)){
+ assert(PROPS[kind],kind);const model=createPaintedHedges([{x:0,z:0,kind:kind.slice(6)}]);
+ try{assert(model.root.children.length,kind);for(const mesh of model.root.children){assert(mesh.geometry.attributes.position.count,kind);assert([...mesh.geometry.attributes.position.array].every(Number.isFinite),kind);}}
+ finally{model.dispose();}
+}
 const geometries=environmentGeometries();
 try{for(const kind of [...proceduralProps,...roofAliases]){
  assert(PROPS[kind],kind);const z=roofAliases.includes(kind)?1:0,map={terrain:[['yard']],upper:[{'0,0':'floor'}],props:[{kind,x:0,y:0,z}],edges:{}};

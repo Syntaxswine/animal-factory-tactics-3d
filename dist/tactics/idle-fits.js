@@ -4,7 +4,7 @@ export const IDLE_FITS={
  // horse
  "k742d7dda":{"nod":15,"up":5,"tilt":5,"yaw":{"1":40,"-1":30},"twist":{"1":30,"-1":30},"swing":{"lean":{"1":0,"-1":0},"round":0},"ease":1,"shrug":1,"weightShift":1,"rounding":10},
  // goat
- "kb8010023":{"nod":35,"up":10,"tilt":5,"yaw":{"1":40,"-1":40},"twist":{"1":30,"-1":30},"swing":{"lean":{"1":0,"-1":0},"round":0},"ease":1,"shrug":1,"weightShift":1,"rounding":10},
+ "k05433e0f":{"nod":25,"up":10,"tilt":5,"yaw":{"1":40,"-1":40},"twist":{"1":30,"-1":30},"swing":{"lean":{"1":0,"-1":0},"round":0},"ease":1,"shrug":1,"weightShift":1,"rounding":10},
  // bull
  "kdd19bf25":{"nod":25,"up":10,"tilt":5,"yaw":{"1":40,"-1":40},"twist":{"1":25,"-1":30},"swing":{"lean":{"1":0,"-1":0},"round":0},"ease":1,"shrug":1,"weightShift":1,"rounding":10},
  // cow

@@ -11,10 +11,10 @@ export {groundHash as hedgeHash};
 
 export function createHedgePlan(input,{seed=173}={}){
  if(!Array.isArray(input)||!Number.isSafeInteger(seed))throw Error('Invalid hedge plan');
- const cells=input.map(c=>({x:c.x,z:c.z,base:c.base??0,kind:c.kind??'short'}));
+ const cells=input.map(c=>({x:c.x,z:c.z,base:c.base??0,kind:c.kind??'short',...(c.seed===undefined?{}:{seed:c.seed})}));
  const lookup=new Map();
  for(const c of cells){
-  if(!Number.isSafeInteger(c.x)||!Number.isSafeInteger(c.z)||!Number.isFinite(c.base)||!Object.hasOwn(HEDGE_FORMS,c.kind))throw Error('Invalid hedge cell');
+  if(!Number.isSafeInteger(c.x)||!Number.isSafeInteger(c.z)||!Number.isFinite(c.base)||(c.seed!==undefined&&!Number.isSafeInteger(c.seed))||!Object.hasOwn(HEDGE_FORMS,c.kind))throw Error('Invalid hedge cell');
   if(lookup.has(key(c.x,c.z)))throw Error('Duplicate hedge cell');
   lookup.set(key(c.x,c.z),c);
  }
@@ -37,9 +37,9 @@ export function createHedgePlan(input,{seed=173}={}){
    const dx=b.x-a.x,dz=b.z-a.z,t=clamp(((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz||1));
    const cx=mix(a.x,b.x,t),cz=mix(a.z,b.z,t),fa=HEDGE_FORMS[a.kind],fb=HEDGE_FORMS[b.kind];
    const tall=mix(a.kind==='tall'?1:0,b.kind==='tall'?1:0,t);
-   const radius=mix(fa.radius,fb.radius,t)+(groundNoise(cx,cz,2.3,seed+7)-.5)*mix(.045,.11,tall);
+   const radius=mix(fa.radius,fb.radius,t)+(mix(groundNoise(cx,cz,2.3,(a.seed??seed)+7),groundNoise(cx,cz,2.3,(b.seed??seed)+7),t)-.5)*mix(.045,.11,tall);
    const distance=Math.hypot(x-cx,z-cz),value=radius-distance;
-   if(!best||value>best.value)best={value,distance,radius,cx,cz,tall,height:mix(fa.height,fb.height,t)+(groundNoise(cx,cz,2.7,seed+11)-.5)*2*mix(fa.variation,fb.variation,t)};
+   if(!best||value>best.value)best={value,distance,radius,cx,cz,tall,height:mix(fa.height,fb.height,t)+(mix(groundNoise(cx,cz,2.7,(a.seed??seed)+11),groundNoise(cx,cz,2.7,(b.seed??seed)+11),t)-.5)*2*mix(fa.variation,fb.variation,t)};
   }
   return best||{value:-1,distance:1,radius:.3,cx:x,cz:z,height:0};
  }
@@ -61,7 +61,7 @@ export function createHedgePlan(input,{seed=173}={}){
   const connected=byCell.get(key(c.x,c.z)).find(e=>e.a!==e.b);
   const alongX=!connected||connected.a.x!==connected.b.x;
   for(let i=0;i<2;i++){
-   const r=groundHash(c.x*3+i,c.z,seed+23),u=(i?1:-1)*(.22+r*.035),v=(r-.5)*.20;
+   const r=groundHash(c.x*3+i,c.z,(c.seed??seed)+23),u=(i?1:-1)*(.22+r*.035),v=(r-.5)*.20;
    const at=(p,q,y)=>[c.x+(alongX?p:q),c.base+y,c.z+(alongX?q:p)];
    const height=c.kind==='tall'?.72+r*.32:.38+r*.13;
    wood.push({cell:[c.x,c.z],a:at(u,v,.025),b:at(u*.65,v*.8,height),radius:.065+r*.015});

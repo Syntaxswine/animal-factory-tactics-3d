@@ -1,5 +1,6 @@
 import {canControl,navigationPath,moveGroup,pathCost} from './core/engine.js';
 import {tileKey} from './core/maps.js';
+import {CLIMBS,climbRiskText} from './climbing.js';
 
 const key=p=>tileKey(p.x,p.y,p.z||0);
 // Match the visible, live ground fire. Remembered terrain must not reveal a
@@ -10,7 +11,9 @@ export function walkingHazards(state,path){
 }
 export function walkingWarning(routes){
  const names=routes.filter(r=>r.hazards?.length).map(r=>r.name);
- return names.length?'⚠ Fire on route · '+names.join(', ')+' will catch fire.':'';
+ const warnings=names.length?['⚠ Fire on route · '+names.join(', ')+' will catch fire.']:[];
+ for(const route of routes){const climbs=(route.path||[]).filter(p=>p.climb&&!p.climb.legacy);if(climbs.length){const worst=climbs.reduce((a,b)=>a.climb.chance<b.climb.chance?a:b);warnings.push(`${route.name} · ${climbs.length} climb${climbs.length===1?'':'s'} · ${CLIMBS[worst.kind].label}: ${climbRiskText(worst.climb)} (per attempt)`);}}
+ return warnings.join(' · ');
 }
 
 // Use the same known-map navigation and formation destinations as movement.

@@ -1,4 +1,4 @@
-export const TOOLS={lockpicks:{name:'Lockpick set',weight:.5},repairKit:{name:'Repair supplies',weight:2},largeMedicalKit:{name:'Large medical chest',weight:5}};
+export const TOOLS={lockpicks:{name:'Lockpick set',weight:.5},repairKit:{name:'Repair supplies',weight:2},largeMedicalKit:{name:'Large medical chest',weight:5},demolitionCharge:{name:'Demolition explosives',weight:2}};
 export const isMedicalChest=i=>i?.type==='tool'&&i.kind==='largeMedicalKit';
 export const medicalChest=()=>({type:'tool',kind:'largeMedicalKit',count:1,charges:10});
 export const validMedicalChest=i=>!isMedicalChest(i)||i.count===1&&Number.isInteger(i.charges)&&i.charges>=1&&i.charges<=10;

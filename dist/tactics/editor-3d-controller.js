@@ -1,3 +1,7 @@
+import {embedMapDialogues,resolveDialogue} from './dialogue-data.js';
+import {validateDialogue,mergeDialogueDefinitions} from './dialogue-schema.js';
+import {INTRO_DIALOGUE,TUTORIAL_ROLES} from './tutorial-mission.js';
+import {isHedge} from './hedge-data.js';
 import {spotlightPathError} from './spotlight-path.js';
 import {shiftPatrol,patrolError} from './character-patrol.js';
 import {paintFoliage} from './editor-foliage-brush.js';
@@ -27,6 +31,22 @@ export function brushPoint(p){const x=Math.floor(p.x+.5),y=Math.floor(p.y+.5),dx
 import {helicopterStart} from './helicopter-start.js';
 import {isStrategicSite} from './strategic-site-rules.js';
 export class EditingDocument extends InspectionDocument {
+ tutorialObject(selection,role){
+  const map=structuredClone(this.editor.map),a=selection?.data,p=selection?.type==='prop'&&map.props.find(p=>p.x===a.x&&p.y===a.y&&(p.z||0)===(a.z||0)&&p.kind===a.kind);
+  if(!p)throw Error('Select the tutorial object first.');
+  if(role&&(!Object.hasOwn(TUTORIAL_ROLES,role)||!TUTORIAL_ROLES[role].kinds.includes(p.kind)))throw Error('This tutorial role does not match the selected object.');
+  if(role)p.tutorialRole=role;else delete p.tutorialRole;
+  this.replace(map);
+ }
+ tutorialGuide(id,definition){
+  if(definition?.id!==INTRO_DIALOGUE)throw Error('Load the plateau intro dialogue first.');
+  validateDialogue(definition);const map=structuredClone(this.editor.map),p=map.guards.find(p=>p.character.id===id);
+  if(!p)throw Error('Select a placed NPC or guard.');
+  p.character.canTalk=true;p.character.dialogueRef=INTRO_DIALOGUE;
+  mergeDialogueDefinitions(map,{dialogueDefinitions:{[INTRO_DIALOGUE]:definition}});
+  map.characterResources??={};map.characterResources.dialogues=[...new Set([...(map.characterResources.dialogues||[]),INTRO_DIALOGUE])];
+  this.replace(map);
+ }
  crashStart(selection){if(selection?.type!=='prop')throw Error('Select the crashed helicopter.');this.replace(helicopterStart(this.editor.map,selection.data));}
  siteSabotage(selection,enabled){
   const p=selection?.data;if(selection?.type!=='prop'||!isStrategicSite(p))throw Error('Select a radio tower, radar tower or SAM site.');
@@ -39,7 +59,7 @@ export class EditingDocument extends InspectionDocument {
   let {tool,start,end=start,options={}}=command;const prefab=tool==='prefab'?STRUCTURE_PRESETS[options.preset]:null;if(tool==='prefab'&&!prefab)return {ok:false,error:'Choose a preset structure.'};if(prefab){tool='room';options={...options,width:prefab.width,height:prefab.height};}if(tool!=='land'&&start?.z===3)return previewCanopy(this.editor.map,command,this.size);
   if(!start||![start.x,start.y,start.z??0].every(Number.isInteger))return {ok:false,error:'Choose a map cell.'};
   if(this.block&&(['squad','exit'].includes(tool)||[start,end].some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24)))return {ok:false,error:'Keep block edits inside 24 × 24 tiles; squad and travel markers belong to full maps.'};
-  const breaking=['break-wall','break-floor'].includes(tool),foliage=['foliage-cover','clear-foliage'].includes(tool),shapeTool=breaking?(tool==='break-wall'?'wall':'floor'):foliage||['cliff','erase-cliff'].includes(tool)?'woodland':tool;
+  const hedge=tool==='prop'&&isHedge({kind:options.propKind}),breaking=['break-wall','break-floor'].includes(tool),foliage=['foliage-cover','clear-foliage'].includes(tool),shapeTool=hedge||tool==='erase-prop'?'woodland':breaking?(tool==='break-wall'?'wall':'floor'):foliage||['cliff','erase-cliff'].includes(tool)?'woodland':tool;
   const candidate=createEditor(this.editor.map),points=brushShape(shapeTool)?brushPoints(shapeTool,start,end):[start],cells=[],edges=[];
   if(tool==='cliff'&&points.length>CLIFF_LIMIT)return {ok:false,error:'Paint at most '+CLIFF_LIMIT+' cliff tiles at a time.'};
   if(!points.length)return {ok:false,error:'Choose a cell inside the map.'};
@@ -63,6 +83,10 @@ export class EditingDocument extends InspectionDocument {
     if(breaking){if(breakStructure(candidate.map,tool,{...p,z:start.z||0})){cells.push({...p,z:start.z||0});if(tool==='break-wall')edges.push(p.edge);}continue;}
     if(tool==='erase-tile'&&candidate.map.landPaint?.[`${p.x},${p.y}`]||['erase-cliff','erase-prop'].includes(tool)&&candidate.map.props.some(q=>q.landAuto&&q.x===p.x&&q.y===p.y&&(q.z||0)===(start.z||0)))throw Error('Use Land and choose Ground to lower painted terrain and rebuild its cliff edge.');
     let actualTool=tool==='npc'?'guard':tool,actualOptions=tool==='npc'?{...options,category:'npc'}:options;
+    if(hedge){
+     const existing=candidate.map.props.find(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(start.z||0));
+     if(isHedge(existing)){applyBrush(candidate,'erase-prop',p.x,p.y,'',{level:start.z||0});actualOptions={...options,hedgeSeed:options.hedgeSeed??existing.hedgeSeed};}
+    }
     if(['cliff','erase-cliff'].includes(tool)){
      const existing=candidate.map.props.find(q=>q.x===p.x&&q.y===p.y&&(q.z||0)===(start.z||0));
      if(isCliff(existing))applyBrush(candidate,'erase-prop',p.x,p.y,'',{level:start.z||0});
@@ -84,7 +108,7 @@ export class EditingDocument extends InspectionDocument {
    if(this.block){if(cells.some(p=>p.x<0||p.y<0||p.x>=24||p.y>=24))return {ok:false,error:'The whole footprint must fit inside the block.',cells,edges};validateBlock(extractBlock(candidate.map));}
    if(candidate.map.edgeLocks)for(const key of Object.keys(candidate.map.edgeLocks))if(!EDGES[candidate.map.edges[key]]?.opensTo)delete candidate.map.edgeLocks[key];
    const errors=validateMap(candidate.map,{connectivity:false});
-   const named=(options.propKind||'').match(/north|east|south|west/)?.[0],orientation=named?({north:[0,-1],east:[1,0],south:[0,1],west:[-1,0]})[named]:['prop','roof-tile','room'].includes(tool)?options.rotated?[0,1]:[1,0]:null;return {ok:!errors.length,error:errors[0]||'',cells,edges,map:candidate.map,orientation};
+   const named=(options.propKind||'').match(/north|east|south|west/)?.[0],orientation=named?({north:[0,-1],east:[1,0],south:[0,1],west:[-1,0]})[named]:['prop','roof-tile','room'].includes(tool)?options.rotated?[0,1]:[1,0]:null;return {ok:!errors.length,error:errors[0]||'',cells,edges,map:candidate.map,hedgePreview:hedge||tool==='erase-prop',orientation:hedge?null:orientation};
   }catch(e){return {ok:false,error:e.message,cells:points,edges};}
  }
  apply(command){const result=this.preview(command);if(result.ok){replaceMap(this.editor,result.map);this.refresh();}return result;}
@@ -94,9 +118,10 @@ export class EditingDocument extends InspectionDocument {
   const row=this.character(id);if(!row)throw Error('This character no longer exists.');
   const map=structuredClone(this.editor.map),p=map[row.field][row.index];
   for(const key of ['species','outfit','weapon','heading'])if(Object.hasOwn(patch,key))p[key]=patch[key];
+  if(patch.stats&&Object.hasOwn(patch.stats,'climbing'))p.stats={...p.stats,climbing:patch.stats.climbing};
   const allowed=['displayName','scriptId','faction','attitude','combatBehavior','canTalk','dialogueRef','canSell','shopInventoryRef','shopPricingRef','references','model','visualVariant'];
   for(const key of allowed)if(Object.hasOwn(patch.character||{},key))p.character[key]=structuredClone(patch.character[key]);
-  p.character.id=id;this.replace(map);return this.characterSelection(id);
+  p.character.id=id;if(this.dialogueCatalog)mergeDialogueDefinitions(map,embedMapDialogues(map,this.dialogueCatalog,{strict:false}));this.replace(map);return this.characterSelection(id);
  }
  setPatrol(id,points){
   const row=this.character(id);if(!row||row.field!=='guards')throw Error('Select a placed guard or NPC.');
@@ -112,8 +137,10 @@ export class EditingDocument extends InspectionDocument {
   const [copy]=copyCharacters([row.p],this.editor.map);if(copy.patrol)copy.patrol=shiftPatrol(copy.patrol,point.x-copy.x,point.y-copy.y,(point.z||0)-(copy.z||0));Object.assign(copy,{x:point.x,y:point.y,z:point.z||0});delete copy.towerPost;
   this.replace({...this.editor.map,guards:[...this.editor.map.guards,copy]});return copy.character.id;
  }
+ export(){return JSON.stringify(embedMapDialogues(this.original,this.dialogueCatalog,{strict:false}),null,2);}
+ dialogueDefinition(definition,{replace=false}={}){validateDialogue(definition);const map=structuredClone(this.editor.map);if(replace&&map.dialogueDefinitions)delete map.dialogueDefinitions[definition.id];mergeDialogueDefinitions(map,{dialogueDefinitions:{[definition.id]:definition}});map.characterResources??={};map.characterResources.dialogues=[...new Set([...(map.characterResources.dialogues||[]),definition.id])];this.replace(map);}
  characterResources(resources){this.replace({...this.editor.map,characterResources:structuredClone(resources)});}
- characterWarnings(){return characterDiagnostics(this.editor.map);}
+ characterWarnings(){const map=this.editor.map,out=characterDiagnostics(map);for(const {p}of characters(map))if(p.character?.canTalk){try{resolveDialogue(map,null,p.character.dialogueRef,this.dialogueCatalog);}catch(e){out.push(characterName(p)+': '+e.message);}}return [...new Set(out)];}
  undo(){if(!this.editor||!undo(this.editor))return false;this.refresh();return true;}
  redo(){if(!this.editor||!redo(this.editor))return false;this.refresh();return true;}
  doorLock(selection,difficulty){

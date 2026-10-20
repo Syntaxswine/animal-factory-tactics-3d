@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import {paintValidity} from './horse-model-paint.js';
+import {textureValidity} from './horse-model-paint.js';
 
 // Registered garment painting exposes the cloth beneath the neutral arms.
 // Full-size source footprints preserve folds across the hips and vest sides.
@@ -8,8 +8,8 @@ export function sheepPaintLayers(renderer,sheep,textures,frame){
  const old={target:renderer.getRenderTarget(),color:renderer.getClearColor(new THREE.Color()),alpha:renderer.getClearAlpha(),tone:renderer.toneMapping,space:renderer.outputColorSpace,viewport:renderer.getViewport(new THREE.Vector4()),scissor:renderer.getScissor(new THREE.Vector4()),test:renderer.getScissorTest()};
  for(let layer=0;layer<1;layer++){
   const texture=textures[layer];texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
-  const im=texture.image,c=document.createElement('canvas');c.width=im.width;c.height=im.height;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);
-  const mask=new THREE.DataTexture(paintValidity(ctx.getImageData(0,0,im.width,im.height).data,im.width,im.height),im.width,im.height,THREE.RedFormat);mask.flipY=true;mask.minFilter=mask.magFilter=THREE.LinearFilter;mask.needsUpdate=true;masks.push(mask);
+  const im=texture.image;
+  const mask=new THREE.DataTexture(textureValidity(texture),im.width,im.height,THREE.RedFormat);mask.flipY=true;mask.minFilter=mask.magFilter=THREE.LinearFilter;mask.needsUpdate=true;masks.push(mask);
   const scene=new THREE.Scene(),materials=[];
   sheep.parts.forEach((p,i)=>{if(![1,8].includes(i))return;const m=new THREE.ShaderMaterial({uniforms:{id:{value:i+1}},vertexShader:'attribute vec3 paintPosition;void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(paintPosition,1.);}',fragmentShader:'uniform float id;void main(){gl_FragColor=vec4(id/255.,0.,0.,1.);}',toneMapped:false});materials.push(m);scene.add(new THREE.Mesh(p.geometry,m));});
   const target=new THREE.WebGLRenderTarget(2048,1024,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});targets.push(target);

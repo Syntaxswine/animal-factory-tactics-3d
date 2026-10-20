@@ -7,10 +7,17 @@ import {blankMap} from '../dist/tactics/maps.js';
 import {buildWorld,traceWorld,DIMENSIONS} from '../dist/tactics/hybrid-world.js';
 import {createWorld,currentMap,travel} from '../dist/tactics/world.js';
 import {squad,guards,refresh} from '../dist/tactics/engine.js';
+import {isHedge} from '../dist/tactics/hedge-data.js';
 test('catalog silhouettes are finite, distinguish open containers and retain structure openings',()=>{
  for(const [kind,rule]of Object.entries(PROPS)){
   if(rule.groundLayer)continue;let parts;
-  if(kind.startsWith('ramp-')||kind.startsWith('rampbank-')){
+  if(isHedge({kind})){
+   const world=buildWorld({terrain:[['yard']],props:[{kind,x:0,y:0,z:0}],edges:{}}),hedges=world.boxes.filter(b=>b.id.startsWith('hedge:'));
+   assert.ok(hedges.some(b=>b.blocksSight&&!b.blocksShot),kind+' leaf screening');
+   assert.ok(hedges.some(b=>b.blocksSight&&b.blocksShot),kind+' wooden stems');
+   assert.ok(hedges.every(b=>b.hedgeTree),kind+' uses finite mesh collision');
+   parts=hedges.map(b=>({center:b.min.map((n,i)=>(n+b.max[i])/2),size:b.min.map((n,i)=>b.max[i]-n)}));
+  }else if(kind.startsWith('ramp-')||kind.startsWith('rampbank-')){
    const map={terrain:[['yard']],props:[{kind,x:0,y:0,z:0}],edges:{}},world=buildWorld(map);
    parts=environmentVisuals(world,map).filter(p=>p.kind==='ramp'||p.kind==='ramp-bank');
    const colliders=world.boxes.filter(b=>b.source.prop);

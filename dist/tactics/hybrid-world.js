@@ -1,3 +1,4 @@
+import {isHedge} from './hedge-data.js';
 import {synchronizeFoliage,foliageSegment} from './foliage-obstacles.js';
 import {isScenery} from './scenery-catalog.js';
 import {isStrategicSite} from './strategic-site-rules.js';
@@ -65,7 +66,7 @@ export function buildWorld(map){map=canopyPresentation(map);
   }else diagnostics.push({source:`edge:${key}`,kind,message:'Unsupported edge'});
  }
  for(const p of map.props||[]){if(isRampBank(p)){const id='prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind;box(id,'prop',p.kind,[p.x,(p.z||0)*D.floorSpacing+1,p.y],[1,2,1],{prop:id,x:p.x,y:p.y,z:p.z||0},{blocksShot:false,blocksSight:false});continue;}if(isRamp(p)){const r=rampInfo(p),rule=RAMP_PROPS[p.kind],id='prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind;if(r.surface.startsWith('wood')){for(const [i,part] of woodenRampParts(p,D.floorSpacing).entries()){box(id+':timber:'+i,'prop',r.surface==='woodgold'?'ground-wood-planks':'wood',part.center,part.size,{prop:id,x:p.x,y:p.y,z:p.z||0},{rotation:part.rotation,trellisPart:part});const b=boxes.at(-1),radius=Math.hypot(...part.size)/2;b.min=part.center.map(v=>v-radius);b.max=part.center.map(v=>v+radius);}continue;}box(id,'prop',p.kind,[(r.low.x+r.high.x)/2,r.z*D.floorSpacing+1,(r.low.y+r.high.y)/2],[rule.w,2,rule.h],{prop:id,x:p.x,y:p.y,z:p.z||0},{blocksShot:false,blocksSight:false});continue;}
-  if(isCliff(p)||isStrategicSite(p)||isScenery(p))continue;
+  if(isHedge(p)||isCliff(p)||isStrategicSite(p)||isScenery(p))continue;
   if(LIGHT_FORMS[p.kind])continue;
   const id=`prop:${p.x},${p.y},${p.z||0}:${p.kind}`;
   if(!supportedProps.has(p.kind)){diagnostics.push({source:id,kind:p.kind,message:'Unsupported prop'});continue;}
@@ -87,9 +88,9 @@ export function buildWorld(map){map=canopyPresentation(map);
  }
  for(const p of map.stairs||[]){
   const base=p.z*D.floorSpacing;
-  if(p.kind==='ladder'){
-   for(const y of [-.3,.3])box(`stairs:${p.x},${p.y},${p.z}:rail:${y}`,'stairs','metal',[p.x+.35,base+D.floorSpacing/2,p.y+y],[.07,D.floorSpacing,.07],{x:p.x,y:p.y,z:p.z});
-   for(let i=0;i<8;i++)box(`stairs:${p.x},${p.y},${p.z}:rung:${i}`,'stairs','metal',[p.x+.35,base+(i+.5)*D.floorSpacing/8,p.y],[.07,.055,.65],{x:p.x,y:p.y,z:p.z});continue;
+  if(p.kind==='ladder'){const ladderMaterial=p.rusty?'rust':'metal';
+   for(const y of [-.3,.3])box(`stairs:${p.x},${p.y},${p.z}:rail:${y}`,'stairs',ladderMaterial,[p.x+.35,base+D.floorSpacing/2,p.y+y],[.07,D.floorSpacing,.07],{x:p.x,y:p.y,z:p.z});
+   for(let i=0;i<8;i++)box(`stairs:${p.x},${p.y},${p.z}:rung:${i}`,'stairs',ladderMaterial,[p.x+.35,base+(i+.5)*D.floorSpacing/8,p.y],[.07,.055,.65],{x:p.x,y:p.y,z:p.z});continue;
   }
   // Open steel treads preserve a visible opening, with the same volumes for rays.
   for(let i=0;i<8;i++)box(`stairs:${p.x},${p.y},${p.z}:tread:${i}`,'stairs','metal',[p.x-.5+(i+.5)/8,base+(i+1)*D.floorSpacing/8-.025,p.y],[.1,.05,.8],{x:p.x,y:p.y,z:p.z});

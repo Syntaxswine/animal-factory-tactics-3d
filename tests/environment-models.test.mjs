@@ -5,12 +5,22 @@ import {buildWorld,traceWorld} from '../dist/tactics/hybrid-world.js';
 import {environmentVisuals} from '../dist/tactics/environment-visuals.js';
 import {environmentGeometries} from '../dist/tactics/environment-geometry.js';
 import * as THREE from '../dist/tactics/vendor/three.module.js';
+import {isHedge,hedgeGroups} from '../dist/tactics/hedge-data.js';
+import {createPaintedHedges} from '../dist/tactics/painted-hedges.js';
 const mapFor=(kind,rotated=false,z=0)=>({terrain:[['yard']],upper:z?[{'0,0':'floor','0,1':'floor','1,0':'floor','1,1':'floor'}]:[],props:[{x:0,y:0,z,kind,rotated}],edges:{},stairs:[]});
 test('complete model catalog renders finite geometry without mutating collision or map data',()=>{
  const geometries=environmentGeometries();
  try{for(const kind of Object.keys(PROPS))for(const rotated of [false,true]){
   const map=mapFor(kind,rotated,kind.startsWith('roof-')?1:0),world=buildWorld(map),before=JSON.stringify(world.boxes),saved=JSON.stringify(map),hit=traceWorld(world,[-3,.4,0],[3,.4,0]);
-  const parts=environmentVisuals(world,map);assert(parts.some(p=>p.source.prop?.endsWith(':'+kind)),kind);
+  const parts=environmentVisuals(world,map);
+  if(isHedge({kind})){
+   // Joined hedges have their own chunk renderer; a generic prop would draw
+   // twice and conceal the rounded joins with an unrelated box silhouette.
+   assert.equal(parts.some(p=>p.source.prop?.endsWith(':'+kind)),false,kind);
+   const model=createPaintedHedges(hedgeGroups(map)[0].cells);
+   try{assert.ok(model.root.children.length,kind);for(const mesh of model.root.children){for(const name of ['position','normal'])assert.ok([...mesh.geometry.attributes[name].array].every(Number.isFinite),kind);assert.ok(mesh.geometry.attributes.position.count>0,kind);}}
+   finally{model.dispose();}
+  }else assert(parts.some(p=>p.source.prop?.endsWith(':'+kind)),kind);
   for(const p of parts){assert(p.center.every(Number.isFinite)&&p.size.every(n=>Number.isFinite(n)&&n>0),p.id);assert(geometries[p.shape||'box'],p.id);}
   assert.equal(JSON.stringify(world.boxes),before);assert.equal(JSON.stringify(map),saved);assert.deepEqual(traceWorld(world,[-3,.4,0],[3,.4,0]),hit);
  }}finally{for(const g of Object.values(geometries))g.dispose();}

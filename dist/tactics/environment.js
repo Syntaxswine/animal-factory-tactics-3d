@@ -1,3 +1,4 @@
+import {HEDGE_PROPS} from './hedge-data.js';
 import {ROOF_KINDS,GAP_ROOF_KINDS,climbableRoofKind} from './climbable-roofs.js';
 import {BANK_PROPS} from './ramp-banks.js';
 import {RAMP_PROPS} from './cliff-ramps.js';
@@ -53,3 +54,5 @@ for(const kind of ['door-steel-closed','door-wood-closed','jail-door-closed'])ED
 EDGES['wall-wood-trellis']={solid:true,opaque:false,cover:25,art:'wall-wood-trellis'};
 
 EDGES['wall-wood-trellis-arch']={solid:false,opaque:false,cover:0,art:'wall-wood-trellis-arch'};
+
+Object.assign(PROPS,HEDGE_PROPS);

@@ -9,7 +9,7 @@ import {buildWorld} from '../dist/tactics/hybrid-world.js';
 import {createGame,WEAPONS} from '../dist/tactics/core/engine.js';
 import {detonate} from '../dist/tactics/core/explosives.js';
 import {detonateGrenade} from '../dist/tactics/grenade-blast.js';
-import {canStep,validateMap} from '../dist/tactics/core/maps.js';
+import {neighbors,validateMap} from '../dist/tactics/core/maps.js';
 import {captureEncounter,restoreEncounter} from '../dist/tactics/encounter-save.js';
 import {startEncounterClock} from '../dist/tactics/encounter-clock.js';
 import {BattleGrenades} from '../dist/tactics/battle-grenades.js';
@@ -17,6 +17,8 @@ import {damageStructure,structureInfo} from '../dist/tactics/structure-health.js
 import {settleStructureCollapse} from '../dist/tactics/structure-collapse.js';
 import {grenadeWorld,sweepGrenade,GRENADE_FLOOR} from '../dist/tactics/grenade-geometry.js';
 const endCount=map=>[...wallBreachEnds(map).values()].reduce((n,v)=>n+!!(v&1)+!!(v&2),0);
+// An intact wall now permits a skill-checked climb, but never an ordinary step.
+const canWalk=(s,a,b)=>neighbors(s,a).some(p=>!p.kind&&p.x===b.x&&p.y===b.y&&p.z===b.z);
 
 test('one to five destroyed neighbors leave only the two outside ends, in both axes and levels',()=>{
  for(const material of ['brick','concrete','corrugated'])for(const axis of ['e','s'])for(const level of [0,1])for(let count=0;count<=5;count++){
@@ -60,12 +62,12 @@ test('broken meshes are capped, deterministic and bounded inside the surviving w
 test('real explosive destruction opens movement, restores rough ends after save/load, and waits for the grenade fuse in presentation',()=>{
  const definition=wallBreachBattleFixture();assert.deepEqual(validateMap(definition),[]);
  for(const weapon of ['grenade','rpg']){
-  const state=createGame(7,definition,true,'easy',{statSystem:true});startEncounterClock(state);const near={x:20,y:21,z:0},far={x:20,y:20,z:0};assert.equal(canStep(state,near,far),false);
+  const state=createGame(7,definition,true,'easy',{statSystem:true});startEncounterClock(state);const near={x:20,y:21,z:0},far={x:20,y:20,z:0};assert.equal(canWalk(state,near,far),false);
   const impact={x:20,y:20.75,z:0,h:.8};
   if(weapon==='grenade'){
-   detonateGrenade(state,impact);assert.ok(structureInfo(state,{edge:'s:20:20'}).hp<200);assert.equal(endCount(state),0);assert.equal(canStep(state,near,far),false);
+   detonateGrenade(state,impact);assert.ok(structureInfo(state,{edge:'s:20:20'}).hp<200);assert.equal(endCount(state),0);assert.equal(canWalk(state,near,far),false);
   }
-  const result=weapon==='grenade'?detonateGrenade(state,impact):detonate(state,impact,WEAPONS.rpg);assert.ok(endCount(state)>=2);assert.ok(canStep(state,near,far));const loaded=restoreEncounter(captureEncounter(state));assert.deepEqual(wallBreachEnds(loaded),wallBreachEnds(state));
+  const result=weapon==='grenade'?detonateGrenade(state,impact):detonate(state,impact,WEAPONS.rpg);assert.ok(endCount(state)>=2);assert.ok(canWalk(state,near,far));const loaded=restoreEncounter(captureEncounter(state));assert.deepEqual(wallBreachEnds(loaded),wallBreachEnds(state));
   const b=new BattleGrenades(new T.Scene());try{if(weapon==='grenade'){const shot={event:{grenade:{scenery:result.before},sites:result.sites},phase:{discharged:false}};assert.equal(endCount(b.scenery(state,{active:shot,queue:[]})),0);shot.phase.discharged=true;assert.equal(endCount(b.scenery(state,{active:shot,queue:[]})),endCount(state));}}finally{b.dispose();}
  }
 });
@@ -79,8 +81,8 @@ test('all three materials breach only at zero HP, with clear collision on every 
   const a={x:7,y:7,z},b=axis==='s'?{x:7,y:6,z}:{x:6,y:7,z};
   const ray=p=>({...p,h:z*GRENADE_FLOOR+.8}),blocked=()=>sweepGrenade(grenadeWorld(state),ray(a),ray(b),0);
   assert.equal(structureInfo(state,target).maxHp,maxHp);damageStructure(state,target,maxHp-1);
-  assert.equal(structureInfo(state,target).hp,1);assert.equal(endCount(state),0);assert.ok(blocked());assert.equal(canStep(state,a,b),false);
-  const receipt=damageStructure(state,target,1);assert.equal(receipt.destroyed,true);assert.equal(endCount(state),2);assert.equal(blocked(),null);assert.ok(canStep(state,a,b));
+  assert.equal(structureInfo(state,target).hp,1);assert.equal(endCount(state),0);assert.ok(blocked());assert.equal(canWalk(state,a,b),false);
+  const receipt=damageStructure(state,target,1);assert.equal(receipt.destroyed,true);assert.equal(endCount(state),2);assert.equal(blocked(),null);assert.ok(canWalk(state,a,b));
   assert.equal(state.structureHealth['edge:'+edge],undefined);assert.equal(state.definition.edges[edge],'wall-'+material);
   assert.equal(environmentVisuals(buildWorld(state),state).filter(v=>v.breachEnds).length,2);
  }
