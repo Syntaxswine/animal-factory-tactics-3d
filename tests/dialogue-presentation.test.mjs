@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {plan,render,mouthAt} from '../dist/tactics/vendor/babble/index.mjs';
 import {normalizeSettings,readSettings,saveSettings} from '../dist/tactics/settings-3d.js';
-import {VOICES,resolvePresentation,portraitSpecies} from '../dist/tactics/dialogue-presentation-manifest.js';
+import {VOICES,resolvePresentation,resolveMercPresentation,portraitSpecies} from '../dist/tactics/dialogue-presentation-manifest.js';
 import {phrases,wordState,ByteCache} from '../dist/tactics/dialogue-timeline.js';
 import {SpeechClient} from '../dist/tactics/dialogue-speech-client.js';
 import {DialoguePerformance} from '../dist/tactics/dialogue-performance.js';
@@ -19,6 +19,15 @@ test('presentation settings migrate, bound invalid values and survive the Option
 });
 test('voice follows stable identity across rename, clothes and save/load; guide donor stays donkey',()=>{
  const npc={characterId:'char_plateau_intro_guide',species:'donkey',outfit:'blue-hawaiian',name:'Guide'},d={id:'plateau_intro'},a=resolvePresentation(npc,d,'greeting','Hello');assert.deepEqual(a,resolvePresentation({...JSON.parse(JSON.stringify(npc)),name:'Renamed',outfit:'red-hats'},d,'greeting','Hello'));assert.deepEqual(a,resolvePresentation({...npc,campaignId:'campaign-instance'},d,'greeting','Hello'));assert.equal(a.voice.tongue,0);assert.equal(portraitSpecies({species:'donkey-guide'}),'donkey');assert.notEqual(VOICES.guide.voice.oq,VOICES.nadia.voice.oq);assert.notEqual(VOICES.guide.voice.rough,VOICES.nadia.voice.rough);
+});
+test('merc replies use their own stable voice, never the conversation NPC’s voice',()=>{
+ const merc={characterId:'char_dialogue_merc_0',species:'horse',name:'Yakov',outfit:'olive'};
+ const voice=resolveMercPresentation(merc);
+ assert.deepEqual(resolveMercPresentation({...structuredClone(merc),name:'Renamed',outfit:'red-hats',campaignId:'new-campaign-record'}),voice);
+ assert.notEqual(voice.id,resolvePresentation(merc,{id:'yard_bomb_permission'},'greeting','Hello').id);
+ assert.notDeepEqual(voice,resolveMercPresentation({...merc,characterId:'char_dialogue_merc_1'}));
+ const clip=render('I can help you with that.',voice.voice,{sampleRate:8000});
+ assert.ok(clip.samples.some(value=>Math.abs(value)>.001));assert.equal(clip.plan.words.length,6);
 });
 test('every word retains source spans and scales at .5, 1 and 2 without pitch shifting; tongue changes only phonemes',()=>{
  const text="Don't stop, stop! Bring 42 charges and 100 HP. Ready?",voice={...VOICES.hen.voice,...VOICES.hen.language},base=plan(text,voice);
@@ -64,7 +73,7 @@ test('voice and text both off are instant and prepare no audio; unmuting retains
 });
 test('presentation keys change only at committed navigation; checked result is not exposed before checkpoint',async()=>{
  const fetcher=async url=>({ok:true,json:async()=>JSON.parse(await fs.readFile(url,'utf8'))}),map=await dialogueFixture(fetcher),state=createGame(1947,map,true,'easy',{social:true,awareness:true,statSystem:true});startEncounterClock(state);let commit;
- const s=new DialogueSession({source:()=>({state,dialogue:state.dialogue}),catalog:{definitions:{},errors:{}},commit:next=>new Promise(resolve=>{commit=()=>{state.dialogue=next;resolve();};})}),n=state.units.find(u=>u.character?.dialogueRef==='yard_bomb_permission'),who=name=>state.units.find(u=>u.name===name);s.show(n,who('Misha'));const key=s.refresh().presentationKey;s.switchSpeaker(dialogueActorId(who('Anya')));assert.equal(s.refresh().presentationKey,key);s.switchSpeaker(dialogueActorId(who('Misha')));const option=s.refresh().choices.find(p=>p.choice.id==='offer'),promise=s.choose('offer',option.token);assert.equal(s.refresh().presentationKey,key);assert.equal(s.refresh().receipt,null);commit();await promise;assert.notEqual(s.refresh().presentationKey,key);const result=s.refresh();s.switchSpeaker(dialogueActorId(who('Anya')));assert.equal(s.refresh().line,result.line);assert.equal(s.refresh().presentationKey,result.presentationKey);
+ const s=new DialogueSession({source:()=>({state,dialogue:state.dialogue}),catalog:{definitions:{},errors:{}},commit:next=>new Promise(resolve=>{commit=()=>{state.dialogue=next;resolve();};})}),n=state.units.find(u=>u.character?.dialogueRef==='yard_bomb_permission'),who=name=>state.units.find(u=>u.name===name);s.show(n,who('Misha'));const key=s.refresh().presentationKey;s.show(n,who('Anya'));assert.equal(s.refresh().presentationKey,key);s.show(n,who('Misha'));assert.equal(s.actors().speaker,who('Misha'));const option=s.refresh().choices.find(p=>p.choice.id==='offer'),promise=s.choose('offer',option.token);assert.equal(s.refresh().presentationKey,key);assert.equal(s.refresh().receipt,null);commit();await promise;assert.notEqual(s.refresh().presentationKey,key);const result=s.refresh();s.show(n,who('Anya'));assert.equal(s.refresh().line,result.line);assert.equal(s.refresh().presentationKey,result.presentationKey);
 });
 
 test('worker rejects oversized preparation before producing transferable PCM',async()=>{

@@ -9,9 +9,11 @@ On the project's development server, open:
 - `tactics/battle-3d.html?study=dialogue` — Nadia and a friendly Red Hat yard worker, surrounded by the four existing mercs.
 - `tactics/editor-3d.html?editing=1&study=dialogue` — the same map, ready to edit, export or playtest.
 
-Right-click Nadia. Yakov starts the conversation but cannot make the Explosives offer. Choose Anya in **Speaker** to see 20%; choose Misha to see 40% and **Creator · no roll**. The Creator response records reassurance once, raising Misha's offer to 50%. There is one attempt for the whole team. A saved failure remains a failure when you change speakers or reopen the sector. **Last response** preserves the actual wording, including natural 1/100 text. The nearby friendly Red Hat demonstrates a flat conversation with no checks.
+Select a merc in the squad HUD, then right-click Nadia. Yakov cannot make the Explosives offer. Leave and approach as Anya to see 20%, or as Misha to see 40% and **Creator · no roll**. The acting merc remains the speaker for the whole conversation; there is no speaker picker in the chat. The Creator response records reassurance once, raising Misha's offer to 50%. There is one attempt for the whole team. A saved failure remains a failure when you change speakers or reopen the sector. **Last response** preserves the actual wording, including natural 1/100 text. The nearby friendly Red Hat demonstrates a flat conversation with no checks.
 
-Conversation pauses tactical and campaign time. It does not change the selected squad leader, facing, position, AP, stamina, equipment or allegiance. The speaker must be conscious and present, within two tiles, on the same support level, with a clear potential sightline to an identified character. Combat, fright, hostility and an unfinished action block talking. No approach order is issued automatically. Leave, X and Escape remain available, including when content is missing or a checkpoint fails.
+Right-clicking an identified, talkable NPC gives the primary selected merc an approach order. Normal discovered navigation, obstacles, movement costs and stamina apply. The merc stops within 12 tiles, on the same support level with a clear potential sightline, faces the NPC for free and opens dialogue after the walking animation settles. If already in range, no walking is needed. Combat, fright, hostility, casualties or losing identification interrupt the order; Escape, Stop, another order or selecting another merc cancels it. A blocked route reports why it stopped. Loading a save does not resume the transient talk intention.
+
+Once the conversation opens, tactical and campaign time pause. Choices do not move the merc or spend AP, stamina, equipment or allegiance. Leave, X and Escape remain available, including when content is missing or a checkpoint fails. Both participants use close 3D portraits. A reply commits through the existing atomic checkpoint, speaks in the acting merc’s own voice, then presents the NPC response. Skip, Replay, mute and portrait settings affect presentation only.
 
 ## Author without changing engine code
 
@@ -78,7 +80,7 @@ Resources are data only, with a 256 KiB and 256-node limit. Unknown fields, malf
 
 ## Plateau tutorial intro
 
-`plateau_intro` is the authored tutorial briefing. Right-clicking its friendly guide uses the normal conversation UI. Opening, inspecting, switching speakers and choosing an informational reply never roll, spend AP, consume supplies or destroy anything.
+`plateau_intro` is the authored tutorial briefing. Right-clicking its friendly guide uses the normal conversation UI. Opening, inspecting and choosing an informational reply never roll, spend AP, consume supplies or destroy anything.
 
 In the editor, select an existing NPC/guard and use **Plateau tutorial → Use as intro guide**. This enables **Can talk** and embeds the dialogue without changing identity, appearance or faction. Keep the character friendly. Select each existing radio tower, SAM site and crash-sector crate, then assign its **Mission role** in the same panel. Use exactly one of each role across the campaign. The roles survive moving, rotating, map export/import, modular blocks and destruction; duplicate roles are rejected. Clear a copied object's role if it is decorative.
 
