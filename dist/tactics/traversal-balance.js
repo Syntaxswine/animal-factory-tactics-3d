@@ -84,6 +84,10 @@ export function followCentre(times,plan,comAt,{passes=5,base=null,from=null}={})
 //   is the pressure point's box, the floor's height (or the top's, with nothing on the floor) its plane;
 // - a part against a face, or on a top the body hangs below, is not counted: it can only push, and a plan leaning on
 //   it would ask what it cannot give (the forearms on a wall's edge as the hands come over at a catch);
+// - but a body on a top that also leans on a face below it is held by the two together ('hold': the plan keeps the
+//   authored path, which the rig judges): a body draped over the window's sill with its chest against the far face,
+//   its centre of mass 15 cm past the edge, is held by the edge's friction and the face's push, where the top alone
+//   could only tip it (planned on the top alone, the centre of mass was pulled back 10 cm, into the wall);
 // - nothing counted is flight.
 // DRAPE: a body draped over a top with its centre of mass a little below it (over the window's sill as it reaches for
 // the floor, 2 cm below) still lies on it; one hanging well below (the forearms on a wall's edge at a catch, 70 cm) does
@@ -98,13 +102,14 @@ export const contactProbe=worker=>createSurfaceProbe(worker,{stride:1});
 const endsOf=probe=>{let e=ENDS.get(probe);if(!e){const kind=probe.names.map(p=>/hand/.test(p)?1:/hoof|boot|foot|toe/i.test(p)?2:0);e=Uint8Array.from(probe.part,pi=>kind[pi]);ENDS.set(probe,e);}return e;};
 export function supportAt(probe,obstacles,com){
  const over=(x,z)=>obstacles.some(b=>x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]),ends=endsOf(probe),grow=(b,x,z)=>{b[0]=Math.min(b[0],x);b[1]=Math.max(b[1],x);b[2]=Math.min(b[2],z);b[3]=Math.max(b[3],z);};
- let grip=false,top=null;const box=[Infinity,-Infinity,Infinity,-Infinity],onTop=[Infinity,-Infinity,Infinity,-Infinity];
+ let grip=false,face=false,top=null;const box=[Infinity,-Infinity,Infinity,-Infinity],onTop=[Infinity,-Infinity,Infinity,-Infinity];
  for(let i=0;i<probe.count;i++){const x=probe.x[i],y=probe.y[i],z=probe.z[i],e=ends[i];
   if(y<TOL&&y>-TOL&&!over(x,z)){grow(box,x,z);continue;}
   for(const o of obstacles){const dx=Math.max(o.min[0]-x,0,x-o.max[0]),dy=Math.max(o.min[1]-y,0,y-o.max[1]),dz=Math.max(o.min[2]-z,0,z-o.max[2]);if(dx>=TOL||dy>=TOL||dz>=TOL)continue;const inside=!dx&&!dy&&!dz;
    const d=inside?Math.min(x-o.min[0],o.max[0]-x,y-o.min[1],o.max[1]-y,z-o.min[2],o.max[2]-z):Math.hypot(dx,dy,dz);if(d>=TOL)continue;
-   if(e===1)grip=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);top=Math.max(top??-Infinity,o.max[1]);}}}
+   if(e===1)grip=true;else if(y<=o.max[1]-TOL)face=true;else if(com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);top=Math.max(top??-Infinity,o.max[1]);}}}
  if(grip)return {kind:'grip'};
+ if(face&&onTop[0]<=onTop[1])return {kind:'hold'};
  if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'feet',box,floor:0};}
  return onTop[0]<=onTop[1]?{kind:'feet',box:onTop,floor:top}:{kind:'air'};}
 // The whole pipeline for a motion: pose(t) poses it (with the hips moved by the current trial shift, set through
@@ -185,6 +190,9 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  const history=[],runs=S=>{const out=[];S.forEach((s,i)=>{const r=out.at(-1);if(r&&r.kind===s.kind)r.end=times[i];else out.push({kind:s.kind,start:times[i],end:times[i]});});return out.map(r=>`${r.kind} ${r.start.toFixed(3)}-${r.end.toFixed(3)}`).join(', ');};
  const measure=()=>{const frames=[];const S=times.map(t=>{setShift(follow?follow.shift(t):null);const P=pose(t);probe.update();frames.push(Object.fromEntries(KEEP.map(k=>[k,P[k].clone()])));const c=com(P).toArray();return {...supportAt(probe,obstacles,c),c};});
   const lag=Math.round(ONSET/dt);for(let i=n-1;i>=0;i--)if(S[i].kind==='grip'){let j=i;while(j>0&&S[j-1].kind==='grip')j--;const end=i-j+1<3*lag?i+1:Math.min(n,j+lag);for(let k=j;k<end;k++)S[k]=j>0?{...S[j-1],c:S[k].c}:S[k];i=j;}
+  // a chest brushing a face as the body slides over a top holds on and off: a gap on the top shorter than 3 ONSET
+  // between two holds is held too (switched each time, the plan's constraints changed every few samples)
+  for(let i=1;i<n;i++)if(S[i].kind==='feet'&&S[i].floor>0&&S[i-1].kind==='hold'){let j=i;while(j<n&&S[j].kind==='feet'&&S[j].floor>0)j++;if(j<n&&S[j].kind==='hold'&&j-i<3*lag)for(let k=i;k<j;k++)S[k]={kind:'hold',c:S[k].c};i=j;}
   return {S,...turning(frames,dt)};};
  // Two rounds: the second measures the schedule and the turning again on the balanced motion (four gave the climb no
  // more: 0.23 s against 0.21 s over). With more, the schedule is held from the second on: moved by each round's hips, a
