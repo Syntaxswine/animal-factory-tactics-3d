@@ -1,3 +1,6 @@
+import {createBattleDialogue} from './battle-dialogue.js';
+import {loadDialogueCatalog,resolveDialogue} from './dialogue-data.js';
+import {initializeDialogue,pinDialogue} from './dialogue-state.js';
 import {MapGeometryCache} from './map-geometry-cache.js';
 import {drawFoliageHover} from './battle-foliage-focus.js';
 import {sectorLoading} from './sector-loading.js';
@@ -22,7 +25,7 @@ import {heldWeaponJammed} from './loot-policy.js';
 import {edgeCells} from './core/maps.js';
 import {nearbyCliffClimbs} from './cliff-actions.js';
 import {captureEncounter,restoreEncounter} from './encounter-save.js';
-import {getSave,putSave} from './save-store.js';
+import {getSave,putSave,checkpointSave,saveToken} from './save-store.js';
 import {createSavePanel} from './save-panel.js';
 import {nearbyLoot,visibleLoot} from './battle-inventory.js';
 import {nearbyInteractions,performInteraction} from './field-actions.js';
@@ -45,6 +48,9 @@ import {createBattleHud} from './battle-hud.js';
 const $=id=>document.getElementById(id),canvas=$('battle'),ctx=canvas.getContext('2d');
 $('difficulty').value=readSettings().difficulty;
 let definition,initialState,campaign=null,campaignSavedRevision=-1;
+const dialogueCatalog=await loadDialogueCatalog().catch(e=>({definitions:{},errors:{},error:e.message}));
+let autoToken,autoTokenError;try{autoToken=saveToken(await getSave('auto'));}catch(e){autoTokenError=e;}
+let dialogueUI;
 try{const campaignSlot=new URLSearchParams(location.search).get('campaign');if(campaignSlot){campaign=await campaignBattle(campaignSlot);initialState=campaign.state;definition=initialState.definition;}const slot=new URLSearchParams(location.search).get('load');if(campaign){}else if(slot){const record=await getSave(slot);if(!record)throw Error('That save slot is empty. Return to the title screen to choose another.');initialState=restoreEncounter(record);definition=initialState.definition;}else definition=await loadBattleMap();}catch(error){$('message').textContent=error.message;$('restart').disabled=true;throw error;}
 if(new URLSearchParams(location.search).has('editorPlaytest')){
  const back=document.createElement('button');back.id='return-editor';back.textContent='Return to editor';back.onclick=()=>{window.opener?.focus();window.close();};document.querySelector('header').append(back);
@@ -62,7 +68,7 @@ const defeatFlow=new DefeatFlow({announce:summary=>{pickupOrder.cancel();closeSt
  complete:async()=>{storageBusy=true;frameClock.reset();try{if(campaign)await campaign.finishDefeat();}finally{storageBusy=false;frameClock.reset();}},
  navigate:()=>{location.href=campaign?'campaign.html?defeat=1':'../tactics-3d.html';}});
 const shotDialog=$('shot-popup');
-const paused=(ignorePlanner=false)=>sectorLoading.active||(!ignorePlanner&&(shotDialog.open||flamePlanner.open||grenadePlanner.open||contextMenu.open))||userPaused||storageBusy||campaign?.paused||document.hidden||characterScreen.open||savePanel.open;
+const paused=(ignorePlanner=false)=>sectorLoading.active||dialogueUI?.open||(!ignorePlanner&&(shotDialog.open||flamePlanner.open||grenadePlanner.open||contextMenu.open))||userPaused||storageBusy||campaign?.paused||document.hidden||characterScreen.open||savePanel.open;
 function syncClock(){const phase=timeOfDay(state.clock).phase;$('game-clock').textContent=formatClock(state.clock)+' \u00b7 '+phase[0].toUpperCase()+phase.slice(1);$('drawer-clock').textContent=$('game-clock').textContent;$('pause').textContent=userPaused?'Resume':'Pause';$('pause').setAttribute('aria-pressed',String(userPaused));}
 const view={x:0,y:0,zoom:1.15,turn:0};
 let stanceAnchor=null;
@@ -81,7 +87,7 @@ function openStances(id,anchor){
 }
 const hud=createBattleHud($('squad'),{
  onSelect:(id,toggle)=>{closeStances();selectMerc(id,toggle);center();sync();},
- onInventory:id=>{closeStances();characterScreen.show(id);},
+ onInventory:id=>{if(dialogueUI?.open)return;closeStances();characterScreen.show(id);},
  onStance:openStances,
  onEquip:(id,weapon)=>action(()=>{const unit=state.units.find(u=>u.id===id);return unit&&equip(state,unit,weapon);}),
  onReload:id=>action(()=>{const unit=state.units.find(u=>u.id===id);return unit&&reload(state,unit);})
@@ -116,15 +122,15 @@ function syncLevelButtons(){for(const b of document.querySelectorAll('#battle-le
 function center(){const u=selected();level=u.z||0;$('floor').value=level;syncLevelButtons();focus(u.x,u.y);}
 function overview(){overviewMode=true;overviewBattleView(view,definition.width,definition.height,width,height);$('hint').textContent='Click the map to inspect an area · WASD / arrows or drag to pan · Q / E rotate camera · Scroll to zoom · Center returns to your squad';}
 function resize(){const box=canvas.getBoundingClientRect(),oldWidth=width,oldHeight=height;width=box.width;height=box.height;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(state){if(overviewMode)overview();else if(oldWidth>1&&oldHeight>1){view.x+=(width-oldWidth)/2;view.y+=(height-oldHeight)/2;}else center();}}
-function restart(){defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;lastAuto=performance.now();autoRound=state.round;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Exteriors revealed. Look through doors or windows to discover interiors. People still need line of sight.':'Explore to reveal the map.');sync();}
+function restart(){dialogueUI?.close();defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});prepareDialogueResources();startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;lastAuto=performance.now();autoRound=state.round;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Exteriors revealed. Look through doors or windows to discover interiors. People still need line of sight.':'Explore to reveal the map.');sync();}
 async function saveGame(id){
  if(storageBusy)throw Error('A save or load is already in progress.');settleEncounterRounds(state);const record=campaign?null:captureEncounter(state);storageBusy=true;frameClock.reset();
- try{const saved=campaign?await campaign.save(id):(await putSave(id,record),record);lastAuto=performance.now();autoRound=state.round;campaignSavedRevision=state.revision;autoDisabled=false;return saved;}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}
+ try{if(!campaign&&id==='auto'&&autoTokenError)throw autoTokenError;const saved=campaign?await campaign.save(id):id==='auto'?await checkpointSave(id,record,autoToken):await putSave(id,record);if(!campaign&&id==='auto')autoToken=saveToken(saved);lastAuto=performance.now();autoRound=state.round;campaignSavedRevision=state.revision;autoDisabled=false;return saved;}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}
 }
-function installState(restored){defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=restored;definition=state.definition;$('difficulty').value=state.difficulty;selectedIds=new Set([state.selected]);targetId=null;drag=null;userPaused=true;presentationTime=0;renderer.presentationNow=0;lastStep=0;stepDelay=MOVEMENT_MS;lastClockCombat=undefined;lastUI='';lastAuto=performance.now();autoRound=state.round;frameClock.reset();center();sync();message('Encounter loaded and paused. Press Resume to continue.');}
+function installState(restored){dialogueUI?.close();defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=restored;definition=state.definition;prepareDialogueResources();$('difficulty').value=state.difficulty;selectedIds=new Set([state.selected]);targetId=null;drag=null;userPaused=true;presentationTime=0;renderer.presentationNow=0;lastStep=0;stepDelay=MOVEMENT_MS;lastClockCombat=undefined;lastUI='';lastAuto=performance.now();autoRound=state.round;frameClock.reset();center();sync();message('Encounter loaded and paused. Press Resume to continue.');}
 async function loadGame(id){return sectorLoading.run(()=>loadEncounterSave(id),{message:'Restoring saved sector'});}
 async function prepareView(){await prepareSectorView(renderer,()=>{ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);},{status:text=>sectorLoading.status(text)});}
-async function loadEncounterSave(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{if(campaign){const restored=await campaign.load(id);if(restored)installState(restored);}else{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);installState(restored);}if(state)await prepareView();}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}}
+async function loadEncounterSave(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{if(campaign){const restored=await campaign.load(id);if(restored)installState(restored);}else{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);autoToken=saveToken(await getSave('auto'));autoTokenError=null;installState(restored);}if(state)await prepareView();}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}}
 async function quickSave(){try{await saveGame('quick');message('Quicksave saved.');}catch(e){message('Could not save: '+e.message);}}
 async function quickLoad(){try{await loadGame('quick');}catch(e){message('Could not load: '+e.message);}}
 function autosave(){if(new URLSearchParams(location.search).get('study')==='tree-cover'||new URLSearchParams(location.search).get('study')==='climbing')return;saveGame('auto').catch(e=>{autoDisabled=true;if(campaign)userPaused=true;sync();message('Autosave failed: '+e.message+' Use Save / Load to retry.');});}
@@ -171,6 +177,7 @@ function sync(){
  else if(lastDiagnostic){if($('message').textContent===lastDiagnostic)message('Ready.');lastDiagnostic='';}
 }
 function selectMerc(id,toggle=false){
+ if(dialogueUI?.open)return;
  contextMenu.close();pickupOrder.cancel();tileTarget=null;
  const u=state.units.find(u=>u.id===id);if(!u||!selectable(u))return;
  selectedIds=toggle?toggleSelection(selectedIds,id):new Set([id]);state.selected=selectedIds.has(id)?id:[...selectedIds][0];targetId=null;state.queue=[];
@@ -230,10 +237,11 @@ function runContextAction(a){
   if(a.kind==='move')return selectedIds.size>1?moveGroup(state,[...selectedIds],selected(),a.point.x,a.point.y,a.point.z):move(state,selected(),a.point.x,a.point.y,a.point.z);return false;});
 }
 canvas.addEventListener('contextmenu',e=>{
- e.preventDefault();if(storageBusy||characterScreen.open||savePanel.open||shotDialog.open)return;
+ e.preventDefault();if(dialogueUI.open){dialogueUI.refresh();return;}if(storageBusy||characterScreen.open||savePanel.open||shotDialog.open)return;
  const b=canvas.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top,hit=renderer.pick(x,y,width,height,level),unit=state.units.find(u=>u.id===hit),pile=renderer.pickLoot(x,y,width,height,level);
  const point=unit?{x:unit.x,y:unit.y,z:unit.z||0,towerPost:unit.towerPost,cliffSupport:unit.cliffSupport}:pile||battleFloorPoint(view,x,y,level),info=inspectBattleTile(state,point);if(!info)return;
  drag=null;clearHover();renderer.wallXray.setPointer(null,null);flamePlanner.cancel();grenadePlanner.cancel();
+ if(unit?.team!=='squad'&&unit?.character?.canTalk&&state.detected.has(unit.id)){contextMenu.close();closeStances();dialogueUI.show(unit,selected());return;}
  const merc=unit?.team==='squad'?unit:null;if(merc&&selectable(merc)){if(merc.id!==state.selected)selectMerc(merc.id);else selectedIds=new Set([merc.id]);}
  contextMenu.show({title:merc?merc.name:info.title,location:info.location,detail:merc?mercStatus(merc):info.objects.join(' · '),entries:contextChoices(info,merc)},e.clientX,e.clientY);
 });
@@ -282,7 +290,7 @@ function showGuardSight(now){
  drawGuardCones(ctx,cones,project);
 }
 function showWalkingRoute(){
- if(overviewMode||shotDialog.open||flamePlanner.open||grenadePlanner.open||characterScreen.open||savePanel.open||drag?.moved){walkingCacheKey='';walkingCache=[];showWalkingWarning();return;}
+ if(overviewMode||dialogueUI.open||shotDialog.open||flamePlanner.open||grenadePlanner.open||characterScreen.open||savePanel.open||drag?.moved){walkingCacheKey='';walkingCache=[];showWalkingWarning();return;}
  let goal=null;
  if(hoverPointer&&!contextMenu.open&&!canvas.dataset.targetCursor){const bounds=canvas.getBoundingClientRect(),p=battleFloorPoint(view,hoverPointer.x-bounds.left,hoverPointer.y-bounds.top,level);goal={x:Math.round(p.x),y:Math.round(p.y),z:level};}
  const key=JSON.stringify([state.revision,state.phase,state.selected,level,[...selectedIds],goal,state.queue,state.fires,state.units.filter(u=>selectedIds.has(u.id)).map(u=>[u.x,u.y,u.z,u.ap,u.stance,u.running,u.sneaking,u.legWound])]);
@@ -299,7 +307,7 @@ canvas.addEventListener('pointercancel',()=>{clearHover();drag=null;renderer.wal
 canvas.addEventListener('lostpointercapture',()=>{drag=null;});
 window.addEventListener('blur',()=>{clearHover();drag=null;renderer.wallXray.setPointer(null,null);});
 canvas.addEventListener('wheel',e=>{e.preventDefault();const box=canvas.getBoundingClientRect(),x=e.clientX-box.left,y=e.clientY-box.top,old=view.zoom;view.zoom=Math.max(.08,Math.min(3,old*Math.exp(-e.deltaY*.001)));view.x=x-(x-view.x)*view.zoom/old;view.y=y-(y-view.y)*view.zoom/old;},{passive:false});
-document.addEventListener('keydown',e=>{if(e.defaultPrevented||sectorLoading.active||characterScreen.open||savePanel.open)return;if(e.key==='Escape'&&grenadePlanner.open){e.preventDefault();grenadePlanner.cancel();return;}if(e.key==='Escape'&&flamePlanner.open){e.preventDefault();flamePlanner.cancel();return;}if(e.key==='Escape'&&!paused()){pickupOrder.cancel();drag=null;state.queue=[];targetId=null;tileTarget=null;sync();}});
+document.addEventListener('keydown',e=>{if(e.defaultPrevented||dialogueUI.open||sectorLoading.active||characterScreen.open||savePanel.open)return;if(e.key==='Escape'&&grenadePlanner.open){e.preventDefault();grenadePlanner.cancel();return;}if(e.key==='Escape'&&flamePlanner.open){e.preventDefault();flamePlanner.cancel();return;}if(e.key==='Escape'&&!paused()){pickupOrder.cancel();drag=null;state.queue=[];targetId=null;tileTarget=null;sync();}});
 document.addEventListener('keydown',e=>{
  if(contextMenu.open||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||characterScreen.open||savePanel.open||document.hidden||e.target.isContentEditable||e.target.closest?.('input,select,textarea,[role="textbox"],#stance-menu,#command-drawer')||document.querySelector('dialog[open]'))return;
  if(/^[1-3]$/.test(e.key)){e.preventDefault();document.querySelector(`#battle-levels [data-level="${+e.key-1}"]`).click();return;}
@@ -312,7 +320,7 @@ function action(fn){if(paused()||renderer.busy)return;pickupOrder.cancel();const
  for(const mode of Object.keys(MOVEMENT_MODES))$('move-'+mode).onclick=()=>{if(paused()||renderer.busy)return;const result=setSelectionMovement(state,selectedIds,mode);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' set to '+mode+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'.':''));sync();};
  $('character').onclick=()=>characterScreen.show(state.selected);
  $('save-load').onclick=()=>savePanel.show();$('quicksave').onclick=quickSave;$('quickload').onclick=quickLoad;
- document.addEventListener('keydown',e=>{if(sectorLoading.active||characterScreen.open||savePanel.open||e.target.closest?.('input,select,textarea'))return;if(e.key==='F6'||e.key==='F9'){e.preventDefault();(e.key==='F6'?quickSave:quickLoad)();}});
+ document.addEventListener('keydown',e=>{if(dialogueUI.open||sectorLoading.active||characterScreen.open||savePanel.open||e.target.closest?.('input,select,textarea'))return;if(e.key==='F6'||e.key==='F9'){e.preventDefault();(e.key==='F6'?quickSave:quickLoad)();}});
  $('battle-menu').onclick=async e=>{e.preventDefault();const href=e.currentTarget.href;try{await saveGame('auto');location.href=href;}catch(error){message('Could not save before leaving: '+error.message);}};
  $('restart').onclick=async()=>{try{await saveGame('auto');await sectorLoading.run(async()=>{restart();await prepareView();},{message:'Restarting sector'});}catch(e){message('Could not restart the sector. '+e.message);}};$('center').onclick=center;$('overview').onclick=overview;
  $('reload').onclick=()=>action(()=>reload(state,selected()));$('end').onclick=()=>action(()=>endTurn(state));
@@ -325,8 +333,22 @@ function action(fn){if(paused()||renderer.busy)return;pickupOrder.cancel();const
  $('stop').onclick=()=>{if(paused())return;pickupOrder.cancel();state.queue=[];sync();};$('floor').onchange=()=>{contextMenu.close();tileTarget=null;level=+$('floor').value;clearHover();targetId=null;drag=null;flamePlanner.cancel();sync();};
  for(const b of document.querySelectorAll('#battle-levels [data-level]'))b.onclick=()=>{$('floor').value=b.dataset.level;$('floor').dispatchEvent(new Event('change'));};
 $('pause').onclick=()=>{userPaused=!userPaused;frameClock.reset();sync();};
-document.addEventListener('visibilitychange',()=>{renderer.wallXray.setPointer(null,null);frameClock.reset();sync();if(document.hidden&&!storageBusy&&!autoDisabled&&(performance.now()-lastAuto>=30000||state.round!==autoRound||campaign&&state.revision!==campaignSavedRevision))autosave();});
+document.addEventListener('visibilitychange',()=>{renderer.wallXray.setPointer(null,null);frameClock.reset();sync();if(document.hidden&&!dialogueUI.open&&!storageBusy&&!autoDisabled&&(performance.now()-lastAuto>=30000||state.round!==autoRound||campaign&&state.revision!==campaignSavedRevision))autosave();});
 window.addEventListener('pageshow',()=>frameClock.reset());
+function prepareDialogueResources(){
+ const owner=campaign?.campaign||state,d=initializeDialogue(owner);
+ for(const p of [...(state.definition.starts||[]),...(state.definition.guards||[])])if(p.character?.canTalk&&p.character.dialogueRef){try{pinDialogue(d,resolveDialogue(state.definition,d,p.character.dialogueRef,dialogueCatalog));}catch{/* Missing author resources are reported in the conversation, never replaced by a guessed line. */}}
+}
+dialogueUI=createBattleDialogue({catalog:dialogueCatalog,source:()=>({state,dialogue:(campaign?.campaign||state).dialogue,busy:renderer?.busy}),
+ onChange:()=>{frameClock.reset();lastUI='';},onLoadLatest:()=>loadGame(campaign?'continue':'auto').catch(e=>message(e.message)),
+ commit:async(next,expected)=>{
+  if(storageBusy)throw Error('A checkpoint is already in progress.');storageBusy=true;frameClock.reset();
+  try{if(campaign){state=await campaign.commitDialogue(expected,next);definition=state.definition;}else{
+    if(autoTokenError){autoToken=saveToken(await getSave('auto'));autoTokenError=null;}if(state.dialogue.revision!==expected)throw Error('The conversation changed. Review it again.');
+    const candidate={...state,dialogue:next},saved=await checkpointSave('auto',captureEncounter(candidate),autoToken);autoToken=saveToken(saved);state.dialogue=next;
+   }lastAuto=performance.now();autoRound=state.round;campaignSavedRevision=state.revision;autoDisabled=false;
+  }finally{storageBusy=false;frameClock.reset();lastUI='';}
+ }});
 new ResizeObserver(resize).observe(canvas);resize();if(initialState)installState(initialState);else restart();
 if(campaign)campaign.mount({changed:()=>{lastUI='';frameClock.reset();sync();},failure:e=>{userPaused=true;message('Campaign checkpoint failed: '+e.message+' Use Save / Load to retry.');}});
 if(new URLSearchParams(location.search).get('view')==='overview')overview();
@@ -350,7 +372,7 @@ function frame(now){
  }catch(error){message('Encounter stopped: '+error.message);console.error(error);}
 }
 // Read-only inspection hooks for browser regression checks.
-window.battle3d={get state(){return state;},get level(){return level;},get renderer(){return renderer;},get clock(){return state.clock;},get paused(){return paused();},get picks(){return picks;},get walkingPreview(){return walkingCache;},get flamePreview(){return flamePlanner.preview;},get grenadePreview(){return grenadePlanner.preview;},get contextMenu(){return contextMenu;},get pickupOrder(){return pickupOrder.pending;},get selectedIds(){return [...selectedIds];},project,view};
+window.battle3d={get state(){return state;},get level(){return level;},get renderer(){return renderer;},get clock(){return state.clock;},get paused(){return paused();},get picks(){return picks;},get walkingPreview(){return walkingCache;},get flamePreview(){return flamePlanner.preview;},get grenadePreview(){return grenadePlanner.preview;},get dialogue(){return dialogueUI;},get contextMenu(){return contextMenu;},get pickupOrder(){return pickupOrder.pending;},get selectedIds(){return [...selectedIds];},project,view};
 await prepareView();
 if(new URLSearchParams(location.search).get('study')==='tree-cover'){const {installFoliagePerformanceReview}=await import('./foliage-performance-review.js');installFoliagePerformanceReview(window.battle3d);}
 document.addEventListener('sector-ready',()=>{frameClock.reset();lastUI='';sync();});

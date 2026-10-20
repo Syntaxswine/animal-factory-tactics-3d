@@ -1,3 +1,5 @@
+import {embedMapDialogues,resolveDialogue} from './dialogue-data.js';
+import {validateDialogue,mergeDialogueDefinitions} from './dialogue-schema.js';
 import {isHedge} from './hedge-data.js';
 import {spotlightPathError} from './spotlight-path.js';
 import {shiftPatrol,patrolError} from './character-patrol.js';
@@ -102,7 +104,7 @@ export class EditingDocument extends InspectionDocument {
   if(patch.stats&&Object.hasOwn(patch.stats,'climbing'))p.stats={...p.stats,climbing:patch.stats.climbing};
   const allowed=['displayName','scriptId','faction','attitude','combatBehavior','canTalk','dialogueRef','canSell','shopInventoryRef','shopPricingRef','references','model','visualVariant'];
   for(const key of allowed)if(Object.hasOwn(patch.character||{},key))p.character[key]=structuredClone(patch.character[key]);
-  p.character.id=id;this.replace(map);return this.characterSelection(id);
+  p.character.id=id;if(this.dialogueCatalog)mergeDialogueDefinitions(map,embedMapDialogues(map,this.dialogueCatalog,{strict:false}));this.replace(map);return this.characterSelection(id);
  }
  setPatrol(id,points){
   const row=this.character(id);if(!row||row.field!=='guards')throw Error('Select a placed guard or NPC.');
@@ -118,8 +120,10 @@ export class EditingDocument extends InspectionDocument {
   const [copy]=copyCharacters([row.p],this.editor.map);if(copy.patrol)copy.patrol=shiftPatrol(copy.patrol,point.x-copy.x,point.y-copy.y,(point.z||0)-(copy.z||0));Object.assign(copy,{x:point.x,y:point.y,z:point.z||0});delete copy.towerPost;
   this.replace({...this.editor.map,guards:[...this.editor.map.guards,copy]});return copy.character.id;
  }
+ export(){return JSON.stringify(embedMapDialogues(this.original,this.dialogueCatalog,{strict:false}),null,2);}
+ dialogueDefinition(definition,{replace=false}={}){validateDialogue(definition);const map=structuredClone(this.editor.map);if(replace&&map.dialogueDefinitions)delete map.dialogueDefinitions[definition.id];mergeDialogueDefinitions(map,{dialogueDefinitions:{[definition.id]:definition}});map.characterResources??={};map.characterResources.dialogues=[...new Set([...(map.characterResources.dialogues||[]),definition.id])];this.replace(map);}
  characterResources(resources){this.replace({...this.editor.map,characterResources:structuredClone(resources)});}
- characterWarnings(){return characterDiagnostics(this.editor.map);}
+ characterWarnings(){const map=this.editor.map,out=characterDiagnostics(map);for(const {p}of characters(map))if(p.character?.canTalk){try{resolveDialogue(map,null,p.character.dialogueRef,this.dialogueCatalog);}catch(e){out.push(characterName(p)+': '+e.message);}}return [...new Set(out)];}
  undo(){if(!this.editor||!undo(this.editor))return false;this.refresh();return true;}
  redo(){if(!this.editor||!redo(this.editor))return false;this.refresh();return true;}
  doorLock(selection,difficulty){

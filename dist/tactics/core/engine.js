@@ -1,3 +1,4 @@
+import {initializeDialogue,ensureDialogueUnitIds,pinDialogue} from '../dialogue-state.js';
 import {climbingPreview,rollClimb} from '../climbing.js';
 import {failedClimbFall,cancelClimbOrders} from '../fall-damage.js';
 import {withCombatQueries,combatQuery} from '../combat-queries.js';
@@ -113,6 +114,7 @@ export const DEFAULT_CAST=[['Yakov','horse','assault'],['Anya','goat','rifle'],[
 export function createGame(seed=1947,definition=factoryMap(),detect=true,difficulty='standard',options={}){
  const errors=validateMap(definition);if(errors.length)throw Error(errors.join(' '));
  const s={difficulty:difficulty==='easy'?'easy':'standard',map:structuredClone(definition.terrain),upper:structuredClone(definition.upper),stairs:structuredClone(definition.stairs),climbs:structuredClone(definition.climbs||[]),props:structuredClone(definition.props||[]),canopies:structuredClone(definition.canopies||[]),sectors:structuredClone(definition.sectors),edges:{...definition.edges},...(definition.environment?{environment:structuredClone(definition.environment)}:{}),...(definition.foliage?{foliage:structuredClone(definition.foliage)}:{}),...(definition.breaches?{breaches:structuredClone(definition.breaches)}:{}),edgeLocks:structuredClone(definition.edgeLocks||{}),definition:structuredClone(definition),units:[],phase:'explore',round:0,selected:0,visible:new Set(),seen:new Set(),detected:new Set(),glimpses:{},log:[],seed,perceptionSeed:seed,revision:0,queue:[],enemyIndex:0,contacts:{},effect:null};
+ initializeDialogue(s,seed);for(const d of Object.values(definition.dialogueDefinitions||{}))pinDialogue(s.dialogue,d);
  const add=(team,name,species,x,y,weapon,z=0)=>spawnUnit(s,{team,name,species,x,y,z,weapon,medical:team==='squad'?[0,25,50,100][s.units.length]:0});
  const cast=options.cast?options.cast.map(c=>[c.name,c.species,c.weapon]):DEFAULT_CAST;
  definition.starts.forEach((p,i)=>{if(cast[i]){add('squad',cast[i][0],p.species||cast[i][1],p.x,p.y,p.weapon||cast[i][2],levelOf(p));if(p.heading!==undefined){const u=s.units.at(-1);u.heading=p.heading;const angle=p.heading*Math.PI/180;u.facing=Math.cos(angle)-Math.sin(angle)>=0?1:-1;}if(p.outfit)s.units.at(-1).outfit=p.outfit;applyRuntimeCharacter(s.units.at(-1),p);}});
@@ -128,7 +130,7 @@ export function createGame(seed=1947,definition=factoryMap(),detect=true,difficu
  if(definition.name==='Factory test')s.loot[0].items.push({type:'weapon',kind:'flamethrower',rounds:4},{type:'ammo',kind:'flamethrower',count:4});
  if(options.statSystem){s.rules.statSystem=true;for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id],authored={...(u.team==='squad'?options.cast?.[u.id]?.stats:{}),...source?.stats};if(Number.isFinite(source?.perception)&&!Number.isFinite(authored.perception))authored.perception=source.perception;initializeStats(u,authored);starterTools(u);}}
  if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id];if(source?.towerPost)u.towerPost=structuredClone(source.towerPost);u.perception=u.stats?u.stats.perception:Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}
- trackMapGeometry(s);if(detect)refresh(s);log(s,`Local map ready / ${definition.guards.length} guards.`);return s;
+ ensureDialogueUnitIds(s);trackMapGeometry(s);if(detect)refresh(s);log(s,`Local map ready / ${definition.guards.length} guards.`);return s;
 }
 // Visibility and projectiles share solid geometry, but bodies do not occlude sight.
 export function zoneVisible(s,a,b,zone='torso'){a={...a,cliffSupport:rampSupportAt(s,a)||a.cliffSupport};b={...b,cliffSupport:rampSupportAt(s,b)||b.cliffSupport};

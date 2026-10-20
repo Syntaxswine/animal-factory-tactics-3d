@@ -1,3 +1,4 @@
+import {initializeDialogue,validateDialogueState,validateDialogueActors} from './dialogue-state.js';
 import {validateSavedState} from './encounter-save.js';
 import {migrateClimbing} from './character-stats.js';
 import {environmentErrors} from './environment-regions.js';
@@ -12,8 +13,11 @@ const plain=v=>v&&typeof v==='object'&&!Array.isArray(v);
 const fail=()=>{throw Error('This campaign save is damaged or inconsistent. The running campaign has not changed.');};
 const transient=['effect','queue','fireAnimations','fireAnimationSequence','towerTraversal','cliffTraversals','cliffTraversalSequence','roofTraversals','roofTraversalSequence','shouting','sealed','lastClimb','simpleTraversal','simpleTraversals'];
 export function validateCampaign(c,{assignments=true}={}){
+ if(c?.dialogue!==undefined)validateDialogueState(c.dialogue);
  if(!plain(c)||c.version!==CAMPAIGN_VERSION||typeof c.id!=='string'||!c.id||!integer(c.seed)||c.seed>4294967295||typeof c.contentVersion!=='string'||!['easy','standard'].includes(c.difficulty)||!integer(c.revision)||!finite(c.clock?.minutes)||!finite(c.money)||!integer(c.nextUnitId)||!integer(c.nextGroup)||!integer(c.nextIncident)||!plain(c.characters)||!plain(c.sectors)||!plain(c.assignments)||!Array.isArray(c.groups)||!Array.isArray(c.incidents)||c.overmap?.width!==30||c.overmap?.height!==15||c.overmap.sectors?.length!==450)fail();
  if(environmentErrors(c.overmap.environments).length)fail();
+ if(c.dialogue)validateDialogueActors(c.dialogue,Object.values(c.characters).map(r=>r.unit));
+ if(Object.values(c.sectors).some(sector=>sector.state?.dialogue!==undefined))fail();
  if(assignments)validateAssignments(c);
  const numeric=new Set(),physical=new Set(),members=new Set(),groupIds=new Set(c.groups.map(g=>g.id));
  if(groupIds.size!==c.groups.length||c.groups.length>64||c.incidents.length>10000||Object.keys(c.characters).length>10000)fail();
@@ -69,7 +73,7 @@ export function restoreCampaign(record){
  if(record?.format!==CAMPAIGN_FORMAT||record.version!==CAMPAIGN_VERSION)throw Error('This is not a supported campaign save.');
  const c=structuredClone(record.data);if(!plain(c)||!plain(c.characters)||!plain(c.sectors)||!plain(c.assignments)||record.campaignId!==c.id||record.revision!==c.revision)fail();
  for(const [index,sector]of Object.entries(c.sectors))if(sector.state){if(!Array.isArray(sector.unitIds)||sector.unitIds.some(id=>!c.characters[id]))fail();sector.state.units=sector.unitIds.map(id=>c.characters[id].unit);sector.state.definition=c.assignments[index]?.map;delete sector.unitIds;}
- for(const r of Object.values(c.characters))migrateClimbing(r?.unit);
+ initializeDialogue(c);for(const r of Object.values(c.characters))migrateClimbing(r?.unit);
  validateCampaign(c);
  for(const sector of Object.values(c.sectors))if(sector.state)observeRoundTime(sector.state.clock,sector.state);
  return bindCampaign(c);

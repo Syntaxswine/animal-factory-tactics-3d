@@ -50,6 +50,7 @@ export async function campaignBattle(slot){
   }
  }
  return {get state(){return s;},get campaign(){return session.campaign;},get busy(){return session.busy;},get paused(){return paused||session.busy||!!inventory?.open;},saveOptions,mount,update,save,
+  async commitDialogue(expected,next){await session.transition(c=>{if(c.dialogue.revision!==expected)throw Error('The conversation changed. Load its latest checkpoint.');c.dialogue=structuredClone(next);});s=activeState(session.campaign);last='';return s;},
   async finishDefeat(){if(s.phase!=='lost')throw Error('The encounter is still in progress.');await session.transition(c=>finishCampaignEncounter(c));paused=true;},
   async load(id){session=await loadCampaignSession(id);s=activeState(session.campaign);if(!s){location.href='campaign.html';return null;}paused=false;last='';return s;}};
 }

@@ -5,4 +5,10 @@ function database(){return new Promise((resolve,reject)=>{const r=indexedDB.open
 async function transaction(mode,work){const db=await database();try{return await new Promise((resolve,reject)=>{const tx=db.transaction(TABLE,mode),req=work(tx.objectStore(TABLE));let result;req.onsuccess=()=>result=req.result;tx.oncomplete=()=>resolve(result);tx.onerror=()=>reject(tx.error||Error('Could not write the save.'));tx.onabort=()=>reject(tx.error||Error('Save cancelled.'));});}finally{db.close();}}
 export const listSaves=()=>transaction('readonly',s=>s.getAll());
 export const getSave=id=>{valid(id);return transaction('readonly',s=>s.get(id));};
-export const putSave=(id,record)=>{valid(id);return transaction('readwrite',s=>s.put({...record,id}));};
+export const saveToken=record=>record?record.checkpointToken||JSON.stringify([record.savedAt,record.version,record.mapName,record.state?.seed,record.state?.revision]):null;
+export const putSave=async(id,record)=>{valid(id);const next={...record,id,checkpointToken:crypto.randomUUID()};await transaction('readwrite',s=>s.put(next));return next;};
+// Read/compare/write in ONE transaction; a read followed by putSave is not CAS.
+export async function checkpointSave(id,record,expected){
+ valid(id);const db=await database(),next={...record,id,checkpointToken:crypto.randomUUID()};
+ try{return await new Promise((resolve,reject)=>{const tx=db.transaction(TABLE,'readwrite'),s=tx.objectStore(TABLE);let error;const r=s.get(id);r.onsuccess=()=>{if(saveToken(r.result)!==expected){error=Error('Another tab changed this encounter. Load the latest Autosave before continuing.');error.code='SAVE_CONFLICT';tx.abort();return;}s.put(next);};tx.oncomplete=()=>resolve(next);tx.onerror=tx.onabort=()=>reject(error||tx.error||Error('Dialogue checkpoint failed. Nothing was committed.'));});}finally{db.close();}
+}

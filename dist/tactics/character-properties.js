@@ -1,3 +1,4 @@
+import {mergeDialogueDefinitions} from './dialogue-schema.js';
 // Data-only hooks. No field is evaluated as code or changes allegiance implicitly.
 export const FACTIONS=['player','red-hats','civilians','unaffiliated'];
 export const COMBAT_BEHAVIORS=['fight','cower','flee'];
@@ -45,7 +46,7 @@ export function copyCharacters(rows,destination){
  return rows.map(p=>{const copy=structuredClone(p),c=copy.character;if(!c)return copy;c.id=ids.get(c.id);if(c.scriptId){const base=c.scriptId;let n=2;while(used.has(c.scriptId))c.scriptId=base.slice(0,70)+'_'+n++;used.add(c.scriptId);}c.references=c.references.map(r=>({...r,targetId:ids.get(r.targetId)||r.targetId}));return copy;});
 }
 export function copyBlockCharacters(block,destination){const d=structuredClone(block);ensureCharacterIdentities(d);d.guards=copyCharacters(d.guards,destination);return d;}
-export function mergeCharacterResources(map,source){if(!source.characterResources)return;map.characterResources??={};for(const type of RESOURCE_TYPES)map.characterResources[type]=[...new Set([...(map.characterResources[type]||[]),...(source.characterResources[type]||[])])];}
+export function mergeCharacterResources(map,source){mergeDialogueDefinitions(map,source);if(!source.characterResources)return;map.characterResources??={};for(const type of RESOURCE_TYPES)map.characterResources[type]=[...new Set([...(map.characterResources[type]||[]),...(source.characterResources[type]||[])])];}
 export function applyRuntimeCharacter(unit,source){if(source?.patrol?.length)unit.patrol=structuredClone(source.patrol);if(!source?.character)return;unit.character=structuredClone(source.character);unit.characterId=source.character.id;if(source.character.displayName)unit.name=source.character.displayName;}
 
 // Allegiance does not change controller ownership: NPCs remain autonomous.

@@ -1,3 +1,4 @@
+import {initializeDialogue,ensureDialogueUnitIds,validateDialogueState,validateDialogueActors} from './dialogue-state.js';
 import {trackMapGeometry} from './map-geometry-cache.js';
 import {validPatrolState} from './character-patrol.js';
 import {spotlightErrors} from './light-sources.js';
@@ -20,6 +21,7 @@ const fail=()=>{throw Error('This save is damaged or incomplete. Your current en
 const terrain=new Set(['yard','floor','crate','void','water','bridge','woodland','woodland-dense',...GROUNDS]);
 const finite=n=>Number.isFinite(n)&&n>=0;
 export function validateSavedState(s,{population=false,unitIds=null}={}){
+ if(s?.dialogue!==undefined)validateDialogueState(s.dialogue);
  if(!s||!s.definition||validateMap(s.definition,{connectivity:false}).length||canopyErrors(s).length)fail();
  if(!['explore','player','enemy','won','lost'].includes(s.phase)||!Number.isInteger(s.round)||s.round<0||!finite(s.clock?.minutes)||!Number.isInteger(s.enemyIndex)||s.enemyIndex<0)fail();
  if(!Array.isArray(s.map)||s.map.length!==s.definition.height||s.map.some(r=>!Array.isArray(r)||r.length!==s.definition.width||r.some(t=>!terrain.has(t))))fail();
@@ -37,6 +39,7 @@ export function validateSavedState(s,{population=false,unitIds=null}={}){
  for(const u of s.units)if(u.burnedRemains!==undefined&&(typeof u.burnedRemains!=='boolean'||u.burnedRemains&&u.hp>0))fail();
  for(const p of s.loot)if(!p||p.container&&(!p.container.id||typeof p.container.name!=='string'||typeof p.container.locked!=='boolean'||typeof p.searched!=='boolean')||!Array.isArray(p.items)||p.items.some(i=>!itemValid(i))||![p.x,p.y,p.z??0].every(Number.isFinite))fail();
  for(const key of ['seed','perceptionSeed','interactionSeed','lootSeed','jamSeed','climbSeed'])if(s[key]!==undefined&&!Number.isFinite(s[key]))fail();
+ if(s.dialogue)validateDialogueActors(s.dialogue,s.units);
  return s;
 }
 export function captureEncounter(state,now=Date.now()){
@@ -49,7 +52,7 @@ export function captureEncounter(state,now=Date.now()){
 }
 export function restoreEncounter(record){
  if(record?.format!=='animal-factory-tactics-3d'||record.version!==SAVE_VERSION)throw Error('This save uses an unsupported format or version.');
- const s=structuredClone(record.state);if(Array.isArray(s?.units))s.units.forEach(migrateClimbing);validateSavedState(s);s.effect=null;s.queue=[];delete s.lastClimb;delete s.simpleTraversal;delete s.simpleTraversals;delete s.fireAnimations;delete s.fireAnimationSequence;delete s.towerTraversal;delete s.cliffTraversals;delete s.cliffTraversalSequence;delete s.roofTraversals;delete s.roofTraversalSequence;delete s.shouting;delete s.sealed;
+ const s=structuredClone(record.state);if(s){initializeDialogue(s);ensureDialogueUnitIds(s);}if(Array.isArray(s?.units))s.units.forEach(migrateClimbing);validateSavedState(s);s.effect=null;s.queue=[];delete s.lastClimb;delete s.simpleTraversal;delete s.simpleTraversals;delete s.fireAnimations;delete s.fireAnimationSequence;delete s.towerTraversal;delete s.cliffTraversals;delete s.cliffTraversalSequence;delete s.roofTraversals;delete s.roofTraversalSequence;delete s.shouting;delete s.sealed;
  // Prime the observer without advancing time, refilling resources or recomputing awareness.
  observeRoundTime(s.clock,s);return trackMapGeometry(s);
 }

@@ -1,11 +1,14 @@
 # Dialogue infrastructure: a conversation, a decision, a recorded result
 
-Design proposal · 19 October 2026 · **Not implemented**
+Design proposal · 19 October 2026 · **Approved and implemented on the builder branch**
+
+See [the implementation and authoring guide](DIALOGUE-AUTHORING.md) for the shipped behavior, rehearsal and remaining human acceptance exercises.
 
 Code inspected: builder branch `work/editor-3d`, commit
 [`146ee23`](https://github.com/Syntaxswine/animal-factory-tactics-3d/commit/146ee23a66987d3ea053c2439576d139206a849f).
-This is a proposal for the next coding task, not a claim about canonical or live
-Pages. Existing code is evidence; the rules marked **Recommended** are new.
+This records the design approved for the implementation task; it is not a claim
+about canonical or live Pages. Existing code below describes the inspected baseline;
+the rules marked **Recommended** were subsequently approved for implementation.
 The bomb, its custodian and all conversation lines below are **invented example
 content**, not an existing quest. No authored bomb conversation or bomb-disarming
 interaction was found in the inspected gameplay/content files.
