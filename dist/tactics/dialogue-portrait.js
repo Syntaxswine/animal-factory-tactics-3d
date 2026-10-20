@@ -54,7 +54,7 @@ export class DialoguePortrait {
  }
  draw(open=0,force=false){if(this.closed||!this.model||!this.host.isConnected||document.hidden)return;const now=performance.now();if(open===0&&this.lastOpen>0)force=true;if(!force&&(now-this.lastDraw<1000/30||Math.abs(open-(this.lastOpen||0))<.001))return;this.lastDraw=now;this.lastOpen=open;
   const {worker,head,speech,frame}=this.model;speech?.setJaw(Math.max(0,Math.min(1,open))*(head?speechOpen(head):0));worker.root.updateMatrixWorld(true);
-  const rect=this.host.getBoundingClientRect(),w=Math.max(1,Math.min(512,Math.round(rect.width*devicePixelRatio))),h=Math.max(1,Math.min(512,Math.round(rect.height*devicePixelRatio)));
+  const rect={width:this.host.clientWidth,height:this.host.clientHeight},w=Math.max(1,Math.min(512,Math.round(rect.width*devicePixelRatio))),h=Math.max(1,Math.min(512,Math.round(rect.height*devicePixelRatio)));
   if(this.renderer.domElement.width!==w||this.renderer.domElement.height!==h)this.renderer.setSize(w,h,false);
   const ratio=Math.max(.3,rect.width/Math.max(1,rect.height)),height=frame.height;this.camera.left=-height*ratio/2;this.camera.right=height*ratio/2;this.camera.top=height/2;this.camera.bottom=-height/2;this.camera.near=.05;this.camera.far=20;
   const center=worker.root.localToWorld(new THREE.Vector3(...frame.center));this.camera.position.copy(center).add(new THREE.Vector3(4,.12,2.4));this.camera.lookAt(center);this.camera.updateProjectionMatrix();this.renderer.render(this.scene,this.camera);this.draws++;this.drawTimes.push(now);this.drawTimes=this.drawTimes.slice(-250);this.drawCosts.push(performance.now()-now);this.drawCosts=this.drawCosts.slice(-250);

@@ -85,3 +85,19 @@ The audition page reports speech-start latency, cue-start lag, portrait preparat
 Remaining artistic acceptance: blind listener comparisons, each recurring voice in its real scene, and the artist's six documented mouth TODOs. No subjective approval is claimed from passing timing tests.
 
 ![Plateau guide in the packaged conversation](images/dialogue-presentation-2026-10-20/guide.png)
+
+## Follow-up: industrial message terminal
+
+The user's next visual direction replaces the paper form with a dark, worn terminal bezel and a familiar message exchange. Incoming NPC messages align left; selected merc replies align right in amber. Names stay attached to sent messages even when the player changes the replying merc. The last 80 messages are retained for the open conversation, with the existing durable Last saved response still available across visits.
+
+Both participants occupy the upper corners. The NPC portrait grows during speech, and the selected merc's cropped HUD portrait grows when it is their turn to reply. Speaking, Listening, Paused and Your reply labels supplement size and colour. Reduced motion removes the transition. The portrait spaces reserve their full size, so growth does not move the text. The 3D renderer measures the unscaled layout dimensions to avoid reallocating its render buffer during a CSS transition; there is still only one 3D portrait renderer.
+
+A chosen reply is marked Sending until the existing command returns. Checkpoint failures show Not saved and retain the existing retry action. Retry updates that same bubble; abandoning the candidate marks it Not sent. Neither message history nor playback changes the roll/save engine. Long incoming messages start at their first line. Individual word cues never scroll the thread. Leave and Escape remain available.
+
+Validation for this UI follow-up: **52 focused tests passed**, including message attribution, repeated identical lines, failed checkpoints/retries, stale message IDs, presentation timing, the existing dialogue/tutorial rules and packaging closure. The final 3D build passed. Packaged browser checks covered the guide's crate instructions, Nadia's ordinary/personality/40% options, a recorded failure, Replay, replying-merc changes, options pause/Continue and Escape. At 390 × 844, the long guide message began 16px below the message window's top and there was no horizontal overflow. No browser warnings or errors were observed. The earlier full release run above belongs to the initial presentation integration, not a second full-suite run for this styling change.
+
+Babble Lab's local checkout had advanced to `d82c5ab`, adding sample layering and spectral morph auditions. Its core runtime modules had not changed from the game's pinned `8f1d23c`. This UI change does not adopt unreviewed voices or switch the pinned runtime; the dialogue adapter remains the integration boundary for the incoming TTS upgrade.
+
+![Industrial message window](images/dialogue-presentation-2026-10-20/terminal-desktop.png)
+
+[Narrow viewport check](images/dialogue-presentation-2026-10-20/terminal-narrow.png)
