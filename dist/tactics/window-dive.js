@@ -1,6 +1,7 @@
 import * as T from './vendor/three.module.js';
 import {V,Q,DEG,clamp,smooth,track,spinTrack,bodyQ,yawQ,relQ,frameToWorld as toWorld,keyedLimb,posedFrom,steadyPoles,steadyTurns,limbSample,createTraversalBody,createSurfaceProbe,massPoints,inertiaAbout,BODY_MASS} from './traversal-pose.js';
 import {bodyFit,createTailBend,createClearanceFit,edgeBoxes} from './traversal-fit.js';
+import {balanceTraversal,contactProbe} from './traversal-balance.js';
 // Head-first window entry and roll (docs/tactics/NATURAL-TRAVERSAL.md). Local frame: start on the tile at the
 // origin facing +X, the window on the edge at X = .5 (faces .42 and .58, sill top .85, opening top 1.55),
 // finish standing on the next tile's centre (1, 0, 0) facing on.
@@ -16,14 +17,15 @@ export const ROLL=Object.freeze({dir:78,start:2.40,flex:40,back:[.94,-.55],omega
 // past 180 inverted; heading from +X toward +Z). The last keyed pose before the roll is built from the roll itself.
 // Heights are the horse's; a key the legs hold up (stand) is scaled to each character's legs, and a body deeper in
 // front stands back while it faces the window (near), feet and all, and lies that much higher on the sill (over)
-// (traversal-fit.js).
+// (traversal-fit.js). The hop, slide and reach are keyed 2.5 cm into the sill, so the clearance fit, which only lifts a
+// body out, sets the belly on it: keyed above it, the body slid 1 to 2.6 cm over the sill with nothing holding it.
 const PRE=[
  {t:0,label:'Ready',hips:[0,.80,0],stand:true},
  {t:.55,label:'Step in',hips:[.08,.79,-.16],pitch:8,stand:true,near:true},
  {t:.90,label:'Hands on the sill',hips:[.12,.74,-.20],pitch:28,stand:true,near:true},
- {t:1.25,label:'Hop onto the sill',hips:[.34,.98,-.24],pitch:82,over:true},
- {t:1.60,label:'Slide over',hips:[.50,1.03,-.28],pitch:115,heading:10,over:true},
- {t:2.00,label:'Reach for the floor',hips:[.74,.96,-.32],pitch:155,heading:40,roll:-5},
+ {t:1.25,label:'Hop onto the sill',hips:[.34,.955,-.24],pitch:82,over:true},
+ {t:1.60,label:'Slide over',hips:[.50,1.005,-.28],pitch:115,heading:10,over:true},
+ {t:2.00,label:'Reach for the floor',hips:[.74,.935,-.32],pitch:155,heading:40,roll:-5},
  {t:2.22,label:'Hands to the floor',hips:[.95,.76,-.32],pitch:195,heading:58,roll:-5},
 ];
 const TURN=35; // the head turns this way coming down, so the muzzle stays off the wall
@@ -44,7 +46,7 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // floor as the body sits up: 0.7 cm short, measured), arms in.
  const TUCK={'leg-1':[.06,-.33,-.14],leg1:[.06,-.33,.14],'arm-1':[.28,.04,-.26],arm1:[.28,.04,.12]},TUCK_ELBOW={'arm-1':[.3,0,1],arm1:[.8,0,.4]};
  // fit: this character's clearance corrections; steady: its limbs' bend directions (both solved below, null until then).
- let fit=null,steady=null,turnRef=null;
+ let fit=null,steady=null,turnRef=null,balance=null,onSill=null;
  const posed=(tr,limbs,t)=>posedFrom(tr,limbs,{elbowAway:[1,.15,0],poles:steady&&t!==undefined?id=>steady(id,t):null,offsets:fit?.limb&&t!==undefined?id=>fit.limb(id,t):null,snaps:fit?.plant&&t!==undefined?id=>fit.plant(id,t):null,turns:turnRef&&t!==undefined?b=>turnRef(b,t):null});
  const tuckLimbs=Object.fromEntries(Object.entries(TUCK).map(([k,p])=>[k,k.startsWith('leg')?{f:'pelvis',p}:{f:'chest',p,elbow:TUCK_ELBOW[k]}]));
  const lowest=()=>{probe.update();return probe.lowest();};
@@ -110,7 +112,9 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const posTrack=track(trunkRows.map(r=>[r.t,...r.p.toArray()]),{[iStart]:hipsSpin.toArray(),[iEnd]:endVel.toArray()}),rotTrack=spinTrack(trunkRows.map((r,i)=>[r.t,r.q,i===iStart?axis.clone().multiplyScalar(ROLL.omega):i===iEnd?endSpin:undefined]));
  // The clearance corrections are zero until solved, and held at zero through the roll.
  function trunkAt(t){const s=t>ROLL.start&&t<ROLL_END?s0:shapeAt(t);let hips,hipsQ;if(t>ROLL.start&&t<CATCH_END){const r=rollAt(t);hips=r.hips;hipsQ=r.hipsQ;}else{hips=V(...posTrack(t));hipsQ=rotTrack(t);}
+  if(onSill)hips=hips.clone().add(onSill(t));if(balance)hips=hips.clone().add(balance.shift(t));
   let headQ=s.headQ;if(fit){hips=hips.clone().add(fit.trunk(t));const bow=fit.bow(t);if(bow)hipsQ=hipsQ.clone().multiply(bodyQ(bow*DEG));const [nod,tilt,turn]=fit.head(t);if(nod||tilt||turn)headQ=s.headQ.clone().multiply(relQ(nod,tilt,turn));}
+  const sp=balance?.spin?.(t);if(sp){hipsQ=sp.q.clone().multiply(hipsQ);hips=hips.clone().sub(sp.pivot).applyQuaternion(sp.q).add(sp.pivot);}
   return {hips,hipsQ,...s,headQ,...chestOf(hips,hipsQ,s.spineQ)};}
  // ---- limbs: world targets where planted, the tuck through the roll ----
  const rest={leg:s=>({f:'world',p:body.at0('hoof'+s).toArray(),plant:true}),arm:s=>({f:'chest',p:restWrist(s)})};
@@ -145,6 +149,16 @@ export function createWindowDive(worker,profile={id:'horse'}){
  fit=createClearanceFit(D);fit.solve({body,probe,tails,obstacles:edgeBoxes(WINDOW.edge,WINDOW.half,[[0,WINDOW.sill],[WINDOW.top,2]]),poseAt:t=>body.pose(spec(t),'fit'),
   stage:t=>t<1.0?'near':t<1.9?'over':'far',free:{trunk:held,head:held}});
  buildLimbs();
+ // The belly rests on the sill while the body goes over it. The clearance fit leaves its lowest point 1 to 2 cm above
+ // (its 4 mm margin, its 20 ms samples), where the phantom-wrench rig's contact (1 cm) finds nothing holding the body.
+ // On the rig's own surface every 5 ms through the slide, the trunk is set down to REST above the sill (never lifted),
+ // faded in and out at the ends of the span.
+ {const REST=.003,[a,b]=[1.02,2.06],cp=contactProbe(worker),rows=[];
+  for(let t=a;t<=b+1e-9;t+=.005){body.pose(spec(t),'rest');cp.update();let gap=Infinity;
+   for(let i=0;i<cp.count;i++){const x=cp.x[i],part=cp.names[cp.part[i]];if(x>WINDOW.edge-WINDOW.half&&x<WINDOW.edge+WINDOW.half&&!/hand|hoof|boot|foot|toe/i.test(part))gap=Math.min(gap,cp.y[i]-WINDOW.sill);}
+   const w=smooth(Math.min(t-a,b-t)/.08);rows.push([t,0,gap<Infinity?-Math.max(0,gap-REST)*w:0,0]);}
+  const tr=track(rows,{},{limit:false});onSill=t=>t>a&&t<b?V(...tr(t)):V();}
+ buildLimbs();
  steady=steadyPoles(D,t=>limbSample(body,spec(t)));
  // The limbs are fitted with their steady bend directions, which are then found again for the moved targets.
  // How planted each limb's end is (a palm on a surface, a hoof set on the floor or a face), for the limb fit.
@@ -153,7 +167,11 @@ export function createWindowDive(worker,profile={id:'horse'}){
  fit.solveLimbs({planted});steady=steadyPoles(D,t=>limbSample(body,spec(t)));fit.solvePlants({planted});
  // Twice: the first pass unwraps the palms' yaw blends, the second finds the hands' ways round for those continuous
  // targets (found for the wrapped ones, they named the wrong way where a blend passed 180 degrees: a 47 m/s snap).
- const turnsAt=t=>{body.pose(spec(t),'turns');return body.turns.slice();};turnRef=steadyTurns(D,turnsAt);turnRef=steadyTurns(D,turnsAt);
+ const turnsAt=t=>{body.pose(spec(t),'turns');return body.turns.slice();},turns=()=>{turnRef=null;turnRef=steadyTurns(D,turnsAt);turnRef=steadyTurns(D,turnsAt);};turns();
+ // Balance: the centre of mass planned against what holds the body at each moment, the hips moved to follow it. It
+ // runs on the hands' final turns (a palm's angle decides when it first touches), which are then found again.
+ const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(WINDOW.edge,WINDOW.half,[[0,WINDOW.sill],[WINDOW.top,2]]),pose:t=>body.pose(spec(t),'balance'),com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onSill(t)).toArray()});
+ balance=bal;turns();
  const KEYS=[...PRE.map(k=>({t:k.t,label:k.label})),{t:ROLL.start,label:'Back to the floor'},{t:(ROLL.start+ROLL_END)/2,label:'Roll'},{t:ROLL_END,label:'Sit up'},{t:kneelT,label:'Rise from the crouch'},{t:END,label:'Stand on the tile'}];
  let state=null;
  const api={duration:D,keys:KEYS,body,probe,roll:{rows:rollRows,dir:ROLL.dir,start:ROLL.start,end:ROLL_END},
@@ -161,6 +179,6 @@ export function createWindowDive(worker,profile={id:'horse'}){
   at(t){const time=clamp(t,0,D),P=body.pose(spec(time),time.toFixed(3));body.root.updateMatrixWorld(true);worker.skeleton?.update?.();const [tp,ty]=fit.tail(time);tails.set(tp*DEG,ty*DEG);
    const phase=api.phases.find(p=>time<=p.end)?.label||KEYS.at(-1).label;state={time,phase,com:body.com(P).toArray(),points:Object.fromEntries(Object.entries(P).map(([k,v])=>[k,v.toArray()]))};return state;},
   apply(progress,{origin=[0,0,0],heading=0}={}){const r=api.at(clamp(progress)*D),q=Q().setFromAxisAngle(V(0,1,0),-heading*DEG);body.root.quaternion.copy(q);body.root.position.copy(V(...origin));body.root.updateMatrixWorld(true);worker.skeleton?.update?.();r.worldRoot=body.root.position.toArray();return r;},
-  fit:fit.report,clearance:fit,diagnostics:()=>state,dispose(){tails.restore();body.root.position.set(0,0,0);body.root.quaternion.identity();worker.pose('neutral');}};
+  fit:fit.report,clearance:fit,balance:bal,diagnostics:()=>state,dispose(){tails.restore();body.root.position.set(0,0,0);body.root.quaternion.identity();worker.pose('neutral');}};
  return api;
 }
