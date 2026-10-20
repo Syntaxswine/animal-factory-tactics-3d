@@ -15,7 +15,7 @@ export async function createAnimalPaint(renderer,worker,profile,loader,outfit='n
  const options={species:profile.id,frame:profile.frame,sceneLighting},textures=[],load=async url=>{const t=await loader.loadAsync(url);if(released)t.dispose();else textures.push(t);return t;},base='../assets/characters/lowpoly-proof/';
  // Later outfit loads may fail after projection targets already exist. Keep
  // their ownership here, including textures that finish after a sibling fails.
- function dispose(){if(released)return;released=true;guideHat?.dispose();disposeHawaiian?.();disposeUniform?.();if(disposePaint)disposePaint();else options.paintLayers?.dispose();textures.forEach(t=>t.dispose());}
+ function dispose(){if(released)return;released=true;guideHat?.dispose();disposeHawaiian?.();disposeUniform?.();if(disposePaint)disposePaint();else {options.paintLayers?.dispose();options.preparedProjection?.dispose();}textures.forEach(t=>t.dispose());}
  try{
  const main=await load(profile.paint);
  if(profile.id==='cow')options.paintLayers=cowNeckPaint(await load(COW_NECK_PAINT),renderer);
@@ -26,6 +26,7 @@ export async function createAnimalPaint(renderer,worker,profile,loader,outfit='n
  if(profile.id==='pig-foreman')options.earTexture=await load('../assets/characters/model-references/pig-foreman-turnaround-v2.png');
  if(profile.tailPaint)options.tailTexture=await load(profile.tailPaint);
  options.paintLayers=animalMotionRepairPaint(profile,options.paintLayers);
+ if(loader.prepareProjection)options.preparedProjection=await loader.prepareProjection(worker,profile.frame);
  paint=createModelPaint(renderer,worker,main,options);disposePaint=paint.dispose;
  const tailored=profile.id==='hen'||profile.id==='pig-director';
  disposeUniform=outfit==='red-hats'&&profile.id!=='pig-foreman'?(tailored?await applyTailoredRedHat(renderer,paint.material,await load(base+profile.id+'-red-hat-paint-v1.png'),profile):await applyRedHatUniform(renderer,paint.material,await load(RED_HAT_UNIFORM_PAINT),profile)):null;

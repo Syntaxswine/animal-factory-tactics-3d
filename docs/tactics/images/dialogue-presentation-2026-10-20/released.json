@@ -1,0 +1,32 @@
+{
+  "released": true,
+  "audio": {
+    "workers": 0,
+    "pending": 0,
+    "cacheBytes": 0,
+    "sources": 0,
+    "frames": 0,
+    "audioBytes": 0,
+    "status": "closed"
+  },
+  "portrait": {
+    "renderer": 0,
+    "draws": 154,
+    "drawP95Ms": 1.0999999642372131,
+    "preparationMs": {
+      "context": 12.300000011920929,
+      "mesh": 5.800000011920929,
+      "rig": 3.399999976158142,
+      "projection": 29.19999998807907,
+      "uploadMax": 18,
+      "compile": 29.899999976158142,
+      "ready": 362.5
+    },
+    "geometries": 0,
+    "textures": 0,
+    "triangles": 13583,
+    "calls": 22,
+    "width": 260,
+    "height": 312
+  }
+}
