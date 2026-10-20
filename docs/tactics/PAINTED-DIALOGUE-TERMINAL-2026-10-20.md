@@ -22,7 +22,9 @@ The three runtime textures total **562,498 bytes (549 KiB)** on disk and approxi
 
 - `dist/tactics/battle-dialogue.css` applies the materials to the existing component. The shell slices at 7%, with an 18px desktop rim and 10px narrow-screen rim so hardware does not stretch with the panel.
 - Message surfaces use pale solid-color fallbacks. Controls retain hover, disabled and visible keyboard-focus states. Portrait canvases remain live.
-- The CRT glass is a `::after` overlay on each portrait, using the user's requested **Color Burn at 30% opacity**. `isolation:isolate` confines blending to that portrait, clipping follows its rounded frame, and `pointer-events:none` keeps input passing through. Small status captions stay above the filter. Both animated participant canvases, and their fallback images, receive the same material.
+- Each portrait receives a broad, neutral center light before the CRT materials. `battle-dialogue.js` adds an empty, decorative `.dialogue-face-light`; its CSS radial gradient uses Color Dodge to lift existing highlights, fading to neutral black at the frame edges. The explicit stacking order is **image/canvas → center light → green glass → scanlines → status caption**, so the light cannot wash over the bands.
+- The painted CRT glass uses **Multiply at 20% opacity** in each portrait's `::before` overlay. A separate `::after` overlay draws **2 CSS pixels of dark band, then 2 pixels clear**, also at 20% Multiply. This makes the bands survive the small display size; increasing the opacity of the downsampled texture alone did not make its fine lines visible enough. White is neutral in the scanline layer's Multiply blend, so it leaves the clear rows unchanged. The original raster asset is unchanged.
+- `isolation:isolate` confines all three layers to that portrait, clipping follows its rounded frame, and `pointer-events:none` keeps input passing through. Small status captions stay above the filter. Both animated participant canvases, and their fallback images, receive the same treatment.
 - The integrated dialogue uses the acting merc's name rather than a speaker selector. Participant names wrap in the narrow layout.
 - `tools/build-tactics-pages.mjs` copies the asset directory; the 3D packaging build uses this path too.
 - No dialogue rules, speaker selection logic, saved state or gameplay rules were modified.
@@ -37,9 +39,15 @@ The three runtime textures total **562,498 bytes (549 KiB)** on disk and approxi
 - Disposable browser processes exited and released their automation ports. Captures and receipts are under `artifacts/painted-dialogue/review/`.
 - Independent visual review: **9/10, approved with no remaining blocker**, including the corrected narrow speaker selector and both zoom-equivalent captures. The reply button was hit-tested after scrolling to confirm it remained reachable.
 
-The CRT source asset and its applied portrait overlay each independently received a **9/10** review, with no blockers. The overlay browser checks additionally confirm the decoded texture dimensions, Color Burn/30% on both faces, confined blending and continued animated portrait redraws. The overlay captures and cleanup receipts are under `artifacts/painted-dialogue/crt-review/`.
+The CRT source asset and its applied portrait overlay each independently received a **9/10** review, with no blockers. The original 30% Color Burn captures are under `artifacts/painted-dialogue/crt-review/`; the later 40% pass is under `artifacts/painted-dialogue/crt-40-review/`. Those versions were superseded after the user found their lines too faint at actual display size.
 
-The browser review is reproducible with `tools/review-dialogue-paint.mjs` and Playwright (`PLAYWRIGHT_PATH` may point at a local installation). Set `REVIEW_PACKAGED=1` after building to include the packaged route.
+The final **20% Multiply with 2px bands** passed a fresh packaging build and browser review, including both portrait styles, narrow screens, animated speech and the packaged route. A native-size comparison checked texture-only Color Burn, texture-only Multiply, and explicit bands with either glass blend. Independent review preferred the delivered Multiply/bands version at **9/10**, with visible lines and readable faces at desktop and phone sizes. The banded Color Burn comparison was muddier. Captures and cleanup receipts are under `artifacts/painted-dialogue/crt-bands-review/`; the disposable browser exited and released its port.
+
+The center-light follow-up passed a fresh packaging build and the same browser review, with an explicit check that the light is below the glass and scanlines. Independent review approved it at **9/10**: gently lifted central highlights, no white haze or visible ring, and clear bands at desktop and phone sizes. Native-size before/after captures and the stopped-browser receipt are under `artifacts/painted-dialogue/crt-glow-review/`. The light is static, adds no image assets, and retains the established scanline contrast.
+
+![Both portraits with the final scanline treatment at native display size](review-images/painted-dialogue-portraits.png)
+
+The browser review is reproducible with `tools/review-dialogue-paint.mjs` and Playwright (`PLAYWRIGHT_PATH` may point at a local installation). Set `REVIEW_PACKAGED=1` after building to include the packaged route. `COMPARE_CRT=1` also captures the alternate blend treatments.
 
 ## Local preview lifecycle
 

@@ -5,6 +5,36 @@ Reviewed canonical `af42810`, coding branch `c29241ae`, and animation branch
 terminal `ee4ae6fb`. Animation checks used an isolated checkout of each pushed
 commit. Other agents' working files were not changed.
 
+## CRT scanlines and highlight follow-up: `45cefaf6`
+
+**Approved.** The lines now read clearly at the actual portrait size. Drawing
+2px dark / 2px clear bands in CSS solves the loss of detail from shrinking the
+original texture. The 20% Multiply treatment preserves facial features, and
+the neutral Color Dodge highlight beneath the glass restores central brightness
+without an obvious white patch. Keep this strength.
+
+The integrated version retains both animated participant portraits and the
+acting merc's fixed identity. The artist branch predated that functionality;
+merge reconciliation added its decorative light to both current frames without
+restoring the obsolete speaker selector or single-portrait review API.
+
+Compared with the previous glass overlay, this adds two static CSS layers per
+portrait and no new runtime image downloads, model geometry, lights, or animation
+loop. Blending still adds browser compositing work over changing portrait pixels;
+this is an implementation assessment, not a GPU/FPS measurement. The existing
+CRT WebP is unchanged.
+
+**Validation:** all 60 focused dialogue and packaging tests pass. The packaged
+page was reviewed at 1280×720 and 390×844: scanlines remain visible, faces and text
+remain readable, the narrow dialog has no horizontal overflow, both portrait
+canvases load, and Replay works. Computed styles confirm the light → glass →
+scanline order, isolated blending, and pointer-transparent layers. Browser
+warning/error logs were empty. Leaving dialogue removes both portrait canvases.
+The standalone Playwright review script was reconciled and syntax-checked;
+this integration's browser checks used the in-app browser.
+
+![Integrated CRT scanlines on the speaking and listening portraits](images/oct20-integration-review/dialogue-crt-scanlines.jpg)
+
 ## Blocked movement: approach the barrier, then stop
 
 The player's clarified rule supersedes immediate rejection of an unreachable

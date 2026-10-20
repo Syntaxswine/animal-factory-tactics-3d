@@ -25,6 +25,9 @@ export function createBattleDialogue(options){
  const face=el('div',undefined,'dialogue-face'),fallback=el('img'),faceStatus=el('small');fallback.alt='';face.append(fallback,faceStatus);
  const npcName=el('h3'),npcRole=el('small','Speaking','dialogue-role');npcCard.append(face,npcName,npcRole);
  const mercFace=el('div',undefined,'dialogue-face dialogue-merc-face'),mercImage=el('img'),mercFaceStatus=el('small');mercImage.alt='';mercFace.append(mercImage,mercFaceStatus);
+ for(const frame of [face,mercFace]){
+  const light=el('span',undefined,'dialogue-face-light');light.setAttribute('aria-hidden','true');frame.append(light);
+ }
  const mercName=el('h3'),mercRole=el('small','Listening','dialogue-role');mercName.id='dialogue-speaker';mercCard.append(mercFace,mercName,mercRole);
  const connection=el('div',undefined,'dialogue-connection'),turnLabel=el('span','Local conversation'),signal=el('span','↔','dialogue-signal');signal.setAttribute('aria-hidden','true');connection.append(signal,turnLabel);
  participants.append(npcCard,connection,mercCard);
