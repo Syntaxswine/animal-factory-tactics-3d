@@ -12,10 +12,12 @@ export const bodyQ=(pitch=0,roll=0,yaw=0)=>turn('y',yaw).multiply(turn('x',roll)
 // from the neighbouring slopes. pins fixes a key's slope ({index: [slopes]}). A channel sampled densely from a
 // solver (not authored keys) passes {limit:false}: plain central slopes, since a flat slope forced at every sampled
 // extremum steps the velocity inside one segment (the balance shift turning at a 5 ms key: 2 cm/s, read as 8 m/s^2).
-export function track(rows,pins={},{limit=true}={}){
+// accel fixes a key's acceleration ({index: [accelerations]}): a fall from rest keyed v = 0 and a = -g at both ends
+// is exactly the free-fall parabola between them.
+export function track(rows,pins={},{limit=true,accel={}}={}){
  const keys=rows.map(([t,...p])=>({t,p})),n=keys.length;if(n<2)throw Error('A track needs two keys');
  keys.forEach((k,i)=>{const a=keys[i-1],b=keys[i+1];k.v=pins[i]||k.p.map((x,j)=>{if(!a||!b)return 0;const m=(b.p[j]-a.p[j])/(b.t-a.t);if(!limit)return m;const l=(x-a.p[j])/(k.t-a.t),r=(b.p[j]-x)/(b.t-k.t);if(l*r<=0)return 0;return Math.sign(m)*Math.min(Math.abs(m),3*Math.abs(l),3*Math.abs(r));});});
- keys.forEach((k,i)=>{k.a=k.p.map((x,j)=>i&&i<n-1?(keys[i+1].v[j]-keys[i-1].v[j])/(keys[i+1].t-keys[i-1].t):0);});
+ keys.forEach((k,i)=>{k.a=accel[i]||k.p.map((x,j)=>i&&i<n-1?(keys[i+1].v[j]-keys[i-1].v[j])/(keys[i+1].t-keys[i-1].t):0);});
  return t=>{let i=1;while(i<n-1&&t>keys[i].t)i++;const a=keys[i-1],b=keys[i],dt=b.t-a.t,u=clamp((t-a.t)/dt),u2=u*u,u3=u2*u,u4=u3*u,u5=u4*u;
   const h0=1-10*u3+15*u4-6*u5,h1=u-6*u3+8*u4-3*u5,h2=.5*u2-1.5*u3+1.5*u4-.5*u5,h3=.5*u3-u4+.5*u5,h4=-4*u3+7*u4-3*u5,h5=10*u3-15*u4+6*u5;
   return a.p.map((x,j)=>h0*x+h5*b.p[j]+dt*(h1*a.v[j]+h4*b.v[j])+dt*dt*(h2*a.a[j]+h3*b.a[j]));};
@@ -46,9 +48,23 @@ export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][
  // elbow: an optional bend direction in the chest frame (z mirrored per side), weighted in (elbowW) over the arm's
  // own rule where a key has none.
  const pn=p=>p===true?[0,1,0]:p||null,el=k=>k.elbow,elbow=el(a)||el(b)?(el(a)||el(b)).map((v,j)=>lerp(v,(el(b)||el(a))[j],u)):undefined;
- return {f:'world',p:pa.lerp(pb,u).toArray(),knee,lift:a.lift||0,hoof:has(a)||has(b)?lerp(hp??0,hq??0,u):undefined,hoofW:lerp(has(a)?1:0,has(b)?1:0,u),heading:lerp(a.heading||0,b.heading||0,u),
+ // soft (metres): on a key carried by the trunk next to a floor key, the end's height between them is the smooth
+ // maximum of the two (softplus over soft), and it moves along the floor only while it is off it (g: how far down, held
+ // to zero at the trunk key; the blends are smooth ors, u + (1 - u) g, as a min or max kinked where its sides crossed and
+ // stepped the centre of mass's velocity by 0.1 m/s at a toe-off). Leaving a mark, a hoof stays down until the leg's own reach lifts it; coming down, it
+ // slows onto the mark. Driven at an unreachable mark instead, a leg locks straight and its knee whips as it frees or
+ // catches (14 m/s at a toe-off). The softplus never quite reaches either key, so its gap is taken out at both ends with
+ // (1 - u)^3 and u^3 (a 2 mm step there read as 2,000 m/s^2). Mid-segment the leg's soft reach (zone) widens to 2 soft,
+ // back to the exact one at both keys (stepped at the trunk key, a leg already near its reach jumped): a leg asked past
+ // its reach stays bent, and a falling hoof slows onto the floor over about 3 zones of the hips' travel instead of
+ // stopping in the last centimetre.
+ const sk=a.soft&&b.f==='world'&&b.plant===true?a:b.soft&&a.f==='world'&&a.plant===true?b:null;let p=pa.clone().lerp(pb,u),g=0,zone=0;
+ if(sk){const W=sk===a?pb:pa,F=sk===a?pa:pb,s=sk.soft,d=(F.y-W.y)/s,top=W.y+s*(d>30?d:Math.log1p(Math.exp(d))),v=1-u,
+   down=1/(1+Math.exp(Math.min(30,d)));g=down*(sk===a?1-v*v*v:1-u*u*u);
+  p=pa.clone().lerp(pb,sk===a?u+v*g:u*(1-g));p.y=top+(pa.y-top)*v*v*v+(pb.y-top)*u*u*u;zone=2*s*smooth(Math.min(u,v)/.25);}
+ return {f:'world',p:p.toArray(),knee,lift:a.lift||0,hoof:has(a)||has(b)?lerp(hp??0,hq??0,u):undefined,hoofW:lerp(has(a)?1:0,has(b)?1:0,u),heading:lerp(a.heading||0,b.heading||0,u),
   palm:pal(a)||pal(b)?lerp(pal(a)?a.palm:b.palm,pal(b)?b.palm:a.palm,u):undefined,palmW:lerp(pal(a)?1:0,pal(b)?1:0,u),
-  elbow,elbowW:lerp(el(a)?1:0,el(b)?1:0,u),plantW:lerp(a.plant?1:0,b.plant?1:0,u),plant:[pn(a.plant),pn(b.plant),u]};}
+  elbow,elbowW:lerp(el(a)?1:0,el(b)?1:0,u),plantW:(w=>w+(1-w)*g)(lerp(a.plant?1:0,b.plant?1:0,u)),plant:[pn(a.plant),pn(b.plant),u],zone};}
 // The body pose for a trunk (hips, hipsQ, spineQ, headQ, chest, chestQ) and world limb targets. Knees bend
 // forward of the pelvis; elbows back and out from the chest, or toward elbowAway (world) while a palm is planted.
 // A palm is never placed below the floor. poles(id) may replace a limb's bend direction (steadyPoles), offsets(id)
@@ -61,7 +77,7 @@ export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][
 const outward=(off,w,n)=>{if(!(w>0)||!n)return off.clone();const N=V(...n).normalize(),out=Math.max(0,off.dot(N));return off.clone().multiplyScalar(1-w).addScaledVector(N,out*w);};
 export function posedFrom(tr,limbs,{elbowAway=null,poles=null,offsets=null,snaps=null,turns=null}={}){const legs={},arms={};for(const s of [-1,1]){const l=limbs['leg'+s],a=limbs['arm'+s];
   const kn=l.knee||[1,0,.25],ankle=frameToWorld(tr,l.f,l.p),lo=offsets?.('leg'+s);if(lo){const [na,nb,u]=l.plant||[null,null,0];ankle.add(outward(lo,1,na).multiplyScalar(1-u).addScaledVector(outward(lo,1,nb),u));}const ls=snaps?.('leg'+s);if(ls)ankle.add(ls);
-  legs[s]={ankle:ankle.toArray(),pole:(poles?.('leg'+s)||V(kn[0],kn[1],s*kn[2]).applyQuaternion(tr.hipsQ)).toArray(),q:l.hoof!==undefined?yawQ(l.heading||0).multiply(bodyQ(l.hoof*DEG)):null,w:l.hoofW??1,slack:l.lift||0,ref:turns?.('hoof'+s)||null};
+  legs[s]={ankle:ankle.toArray(),pole:(poles?.('leg'+s)||V(kn[0],kn[1],s*kn[2]).applyQuaternion(tr.hipsQ)).toArray(),q:l.hoof!==undefined?yawQ(l.heading||0).multiply(bodyQ(l.hoof*DEG)):null,w:l.hoofW??1,slack:l.lift||0,zone:l.zone||0,ref:turns?.('hoof'+s)||null};
   const k=a.palm!==undefined?a.palmW??1:0,pole=V(-.3,-.2,s).applyQuaternion(tr.chestQ);if(elbowAway)pole.lerp(V(...elbowAway),k);
   if(a.elbow&&a.elbowW>0)pole.lerp(V(a.elbow[0],a.elbow[1],s*a.elbow[2]).applyQuaternion(tr.chestQ),a.elbowW);const wrist=frameToWorld(tr,a.f,a.p),ao=offsets?.('arm'+s);if(ao)wrist.add(outward(ao,k,[0,1,0]));const as=snaps?.('arm'+s);if(as)wrist.add(as);wrist.y=Math.max(wrist.y,.06);
   arms[s]={wrist:wrist.toArray(),pole:(poles?.('arm'+s)||pole).toArray(),q:a.palm!==undefined?'palm':null,palm:a.palm,w:a.palmW??1,slack:a.lift||0,ref:turns?.('hand'+s)||null,palmRef:turns?.('palm'+s)??null};}
@@ -151,9 +167,9 @@ export function createTraversalBody(worker){
  // Two-bone limb: the elbow or knee bends toward pole, and the rest bend plane maps onto the posed one, so the
  // thigh and forearm turn with the pelvis and shoulder (no candy-wrapper twist). Throws outside native reach.
  let label='';
- function limb(a,b,c,target,pole,slack=0){const ra=rest.get(a),rb=rest.get(b),rc=rest.get(c),start=a.getWorldPosition(V()),l1=ra.distanceTo(rb),l2=rb.distanceTo(rc);let d=target.distanceTo(start);
+ function limb(a,b,c,target,pole,slack=0,zone=0){const ra=rest.get(a),rb=rest.get(b),rc=rest.get(c),start=a.getWorldPosition(V()),l1=ra.distanceTo(rb),l2=rb.distanceTo(rc),S=Math.max(SOFT,zone);let d=target.distanceTo(start);
   if(d>l1+l2+slack+1e-6||d<Math.abs(l1-l2)-1e-6)warnings.push({bone:a.name,label,over:d-(l1+l2)});
-  const knee0=l1+l2-SOFT,x=(d-knee0)/SOFT,tgt=d>knee0?start.clone().addScaledVector(target.clone().sub(start).normalize(),(d=l1+l2-SOFT*(1+x)*Math.exp(-2*x))):target;
+  const knee0=l1+l2-S,x=(d-knee0)/S,tgt=d>knee0?start.clone().addScaledVector(target.clone().sub(start).normalize(),(d=l1+l2-S*(1+x)*Math.exp(-2*x))):target;
   const axis=tgt.clone().sub(start).normalize(),along=(l1*l1-l2*l2+d*d)/(2*d),side=pole.clone().addScaledVector(axis,-pole.dot(axis));if(side.lengthSq()<1e-12)side.copy(V(1,0,0).addScaledVector(axis,-axis.x));side.normalize();
   const mid=start.clone().addScaledVector(axis,along).addScaledVector(side,Math.sqrt(Math.max(0,l1*l1-along*along)));
   const d0a=rb.clone().sub(ra),d0b=rc.clone().sub(rb),n0=d0a.clone().cross(d0b).normalize(),d1a=mid.clone().sub(start),d1b=tgt.clone().sub(mid);
@@ -188,7 +204,7 @@ export function createTraversalBody(worker){
   rec.used=angle/DEG;turns.push(rec);rotate(b,Q().setFromAxisAngle(axis,angle*w).multiply(f));};
  function pose(p,tag=''){label=tag;turns.length=0;root.position.set(0,0,0);root.quaternion.identity();for(const b of worker.bones){b.position.copy(restP.get(b));b.quaternion.copy(restQ.get(b));}
   bones.hips.position.copy(V(...p.hips));bones.hips.quaternion.copy(p.hipsQ);bones.spine.quaternion.copy(p.spineQ||Q());bones.head.quaternion.copy(p.headQ||Q());root.updateMatrixWorld(true);
-  for(const s of [-1,1]){const leg=p.legs?.[s];if(leg){limb(bones['thigh'+s],bones['shin'+s],bones['hoof'+s],V(...leg.ankle),V(...leg.pole),leg.slack||0);endTurn(bones['hoof'+s],leg.q,leg.w,leg.ref);}
+  for(const s of [-1,1]){const leg=p.legs?.[s];if(leg){limb(bones['thigh'+s],bones['shin'+s],bones['hoof'+s],V(...leg.ankle),V(...leg.pole),leg.slack||0,leg.zone||0);endTurn(bones['hoof'+s],leg.q,leg.w,leg.ref);}
    const arm=p.arms?.[s];if(arm){limb(bones['upperArm'+s],bones['forearm'+s],bones['hand'+s],V(...arm.wrist),V(...arm.pole),arm.slack||0);endTurn(bones['hand'+s],arm.q==='palm'?palmFrom(bones['hand'+s],arm.palm,s,arm.palmRef??null):arm.q,arm.w,arm.ref);}}
   root.updateMatrixWorld(true);return points();}
  const world=(b,local)=>V(...local).applyQuaternion(b.getWorldQuaternion(Q())).add(b.getWorldPosition(V()));

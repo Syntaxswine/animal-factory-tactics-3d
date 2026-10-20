@@ -1,6 +1,6 @@
 import {V,Q,DEG,clamp,track,spinTrack,bodyQ,yawQ,relQ,frameToWorld,keyedLimb,posedFrom,steadyPoles,steadyTurns,limbSample,createTraversalBody,createSurfaceProbe} from './traversal-pose.js';
 import {bodyFit,createTailBend,createClearanceFit,edgeBoxes} from './traversal-fit.js';
-import {balanceTraversal} from './traversal-balance.js';
+import {balanceTraversal,contactProbe} from './traversal-balance.js';
 // Side vault over a waist-high wall (docs/tactics/NATURAL-TRAVERSAL.md). Local frame: start on the tile at the
 // origin facing +X, the wall on the edge at X = .5 (faces .42 and .58, top 1.0), finish standing on the next tile's
 // centre (1, 0, 0) facing on. Both hands go on the top; the jump swings the legs up in front and over the wall to the
@@ -33,10 +33,11 @@ export function createWallVault(worker,profile={id:'horse'}){
  const keys=TRUNK.map(k=>({...k,hips:[k.hips[0]-(k.near?back:0),k.stand?fitB.stand(k.hips[1]):k.hips[1],k.hips[2]]}));
  const posTrack=track(keys.map(k=>[k.t,...k.hips])),rotTrack=spinTrack(keys.map(k=>[k.t,yawQ(k.heading||0).multiply(bodyQ((k.pitch||0)*DEG,(k.roll||0)*DEG))]));
  const shape=track(keys.map(k=>[k.t,k.flex||0,k.side||0,k.twist||0,k.nod||0,k.tilt||0,k.turn||0]));
- let fit=null,steady=null,turnRef=null,balance=null,trial=null;
+ let fit=null,steady=null,turnRef=null,balance=null;
  function trunkAt(t){const [flex,side,twist,nod,tilt,turn]=shape(clamp(t,0,D));let hips=V(...posTrack(t)),hipsQ=rotTrack(t),headQ=relQ(nod,tilt,turn);const spineQ=relQ(flex,side,twist);
- if(trial)hips.add(trial);else if(balance)hips.add(balance(t));
+ if(balance)hips.add(balance.shift(t));
   if(fit){hips.add(fit.trunk(t));const bow=fit.bow(t);if(bow)hipsQ=hipsQ.clone().multiply(bodyQ(bow*DEG));const h=fit.head(t);if(h[0]||h[1]||h[2])headQ=headQ.multiply(relQ(...h));}
+  const sp=balance?.spin?.(t);if(sp){hipsQ=sp.q.clone().multiply(hipsQ);hips.sub(sp.pivot).applyQuaternion(sp.q).add(sp.pivot);}
   return {hips,hipsQ,spineQ,headQ,chestQ:hipsQ.clone().multiply(spineQ),chest:hips.clone().add(body.offsets.spine.clone().applyQuaternion(hipsQ))};}
  const restWrist=s=>body.at0('hand'+s).sub(body.at0('spine')).toArray(),ANKLE=fitB.ankle,top=LOW_WALL.top+.07;
  // Hooves: planted in the world where they stand, tucked in the pelvis frame in the air. Palms flat on the top. The
@@ -68,8 +69,8 @@ export function createWallVault(worker,profile={id:'horse'}){
  const turnsAt=t=>{body.pose(spec(t),'turns');return body.turns.slice();},turns=()=>{turnRef=null;turnRef=steadyTurns(D,turnsAt);turnRef=steadyTurns(D,turnsAt);};turns();
  // Balance: the centre of mass planned against what holds the body at each moment, the hips moved to follow it. It
  // runs on the hands' final turns (a palm's angle decides when it first touches), which are then found again.
- const bal=balanceTraversal({duration:D,probe,obstacles:edgeBoxes(LOW_WALL.edge,LOW_WALL.half,[[0,LOW_WALL.top]]),pose:t=>body.pose(spec(t),'balance'),com:P=>body.com(P),setShift:s=>{trial=s;},base:t=>fit.trunk(t).toArray()});
- balance=bal.shift;turns();
+ const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(LOW_WALL.edge,LOW_WALL.half,[[0,LOW_WALL.top]]),pose:t=>body.pose(spec(t),'balance'),com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).toArray()});
+ balance=bal;turns();
  const KEYS=TRUNK.map(k=>({t:k.t,label:k.label}));let state=null;
  const api={duration:D,keys:KEYS,body,probe,obstacle:LOW_WALL,fit:fit.report,clearance:fit,balance:bal,phases:KEYS.slice(0,-1).map((k,i)=>({label:KEYS[i+1].label,start:k.t,end:KEYS[i+1].t})),
   at(t){const time=clamp(t,0,D),P=body.pose(spec(time),time.toFixed(3));body.root.updateMatrixWorld(true);worker.skeleton?.update?.();const [tp,ty]=fit.tail(time);tails.set(tp*DEG,ty*DEG);
