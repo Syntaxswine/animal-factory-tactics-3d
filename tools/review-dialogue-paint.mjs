@@ -60,6 +60,22 @@ try{
  page.on('response',r=>{if(r.status()>=400)errors.push(`${r.status()} ${r.url()}`);});
  await openDialogue(page);
  await capture(page,'desktop-opening');
+ const overlays=await page.locator('.dialogue-face').evaluateAll(faces=>faces.map(face=>{
+  const glass=getComputedStyle(face,'::after');
+  return {mode:glass.mixBlendMode,opacity:glass.opacity,pointerEvents:glass.pointerEvents,isolation:getComputedStyle(face).isolation,image:glass.backgroundImage};
+ }));
+ assert.equal(overlays.length,2,'both dialogue portraits have CRT glass');
+ for(const overlay of overlays){
+  assert.equal(overlay.mode,'color-burn');assert.equal(overlay.opacity,'0.3');
+  assert.equal(overlay.pointerEvents,'none');assert.equal(overlay.isolation,'isolate');
+  assert.match(overlay.image,/crt-green-v1\.webp/);
+ }
+ const texture=await page.evaluate(async()=>{const i=new Image();i.src=new URL('../assets/ui/dialogue-terminal/crt-green-v1.webp',location.href);await i.decode();return [i.naturalWidth,i.naturalHeight];});
+ assert.deepEqual(texture,[1448,1086],'CRT overlay decoded at authored dimensions');
+ await page.locator('.dialogue-participants').screenshot({path:path.join(out,'crt-portraits.png')});
+ const unfiltered=await page.addStyleTag({content:'.battle-dialogue .dialogue-face::after{opacity:0}'});
+ await page.locator('.dialogue-participants').screenshot({path:path.join(out,'portraits-before-crt.png')});
+ await unfiltered.evaluate(node=>node.remove());
  const startMinute=await page.evaluate(()=>window.battle3d.state.clock.minutes);
  const options=page.locator('.dialogue-choice button');
  const inquiry=options.filter({hasText:'What do you know'});
@@ -72,6 +88,17 @@ try{
  await page.locator('.dialogue-preferences').scrollIntoViewIfNeeded();
  await capture(page,'desktop-options');
  await page.getByText('Conversation options',{exact:true}).click();
+ // The overlay must stay above a changing canvas without replacing that canvas.
+ await page.emulateMedia({reducedMotion:'no-preference'});
+ await page.getByText('Conversation options',{exact:true}).click();
+ await page.getByRole('checkbox',{name:'Animate text',exact:true}).check();
+ await page.getByText('Conversation options',{exact:true}).click();
+ const draws=await page.evaluate(()=>window.battle3d.dialogue.presentationResources.portrait.draws);
+ await page.getByRole('button',{name:'Replay',exact:true}).click();
+ await page.waitForFunction(before=>window.battle3d.dialogue.presentationResources.portrait.draws>before+3,draws,{timeout:30000});
+ await page.locator('.dialogue-header').scrollIntoViewIfNeeded();
+ await capture(page,'crt-speaking');
+ await page.getByRole('button',{name:'Show full line',exact:true}).click();
  await page.keyboard.press('Tab');
  const focused=await page.evaluate(()=>({inside:document.querySelector('.battle-dialogue').contains(document.activeElement),outline:getComputedStyle(document.activeElement).outlineStyle}));
  assert.equal(focused.inside,true,'Tab remains in modal');assert.notEqual(focused.outline,'none','keyboard focus visible');
@@ -104,7 +131,7 @@ try{
  await page.getByRole('button',{name:'Leave',exact:true}).click();
  await context.close();
  assert.deepEqual(errors,[]);
- fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({checks,errors,focus:focused},null,2));
+ fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({checks,errors,focus:focused,overlays,texture},null,2));
  console.log(JSON.stringify({captures:checks.length,errors,output:out}));
 }catch(error){
  const body=await reviewPage?.locator('body').innerText().catch(()=>null);

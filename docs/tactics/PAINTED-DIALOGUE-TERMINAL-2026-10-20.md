@@ -12,15 +12,17 @@ This art branch starts from the coder's `c29241a` (`work/editor-3d`), the termin
 | --- | --- | --- | --- |
 | `dist/assets/ui/dialogue-terminal/field-terminal.webp` | Nine-slice outer shell; sampled paint on controls and inset panels | 1254 × 1254 | 240,362 bytes |
 | `dist/assets/ui/dialogue-terminal/message-paper.webp` | Quiet paper for incoming and outgoing message cards | 1254 × 1254 | 252,780 bytes |
+| `dist/assets/ui/dialogue-terminal/crt-green-v1.webp` | Green scanlines and soft curved-glass edge shading over both portraits | 1448 × 1086 | 69,356 bytes |
 
-Both textures were created with the built-in `image_gen` tool. [The asset manifest](../../dist/assets/ui/dialogue-terminal/manifest.json) contains the complete prompts, original generation filenames, dimensions, SHA-256 hashes and processing record. The generated PNG originals remain in Codex's generated-image directory. The delivered images retain the entire generated composition, encoded as WebP at quality 90; no text or controls are baked into them.
+All textures were created with the built-in `image_gen` tool. [The material manifest](../../dist/assets/ui/dialogue-terminal/manifest.json) and [CRT manifest](../../dist/assets/ui/dialogue-terminal/crt-green-v1.json) contain the complete prompts, original generation filenames, dimensions, SHA-256 hashes and processing records. The generated PNG originals remain in Codex's generated-image directory; the reusable CRT PNG is also included beside its WebP. The delivered images retain the entire generated composition, encoded as WebP at quality 90 for metal/paper and 92 for glass; no text or controls are baked into them.
 
-The two textures total **493,142 bytes (482 KiB)** on disk and approximately **12 MiB** if both are decoded into RGBA surfaces. This is not a measurement of browser memory consumption. They are shared by all cards and buttons, not unique per message.
+The three runtime textures total **562,498 bytes (549 KiB)** on disk and approximately **18 MiB** if all are decoded into RGBA surfaces. This is not a measurement of browser memory consumption. They are shared across the interface, not unique per message or portrait. The original CRT PNG is an additional reusable source asset and is not requested by the live UI.
 
 ## Integration
 
 - `dist/tactics/battle-dialogue.css` applies the materials to the existing component. The shell slices at 7%, with an 18px desktop rim and 10px narrow-screen rim so hardware does not stretch with the panel.
-- Message surfaces use pale solid-color fallbacks. Controls retain hover, disabled and visible keyboard-focus states. Portrait canvases remain unobstructed.
+- Message surfaces use pale solid-color fallbacks. Controls retain hover, disabled and visible keyboard-focus states. Portrait canvases remain live.
+- The CRT glass is a `::after` overlay on each portrait, using the user's requested **Color Burn at 30% opacity**. `isolation:isolate` confines blending to that portrait, clipping follows its rounded frame, and `pointer-events:none` keeps input passing through. Small status captions stay above the filter. Both the animated NPC canvas and the mercenary image receive the same material.
 - The narrow layout wraps the “Replying as” label and gives the speaker selector a nonshrinking width.
 - `tools/build-tactics-pages.mjs` copies the asset directory; the 3D packaging build uses this path too.
 - No dialogue rules, speaker selection logic, saved state or gameplay rules were modified.
@@ -34,6 +36,8 @@ The two textures total **493,142 bytes (482 KiB)** on disk and approximately **1
 - Packaged output was loaded separately. A failed-texture-decode run retained usable solid-color surfaces and live text.
 - Disposable browser processes exited and released their automation ports. Captures and receipts are under `artifacts/painted-dialogue/review/`.
 - Independent visual review: **9/10, approved with no remaining blocker**, including the corrected narrow speaker selector and both zoom-equivalent captures. The reply button was hit-tested after scrolling to confirm it remained reachable.
+
+The CRT source asset and its applied portrait overlay each independently received a **9/10** review, with no blockers. The overlay browser checks additionally confirm the decoded texture dimensions, Color Burn/30% on both faces, confined blending and continued animated portrait redraws. The overlay captures and cleanup receipts are under `artifacts/painted-dialogue/crt-review/`.
 
 The browser review is reproducible with `tools/review-dialogue-paint.mjs` and Playwright (`PLAYWRIGHT_PATH` may point at a local installation). Set `REVIEW_PACKAGED=1` after building to include the packaged route.
 

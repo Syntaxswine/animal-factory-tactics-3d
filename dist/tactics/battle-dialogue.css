@@ -2,6 +2,7 @@
  --terminal-ink:#eee7cf;--terminal-muted:#d0cfb5;--terminal-line:#7b8061;--terminal-amber:#edc17d;
  --terminal-paint:url('../assets/ui/dialogue-terminal/field-terminal.webp');
  --terminal-stock:url('../assets/ui/dialogue-terminal/message-paper.webp');
+ --terminal-crt:url('../assets/ui/dialogue-terminal/crt-green-v1.webp');
  width:min(930px,calc(100vw - 24px));max-height:calc(100dvh - 24px);box-sizing:border-box;overflow:auto;
  padding:14px 18px 10px;border:18px solid #555940;border-radius:3px;color:var(--terminal-ink);
  /* Keep the screws and chipped rim at a fixed size as the live panel grows. */
@@ -29,7 +30,9 @@
 .dialogue-participants{display:grid;grid-template-columns:minmax(0,1fr) minmax(80px,.7fr) minmax(0,1fr);align-items:end;gap:14px;margin:0 0 10px}
 .dialogue-participant{min-width:0;display:flex;flex-direction:column;align-items:flex-start;position:relative}
 .dialogue-participant-merc{align-items:flex-end;text-align:right}
-.dialogue-face{position:relative;width:160px;height:132px;background:radial-gradient(ellipse at 40% 35%,#a8b295,#677d68 70%,#3b5449);border:1px solid #89957a;border-radius:5px;overflow:hidden;box-sizing:border-box}
+.dialogue-face{position:relative;isolation:isolate;width:160px;height:132px;background:radial-gradient(ellipse at 40% 35%,#a8b295,#677d68 70%,#3b5449);border:1px solid #89957a;border-radius:5px;overflow:hidden;box-sizing:border-box}
+/* Match the requested Photoshop treatment, confined to the portrait glass. */
+.battle-dialogue .dialogue-face::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:var(--terminal-crt) center/100% 100% no-repeat;mix-blend-mode:color-burn;opacity:.3}
 .dialogue-face canvas{position:absolute;inset:0;width:100%;height:100%}
 .dialogue-face>img{position:absolute;width:100%;height:100%;object-fit:cover;object-position:top;image-rendering:auto}
 .dialogue-face small{position:absolute;bottom:0;left:0;right:0;z-index:2;background:#243b30eb;color:#f8ebc9;font:11px/1.4 system-ui;text-align:center}
