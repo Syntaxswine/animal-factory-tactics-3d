@@ -101,3 +101,18 @@ Babble Lab's local checkout had advanced to `d82c5ab`, adding sample layering an
 ![Industrial message window](images/dialogue-presentation-2026-10-20/terminal-desktop.png)
 
 [Narrow viewport check](images/dialogue-presentation-2026-10-20/terminal-narrow.png)
+
+
+## Follow-up: acting merc and two close 3D portraits
+
+The latest user direction supersedes the earlier speaker selector and cropped HUD image described above. Both corners now use independent 3D rigs, framed from roughly the collarbone up. Only the speaking rig animates; the listener retains a neutral frame. The two owned renderers, short-lived preparation workers and shared current-utterance player are disposed when dialogue closes. Fallback images remain available for missing/failed model assets.
+
+Right-clicking an identified NPC orders the primary selected merc to a reachable, same-elevation spot within 12 tiles with a clear potential sightline. The normal movement engine handles every step; arrival waits for the visible walking animation, then faces the NPC for free. Combat, fright, casualty, lost identification and replacement orders cancel safely. The talk intention is transient across load/restart; normal saved movement and dialogue outcomes remain unchanged. Once open, the acting merc owns the session. To use a different merc, leave and issue a new talk order with them selected.
+
+Selected replies use that merc's persistent-identity voice, independent of the NPC's dialogue-resource voice. The existing command/checkpoint happens at selection; a presentation gate waits for both that command and the merc's utterance before showing or speaking the NPC response. A failed write never speaks the staged result. Retry saves the same candidate without duplicating the outgoing line. Skip, mute, synthesis failure, closing and late callbacks cannot repeat consequences. Ordinary replies remain ordinary navigation.
+
+The Babble runtime remains pinned at 8f1d23c; this change does not incorporate the ongoing upstream TTS upgrade.
+
+Validation for this follow-up: **71 focused tests passed**, covering talk-range boundaries, movement and interrupted approach orders, fixed speaker identity, checkpoint failure/retry, outgoing speech sequencing, stable merc voices, portrait preparation, existing dialogue/tutorial rules and both packaging closures. The final 3D package built successfully. Packaged browser checks confirmed the actual walk-to-talk flow, two live 3D portrait canvases, voiced player replies preceding NPC responses, the guide with both Yakov and Misha, pause/Continue, no speaker selector, and zero portrait canvases after Leave. The 390 × 844 layout had no horizontal overflow. No browser errors or warnings were observed. This was a focused follow-up run, not another full repository suite.
+
+![Both participants use close 3D portraits](images/dialogue-presentation-2026-10-20/two-model-portraits.png)

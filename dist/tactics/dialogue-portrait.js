@@ -6,7 +6,8 @@ import {createRedHatCap} from './red-hat-model.js';
 import {withSpeakingHead,rigSpeakingHead,speakingHeadFile,speechOpen} from './speaking-head.js';
 import {PORTRAIT_FRAMES,portraitSpecies} from './dialogue-presentation-manifest.js';
 
-// One owned renderer per open conversation; never borrows the battle rig or textures.
+// One owned renderer per participant; never borrows the battle rig or textures.
+// Only the speaking participant animates. The listener keeps its neutral frame.
 export class DialoguePortrait {
  constructor(host,{onStatus=()=>{}}={}){
   const started=performance.now();this.timings={};this.drawTimes=[];this.drawCosts=[];

@@ -24,15 +24,16 @@ const select=(h,id)=>h.session.choose(id,option(h,id)?.token);
 test('real map units evaluate the primary speaker, free facing, faction independence and readiness',()=>{
  const s=fresh(),n=npc(s),u=selected(s,'Misha');assert.equal(dialogueReadiness(s,n,u).ok,true);u.heading=270;assert.equal(dialogueReadiness(s,n,u).ok,true);
  const before=structuredClone(s);for(let i=0;i<100;i++)dialogueReadiness(s,n,u);assert.deepEqual(s,before);
- for(const change of [t=>npc(t).hp=0,t=>npc(t).npcFrightened=true,t=>npc(t).character.canTalk=false,t=>npc(t).character.attitude='hostile',t=>t.engaged=true,t=>t.phase='player',t=>t.phase='enemy',t=>t.detected.delete(n.id),t=>selected(t,'Misha').x=0,t=>selected(t,'Misha').z=1,t=>selected(t,'Misha').casualty='captured',t=>selected(t,'Misha').away=true,t=>t.queue.push({}),t=>selected(t,'Misha').hp=0]){const altered=structuredClone(s);change(altered);assert.equal(dialogueReadiness(altered,npc(altered),selected(altered,'Misha')).ok,false);}
+ for(const change of [t=>npc(t).hp=0,t=>npc(t).npcFrightened=true,t=>npc(t).character.canTalk=false,t=>npc(t).character.attitude='hostile',t=>t.engaged=true,t=>t.phase='player',t=>t.phase='enemy',t=>t.detected.delete(n.id),t=>selected(t,'Misha').x=-1,t=>selected(t,'Misha').z=1,t=>selected(t,'Misha').casualty='captured',t=>selected(t,'Misha').away=true,t=>t.queue.push({}),t=>selected(t,'Misha').hp=0]){const altered=structuredClone(s);change(altered);assert.equal(dialogueReadiness(altered,npc(altered),selected(altered,'Misha')).ok,false);}
  assert.equal(dialogueReadiness(s,n,u,{busy:true}).ok,false);assert.equal(dialogueReadiness(s,n,u,{sight:()=>false}).ok,false);
  n.character.faction='player';n.character.attitude='hostile';assert.equal(dialogueReadiness(s,n,u).ok,true);n.hostileToPlayer=true;assert.equal(dialogueReadiness(s,n,u).ok,false);
  const worker=s.units.find(u=>u.name==='Yard worker');worker.x=13;worker.y=13;s.detected.add(worker.id);assert.equal(dialogueReadiness(s,worker,selected(s,'Yakov')).ok,true);
 });
-test('speaker changes and information navigation are transient; effects are written once',async()=>{
+test('the acting merc owns the session; changing speakers requires leaving; effects are written once',async()=>{
  const h=setup(),s=h.state,before=structuredClone(s);h.session.show(npc(s),selected(s,'Yakov'));assert.equal(option(h,'offer'),undefined);
- h.session.switchSpeaker(dialogueActorId(selected(s,'Anya')));assert.equal(option(h,'offer').check.chance,20);
- h.session.switchSpeaker(dialogueActorId(selected(s,'Misha')));assert.equal(option(h,'offer').check.chance,40);assert.equal(s.selected,before.selected);
+ h.session.show(npc(s),selected(s,'Misha'));assert.equal(option(h,'offer'),undefined,'another show call cannot replace the actor');
+ h.session.close();h.session.show(npc(s),selected(s,'Anya'));assert.equal(option(h,'offer').check.chance,20);
+ h.session.close();h.session.show(npc(s),selected(s,'Misha'));assert.equal(option(h,'offer').check.chance,40);assert.equal(s.selected,before.selected);
  await select(h,'ask');await select(h,'facts_back');assert.deepEqual(s,before);assert.equal(h.writes,0);
  const choice=option(h,'creator');await Promise.all([h.session.choose('creator',choice.token),h.session.choose('creator',choice.token)]);assert.equal(h.writes,1);assert.equal(s.dialogue.checkSeed,before.dialogue.checkSeed);
  await select(h,'plan_back');assert.equal(option(h,'offer').check.chance,50);await select(h,'offer');assert.equal(h.writes,2);

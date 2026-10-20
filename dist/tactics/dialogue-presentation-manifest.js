@@ -19,6 +19,15 @@ export function resolvePresentation(npc,definition,nodeId,text,lineIndex=0){
  const entry=LINE_DELIVERY[definition.id+'/'+nodeId+'/'+lineIndex],delivery=entry?.textHash===textHash(text)?entry:null;
  return {id,version:profile.version,label:profile.label,voice:{...profile.voice,...profile.language,...(id==='neutral'?{seed:parseInt(textHash(identity),16)%9999}:{}),...(delivery?.voice||{})},language:profile.language,revision:PRESENTATION_VERSION};
 }
-// Framing in the model's authored dimensions, including ears, hats and horns.
-export const PORTRAIT_FRAMES={horse:{center:[.06,1.43,0],height:.80},donkey:{center:[.02,1.40,0],height:.92},sheep:{center:[.03,1.43,0],height:.78},hen:{center:[.03,1.36,0],height:.76},goat:{center:[.03,1.48,0],height:.94},bull:{center:[.03,1.43,0],height:1.0},cow:{center:[.03,1.43,0],height:.94},rabbit:{center:[.02,1.52,0],height:1.05},dog:{center:[.02,1.43,0],height:.85},skunk:{center:[.03,1.43,0],height:.84},'pig-foreman':{center:[.04,1.40,0],height:.84},'pig-director':{center:[.04,1.45,0],height:.90}};
+export function resolveMercPresentation(merc){
+ // A reply must never inherit the NPC's dialogue-resource voice. Give uncast
+ // mercs a repeatable voice from their persistent identity, not their name/skin.
+ const identity=merc.characterId||merc.character?.id||merc.campaignId;
+ const profile=resolvePresentation(merc,{id:''},'',''),seed=parseInt(textHash(identity||'merc'),16);
+ return profile.id!=='neutral'?profile:{...profile,id:'merc-'+textHash(identity||'merc'),version:1,
+  voice:{...profile.voice,seed:seed%9999,pitch:140+seed%71,tract:.96+(seed%13)/100},label:'Merc voice'};
+}
+// Collarbone-up framing in authored model units, with room for ears and hats.
+// Lower edges sit near 1.2 rather than the old armpit-height 1.0.
+export const PORTRAIT_FRAMES={horse:{center:[.06,1.46,0],height:.52},donkey:{center:[.02,1.51,0],height:.62},sheep:{center:[.03,1.46,0],height:.52},hen:{center:[.03,1.34,0],height:.52},goat:{center:[.03,1.46,0],height:.54},bull:{center:[.03,1.48,0],height:.60},cow:{center:[.03,1.45,0],height:.54},rabbit:{center:[.02,1.50,0],height:.62},dog:{center:[.02,1.48,0],height:.56},skunk:{center:[.03,1.46,0],height:.52},'pig-foreman':{center:[.04,1.40,0],height:.50},'pig-director':{center:[.04,1.47,0],height:.54}};
 export function portraitSpecies(npc){return npc.species==='donkey-guide'?'donkey':npc.species;}

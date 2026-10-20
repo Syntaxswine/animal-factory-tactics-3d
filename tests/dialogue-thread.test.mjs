@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DialogueThread,dialogueTurn} from '../dist/tactics/dialogue-thread.js';
+import {DialogueThread,DialogueReplyGate,dialogueTurn} from '../dist/tactics/dialogue-thread.js';
 
 test('a message thread preserves both sides and the merc who actually chose each reply',()=>{
  const thread=new DialogueThread();thread.line('intro','Plateau guide','Did you bring the explosives?');
  const reply=thread.reply('Misha','We do not have them.');thread.settle(reply.id,true);
  thread.line('crate','Plateau guide','There is a crate in the crash sector.');
- // The current merc picker is now Anya; it must not rewrite Misha's sent message.
+ // A later conversation's speaker must not rewrite a previous sent message.
  const other=thread.reply('Anya','We will get them.');thread.settle(other.id,true);
  assert.deepEqual(thread.entries.map(e=>[e.side,e.who,e.text]),[
   ['npc','Plateau guide','Did you bring the explosives?'],['merc','Misha','We do not have them.'],
@@ -40,9 +40,27 @@ test('rejected choices remain visibly unsent, and bounded history keeps the late
 
 test('the speaking portrait follows playback, then hands the floor to the replying merc',()=>{
  assert.equal(dialogueTurn({status:'playing',hasReplies:true}).side,'npc');
- assert.equal(dialogueTurn({status:'playing',busy:true,hasReplies:true}).side,'merc');
+ assert.equal(dialogueTurn({status:'playing',side:'merc',busy:true,hasReplies:true}).side,'merc');
+ assert.equal(dialogueTurn({status:'playing',side:'merc'}).merc,'Speaking');
  assert.equal(dialogueTurn({status:'done',hasReplies:true}).side,'merc');
  assert.equal(dialogueTurn({status:'fallback',hasReplies:true}).merc,'Your reply');
  assert.equal(dialogueTurn({status:'paused',hasReplies:true}).side,null);
  assert.equal(dialogueTurn({status:'done',hasReplies:false}).side,null);
+});
+
+test('NPC responses wait for both the merc performance and commit, in either completion order',()=>{
+ for(const first of ['speech','commit']){
+  const gate=new DialogueReplyGate();assert.equal(gate.start(1),true);assert.equal(gate.start(2),false);
+  if(first==='speech')gate.speech(1,'done');else gate.settle(1);
+  assert.equal(gate.release(),false);
+  if(first==='speech')gate.settle(1);else gate.speech(1,'done');
+  assert.equal(gate.release(),true);assert.equal(gate.release(),false);assert.equal(gate.active,false);
+ }
+});
+test('pause/loading do not advance replies; Skip or unavailable audio can; close rejects late completions',()=>{
+ const gate=new DialogueReplyGate();gate.start(1);gate.settle(1);
+ for(const state of ['loading','playing','paused']){gate.speech(1,state);assert.equal(gate.release(),false);}
+ gate.speech(1,'fallback');assert.equal(gate.release(),true);
+ gate.start(2);gate.clear();gate.start(3);gate.settle(2);gate.speech(2,'done');assert.equal(gate.release(),false);
+ gate.settle(3);gate.speech(3,'done');assert.equal(gate.release(),true);
 });

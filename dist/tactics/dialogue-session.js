@@ -8,7 +8,8 @@ export class DialogueSession {
  constructor({source,catalog,commit,onChange=()=>{}}){Object.assign(this,{source,catalog,commit,onChange,open:false,busy:false,error:'',pending:null});}
  show(npc,speaker){if(this.busy&&!this.open)return;if(this.open){this.onChange();return;}this.npcId=dialogueActorId(npc);this.speakerId=dialogueActorId(speaker);this.presentationSequence=(this.presentationSequence||0)+1;this.nodeId=null;this.response=null;this.error='';this.pending=null;this.open=true;this.minute=this.source().state.clock.minutes;this.refresh();this.onChange();}
  close(){this.open=false;if(!this.busy)this.pending=null;this.onChange();}
- switchSpeaker(id){if(this.busy)return;const snapshot=this.source(),u=snapshot.state.units.find(u=>dialogueActorId(u)===id),npc=this.actors().npc;if(!dialogueReadiness(snapshot.state,npc,u,{busy:snapshot.busy}).ok)return;this.speakerId=id;this.pending=null;this.error='';this.onChange();}
+ // The merc who completed the talk order owns this session. To use another
+ // merc's skills or personality, leave and approach with that merc.
  actors(){const {state}=this.source();return {npc:state.units.find(u=>dialogueActorId(u)===this.npcId),speaker:state.units.find(u=>dialogueActorId(u)===this.speakerId)};}
  refresh(){
   const {state,dialogue,busy}=this.source(),{npc,speaker}=this.actors(),ready=dialogueReadiness(state,npc,speaker,{busy});
