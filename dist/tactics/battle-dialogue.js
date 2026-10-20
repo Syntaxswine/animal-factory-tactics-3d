@@ -21,30 +21,31 @@ export function createBattleDialogue(options){
  const header=el('header',undefined,'dialogue-header'),heading=el('div'),eyebrow=el('small','AF / FIELD TERMINAL','dialogue-eyebrow'),title=el('h2','Conversation');title.id='dialogue-title';
  const close=button('×',leave);close.setAttribute('aria-label','Leave dialogue');heading.append(eyebrow,title);header.append(heading,close);
 
- const participants=el('div',undefined,'dialogue-participants'),npcCard=el('section',undefined,'dialogue-participant dialogue-participant-npc'),mercCard=el('section',undefined,'dialogue-participant dialogue-participant-merc');
+ const stage=el('div',undefined,'dialogue-stage'),npcCard=el('section',undefined,'dialogue-participant dialogue-participant-npc'),mercCard=el('section',undefined,'dialogue-participant dialogue-participant-merc');
  const face=el('div',undefined,'dialogue-face'),fallback=el('img'),faceStatus=el('small');fallback.alt='';face.append(fallback,faceStatus);
  const npcName=el('h3'),npcRole=el('small','Speaking','dialogue-role');npcCard.append(face,npcName,npcRole);
  const mercFace=el('div',undefined,'dialogue-face dialogue-merc-face'),mercImage=el('img'),mercFaceStatus=el('small');mercImage.alt='';mercFace.append(mercImage,mercFaceStatus);
  const mercName=el('h3'),mercRole=el('small','Listening','dialogue-role');mercName.id='dialogue-speaker';mercCard.append(mercFace,mercName,mercRole);
- const connection=el('div',undefined,'dialogue-connection'),turnLabel=el('span','Local conversation'),signal=el('span','↔','dialogue-signal');signal.setAttribute('aria-hidden','true');connection.append(signal,turnLabel);
- participants.append(npcCard,connection,mercCard);
+ const turnLabel=el('span','Local conversation','dialogue-accessible');
 
  const transcript=el('section',undefined,'dialogue-transcript');transcript.setAttribute('aria-label','Conversation messages');transcript.tabIndex=0;
  const currentMessage=el('article',undefined,'dialogue-message dialogue-message-npc dialogue-message-current'),messageName=el('small',undefined,'dialogue-message-name');
  const speech=el('p',undefined,'dialogue-speech'),accessible=el('span',undefined,'dialogue-accessible'),visible=el('span');accessible.setAttribute('aria-live','polite');visible.setAttribute('aria-hidden','true');speech.append(accessible,visible);
  const playback=el('div',undefined,'dialogue-playback'),skip=button('Show full line',()=>player?.skip()),replay=button('Replay',()=>{context=readSettings().dialogueVolume>0?dialogueAudio():null;if(player){player.context=context;player.replay(readSettings());}}),resume=button('Continue',()=>{context=readSettings().dialogueVolume>0?dialogueAudio():null;if(player){player.context=context;player.resume();}}),playbackStatus=el('small');
- playbackStatus.setAttribute('role','status');playback.append(skip,replay,resume,playbackStatus);
- const response=el('p',undefined,'dialogue-result'),currentStatus=el('small',undefined,'dialogue-message-state');currentMessage.append(messageName,speech,playback,response,currentStatus);
+ playbackStatus.setAttribute('role','status');playbackStatus.className='dialogue-playback-status';playback.append(skip,replay,resume);
+ const response=el('p',undefined,'dialogue-result'),currentStatus=el('small',undefined,'dialogue-message-state');currentMessage.append(messageName,speech,response,currentStatus);
+ stage.append(npcCard,transcript,mercCard,turnLabel);
  const composer=el('section',undefined,'dialogue-composer'),composerTitle=el('h3','Choose a reply'),choices=el('div',undefined,'dialogue-choices'),notes=el('div');composerTitle.id='dialogue-reply-title';composer.setAttribute('aria-labelledby',composerTitle.id);composer.append(composerTitle,choices,notes);
  const last=el('details',undefined,'dialogue-last'),lastText=el('p');last.append(el('summary','Last saved response'),lastText);
- const prefsPane=el('details',undefined,'dialogue-options'),prefs=createDialoguePreferences({onChange:next=>{settings=next;if(next.dialogueVolume>0){context=dialogueAudio();if(player)player.context=context;}player?.settingsChanged(next);paintFrame(lastState);}});prefsPane.append(el('summary','Conversation options'),prefs.root);
- prefsPane.addEventListener('toggle',()=>{if(prefsPane.open)player?.pause();paintFrame(lastState);});
- const footer=el('footer',undefined,'dialogue-footer'),meta=el('small','Time paused · No AP cost'),exit=button('Leave',leave);footer.append(meta,exit);
- dialog.append(header,participants,transcript,composer,last,prefsPane,footer);
+ const prefsPane=el('section',undefined,'dialogue-options-panel'),prefs=createDialoguePreferences({onChange:next=>{settings=next;if(next.dialogueVolume>0){context=dialogueAudio();if(player)player.context=context;}player?.settingsChanged(next);paintFrame(lastState);}});prefsPane.id='dialogue-preferences';prefsPane.hidden=true;prefsPane.setAttribute('aria-label','Conversation options');prefsPane.append(prefs.root);
+ const prefsToggle=button('Conversation options',()=>setPreferences(prefsPane.hidden));prefsToggle.className='dialogue-options-button';prefsToggle.setAttribute('aria-controls',prefsPane.id);prefsToggle.setAttribute('aria-expanded','false');
+ function setPreferences(open){prefsPane.hidden=!open;prefsToggle.setAttribute('aria-expanded',String(open));if(open)player?.pause();else if(prefsPane.contains(document.activeElement))prefsToggle.focus();paintFrame(lastState);}
+ const footer=el('footer',undefined,'dialogue-footer'),meta=el('small','Time paused · No AP cost','dialogue-time'),exit=button('Leave',leave);exit.className='dialogue-leave';footer.append(meta,playback,prefsToggle,exit,playbackStatus,prefsPane);
+ dialog.append(header,stage,composer,last,footer);
 
  function stopPresentation(){generation++;for(const side of ['npc','merc']){portraits[side]?.dispose();portraits[side]=null;}player?.dispose();player=null;replyGate.clear();lineKey=null;lastState=lastView=null;pendingReply=activeMessage=null;lastTurn=null;}
  function leave(){session.close();}
- function endSession(){stopPresentation();if(dialog.open)dialog.close();prefsPane.open=false;}
+ function endSession(){stopPresentation();if(dialog.open)dialog.close();prefsPane.hidden=true;prefsToggle.setAttribute('aria-expanded','false');}
  const guard=e=>{if(session.busy&&!dialog.contains(e.target)){e.preventDefault();e.stopImmediatePropagation();}};
  for(const type of ['pointerdown','pointerup','click','contextmenu','keydown'])document.addEventListener(type,guard,true);
  dialog.addEventListener('cancel',e=>{e.preventDefault();leave();});
@@ -79,7 +80,7 @@ export function createBattleDialogue(options){
   }
   updateTranscript(true);
   player??=new DialoguePerformance({context,onFrame:paintFrame});
-  player.begin({key,text:entry.text,profile,settings});if(document.hidden||prefsPane.open)player.pause();
+  player.begin({key,text:entry.text,profile,settings});if(document.hidden||!prefsPane.hidden)player.pause();
  }
  function newLine(view){
   lineKey=view.presentationKey;const entry=thread.line(lineKey,view.npc.name,view.line);
@@ -100,7 +101,7 @@ export function createBattleDialogue(options){
   for(const w of words){const shown=!settings.dialogueTextAnimation||frame.revealed>w.c0||['done','fallback'].includes(frame.status);w.ink.style.visibility=shown?'visible':'hidden';const active=settings.dialogueTextAnimation&&frame.active&&w.c0<frame.active.c1&&w.c1>frame.active.c0;w.ink.classList.toggle('active',!!active);}
   const animate=settings.dialoguePortraits!=='static'&&!motionPreference()?.matches;
   for(const side of ['npc','merc'])portraits[side]?.draw(animate&&side===speechSide?frame.opening:0);
-  skip.hidden=['done','fallback','idle'].includes(frame.status);resume.hidden=frame.status!=='paused';replay.disabled=session.busy||replyGate.active;resume.disabled=prefsPane.open;
+  skip.hidden=['done','fallback','idle'].includes(frame.status);resume.hidden=frame.status!=='paused';replay.disabled=session.busy||replyGate.active;resume.disabled=!prefsPane.hidden;
   const message=frame.error||(frame.status==='loading'?'Preparing voice; the full line is available.':frame.status==='paused'?'Paused · Continue or Replay when ready.':'');if(playbackStatus.textContent!==message)playbackStatus.textContent=message;
   updateTurn();
   if(speechSide==='merc'&&replyGate.active&&['done','fallback'].includes(frame.status)){replyGate.speech(activeMessage,frame.status);const mine=generation;queueMicrotask(()=>{if(mine===generation)finishReply();});}
