@@ -643,6 +643,67 @@ none. The traversal test passes 10 of 12 on the branch: the goat's head is
 
 That choice sets the reach's keys, then the two species.
 
+### 2026-10-20 (physics balance, fourth part): the window's reach braced on the wall
+
+The user: "Use option 1: the hands brace on the outside wall as the body tips and walk down it to the floor. Re-key the
+reach around that, then fix the goat and the pig director."
+
+The window's balance is now on this branch, with the third part's sill, hands, trunk and roll, and the brace:
+- **The right hand braces on the far face.** At 1.42 s it goes off the sill top, over the edge and onto the face. It slides
+  down the face under the body's weight to 32 cm above the floor, stays there until the left hand is down, then takes one
+  step onto its floor mark (2.08 to 2.16 s). Pressed on the face it pushes the body out from the wall below the edge,
+  which slows the tip.
+- **It slides rather than stepping down the face.** Lifted mid-way for a step, it was off the wall for 50 ms just as the
+  tip needed slowing: 55% of body weight.
+- **Its elbow points out to the right, along the wall,** set in the world. Bent away from the wall, the arm went 7.5 cm
+  into the chest as the shoulder neared the wall. Set out to the side in the chest's frame, it turned into the wall as
+  the chest tipped.
+- **The left hand lands at 2.04 to 2.08 s, while the right still braces.** Its mark moved 6 cm toward the body, still
+  behind the rolling back. At the old mark it was out of reach until 2.10 s, so the right hand held the body alone on
+  the wall for 60 ms, which a palm on a wall cannot do (110 to 120 N·m it cannot give). Closer still, the left elbow
+  folded to 172° at the roll.
+
+**New in `traversal-pose.js`:**
+- `face`: a palm pressed flat on a face, turned the least way to face it, and blended with a floor palm from one to the
+  other. Switched at the key, the hand jumped 1.4 cm.
+- `arcTo`: the direction of a step's lift. A palm stepping between two places on a face comes off it on the way.
+- `elbowTo`: an elbow's bend direction set in the world.
+- The vault and climb pose bit for bit the same.
+
+**The species.**
+- **Pig director.** Keyed at the horse's hips, its belly went through the sill as it went down the far face, and the
+  clearance fit, lifting it 19 to 26 cm, still left it 5.7 cm in. A deeper body now hangs further out from the far face
+  by its extra depth (`far`: 16 to 19 cm for the pigs, under 1 cm for the rest). It is left 1.2 cm in, within its 3 cm.
+- **Goat.** Its ears dipped 2.3 cm into the floor for 40 ms while the clearance fit swung its head from one turn to the
+  next. The head now tucks a little as the hands land (nod 10°), and is left 0.2 cm in.
+- `tests/natural-traversal.test.mjs` passes 12/12.
+
+The gate on the horse, same rig. The committed window is the unbalanced one.
+
+| | committed | first pass (bab4ab8) | now |
+|---|---|---|---|
+| over the limit (wrench outside impacts) | 1.71 s of 3.68 | 0.79 s | 0.36 s |
+| slide over | 113% | 12% | 0% |
+| reach for the floor | 106% | 33% | 21% (one peak, 1.80 s) |
+| down the wall | | | 0% |
+| hands to the floor | 77% | 55% | 40% |
+| back to the floor | 179% | 26% | 32% |
+| roll | 247% | 328% | 32% |
+| sit up | 153% | 183% | 38% |
+| rise from the crouch | 366% | 72% | 45% |
+| required force in contact | 30.1 x BW | 17.4 x BW | 5.0 x BW |
+| external velocity jumps | 3 | 5 | none |
+| joint range | elbows 151 and 155° | left elbow 157° | elbows 160 and 151°, knees 156° |
+
+A palm on a face can push, not pull, though the rig lets any hand on an obstacle grip. A copy of the rig where a hand on
+a face only pushes reads 0.39 s over, against 0.36 s: the plan leans on little it could not have.
+
+**Left in the window:**
+- the right hand leaving the wall at 2.09 s (40%): the body turns from heading 46 to 58° on the left hand alone;
+- back to the floor, the roll, the sit-up and the rise (32 to 45%);
+- the left elbow folds to 160° and whips at 10 m/s as the roll starts;
+- the knees reach 156° in the rise.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

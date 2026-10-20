@@ -38,7 +38,7 @@ export const relQ=(flex=0,side=0,twist=0)=>Q().setFromAxisAngle(V(0,1,0),twist*D
 export const frameToWorld=(tr,frame,p)=>frame==='world'?V(...p):frame==='pelvis'?V(...p).applyQuaternion(tr.hipsQ).add(tr.hips):V(...p).applyQuaternion(tr.chestQ).add(tr.chest);
 export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;const [ta,a]=keys[i],[tb,b]=keys[Math.min(keys.length-1,i+1)];
  const u=tb>ta?smooth((t-ta)/(tb-ta)):1,pa=frameToWorld(tr,a.f,a.p),pb=frameToWorld(tr,b.f,b.p),lerp=(x,y,k)=>x+(y-x)*k;
- const has=k=>k.hoof!==undefined,hp=has(a)?a.hoof:b.hoof,hq=has(b)?b.hoof:a.hoof,pal=k=>k.palm!==undefined;
+ const has=k=>k.hoof!==undefined,hp=has(a)?a.hoof:b.hoof,hq=has(b)?b.hoof:a.hoof,pal=k=>k.palm!==undefined,fac=k=>k.face!==undefined;
  // knee: an optional bend direction in the pelvis frame ([x, y, z], z mirrored per side), blended like the point.
  // lift: on a key a foot or hand pushes off from, how far the straightened limb may leave its mark until the next key
  // (a toe-off as the trunk rises, a hand letting go early), without counting as a shortfall. plant: a foot set on the
@@ -48,6 +48,8 @@ export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][
  // elbow: an optional bend direction in the chest frame (z mirrored per side), weighted in (elbowW) over the arm's
  // own rule where a key has none.
  const pn=p=>p===true?[0,1,0]:p||null,el=k=>k.elbow,elbow=el(a)||el(b)?(el(a)||el(b)).map((v,j)=>lerp(v,(el(b)||el(a))[j],u)):undefined;
+ // elbowTo: a bend direction in the world instead (an arm braced on a wall while the chest turns past it).
+ const et=k=>k.elbowTo,elbowTo=et(a)||et(b)?(et(a)||et(b)).map((v,j)=>lerp(v,(et(b)||et(a))[j],u)):undefined;
  // soft (metres): on a key carried by the trunk next to a floor key, the end's height between them is the smooth
  // maximum of the two (softplus over soft), and it moves along the floor only while it is off it (g: how far down, held
  // to zero at the trunk key; the blends are smooth ors, u + (1 - u) g, as a min or max kinked where its sides crossed and
@@ -65,10 +67,14 @@ export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][
   p=pa.clone().lerp(pb,sk===a?u+v*g:u*(1-g));p.y=top+(pa.y-top)*v*v*v+(pb.y-top)*u*u*u;zone=Math.max(0,2*s-.015)*smooth(Math.min(u,v)/.25);}
  // arc (metres): on a key, the end rises that much mid-way from the key before, 64 u^3 (1 - u)^3 (C2 at both keys): a
  // step in one swing, where a mid-step key stopped the hoof in the air and the swing leg's turning read as 640 N·m.
- if(b.arc){const q=tb>ta?clamp((t-ta)/(tb-ta))*(1-clamp((t-ta)/(tb-ta))):0;p.y+=b.arc*64*q*q*q;}
+ // arcTo: the way it lifts, if not up (a hand stepping down a wall comes off it, along the wall's outward normal).
+ // A palm stepping between two places on a face comes off it on the way (its pressed weight falls to none mid-step, or
+ // the clearance fit keeps it on the face and it slides).
+ let lifted=0;if(b.arc){const q=tb>ta?clamp((t-ta)/(tb-ta))*(1-clamp((t-ta)/(tb-ta))):0,h=b.arc*64*q*q*q;lifted=64*q*q*q;if(b.arcTo)p.addScaledVector(V(...b.arcTo),h);else p.y+=h;}
  return {f:'world',p:p.toArray(),knee,lift:a.lift||0,hoof:has(a)||has(b)?lerp(hp??0,hq??0,u):undefined,hoofW:lerp(has(a)?1:0,has(b)?1:0,u),heading:lerp(a.heading||0,b.heading||0,u),
   palm:pal(a)||pal(b)?lerp(pal(a)?a.palm:b.palm,pal(b)?b.palm:a.palm,u):undefined,palmW:lerp(pal(a)?1:0,pal(b)?1:0,u),
-  elbow,elbowW:lerp(el(a)?1:0,el(b)?1:0,u),plantW:(w=>w+(1-w)*g)(lerp(a.plant?1:0,b.plant?1:0,u)),plant:[pn(a.plant),pn(b.plant),u],zone};}
+  face:fac(a)?a.face:fac(b)?b.face:undefined,faceW:lerp(fac(a)?1:0,fac(b)?1:0,u)*(1-lifted),
+  elbow,elbowW:lerp(el(a)?1:0,el(b)?1:0,u),elbowTo,elbowToW:lerp(et(a)?1:0,et(b)?1:0,u),plantW:(w=>w+(1-w)*g)(lerp(a.plant?1:0,b.plant?1:0,u)),plant:[pn(a.plant),pn(b.plant),u],zone};}
 // The body pose for a trunk (hips, hipsQ, spineQ, headQ, chest, chestQ) and world limb targets. Knees bend
 // forward of the pelvis; elbows back and out from the chest, or toward elbowAway (world) while a palm is planted.
 // A palm is never placed below the floor. poles(id) may replace a limb's bend direction (steadyPoles), offsets(id)
@@ -82,9 +88,17 @@ const outward=(off,w,n)=>{if(!(w>0)||!n)return off.clone();const N=V(...n).norma
 export function posedFrom(tr,limbs,{elbowAway=null,poles=null,offsets=null,snaps=null,turns=null}={}){const legs={},arms={};for(const s of [-1,1]){const l=limbs['leg'+s],a=limbs['arm'+s];
   const kn=l.knee||[1,0,.25],ankle=frameToWorld(tr,l.f,l.p),lo=offsets?.('leg'+s);if(lo){const [na,nb,u]=l.plant||[null,null,0];ankle.add(outward(lo,1,na).multiplyScalar(1-u).addScaledVector(outward(lo,1,nb),u));}const ls=snaps?.('leg'+s);if(ls)ankle.add(ls);
   legs[s]={ankle:ankle.toArray(),pole:(poles?.('leg'+s)||V(kn[0],kn[1],s*kn[2]).applyQuaternion(tr.hipsQ)).toArray(),q:l.hoof!==undefined?yawQ(l.heading||0).multiply(bodyQ(l.hoof*DEG)):null,w:l.hoofW??1,slack:l.lift||0,zone:l.zone||0,ref:turns?.('hoof'+s)||null};
-  const k=a.palm!==undefined?a.palmW??1:0,pole=V(-.3,-.2,s).applyQuaternion(tr.chestQ);if(elbowAway)pole.lerp(V(...elbowAway),k);
-  if(a.elbow&&a.elbowW>0)pole.lerp(V(a.elbow[0],a.elbow[1],s*a.elbow[2]).applyQuaternion(tr.chestQ),a.elbowW);const wrist=frameToWorld(tr,a.f,a.p),ao=offsets?.('arm'+s);if(ao)wrist.add(outward(ao,k,[0,1,0]));const as=snaps?.('arm'+s);if(as)wrist.add(as);wrist.y=Math.max(wrist.y,.06);
-  arms[s]={wrist:wrist.toArray(),pole:(poles?.('arm'+s)||pole).toArray(),q:a.palm!==undefined?'palm':null,palm:a.palm,w:a.palmW??1,slack:a.lift||0,ref:turns?.('hand'+s)||null,palmRef:turns?.('palm'+s)??null};}
+  // A palm on a floor (palm) or pressed on a face (face): how planted, and against which normal; from one to the other
+  // both weigh in (switched at the key, the hand jumped 1.4 cm).
+  const kp=a.palm!==undefined?a.palmW??1:0,kf=a.face?a.faceW:0,k=kp+kf,pole=V(-.3,-.2,s).applyQuaternion(tr.chestQ);if(elbowAway)pole.lerp(V(...elbowAway),k);
+  if(a.elbow&&a.elbowW>0)pole.lerp(V(a.elbow[0],a.elbow[1],s*a.elbow[2]).applyQuaternion(tr.chestQ),a.elbowW);if(a.elbowTo&&a.elbowToW>0)pole.lerp(V(...a.elbowTo),a.elbowToW);
+  const wrist=frameToWorld(tr,a.f,a.p),ao=offsets?.('arm'+s);
+  if(ao){if(!kf)wrist.add(outward(ao,kp,[0,1,0]));else wrist.add(outward(ao,k,[0,1,0]).multiplyScalar(kp/k).add(outward(ao,k,a.face).multiplyScalar(kf/k)));}const as=snaps?.('arm'+s);if(as)wrist.add(as);wrist.y=Math.max(wrist.y,.06);
+  // A palm pressed on a face (face: its outward normal) turns the least way to face it; from a face to a floor the two
+  // turns blend by their weights.
+  const both=a.palm!==undefined&&a.face;
+  arms[s]={wrist:wrist.toArray(),pole:(poles?.('arm'+s)||pole).toArray(),q:both?'face+palm':a.palm!==undefined?'palm':a.face?'face':null,palm:a.palm,face:a.face,palmW:a.palmW,faceW:a.faceW,
+   w:both?a.palmW+a.faceW:a.palm===undefined&&a.face?a.faceW:a.palmW??1,slack:a.lift||0,ref:turns?.('hand'+s)||null,palmRef:turns?.('palm'+s)??null};}
  return {hips:tr.hips.toArray(),hipsQ:tr.hipsQ,spineQ:tr.spineQ,headQ:tr.headQ,legs,arms};}
 // Bend directions that do not flip. A two-bone limb bends toward its pole; where the limb's axis swings through the
 // pole, the bend would change sides within a frame (a knee or elbow snapping across). Sampled every step seconds, the
@@ -204,6 +218,10 @@ export function createTraversalBody(worker){
   if(!(w>0)||heading===undefined)return least;if(w>=1)return palmDown(heading);
   const fing=V(0,-1,0).applyQuaternion(least),yaw=Math.atan2(fing.z,fing.x)/DEG;let delta=((heading-yaw)%360+540)%360-180;
   if(ref!==null)delta+=360*Math.round((ref-delta)/360);turns.push({bone:'palm'+s,delta});return palmDown(yaw+w*delta);};
+ // A palm pressed flat on a face whose outward normal is n: the least turn that brings the palm (the hand's +X) to face it.
+ const faceFrom=(b,n)=>{const f=b.getWorldQuaternion(Q()),x=V(1,0,0).applyQuaternion(f);return Q().setFromUnitVectors(x,V(...n).normalize().negate()).multiply(f);};
+ const handTurn=(b,arm,s)=>arm.q==='palm'?palmFrom(b,arm.palm,s,arm.palmRef??null):arm.q==='face'?faceFrom(b,arm.face):
+  arm.q==='face+palm'?faceFrom(b,arm.face).slerp(palmFrom(b,arm.palm,s,arm.palmRef??null),arm.palmW/(arm.palmW+arm.faceW)):arm.q;
  // A partial turn goes the short way round unless ref (an axis kept continuous over time, steadyTurns) says the long
  // way: past 180 degrees the short way switches sides, and the hand would jump.
  const endTurn=(b,q,w=1,ref=null)=>{if(!q||w<=0)return;const f=b.getWorldQuaternion(Q());if(w>=1){rotate(b,q);return;}
@@ -214,7 +232,7 @@ export function createTraversalBody(worker){
  function pose(p,tag=''){label=tag;turns.length=0;root.position.set(0,0,0);root.quaternion.identity();for(const b of worker.bones){b.position.copy(restP.get(b));b.quaternion.copy(restQ.get(b));}
   bones.hips.position.copy(V(...p.hips));bones.hips.quaternion.copy(p.hipsQ);bones.spine.quaternion.copy(p.spineQ||Q());bones.head.quaternion.copy(p.headQ||Q());root.updateMatrixWorld(true);
   for(const s of [-1,1]){const leg=p.legs?.[s];if(leg){limb(bones['thigh'+s],bones['shin'+s],bones['hoof'+s],V(...leg.ankle),V(...leg.pole),leg.slack||0,leg.zone||0);endTurn(bones['hoof'+s],leg.q,leg.w,leg.ref);}
-   const arm=p.arms?.[s];if(arm){limb(bones['upperArm'+s],bones['forearm'+s],bones['hand'+s],V(...arm.wrist),V(...arm.pole),arm.slack||0);endTurn(bones['hand'+s],arm.q==='palm'?palmFrom(bones['hand'+s],arm.palm,s,arm.palmRef??null):arm.q,arm.w,arm.ref);}}
+   const arm=p.arms?.[s];if(arm){limb(bones['upperArm'+s],bones['forearm'+s],bones['hand'+s],V(...arm.wrist),V(...arm.pole),arm.slack||0);endTurn(bones['hand'+s],handTurn(bones['hand'+s],arm,s),arm.w,arm.ref);}}
   root.updateMatrixWorld(true);return points();}
  const world=(b,local)=>V(...local).applyQuaternion(b.getWorldQuaternion(Q())).add(b.getWorldPosition(V()));
  // The rig's named points, read from the posed bones.
