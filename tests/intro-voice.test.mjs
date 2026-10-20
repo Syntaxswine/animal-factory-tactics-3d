@@ -16,15 +16,18 @@ class Media {
  removeEventListener(name,fn){if(this.events.get(name)===fn)this.events.delete(name);}
 }
 
-test('the selected Bright hen WAV and its cues match the existing scene',()=>{
- const wav=read('audio/bright-hen.wav'),cues=JSON.parse(read('audio/bright-hen.cues.json'));
- assert.equal(createHash('sha256').update(wav).digest('hex'),'4b02caa53544c7da12e6c8ce8888684ec9f125faf757a64f7620fd8796c53d06');
+test('the blended Bright hen export and its cues match the existing scene',()=>{
+ const wav=read('audio/bright-hen-blended.wav'),cues=JSON.parse(read('audio/bright-hen-blended.cues.json'));
+ assert.equal(createHash('sha256').update(wav).digest('hex'),'b1262ef9df9a9d3f4ce4b013b54405d9c213c7c4e03070d31590865aa6f0683a');
+ assert.ok(new URL(HEN_VOICE.src).pathname.endsWith('/audio/bright-hen-blended.wav'));
  assert.equal(wav.toString('ascii',0,4),'RIFF');assert.equal(wav.toString('ascii',8,12),'WAVE');
  assert.equal(wav.readUInt16LE(20),1);assert.equal(wav.readUInt16LE(22),1);
  assert.equal(wav.readUInt32LE(24),44100);assert.equal(wav.readUInt16LE(34),16);
  near(wav.readUInt32LE(40)/wav.readUInt32LE(28),HEN_VOICE.duration);
- assert.equal(cues.text,HANDLER_LINE);assert.equal(cues.voice.name,'bright-hen');
- assert.deepEqual(JSON.parse(read('audio/bright-hen.voice.json')),cues.voice);
+ assert.equal(cues.text,HANDLER_LINE);assert.equal(cues.morph.name,'morphed-bright-hen');
+ assert.deepEqual(JSON.parse(read('audio/bright-hen-blended.morph.json')),cues.morph);
+ assert.equal(cues.morph.settings.amount,.7);assert.equal(cues.morph.sliceLayer.level,.18);
+ assert.deepEqual(cues.morph.sources.map(s=>s.id),['bright-hen','sliced-bright-hen']);
  near(cues.sceneStart,HEN_VOICE.start);near(cues.audioDuration,HEN_VOICE.duration);
  let at=0,index=0;
  for(const [syllable,duration] of LINE_SPEECH.syllables){

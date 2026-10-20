@@ -1,21 +1,24 @@
 # Intro, storyboard 01–07: approach, ambush and the cut into the crash
 
-## Bright hen placeholder voice — October 15, 2026
+## Blended Bright hen placeholder voice — October 20, 2026
 
-The user selected **Bright hen** from Babble Lab for the handler's line. The
-whole-intro player now uses that exact voice-only WAV at **4.95 s**, with the
-existing 14-syllable beak timing and a subtitle. This is a placeholder, not
-approval of a final soundtrack. Music, effects and campaign-start integration
-remain separate work.
+The user selected the **blended Bright hen** from Babble Lab for the handler's
+line, replacing the original October 15 formant-only take. The current export
+uses **70% timbre morph** and an **18% sliced-audio layer**. The whole-intro
+player uses that exact voice-only WAV at **4.95 s**. Its cues match the existing
+14-syllable beak timing and subtitle. Music, effects and campaign-start
+integration remain separate work.
 
-The take lives in `dist/tactics/intro-sprites/audio/bright-hen.wav`; the adjacent
-voice and cue JSON files retain the generation settings and timing for a later
-replacement. Source: `babble-lab/audition/animal-factory/bright-hen.wav`, selected
-October 15. SHA-256:
-`4b02caa53544c7da12e6c8ce8888684ec9f125faf757a64f7620fd8796c53d06`.
+The take lives in `dist/tactics/intro-sprites/audio/bright-hen-blended.wav`;
+the adjacent morph recipe and cue JSON files preserve its settings, source
+provenance and timing. Source:
+`babble-lab/audition/animal-factory/morphed-bright-hen.wav`, selected October 20.
+SHA-256:
+`b1262ef9df9a9d3f4ce4b013b54405d9c213c7c4e03070d31590865aa6f0683a`.
 It is 2.93 s of mono 44.1 kHz PCM, 258,470 bytes. Playback gain is 0.7, close to
-the audition's default matched listening level. No radio filter or synthesis
-engine is added to the game.
+the audition's default matched listening level. The blend is baked into the WAV;
+playback needs no runtime morph processing. The explicit blended filename keeps
+the previous recording's URL out of browser caches for the active intro track.
 
 `voice.js` follows the player's timeline through pause, seek, restart, speed
 changes and mute; leaving or hiding the page pauses playback. Failed audio

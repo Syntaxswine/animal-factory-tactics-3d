@@ -1,11 +1,11 @@
 import {HANDLER_LINE,LINE_SPEECH} from './ambush.js';
 
-// User-selected Babble Lab take, 2026-10-15. The WAV starts at the first
-// syllable; the audition's one-second scene preroll is not part of this clip.
+// Blended Babble Lab Bright hen export selected 2026-10-20: 70% timbre morph
+// and an 18% sliced layer. Voice-only WAV; no audition scene preroll.
 export const HEN_VOICE=Object.freeze({
- src:new URL('./audio/bright-hen.wav',import.meta.url).href,
+ src:new URL('./audio/bright-hen-blended.wav',import.meta.url).href,
  start:LINE_SPEECH.start,duration:2.93,text:HANDLER_LINE,
- label:'Bright hen · placeholder voice',volume:.7,
+ label:'Bright hen · blended placeholder voice',volume:.7,
 });
 
 // One media element follows the existing visual timeline. No audio synthesis,

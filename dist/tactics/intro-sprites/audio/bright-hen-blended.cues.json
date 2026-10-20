@@ -1,16 +1,134 @@
 {
   "text": "Your mission is to take out the central relay station.",
-  "voice": {
-    "name": "bright-hen",
-    "pitch": 350,
-    "tract": 1.28,
-    "range": 7,
-    "lilt": 0.2,
-    "tilt": 0.57,
-    "oq": 0.5,
-    "breath": 0.04,
-    "rough": 0.07,
-    "nasal": 0.2
+  "morph": {
+    "babbleMorph": 2,
+    "algorithm": "cepstral-envelope-v1",
+    "name": "morphed-bright-hen",
+    "text": "Your mission is to take out the central relay station.",
+    "sampleRate": 44100,
+    "take": 0,
+    "timing": {
+      "cues": [
+        [
+          0,
+          0.2
+        ],
+        [
+          0.2,
+          0.37
+        ],
+        [
+          0.37,
+          0.56
+        ],
+        [
+          0.56,
+          0.71
+        ],
+        [
+          0.71,
+          0.84
+        ],
+        [
+          0.84,
+          1.08
+        ],
+        [
+          1.08,
+          1.34
+        ],
+        [
+          1.44,
+          1.56
+        ],
+        [
+          1.56,
+          1.76
+        ],
+        [
+          1.76,
+          1.93
+        ],
+        [
+          1.93,
+          2.1
+        ],
+        [
+          2.1,
+          2.34
+        ],
+        [
+          2.34,
+          2.56
+        ],
+        [
+          2.56,
+          2.86
+        ]
+      ]
+    },
+    "settings": {
+      "amount": 0.7,
+      "windowSize": 2048,
+      "hopSize": 256,
+      "envelopeMs": 1,
+      "fadeMs": 2,
+      "peakLimit": 0.9
+    },
+    "sliceLayer": {
+      "level": 0.18,
+      "algorithm": "rms-overlay-v1"
+    },
+    "bank": {
+      "name": "glades-of-arcadia",
+      "source": "glades-of-arcadia.mp3",
+      "note": "Glades of Arcadia score; owner-provided Suno track, non-commercial per project README.",
+      "file": "voice.bank.wav",
+      "sampleRate": 32000,
+      "segmentSeconds": 0.25,
+      "segments": 913,
+      "looks": {
+        "tonal": 138,
+        "struck": 590,
+        "wash": 175,
+        "quiet": 10
+      }
+    },
+    "sourceAlignment": "pad-end-with-silence",
+    "sources": [
+      {
+        "role": "carrier",
+        "id": "bright-hen",
+        "label": "Bright hen",
+        "engine": "formant",
+        "clip": "bright-hen.wav",
+        "voice": {
+          "name": "bright-hen",
+          "pitch": 350,
+          "tract": 1.28,
+          "range": 7,
+          "lilt": 0.2,
+          "tilt": 0.57,
+          "oq": 0.5,
+          "breath": 0.04,
+          "rough": 0.07,
+          "nasal": 0.2
+        }
+      },
+      {
+        "role": "colour",
+        "id": "sliced-bright-hen",
+        "label": "Sliced hen · bright",
+        "engine": "sampler",
+        "clip": "sliced-bright-hen.wav",
+        "voice": {
+          "name": "sliced-bright-hen",
+          "pitch": 280,
+          "lilt": 0.22,
+          "bank": "glades-of-arcadia"
+        }
+      }
+    ]
   },
   "take": 0,
   "timing": {
@@ -490,6 +608,135 @@
     {
       "t": 2.86,
       "chars": 54
+    }
+  ],
+  "bank": {
+    "name": "glades-of-arcadia",
+    "source": "glades-of-arcadia.mp3",
+    "note": "Glades of Arcadia score; owner-provided Suno track, non-commercial per project README.",
+    "file": "voice.bank.wav",
+    "sampleRate": 32000,
+    "segmentSeconds": 0.25,
+    "segments": 913,
+    "looks": {
+      "tonal": 138,
+      "struck": 590,
+      "wash": 175,
+      "quiet": 10
+    }
+  },
+  "used": [
+    {
+      "unit": 0,
+      "segment": 17,
+      "look": "tonal",
+      "origin": 23,
+      "time": 5.886,
+      "pieces": 3
+    },
+    {
+      "unit": 2,
+      "segment": 121,
+      "look": "tonal",
+      "origin": 42,
+      "time": 10.58,
+      "pieces": 2
+    },
+    {
+      "unit": 3,
+      "segment": 799,
+      "look": "wash",
+      "origin": 334,
+      "time": 83.5,
+      "pieces": 2
+    },
+    {
+      "unit": 5,
+      "segment": 120,
+      "look": "tonal",
+      "origin": 375,
+      "time": 93.75,
+      "pieces": 2
+    },
+    {
+      "unit": 7,
+      "segment": 199,
+      "look": "struck",
+      "origin": 176,
+      "time": 44.175,
+      "pieces": 2
+    },
+    {
+      "unit": 9,
+      "segment": 568,
+      "look": "struck",
+      "origin": 811,
+      "time": 202.892,
+      "pieces": 3
+    },
+    {
+      "unit": 11,
+      "segment": 34,
+      "look": "tonal",
+      "origin": 80,
+      "time": 20.136,
+      "pieces": 3
+    },
+    {
+      "unit": 13,
+      "segment": 795,
+      "look": "wash",
+      "origin": 418,
+      "time": 104.548,
+      "pieces": 2
+    },
+    {
+      "unit": 15,
+      "segment": 856,
+      "look": "wash",
+      "origin": 462,
+      "time": 115.5,
+      "pieces": 2
+    },
+    {
+      "unit": 16,
+      "segment": 469,
+      "look": "struck",
+      "origin": 572,
+      "time": 143.172,
+      "pieces": 2
+    },
+    {
+      "unit": 18,
+      "segment": 101,
+      "look": "tonal",
+      "origin": 190,
+      "time": 47.596,
+      "pieces": 2
+    },
+    {
+      "unit": 19,
+      "segment": 125,
+      "look": "tonal",
+      "origin": 41,
+      "time": 10.25,
+      "pieces": 3
+    },
+    {
+      "unit": 21,
+      "segment": 887,
+      "look": "wash",
+      "origin": 790,
+      "time": 197.5,
+      "pieces": 2
+    },
+    {
+      "unit": 22,
+      "segment": 800,
+      "look": "wash",
+      "origin": 316,
+      "time": 79.08,
+      "pieces": 3
     }
   ]
 }
