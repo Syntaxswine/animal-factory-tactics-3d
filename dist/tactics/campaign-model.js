@@ -1,4 +1,5 @@
 import {initializeDialogue,pinDialogue} from './dialogue-state.js';
+import {tutorialRoleErrors,tutorialCrateLoot} from './tutorial-mission.js';
 import {trackMapGeometry} from './map-geometry-cache.js';
 import {localEnvironmentProfile} from './environment-regions.js';
 import {createGame,refresh,alive,incapacitated,abandonCasualties,walkable} from './core/engine.js';
@@ -42,7 +43,7 @@ export function initializeSector(c,index){
  const sector=sectorRecord(c,index);if(sector.initialized)return sector;
  const assignment=c.assignments[index];if(!assignment)fail('No local map is assigned to this sector yet.');
  const s=createGame((c.seed+index)>>>0,assignment.map,false,c.difficulty,{cast:[],social:true,awareness:true,statSystem:true,rosterSeed:c.seed});startEncounterClock(s);s.clock={...c.clock};
- delete s.dialogue;const residents=s.units;s.units=[];s.loot=structuredClone(assignment.map.campaignLoot||[]);
+ delete s.dialogue;const residents=s.units;s.units=[];s.loot=[...tutorialCrateLoot(assignment.map),...structuredClone(assignment.map.campaignLoot||[])];
  for(const [i,u]of residents.entries()){
   const authored=u.characterId||'guard_'+i,id=c.id+':sector:'+index+':'+authored;
   register(c,u,id,{kind:'sector',sector:index});sector.references[authored]=id;
@@ -72,6 +73,7 @@ export function createCampaign(content,{id='campaign_'+crypto.randomUUID(),diffi
  return bindCampaign(c);
 }
 export function validateAssignments(c){
+ const roleErrors=tutorialRoleErrors({props:Object.values(c.assignments).flatMap(a=>a.map.props||[])});if(roleErrors.length)fail(roleErrors.join(' '));
  for(const [index,a]of Object.entries(c.assignments)){
   if(!c.overmap.sectors[index]||typeof a.templateId!=='string'||!a.templateId||typeof a.variant!=='string'||![0,90,180,270].includes(a.orientation)||!a.entries?.length)fail('Invalid sector assignment.');
   const errors=validateMap(a.map);if(errors.length)fail('Invalid '+a.map.name+': '+errors.join(' '));

@@ -1,3 +1,4 @@
+import {tutorialCrateLoot} from '../tutorial-mission.js';
 import {initializeDialogue,ensureDialogueUnitIds,pinDialogue} from '../dialogue-state.js';
 import {climbingPreview,rollClimb} from '../climbing.js';
 import {failedClimbFall,cancelClimbOrders} from '../fall-damage.js';
@@ -130,7 +131,7 @@ export function createGame(seed=1947,definition=factoryMap(),detect=true,difficu
  if(definition.name==='Factory test')s.loot[0].items.push({type:'weapon',kind:'flamethrower',rounds:4},{type:'ammo',kind:'flamethrower',count:4});
  if(options.statSystem){s.rules.statSystem=true;for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id],authored={...(u.team==='squad'?options.cast?.[u.id]?.stats:{}),...source?.stats};if(Number.isFinite(source?.perception)&&!Number.isFinite(authored.perception))authored.perception=source.perception;initializeStats(u,authored);starterTools(u);}}
  if(s.rules.awareness)for(const u of s.units){const source=u.team==='guard'?definition.guards[u.id-s.units.filter(v=>v.team==='squad').length]:definition.starts[u.id];if(source?.towerPost)u.towerPost=structuredClone(source.towerPost);u.perception=u.stats?u.stats.perception:Number.isFinite(source?.perception)?Math.max(0,Math.min(100,source.perception)):50;}
- ensureDialogueUnitIds(s);trackMapGeometry(s);if(detect)refresh(s);log(s,`Local map ready / ${definition.guards.length} guards.`);return s;
+ s.loot.push(...tutorialCrateLoot(definition));ensureDialogueUnitIds(s);trackMapGeometry(s);if(detect)refresh(s);log(s,`Local map ready / ${definition.guards.length} guards.`);return s;
 }
 // Visibility and projectiles share solid geometry, but bodies do not occlude sight.
 export function zoneVisible(s,a,b,zone='torso'){a={...a,cliffSupport:rampSupportAt(s,a)||a.cliffSupport};b={...b,cliffSupport:rampSupportAt(s,b)||b.cliffSupport};

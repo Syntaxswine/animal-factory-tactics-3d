@@ -1,3 +1,4 @@
+import {tutorialObjective} from './tutorial-mission.js';
 import {createBattleDialogue} from './battle-dialogue.js';
 import {loadDialogueCatalog,resolveDialogue} from './dialogue-data.js';
 import {initializeDialogue,pinDialogue} from './dialogue-state.js';
@@ -28,7 +29,7 @@ import {captureEncounter,restoreEncounter} from './encounter-save.js';
 import {getSave,putSave,checkpointSave,saveToken} from './save-store.js';
 import {createSavePanel} from './save-panel.js';
 import {nearbyLoot,visibleLoot} from './battle-inventory.js';
-import {nearbyInteractions,performInteraction} from './field-actions.js';
+import {nearbyInteractions,performInteraction,interactionPreview} from './field-actions.js';
 import {createCharacterScreen} from './character-screen.js';
 import {AIM_LEVELS,shotAim,supportsAim} from './aim-levels.js';
 import {climbPreview,performClimb,performTraversal,nearbyBoundaryClimbs} from './ladder-actions.js';
@@ -208,6 +209,7 @@ function contextChoices(info,merc){
   entries.push(entry('face','Face this direction','↻',{kind:'face',point},ready&&!facing,facing?'Already facing this direction.':'','Free · '+u.name));
   entries.push(entry('ground-shot','Shoot at this tile','⊕',{kind:'ground-shot',point},ready&&!!WEAPONS[u.weapon].mag,!WEAPONS[u.weapon].mag?'Equip a firearm or area weapon.':'','Plan with '+WEAPONS[u.weapon].name));
  }
+ if(!merc)for(const target of info.props||[])if(tutorialObjective(target)&&intactSite(target)){const p=interactionPreview(state,u,'plant-explosives',target);entries.push(entry('plant-explosives','Plant explosives','*',{kind:'interact',entry:{kind:'plant-explosives',target}},free&&p.ok,p.reason,(p.cost?p.cost+' AP':'1 minute')+' / uses 1 charge'));}
  if(info.loot.length){
   const picks=info.loot.map((pile,i)=>{const p=pickupRoute(state,u,pile),warning=walkingWarning([{name:u.name,hazards:walkingHazards(state,p.path||[])}]),note=p.cost?'Approach: '+p.cost+' AP'+(combatCosts(state)&&p.cost>u.ap?' · exceeds current AP':''):'Open nearby inventory';return entry('pickup-'+i,pile.container?.name||(pile.body===undefined?'Pick up items':'Search body'),warning?'⚠':'▤',{kind:'pickup',pile},free&&p.ok,p.reason,[warning,note].filter(Boolean).join(' · '));});
   if(picks.length===1)entries.push(picks[0]);else entries.push({id:'items',label:'Items on this tile',icon:'▤',children:picks});
@@ -239,7 +241,11 @@ function runContextAction(a){
 canvas.addEventListener('contextmenu',e=>{
  e.preventDefault();if(dialogueUI.open){dialogueUI.refresh();return;}if(storageBusy||characterScreen.open||savePanel.open||shotDialog.open)return;
  const b=canvas.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top,hit=renderer.pick(x,y,width,height,level),unit=state.units.find(u=>u.id===hit),pile=renderer.pickLoot(x,y,width,height,level);
+ const scenery=renderer.pickScenery(x,y,width,height,level),site=scenery?.structure&&state.props.find(p=>siteId(p)===scenery.id);
  const point=unit?{x:unit.x,y:unit.y,z:unit.z||0,towerPost:unit.towerPost,cliffSupport:unit.cliffSupport}:pile||battleFloorPoint(view,x,y,level),info=inspectBattleTile(state,point);if(!info)return;
+ // A tall model can project beyond its footprint. Keep the clicked ground tile
+ // for movement, while offering actions on the actual visible structure.
+ if(!unit&&site&&!info.props.includes(site)){info.props.push(site);info.objects.push(scenery.name);}
  drag=null;clearHover();renderer.wallXray.setPointer(null,null);flamePlanner.cancel();grenadePlanner.cancel();
  if(unit?.team!=='squad'&&unit?.character?.canTalk&&state.detected.has(unit.id)){contextMenu.close();closeStances();dialogueUI.show(unit,selected());return;}
  const merc=unit?.team==='squad'?unit:null;if(merc&&selectable(merc)){if(merc.id!==state.selected)selectMerc(merc.id);else selectedIds=new Set([merc.id]);}
@@ -339,7 +345,7 @@ function prepareDialogueResources(){
  const owner=campaign?.campaign||state,d=initializeDialogue(owner);
  for(const p of [...(state.definition.starts||[]),...(state.definition.guards||[])])if(p.character?.canTalk&&p.character.dialogueRef){try{pinDialogue(d,resolveDialogue(state.definition,d,p.character.dialogueRef,dialogueCatalog));}catch{/* Missing author resources are reported in the conversation, never replaced by a guessed line. */}}
 }
-dialogueUI=createBattleDialogue({catalog:dialogueCatalog,source:()=>({state,dialogue:(campaign?.campaign||state).dialogue,busy:renderer?.busy}),
+dialogueUI=createBattleDialogue({catalog:dialogueCatalog,source:()=>({state,campaign:campaign?.campaign,dialogue:(campaign?.campaign||state).dialogue,busy:renderer?.busy}),
  onChange:()=>{frameClock.reset();lastUI='';},onLoadLatest:()=>loadGame(campaign?'continue':'auto').catch(e=>message(e.message)),
  commit:async(next,expected)=>{
   if(storageBusy)throw Error('A checkpoint is already in progress.');storageBusy=true;frameClock.reset();

@@ -11,7 +11,7 @@ export function inspectBattleTile(s,p){
  const {x,y,z}=point,suffix=z?':'+z:'',surfaces=known?[structureInfo(s,point),...['e:'+x+':'+y,'e:'+(x-1)+':'+y,'s:'+x+':'+y,'s:'+x+':'+(y-1)].map(k=>structureInfo(s,{edge:k+suffix}))].filter(Boolean):[];
  return {point,known,title:known?label(terrainAt(s,point.x,point.y,point.z)):'Unexplored tile',
   location:`Column ${point.x+1} · Row ${point.y+1} · Level ${point.z+1}`,
-  structures:surfaces.map(p=>({id:p.id,kind:p.kind,hp:p.hp,maxHp:p.maxHp})),objects:[...props.map(p=>label(p.kind)),...surfaces.map(p=>`${label(p.kind)} ${p.hp}/${p.maxHp} HP`)],loot:visible?s.loot.filter(p=>p.x===point.x&&p.y===point.y&&(p.z||0)===point.z&&visibleLoot(s,p)):[]};
+  props:visible?props:[],structures:surfaces.map(p=>({id:p.id,kind:p.kind,hp:p.hp,maxHp:p.maxHp})),objects:[...props.map(p=>label(p.kind)),...surfaces.map(p=>`${label(p.kind)} ${p.hp}/${p.maxHp} HP`)],loot:visible?s.loot.filter(p=>p.x===point.x&&p.y===point.y&&(p.z||0)===point.z&&visibleLoot(s,p)):[]};
 }
 
 // A small keyboard-accessible popup with drill-in submenus. Labels come from

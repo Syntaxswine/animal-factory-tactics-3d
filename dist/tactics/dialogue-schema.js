@@ -1,5 +1,6 @@
 import {STAT_DEFINITIONS} from './character-stats.js';
 import {WHEEL} from './core/archetypes.js';
+import {DIALOGUE_VARIABLES} from './dialogue-variables.js';
 
 export const dialogueToken=/^[a-zA-Z][a-zA-Z0-9_-]{0,79}$/;
 export const plain=v=>!!v&&Object.getPrototypeOf(v)===Object.prototype;
@@ -23,13 +24,15 @@ function inspectDialogue(d){
  const errors=[],warnings=[],bad=s=>errors.push(s),keys=(v,allowed,label)=>{if(!plain(v)){bad(label+' must be an object.');return false;}for(const k of Object.keys(v))if(!allowed.includes(k)||['__proto__','constructor','prototype'].includes(k))bad(label+': unknown field '+k+'.');return true;};
  const token=(v,label)=>{if(typeof v!=='string'||!dialogueToken.test(v)||['constructor','prototype','__proto__'].includes(v))bad(label+': invalid identifier.');};
  const line=(s,label)=>{if(typeof s!=='string'||!s.trim()||s.length>2000)bad(label+': expected 1–2000 characters.');};
- if(!keys(d,['schemaVersion','id','version','facts','entry','nodes'],'Dialogue'))return {errors,warnings};
+ if(!keys(d,['schemaVersion','id','version','facts','variables','entry','nodes'],'Dialogue'))return {errors,warnings};
  try{if(new TextEncoder().encode(JSON.stringify(d)).length>262144)bad('Dialogue exceeds 256 KiB.');}catch{bad('Dialogue must be JSON data.');return {errors,warnings};}
  token(d.id,'Dialogue ID');if(d.schemaVersion!==1||!integer(d.version,1,Number.MAX_SAFE_INTEGER))bad('Unsupported dialogue schema or content version.');
+ if(d.variables!==undefined&&(!Array.isArray(d.variables)||!d.variables.length||new Set(d.variables).size!==d.variables.length||d.variables.some(k=>!DIALOGUE_VARIABLES.includes(k))))bad('Variables must name supported read-only world values.');
  if(d.facts!==undefined&&(!plain(d.facts)||Object.entries(d.facts).some(([k,v])=>!dialogueToken.test(k)||typeof v!=='boolean'||['constructor','prototype'].includes(k))))bad('Facts must be declared boolean values.');
  const facts=plain(d.facts)?d.facts:{},nodes=plain(d.nodes)?d.nodes:{},nodeKeys=Object.keys(nodes),choices=new Set(),attempts=new Set(),targets=[];
  if(!nodeKeys.length||nodeKeys.length>256)bad('A dialogue needs 1–256 nodes.');
  const fact=f=>{if(keys(f,['id','is'],'Fact condition')&&(!Object.hasOwn(facts,f.id)||typeof f.is!=='boolean'))bad('Unknown fact or non-boolean condition.');};
+ const variables=v=>{if(!plain(v)||!Object.keys(v).length||Object.entries(v).some(([k,b])=>!d.variables?.includes(k)||typeof b!=='boolean'))bad('Conditions must use declared boolean world variables.');};
  const sets=v=>{if(!plain(v)||!Object.keys(v).length||Object.entries(v).some(([k,b])=>!Object.hasOwn(facts,k)||typeof b!=='boolean'))bad('Effects must assign declared boolean facts.');};
  const target=t=>{token(t,'Destination');targets.push(t);};
  for(const [id,n]of Object.entries(nodes)){
@@ -39,7 +42,7 @@ function inspectDialogue(d){
   for(const c of n.choices||[]){
    if(!keys(c,['id','text','requires','to','set','check','outcomes','rollText'],'Choice'))continue;
    token(c.id,'Choice');if(choices.has(c.id))bad('Duplicate choice '+c.id);choices.add(c.id);line(c.text,'Choice text');
-   if(c.requires!==undefined&&keys(c.requires,['archetype','fact'],'Requirements')){if(c.requires.archetype!==undefined&&!WHEEL.includes(c.requires.archetype))bad('Unknown archetype.');if(c.requires.fact!==undefined)fact(c.requires.fact);}
+   if(c.requires!==undefined&&keys(c.requires,['archetype','fact','variables'],'Requirements')){if(c.requires.archetype!==undefined&&!WHEEL.includes(c.requires.archetype))bad('Unknown archetype.');if(c.requires.fact!==undefined)fact(c.requires.fact);if(c.requires.variables!==undefined)variables(c.requires.variables);}
    if(c.check!==undefined){
     if(c.to!==undefined||c.set!==undefined)bad('Checked choices use outcomes, not to/set.');
     const ch=c.check;if(keys(ch,['attemptId','skill','minimum','difficulty','modifiers'],'Check')){
@@ -52,7 +55,7 @@ function inspectDialogue(d){
    }else{target(c.to);if(c.set!==undefined)sets(c.set);if(c.outcomes!==undefined||c.rollText!==undefined)bad('Outcomes and critical text require a check.');}
   }
  }
- if(!Array.isArray(d.entry)||!d.entry.length||d.entry.length>256)bad('Entry requires routes and a final unconditional node.');else d.entry.forEach((e,i)=>{if(!keys(e,['when','node'],'Entry'))return;target(e.node);if(i===d.entry.length-1){if(e.when!==undefined)bad('Last entry must be unconditional.');}else if(e.when===undefined)bad('Only final entry can be unconditional.');if(e.when!==undefined&&keys(e.when,['attempt','is'],'Entry condition')&&(!attempts.has(e.when.attempt)||!['success','failure'].includes(e.when.is)))bad('Unknown entry attempt or result.');});
+ if(!Array.isArray(d.entry)||!d.entry.length||d.entry.length>256)bad('Entry requires routes and a final unconditional node.');else d.entry.forEach((e,i)=>{if(!keys(e,['when','node'],'Entry'))return;target(e.node);if(i===d.entry.length-1){if(e.when!==undefined)bad('Last entry must be unconditional.');}else if(e.when===undefined)bad('Only final entry can be unconditional.');if(e.when!==undefined&&keys(e.when,['attempt','is','variables'],'Entry condition')){if(e.when.variables!==undefined){variables(e.when.variables);if(e.when.attempt!==undefined||e.when.is!==undefined)bad('Use either a world condition or an attempt condition.');}else if(!attempts.has(e.when.attempt)||!['success','failure'].includes(e.when.is))bad('Unknown entry attempt or result.');}});
  for(const t of targets)if(!Object.hasOwn(nodes,t))bad('Missing branch destination '+t+'.');
  const reached=new Set(),visit=id=>{if(reached.has(id)||!nodes[id])return;reached.add(id);for(const c of nodes[id].choices||[])if(c.check){visit(c.outcomes?.success?.to);visit(c.outcomes?.failure?.to);}else visit(c.to);};for(const e of d.entry||[])visit(e.node);for(const id of nodeKeys)if(!reached.has(id))warnings.push('Unreachable node '+id+'.');
  return {errors,warnings};

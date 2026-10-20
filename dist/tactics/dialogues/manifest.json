@@ -8,6 +8,10 @@
     {
       "id": "yard_worker_flavour",
       "version": 1
+    },
+    {
+      "id": "plateau_intro",
+      "version": 1
     }
   ]
 }

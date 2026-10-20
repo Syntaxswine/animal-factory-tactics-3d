@@ -1,5 +1,6 @@
 import {embedMapDialogues,resolveDialogue} from './dialogue-data.js';
 import {validateDialogue,mergeDialogueDefinitions} from './dialogue-schema.js';
+import {INTRO_DIALOGUE,TUTORIAL_ROLES} from './tutorial-mission.js';
 import {isHedge} from './hedge-data.js';
 import {spotlightPathError} from './spotlight-path.js';
 import {shiftPatrol,patrolError} from './character-patrol.js';
@@ -30,6 +31,22 @@ export function brushPoint(p){const x=Math.floor(p.x+.5),y=Math.floor(p.y+.5),dx
 import {helicopterStart} from './helicopter-start.js';
 import {isStrategicSite} from './strategic-site-rules.js';
 export class EditingDocument extends InspectionDocument {
+ tutorialObject(selection,role){
+  const map=structuredClone(this.editor.map),a=selection?.data,p=selection?.type==='prop'&&map.props.find(p=>p.x===a.x&&p.y===a.y&&(p.z||0)===(a.z||0)&&p.kind===a.kind);
+  if(!p)throw Error('Select the tutorial object first.');
+  if(role&&(!Object.hasOwn(TUTORIAL_ROLES,role)||!TUTORIAL_ROLES[role].kinds.includes(p.kind)))throw Error('This tutorial role does not match the selected object.');
+  if(role)p.tutorialRole=role;else delete p.tutorialRole;
+  this.replace(map);
+ }
+ tutorialGuide(id,definition){
+  if(definition?.id!==INTRO_DIALOGUE)throw Error('Load the plateau intro dialogue first.');
+  validateDialogue(definition);const map=structuredClone(this.editor.map),p=map.guards.find(p=>p.character.id===id);
+  if(!p)throw Error('Select a placed NPC or guard.');
+  p.character.canTalk=true;p.character.dialogueRef=INTRO_DIALOGUE;
+  mergeDialogueDefinitions(map,{dialogueDefinitions:{[INTRO_DIALOGUE]:definition}});
+  map.characterResources??={};map.characterResources.dialogues=[...new Set([...(map.characterResources.dialogues||[]),INTRO_DIALOGUE])];
+  this.replace(map);
+ }
  crashStart(selection){if(selection?.type!=='prop')throw Error('Select the crashed helicopter.');this.replace(helicopterStart(this.editor.map,selection.data));}
  siteSabotage(selection,enabled){
   const p=selection?.data;if(selection?.type!=='prop'||!isStrategicSite(p))throw Error('Select a radio tower, radar tower or SAM site.');

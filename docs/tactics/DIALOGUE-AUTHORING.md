@@ -76,6 +76,30 @@ Minimum defaults to 1; difficulty defaults to 50. Numeric inputs must be integer
 
 Resources are data only, with a 256 KiB and 256-node limit. Unknown fields, malformed numbers, duplicate IDs, invalid facts, missing destinations and arbitrary code are rejected. Unreachable nodes produce author warnings. Player-driven cycles are allowed; there is no automatic branch traversal loop.
 
+## Plateau tutorial intro
+
+`plateau_intro` is the authored tutorial briefing. Right-clicking its friendly guide uses the normal conversation UI. Opening, inspecting, switching speakers and choosing an informational reply never roll, spend AP, consume supplies or destroy anything.
+
+In the editor, select an existing NPC/guard and use **Plateau tutorial → Use as intro guide**. This enables **Can talk** and embeds the dialogue without changing identity, appearance or faction. Keep the character friendly. Select each existing radio tower, SAM site and crash-sector crate, then assign its **Mission role** in the same panel. Use exactly one of each role across the campaign. The roles survive moving, rotating, map export/import, modular blocks and destruction; duplicate roles are rejected. Clear a copied object's role if it is decorative.
+
+The guide derives three read-only variables from the actual game:
+
+| Variable | Source |
+| --- | --- |
+| `has_explosives` | At least one conscious, present squad merc in this sector carries demolition explosives. Unsearched crates, dropped items, dead/away mercs and other sectors do not count. |
+| `radio_destroyed` | The object tagged `plateau-radio` is a destroyed radio tower. |
+| `sam_destroyed` | The object tagged `plateau-sam` is a destroyed SAM site. |
+
+Campaign lookup uses each visited sector's saved objects and unvisited sectors' authored maps. Missing or ambiguous sites produce a closable setup diagnostic; absence never means destruction. A standalone playtest needs both sites in its one map. A completed objective takes precedence over the inventory question: both destroyed → liberate the town; radio only → deal with the SAM; SAM only → finish the radio tower; neither → the opening briefing. Every reopening reflects the current world. Leaving or saving does not lock in stale answers.
+
+The tagged crate starts a **new encounter/sector** with two demolition charges. Search it and take them through the existing inventory system. The acting merc must carry a charge, stand beside the site's control equipment and right-click the site → **Plant explosives**. The action uses one charge, 3 stamina and 6 AP in combat, or one minute outside combat. These are implementation defaults using the existing sabotage cost. It commits the demolition immediately through the existing wreck conversion; this tranche does not add a timed fuse, blast radius or planting animation. Free legacy sabotage cannot bypass the charge requirement on these two objectives. Other explosions and flamethrowers still count. Empty crates and destroyed sites persist; loading never replenishes either.
+
+These variables are declared in a resource with `"variables": ["has_explosives", "radio_destroyed", "sam_destroyed"]`. Entry routes can use `"when": {"variables": {"radio_destroyed": true}}`; choice requirements can use `"requires": {"variables": {"has_explosives": true}}`. Conditions are AND comparisons of declared booleans; routes use the first match, ending with an unconditional route. They cannot assign world variables or execute code. Ordinary choices stay ordinary. A checked/effectful choice that also uses variables stores its input snapshot in its existing receipt so save validation can replay the historical result. Live previews include world inputs and reject stale selections.
+
+Try `battle-3d.html?study=tutorial-intro`, or `editor-3d.html?editing=1&study=tutorial-intro`. This compact rehearsal includes the guide, two sites and crate. It does not replace the authored plateau layout or the current two-sector foundation campaign; authors can attach these roles to the plateau's existing objects. Site destruction currently updates this briefing, not a new global SAM deployment rule.
+
+`tests/tutorial-intro.test.mjs` covers all eight progress/inventory combinations, real search/transfer, double activation, costs and range, alternate destruction, editor undo/rotation/blocks, missing roles, and cross-sector save/load without restocking.
+
 ## Persistence seams
 
 `dialogue-schema.js` validates content and computes canonical SHA-256 hashes. `dialogue-state.js` owns pure previews, the isolated unbiased percentile stream and receipt replay. `dialogue-session.js` owns transient node/speaker selection. `dialogue-rules.js` reuses the real game's talk restrictions, potential sight, support heights and personalities. `battle-dialogue.js` presents the modal using text nodes.
