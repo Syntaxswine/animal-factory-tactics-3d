@@ -485,6 +485,84 @@ The vault now takes 0.97 s to build (node, horse), up from 0.47 s.
 Next: the climb's jump asks 6 x BW of the legs (0.26 s from the crouch to the catch) and its drop outruns gravity, so
 both are re-keyed as ballistic flights. In flight the angular momentum must also hold.
 
+### 2026-10-20 (physics balance, second part): the climb, and where the window stands
+
+**The climb is re-keyed** wherever it asked for a force its legs or hands could not give. Its duration goes from 4.85
+to 6.10 s.
+
+| stretch | before | now |
+|---|---|---|
+| jump | crouch to catch in 0.26 s: 6 x BW | a deeper crouch, a steady 2 g push of 0.16 s, then the launch, apex and catch on one arc |
+| flight | legs tuck, arms swing in the air (up to 300 N·m) | limbs held to the trunk; the hands reach onto the top in the last 0.15 s |
+| far side | one hand on two contact points while sliding off; the hips 0.81 m down in 0.28 s | the right hand re-planted turned in the straddle; the lowering takes 0.48 s |
+| drop | 0.40 m in 0.20 s, faster than a fall | from a still hang on the free fall's parabola; the hooves come off the face and the hands off the top first |
+| turn onto the tile | the stance hoof 20 to 30 cm from the centre of mass | the weight onto each foot, then one swing per step (0.32 s), set down over the mark |
+
+Flight keys carry the arc's speed and an acceleration of -g. Keyed by speed alone, the drop outran gravity at 13.8 m/s²
+and the push went on past the toe-off at +24 m/s². The plan's arc could fit neither, and it moved the toe-off earlier
+each round to try.
+
+**New in the shared tools:**
+- `angleTrack` keys a trunk's heading, pitch and roll on C2 quintics. `spinTrack`'s cubic in the log of the turn stepped
+  the angular acceleration at every key: 55 m/s² at the head within 2 ms. It also made the vault's 0.98 s velocity step,
+  which now passes.
+- `track()` takes acceleration pins.
+- A limb key's `soft` option: next to a floor key, the hoof's height is the softplus maximum of the two, and the leg's
+  soft reach widens mid-segment. A leg driven at an unreachable mark locked straight, and its knee whipped at 14 m/s at
+  the toe-off.
+- A limb key's `arc` option lifts a step mid-swing, so the hoof no longer stops in the air at a mid-step key.
+- **What counts as support:**
+  - a part against a face, or on a top the body hangs below, doesn't count (forearms on the edge at the catch);
+  - a body part on a top with the centre of mass above it does count (a belly on a sill);
+  - a touch under 60 ms is not a grip.
+- **The contacts' probe is the rig's own surface:** every hand and foot vertex and every third of the rest.
+- **The feet's push** fades over the 20 ms next to a flight, and a feet sample's box is the intersection of its
+  neighbours'.
+- **The body's turning.** The whole body turns about its centre of mass at w = I^-1 (L* - L):
+  - in flight, L* is the flight's median and the turn is eased in and out over the contacts beside it;
+  - on contacts, L* is L averaged over 40 ms, so a leg's swing or a stepping hoof's arrival is taken by a few degrees of
+    the trunk instead of 270 to 640 N·m from one hand or hoof.
+- **Two rounds**, the follow warm-started; four gave no more.
+
+The gate on the horse, same rig. The climb is compared with the unbalanced 7232820; the vault was the first part's.
+
+| | climb before | climb now | vault now |
+|---|---|---|---|
+| phantom wrench outside impacts | 0.94 s of 4.85 s over | 0.21 s of 6.10 s over | pass |
+| required force in contact | 12.6 x BW | 3.1 x BW | 3.7 x BW |
+| external velocity jumps | 4 | pass | pass |
+| position pops, internal snaps, joint range | pass | pass | pass |
+
+The vault now passes 6 of the 8 checks. Its capsule overlap and point speed are not balance checks.
+
+**The vault on every mammal:**
+- The required force passes for all 11 (3.4 to 4.8 x BW).
+- Both checks pass for 7: horse, goat, bull, cow, donkey, sheep and skunk.
+- The rabbit and the dog fail the wrench check at its first moving sample, 11% against the limit of 10%.
+- The pig director fails it at one sample of the spring (32%).
+- The pig foreman fails it on two events between samples (worst 127 N).
+
+**Still over 10% of body weight on the climb:**
+- the toe-off and the start of the flight (56% and 55%), where the legs slow as they near full reach just as the support
+  narrows to the toe tips;
+- the weight onto the right foot (26%) and the right foot's step (43%);
+- the left leg over (13%);
+- 388 N·m airborne just before the landing.
+
+The catch, hang, walk-up, straddle, lowering, drop, absorb and the left foot's step pass.
+
+**The window is not balanced on this branch.** Its first pass is parked on `anim/window-balance-wip` (bab4ab8):
+- The clearance fit left the belly 1 to 2.6 cm above the sill through the slide, where the rig finds nothing holding the
+  body. The trunk is now set down onto it.
+- With that, the window is over the limit for 0.85 s of 3.68 (1.74 s unbalanced), with 17.4 x BW at the roll (30.1).
+- The traversal test fails for five species: three trunks 1.1 to 1.4 cm into the sill, and the pig foreman's head
+  16.8 cm in where the reach plans as a 0.16 s flight.
+
+Next there: hold the sill until the hands are down; then the roll's contact jumps (328%), the sit-up and the rise.
+
+Build time, measured while other sessions ran their tests: vault 1.3 s and climb 3.4 s, against 0.84 and 1.63 s at
+50f5b53 under the same load. The balance is most of it (the follow and the contact measure).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

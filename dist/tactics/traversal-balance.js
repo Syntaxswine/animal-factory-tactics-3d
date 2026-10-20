@@ -154,7 +154,9 @@ function bodyTurn(w,S,L,I,dt){
  const wC=Array.from({length:n},()=>[0,0,0]);
  for(let i=0;i<n;i++){if(air[i])continue;const d=solve3(I[i],[0,1,2].map(a=>ref[i][a]-L[i][a]));delta=Math.max(delta,Math.hypot(...d)*(1-fl[i]));wC[i]=d.map(x=>x*(1-fl[i]));nw[i]=nw[i].map((y,a)=>y+wC[i][a]);}
  const thC=[[0,0,0]];for(let i=1;i<n;i++){const p=thC[i-1],q=(1-fl[i])*dt/UNWIND,cw=i=>air[i]?[0,0,0]:nw[i].map((y,a)=>y*(1-fl[i]));const a0=cw(i-1),a1=cw(i);thC.push(p.map((x,a)=>x+dt*(a0[a]+a1[a])/2-q*x));}
- const end=thC[n-1],theta=thF.map((x,i)=>x.map((y,a)=>y+thC[i][a]-end[a]*i/(n-1)));
+ // the drift out along a smoothstep, at rest at both ends (taken out linearly, the turn began at a constant rate from
+ // rest: 11% of the body's weight at the first sample)
+ const end=thC[n-1],theta=thF.map((x,i)=>x.map((y,a)=>y+thC[i][a]-end[a]*smooth(i/(n-1))));
  return {theta,w:nw,delta};}
 const KEEP=[...new Set(MASS_SEGMENTS.flatMap(([a,b])=>[a,b]))];
 // The whole pipeline for a motion: pose(t) poses it (with the hips moved by the current trial shift, set through
