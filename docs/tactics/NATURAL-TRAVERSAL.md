@@ -425,6 +425,66 @@ Left for the physics pass and polish:
    3 cm at the catch. A pig needs its own hang.
 5. **Long ears** at the lintel, and **tails** on the walls.
 
+### 2026-10-20 (physics balance, first part): the side vault
+
+The user: "Start the physics-balance pass: the phantom wrench and required-force checks for the window, vault and
+climb."
+
+The new `dist/tactics/traversal-balance.js` balances a traversal in four steps:
+1. **What holds the body** is read from its skinned surface, the way the phantom-wrench rig reads it:
+   - a hand within 1 cm of an obstacle grips;
+   - hooves or hands within 1 cm of the floor stand, and their extent is the pressure point's box;
+   - any other part touching is held as authored;
+   - nothing touching is flight.
+2. **A plan for the centre of mass**, as near the authored path as those contacts allow, with low jerk:
+   - in flight, ballistic;
+   - on the feet, the linear inverted pendulum's pressure point (with the body's measured dL/dt) inside the soles,
+     the push within friction, and the floor pushing between 0.3 and 3 body weights;
+   - gripping, any way within 3 body weights;
+   - the first and last samples at rest.
+
+   It is one convex QP per axis, the vertical first, solved by ADMM on a banded Cholesky factorisation. Clamping the
+   pressure point sample by sample instead made an unstable pendulum: the plan drifted 90 cm and snapped back.
+3. **The hips follow the plan.** Each of five passes moves them by 1.29 times the miss.
+4. **Rounds.** The contacts are measured again on the balanced motion and the plan is solved again, until the schedule
+   settles. A grip counts from 20 ms after its first touch.
+
+The rig's 1 ms audit then found two interpolation defects between the 5 ms samples:
+- **`track()` flattens the slope at every key where a channel turns**, so an authored channel never overshoots its
+  keys. On the densely sampled hips shift, that stepped the velocity by 2 cm/s inside one segment: 8 m/s² at 0.299 s.
+  Solver channels now pass `{limit:false}`.
+- **The clearance fit's trunk offset (20 ms knots) and the shift (5 ms knots)** each cancel the other only at their own
+  knots. The fit's push back from the wall at 0.56 s read as 480 N of phantom force between samples. The shift is now
+  interpolated together with the fit's offset.
+
+Also shared by all three crossings:
+- **Plant snaps.** A planted end's lowest point is held 2 mm off its surface where fully planted, and faded with the
+  plant (the rig counts a contact within 1 cm). Switched on at half planted, the snap jerked the wrists.
+- **Soft IK is C2.**
+- **The turn pre-pass's cheap switch is 0.1°.** At 4° it popped the palms 3 to 4 mm.
+
+**The vault's left hand stays on the top until the hooves are down**, so the vault has no free flight.
+
+The phantom-wrench gate on the horse vault, same rig, before (50f5b53) and after:
+
+| | 50f5b53 | now |
+|---|---|---|
+| phantom wrench outside impacts | 0.49 s of 2.40 s over, worst 5,486 N | pass |
+| required force in contact | 11.3 x BW | 3.7 x BW |
+| position pops | palms 0.3 and 0.4 cm | none |
+| fastest point | 12.2 m/s | 10.0 m/s |
+
+Still failing as before: a 0.015 m/s step in the COM velocity at 0.98 s, the upper arm and thigh capsules 3.5 cm at
+1.068 s, and the feet at 10 m/s in the spring.
+
+The rig changed in the same pass. Each part's touching points on a face are now its convex hull in that face's plane,
+as in the idle rig. The deepest vertex plus or minus 2 cm, as before, stood a flat hoof on its heel.
+
+The vault now takes 0.97 s to build (node, horse), up from 0.47 s.
+
+Next: the climb's jump asks 6 x BW of the legs (0.26 s from the crouch to the catch) and its drop outruns gravity, so
+both are re-keyed as ballistic flights. In flight the angular momentum must also hold.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

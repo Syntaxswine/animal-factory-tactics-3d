@@ -9,10 +9,12 @@ const AX={x:V(1,0,0),y:V(0,1,0),z:V(0,0,1)},turn=(axis,a)=>Q().setFromAxisAngle(
 export const bodyQ=(pitch=0,roll=0,yaw=0)=>turn('y',yaw).multiply(turn('x',roll)).multiply(turn('z',-pitch));
 // Quintic Hermite through [t,...values] rows (C2: a cubic's acceleration steps at every key, which reads as a
 // jolt of force). Slopes are Catmull-Rom, limited so a channel never overshoots its keys; key accelerations come
-// from the neighbouring slopes. pins fixes a key's slope ({index: [slopes]}).
-export function track(rows,pins={}){
+// from the neighbouring slopes. pins fixes a key's slope ({index: [slopes]}). A channel sampled densely from a
+// solver (not authored keys) passes {limit:false}: plain central slopes, since a flat slope forced at every sampled
+// extremum steps the velocity inside one segment (the balance shift turning at a 5 ms key: 2 cm/s, read as 8 m/s^2).
+export function track(rows,pins={},{limit=true}={}){
  const keys=rows.map(([t,...p])=>({t,p})),n=keys.length;if(n<2)throw Error('A track needs two keys');
- keys.forEach((k,i)=>{const a=keys[i-1],b=keys[i+1];k.v=pins[i]||k.p.map((x,j)=>{if(!a||!b)return 0;const l=(x-a.p[j])/(k.t-a.t),r=(b.p[j]-x)/(b.t-k.t);if(l*r<=0)return 0;const m=(b.p[j]-a.p[j])/(b.t-a.t);return Math.sign(m)*Math.min(Math.abs(m),3*Math.abs(l),3*Math.abs(r));});});
+ keys.forEach((k,i)=>{const a=keys[i-1],b=keys[i+1];k.v=pins[i]||k.p.map((x,j)=>{if(!a||!b)return 0;const m=(b.p[j]-a.p[j])/(b.t-a.t);if(!limit)return m;const l=(x-a.p[j])/(k.t-a.t),r=(b.p[j]-x)/(b.t-k.t);if(l*r<=0)return 0;return Math.sign(m)*Math.min(Math.abs(m),3*Math.abs(l),3*Math.abs(r));});});
  keys.forEach((k,i)=>{k.a=k.p.map((x,j)=>i&&i<n-1?(keys[i+1].v[j]-keys[i-1].v[j])/(keys[i+1].t-keys[i-1].t):0);});
  return t=>{let i=1;while(i<n-1&&t>keys[i].t)i++;const a=keys[i-1],b=keys[i],dt=b.t-a.t,u=clamp((t-a.t)/dt),u2=u*u,u3=u2*u,u4=u3*u,u5=u4*u;
   const h0=1-10*u3+15*u4-6*u5,h1=u-6*u3+8*u4-3*u5,h2=.5*u2-1.5*u3+1.5*u4-.5*u5,h3=.5*u3-u4+.5*u5,h4=-4*u3+7*u4-3*u5,h5=10*u3-15*u4+6*u5;
@@ -50,17 +52,18 @@ export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][
 // The body pose for a trunk (hips, hipsQ, spineQ, headQ, chest, chestQ) and world limb targets. Knees bend
 // forward of the pelvis; elbows back and out from the chest, or toward elbowAway (world) while a palm is planted.
 // A palm is never placed below the floor. poles(id) may replace a limb's bend direction (steadyPoles), offsets(id)
-// move its end target (a clearance fit); id is 'leg-1', 'leg1', 'arm-1' or 'arm1'. turns(bone) gives a partial hand
+// move its end target (a clearance fit) and snaps(id) set a planted end onto its surface (unmasked); id is 'leg-1',
+// 'leg1', 'arm-1' or 'arm1'. turns(bone) gives a partial hand
 // or hoof turn its way round (steadyTurns). A planted contact stays on its surface: a planted foot or palm takes only
 // the part of an offset out along its surface's normal (a toe-down hoof lifting its heel, a palm rising onto a sill, a
 // long foot set off a wall face), not the slide (moved out by its forearm on an edge, a gripping hand left the wall top
 // by 5 to 14 cm).
 const outward=(off,w,n)=>{if(!(w>0)||!n)return off.clone();const N=V(...n).normalize(),out=Math.max(0,off.dot(N));return off.clone().multiplyScalar(1-w).addScaledVector(N,out*w);};
-export function posedFrom(tr,limbs,{elbowAway=null,poles=null,offsets=null,turns=null}={}){const legs={},arms={};for(const s of [-1,1]){const l=limbs['leg'+s],a=limbs['arm'+s];
-  const kn=l.knee||[1,0,.25],ankle=frameToWorld(tr,l.f,l.p),lo=offsets?.('leg'+s);if(lo){const [na,nb,u]=l.plant||[null,null,0];ankle.add(outward(lo,1,na).multiplyScalar(1-u).addScaledVector(outward(lo,1,nb),u));}
+export function posedFrom(tr,limbs,{elbowAway=null,poles=null,offsets=null,snaps=null,turns=null}={}){const legs={},arms={};for(const s of [-1,1]){const l=limbs['leg'+s],a=limbs['arm'+s];
+  const kn=l.knee||[1,0,.25],ankle=frameToWorld(tr,l.f,l.p),lo=offsets?.('leg'+s);if(lo){const [na,nb,u]=l.plant||[null,null,0];ankle.add(outward(lo,1,na).multiplyScalar(1-u).addScaledVector(outward(lo,1,nb),u));}const ls=snaps?.('leg'+s);if(ls)ankle.add(ls);
   legs[s]={ankle:ankle.toArray(),pole:(poles?.('leg'+s)||V(kn[0],kn[1],s*kn[2]).applyQuaternion(tr.hipsQ)).toArray(),q:l.hoof!==undefined?yawQ(l.heading||0).multiply(bodyQ(l.hoof*DEG)):null,w:l.hoofW??1,slack:l.lift||0,ref:turns?.('hoof'+s)||null};
   const k=a.palm!==undefined?a.palmW??1:0,pole=V(-.3,-.2,s).applyQuaternion(tr.chestQ);if(elbowAway)pole.lerp(V(...elbowAway),k);
-  if(a.elbow&&a.elbowW>0)pole.lerp(V(a.elbow[0],a.elbow[1],s*a.elbow[2]).applyQuaternion(tr.chestQ),a.elbowW);const wrist=frameToWorld(tr,a.f,a.p),ao=offsets?.('arm'+s);if(ao)wrist.add(outward(ao,k,[0,1,0]));wrist.y=Math.max(wrist.y,.06);
+  if(a.elbow&&a.elbowW>0)pole.lerp(V(a.elbow[0],a.elbow[1],s*a.elbow[2]).applyQuaternion(tr.chestQ),a.elbowW);const wrist=frameToWorld(tr,a.f,a.p),ao=offsets?.('arm'+s);if(ao)wrist.add(outward(ao,k,[0,1,0]));const as=snaps?.('arm'+s);if(as)wrist.add(as);wrist.y=Math.max(wrist.y,.06);
   arms[s]={wrist:wrist.toArray(),pole:(poles?.('arm'+s)||pole).toArray(),q:a.palm!==undefined?'palm':null,palm:a.palm,w:a.palmW??1,slack:a.lift||0,ref:turns?.('hand'+s)||null,palmRef:turns?.('palm'+s)??null};}
  return {hips:tr.hips.toArray(),hipsQ:tr.hipsQ,spineQ:tr.spineQ,headQ:tr.headQ,legs,arms};}
 // Bend directions that do not flip. A two-bone limb bends toward its pole; where the limb's axis swings through the
@@ -86,9 +89,10 @@ export function steadyPoles(duration,sample,{step=.005}={}){
 // body's turns), each turn's axis is kept continuous: where the short way's axis reverses (the turn passing 180
 // degrees), the long way is kept, except where switching back to the short way is cheap: a partial turn of weight w
 // jumps 360 x min(w, 1-w) degrees when its way changes, so a turn within SWITCH degrees of done or undone takes the short way again
-// (kept, a hand released at 180 degrees went on the long way to 280 and spun). A palm's yaw blend (delta, degrees) is
+// (kept, a hand released at 180 degrees went on the long way to 280 and spun; at 4 degrees the switch itself popped a
+// palm 4 mm). A palm's yaw blend (delta, degrees) is
 // unwrapped by whole turns. Returns ref(bone, t): the axis (or delta) that names the way round at the nearest sample.
-const SWITCH=4;
+const SWITCH=.1;
 export function steadyTurns(duration,turnsAt,{step=.005}={}){
  const n=Math.max(2,Math.round(duration/step)+1),dt=duration/(n-1),axes={};
  for(let k=0;k<n;k++)for(const x of turnsAt(k*dt)){const list=axes[x.bone]||(axes[x.bone]=new Array(n).fill(null)),prev=list[k-1];
@@ -129,7 +133,9 @@ export function createTraversalBody(worker){
  // scratch audits list them). Within SOFT of full reach the
  // limb straightens asymptotically (soft IK): the bend grows as the square root of the distance short of full reach,
  // so a hard reach throws the knee or elbow centimetres in a millisecond as a target passes in or out of it. The soft
- // reach leaves the end short by at most SOFT/e there and is exact closer in.
+ // reach, L - SOFT (1 + x) e^(-2x) past the knee, is C2 there (a plain exponential steps the end's acceleration by
+ // v^2/SOFT: standing legs sit at the knee, and the body's centre of mass shivered 8 m/s^2), leaves the end short by
+ // at most 0.27 SOFT at full reach and is exact closer in.
  const warnings=[],SOFT=.015;
  const root=worker.root,bones=Object.fromEntries(worker.bones.map(b=>[b.name,b]));
  for(const n of ['hips','spine','head',...[-1,1].flatMap(s=>['upperArm','forearm','hand','thigh','shin','hoof'].map(b=>b+s))])if(!bones[n])throw Error('Traversal rig is missing bone '+n);
@@ -147,7 +153,7 @@ export function createTraversalBody(worker){
  let label='';
  function limb(a,b,c,target,pole,slack=0){const ra=rest.get(a),rb=rest.get(b),rc=rest.get(c),start=a.getWorldPosition(V()),l1=ra.distanceTo(rb),l2=rb.distanceTo(rc);let d=target.distanceTo(start);
   if(d>l1+l2+slack+1e-6||d<Math.abs(l1-l2)-1e-6)warnings.push({bone:a.name,label,over:d-(l1+l2)});
-  const knee0=l1+l2-SOFT,tgt=d>knee0?start.clone().addScaledVector(target.clone().sub(start).normalize(),(d=knee0+SOFT*(1-Math.exp(-(d-knee0)/SOFT)))):target;
+  const knee0=l1+l2-SOFT,x=(d-knee0)/SOFT,tgt=d>knee0?start.clone().addScaledVector(target.clone().sub(start).normalize(),(d=l1+l2-SOFT*(1+x)*Math.exp(-2*x))):target;
   const axis=tgt.clone().sub(start).normalize(),along=(l1*l1-l2*l2+d*d)/(2*d),side=pole.clone().addScaledVector(axis,-pole.dot(axis));if(side.lengthSq()<1e-12)side.copy(V(1,0,0).addScaledVector(axis,-axis.x));side.normalize();
   const mid=start.clone().addScaledVector(axis,along).addScaledVector(side,Math.sqrt(Math.max(0,l1*l1-along*along)));
   const d0a=rb.clone().sub(ra),d0b=rc.clone().sub(rb),n0=d0a.clone().cross(d0b).normalize(),d1a=mid.clone().sub(start),d1b=tgt.clone().sub(mid);

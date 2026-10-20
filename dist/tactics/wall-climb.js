@@ -73,7 +73,7 @@ export function createWallClimb(worker,profile={id:'horse'}){
   'arm-1':[[0,{f:'chest',p:restWrist(-1)}],[.40,{f:'chest',p:[.20,.15,-.30]}],[.62,{f:'chest',p:[.10,-.05,-.32]}],[.74,{f:'chest',p:[.14,.40,-.26],elbow:HANG}],[.88,{f:'world',p:[.45,top,-.18],palm:0,elbow:HANG}],[3.10,{f:'world',p:[.46,top,-.18],palm:0,elbow:HANG}],[3.20,{f:'world',p:[.50,top+.06,.04]}],[3.30,{f:'world',p:[.54,top,.20],palm:-180}],[3.62,{f:'world',p:[.54,top,.20],palm:-180,lift:.3}],[3.80,{f:'chest',p:[.10,.30,-.30]}],[3.96,{f:'chest',p:[.14,-.10,-.32]}],[4.35,{f:'chest',p:restWrist(-1)}],[4.85,{f:'chest',p:restWrist(-1)}]],
   arm1:[[0,{f:'chest',p:restWrist(1)}],[.40,{f:'chest',p:[.20,.15,.30]}],[.62,{f:'chest',p:[.10,-.05,.32]}],[.74,{f:'chest',p:[.14,.40,.26],elbow:HANG}],[.88,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[1.96,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.08,{f:'world',p:[.52,top+.06,0]}],[2.20,{f:'world',p:[.54,top,-.10],palm:-40}],[3.28,{f:'world',p:[.54,top,-.20],palm:-180}],[3.62,{f:'world',p:[.54,top,-.20],palm:-180,lift:.3}],[3.80,{f:'chest',p:[.10,.30,.30]}],[3.96,{f:'chest',p:[.14,-.10,.32]}],[4.35,{f:'chest',p:restWrist(1)}],[4.85,{f:'chest',p:restWrist(1)}]],
  };
- const spec=t=>{const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posedFrom(tr,limbs,{poles:steady?id=>steady(id,t):null,offsets:fit?.limb?id=>fit.limb(id,t):null,turns:turnRef?b=>turnRef(b,t):null});};
+ const spec=t=>{const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posedFrom(tr,limbs,{poles:steady?id=>steady(id,t):null,offsets:fit?.limb?id=>fit.limb(id,t):null,snaps:fit?.plant?id=>fit.plant(id,t):null,turns:turnRef?b=>turnRef(b,t):null});};
  // Fit this character's surface: trunk, head and tail out of the floor and the wall. The face is the way out until the
  // chest is nearly over (1.88): a hanging front (the sheep's waistcoat hem) meets the top edge before the chest does.
  fit=createClearanceFit(D);fit.solve({body,probe,tails,obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),poseAt:t=>body.pose(spec(t),'fit'),stage:t=>t<1.88?'near':t<3.3?'over':'far'});
@@ -82,7 +82,7 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // How planted each limb's end is (a palm on a surface, a hoof set on the floor or a face), for the limb fit.
  const planted=(id,t)=>{const l=keyedLimb(LIMB[id],t,trunkAt(t));if(id.startsWith('arm'))return [l.palm!==undefined?l.palmW:0,[0,1,0]];
   const [na,nb,u]=l.plant;return [l.plantW||0,na&&nb?na.map((v,j)=>v+(nb[j]-v)*u):na||nb];};
- fit.solveLimbs({planted});steady=steadyPoles(D,t=>limbSample(body,spec(t)));
+ fit.solveLimbs({planted});steady=steadyPoles(D,t=>limbSample(body,spec(t)));fit.solvePlants({planted});
  // Twice: the first pass unwraps the palms' yaw blends, the second finds the hands' ways round for those continuous
  // targets (found for the wrapped ones, they named the wrong way where a blend passed 180 degrees: a 47 m/s snap).
  const turnsAt=t=>{body.pose(spec(t),'turns');return body.turns.slice();};turnRef=steadyTurns(D,turnsAt);turnRef=steadyTurns(D,turnsAt);

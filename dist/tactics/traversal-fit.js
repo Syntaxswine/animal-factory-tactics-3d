@@ -74,7 +74,7 @@ const BOW_TRY=[];for(let b=-30;b<=45;b+=5)BOW_TRY.push(b);BOW_TRY.sort((x,y)=>Ma
 const TAIL_TRY=[];for(let a=-150;a<=150;a+=10)for(let b=-120;b<=120;b+=10)TAIL_TRY.push([a,b]);TAIL_TRY.sort((x,y)=>Math.abs(x[0])+Math.abs(x[1])-Math.abs(y[0])-Math.abs(y[1]));
 export function createClearanceFit(duration,{step=.02}={}){
  const n=Math.max(2,Math.round(duration/step)+1),dt=duration/(n-1),times=Array.from({length:n},(_,k)=>k*dt);
- const ch={trunk:times.map(()=>[0,0,0]),bow:times.map(()=>[0]),head:times.map(()=>[0,0,0]),tail:times.map(()=>[0,0]),...Object.fromEntries(LIMBS.map(id=>[id,times.map(()=>[0,0,0])]))};let tracks=null,last=null;
+ const ch={trunk:times.map(()=>[0,0,0]),bow:times.map(()=>[0]),head:times.map(()=>[0,0,0]),tail:times.map(()=>[0,0]),...Object.fromEntries(LIMBS.flatMap(id=>[[id,times.map(()=>[0,0,0])],['snap:'+id,times.map(()=>[0,0,0])]]))};let tracks=null,last=null;
  const at=(a,t)=>{const x=clamp(t/dt,0,n-1),i=Math.min(n-2,Math.floor(x)),u=x-i;return a[i].map((v,j)=>v+(a[i+1][j]-v)*u);};
  const get=k=>t=>tracks?tracks[k](clamp(t,0,duration)):at(ch[k],t);
  const W=Math.max(1,Math.round(.06/dt)),R=Math.max(1,Math.round(.1/dt)),CHUNK=Math.max(1,Math.round(.24/dt)),TAIL_CHUNK=Math.max(1,Math.round(.12/dt));
@@ -186,8 +186,33 @@ export function createClearanceFit(duration,{step=.02}={}){
     if(tails?.count){const [a,b]=fit.tail(t);tails.world(a*DEG,b*DEG,v=>note('tail',into(v,way)));}}
    fit.report=left;};
   fit.solveLimbs=({rounds:limbRounds=3,planted=null}={})=>{tracks=null;for(let r=0;r<limbRounds;r++){const need=limbNeed(planted);for(const id of LIMBS)add(id,need[id],free.limbs);}build();report();return fit;};
+  // Planted ends sit on their surface. Each planted end's lowest point, along its surface's normal, is put SNAP off the
+  // surface it rests on, both ways: the phantom-wrench rig counts a contact only within 1 cm, and a palm keyed a fixed
+  // height up hovered 1 to 3 cm over a top while a toe-down hoof lifted by the clearance hovered 4 cm over the floor,
+  // so the gate read hand-supported stretches as flight. planted(id, t) gives [weight, normal]; the snap is weighted by
+  // it, smoothed over three samples, and given to the pose unmasked (fit.plant).
+  const SNAP=.002,lift=(q,N)=>{
+   if(N.y>.5){let s=inFoot(q.x,q.z)?-Infinity:0;for(const b of obstacles)if(q.x>b.min[0]&&q.x<b.max[0]&&q.z>b.min[2]&&q.z<b.max[2]&&b.max[1]<=q.y+.06)s=Math.max(s,b.max[1]);return s===-Infinity?Infinity:q.y-s;}
+   const ax=Math.abs(N.x)>.5?0:2,o=2-ax,sg=Math.sign(N.getComponent(ax));let best=Infinity;
+   for(const b of obstacles){if(q.y<b.min[1]||q.y>b.max[1]||q.getComponent(o)<b.min[o]||q.getComponent(o)>b.max[o])continue;const h=sg*(q.getComponent(ax)-(sg<0?b.min[ax]:b.max[ax]));if(h>-.06&&h<best)best=h;}
+   return best;};
+  // The snap is measured where the end is fully planted (and near its surface) and fades in and out with the plant
+  // from the nearest such sample, so it rides the approach and the release (switched on at half planted, it jerked the
+  // wrists at 200 m/s^2 for 10 ms).
+  fit.solvePlants=({planted=null,rounds=2}={})=>{if(!planted)return fit;tracks=null;
+   for(let r=0;r<rounds;r++){const fix=times.map(()=>({})),full=LIMBS.map(()=>new Array(n).fill(null)),wt=LIMBS.map(()=>new Array(n).fill(0));
+    times.forEach((t,k)=>{const ws=LIMBS.map(id=>planted(id,t));ws.forEach(([w],j)=>{wt[j][k]=w||0;});if(!ws.some(([w])=>w>.98))return;st=stage(t);poseAt(t);probe.update();
+     LIMBS.forEach((id,j)=>{const [w,nrm]=ws[j];if(!(w>.98)||!nrm)return;const N=V(...nrm).normalize();let low=Infinity;
+      for(const i of endPts[id]){p.set(probe.x[i],probe.y[i],probe.z[i]);const h=lift(p,N);if(h<low)low=h;}
+      if(low<.06)full[j][k]=N.multiplyScalar(SNAP-low).toArray();});});
+    LIMBS.forEach((id,j)=>{for(let k=0;k<n;k++){if(!(wt[j][k]>0))continue;let a=k,b=k;while(a>=0&&!full[j][a]&&wt[j][a]>0)a--;while(b<n&&!full[j][b]&&wt[j][b]>0)b++;
+     const src=full[j][k]||(a>=0&&full[j][a]&&(b>=n||!full[j][b]||k-a<=b-k)?full[j][a]:b<n?full[j][b]:null);if(src)fix[k][id]=src.map(x=>x*smooth(wt[j][k])*ends(times[k]));}});
+    for(const id of LIMBS){const key='snap:'+id,raw=times.map((_,k)=>fix[k][id]||[0,0,0]);
+     for(let k=0;k<n;k++){const sm=[0,0,0];for(let d=-1;d<=1;d++){const q=raw[clamp(k+d,0,n-1)];for(let c=0;c<3;c++)sm[c]+=q[c]/3;}ch[key][k]=ch[key][k].map((v,c)=>v+sm[c]);}}
+    build();}
+   report();return fit;};
   build();report();return fit;}
- const fit={trunk:t=>V(...get('trunk')(t)),bow:t=>get('bow')(t)[0],head:get('head'),tail:get('tail'),limb:(id,t)=>V(...get(id)(t)),report:null,solve,solveLimbs:()=>fit};
+ const fit={trunk:t=>V(...get('trunk')(t)),bow:t=>get('bow')(t)[0],head:get('head'),tail:get('tail'),limb:(id,t)=>V(...get(id)(t)),plant:(id,t)=>V(...get('snap:'+id)(t)),report:null,solve,solveLimbs:()=>fit,solvePlants:()=>fit};
  return fit;
 }
 // The rig's obstacle boxes (phantom-wrench rigs/traversal.mjs): one tile wide on the edge at x = edge.

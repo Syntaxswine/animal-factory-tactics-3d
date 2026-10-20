@@ -45,7 +45,7 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const TUCK={'leg-1':[.06,-.33,-.14],leg1:[.06,-.33,.14],'arm-1':[.28,.04,-.26],arm1:[.28,.04,.12]},TUCK_ELBOW={'arm-1':[.3,0,1],arm1:[.8,0,.4]};
  // fit: this character's clearance corrections; steady: its limbs' bend directions (both solved below, null until then).
  let fit=null,steady=null,turnRef=null;
- const posed=(tr,limbs,t)=>posedFrom(tr,limbs,{elbowAway:[1,.15,0],poles:steady&&t!==undefined?id=>steady(id,t):null,offsets:fit?.limb&&t!==undefined?id=>fit.limb(id,t):null,turns:turnRef&&t!==undefined?b=>turnRef(b,t):null});
+ const posed=(tr,limbs,t)=>posedFrom(tr,limbs,{elbowAway:[1,.15,0],poles:steady&&t!==undefined?id=>steady(id,t):null,offsets:fit?.limb&&t!==undefined?id=>fit.limb(id,t):null,snaps:fit?.plant&&t!==undefined?id=>fit.plant(id,t):null,turns:turnRef&&t!==undefined?b=>turnRef(b,t):null});
  const tuckLimbs=Object.fromEntries(Object.entries(TUCK).map(([k,p])=>[k,k.startsWith('leg')?{f:'pelvis',p}:{f:'chest',p,elbow:TUCK_ELBOW[k]}]));
  const lowest=()=>{probe.update();return probe.lowest();};
  const shapeOf=row=>{const [flex,side,twist,nod,tilt,turn]=row;return {spineQ:relQ(flex,side,twist),headQ:relQ(nod,tilt,turn)};};
@@ -150,7 +150,7 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // How planted each limb's end is (a palm on a surface, a hoof set on the floor or a face), for the limb fit.
  const planted=(id,t)=>{const l=keyedLimb(LIMB[id],t,trunkAt(t));if(id.startsWith('arm'))return [l.palm!==undefined?l.palmW:0,[0,1,0]];
   const [na,nb,u]=l.plant;return [l.plantW||0,na&&nb?na.map((v,j)=>v+(nb[j]-v)*u):na||nb];};
- fit.solveLimbs({planted});steady=steadyPoles(D,t=>limbSample(body,spec(t)));
+ fit.solveLimbs({planted});steady=steadyPoles(D,t=>limbSample(body,spec(t)));fit.solvePlants({planted});
  // Twice: the first pass unwraps the palms' yaw blends, the second finds the hands' ways round for those continuous
  // targets (found for the wrapped ones, they named the wrong way where a blend passed 180 degrees: a 47 m/s snap).
  const turnsAt=t=>{body.pose(spec(t),'turns');return body.turns.slice();};turnRef=steadyTurns(D,turnsAt);turnRef=steadyTurns(D,turnsAt);
