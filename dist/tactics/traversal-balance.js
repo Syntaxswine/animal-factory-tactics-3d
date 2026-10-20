@@ -24,7 +24,7 @@ function cholSolve(n,k,L,b,y=new Float64Array(n),x=new Float64Array(n)){const w=
  return x;}
 // One axis: minimise sum wT (c - c0)^2 + wJ |third difference|^2 subject to lo <= row . c <= hi for every row
 // ({at, c: coefficients, lo, hi}; an equality has lo = hi). Rows are scaled to unit norm.
-function boxedPath(c0,wT,wJ,rows,{rho=2e5,iters=1500,tol=1e-8}={}){
+export function boxedPath(c0,wT,wJ,rows,{rho=2e5,iters=1500,tol=1e-8}={}){
  const n=c0.length,k=3,w=k+1,M=new Float64Array(n*w),R=rows.map(r=>{const s=Math.hypot(...r.c)||1;return {at:r.at,c:r.c.map(x=>x/s),lo:r.lo/s,hi:r.hi/s};});
  const outer=(at,cs,f)=>{for(let a=0;a<cs.length;a++){const i=at+a;if(i<0||i>=n)continue;for(let b=0;b<=a;b++){const j=at+b;if(j<0)continue;M[i*w+j-i+k]+=f*cs[a]*cs[b];}}};
  for(let i=0;i<n;i++)M[i*w+k]+=wT[i];for(let i=0;i+3<n;i++)outer(i,[-1,3,-3,1],wJ);for(const r of R)outer(r.at,r.c,rho);
@@ -77,17 +77,22 @@ export function followCentre(times,plan,comAt,{passes=5,base=null,from=null}={})
  const tr=track(times.map((t,i)=>{const b=base?base(t):[0,0,0];return [t,...shift[i].map((x,ax)=>x+b[ax])];}),{},{limit:false});
  return {shift:t=>{const tc=clamp(t,times[0],times.at(-1)),s=V(...tr(tc));return base?s.sub(V(...base(tc))):s;},worst,samples:shift};}
 // What holds the body at a moment, from its real surface (the phantom-wrench rig's contacts: within 1 cm):
-// - a hand on an obstacle grips;
-// - anything on the floor stands on it (hooves, hands, a back in a roll), and so does a part on an obstacle's top
-//   while the centre of mass is above that top (a belly on a sill): their extent is the pressure point's box, the
-//   floor's height (or the top's, with nothing on the floor) its plane;
+// - a hand on an obstacle grips (the rig's rule; a hand against a face is no grip, but the climb's landing leans on one);
+// - anything on the floor stands on it (hooves, hands, a back in a roll), and so does a part on an obstacle's top or
+//   its edge (within TOL of the top's height: the rig reads a point just past the edge as touching the edge, pushing up
+//   and out) while the centre of mass is above that top or less than DRAPE below it (a belly on a sill): their extent
+//   is the pressure point's box, the floor's height (or the top's, with nothing on the floor) its plane;
 // - a part against a face, or on a top the body hangs below, is not counted: it can only push, and a plan leaning on
 //   it would ask what it cannot give (the forearms on a wall's edge as the hands come over at a catch);
 // - nothing counted is flight.
-const TOL=.01,ENDS=new WeakMap();
-// The contacts' probe: the rig's own surface, every vertex of the hands and feet and every third of the rest (a fit's
-// probe, every other vertex, found the hooves down 5 to 10 ms before the rig at a landing).
-export const contactProbe=worker=>createSurfaceProbe(worker,{stride:1,keep:(m,i)=>/hand|hoof|boot|foot|toe/i.test(m.name)||i%3===0});
+// DRAPE: a body draped over a top with its centre of mass a little below it (over the window's sill as it reaches for
+// the floor, 2 cm below) still lies on it; one hanging well below (the forearms on a wall's edge at a catch, 70 cm) does
+// not.
+const TOL=.01,DRAPE=.15,ENDS=new WeakMap();
+// The contacts' probe: the rig's own surface, every vertex (a fit's probe, every other vertex, found the hooves down 5 to
+// 10 ms before the rig at a landing; every third of the body's missed a belly sliding over the window's sill, touching
+// it between them: every vertex 0.03 to 0.3 cm off it, every third 1.5 to 2.2 cm).
+export const contactProbe=worker=>createSurfaceProbe(worker,{stride:1});
 // Per probe point: 1 a hand, 2 a foot, 0 the rest, by its mesh as the rig names them (a sleeve cuff riding the hand
 // bone is not a grip). Read once the probe has been skinned (its part indices are set by update).
 const endsOf=probe=>{let e=ENDS.get(probe);if(!e){const kind=probe.names.map(p=>/hand/.test(p)?1:/hoof|boot|foot|toe/i.test(p)?2:0);e=Uint8Array.from(probe.part,pi=>kind[pi]);ENDS.set(probe,e);}return e;};
@@ -98,7 +103,7 @@ export function supportAt(probe,obstacles,com){
   if(y<TOL&&y>-TOL&&!over(x,z)){grow(box,x,z);continue;}
   for(const o of obstacles){const dx=Math.max(o.min[0]-x,0,x-o.max[0]),dy=Math.max(o.min[1]-y,0,y-o.max[1]),dz=Math.max(o.min[2]-z,0,z-o.max[2]);if(dx>=TOL||dy>=TOL||dz>=TOL)continue;const inside=!dx&&!dy&&!dz;
    const d=inside?Math.min(x-o.min[0],o.max[0]-x,y-o.min[1],o.max[1]-y,z-o.min[2],o.max[2]-z):Math.hypot(dx,dy,dz);if(d>=TOL)continue;
-   if(e===1)grip=true;else if(!dx&&!dz&&y>o.max[1]-TOL&&com&&com[1]>o.max[1]){grow(onTop,x,z);top=Math.max(top??-Infinity,o.max[1]);}}}
+   if(e===1)grip=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);top=Math.max(top??-Infinity,o.max[1]);}}}
  if(grip)return {kind:'grip'};
  if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'feet',box,floor:0};}
  return onTop[0]<=onTop[1]?{kind:'feet',box:onTop,floor:top}:{kind:'air'};}

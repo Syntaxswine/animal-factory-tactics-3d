@@ -134,7 +134,7 @@ const expq=r=>{const a=r.length();return a<1e-12?Q():Q().setFromAxisAngle(r.clon
 // yawQ(heading) x bodyQ(pitch, roll). spinTrack's cubic in the log of the turn steps the angular acceleration at every
 // key, and each key's change is taken about a different reference: the head and chest jerked sideways at a key of the
 // climb's turn onto the tile (headTip 55 m/s^2 within 2 ms; 42% of the body's weight of phantom push).
-export function angleTrack(rows){const tr=track(rows);return t=>{const [h,p,r]=tr(t);return yawQ(h).multiply(bodyQ(p*DEG,r*DEG));};}
+export function angleTrack(rows,pins={}){const tr=track(rows,pins);return t=>{const [h,p,r]=tr(t);return yawQ(h).multiply(bodyQ(p*DEG,r*DEG));};}
 export function spinTrack(rows){
  const keys=rows.map(([t,q,w])=>({t,q:q.clone().normalize(),pin:w}));for(let i=1;i<keys.length;i++)if(keys[i].q.dot(keys[i-1].q)<0)keys[i].q.set(-keys[i].q.x,-keys[i].q.y,-keys[i].q.z,-keys[i].q.w);
  const d=keys.slice(1).map((k,i)=>logq(k.q.clone().multiply(keys[i].q.clone().invert())));

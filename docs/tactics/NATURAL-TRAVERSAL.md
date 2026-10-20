@@ -563,6 +563,86 @@ Next there: hold the sill until the hands are down; then the roll's contact jump
 Build time, measured while other sessions ran their tests: vault 1.3 s and climb 3.4 s, against 0.84 and 1.63 s at
 50f5b53 under the same load. The balance is most of it (the follow and the contact measure).
 
+### 2026-10-20 (physics balance, third part): the window's sill, reach and roll
+
+The user: "Continue with the window's balance: hold the sill until the hands are down, measure the rest on every vertex,
+then the roll."
+
+**The rig now reads every vertex of the body** (phantom-wrench d3ea4d3). A belly sliding over the sill's edge touches it
+between every third vertex: every vertex 0.03 to 0.3 cm off it, every third 1.5 to 2.2 cm, so no contact. The rig
+already read every hand and foot vertex for the same reason. On the committed vault and climb it reads the same:
+
+| | every third | every vertex |
+|---|---|---|
+| side vault | wrench and force pass | the same, in every number |
+| climb, wrench outside impacts | 0.21 s over, 12 spans | 0.21 s over, 11 spans |
+| climb, Left leg over | 13% BW | 10% BW |
+| gate time, vault / climb | 24 / 115 s | 49 / 119 s |
+
+**Support, in `traversal-balance.js`:**
+- The contacts' probe is the rig's surface again: every vertex.
+- A part on a top counts at its edge too, within 1 cm of the top's height. The rig reads a point just past the edge as
+  touching the edge, pushing up and out.
+- A body draped over a top still lies on it while its centre of mass is less than 15 cm below the top (the window's
+  belly as it reaches for the floor), not when it hangs well below (forearms on a wall's edge at a catch, 70 cm).
+- A hand against a face still grips, as the rig has it. Taking that away (only a hand on a top or within 5 cm below it
+  grips) cost the climb's landing 0.08 s. It leans on a hand brushing the wall's face to take a 200°/s turn the drop
+  carries onto the feet.
+
+The vault and climb read the same, phase for phase, with all of this. `tests/natural-traversal.test.mjs` passes 12/12
+with the committed window. `angleTrack` takes slope pins, and the planner's banded programme (`boxedPath`) is exported.
+
+**What the window's reach is, measured.** A belly on the sill is an inverted pendulum about the edge, its centre of mass
+about the belly's depth above it. Tipping head down carries the centre of mass past the edge and the tip speeds up.
+Computed about the edge with the body's own inertia, it goes from 1.7 rad/s at the slide to 4.1 rad/s by the time the
+left hand reaches the floor. The keyed tip stays near 1.8 rad/s. No shape of the body keeps it over the sill:
+- the trunk is about 20 cm deep, so a trunk hanging down the far face carries its mass 10 to 20 cm past the edge;
+- the legs, a third of the mass, can't reach far enough back to balance it (piked level behind: 3.5 cm of it);
+- moving the hips back puts the chest into the wall.
+
+Re-timed 0.1 s earlier, the keyed tip stays within about 4° of the computed one, but it slows from 1.76 s, before the
+chest reaches the far face at 1.88 s: 130 to 270 N·m about the edge, with nothing there to give it.
+
+**The window's balance, on its own branch and not passing yet** (`anim/window-reach-wip`):
+- **The sill held until the hands are down.** The trunk is set down onto the sill as one smooth push inside a band at
+  every 5 ms, solved with the planner's banded programme:
+  - at least enough that the body is within the rig's centimetre of the sill's top or edge, on every vertex;
+  - at most 8 mm into the sill anywhere over it: a soft belly flattens, and 4 mm in it touches over the sill's depth;
+  - never into the floor.
+  - A point that has passed the edge may go on down beside the face, so a 2.4 cm step in the nearest point never closes
+    the band. The push sampled point by point, or averaged, stepped the hips' velocity by up to 0.5 m/s.
+- **The hands** are aimed at their floor marks, set down on them and kept there. They used to touch down and slide 12 to
+  20 cm.
+- **The trunk turns on per-angle quintics** from rest into the roll's spin. `spinTrack` jolted the centre of mass by
+  12 m/s² at a key.
+- **The roll's re-seat is averaged** over its 40 ms, like the roll itself. Re-seated exactly, the lowest point's jump
+  from the mane to the shoulder and on to the seat came back as a 0.6 m/s step in 6 ms (14 x BW). The seat now sinks at
+  most 1.1 cm into the floor.
+- **`hold`, a support rule tried there:** a body on a top that also leans on a face below it is held by the two, and the
+  plan keeps the authored path for the rig to judge. Planned on the top alone, the draped body's centre of mass was
+  pulled back 10 cm into the wall and 24 cm along it.
+
+The gate on the horse (every-vertex rig), percent of body weight:
+
+| | over the limit | slide | reach | right hand down | hands to the floor | back to the floor | roll | sit up | rise |
+|---|---|---|---|---|---|---|---|---|---|
+| first pass (bab4ab8) | 0.79 s | 12 | 33 | | 55 | 26 | 328 | 183 | 72 |
+| re-timed, with `hold` (the branch) | 0.66 s | 146 | 150 | 35 | 42 | 40 | 34 | 38 | 47 |
+| re-timed, without | 0.92 s | 120 | 142 | 79 | 36 | 41 | 34 | 38 | 48 |
+| first timing, without | 0.55 s | 3 | 195 | 141 | 25 | 54 | 36 | 41 | 34 |
+| first timing, with `hold` | 0.70 s | 3 | 110 | 44 | 106 | 52 | 40 | 41 | 32 |
+
+The roll's fix holds in every variant: the required force in contact goes from 17.4 to 5.0 x BW. The reach passes in
+none. The traversal test passes 10 of 12 on the branch: the goat's head is
+2.2 cm into the floor at 2.12 s, and the pig director's trunk 5.2 cm into the sill at 1.82 s.
+
+**Open: what stops the tip.** Gravity speeds it up until something holds the body:
+- the hands bracing on the outside wall as the body tips, then walking down it to the floor;
+- the chest coming to rest against the outside wall, the body sliding down it on the chest until the hands are down;
+- or nothing: a free tip onto the hands, which reach the floor at about 2 m/s and take it on the arms.
+
+That choice sets the reach's keys, then the two species.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
