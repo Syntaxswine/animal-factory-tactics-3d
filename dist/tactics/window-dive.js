@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.js';
-import {V,Q,DEG,clamp,smooth,track,spinTrack,bodyQ,yawQ,relQ,frameToWorld as toWorld,keyedLimb,posedFrom,createTraversalBody,createSurfaceProbe,massPoints,inertiaAbout,BODY_MASS} from './traversal-pose.js';
+import {V,Q,DEG,clamp,smooth,track,spinTrack,bodyQ,yawQ,relQ,frameToWorld as toWorld,keyedLimb,posedFrom,steadyPoles,steadyTurns,limbSample,createTraversalBody,createSurfaceProbe,massPoints,inertiaAbout,BODY_MASS} from './traversal-pose.js';
 import {bodyFit,createTailBend,createClearanceFit,edgeBoxes} from './traversal-fit.js';
 // Head-first window entry and roll (docs/tactics/NATURAL-TRAVERSAL.md). Local frame: start on the tile at the
 // origin facing +X, the window on the edge at X = .5 (faces .42 and .58, sill top .85, opening top 1.55),
@@ -11,7 +11,7 @@ import {bodyFit,createTailBend,createClearanceFit,edgeBoxes} from './traversal-f
 export const WINDOW={edge:.5,half:.08,sill:.85,top:1.55};
 // The roll's pace is not keyed: it starts spinning at omega (rad/s) and gravity, the contact and the impacts
 // where the contact jumps decide the rest (see rollDynamics).
-export const ROLL=Object.freeze({dir:78,start:2.40,flex:40,back:[.86,-.55],omega:2.2,maxTurn:150});
+export const ROLL=Object.freeze({dir:78,start:2.40,flex:40,back:[.94,-.55],omega:2.2,maxTurn:150});
 // Keyed trunk before the roll: time, label, hips [x, y, z], pelvis pitch / roll / heading (degrees: pitch forward,
 // past 180 inverted; heading from +X toward +Z). The last keyed pose before the roll is built from the roll itself.
 // Heights are the horse's; a key the legs hold up (stand) is scaled to each character's legs, and a body deeper in
@@ -42,9 +42,11 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const d=V(Math.cos(ROLL.dir*DEG),0,Math.sin(ROLL.dir*DEG)),axis=V(0,1,0).cross(d).normalize();
  // The rolling shape, in the trunk's own frames: a squat tuck (heels under the seat, so the hooves arrive at the
  // floor as the body sits up: 0.7 cm short, measured), arms in.
- const TUCK={'leg-1':[.06,-.33,-.14],leg1:[.06,-.33,.14],'arm-1':[.26,.05,-.28],arm1:[.26,.06,-.06]};
- const posed=(tr,limbs)=>posedFrom(tr,limbs,{elbowAway:[1,.15,0]});
- const tuckLimbs=Object.fromEntries(Object.entries(TUCK).map(([k,p])=>[k,{f:k.startsWith('leg')?'pelvis':'chest',p}]));
+ const TUCK={'leg-1':[.06,-.33,-.14],leg1:[.06,-.33,.14],'arm-1':[.28,.04,-.26],arm1:[.28,.04,.12]},TUCK_ELBOW={'arm-1':[.3,0,1],arm1:[.8,0,.4]};
+ // fit: this character's clearance corrections; steady: its limbs' bend directions (both solved below, null until then).
+ let fit=null,steady=null,turnRef=null;
+ const posed=(tr,limbs,t)=>posedFrom(tr,limbs,{elbowAway:[1,.15,0],poles:steady&&t!==undefined?id=>steady(id,t):null,offsets:fit?.limb&&t!==undefined?id=>fit.limb(id,t):null,turns:turnRef&&t!==undefined?b=>turnRef(b,t):null});
+ const tuckLimbs=Object.fromEntries(Object.entries(TUCK).map(([k,p])=>[k,k.startsWith('leg')?{f:'pelvis',p}:{f:'chest',p,elbow:TUCK_ELBOW[k]}]));
  const lowest=()=>{probe.update();return probe.lowest();};
  const shapeOf=row=>{const [flex,side,twist,nod,tilt,turn]=row;return {spineQ:relQ(flex,side,twist),headQ:relQ(nod,tilt,turn)};};
  // ---- the roll: from the chest-flat start pose the curled body turns about the floor contact under it ----
@@ -74,20 +76,25 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // moving average of the trajectory, then re-seated on the floor), so the floor never has to stop it in zero time.
  const SOFT=.04,uni=[];{const t0=rollRows[0].t,t1=rollRows.at(-1).t,n=Math.ceil((t1-t0)/.0025),seg=t=>{let i=0;while(i<rollRows.length-2&&rollRows[i+1].t<t)i++;return i;};
   const raw=Array.from({length:n+1},(_,k)=>{const t=t0+(t1-t0)*k/n,i=seg(t),a=rollRows[i],b=rollRows[i+1]||a,f=b.t>a.t?(t-a.t)/(b.t-a.t):0;return {t,p:a.p.clone().lerp(b.p,f),q:a.q.clone().slerp(b.q,f)};});
-  const h=Math.round(SOFT/2/.0025);for(let k=0;k<=n;k++){const lo=Math.max(0,k-h),hi=Math.min(n,k+h),p=V();let q=raw[k].q.clone(),m=0;for(let j=lo;j<=hi;j++){p.add(raw[j].p);m++;}p.divideScalar(m);
+  // The window narrows symmetrically toward the ends, so the softened roll starts and ends exactly where the keyed
+  // descent hands over and the get-up takes over (a one-sided window shifted them by up to 2 cm: a pop of the whole body).
+  const h=Math.round(SOFT/2/.0025);for(let k=0;k<=n;k++){const hk=Math.min(h,k,n-k),lo=k-hk,hi=k+hk,p=V();let q=raw[k].q.clone(),m=0;for(let j=lo;j<=hi;j++){p.add(raw[j].p);m++;}p.divideScalar(m);
    const ref=raw[k].q,acc=V();for(let j=lo;j<=hi;j++){const dq=raw[j].q.clone().multiply(ref.clone().invert());if(dq.w<0)dq.set(-dq.x,-dq.y,-dq.z,-dq.w);const a=2*Math.acos(clamp(dq.w,-1,1)),sn=Math.sqrt(Math.max(0,1-dq.w*dq.w));if(sn>1e-9)acc.addScaledVector(V(dq.x,dq.y,dq.z).divideScalar(sn),a);}acc.divideScalar(m);
    const ang=acc.length();q=(ang>1e-9?Q().setFromAxisAngle(acc.clone().divideScalar(ang),ang):Q()).multiply(ref);
    const tr={hips:p,hipsQ:q,...s0,...chestOf(p,q,s0.spineQ)};body.pose(posed(tr,tuckLimbs),'roll soft');const L=lowest();uni.push({t:raw[k].t,p:p.clone().add(V(0,-L.y,0)),q});}}
- const rollPos=track(uni.map(r=>[r.t,...r.p.toArray()])),rollRot=spinTrack(uni.map(r=>[r.t,r.q]));
+ // The roll leaves and rejoins the keyed trunk at its own speed: the hips moving as the body turns about the first
+ // contact, and as it turns about the seat at the end.
+ const rEnd=rollRows.at(-1),D=END,c0=V(...rollRows[0].contact),hipsSpin=axis.clone().cross(p0.clone().sub(c0)).multiplyScalar(ROLL.omega);
+ const endSpin=axis.clone().multiplyScalar(rEnd.w),endVel=axis.clone().cross(rEnd.p.clone().sub(seat)).multiplyScalar(rEnd.w);
+ const rollPos=track(uni.map(r=>[r.t,...r.p.toArray()]),{0:hipsSpin.toArray(),[uni.length-1]:endVel.toArray()});
+ const rollRot=spinTrack(uni.map((r,i)=>[r.t,r.q,i===0?axis.clone().multiplyScalar(ROLL.omega):i===uni.length-1?endSpin:undefined]));
  const rollAt=t=>{let i=0;while(i<rollRows.length-1&&rollRows[i+1].t<t)i++;return {hips:V(...rollPos(t)),hipsQ:rollRot(t),contact:rollRows[i].contact,part:rollRows[i].part};};
- const rEnd=rollRows.at(-1),D=END;
  // Spine and head over the whole motion: the pre-roll keys, the roll's fixed curl, then unfolding.
  const SHAPE=[...SHAPE_PRE,[ROLL_END,...SHAPE_PRE.at(-1).slice(1)],...SHAPE_POST.map(([dt,...v])=>[CATCH_END+dt,...v])];
  const shape=track(SHAPE),shapeAt=t=>shapeOf(shape(clamp(t,0,D)));
  // ---- keyed trunk: before the roll, then from the roll's end up to standing on the tile centre ----
  // The descent hands over at the roll's own spin (the hips moving as the body turns about the contact).
  const preRows=pre.map(k=>({t:k.t,p:V(...k.hips),q:yawQ(k.heading||0).multiply(bodyQ((k.pitch||0)*DEG,(k.roll||0)*DEG))}));
- const c0=V(...rollRows[0].contact),hipsSpin=axis.clone().cross(p0.clone().sub(c0)).multiplyScalar(ROLL.omega);
  // The get-up rises in place over the seat: the right foot catches the roll's forward spin just ahead, the left shin
  // lands beside the seat, and the body pivots on both feet to face on as it stands.
  // Until the foot lands the body keeps turning about the seat, slowing from the roll's spin to rest: the catch
@@ -99,15 +106,14 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const kneel={t:kneelT,p:mid.clone().addScaledVector(d,-.10).setY(fitB.stand(.55)),q:yawQ(ROLL.dir*.6).multiply(bodyQ(30*DEG))};
  const stand={t:END,p:body.at0('hips').add(V(1,0,0)),q:Q()};
  const trunkRows=[...preRows,{t:ROLL.start,p:p0,q:q0},catchKey,kneel,stand];
- const iStart=trunkRows.findIndex(r=>r.t===ROLL.start),iEnd=iStart+1,endSpin=axis.clone().multiplyScalar(rEnd.w),endVel=axis.clone().cross(rEnd.p.clone().sub(seat)).multiplyScalar(rEnd.w);
+ const iStart=trunkRows.findIndex(r=>r.t===ROLL.start),iEnd=iStart+1;
  const posTrack=track(trunkRows.map(r=>[r.t,...r.p.toArray()]),{[iStart]:hipsSpin.toArray(),[iEnd]:endVel.toArray()}),rotTrack=spinTrack(trunkRows.map((r,i)=>[r.t,r.q,i===iStart?axis.clone().multiplyScalar(ROLL.omega):i===iEnd?endSpin:undefined]));
- // fit: this character's clearance corrections (solved below; zero until then, and held at zero through the roll).
- let fit=null;
+ // The clearance corrections are zero until solved, and held at zero through the roll.
  function trunkAt(t){const s=t>ROLL.start&&t<ROLL_END?s0:shapeAt(t);let hips,hipsQ;if(t>ROLL.start&&t<CATCH_END){const r=rollAt(t);hips=r.hips;hipsQ=r.hipsQ;}else{hips=V(...posTrack(t));hipsQ=rotTrack(t);}
   let headQ=s.headQ;if(fit){hips=hips.clone().add(fit.trunk(t));const bow=fit.bow(t);if(bow)hipsQ=hipsQ.clone().multiply(bodyQ(bow*DEG));const [nod,tilt,turn]=fit.head(t);if(nod||tilt||turn)headQ=s.headQ.clone().multiply(relQ(nod,tilt,turn));}
   return {hips,hipsQ,...s,headQ,...chestOf(hips,hipsQ,s.spineQ)};}
  // ---- limbs: world targets where planted, the tuck through the roll ----
- const rest={leg:s=>({f:'world',p:body.at0('hoof'+s).toArray()}),arm:s=>({f:'chest',p:restWrist(s)})};
+ const rest={leg:s=>({f:'world',p:body.at0('hoof'+s).toArray(),plant:true}),arm:s=>({f:'chest',p:restWrist(s)})};
  // Hands are placed from where the shoulders really are at that key, so the short arms are never asked past
  // their reach: dangling toward a direction, or flat on the floor near below the shoulder.
  const REACH=s=>body.L[s].upper+body.L[s].fore,shoulderAt=(t,s)=>{const tr=trunkAt(t);return tr.chest.clone().add(body.offsets.shoulder[s].clone().applyQuaternion(tr.chestQ));};
@@ -116,17 +122,22 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const dangle=(t,s,dir,k=.92)=>{const tr=trunkAt(t),w=shoulderAt(t,s).addScaledVector(V(...dir).normalize(),k*REACH(s));return {f:'chest',p:w.sub(tr.chest).applyQuaternion(tr.chestQ.clone().invert()).toArray()};};
  // A hand the floor is out of reach for stays aimed at it; the limb records the shortfall (body.warnings).
  const floorHand=(t,s,off,palm)=>{const sh=shoulderAt(t,s);return {f:'world',p:[sh.x+off[0],.06,sh.z+off[2]],palm};};
+ // While the hands take the floor and the body lies back onto them, the left elbow bends up and out to the open side;
+ // the right shoulder is 7 to 11 cm off the wall face, so its hand goes under it and the elbow bends back along the body
+ // (a narrow push-up). The sill's world-forward elbows folded the right arm across the chest of a body upside down at
+ // 58 degrees (18 cm into it, phantom-wrench capsules); out or up, it met the wall or the head.
+ const FLOOR_ELBOW={[-1]:[.6,0,1],1:[0,-1,.2]};
  let LIMB;const buildLimbs=()=>{LIMB={
-  'leg-1':[[0,rest.leg(-1)],[.55,{f:'world',p:[-.035-back,fitB.ankle,-.40]}],[.90,{f:'world',p:[-.035-back,fitB.ankle,-.40],lift:.25}],[1.25,{f:'pelvis',p:[-.06,-.56,-.13],hoof:40}],[1.60,{f:'pelvis',p:[-.06,-.60,-.12],hoof:60}],[2.00,{f:'pelvis',p:[-.22,-.46,-.12],hoof:50}],[2.22,{f:'pelvis',p:[-.12,-.30,-.13],hoof:40}],[ROLL.start,{f:'pelvis',p:TUCK['leg-1']}],[ROLL_END-.10,{f:'pelvis',p:TUCK['leg-1']}]],
-  leg1:[[0,rest.leg(1)],[.55,{f:'world',p:[.20-back,fitB.ankle,-.06]}],[.90,{f:'world',p:[.20-back,fitB.ankle,-.06],lift:.25}],[1.25,{f:'pelvis',p:[-.04,-.56,.13],hoof:40}],[1.60,{f:'pelvis',p:[-.06,-.60,.12],hoof:60}],[2.00,{f:'pelvis',p:[-.22,-.46,.12],hoof:50}],[2.22,{f:'pelvis',p:[-.12,-.30,.13],hoof:40}],[ROLL.start,{f:'pelvis',p:TUCK.leg1}],[ROLL_END-.10,{f:'pelvis',p:TUCK.leg1}]],
-  'arm-1':[[0,rest.arm(-1)],[.55,{f:'world',p:[.36,.92,-.42]}],[.90,{f:'world',p:[.44,.91,-.42],palm:0}],[1.25,{f:'world',p:[.47,.91,-.42],palm:0}],[1.60,dangle(1.60,-1,[.35,-1,-.05])],[2.00,dangle(2.00,-1,[.25,-1,-.10],.97)],[2.22,floorHand(2.22,-1,[.10,0,-.08],30)],[ROLL.start,floorHand(2.22,-1,[.10,0,-.08],30)],[ROLL.start+.12,{f:'chest',p:TUCK['arm-1']}],[ROLL_END,{f:'chest',p:TUCK['arm-1']}]],
-  arm1:[[0,rest.arm(1)],[.55,{f:'world',p:[.36,.92,.02]}],[.90,{f:'world',p:[.44,.91,0],palm:0}],[1.25,{f:'world',p:[.47,.91,-.02],palm:0}],[1.60,dangle(1.60,1,[.35,-1,.05])],[2.00,dangle(2.00,1,[.25,-1,.10],.97)],[2.22,floorHand(2.22,1,[.12,0,.08],50)],[ROLL.start,floorHand(2.22,1,[.12,0,.08],50)],[ROLL.start+.12,{f:'chest',p:TUCK.arm1}],[ROLL_END,{f:'chest',p:TUCK.arm1}]],
+  'leg-1':[[0,rest.leg(-1)],[.55,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,plant:true}],[.90,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.06,-.56,-.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,-.12]}],[2.00,{f:'pelvis',p:[-.22,-.46,-.12]}],[2.22,{f:'pelvis',p:[-.12,-.30,-.13]}],[ROLL.start,{f:'pelvis',p:TUCK['leg-1']}],[ROLL_END-.10,{f:'pelvis',p:TUCK['leg-1']}]],
+  leg1:[[0,rest.leg(1)],[.55,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,plant:true}],[.90,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.04,-.56,.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,.12]}],[2.00,{f:'pelvis',p:[-.22,-.46,.12]}],[2.22,{f:'pelvis',p:[-.12,-.30,.13]}],[ROLL.start,{f:'pelvis',p:TUCK.leg1}],[ROLL_END-.10,{f:'pelvis',p:TUCK.leg1}]],
+  'arm-1':[[0,rest.arm(-1)],[.55,{f:'world',p:[.36,.92,-.42]}],[.90,{f:'world',p:[.44,.91,-.42],palm:0}],[1.25,{f:'world',p:[.47,.91,-.42],palm:0}],[1.60,dangle(1.60,-1,[.35,-1,-.05])],[2.00,dangle(2.00,-1,[.25,-1,-.10],.97)],[2.22,{...floorHand(ROLL.start,-1,[.06,0,-.20],30),elbow:FLOOR_ELBOW[-1]}],[ROLL.start,{...floorHand(ROLL.start,-1,[.06,0,-.20],30),elbow:FLOOR_ELBOW[-1]}],[ROLL.start+.18,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}],[ROLL_END,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}]],
+  arm1:[[0,rest.arm(1)],[.55,{f:'world',p:[.36,.92,.02]}],[.90,{f:'world',p:[.44,.91,0],palm:0}],[1.25,{f:'world',p:[.47,.91,-.02],palm:0}],[1.60,dangle(1.60,1,[.35,-1,.05])],[2.00,dangle(2.00,1,[.25,-1,.10],.97)],[2.22,{...floorHand(2.22,1,[0,0,0],50),elbow:FLOOR_ELBOW[1]}],[ROLL.start,{...floorHand(2.22,1,[0,0,0],50),elbow:FLOOR_ELBOW[1]}],[ROLL.start+.18,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}],[ROLL_END,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}]],
  };
  // After the roll both hooves stay where they landed (turning flat as they take the weight) until the stand,
  // which steps them into the stance on the tile centre.
- for(const s of [-1,1])LIMB['leg'+s].push([catchT,{f:'world',p:feet[s].toArray(),hoof:0,heading:ROLL.dir}],[kneelT+.15,{f:'world',p:feet[s].toArray(),hoof:0,heading:ROLL.dir}],[END,{f:'world',p:fitB.foot(s,1),hoof:0,heading:0}]);
+ for(const s of [-1,1])LIMB['leg'+s].push([catchT,{f:'world',p:feet[s].toArray(),hoof:0,heading:ROLL.dir,plant:true}],[kneelT+.15,{f:'world',p:feet[s].toArray(),hoof:0,heading:ROLL.dir,plant:true}],[END,{f:'world',p:fitB.foot(s,1),hoof:0,heading:0,plant:true}]);
  for(const s of [-1,1])LIMB['arm'+s].push([kneelT,{f:'chest',p:restWrist(s)}],[END,{f:'chest',p:restWrist(s)}]);};buildLimbs();
- function spec(t){const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posed(tr,limbs);}
+ function spec(t){const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posed(tr,limbs,t);}
  // Fit this character's surface: trunk, head and tail out of the floor, the sill and the lintel. The roll is computed
  // from the body itself, so the trunk and head are held through it, easing in and out over 0.08 s; the hands are then
  // placed again from the fitted shoulders.
@@ -134,6 +145,15 @@ export function createWindowDive(worker,profile={id:'horse'}){
  fit=createClearanceFit(D);fit.solve({body,probe,tails,obstacles:edgeBoxes(WINDOW.edge,WINDOW.half,[[0,WINDOW.sill],[WINDOW.top,2]]),poseAt:t=>body.pose(spec(t),'fit'),
   stage:t=>t<1.0?'near':t<1.9?'over':'far',free:{trunk:held,head:held}});
  buildLimbs();
+ steady=steadyPoles(D,t=>limbSample(body,spec(t)));
+ // The limbs are fitted with their steady bend directions, which are then found again for the moved targets.
+ // How planted each limb's end is (a palm on a surface, a hoof set on the floor or a face), for the limb fit.
+ const planted=(id,t)=>{const l=keyedLimb(LIMB[id],t,trunkAt(t));if(id.startsWith('arm'))return [l.palm!==undefined?l.palmW:0,[0,1,0]];
+  const [na,nb,u]=l.plant;return [l.plantW||0,na&&nb?na.map((v,j)=>v+(nb[j]-v)*u):na||nb];};
+ fit.solveLimbs({planted});steady=steadyPoles(D,t=>limbSample(body,spec(t)));
+ // Twice: the first pass unwraps the palms' yaw blends, the second finds the hands' ways round for those continuous
+ // targets (found for the wrapped ones, they named the wrong way where a blend passed 180 degrees: a 47 m/s snap).
+ const turnsAt=t=>{body.pose(spec(t),'turns');return body.turns.slice();};turnRef=steadyTurns(D,turnsAt);turnRef=steadyTurns(D,turnsAt);
  const KEYS=[...PRE.map(k=>({t:k.t,label:k.label})),{t:ROLL.start,label:'Back to the floor'},{t:(ROLL.start+ROLL_END)/2,label:'Roll'},{t:ROLL_END,label:'Sit up'},{t:kneelT,label:'Rise from the crouch'},{t:END,label:'Stand on the tile'}];
  let state=null;
  const api={duration:D,keys:KEYS,body,probe,roll:{rows:rollRows,dir:ROLL.dir,start:ROLL.start,end:ROLL_END},

@@ -67,14 +67,14 @@ export function createTailBend(worker){
 // The way out of an obstacle follows the crossing (stage(t)): straight back while approaching it; over it, the nearest
 // of back, up or on; past it, the nearer of on or up. From under an overhead obstacle (a lintel) the way out is always
 // down: duck. The floor always pushes up.
-const EASE=.12;
+const EASE=.12,LIMBS=['leg-1','leg1','arm-1','arm1'];
 const HEAD_TRY=[];for(let a=-40;a<=40;a+=10)for(let b=-60;b<=60;b+=15)for(let c=-48;c<=48;c+=12)HEAD_TRY.push([a,b,c]);
 const headCost=h=>1.5*Math.abs(h[0])+1.2*Math.abs(h[1])+Math.abs(h[2]);HEAD_TRY.sort((x,y)=>headCost(x)-headCost(y));
 const BOW_TRY=[];for(let b=-30;b<=45;b+=5)BOW_TRY.push(b);BOW_TRY.sort((x,y)=>Math.abs(x)-Math.abs(y));
 const TAIL_TRY=[];for(let a=-150;a<=150;a+=10)for(let b=-120;b<=120;b+=10)TAIL_TRY.push([a,b]);TAIL_TRY.sort((x,y)=>Math.abs(x[0])+Math.abs(x[1])-Math.abs(y[0])-Math.abs(y[1]));
 export function createClearanceFit(duration,{step=.02}={}){
  const n=Math.max(2,Math.round(duration/step)+1),dt=duration/(n-1),times=Array.from({length:n},(_,k)=>k*dt);
- const ch={trunk:times.map(()=>[0,0,0]),bow:times.map(()=>[0]),head:times.map(()=>[0,0,0]),tail:times.map(()=>[0,0])};let tracks=null;
+ const ch={trunk:times.map(()=>[0,0,0]),bow:times.map(()=>[0]),head:times.map(()=>[0,0,0]),tail:times.map(()=>[0,0]),...Object.fromEntries(LIMBS.map(id=>[id,times.map(()=>[0,0,0])]))};let tracks=null,last=null;
  const at=(a,t)=>{const x=clamp(t/dt,0,n-1),i=Math.min(n-2,Math.floor(x)),u=x-i;return a[i].map((v,j)=>v+(a[i+1][j]-v)*u);};
  const get=k=>t=>tracks?tracks[k](clamp(t,0,duration)):at(ch[k],t);
  const W=Math.max(1,Math.round(.06/dt)),R=Math.max(1,Math.round(.1/dt)),CHUNK=Math.max(1,Math.round(.24/dt)),TAIL_CHUNK=Math.max(1,Math.round(.12/dt));
@@ -164,15 +164,30 @@ export function createClearanceFit(duration,{step=.02}={}){
   // left, then the tail bends and lifts it for what is left; a last pass fits the head and tail to the finished trunk.
   for(let r=0;r<rounds;r++){add('trunk',torsoNeed(),free.trunk);add('trunk',solveHead(),free.trunk);if(tails?.count)add('trunk',solveTail(),free.trunk);}
   solveHead();if(tails?.count)solveTail();
-  tracks=Object.fromEntries(Object.keys(ch).map(k=>[k,track(times.map((t,i)=>[t,...ch[k][i]]))]));
-  // What is left after fitting, on the same grid: the deepest torso, head and tail points.
-  const left={trunk:{depth:0,t:0},head:{depth:0,t:0},tail:{depth:0,t:0}};
-  for(const t of times){st=stage(t);poseAt(t);probe.update();const note=(k,d)=>{if(d>left[k].depth)left[k]={depth:d,t};};
-   for(const i of torso){p.set(probe.x[i],probe.y[i],probe.z[i]);note('trunk',into(p,way));}
-   for(const i of head){p.set(probe.x[i],probe.y[i],probe.z[i]);note('head',into(p,way));}
-   if(tails?.count){const [a,b]=fit.tail(t);tails.world(a*DEG,b*DEG,v=>note('tail',into(v,way)));}}
-  fit.report=left;return fit;}
- const fit={trunk:t=>V(...get('trunk')(t)),bow:t=>get('bow')(t)[0],head:get('head'),tail:get('tail'),report:null,solve};
+  // Limbs: the points riding a limb's bones move its end target out (a planted palm rises to lie on the sill, a hoof
+  // drops under the lintel, a leg lifts over the wall top). They are fitted afterwards (solveLimbs), once the motion has
+  // given its limbs their steady bend directions. planted(id, t) gives [weight, surface normal] for a limb's end; over a
+  // half, only the end's own points count (moving a planted hand cannot clear its forearm on an edge: that is the
+  // bend's work), and a planted end's need is taken as the pose takes its offset, out along the normal only. Counted
+  // whole, the need the pose would not apply grew round on round to 21 cm and folded the arms in the reach to the catch.
+  const limbPts=Object.fromEntries(LIMBS.map(id=>[id,[]])),endPts=Object.fromEntries(LIMBS.map(id=>[id,[]]));
+  for(let i=0;i<probe.count;i++){const m=probe.boneNames[probe.bone[i]].match(/^(upperArm|forearm|hand|fingers|thigh|shin|hoof)(-?1)$/);if(!m)continue;const id=(/^(thigh|shin|hoof)$/.test(m[1])?'leg':'arm')+m[2];limbPts[id].push(i);if(/^(hand|fingers|hoof)$/.test(m[1]))endPts[id].push(i);}
+  const limbNeed=planted=>{const need=Object.fromEntries(LIMBS.map(id=>[id,[]]));
+   for(const t of times){st=stage(t);poseAt(t);probe.update();for(const id of LIMBS){const [pw,pn]=planted?.(id,t)||[0,null];let deep=0,out=V();for(const i of(pw>.5?endPts:limbPts)[id]){p.set(probe.x[i],probe.y[i],probe.z[i]);const d=into(p,way)+margin;if(d>deep){deep=d;out=way.clone().multiplyScalar(d);}}
+     if(pw>0&&pn){const N=V(...pn).normalize(),along=Math.max(0,out.dot(N));out.multiplyScalar(1-pw).addScaledVector(N,along*pw);}need[id].push(out.toArray());}}
+   return need;};
+  const build=()=>{tracks=Object.fromEntries(Object.keys(ch).map(k=>[k,track(times.map((t,i)=>[t,...ch[k][i]]))]));};
+  // What is left after fitting, on the same grid: the deepest torso, head, tail and limb points.
+  const report=()=>{const left=Object.fromEntries(['trunk','head','tail',...LIMBS].map(k=>[k,{depth:0,t:0}]));
+   for(const t of times){st=stage(t);poseAt(t);probe.update();const note=(k,d)=>{if(d>left[k].depth)left[k]={depth:d,t};};
+    for(const i of torso){p.set(probe.x[i],probe.y[i],probe.z[i]);note('trunk',into(p,way));}
+    for(const i of head){p.set(probe.x[i],probe.y[i],probe.z[i]);note('head',into(p,way));}
+    for(const id of LIMBS)for(const i of limbPts[id]){p.set(probe.x[i],probe.y[i],probe.z[i]);note(id,into(p,way));}
+    if(tails?.count){const [a,b]=fit.tail(t);tails.world(a*DEG,b*DEG,v=>note('tail',into(v,way)));}}
+   fit.report=left;};
+  fit.solveLimbs=({rounds:limbRounds=3,planted=null}={})=>{tracks=null;for(let r=0;r<limbRounds;r++){const need=limbNeed(planted);for(const id of LIMBS)add(id,need[id],free.limbs);}build();report();return fit;};
+  build();report();return fit;}
+ const fit={trunk:t=>V(...get('trunk')(t)),bow:t=>get('bow')(t)[0],head:get('head'),tail:get('tail'),limb:(id,t)=>V(...get(id)(t)),report:null,solve,solveLimbs:()=>fit};
  return fit;
 }
 // The rig's obstacle boxes (phantom-wrench rigs/traversal.mjs): one tile wide on the edge at x = edge.

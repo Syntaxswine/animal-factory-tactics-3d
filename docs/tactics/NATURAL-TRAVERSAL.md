@@ -334,6 +334,97 @@ crossing is cut short. A mutant that lifts her body on the sill fails it.
 
 Not done for the hen: the physics audit. A flapping bird needs the wings' push on the air in the rig.
 
+### 2026-10-19 (polish): limb flips, joins and clipping, every mammal
+
+The user: "Start the physics and polish pass: the window roll's right arm, the joins, the limb flips in the vault and
+climb, and the shared clipping, across all species."
+
+Most of the pops came from the shared solver, not the keys, so most of the fixes are in
+`dist/tactics/traversal-pose.js` and `traversal-fit.js`:
+
+| defect | cause | fix |
+|---|---|---|
+| knees and elbows thrown 2 to 3 cm in a millisecond (14 to 21 m/s) as a limb straightens or unstraightens | a two-bone bend grows as the square root of the distance short of full reach | soft IK: within 1.5 cm of full reach the limb straightens asymptotically (at most 5.5 mm short there, exact closer in) |
+| a hanging hand snapping 80 degrees (12 m/s) | its palm blend slerped between two palm-down turns 180 degrees apart; the short way switched sides | the blend is a yaw angle; its way round is kept continuous like the turns' |
+| a released hand spinning the long way (to 280 degrees) | the way round was kept continuous from a first sample taken at 180 degrees | where a switch is cheap (360 x min(w, 1-w) under 4 degrees) the short way is taken again |
+| a 47 m/s hand snap | the turn pre-pass read palm targets without their yaw reference, so it kept the wrong way for the live pose | turn records carry the short way; the pre-pass runs twice, the second time on the unwrapped palm targets |
+| gripping hands dragged 5 to 30 cm off a top, feet off the face; arms folded to 159 degrees | the limb fit moved a planted end by its forearm's or shin's contact, and, unable to fix that, grew round on round to 21 cm | a planted contact (a palm, or a hoof marked `plant` with its surface's normal) takes only the part of an offset out along that normal; while planted only the end's own points count, and its need is projected the same way |
+| no say in where an elbow bends | arms had a fixed rule (back, down and out, or toward world `elbowAway` while a palm is planted) | per-key `elbow` direction in the chest frame, as knees already had |
+| an elbow swinging 6 cm in 8 ms as its arm straightens | near full reach the bend side caught up at up to 45 degrees per 5 ms, and soft IK leaves a 3.7 cm bend there | the catch-up is capped at 15 degrees per 5 ms |
+
+**Window.**
+- **The right arm** went 18.5 cm into the chest as the body lay back onto its hands. The sill's world-forward elbow
+  rule folded it across a body upside down at 58 degrees.
+- **The right shoulder** is 7 to 11 cm off the wall face there. Its hand now goes under it and the elbow bends back
+  along the body, a narrow push-up (a search over 20 hand spots and elbow directions found the only clean pair).
+- **The left elbow** bends up and out to the open side.
+- **The roll** starts 8 cm farther from the wall, so the right sleeve stays off it.
+- **Release and tuck.** Both hands leave the floor over 0.18 s, and the tuck's elbows point out.
+
+**Side vault.**
+- **The right hand** used to drop to the hip after its push, through the right thigh (11.8 cm). It now lets go as the
+  spring starts and lifts out to the side at shoulder height, a balancing arm wide of the chest, while the legs pass
+  under it.
+- **The planted elbows** bend back and out, as in a dip. Bent down, the bigger bodies' forearms crossed the near edge,
+  and the bull's elbow whipped at 27 m/s.
+- **The spring** is 10 cm higher (6 cm at "Legs up and out"), so the deeper bodies' legs clear the near corner (bull
+  4.3 to 2.5 cm, skunk 5.6 to 2.0).
+
+**Climb.** The far side was re-keyed after a probe found:
+- the legs crossed (left foot on the right) from 3.0 to 4.5 s;
+- the feet turned backward through the drop and stand;
+- the left knee folding into the far face as the leg came over;
+- a 310-degree long-way hoof turn between keys at heading -130 and 180.
+
+The new far side:
+- **Straddle:** faces along the wall, one leg down each side.
+- **Left leg over:** the left knee goes up behind onto the top, then the leg slides off the far side as the body turns
+  left to face the wall. The knee points out to the side, clear of the face.
+- **Hands:** the right lets go once the chest is over and plants ahead, before the right knee comes up beside it; the
+  left re-grips on the far side.
+- **Feet:** on their own sides, toes forward, from the hang to the drop.
+- **The turn onto the tile** is two steps, lifted mid-step: the left foot round behind the planted right, then the
+  right foot round to its place.
+
+Also on the climb:
+- **The right knee-up** no longer passes the foot by its own hip; there the bend plane spun the knee at 21 m/s.
+- **A foot leaving a face** keeps its ankle off it, toe up, so a long foot (rabbit, dog, skunk) never swings into the
+  wall (8 to 2.3 cm).
+- **The arms swing up ahead of the jump**, in front of the face, and come down onto the top. Reaching straight for it,
+  the forearms went 7 cm into the face.
+- **Gripping elbows** bend back and out from the wall.
+- **The face stays the way out until 1.88 s**, so the sheep's waistcoat hem no longer meets the top edge (6.9 to 1.4 cm).
+
+The phantom-wrench gate on the horse, before (781975c) and after:
+
+| | window | side vault | climb |
+|---|---|---|---|
+| capsule overlaps over 2 cm (deepest) | 11 (18.5 cm) to 1 (4.7) | 8 (10.3) to 2 (3.4) | 42 (15.0) to 7 (3.7) |
+| fastest point | 71.7 to 8.4 m/s | 136 to 12.2 | 34.8 to 10.2 |
+| position pops | 8.3 cm palms to none | 1.0 to 0.4 cm | 8.1 cm palms to none |
+| COM velocity jumps | 0.04 to 0.03 m/s | 8.0 to 0.015 m/s | 34 to 0.09 m/s |
+| required force in contact | 29 to 30 x BW | 503 to 11.3 | 38 to 7.7 |
+| joint range | elbow 160 to 155 degrees | inside | inside |
+
+Every mammal's surface against the floor and obstacle, deepest part, every 10 ms:
+- **Window:** 3.3 cm or less, except the donkey's and rabbit's ears at the lintel (5.6 and 4.7) and a 10 ms frame of
+  the cow's tail.
+- **Side vault:** 3.1 cm or less, except the tails (donkey 7.3, cow 3.5).
+- **Climb:** 3.2 cm or less, except both pigs (8, their bellies at the face) and the skunk's tail plume (4.6).
+
+The committed climb put feet, seats, forearms and shirts 8 cm into the wall for most species. The 12 traversal tests
+pass.
+
+Left for the physics pass and polish:
+1. **Physics balance.** The phantom wrench outside impacts and the required force in contact still fail all three
+   (the window's roll peaks at 30 x BW).
+2. **The window's right elbow** folds to 155 degrees as its hand leaves the floor, 5 past the rig's table. The tucked
+   right hand rests on the right thigh (4.7 cm by capsules).
+3. **The vault's spring** swings the feet at 12 m/s, over the gate's 8.
+4. **The climb.** The seat grazes the top 2 to 3 cm as the left leg slides off. The forearms graze the near edge 2 to
+   3 cm at the catch. A pig needs its own hang.
+5. **Long ears** at the lintel, and **tails** on the walls.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
