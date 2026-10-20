@@ -10,8 +10,16 @@
   "usage": "Blank screen material with alternating horizontal phosphor scanlines and a diffuse curved-glass edge vignette. Use as one complete background, not a repeating tile; keep live text within the central area. Authored at 4:3. Prefer preserving that ratio; very wide stretching changes the apparent scanline spacing and curvature.",
   "processing": "PNG copied unchanged from generated output. WebP is a quality-92 encoding of the full image, with no cropping or repainting.",
   "portraitOverlay": {
-    "blendMode": "color-burn",
-    "opacity": 0.4,
+    "blendMode": "multiply",
+    "opacity": 0.2,
+    "scanlines": {
+      "source": "CSS repeating-linear-gradient at portrait display size, separate from the unchanged painted glass",
+      "darkBandCssPx": 2,
+      "clearBandCssPx": 2,
+      "blendMode": "multiply",
+      "opacity": 0.2,
+      "colors": ["#031108", "#ffffff"]
+    },
     "scope": "Both dialogue portraits, clipped and isolated inside each portrait frame",
     "input": "Pointer events pass through; status captions stay above the filter"
   },

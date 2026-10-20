@@ -61,19 +61,37 @@ try{
  await openDialogue(page);
  await capture(page,'desktop-opening');
  const overlays=await page.locator('.dialogue-face').evaluateAll(faces=>faces.map(face=>{
-  const glass=getComputedStyle(face,'::after');
-  return {mode:glass.mixBlendMode,opacity:glass.opacity,pointerEvents:glass.pointerEvents,isolation:getComputedStyle(face).isolation,image:glass.backgroundImage};
+  const layer=pseudo=>{const s=getComputedStyle(face,pseudo);return {mode:s.mixBlendMode,opacity:s.opacity,pointerEvents:s.pointerEvents,image:s.backgroundImage};};
+  return {glass:layer('::before'),scanlines:layer('::after'),isolation:getComputedStyle(face).isolation};
  }));
  assert.equal(overlays.length,2,'both dialogue portraits have CRT glass');
  for(const overlay of overlays){
-  assert.equal(overlay.mode,'color-burn');assert.equal(overlay.opacity,'0.4');
-  assert.equal(overlay.pointerEvents,'none');assert.equal(overlay.isolation,'isolate');
-  assert.match(overlay.image,/crt-green-v1\.webp/);
+  for(const layer of [overlay.glass,overlay.scanlines]){
+   assert.equal(layer.mode,'multiply');assert.equal(layer.opacity,'0.2');
+   assert.equal(layer.pointerEvents,'none');
+  }
+  assert.equal(overlay.isolation,'isolate');
+  assert.match(overlay.glass.image,/crt-green-v1\.webp/);
+  assert.match(overlay.scanlines.image,/repeating-linear-gradient/);
+  assert.match(overlay.scanlines.image,/2px/);assert.match(overlay.scanlines.image,/4px/);
  }
  const texture=await page.evaluate(async()=>{const i=new Image();i.src=new URL('../assets/ui/dialogue-terminal/crt-green-v1.webp',location.href);await i.decode();return [i.naturalWidth,i.naturalHeight];});
  assert.deepEqual(texture,[1448,1086],'CRT overlay decoded at authored dimensions');
  await page.locator('.dialogue-participants').screenshot({path:path.join(out,'crt-portraits.png')});
- const unfiltered=await page.addStyleTag({content:'.battle-dialogue .dialogue-face::after{opacity:0}'});
+ if(process.env.COMPARE_CRT==='1'){
+  // Same live portraits, native size: inspect whether the blend change alone
+  // is enough, versus bands that survive the portrait's small display size.
+  for(const [name,css] of [
+   ['legacy-color-burn-40','.battle-dialogue .dialogue-face::before{mix-blend-mode:color-burn;opacity:.4}.battle-dialogue .dialogue-face::after{opacity:0}'],
+   ['texture-only-multiply-20','.battle-dialogue .dialogue-face::after{opacity:0}'],
+   ['bands-color-burn-40','.battle-dialogue .dialogue-face::before{mix-blend-mode:color-burn;opacity:.4}']
+  ]){
+   const style=await page.addStyleTag({content:css});
+   await page.locator('.dialogue-participants').screenshot({path:path.join(out,name+'.png')});
+   await style.evaluate(node=>node.remove());
+  }
+ }
+ const unfiltered=await page.addStyleTag({content:'.battle-dialogue .dialogue-face::before,.battle-dialogue .dialogue-face::after{opacity:0}'});
  await page.locator('.dialogue-participants').screenshot({path:path.join(out,'portraits-before-crt.png')});
  await unfiltered.evaluate(node=>node.remove());
  const startMinute=await page.evaluate(()=>window.battle3d.state.clock.minutes);
@@ -96,7 +114,7 @@ try{
  const draws=await page.evaluate(()=>window.battle3d.dialogue.presentationResources.portrait.draws);
  await page.getByRole('button',{name:'Replay',exact:true}).click();
  await page.waitForFunction(before=>window.battle3d.dialogue.presentationResources.portrait.draws>before+3,draws,{timeout:30000});
- await page.locator('.dialogue-header').scrollIntoViewIfNeeded();
+ await page.locator('.battle-dialogue').evaluate(d=>d.scrollTop=0);
  await capture(page,'crt-speaking');
  await page.getByRole('button',{name:'Show full line',exact:true}).click();
  await page.keyboard.press('Tab');
