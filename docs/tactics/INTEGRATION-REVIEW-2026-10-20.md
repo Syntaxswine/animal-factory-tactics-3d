@@ -5,7 +5,85 @@ Reviewed canonical `af42810`, coding branch `c29241ae`, and animation branch
 terminal `ee4ae6fb`. Animation checks used an isolated checkout of each pushed
 commit. Other agents' working files were not changed.
 
-## Follow-up decisions
+## Later dialogue follow-up: `3aac80db` and `7bf61901`
+
+**Approved with two corrections.** The acting merc now approaches the NPC,
+stops at a clear same-elevation talking position within 12 tiles, and owns the
+conversation. Both participants have close 3D portraits. The merc speaks the
+selected reply before the NPC's response appears; pause/Continue preserves that
+order. Opening another conversation with a different merc is how the player
+changes the acting character.
+
+The closer framing resolves much of the earlier excess-shirt problem. The
+artist's green CRT glass at 30% Color Burn gives the portraits a restrained field
+monitor treatment. Keep this strength; the inactive portrait is already darkened
+by the speaker emphasis. The message text remains outside the effect.
+
+Mercs without an authored casting entry get repeatable pitch/tract variation from
+their persistent identity. That is a useful placeholder, but individual voice
+casting is still needed to express character and personality. This review checks
+the presentation and sequencing; it does not substitute for listening approval
+of the final voices.
+
+![Both close portraits with CRT glass](images/oct20-integration-review/dialogue-crt-two-portraits.png)
+
+### Corrections made before integration
+
+- **Paused cancellation:** a talk order issued while paused promised that Escape
+  would cancel, but ignored Escape and disabled Stop. Resuming then executed the
+  unwanted order. Both controls now cancel that pending intention while paused.
+  Packaged browser review reproduced the original behavior and verified Escape,
+  Stop, resuming without movement, and an uncancelled walk into conversation.
+- **Unreachable talking positions:** the submitted route finder repeated a full
+  path search for hundreds of possible positions across the same sealed boundary.
+  An independent fully revealed 240 × 240 sector reproduction took **74.1 s**.
+  After the first failed route, the code now computes reachability once and skips
+  disconnected positions. The same reproduction took **1.08 s**, including
+  concurrent focused checks. A regression uses the real movement engine and
+  verifies that the sealed case performs one path search and one reachability
+  pass. This is a major improvement, but the worst-case synchronous query still
+  has a noticeable pause; moving expensive navigation preparation off the UI
+  thread remains a performance follow-up.
+
+The code and those fixes are recorded in `4387a07a`. Merge reconciliation retained
+the painted message surfaces while removing the superseded speaker selector.
+
+### Rendering and verification
+
+The new CRT WebP adds **69,356 bytes** to runtime transfer and approximately
+**6 MiB** of decoded RGBA pixels, shared by both portraits. The three UI material
+images together are about 549 KiB transferred / 18 MiB decoded. The PNG beside
+the WebP is a reusable source asset, not the runtime image. Actual browser and
+GPU allocation differs from this pixel estimate.
+
+Two portrait renderers now remain resident during conversation, so model/paint
+memory and setup work increase relative to the previous single animated portrait.
+Preparation is sequential; only the speaker continues rendering changing mouth
+poses, while the listener retains a neutral frame. The CRT is two small isolated
+CSS blend surfaces, with no additional scene geometry or lights. This review did
+not measure GPU frame completion time.
+
+- **58 focused tests passed:** movement, cancellation ownership, blocked approach,
+  fixed speaker, dialogue/checkpoint rules, outgoing reply gating, presentation,
+  existing playback regressions and deployment closure.
+- **26 additional tutorial and context-action tests passed** (84 distinct checks
+  in this follow-up). The artist's browser review script was updated to the new
+  `portraits.npc` / `portraits.merc` diagnostics and syntax-checked. Browser
+  verification in this review used the in-app browser rather than running that
+  separate automation script.
+- Asset audit and generated-core consistency checks passed. The final Pages build
+  includes the CRT image with the same SHA-256 as the reviewed source.
+- Packaged browser: two live portrait canvases, no speaker selector, ordered reply
+  handoff, pause/Continue, Replay, close cleanup, and 390 × 844 layout with no
+  horizontal dialogue overflow. No warnings or errors were observed.
+- At the 1280 × 720 review viewport, each portrait canvas was 156 × 128 pixels.
+  Both overlays had isolated `color-burn`, opacity `0.3`, and no pointer handling.
+
+These are focused follow-up checks, not a second local run of the full suite
+listed below. The earlier `2d251f27` deployment completed successfully before
+this review began.
+
+## Earlier follow-up decisions
 
 **Approved:** the coding integration and review corrections are on canonical as
 `3366bb16`. The painted dialogue terminal at `ee4ae6fb` also passes review and
