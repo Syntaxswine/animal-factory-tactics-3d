@@ -1,4 +1,4 @@
-import {V,Q,clamp,track,MASS_SEGMENTS,BODY_MASS,createSurfaceProbe} from './traversal-pose.js';
+import {V,Q,clamp,smooth,track,MASS_SEGMENTS,BODY_MASS,createSurfaceProbe} from './traversal-pose.js';
 // Balance for the tile-to-tile traversals (docs/tactics/NATURAL-TRAVERSAL.md): the centre of mass is planned against
 // what actually holds the body at each moment, then the hips are moved until the real centre of mass follows the plan
 // (the grenade throw's pendulum, grenade-throw-motion.js, generalised to flight and grips).
@@ -71,11 +71,11 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,fmax=FMAX,margin=
 // A pass moves a sample's hips at most STEP on each axis: a sample whose centre of mass stopped answering the hips (a
 // catch whose hands missed the top) ran 1.3 m away in five passes.
 const GAIN=1.29,STEP=.2;
-export function followCentre(times,plan,comAt,{passes=5,base=null}={}){
- const shift=times.map(()=>[0,0,0]);let worst=0;
+export function followCentre(times,plan,comAt,{passes=5,base=null,from=null}={}){
+ const shift=from?from.map(x=>x.slice()):times.map(()=>[0,0,0]);let worst=0;
  for(let p=0;p<passes;p++){worst=0;times.forEach((t,i)=>{const c=comAt(t,shift[i]);for(let ax=0;ax<3;ax++){const miss=plan[i][ax]-c[ax];shift[i][ax]+=clamp(GAIN*miss,-STEP,STEP);worst=Math.max(worst,Math.abs(miss));}});}
  const tr=track(times.map((t,i)=>{const b=base?base(t):[0,0,0];return [t,...shift[i].map((x,ax)=>x+b[ax])];}),{},{limit:false});
- return {shift:t=>{const tc=clamp(t,times[0],times.at(-1)),s=V(...tr(tc));return base?s.sub(V(...base(tc))):s;},worst};}
+ return {shift:t=>{const tc=clamp(t,times[0],times.at(-1)),s=V(...tr(tc));return base?s.sub(V(...base(tc))):s;},worst,samples:shift};}
 // What holds the body at a moment, from its real surface (the phantom-wrench rig's contacts: within 1 cm):
 // - a hand on an obstacle grips;
 // - anything on the floor stands on it (hooves, hands, a back in a roll), and so does a part on an obstacle's top
@@ -118,30 +118,43 @@ function turning(frames,dt){const n=frames.length,mid=(P,a,b)=>P[a].clone().add(
  const dL=L.map((_,i)=>L[Math.min(n-1,i+1)].clone().sub(L[Math.max(0,i-1)]).divideScalar((Math.min(n-1,i+1)-Math.max(0,i-1))*dt));
  // a light five-sample average: the differences of differences are noisy at 5 ms
  return {dL:dL.map((_,i)=>{const s=V();let m=0;for(let j=i-2;j<=i+2;j++)if(j>=0&&j<n){s.add(dL[j]);m++;}return s.divideScalar(m).toArray();}),L:L.map(v=>v.toArray()),I:frames.map((P,i)=>inertia(P,c[i]))};}
-// Flight: nothing touches, so the angular momentum about the centre of mass must hold (the rig allows 10 N·m of
-// phantom torque airborne). The limbs keep their authored motion and the whole body turns about its centre of mass at
-// the rate that holds it, w = I^-1 (L* - L), as a diver does. L* is the flight's median angular momentum, so the body
-// turns only where the limbs move (taken at the catch, which carries the arms' reach onto the top, it turned the whole
-// flight and wound 59 degrees into the push). The turn is zero where a flight meets the feet (a landing could not take
-// the torque of easing it out) and eases in and out over EASE of the contacts on either side, matching the turn, its
-// rate and its acceleration. w carries over between rounds (each adds what the last missed; delta, the largest, in
-// rad/s, says when it has settled).
-const EASE=.25,TURN_TOL=.02,REFINE=2;
-function flightTurn(w,S,L,I,dt){
- const n=S.length,theta=Array.from({length:n},()=>[0,0,0]),nw=Array.from({length:n},()=>[0,0,0]);let delta=0;
+// The body's turning. Nothing touches in flight, so there its angular momentum about the centre of mass must hold (the
+// rig allows 10 N·m of phantom torque airborne); on contacts it may change, but only as fast as they can turn the body
+// (a leg's swing or a stepping hoof's arrival asked 270 to 640 N·m of one hand or one hoof in 30 ms). Everywhere the
+// limbs keep their authored motion and the whole body turns about its centre of mass at the rate w = I^-1 (L* - L)
+// that gives it the angular momentum L*, as a diver or a skater does:
+// - in flight L* is the flight's median (taken at the catch, which carries the arms' reach onto the top, the whole
+//   flight turned and wound 59 degrees into the push);
+// - on contacts L* is L averaged over TAU either side, blended into a flight's median over EASE before and after it,
+//   and a turn left from a flight unwinds there over UNWIND.
+// The turn is the integral of w, its drift taken out along the motion so that it ends unturned. w carries over between
+// rounds (each adds what the last missed; delta, the largest, in rad/s, says when it has settled).
+const EASE=.25,TAU=.04,UNWIND=.3,TURN_TOL=.02,REFINE=2;
+function bodyTurn(w,S,L,I,dt){
+ const n=S.length,k=Math.round(TAU/dt),e=Math.round(EASE/dt),air=S.map(x=>x.kind==='air'),fl=new Float64Array(n),nw=w.map(x=>x.slice());let delta=0;
+ const add=(i,target)=>{const d=solve3(I[i],[0,1,2].map(a=>target[a]-L[i][a]));delta=Math.max(delta,Math.hypot(...d));nw[i]=nw[i].map((y,a)=>y+d[a]);};
  // a quintic from (p, v, a) at u = 0 to rest at zero at u = 1, over T
  const ease=(p,v,a,T,u)=>{const u2=u*u,u3=u2*u,u4=u3*u,u5=u4*u,h0=1-10*u3+15*u4-6*u5,h1=u-6*u3+8*u4-3*u5,h2=.5*u2-1.5*u3+1.5*u4-.5*u5;return p.map((x,j)=>h0*x+T*h1*v[j]+T*T*h2*a[j]);};
- for(let i0=0;i0<n;i0++){if(S[i0].kind!=='air')continue;let i1=i0;while(i1+1<n&&S[i1+1].kind==='air')i1++;
-  const ref=[0,1,2].map(a=>{const v=L.slice(i0,i1+1).map(x=>x[a]).sort((p,q)=>p-q);return v[v.length>>1];});
-  for(let i=i0;i<=i1;i++){const d=solve3(I[i],[0,1,2].map(a=>ref[a]-L[i][a]));nw[i]=w[i].map((x,a)=>x+d[a]);delta=Math.max(delta,Math.hypot(...d));}
+ // flights: the median held, the turn zero at a feet end, eased in and out over the contacts beside it
+ const thF=Array.from({length:n},()=>[0,0,0]);
+ for(let i0=0;i0<n;i0++){if(!air[i0])continue;let i1=i0;while(i1+1<n&&air[i1+1])i1++;
+  const med=[0,1,2].map(a=>{const v=L.slice(i0,i1+1).map(x=>x[a]).sort((p,q)=>p-q);return v[v.length>>1];});
+  for(let i=i0;i<=i1;i++)add(i,med);
   const back=S[i1+1]?.kind==='feet'&&S[i0-1]?.kind!=='feet';
-  if(!back)for(let i=i0+1;i<=i1;i++)theta[i]=theta[i-1].map((x,a)=>x+dt*(nw[i-1][a]+nw[i][a])/2);
-  else for(let i=i1-1;i>=i0;i--)theta[i]=theta[i+1].map((x,a)=>x-dt*(nw[i][a]+nw[i+1][a])/2);
-  // the eases, over the contact runs on both sides (time runs backward before the flight)
-  for(const [e,s] of [[i0,-1],[i1,1]]){let run=0;while(e+s*(run+1)>=0&&e+s*(run+1)<n&&S[e+s*(run+1)].kind!=='air')run++;
-   const m=Math.min(Math.round(EASE/dt),run-1),T=m*dt,v=nw[e].map(x=>s*x),a=nw[e].map((x,j)=>i1>i0?(x-nw[e-s][j])/dt*s:0);
-   for(let k=1;k<=m;k++)theta[e+s*k]=ease(theta[e],v,a,T,k/m);}
+  if(!back)for(let i=i0+1;i<=i1;i++)thF[i]=thF[i-1].map((x,a)=>x+dt*(nw[i-1][a]+nw[i][a])/2);
+  else for(let i=i1-1;i>=i0;i--)thF[i]=thF[i+1].map((x,a)=>x-dt*(nw[i][a]+nw[i+1][a])/2);
+  for(const [ed,sg] of [[i0,-1],[i1,1]]){let run=0;while(ed+sg*(run+1)>=0&&ed+sg*(run+1)<n&&!air[ed+sg*(run+1)])run++;
+   const m=Math.min(e,run-1),T=m*dt,v=nw[ed].map(x=>sg*x),acc=nw[ed].map((x,j)=>i1>i0?(x-nw[ed-sg][j])/dt*sg:0);
+   for(let q=1;q<=m;q++){thF[ed+sg*q]=ease(thF[ed],v,acc,T,q/m);fl[ed+sg*q]=Math.max(fl[ed+sg*q],smooth(1-q/m));}}
+  for(let i=i0;i<=i1;i++)fl[i]=1;
   i0=i1;}
+ // contacts: L averaged over TAU either side, faded out beside a flight; the turn unwinds there and its drift is taken
+ // out along the motion
+ const ref=L.map((_,i)=>{const s=[0,0,0];let m=0;for(let j=Math.max(0,i-k);j<=Math.min(n-1,i+k);j++){for(let a=0;a<3;a++)s[a]+=L[j][a];m++;}return s.map(x=>x/m);});
+ const wC=Array.from({length:n},()=>[0,0,0]);
+ for(let i=0;i<n;i++){if(air[i])continue;const d=solve3(I[i],[0,1,2].map(a=>ref[i][a]-L[i][a]));delta=Math.max(delta,Math.hypot(...d)*(1-fl[i]));wC[i]=d.map(x=>x*(1-fl[i]));nw[i]=nw[i].map((y,a)=>y+wC[i][a]);}
+ const thC=[[0,0,0]];for(let i=1;i<n;i++){const p=thC[i-1],q=(1-fl[i])*dt/UNWIND,cw=i=>air[i]?[0,0,0]:nw[i].map((y,a)=>y*(1-fl[i]));const a0=cw(i-1),a1=cw(i);thC.push(p.map((x,a)=>x+dt*(a0[a]+a1[a])/2-q*x));}
+ const end=thC[n-1],theta=thF.map((x,i)=>x.map((y,a)=>y+thC[i][a]-end[a]*i/(n-1)));
  return {theta,w:nw,delta};}
 const KEEP=[...new Set(MASS_SEGMENTS.flatMap(([a,b])=>[a,b]))];
 // The whole pipeline for a motion: pose(t) poses it (with the hips moved by the current trial shift, set through
@@ -155,7 +168,7 @@ const KEEP=[...new Set(MASS_SEGMENTS.flatMap(([a,b])=>[a,b]))];
 const ONSET=.02;
 // setMove({shift(t), spin(t)}) hands the motion its hips' move while it is found (spin(t) is null where the body does
 // not turn, or {q, pivot}: a turn about a point); the result's shift and spin are the final ones.
-export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base=null,dt=.005,rounds=4,plan:options={}}){
+export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base=null,dt=.005,rounds=2,plan:options={}}){
  const n=Math.round(duration/dt)+1,times=Array.from({length:n},(_,i)=>Math.min(duration,i*dt));let c0=null,follow=null,samples=null,plan=null,last=null,settled=false,spin=null,w=times.map(()=>[0,0,0]);
  const turnAt=(theta,pivot)=>{let lo=theta.findIndex(x=>x[0]||x[1]||x[2]),hi=theta.findLastIndex(x=>x[0]||x[1]||x[2]);if(lo<0)return null;lo=Math.max(0,lo-1);hi=Math.min(n-1,hi+1);
   const tr=track(theta.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false}),pv=track(pivot.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false});
@@ -166,8 +179,12 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  const measure=()=>{const frames=[];const S=times.map(t=>{setShift(follow?follow.shift(t):null);const P=pose(t);probe.update();frames.push(Object.fromEntries(KEEP.map(k=>[k,P[k].clone()])));const c=com(P).toArray();return {...supportAt(probe,obstacles,c),c};});
   const lag=Math.round(ONSET/dt);for(let i=n-1;i>=0;i--)if(S[i].kind==='grip'){let j=i;while(j>0&&S[j-1].kind==='grip')j--;const end=i-j+1<3*lag?i+1:Math.min(n,j+lag);for(let k=j;k<end;k++)S[k]=j>0?{...S[j-1],c:S[k].c}:S[k];i=j;}
   return {S,...turning(frames,dt)};};
- for(let r=0;r<rounds&&!settled;r++){const {S,dL,L,I}=measure(),key=S.map(x=>x.kind).join();history.push(runs(S));
-  if(!c0)c0=S.map(x=>x.c);const turn=flightTurn(w,S,L,I,dt);settled=key===last&&turn.delta<TURN_TOL;last=key;if(settled)break;
+ // Two rounds: the second measures the schedule and the turning again on the balanced motion (four gave the climb no
+ // more: 0.23 s against 0.21 s over). With more, the schedule is held from the second on: moved by each round's hips, a
+ // toe-off came 5 ms earlier every round (the plan, pushing to reach it, raised the hips that lifted the hoof).
+ let held=null;
+ for(let r=0;r<rounds&&!settled;r++){const {S,dL,L,I}=measure();if(held)S.forEach((x,i)=>{if(x.kind!==held[i].kind)Object.assign(x,{...held[i],c:x.c});});else if(r===1)held=S.map(x=>({...x}));const key=S.map(x=>x.kind).join();history.push(runs(S));
+  if(!c0)c0=S.map(x=>x.c);const turn=bodyTurn(w,S,L,I,dt);settled=key===last&&turn.delta<TURN_TOL;last=key;if(settled)break;
   samples=S.map((x,i)=>({...x,c:c0[i],dL:dL[i]}));plan=planCentre(samples,dt,options);w=turn.w;spin=turnAt(turn.theta,plan);
   // The turn refined REFINE times on the flight samples alone, posed with the turn so far: by rounds alone, a flight's
   // first samples never settled where the toe-off moved a sample each round (955 N·m at the push-off).
@@ -175,6 +192,7 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
    for(let a=0;a<n;a++){if(S[a].kind!=='air')continue;let b=a;while(b+1<n&&S[b+1].kind==='air')b++;const lo=Math.max(0,a-1),hi=Math.min(n-1,b+1),frames=[];
     for(let i=lo;i<=hi;i++){setShift(follow?follow.shift(times[i]):null);const P=pose(times[i]);frames.push(Object.fromEntries(KEEP.map(q=>[q,P[q].clone()])));}
     const tu=turning(frames,dt);for(let i=a;i<=b;i++){L2[i]=tu.L[i-lo];I2[i]=tu.I[i-lo];}a=b;}
-   const t2=flightTurn(w,S,L2,I2,dt);w=t2.w;spin=turnAt(t2.theta,plan);}
-  follow=followCentre(times,plan,(t,s)=>{setShift(V(...s));return com(pose(t)).toArray();},{base});}
+   const t2=bodyTurn(w,S,L2,I2,dt);w=t2.w;spin=turnAt(t2.theta,plan);}
+  // the first round's hips only set up the second's measure: three passes; the second starts from them
+  follow=followCentre(times,plan,(t,s)=>{setShift(V(...s));return com(pose(t)).toArray();},{base,passes:3,from:follow?.samples});}
  setMove(null);return {...follow,spin:spin||(()=>null),plan,samples,times,settled,history};}
