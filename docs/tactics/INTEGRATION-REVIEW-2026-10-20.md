@@ -1,8 +1,57 @@
 # October 20 integration review
 
 Reviewed canonical `af42810`, coding branch `c29241ae`, and animation branch
-`4e27c6fa`. The animation checkout was isolated at the pushed commit; the
-artist's newer uncommitted edits were not included.
+`4e27c6fa`, followed by the newly pushed animation `2c5826aa` and painted dialogue
+terminal `ee4ae6fb`. Animation checks used an isolated checkout of each pushed
+commit. Other agents' working files were not changed.
+
+## Follow-up decisions
+
+**Approved:** the coding integration and review corrections are on canonical as
+`3366bb16`. The painted dialogue terminal at `ee4ae6fb` also passes review and
+merges cleanly with that integration.
+
+The worn olive metal, restrained brass edges and pale message stock fit the
+characters and industrial setting. The textures leave the text area quiet;
+incoming and outgoing messages remain distinguishable. Packaged browser review
+covered the contextual guide reply, history, options and keyboard access at
+1280 × 720, 390 × 844 and 320 × 640. Narrow layouts scroll without horizontal
+dialogue overflow; the close control and footer remain accessible. No browser
+errors or warnings were recorded.
+
+![Painted dialogue terminal in the packaged game](images/oct20-integration-review/painted-dialogue-terminal.png)
+
+The skin adds two shared 1254 × 1254 static WebP images: **493,142 bytes combined**
+(about 482 KiB transferred), or approximately **12 MiB of uncompressed RGBA
+pixels** for both. Actual browser/GPU storage may differ. They are reused by CSS;
+the skin adds no 3D geometry or scene lights. CSS text/layout and active portrait
+rendering still have their existing costs. The guide's head framing remains the
+next polish item: too much of the small portrait is occupied by the shirt.
+
+**Still held:** the natural traversal set at `2c5826aa`. The pig director improves,
+but a final-pose scan still finds a **52.2 cm knee displacement in one 60 Hz step**
+near 2.533 s, and a **4.55 cm jump in 1 ms** near 0.838 s. Its largest leg-target
+reach shortfall is **88.8 cm** near 1.567 s. These remain substantial defects,
+not a request for subtler stylistic polish.
+
+![Latest pig director climb at 1.57 seconds](images/oct20-integration-review/pig-director-2c5826aa.png)
+
+The reported world position still finishes one tile behind the visible character,
+and the adapter still reports the weapon as carried throughout. The wall study's
+cached obstacle-height issue and the pre-balance clearance assertions are unchanged.
+All **12 existing traversal tests pass again**, so they still need the final-pose
+coverage described below.
+
+The latest independent constructor measurements were approximately 1.14 s for
+the horse window, 1.13 s for the low wall, 2.88 s for the horse full wall and
+2.96 s for the pig director full wall. This is faster, but still unsuitable for
+a synchronous solve when a gameplay move starts. The horse's full-wall pose also
+retains an approximately 8.8 cm leg-target reach shortfall.
+
+The follow-up ran **47 dialogue and packaging tests**, the asset audit, source/
+packaged texture hash checks and the browser review above. All passed. The full
+2,707-pass integration check below belongs to `3366bb16`; it was not needlessly
+repeated locally for the subsequent CSS/assets-only skin.
 
 ## Coding branch
 
@@ -48,9 +97,10 @@ the guide and hen auditions, and resource release. The encounter clock held at
 **Next visual pass:** tighten the guide's crop. The current portrait spends too
 much of its small box on the shirt, while the merc's static portrait fills its
 box with the head. Match their apparent head size and retain the hat/ears where
-possible. Apply the artist's industrial paint treatment without reducing the
-message text's contrast or the distinction between replies and received text.
-These are polish notes, not reasons to withhold the working dialogue system.
+possible. The painted follow-up above supplies the industrial material treatment
+while preserving text contrast and the distinction between replies and received
+text. The framing note is polish, not a reason to withhold the working dialogue
+system.
 
 The three authored voice profiles are an initial audition set. Stable identity
 selects the profile, and text/word cues follow the same synthesized timing plan.
@@ -86,7 +136,7 @@ has a cold preparation cost; the builder's 1,024-cell stress measurement is
 documented in [the hedge integration report](HEDGE-GAMEPLAY-INTEGRATION-2026-10-19.md).
 Do not present that stress result as a steady rendering cost.
 
-## Natural traversal: hold for revision
+## Natural traversal at `4e27c6fa`: original findings
 
 The horse's movements improve substantially, and the hen's wing-assisted hop is
 a sensible species-specific solution. However, the complete set at `4e27c6fa`

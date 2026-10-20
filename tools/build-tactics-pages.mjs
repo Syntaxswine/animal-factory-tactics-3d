@@ -18,6 +18,7 @@ console.log('Built Pages distribution: '+out+' ('+files.length+' app files plus 
 fs.cpSync(path.join(root,'dist/tactics/vendor'),path.join(out,'tactics/vendor'),{recursive:true});
 
 fs.cpSync(path.join(root,'dist/assets/ui/loading-screen'),path.join(out,'assets/ui/loading-screen'),{recursive:true});
+fs.cpSync(path.join(root,'dist/assets/ui/dialogue-terminal'),path.join(out,'assets/ui/dialogue-terminal'),{recursive:true});
 
 packageDialogues(root,out);
 
