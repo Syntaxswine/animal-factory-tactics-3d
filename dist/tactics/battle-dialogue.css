@@ -31,14 +31,17 @@
 .dialogue-participant{min-width:0;display:flex;flex-direction:column;align-items:flex-start;position:relative}
 .dialogue-participant-merc{align-items:flex-end;text-align:right}
 .dialogue-face{position:relative;isolation:isolate;width:160px;height:132px;background:radial-gradient(ellipse at 40% 35%,#a8b295,#677d68 70%,#3b5449);border:1px solid #89957a;border-radius:5px;overflow:hidden;box-sizing:border-box}
+/* Lift the image before the glass and bands. Neutral dodge light boosts
+   existing highlights without a white veil over shadows; black is neutral. */
+.battle-dialogue .dialogue-face-light{position:absolute;inset:0;z-index:1;pointer-events:none;mix-blend-mode:color-dodge;background:radial-gradient(ellipse closest-side at 50% 50%,#383838 0%,#2b2b2b 22%,#151515 50%,#050505 78%,#000 100%)}
 /* Keep painted glass and screen-sized bands separate: resizing the source
    texture alone filters its fine scanlines away in these small portraits. */
-.battle-dialogue .dialogue-face::before,.battle-dialogue .dialogue-face::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;mix-blend-mode:multiply;opacity:.2}
-.battle-dialogue .dialogue-face::before{background:var(--terminal-crt) center/100% 100% no-repeat}
-.battle-dialogue .dialogue-face::after{background:repeating-linear-gradient(to bottom,#031108 0 2px,#fff 2px 4px)}
+.battle-dialogue .dialogue-face::before,.battle-dialogue .dialogue-face::after{content:'';position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.2}
+.battle-dialogue .dialogue-face::before{z-index:2;background:var(--terminal-crt) center/100% 100% no-repeat}
+.battle-dialogue .dialogue-face::after{z-index:3;background:repeating-linear-gradient(to bottom,#031108 0 2px,#fff 2px 4px)}
 .dialogue-face canvas{position:absolute;inset:0;width:100%;height:100%}
 .dialogue-face>img{position:absolute;width:100%;height:100%;object-fit:cover;object-position:top;image-rendering:auto}
-.dialogue-face small{position:absolute;bottom:0;left:0;right:0;z-index:2;background:#243b30eb;color:#f8ebc9;font:11px/1.4 system-ui;text-align:center}
+.dialogue-face small{position:absolute;bottom:0;left:0;right:0;z-index:4;background:#243b30eb;color:#f8ebc9;font:11px/1.4 system-ui;text-align:center}
 .dialogue-face small:empty{display:none}
 .dialogue-participant .dialogue-face{transform:scale(.76);transform-origin:left bottom;transition:transform 180ms ease-out,filter 180ms ease-out;border:2px solid #7b8163;filter:saturate(.62) brightness(.83);box-shadow:0 0 0 4px #151e16,0 0 0 5px #8c8964,0 3px 8px #0008;margin-bottom:8px}
 .dialogue-participant-merc .dialogue-face{transform-origin:right bottom}

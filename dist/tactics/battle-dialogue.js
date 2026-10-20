@@ -26,6 +26,9 @@ export function createBattleDialogue(options){
  const face=el('div',undefined,'dialogue-face'),fallback=el('img'),faceStatus=el('small');fallback.alt='';face.append(fallback,faceStatus);
  const npcName=el('h3'),npcRole=el('small','Speaking','dialogue-role');npcCard.append(face,npcName,npcRole);
  const mercFace=el('div',undefined,'dialogue-face dialogue-merc-face'),mercImage=el('img');mercImage.alt='';mercFace.append(mercImage);
+ for(const frame of [face,mercFace]){
+  const light=el('span',undefined,'dialogue-face-light');light.setAttribute('aria-hidden','true');frame.append(light);
+ }
  const replyRow=el('label',undefined,'dialogue-reply'),replyLabel=el('span','Replying as'),picker=el('select'),mercRole=el('small','Listening','dialogue-role');
  picker.id='dialogue-speaker';picker.setAttribute('aria-label','Replying as');picker.onchange=()=>session.switchSpeaker(picker.value);replyRow.append(replyLabel,picker);mercCard.append(mercFace,replyRow,mercRole);
  const connection=el('div',undefined,'dialogue-connection'),turnLabel=el('span','Local conversation'),signal=el('span','↔','dialogue-signal');signal.setAttribute('aria-hidden','true');connection.append(signal,turnLabel);
