@@ -66,7 +66,7 @@ try{
  }));
  assert.equal(overlays.length,2,'both dialogue portraits have CRT glass');
  for(const overlay of overlays){
-  assert.equal(overlay.mode,'color-burn');assert.equal(overlay.opacity,'0.3');
+  assert.equal(overlay.mode,'color-burn');assert.equal(overlay.opacity,'0.4');
   assert.equal(overlay.pointerEvents,'none');assert.equal(overlay.isolation,'isolate');
   assert.match(overlay.image,/crt-green-v1\.webp/);
  }

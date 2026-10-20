@@ -11,7 +11,7 @@
   "processing": "PNG copied unchanged from generated output. WebP is a quality-92 encoding of the full image, with no cropping or repainting.",
   "portraitOverlay": {
     "blendMode": "color-burn",
-    "opacity": 0.3,
+    "opacity": 0.4,
     "scope": "Both dialogue portraits, clipped and isolated inside each portrait frame",
     "input": "Pointer events pass through; status captions stay above the filter"
   },

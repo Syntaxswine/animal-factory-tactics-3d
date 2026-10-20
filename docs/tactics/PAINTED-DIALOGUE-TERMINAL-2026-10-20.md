@@ -22,7 +22,7 @@ The three runtime textures total **562,498 bytes (549 KiB)** on disk and approxi
 
 - `dist/tactics/battle-dialogue.css` applies the materials to the existing component. The shell slices at 7%, with an 18px desktop rim and 10px narrow-screen rim so hardware does not stretch with the panel.
 - Message surfaces use pale solid-color fallbacks. Controls retain hover, disabled and visible keyboard-focus states. Portrait canvases remain live.
-- The CRT glass is a `::after` overlay on each portrait, using the user's requested **Color Burn at 30% opacity**. `isolation:isolate` confines blending to that portrait, clipping follows its rounded frame, and `pointer-events:none` keeps input passing through. Small status captions stay above the filter. Both the animated NPC canvas and the mercenary image receive the same material.
+- The CRT glass is a `::after` overlay on each portrait, using **Color Burn at 40% opacity**, increased from 30% at the user's request to make the banding more visible. `isolation:isolate` confines blending to that portrait, clipping follows its rounded frame, and `pointer-events:none` keeps input passing through. Small status captions stay above the filter. Both the animated NPC canvas and the mercenary image receive the same material.
 - The narrow layout wraps the “Replying as” label and gives the speaker selector a nonshrinking width.
 - `tools/build-tactics-pages.mjs` copies the asset directory; the 3D packaging build uses this path too.
 - No dialogue rules, speaker selection logic, saved state or gameplay rules were modified.
@@ -37,7 +37,9 @@ The three runtime textures total **562,498 bytes (549 KiB)** on disk and approxi
 - Disposable browser processes exited and released their automation ports. Captures and receipts are under `artifacts/painted-dialogue/review/`.
 - Independent visual review: **9/10, approved with no remaining blocker**, including the corrected narrow speaker selector and both zoom-equivalent captures. The reply button was hit-tested after scrolling to confirm it remained reachable.
 
-The CRT source asset and its applied portrait overlay each independently received a **9/10** review, with no blockers. The overlay browser checks additionally confirm the decoded texture dimensions, Color Burn/30% on both faces, confined blending and continued animated portrait redraws. The overlay captures and cleanup receipts are under `artifacts/painted-dialogue/crt-review/`.
+The CRT source asset and its applied portrait overlay each independently received a **9/10** review, with no blockers. The overlay browser checks additionally confirm the decoded texture dimensions, Color Burn on both faces, confined blending and continued animated portrait redraws. The original 30% overlay captures and cleanup receipts are under `artifacts/painted-dialogue/crt-review/`; the stronger 40% pass is under `artifacts/painted-dialogue/crt-40-review/`.
+
+The 40% adjustment passed a fresh packaging build and the browser review, including both portrait styles, narrow screens, animated speech and the packaged route. Independent visual review again approved it at **9/10**: modestly stronger scanlines and shading, with faces readable and controls unaffected. The disposable browser exited and released its port.
 
 The browser review is reproducible with `tools/review-dialogue-paint.mjs` and Playwright (`PLAYWRIGHT_PATH` may point at a local installation). Set `REVIEW_PACKAGED=1` after building to include the packaged route.
 
