@@ -12,8 +12,9 @@ test('walking preview agrees with charged AP for pace, stance and injury without
 test('queued footprints remain without hovering and shrink as movement commits',()=>{
  const {s,u,goal}=fixture();move(s,u,goal.x,goal.y,0);assert.equal(walkingRoutes(s,[u.id],u,null)[0].cost,4);stepMovement(s);assert.equal(walkingRoutes(s,[u.id],u,null)[0].cost,2);s.queue=[];assert.deepEqual(walkingRoutes(s,[u.id],u,null),[]);
 });
-test('unaffordable route still displays total cost; unreachable destinations do not draw a route',()=>{
- const {s,u,goal}=fixture();u.ap=1;const route=walkingRoutes(s,[u.id],u,goal)[0];assert.equal(route.cost,4);assert.ok(route.cost>route.ap);s.map[10][12]='wall';s.seen.add('12,10');assert.deepEqual(walkingRoutes(s,[u.id],u,goal),[]);
+test('unaffordable routes display total cost; blocked destinations preview the reachable stopping point',()=>{
+ const {s,u,goal}=fixture();u.ap=1;const route=walkingRoutes(s,[u.id],u,goal)[0];assert.equal(route.cost,4);assert.ok(route.cost>route.ap);s.map[10][12]='wall';s.seen.add('12,10');
+ const partial=walkingRoutes(s,[u.id],u,goal)[0];assert.equal(partial.partial,true);assert.equal(partial.cost,2);assert.equal(partial.path.at(-1).x,11);assert.match(walkingWarning([partial]),/Route blocked/);
 });
 test('formation previews share group order destinations and preserve logs, AP and overwatch',()=>{
  const {s,u,goal}=fixture();u.overwatch={heading:0};const before=structuredClone(s),routes=walkingRoutes(s,[0,1],u,goal);assert.deepEqual(s,before);assert.equal(routes.length,2);assert.ok(moveGroup(s,[0,1],u,goal.x,goal.y,0));for(const r of routes){const order=s.queue[0].group.find(o=>o.id===r.id),end=r.path.at(-1);assert.deepEqual({x:end.x,y:end.y,z:end.z},order.goal);}

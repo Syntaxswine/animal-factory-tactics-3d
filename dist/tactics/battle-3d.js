@@ -252,7 +252,7 @@ canvas.addEventListener('contextmenu',e=>{
   contextMenu.close();closeStances();if(renderer.busy){message('Finish the current action first.');return;}
   pickupOrder.cancel();dialogueOrder.cancel();state.queue=[];dialogueUI.unlock();
   const order=dialogueOrder.start(state,selected(),unit);
-  message(order.ok?(order.path.length?'Walking into talking range. Escape cancels.'+(userPaused?' Resume to continue.':''):''):order.reason);
+  message(order.ok?(order.path.length?(order.partial?order.reason:'Walking into talking range.')+' Escape cancels.'+(userPaused?' Resume to continue.':''):''):order.reason);
   if(order.ok)updateDialogueOrder();sync();return;
  }
  const merc=unit?.team==='squad'?unit:null;if(merc&&selectable(merc)){if(merc.id!==state.selected)selectMerc(merc.id);else selectedIds=new Set([merc.id]);}

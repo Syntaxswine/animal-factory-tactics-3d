@@ -12,6 +12,7 @@ export function walkingHazards(state,path){
 export function walkingWarning(routes){
  const names=routes.filter(r=>r.hazards?.length).map(r=>r.name);
  const warnings=names.length?['⚠ Fire on route · '+names.join(', ')+' will catch fire.']:[];
+ for(const route of routes)if(route.partial)warnings.push(route.name+' · Route blocked; will stop at the nearest reachable tile.');
  for(const route of routes){const climbs=(route.path||[]).filter(p=>p.climb&&!p.climb.legacy);if(climbs.length){const worst=climbs.reduce((a,b)=>a.climb.chance<b.climb.chance?a:b);warnings.push(`${route.name} · ${climbs.length} climb${climbs.length===1?'':'s'} · ${CLIMBS[worst.kind].label}: ${climbRiskText(worst.climb)} (per attempt)`);}}
  return warnings.join(' · ');
 }
@@ -27,7 +28,7 @@ export function walkingRoutes(state,ids,leader,goal){
   if(ids.length>1){const copy={...state,units:state.units.map(u=>({...u})),queue:[],log:[...state.log]};if(!moveGroup(copy,ids,copy.units.find(u=>u.id===leader.id),goal.x,goal.y,goal.z))return [];orders=copy.queue[0].group;}
   else orders=[{id:leader.id,goal}];
  }
- return orders.flatMap(order=>{const unit=state.units.find(u=>u.id===order.id);if(!canControl(state,unit))return [];const path=navigationPath(state,unit,order.goal.x,order.goal.y,order.goal.z);return path?.length?[{id:unit.id,name:unit.name,start:unit,path,cost:pathCost(path),ap:unit.ap,hazards:walkingHazards(state,path)}]:[];});
+ return orders.flatMap(order=>{const unit=state.units.find(u=>u.id===order.id);if(!canControl(state,unit))return [];const path=navigationPath(state,unit,order.goal.x,order.goal.y,order.goal.z,{partial:true}),end=path?.at(-1);return end?[{id:unit.id,name:unit.name,start:unit,path,cost:pathCost(path),ap:unit.ap,partial:end.x!==order.goal.x||end.y!==order.goal.y||end.z!==(order.goal.z||0),hazards:walkingHazards(state,path)}]:[];});
 }
 
 export function drawWalkingRoutes(ctx,routes,project,level,zoom,combat){

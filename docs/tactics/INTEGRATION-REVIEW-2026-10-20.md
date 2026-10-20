@@ -5,6 +5,37 @@ Reviewed canonical `af42810`, coding branch `c29241ae`, and animation branch
 terminal `ee4ae6fb`. Animation checks used an isolated checkout of each pushed
 commit. Other agents' working files were not changed.
 
+## Blocked movement: approach the barrier, then stop
+
+The player's clarified rule supersedes immediate rejection of an unreachable
+conversation: walk as far toward the target as the available route permits,
+then stop. A complete route around an obstacle takes priority. If the merc is
+already as close as possible, the order produces no movement.
+
+This now applies to 3D ground orders, group destinations, and conversation
+approaches. Footprints preview the reachable endpoint and warn when the hovered
+destination is blocked. Movement still pays normal AP and stamina, respects
+occupancy and floor connections, and can stop earlier for combat or cancellation.
+Planning uses discovered geometry; it does not reveal hidden obstacles.
+An unreachable conversation ends at the barrier without opening dialogue.
+
+The movement search keeps its best reachable endpoint during the same graph
+search. Strict `pathTo`/`navigationPath` queries remain exact unless explicitly
+asked for a partial route, preserving AI and interaction eligibility checks.
+Conversation planning reuses its existing reachability result: the sealed-sector
+regression now performs one exhausted path search, one reachability pass, and
+one short route to the reachable stopping point. Queued movement targets that
+point rather than repeatedly searching for the impossible original destination.
+The generated core change is recorded in `tools/core-partial-route-adapter.mjs`.
+
+**Validation:** 129 targeted tests pass, including blocked ground, occupied
+destinations, viable detours, changing barriers, fog-of-war, AP interruption,
+multi-floor movement, formation separation, dialogue cancellation, save/load,
+climbing, ramps, and deployment file coverage. Asset validation, core
+reproduction, JavaScript syntax checks, and the Pages build pass. This follow-up
+was verified through the simulation and preview APIs; it adds no new browser
+visual or frame-time benchmark.
+
 ## Later dialogue follow-up: `3aac80db` and `7bf61901`
 
 **Approved with two corrections.** The acting merc now approaches the NPC,
