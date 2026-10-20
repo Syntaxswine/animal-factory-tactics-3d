@@ -28,3 +28,5 @@ The skin uses six rest-space projections with part/depth visibility checks, fore
 `node tools/build-factory-machines.mjs` reproduces the two mesh resolutions. `node --test tests/factory-machines.test.mjs` verifies bounds, grounding, finite/valid geometry, exact author-to-reduced vertex provenance, and unobstructed working gaps. `tools/factory-machines-review.mjs --grey` captures references; without the flag it inspects 8 headings at gameplay/fit scales, both meshes, 48 coverage views, browser errors and mobile overflow.
 
 This is an art collection. Factory production behavior, editor placement, collision and machine animation are not integrated.
+
+The proposed next delivery is [editor placement and physical cover](FACTORY-MACHINE-EDITOR-PROPOSAL-2026-10-20.md), covering the three static models, their saved orientation, movement clearance, sight and projectile collision.

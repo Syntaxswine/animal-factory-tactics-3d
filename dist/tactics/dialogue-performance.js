@@ -13,7 +13,7 @@ export class DialoguePerformance {
   this.load(this.serial);return true;}
  async load(mine){
   const chunk=this.chunks[this.index];if(!chunk){this.finish();return;}
-  try{const clip=await (this.nextClip||this.client.prepare(chunk.text,this.profile,this.rate));this.nextClip=null;if(this.closed||mine!==this.serial)return;
+  try{const clip=await (this.nextClip||this.client.prepare(chunk.text,this.profile,this.rate));if(this.closed||mine!==this.serial)return;this.nextClip=null;
    if(clip.samples.byteLength>2*1024*1024)throw Error('Voice phrase exceeds the audio budget.');
    clearTimeout(this.readableTimer);this.clip=clip;this.offset=0;this.clipStart=chunk.c0;
    // Only current and next phrase are prepared. No speculative branch audio.
@@ -39,7 +39,7 @@ export class DialoguePerformance {
   this.revealed=this.settings.dialogueTextAnimation?Math.max(this.revealed,this.clipStart+current.revealed):this.text.length;
   this.active=this.settings.dialogueTextAnimation&&word?{c0:this.clipStart+word.c0,c1:this.clipStart+word.c1}:null;this.opening=mouthAt(plan,t);
   this.emit();
-  if(t>=Math.max(plan.duration,this.clip.samples.length/this.clip.sampleRate)){this.releaseSource();this.revealed=Math.max(this.revealed,this.chunks[this.index].c1);this.index++;this.status='loading';this.active=null;this.opening=0;this.emit();this.load(this.serial);}
+  if(t>=Math.max(plan.duration,this.clip.samples.length/this.clip.sampleRate)){this.releaseSource();this.revealed=Math.max(this.revealed,this.chunks[this.index].c1);this.index++;this.clip=null;this.offset=0;this.status='loading';this.active=null;this.opening=0;this.emit();this.load(this.serial);}
  }
  emit(){this.onFrame({status:this.status,revealed:this.revealed,active:this.active,opening:this.opening,error:this.error||'',rate:this.rate,text:this.text,key:this.key,chunk:this.index,cueStart:this.active?this.clip?.plan.words.find(w=>w.c0===this.active.c0-this.clipStart)?.t0:null,clipTime:this.clip?this.position():0});}
  settingsChanged(settings){this.settings={...settings};if(!settings.dialogueTextAnimation&&settings.dialogueVolume===0){this.skip();return;}if(this.gain)this.gain.gain.value=settings.dialogueVolume;if(!settings.dialogueTextAnimation){this.revealed=this.text.length;this.active=null;}

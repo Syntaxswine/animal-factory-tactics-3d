@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {dialogueFixture} from '../dist/tactics/dialogue-fixture.js';
-import {createGame,refresh,move,stepMovement} from '../dist/tactics/core/engine.js';
+import {createGame,refresh,move,stepMovement,pathTo,reachable,key,headingTo} from '../dist/tactics/core/engine.js';
 import {startEncounterClock} from '../dist/tactics/encounter-clock.js';
 import {captureEncounter,restoreEncounter} from '../dist/tactics/encounter-save.js';
 import {DialogueOrder,dialogueRoute} from '../dist/tactics/dialogue-order.js';
@@ -54,11 +54,59 @@ test('a blocked or interrupted route is not a teleport or an automatic conversat
  assert.match(order.update(s).reason,/Stopped/);assert.equal(u.x,12);
  npc.x=14;npc.y=13;
  for(const k of ['e:13:13','e:14:13','s:14:12','s:14:13'])s.edges[k]='wall';
- invalidateMapGeometry(s);assert.equal(dialogueRoute(s,u,npc).ok,false);
+ invalidateMapGeometry(s);const partial=dialogueRoute(s,u,npc);
+ assert.equal(partial.ok,true);assert.equal(partial.partial,true);assert.deepEqual(partial.goal,{x:13,y:13,z:0});
 });
 test('a new/load-restored sector abandons the transient talk order without changing saved dialogue',()=>{
  const {s,u,npc,order}=fresh({far:true});order.start(s,u,npc);
  const saved=captureEncounter(s),loaded=restoreEncounter(saved);
  assert.equal(new DialogueOrder().pending,null);assert.equal(order.update(loaded).stopped,true);
  assert.deepEqual(loaded.dialogue,saved.state.dialogue);assert.deepEqual(loaded.queue,saved.state.queue);
+});
+
+test('an identified NPC across a sealed sector boundary does not trigger hundreds of exhausted path searches',()=>{
+ const {s,u,npc,order}=fresh({far:true}),scout=s.units[1];
+ scout.x=30;scout.y=14;scout.heading=headingTo(scout,npc);
+ for(let y=0;y<s.definition.height;y++)s.edges['e:20:'+y]='wall';
+ invalidateMapGeometry(s);refresh(s);s.detected.add(npc.id);
+ for(let y=0;y<s.definition.height;y++)for(let x=0;x<s.definition.width;x++)s.seen.add(key(x,y,0));
+ let searches=0,reachabilityPasses=0;
+ const result=dialogueRoute(s,u,npc,{
+  routeTo:(...args)=>{searches++;return pathTo(...args);},
+  reachableFrom:(...args)=>{reachabilityPasses++;return reachable(...args);}
+ });
+ assert.equal(result.ok,true);assert.equal(result.partial,true);assert.match(result.reason,/Route blocked/);
+ assert.deepEqual(result.goal,{x:20,y:13,z:0});
+ assert.equal(searches,2,'one exhausted search plus a route to the known reachable endpoint');
+ assert.equal(reachabilityPasses,1);
+ assert.equal(u.x,12);assert.equal(s.queue.length,0);
+ const dialogueBefore=structuredClone(s.dialogue);
+ assert.equal(order.start(s,u,npc).partial,true);
+ let outcome;for(let i=0;i<30&&!outcome;i++){stepMovement(s);outcome=order.update(s);}
+ assert.equal(outcome?.stopped,true);assert.match(outcome.reason,/barrier/);
+ assert.deepEqual([u.x,u.y,u.z],[20,13,0]);
+ assert.equal(order.pending,null);assert.equal(s.queue.length,0);
+ assert.deepEqual(s.dialogue,dialogueBefore);
+ assert.equal(order.update(s),null,'no repeated attempts or automatic conversation');
+});
+
+test('a partial conversation approach can be cancelled before reaching the barrier',()=>{
+ const {s,u,npc,order}=fresh();npc.x=14;npc.y=13;
+ for(const k of ['e:13:13','e:14:13','s:14:12','s:14:13'])s.edges[k]='wall';
+ invalidateMapGeometry(s);
+ assert.equal(order.start(s,u,npc).partial,true);
+ order.cancel();assert.equal(s.queue.length,0);assert.equal(order.update(s),null);assert.equal(u.x,12);
+});
+
+test('a new obstruction shortens an active talk approach instead of cancelling it before the barrier',()=>{
+ const {s,u,npc,order}=fresh({far:true}),scout=s.units[1];
+ Object.assign(scout,{x:30,y:14});scout.heading=headingTo(scout,npc);refresh(s);s.detected.add(npc.id);
+ assert.equal(order.start(s,u,npc).ok,true);
+ stepMovement(s);assert.equal(order.update(s),null);
+ for(let y=0;y<s.definition.height;y++){s.edges['e:15:'+y]='wall';s.seen.add(key(15,y));s.seen.add(key(16,y));}
+ invalidateMapGeometry(s);
+ let outcome;for(let i=0;i<20&&!outcome;i++){stepMovement(s);outcome=order.update(s);}
+ assert.equal(outcome?.stopped,true);assert.equal(outcome.ready,undefined);
+ assert.deepEqual([u.x,u.y,u.z],[15,13,0]);assert.equal(s.queue.length,0);
+ assert.equal(order.pending,null);
 });

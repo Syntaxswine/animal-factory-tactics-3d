@@ -80,6 +80,7 @@ export const movementModeOf=u=>u?.sneaking?'sneak':u?.running?'run':'walk';
 export const movementMultiplier=u=>MOVEMENT_MODES[movementModeOf(u)].apMultiplier*injuryMovement(u);
 export const movementCost=u=>STANCES[stanceOf(u)].moveCost*movementMultiplier(u);
 export const effectiveStealth=u=>Math.min(100,Math.max(0,(u.stealth||0)+(u.sneaking?20:0)));
+function movementCosts(s,step){return s.phase==='player'||!!step.climb&&combatCosts(s);}
 export function movementStep(u,p,q,combat=false){
  const climb=climbingPreview(u,q,combat);
  if(climb&&(!climb.ok||stanceOf(u)!=='standing'))return null;
@@ -145,17 +146,25 @@ export function zoneVisible(s,a,b,zone='torso'){a={...a,cliffSupport:rampSupport
 export const visibleZones=(s,a,b)=>Object.keys(AIM_ZONES).filter(zone=>zoneVisible(s,a,b,zone));
 export function lineOfSight(s,a,b){return ['head','torso','legs','weapon'].some(zone=>zoneVisible(s,a,b,zone));}
 export const pathCost=path=>path.reduce((n,p)=>n+(p.cost||1),0);
-export function pathTo(s,u,x,y,z=levelOf(u)){if(towerForUnit(s,u))return null;
- if(!walkable(s,x,y,z)||(occupant(s,x,y,z)&&occupant(s,x,y,z)!==u))return null;
+export function pathTo(s,u,x,y,z=levelOf(u),{partial=false,avoidEnd=new Set()}={}){if(towerForUnit(s,u))return null;
+ if(!inBounds(x,y,z))return null;
+ const target=occupant(s,x,y,z),exact=walkable(s,x,y,z)&&(!target||target===u)&&!avoidEnd.has(key(x,y,z));
+ if(!partial&&!exact)return null;
  const start=key(u.x,u.y,levelOf(u)),goal=key(x,y,z),occupied=new Set(s.units.filter(p=>(alive(p)||incapacitated(p))&&p!==u).map(p=>key(p.x,p.y,levelOf(p)))),stairs=stairSet(s);
  const heuristic=p=>{const dx=Math.abs(p.x-x),dy=Math.abs(p.y-y);return (Math.max(dx,dy)+.5*Math.min(dx,dy))*movementCost(u)+2*movementMultiplier(u)*Math.abs(levelOf(p)-z);},heap=[],scores=new Map([[start,0]]),parents=new Map();
  const deviation=p=>Math.abs((p.x-u.x)*(y-u.y)-(p.y-u.y)*(x-u.x));const less=(a,b)=>a.f<b.f||(a.f===b.f&&(deviation(a)<deviation(b)||(deviation(a)===deviation(b)&&a.g>b.g)));
  const push=n=>{heap.push(n);let i=heap.length-1;while(i){const p=(i-1)>>1;if(!less(heap[i],heap[p]))break;[heap[i],heap[p]]=[heap[p],heap[i]];i=p;}};
  const pop=()=>{const first=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let i=0;while(true){let c=i*2+1;if(c>=heap.length)break;if(c+1<heap.length&&less(heap[c+1],heap[c]))c++;if(!less(heap[c],heap[i]))break;[heap[i],heap[c]]=[heap[c],heap[i]];i=c;}}return first;};
+ const trace=k=>{const path=[];while(k!==start){const entry=parents.get(k);path.push(entry.point);k=entry.parent;}return path.reverse();};
+ // Track a fallback during the SAME search. A full route always wins. Only
+ // strictly closer endpoints count as progress; ties prefer cheaper movement.
+ const remaining=p=>Math.hypot(p.x-x,p.y-y,(levelOf(p)-z)*3);
+ let best=null,bestDistance=remaining(u);
  push({...u,z:levelOf(u),k:start,g:0,f:heuristic(u)});
- while(heap.length){const p=pop();if(p.g!==scores.get(p.k))continue;if(p.k===goal){const path=[];let k=goal;while(k!==start){const entry=parents.get(k);path.push(entry.point);k=entry.parent;}return path.reverse();}
+ while(heap.length){const p=pop();if(p.g!==scores.get(p.k))continue;if(p.k===goal&&!avoidEnd.has(p.k))return trace(goal);
+  if(partial&&!avoidEnd.has(p.k)){const d=remaining(p);if(d<bestDistance-1e-9||best&&Math.abs(d-bestDistance)<1e-9&&p.g<best.g){best=p;bestDistance=d;}if(!exact&&bestDistance<=1&&best)return trace(best.k);}
   for(const q of movementNeighbors(s,u,p,stairs)){const k=key(q.x,q.y,q.z),g=p.g+q.cost;if(occupied.has(k)||g>=(scores.get(k)??Infinity))continue;scores.set(k,g);parents.set(k,{parent:p.k,point:q});push({...q,k,g,f:g+heuristic(q)});}
- }return null;
+ }return partial?(best?trace(best.k):[]):null;
 }
 // Tiles a unit can stand on within `budget` AP of its own movement (its stance, diagonals, stairs, doors it would open), cheapest first; the same graph as pathTo.
 export function reachable(s,u,budget){
@@ -281,19 +290,21 @@ export function setStance(s,u,stance){
 }
 
 export function navigationState(s){const climbs=[...s.climbs,...automaticRoofClimbs(s)];const known=p=>s.seen.has(key(p.x,p.y,levelOf(p))),knowledge=new Set(s.seen);for(const p of climbs)if(known(p)||known({x:p.x+p.dx,y:p.y+p.dy,z:p.z+1}))for(const q of [p,{x:p.x,y:p.y,z:p.z+1},{x:p.x+p.dx,y:p.y+p.dy,z:p.z+1}])knowledge.add(key(q.x,q.y,q.z));return {...s,knowledge,edges:Object.fromEntries(Object.entries(s.edges).filter(([k])=>edgeCells(k).some(known))),props:s.props.filter(p=>propCells(p).some(known)),stairs:s.stairs.filter(p=>known(p)||known({...p,z:p.z+1})),climbs:climbs.filter(p=>known(p)||known({x:p.x+p.dx,y:p.y+p.dy,z:p.z+1})),units:s.units.filter(p=>p.team==='squad'||s.detected.has(p.id))};}
-export function navigationPath(s,u,x,y,z=levelOf(u)){if(!inBounds(x,y,z))return null;return pathTo(navigationState(s),u,x,y,z);}
+export function navigationPath(s,u,x,y,z=levelOf(u),options){if(!inBounds(x,y,z))return null;return pathTo(navigationState(s),u,x,y,z,options);}
 
 export function move(s,u,x,y,z=levelOf(u)){
- if(!canControl(s,u))return false;const path=navigationPath(s,u,x,y,z);if(!path?.length)return false;
+ if(!canControl(s,u))return false;const path=navigationPath(s,u,x,y,z,{partial:true});if(!path?.length)return false;
  if(!canMoveStamina(u,path[0])||s.phase==='player'&&path[0].cost>u.ap)return false;
- u.overwatch=null;s.queue=path.map(p=>({id:u.id,...p,goal:{x,y,z}}));return true;
+ const end=path.at(-1),goal={x:end.x,y:end.y,z:end.z};
+ if(goal.x!==x||goal.y!==y||goal.z!==z)log(s,'Route blocked: walking as close as possible, then stopping.');
+ u.overwatch=null;s.queue=path.map(p=>({id:u.id,...p,goal}));return true;
 }
 export function stepMovement(s,...args){return withCombatQueries(s,()=>stepMovementQueryAction(s,...args));}
 function stepMovementQueryAction(s){
  if(!s.queue.length||!['explore','player','won'].includes(s.phase))return false;
  if(s.queue[0].group)return stepGroupMovement(s);
- let step=s.queue[0];const actor=unit(s,step.id);if(step.goal&&canControl(s,actor)){const goal=step.goal,path=navigationPath(s,actor,goal.x,goal.y,goal.z);if(!path?.length){s.queue=[];log(s,'Route stopped: destination reached or no discovered route remains.');return false;}s.queue=path.map(p=>({id:actor.id,...p,goal}));}step=s.queue.shift();const u=unit(s,step.id),currentStep=u&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===levelOf(step));if(!canControl(s,u)||!currentStep||!canMoveStamina(u,currentStep)||occupant(s,step.x,step.y,levelOf(step))||(combatCosts(s)&&u.ap<currentStep.cost)){s.queue=[];return false;}
- step=currentStep;if(!commitClimb(s,u,step)){refresh(s);return true;}recordSimpleTraversal(s,u,step);recordCliffTraversal(s,u,step);recordRoofTraversal(s,u,step);spendMovement(u,step);openDoorBetween(s,u,step);u.heading=headingTo(u,step);u.facing=(step.x-u.x)-(step.y-u.y)>=0?1:-1;u.x=step.x;u.y=step.y;u.z=levelOf(step);u.steps++;u.overwatch=null;emitNoise(s,u,u.sneaking?3:10);if(combatCosts(s))u.ap-=currentStep.cost;enterFire(s,u);refresh(s);return true;
+ let step=s.queue[0];const actor=unit(s,step.id);if(step.goal&&canControl(s,actor)){const goal=step.goal,path=navigationPath(s,actor,goal.x,goal.y,goal.z,{partial:true});if(!path?.length){s.queue=[];log(s,'Route stopped: destination reached or no discovered route remains.');return false;}const end=path.at(-1);if(end.x!==goal.x||end.y!==goal.y||end.z!==goal.z){Object.assign(goal,{x:end.x,y:end.y,z:end.z});log(s,'Route blocked: walking as close as possible, then stopping.');}s.queue=path.map(p=>({id:actor.id,...p,goal}));}step=s.queue.shift();const u=unit(s,step.id),currentStep=u&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===levelOf(step));if(!canControl(s,u)||!currentStep||!canMoveStamina(u,currentStep)||occupant(s,step.x,step.y,levelOf(step))||(movementCosts(s,currentStep)&&u.ap<currentStep.cost)){s.queue=[];return false;}
+ step=currentStep;if(!commitClimb(s,u,step)){refresh(s);return true;}recordSimpleTraversal(s,u,step);recordCliffTraversal(s,u,step);recordRoofTraversal(s,u,step);spendMovement(u,step);openDoorBetween(s,u,step);u.heading=headingTo(u,step);u.facing=(step.x-u.x)-(step.y-u.y)>=0?1:-1;u.x=step.x;u.y=step.y;u.z=levelOf(step);u.steps++;u.overwatch=null;emitNoise(s,u,u.sneaking?3:10);if(movementCosts(s,currentStep))u.ap-=currentStep.cost;enterFire(s,u);refresh(s);return true;
 }
 export function coverAgainst(s,a,b){
  const occupied=PROPS[propAt(s,b.x,b.y,levelOf(b))?.kind];
@@ -550,10 +561,10 @@ export function moveGroup(s,ids,leader,x,y,z=levelOf(leader)){
  const planning=navigationState(s);planning.units=planning.units.filter(u=>!members.includes(u));
  // Frontmost members vacate space first; every member still takes at most one step per tick.
  members.sort((a,b)=>(b.x*dx+b.y*dy)-(a.x*dx+a.y*dy));
- for(const u of members){const gx=u.x+dx,gy=u.y+dy,candidates=[];for(let oy=-2;oy<=2;oy++)for(let ox=-2;ox<=2;ox++)candidates.push({x:gx+ox,y:gy+oy,z,d:ox*ox+oy*oy});candidates.sort((a,b)=>a.d-b.d);let found=null;for(const goal of candidates){if(reserved.has(key(goal.x,goal.y,z)))continue;const path=inBounds(goal.x,goal.y,z)?pathTo(planning,u,goal.x,goal.y,z):null;if(path&&(path.length||u.x===goal.x&&u.y===goal.y&&levelOf(u)===z)){if(s.phase==='player'&&path.length&&path[0].cost>u.ap)continue;found=goal;break;}}if(!found)return false;reserved.add(key(found.x,found.y,z));orders.push({id:u.id,goal:{x:found.x,y:found.y,z}});}
- if(orders.every(o=>{const u=unit(s,o.id);return u.x===o.goal.x&&u.y===o.goal.y&&levelOf(u)===z;}))return false;for(const u of members)u.overwatch=null;s.queue=[{group:orders}];log(s,'Group movement ordered for '+orders.length+' comrades.');return true;
+ for(const u of members){const gx=u.x+dx,gy=u.y+dy,candidates=[];for(let oy=-2;oy<=2;oy++)for(let ox=-2;ox<=2;ox++)candidates.push({x:gx+ox,y:gy+oy,z,d:ox*ox+oy*oy});candidates.sort((a,b)=>a.d-b.d);let found=null;for(const goal of candidates){if(reserved.has(key(goal.x,goal.y,z)))continue;const path=inBounds(goal.x,goal.y,z)?pathTo(planning,u,goal.x,goal.y,z,{partial:true,avoidEnd:reserved}):null;if(path){if(s.phase==='player'&&path.length&&path[0].cost>u.ap)continue;const end=path.at(-1)||u;if(reserved.has(key(end.x,end.y,levelOf(end))))continue;found={x:end.x,y:end.y,z:levelOf(end)};break;}}if(!found)return false;reserved.add(key(found.x,found.y,found.z));orders.push({id:u.id,goal:found});}
+ if(orders.every(o=>{const u=unit(s,o.id);return u.x===o.goal.x&&u.y===o.goal.y&&levelOf(u)===o.goal.z;}))return false;for(const u of members)u.overwatch=null;s.queue=[{group:orders}];log(s,'Group movement ordered for '+orders.length+' comrades.');return true;
 }
-function stepGroupMovement(s){const order=s.queue[0];let moved=false;for(const entry of order.group){const u=unit(s,entry.id),goal=entry.goal;if(!canControl(s,u)){s.queue=[];return moved;}if(u.x===goal.x&&u.y===goal.y&&levelOf(u)===goal.z)continue;const path=navigationPath(s,u,goal.x,goal.y,goal.z),step=path?.[0],valid=step&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===step.z);if(!valid||!canMoveStamina(u,valid)||occupant(s,step.x,step.y,step.z)||(combatCosts(s)&&u.ap<valid.cost)){s.queue=[];log(s,'Group stopped: route blocked or a comrade lacks AP.');return moved;}if(!commitClimb(s,u,valid)){refresh(s);return true;}recordSimpleTraversal(s,u,valid);recordCliffTraversal(s,u,valid);recordRoofTraversal(s,u,valid);spendMovement(u,valid);openDoorBetween(s,u,step);u.heading=headingTo(u,step);u.facing=(step.x-u.x)-(step.y-u.y)>=0?1:-1;u.x=step.x;u.y=step.y;u.z=step.z;u.steps++;u.overwatch=null;emitNoise(s,u,u.sneaking?3:10);if(combatCosts(s))u.ap-=valid.cost;enterFire(s,u);moved=true;refresh(s);if(s.queue[0]!==order)return moved;}
+function stepGroupMovement(s){const order=s.queue[0];let moved=false;for(const entry of order.group){const u=unit(s,entry.id),goal=entry.goal;if(!canControl(s,u)){s.queue=[];return moved;}if(u.x===goal.x&&u.y===goal.y&&levelOf(u)===goal.z)continue;const path=navigationPath(s,u,goal.x,goal.y,goal.z,{partial:true}),step=path?.[0],valid=step&&movementNeighbors(s,u).find(p=>p.x===step.x&&p.y===step.y&&p.z===step.z);if(!valid||!canMoveStamina(u,valid)||occupant(s,step.x,step.y,step.z)||(movementCosts(s,valid)&&u.ap<valid.cost)){s.queue=[];log(s,'Group stopped: route blocked or a comrade lacks AP.');return moved;}const end=path.at(-1);Object.assign(goal,{x:end.x,y:end.y,z:end.z});if(!commitClimb(s,u,valid)){refresh(s);return true;}recordSimpleTraversal(s,u,valid);recordCliffTraversal(s,u,valid);recordRoofTraversal(s,u,valid);spendMovement(u,valid);openDoorBetween(s,u,step);u.heading=headingTo(u,step);u.facing=(step.x-u.x)-(step.y-u.y)>=0?1:-1;u.x=step.x;u.y=step.y;u.z=step.z;u.steps++;u.overwatch=null;emitNoise(s,u,u.sneaking?3:10);if(movementCosts(s,valid))u.ap-=valid.cost;enterFire(s,u);moved=true;refresh(s);if(s.queue[0]!==order)return moved;}
  if(order.group.every(e=>{const u=unit(s,e.id);return u.x===e.goal.x&&u.y===e.goal.y&&levelOf(u)===e.goal.z;}))s.queue=[];return moved;
 }
 

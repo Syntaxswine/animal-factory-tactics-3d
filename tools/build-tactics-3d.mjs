@@ -58,5 +58,6 @@ checkModuleClosure(new URL('.pages-output/',root),['tactics/rpg-flight-study.js'
 checkModuleClosure(new URL('.pages-output/',root),['tactics/battle-entry.js','tactics/floor-breach-study.js','tactics/wall-breach-study.js','tactics/grenade-blast-study.js','tactics/strategic-sites-study.js','tactics/campaign-page.js','tactics/barrel-blast-study.js','tactics/tank-blast-study.js','tactics/painted-fire-study.js','tactics/helicoid-shot-study.js','tactics/battle-3d.js','tactics/editor-3d.js','tactics/title-3d.js','tactics/overmap.js','tactics/roof-mantle-study.js','tactics/ledge-descent-study.js','tactics/idle-study.js','tactics/armed-idle-study.js','tactics/grenade-throw-study.js']);
 
 checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-hedges-study.js','tactics/foliage-skins-review.js','tactics/editor-foliage-preview-worker.js']);
+checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-hedges-study.html']);
 
 checkModuleClosure(new URL('.pages-output/',root),['tactics/dialogue-audition.js','tactics/dialogue-speech-worker.js','tactics/speaking-heads-viewer.js']);

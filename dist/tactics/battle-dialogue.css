@@ -100,3 +100,17 @@
 @media(min-width:761px) and (max-height:650px){
  .dialogue-participant .dialogue-face{max-width:235px}.dialogue-transcript{height:260px}
 }
+
+/* Canonical painted terminal and CRT treatment, in the approved column layout. */
+.battle-dialogue{--terminal-paint:url('../assets/ui/dialogue-terminal/field-terminal.webp');--terminal-stock:url('../assets/ui/dialogue-terminal/message-paper.webp');--terminal-crt:url('../assets/ui/dialogue-terminal/crt-green-v1.webp');border:14px solid #555940;border-image:var(--terminal-paint) 7% fill / 14px / 0 stretch;background:#283126;box-shadow:0 2px 0 #11170f,0 18px 75px #000c}
+.dialogue-face{isolation:isolate}.dialogue-face small{z-index:4}
+.dialogue-message{background-color:#e7dfc7;background-image:linear-gradient(#eee8d738,#eee8d738),var(--terminal-stock);background-size:100% 100%}
+.dialogue-message-merc{background-color:#e4c99b;background-image:linear-gradient(#b8893f38,#b8893f38),var(--terminal-stock)}
+.battle-dialogue button{background-image:linear-gradient(#4e5c3530,#161e1a40),var(--terminal-paint);background-size:auto,140% 1600%}
+.battle-dialogue .dialogue-playback button,.battle-dialogue .dialogue-leave{background-image:linear-gradient(#fff3d320,#fff3d320),var(--terminal-stock);background-size:100% 100%}
+.battle-dialogue .dialogue-options-button{background-image:none}
+@media(max-width:760px){.battle-dialogue{border-width:8px;border-image-width:8px}}
+.battle-dialogue .dialogue-face-light{position:absolute;inset:0;z-index:1;pointer-events:none;mix-blend-mode:color-dodge;background:radial-gradient(ellipse closest-side at 50% 50%,#383838 0%,#2b2b2b 22%,#151515 50%,#050505 78%,#000 100%)}
+.battle-dialogue .dialogue-face::before,.battle-dialogue .dialogue-face::after{content:'';position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.2}
+.battle-dialogue .dialogue-face::before{z-index:2;background:var(--terminal-crt) center/100% 100% no-repeat}
+.battle-dialogue .dialogue-face::after{content:'';position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.2}

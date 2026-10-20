@@ -167,7 +167,7 @@ function sync(){
  $('reload').textContent=heldWeaponJammed(u)?'Clear jam'+(combatCosts(state)?' · 3 AP':''):'Reload';
  $('reload').disabled=paused()||renderer.busy||!canControl(state,u)||!!state.queue.length||!WEAPONS[u.weapon].mag;
  $('end').disabled=paused()||renderer.busy||state.phase!=='player'||!!state.queue.length;
- $('stop').disabled=paused()||!state.queue.length;
+ $('stop').disabled=(!dialogueOrder.pending&&paused())||!state.queue.length;
  for(const name of Object.keys(STANCES)){const b=$('stance-'+name),group=stanceSelection(state,selectedIds,name);b.setAttribute('aria-pressed',String(group.all));b.disabled=paused()||renderer.busy||!group.ready.length;}
  for(const mode of Object.keys(MOVEMENT_MODES)){const b=$('move-'+mode),group=movementSelection(state,selectedIds,mode);b.setAttribute('aria-pressed',String(group.all));b.disabled=paused()||renderer.busy||!group.ready.length;}
  const group=movementSelection(state,selectedIds,'walk').members,costs=[...new Set(group.map(movementCost))].sort((a,b)=>a-b);
@@ -252,7 +252,7 @@ canvas.addEventListener('contextmenu',e=>{
   contextMenu.close();closeStances();if(renderer.busy){message('Finish the current action first.');return;}
   pickupOrder.cancel();dialogueOrder.cancel();state.queue=[];dialogueUI.unlock();
   const order=dialogueOrder.start(state,selected(),unit);
-  message(order.ok?(order.path.length?'Walking into talking range. Escape cancels.'+(userPaused?' Resume to continue.':''):''):order.reason);
+  message(order.ok?(order.path.length?(order.partial?order.reason:'Walking into talking range.')+' Escape cancels.'+(userPaused?' Resume to continue.':''):''):order.reason);
   if(order.ok)updateDialogueOrder();sync();return;
  }
  const merc=unit?.team==='squad'?unit:null;if(merc&&selectable(merc)){if(merc.id!==state.selected)selectMerc(merc.id);else selectedIds=new Set([merc.id]);}
@@ -327,7 +327,8 @@ canvas.addEventListener('pointercancel',()=>{clearHover();drag=null;renderer.wal
 canvas.addEventListener('lostpointercapture',()=>{drag=null;});
 window.addEventListener('blur',()=>{clearHover();drag=null;renderer.wallXray.setPointer(null,null);});
 canvas.addEventListener('wheel',e=>{e.preventDefault();const box=canvas.getBoundingClientRect(),x=e.clientX-box.left,y=e.clientY-box.top,old=view.zoom;view.zoom=Math.max(.08,Math.min(3,old*Math.exp(-e.deltaY*.001)));view.x=x-(x-view.x)*view.zoom/old;view.y=y-(y-view.y)*view.zoom/old;},{passive:false});
-document.addEventListener('keydown',e=>{if(e.defaultPrevented||dialogueUI.open||sectorLoading.active||characterScreen.open||savePanel.open)return;if(e.key==='Escape'&&grenadePlanner.open){e.preventDefault();grenadePlanner.cancel();return;}if(e.key==='Escape'&&flamePlanner.open){e.preventDefault();flamePlanner.cancel();return;}if(e.key==='Escape'&&!paused()){pickupOrder.cancel();dialogueOrder.cancel();drag=null;state.queue=[];targetId=null;tileTarget=null;sync();}});
+function cancelMovementOrders(){const talking=!!dialogueOrder.pending;pickupOrder.cancel();dialogueOrder.cancel();state.queue=[];if(talking)message('Conversation approach cancelled.');}
+document.addEventListener('keydown',e=>{if(e.defaultPrevented||dialogueUI.open||sectorLoading.active||characterScreen.open||savePanel.open)return;if(e.key==='Escape'&&grenadePlanner.open){e.preventDefault();grenadePlanner.cancel();return;}if(e.key==='Escape'&&flamePlanner.open){e.preventDefault();flamePlanner.cancel();return;}if(e.key==='Escape'&&(!paused()||dialogueOrder.pending)){cancelMovementOrders();drag=null;targetId=null;tileTarget=null;sync();}});
 document.addEventListener('keydown',e=>{
  if(contextMenu.open||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||characterScreen.open||savePanel.open||document.hidden||e.target.isContentEditable||e.target.closest?.('input,select,textarea,[role="textbox"],#stance-menu,#command-drawer')||document.querySelector('dialog[open]'))return;
  if(/^[1-3]$/.test(e.key)){e.preventDefault();document.querySelector(`#battle-levels [data-level="${+e.key-1}"]`).click();return;}
@@ -350,7 +351,7 @@ function action(fn){if(paused()||renderer.busy)return;pickupOrder.cancel();dialo
  $('shot-close').onclick=()=>shotDialog.close();
  shotDialog.addEventListener('close',()=>{frameClock.reset();lastUI='';sync();});
  $('fire').onclick=()=>{shotDialog.close();action(()=>{const t=target();return t&&attack(state,selected(),t,shotBurst,false,shotZone,false,$('aim-level').value);});};
- $('stop').onclick=()=>{if(paused())return;pickupOrder.cancel();dialogueOrder.cancel();state.queue=[];sync();};$('floor').onchange=()=>{contextMenu.close();tileTarget=null;level=+$('floor').value;clearHover();targetId=null;drag=null;flamePlanner.cancel();sync();};
+ $('stop').onclick=()=>{if(paused()&&!dialogueOrder.pending)return;cancelMovementOrders();sync();};$('floor').onchange=()=>{contextMenu.close();tileTarget=null;level=+$('floor').value;clearHover();targetId=null;drag=null;flamePlanner.cancel();sync();};
  for(const b of document.querySelectorAll('#battle-levels [data-level]'))b.onclick=()=>{$('floor').value=b.dataset.level;$('floor').dispatchEvent(new Event('change'));};
 $('pause').onclick=()=>{userPaused=!userPaused;frameClock.reset();sync();};
 document.addEventListener('visibilitychange',()=>{renderer.wallXray.setPointer(null,null);frameClock.reset();sync();if(document.hidden&&!dialogueUI.open&&!storageBusy&&!autoDisabled&&(performance.now()-lastAuto>=30000||state.round!==autoRound||campaign&&state.revision!==campaignSavedRevision))autosave();});
