@@ -320,7 +320,10 @@ export function createWindowDive(worker,profile={id:'horse'}){
   // finding the feet alone under a centre of mass 30 cm behind them, dragged it forward until the knees locked and the
   // hips ran away (80 to 210 m/s)
   hold:t=>t>=FOOT_DOWN-.05&&t<=T('lean')+.05});
- balance=bal;turns();
+ // On the balanced motion, the arms are kept off the legs again (the balance moved the body under them: the left hand
+ // went 2.6 cm into its thigh as the body rose), and the tails bent clear of the trunk as it now is; the fit's report
+ // is then the motion's own.
+ balance=bal;fit.solveSelf({planted,rounds:2});fit.solveTail();turns();
  const KEYS=[...PRE.map(k=>({t:k.t,label:k.label})),{t:ROLL.start,label:'Back to the floor'},{t:(ROLL.start+ROLL_END)/2,label:'Roll'},{t:ROLL_END,label:'Sit up'},{t:T('lean'),label:'Lean over the feet'},{t:T('rise'),label:'Rise over the feet'},{t:T('weightR'),label:'Weight on the right foot'},{t:T('leftBack'),label:'Left foot back'},{t:T('weightL'),label:'Weight on the left foot'},{t:T('rightDown'),label:'Right foot back'},{t:T('weightR2'),label:'Weight on the right again'},{t:T('leftDown'),label:'Left foot round'},{t:END,label:'Stand on the tile'}];
  let state=null;
  const api={duration:D,keys:KEYS,body,probe,roll:{rows:rollRows,dir:ROLL.dir,start:ROLL.start,end:ROLL_END},

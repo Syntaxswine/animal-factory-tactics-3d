@@ -171,6 +171,10 @@ export function createClearanceFit(duration,{step=.02}={}){
   // left, then the tail bends and lifts it for what is left; a last pass fits the head and tail to the finished trunk.
   for(let r=0;r<rounds;r++){add('trunk',torsoNeed(),free.trunk);add('trunk',solveHead(),free.trunk);if(tails?.count)add('trunk',solveTail(),free.trunk);}
   solveHead();if(tails?.count)solveTail();
+  // The tail again on the finished motion, for moves made since (a seat set on the floor, the balance): bent for the
+  // trunk as it now is, with no trunk move for what no bend clears. Fitted only before them, the tails went 2 to 10 cm
+  // into the floor as the body rocked and sat (the bull, cow, donkey, sheep, skunk, both pigs, rabbit and dog).
+  fit.solveTail=()=>{if(tails?.count){tracks=null;solveTail();build();report();}return fit;};
   // Limbs: the points riding a limb's bones move its end target out (a planted palm rises to lie on the sill, a hoof
   // drops under the lintel, a leg lifts over the wall top). They are fitted afterwards (solveLimbs), once the motion has
   // given its limbs their steady bend directions. planted(id, t) gives [weight, surface normal] for a limb's end; over a
@@ -233,7 +237,7 @@ export function createClearanceFit(duration,{step=.02}={}){
     build();}
    report();return fit;};
   build();report();return fit;}
- const fit={trunk:t=>V(...get('trunk')(t)),bow:t=>get('bow')(t)[0],head:get('head'),tail:get('tail'),limb:(id,t)=>V(...get(id)(t)),plant:(id,t)=>V(...get('snap:'+id)(t)),report:null,solve,solveLimbs:()=>fit,solvePlants:()=>fit};
+ const fit={trunk:t=>V(...get('trunk')(t)),bow:t=>get('bow')(t)[0],head:get('head'),tail:get('tail'),limb:(id,t)=>V(...get(id)(t)),plant:(id,t)=>V(...get('snap:'+id)(t)),report:null,solve,solveLimbs:()=>fit,solvePlants:()=>fit,solveTail:()=>fit};
  return fit;
 }
 // The rig's obstacle boxes (phantom-wrench rigs/traversal.mjs): one tile wide on the edge at x = edge.
