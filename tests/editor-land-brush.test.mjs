@@ -98,8 +98,8 @@ test('import rejects malformed ownership and block coordinates without affecting
 });
 
 test('large brush strokes enforce the cliff budget atomically and clip at the map boundary',()=>{
- const d=fresh();apply(d,command(50,50,{landSize:63,landHeight:2}));apply(d,command(130,50,{landSize:63,landHeight:2}));
- const before=d.export(),r=d.apply(command(50,130,{landSize:63,landHeight:2}));assert.equal(r.ok,false);assert.match(r.error,/1024/);assert.equal(d.export(),before);
+ const d=fresh();apply(d,command(50,50,{landSize:63,landHeight:4}));apply(d,command(130,50,{landSize:63,landHeight:4}));
+ const before=d.export(),r=d.apply(command(50,130,{landSize:63,landHeight:4}));assert.equal(r.ok,false);assert.match(r.error,/2048/);assert.equal(d.export(),before);
  const small=fresh();apply(small,command(239,239));assert(cliff(small.map,239,239));assert.deepEqual(validateMap(small.map),[]);
  // Near-limit authored maps must not become impossible to re-import after a brush stroke.
  const large=fresh();large.map.notes='x'.repeat(MAX_MAP_BYTES-large.export().length-160);const saved=large.export();assert(saved.length<MAX_MAP_BYTES);

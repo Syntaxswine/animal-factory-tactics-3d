@@ -72,7 +72,7 @@ Generated from the organized authoring collection. Placeholder recipes and rotat
 | town | town-workshop--land-road-ew | 0 | placeholder |
 | town | town-workshop--river-e1-w1-road-ns | 0 | placeholder |
 | town | town-workshop--river-e1-w2-road-ns | 0 | placeholder |
-| tutorial | tutorial-step-1 | 1 | in-progress |
+| tutorial | tutorial-step-1 | 2 | in-progress |
 | tutorial | tutorial-step-2 | 1 | in-progress |
 | tutorial | tutorial-step-3 | 1 | in-progress |
 | tutorial | tutorial-step-4 | 1 | in-progress |

@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import {passable} from './core/maps.js';
 import {EnvironmentPaint} from './environment-paint.js';
 import {BiomeScene} from './biome-scene.js';
@@ -53,7 +54,7 @@ export class InspectionScene {
    this.materials.set(kind,material);
   }return this.materials.get(kind);
  }
- get visibleLevel(){return this.options.showAllLevels?3:this.options.level;}
+ get visibleLevel(){return this.options.showAllLevels?MAP_LEVELS-1:this.options.level;}
  dim(material,z){if(this.options.showAllLevels||z===this.options.level)return material;if(!this.dimMaterials.has(material)){const m=material.clone();m.onBeforeCompile=(shader,renderer)=>{material.onBeforeCompile(shader,renderer);shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>','outgoingLight *= .38;\n#include <opaque_fragment>');};m.customProgramCacheKey=()=>material.customProgramCacheKey()+'-inspection-dim';this.dimMaterials.set(material,m);}return this.dimMaterials.get(material);}
  clearScenery(){for(const mesh of this.scenery.children)mesh.dispose();this.scenery.clear();}
  async open(document){

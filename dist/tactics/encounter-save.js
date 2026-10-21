@@ -32,7 +32,7 @@ export function validateSavedState(s,{population=false,unitIds=null}={}){
  for(const key of ['edges','edgeLocks','rules','contacts','glimpses'])if(!s[key]||typeof s[key]!=='object'||Array.isArray(s[key]))fail();
  for(const key of ['visible','seen','detected'])if(!(s[key] instanceof Set))fail();
  if(s.alerted!==undefined&&!(s.alerted instanceof Set))fail();
- if(s.upper.length!==2||s.upper.some(layer=>!layer||typeof layer!=='object'||Array.isArray(layer)||Object.values(layer).some(t=>!terrain.has(t))))fail();
+ if(s.upper.length!==s.definition.levels-1||s.upper.some(layer=>!layer||typeof layer!=='object'||Array.isArray(layer)||Object.values(layer).some(t=>!terrain.has(t))))fail();
  if(Object.values(s.edges).some(v=>!EDGES[v])||s.props.some(p=>!p||!PROPS[p.kind]||![p.x,p.y,p.z??0].every(Number.isInteger)||isScenery(p)&&((p.rotation!==undefined&&!SCENERY_ROTATIONS.includes(p.rotation))||(p.rotated!==undefined&&typeof p.rotated!=='boolean'))))fail();
  if(tutorialRoleErrors(s).length||climbingMapErrors(s).length||localEnvironmentErrors(s).length||spotlightErrors(s).length||foliageErrors(s).length||strategicSiteErrors(s).length||breachErrors(s).length||!validStructureHealth(s))fail();
  if(s.units.length>100||new Set(s.units.map(u=>u.id)).size!==s.units.length||!population&&(!s.units.length||!s.units.some(u=>u.id===s.selected&&u.team==='squad')))fail();

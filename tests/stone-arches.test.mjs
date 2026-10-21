@@ -12,15 +12,17 @@ import {archSurfaceAt,archPlacementErrors} from '../dist/tactics/stone-arches.js
 import {STONE_ARCH_SPECS,stoneArchData} from '../dist/tactics/stone-arch-geometry.js';
 import {createStoneArchLibrary} from '../dist/tactics/stone-arch-scene.js';
 import {stoneArchFixture} from '../dist/tactics/stone-arch-fixture.js';
+import {ensureMapLayer} from '../dist/tactics/map-layers.js';
 import {buildWorld,traceWorld,DIMENSIONS} from '../dist/tactics/hybrid-world.js';
 import {environmentVisuals} from '../dist/tactics/environment-visuals.js';
 import {grenadeWorld,sweepGrenade} from '../dist/tactics/grenade-geometry.js';
 
-const place=(kind,rotation=0)=>{const map=blankMap('Arch checks'),prop={kind,x:30,y:30,z:0,rotation,rotated:rotation%180===90};map.props.push(prop);return {map,prop,spec:STONE_ARCH_SPECS[kind]};};
+const place=(kind,rotation=0)=>{const map=blankMap('Arch checks'),prop={kind,x:30,y:30,z:0,rotation,rotated:rotation%180===90},spec=STONE_ARCH_SPECS[kind];ensureMapLayer(map,spec.rise);map.props.push(prop);return {map,prop,spec};};
 const cell=(prop,x,y,z)=>{const p=sceneryPoint(prop,[x,y]);return {x:p.x,y:p.y,z};};
 function lineOfTravel(map,points){for(let i=1;i<points.length;i++)assert.ok(neighbors(map,points[i-1]).some(p=>p.x===points[i].x&&p.y===points[i].y&&p.z===points[i].z),JSON.stringify(points.slice(i-1,i+1)));}
 
-test('available arch routes work in four orientations; layer-4 placement waits for the deferred migration',()=>{
+test('arch routes work in four orientations within their declared map layer capacity',()=>{
+ const legacy=blankMap('Legacy capacity');legacy.props.push({kind:'stone-arch-large',x:30,y:30,z:0});assert.match(validateMap(legacy).join(' '),/playable layers/);
  for(const kind of Object.keys(STONE_ARCH_SPECS))for(const rotation of [0,90,180,270]){
   const {map,prop,spec}=place(kind,rotation);if(spec.rise>=LEVELS){assert.match(validateMap(map).join(' '),/playable layers/);continue;}assert.deepEqual(validateMap(map),[]);
   for(let x=spec.pier;x<spec.w-spec.pier;x++)lineOfTravel(map,Array.from({length:spec.h+4},(_,y)=>cell(prop,x,y-2,0)));
@@ -59,7 +61,7 @@ test('top surfaces follow placement edits and disappear after removal without de
 
 test('placement, four rotations, undo/redo, export and deletion preserve the upper route',()=>{
  for(const kind of Object.keys(STONE_ARCH_SPECS).filter(k=>STONE_ARCH_SPECS[k].rise<LEVELS)){
-  const doc=new EditingDocument().open(JSON.stringify(blankMap('Arch authoring')));
+  const map=blankMap('Arch authoring');ensureMapLayer(map,STONE_ARCH_SPECS[kind].rise);const doc=new EditingDocument().open(JSON.stringify(map));
   assert.equal(doc.apply({tool:'prop',start:{x:30,y:30,z:0},options:{propKind:kind}}).ok,true);
   const selection=()=>doc.inspect(30,30,0,{mode:'prop'});
   for(let i=0;i<4;i++)assert.equal(doc.rotate(selection()).ok,true);

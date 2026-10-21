@@ -6,7 +6,7 @@ import {blankMap,parseMap,passable,validateMap,setTerrain} from '../dist/tactics
 import {blockCanvas,extractBlock,validateBlock} from '../dist/tactics/core/blocks.js';
 import {traceProjectile} from '../dist/tactics/core/projectiles.js';
 import {cliffRayHit,cliffSurfaceAt} from '../dist/tactics/cliff-map-geometry.js';
-import {cliffMapErrors} from '../dist/tactics/cliff-map.js';
+import {cliffMapErrors,CLIFF_LIMIT} from '../dist/tactics/cliff-map.js';
 import {buildWorld} from '../dist/tactics/hybrid-world.js';
 import {cliffTileGeometry} from '../dist/tactics/cliff-tiles.js';
 import {hideUnknownCliffTriangles} from '../dist/tactics/cliff-map-scene.js';
@@ -30,7 +30,7 @@ test('invalid cliff edits reject without changing other props, starts or shared 
  assert.equal(paint(d,{cliffMask:16}).ok,false);assert.equal(d.export(),before);
  assert.equal(paint(d,{},d.map.starts[0]).ok,false);assert.equal(d.export(),before);
 
- assert.ok(cliffMapErrors({props:Array.from({length:1025},(_,x)=>({kind:'cliff-ledge',x,y:0}))})[0].includes('1024'));
+ assert.ok(cliffMapErrors({props:Array.from({length:CLIFF_LIMIT+1},(_,x)=>({kind:'cliff-ledge',x,y:0}))})[0].includes(String(CLIFF_LIMIT)));
 });
 test('cliff mask rotations restore after four turns and reject incompatible neighbors atomically',()=>{
  const d=new EditingDocument().open(JSON.stringify(blankMap()));assert(paint(d,{cliffMask:3}).ok);const before=d.export();

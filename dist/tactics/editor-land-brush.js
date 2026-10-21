@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import {landBrushCells} from './land-paint.js';
 import {terrainAt,setTerrain,edgeCells,MAX_MAP_BYTES} from './core/maps.js';
 import {GROUNDS,propCells} from './core/environment.js';
@@ -7,14 +8,14 @@ const neighbors=[[1,0],[-1,0],[0,1],[0,-1]],key=p=>`${p.x},${p.y}`;
 // Mutate the controller's disposable candidate, never the live document.
 export function paintLand(map,command,size=240){
  const {start,end=start,options={},path}=command,height=options.landHeight??1,surface=options.groundKind||'ground-grass';
- if(![0,1,2].includes(height))throw Error('Land height must be ground, first plateau or second plateau.');
+ if((!Number.isInteger(height)||height<0||height>=MAP_LEVELS))throw Error('Land height must be on layers 1–5.');
  if(!GROUNDS.includes(surface))throw Error('Choose a ground surface for the land.');
  const cells=landBrushCells(start,end,options,size,path),old=map.landPaint||{},land={...old},affected=new Set(),styles=new Map(),changed=new Set(cells.map(key));
  for(const p of cells){
   const k=key(p),previous=old[k],before=previous?.[0]||0;
   if(height>0&&!previous){
    if(!['yard','floor','woodland',...GROUNDS].includes(terrainAt(map,p.x,p.y,0)))throw Error('Paint land on dry ground; clear water or obstacles first.');
-   if([1,2].some(z=>terrainAt(map,p.x,p.y,z)!=='void'))throw Error('An existing upper floor is here. The Land brush only reshapes land it created.');
+   if(Array.from({length:MAP_LEVELS-1},(_,i)=>i+1).some(z=>terrainAt(map,p.x,p.y,z)!=='void'))throw Error('An existing upper floor is here. The Land brush only reshapes land it created.');
   }
   if(height!==before){
    for(const u of [...map.starts,...map.guards,...map.exits])if(u.x===p.x&&u.y===p.y&&(u.z||0)<height)throw Error('Move the character or travel marker before raising land beneath it.');

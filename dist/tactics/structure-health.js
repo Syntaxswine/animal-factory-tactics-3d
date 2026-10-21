@@ -43,9 +43,9 @@ export function damageStructure(s,target,amount){
   if(target.edge!==undefined){before.edges[target.edge]=s.edges[target.edge];delete s.edges[target.edge];if(s.edgeLocks)delete s.edgeLocks[target.edge];}
   else{
    const cells=info.roof?Array.from({length:4},(_,i)=>({x:info.roof.x+i%2,y:info.roof.y+Math.floor(i/2),z:info.roof.z||0})):[target];
-   if(info.roof){const field=(info.roof.z||0)===3?'canopies':'props';before[field].push(structuredClone(info.roof));s[field]=(s[field]||[]).filter(p=>p!==info.roof);}
+   if(info.roof){const field=(s.canopies||[]).includes(info.roof)?'canopies':'props';before[field].push(structuredClone(info.roof));s[field]=(s[field]||[]).filter(p=>p!==info.roof);}
    for(const p of cells){
-    const {x,y,z=0}=p,kind=surface(s,x,y,z);if(z===3)continue;
+    const {x,y,z=0}=p,kind=surface(s,x,y,z);if(info.roof&&(before.canopies||[]).length)continue;
     before.tiles.push({x,y,z,kind});delete s.structureHealth[`tile:${x},${y},${z}`];
     if(z){if(info.type==='wall')s.upper[z-1][`${x},${y}`]='floor';else delete s.upper[z-1][`${x},${y}`];}
     else (s.map||s.terrain)[y][x]=kind==='bridge'?'water':'ground-gravel';
@@ -63,11 +63,11 @@ export function validStructureHealth(s){
  for(const [id,entry]of Object.entries(s.structureHealth)){
   if(!entry||typeof entry.kind!=='string'||!Number.isInteger(entry.hp)||entry.hp<=0)return false;
   let target;
-  if(/^edge:[es]:-?\d+:-?\d+(?::[0-2])?$/.test(id)){
+  if(/^edge:[es]:-?\d+:-?\d+(?::[0-4])?$/.test(id)){
    const [,axis,a,b,c='0']=id.split(':'),x=Number(a),y=Number(b),z=Number(c);
    if(x<(axis==='e'?-1:0)||y<(axis==='s'?-1:0)||x>=map[0].length||y>=map.length)return false;
    target={edge:id.slice(5)};
-  }else if(/^(tile|roof):\d+,\d+,[0-3]$/.test(id)){
+  }else if(/^(tile|roof):\d+,\d+,[0-4]$/.test(id)){
    const [x,y,z]=id.split(':')[1].split(',').map(Number);if(x>=map[0].length||y>=map.length)return false;target={x,y,z};
   }else return false;
   const info=structureInfo(s,target);

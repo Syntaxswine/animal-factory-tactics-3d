@@ -1,6 +1,7 @@
 import {foliageSignature} from './foliage-obstacles.js';
 import {buildWorld,traceWorld,DIMENSIONS} from './hybrid-world.js';
 import {segmentBox} from './hybrid-geometry.js';
+import {MAP_LEVELS} from './map-layers.js';
 const caches=new WeakMap();
 export const isHybrid=s=>s?.geometryMode==='hybrid';
 export const floorSpacing=s=>isHybrid(s)?DIMENSIONS.floorSpacing:3;
@@ -40,7 +41,7 @@ export function traceHybrid(s,shooter,origin,direction,reach,{bodies=true,purpos
  let hit=traceWorld(hybridWorld(s),start,end,{filter:b=>purpose==='sight'?b.blocksSight!==false:b.blocksShot!==false}),limit=hit?.t??1;
  // Canonical event precision avoids last-bit Math.hypot differences between V8 builds.
  const canonical=v=>Math.round(v*1e10)/1e10;
- const impact=(kind,t,extra={})=>{const p=start.map((v,i)=>canonical(v+(end[i]-v)*t));return {kind,x:p[0],y:p[2],h:p[1],z:Math.max(0,Math.min(2,Math.floor((p[1]+1e-7)/floorSpacing(s)))),distance:canonical(t*reach),...extra};};
+ const impact=(kind,t,extra={})=>{const p=start.map((v,i)=>canonical(v+(end[i]-v)*t));return {kind,x:p[0],y:p[2],h:p[1],z:Math.max(0,Math.min(MAP_LEVELS-1,Math.floor((p[1]+1e-7)/floorSpacing(s)))),distance:canonical(t*reach),...extra};};
  let result=hit?impact(hit.kind==='roof'?'floor':hit.kind==='foliage'?'cover':hit.kind,hit.t,{objectId:hit.id,normal:hit.normal,material:hit.material}):impact('range',1);
  // Keep the playable map boundary and physical ground outside painted/void tiles.
  for(const [axis,lo,hi]of [[0,-.5,239.5],[2,-.5,239.5],[1,0,Infinity]]){

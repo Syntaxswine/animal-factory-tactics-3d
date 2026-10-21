@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import {battleFoliageTargets} from './battle-foliage-focus.js';
 import {EnvironmentPaint} from './environment-paint.js';
 import {BiomeScene} from './biome-scene.js';
@@ -98,7 +99,7 @@ export class HybridRenderer{
   if(this.width!==width||this.height!==height){this.renderer.setSize(width,height,false);this.width=width;this.height=height;}
   setBattleCamera(camera,view,width,height,editor?0:level);
   const world=state.geometryMode==='hybrid'?hybridWorld(state):this.mapGeometry.get(state);
-  const renderLevel=showAllLevels?3:level,seen=editor?null:state.seen,wallDefinition=state.definition?.edges,floorDefinition=state.definition?.upper,breaches=state.breaches??state.definition?.breaches,rebuild=this.world!==world||this.seenCount!==seen?.size||this.renderLevel!==renderLevel||this.wallDefinition!==wallDefinition||this.floorDefinition!==floorDefinition||this.breaches!==breaches;if(rebuild){this.rebuild(world,seen,renderLevel,state);this.world=world;this.seenCount=seen?.size;this.renderLevel=renderLevel;this.wallDefinition=wallDefinition;this.floorDefinition=floorDefinition;this.breaches=breaches;}this.level=level;
+  const renderLevel=showAllLevels?MAP_LEVELS-1:level,seen=editor?null:state.seen,wallDefinition=state.definition?.edges,floorDefinition=state.definition?.upper,breaches=state.breaches??state.definition?.breaches,rebuild=this.world!==world||this.seenCount!==seen?.size||this.renderLevel!==renderLevel||this.wallDefinition!==wallDefinition||this.floorDefinition!==floorDefinition||this.breaches!==breaches;if(rebuild){this.rebuild(world,seen,renderLevel,state);this.world=world;this.seenCount=seen?.size;this.renderLevel=renderLevel;this.wallDefinition=wallDefinition;this.floorDefinition=floorDefinition;this.breaches=breaches;}this.level=level;
   const focus=battleFloorPoint(view,width/2,height/2,level);const cursor=this.wallXray?.pointer,hover=cursor?{...battleFloorPoint(view,cursor.x,cursor.y,level),z:level}:null;this.biomes.cutawayTargets=editor?[]:battleFoliageTargets(state,state.units.map(u=>this.displayUnit?{...this.displayUnit(this.state?.units.find(v=>v.id===u.id)||u),presentationLevel:u.presentationLevel}:u),this.foliageSelectedIds||new Set([state.selected]),hover,this.foliageRoutes,level);this.biomes.update(camera,new THREE.Vector3(focus.x,0,focus.y),28*Math.sqrt(2)*view.zoom);
   const units=editor?[...state.starts.map((p,i)=>({...p,id:i,species:['horse','goat','donkey','sheep'][i],weapon:'rifle',hp:100,team:'squad'})),...state.guards.map((p,i)=>({...p,id:i+4,hp:100,team:'guard'}))]:state.units;
   for(const mesh of this.actors.values())mesh.visible=false;const picking=[];

@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import {foliageAt} from './foliage-data.js';
 import {TREE_COVER,treeCoverOf} from './foliage-tree-cover.js';
 import {canopyCells} from './editor-canopies.js';
@@ -25,10 +26,10 @@ export class InspectionDocument {
  }
  export(){return JSON.stringify(this.original,null,2);}
  inspect(px,py,z,{mode='auto',roofs=true,walls=true}={}){
-  if(!Number.isFinite(px)||!Number.isFinite(py)||![0,1,2,3].includes(z))return null;
+  if(!Number.isFinite(px)||!Number.isFinite(py)||(!Number.isInteger(z)||z<0||z>=MAP_LEVELS))return null;
   const x=Math.floor(px+.5),y=Math.floor(py+.5);
   if(x<0||y<0||x>=this.size||y>=this.size)return null;
-  if(z===3){const p=roofs&&this.map.canopies?.find(p=>canopyCells(p).some(q=>q.x===x&&q.y===y));return p?{x,y,z,type:'prop',label:p.kind,data:p,cells:canopyCells(p)}:{x,y,z,type:'tile',label:'Empty roof layer',data:{x,y,z,terrain:'void'},cells:[{x,y,z}]};}const base={x,y,z},terrain=terrainAt(this.map,x,y,z),unit=this.units.find(p=>at(p,x,y,z));
+  const canopy=roofs&&this.map.canopies?.find(p=>canopyCells(p).some(q=>q.x===x&&q.y===y&&q.z===z));if(canopy)return {x,y,z,type:'prop',label:canopy.kind,data:canopy,cells:canopyCells(canopy)};const base={x,y,z},terrain=terrainAt(this.map,x,y,z),unit=this.units.find(p=>at(p,x,y,z));
   const prop=propAt(this.map,x,y,z),availableProp=prop&&(roofs||!prop.kind.startsWith('roof-'));
   const dx=px-x,dy=py-y,axis=Math.abs(dx)>Math.abs(dy)?'e':'s';
   const edge=edgeKey(axis,x-(axis==='e'&&dx<0?1:0),y-(axis==='s'&&dy<0?1:0),z);

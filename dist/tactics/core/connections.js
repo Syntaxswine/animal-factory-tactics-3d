@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from '../map-layers.js';
 import {floorTerrain,EDGES,propAt,PROPS} from './environment.js';
 export const DIRECTIONS=['north','east','south','west'];
 export const CONNECTION_TYPES=['none','fence','road','river','wall','cliff'];
@@ -9,8 +10,8 @@ export function connectionProfile(m,sx,sy,direction,type){
  const horizontal=direction==='north'||direction==='south',x0=sx*24,y0=sy*24;
  const points=Array.from({length:24},(_,i)=>({x:x0+(horizontal?i:direction==='east'?23:0),y:y0+(horizontal?direction==='south'?23:0:i)}));
  const roads=[],rivers=[],fences=[],walls=[],heights=[];
- points.forEach((p,i)=>{const t=tile(m,p.x,p.y,0);if(t==='ground-asphalt')roads.push(i);if(t==='water')rivers.push(i);let height=0;for(let z=1;z<3;z++)if(floorTerrain(tile(m,p.x,p.y,z)))height=z;heights.push(height);
- if(i===23)return;for(let z=0;z<3;z++){const edge=(horizontal?'e':'s')+':'+p.x+':'+p.y+(z?':'+z:'');const material=m.edges[edge];if(material?.startsWith('fence-'))fences.push({position:i,level:z,material});else if(material==='wall'||material?.startsWith('wall-'))walls.push({position:i,level:z,material:material==='wall'?'wall-concrete':material});}});
+ points.forEach((p,i)=>{const t=tile(m,p.x,p.y,0);if(t==='ground-asphalt')roads.push(i);if(t==='water')rivers.push(i);let height=0;for(let z=1;z<MAP_LEVELS;z++)if(floorTerrain(tile(m,p.x,p.y,z)))height=z;heights.push(height);
+ if(i===23)return;for(let z=0;z<MAP_LEVELS;z++){const edge=(horizontal?'e':'s')+':'+p.x+':'+p.y+(z?':'+z:'');const material=m.edges[edge];if(material?.startsWith('fence-'))fences.push({position:i,level:z,material});else if(material==='wall'||material?.startsWith('wall-'))walls.push({position:i,level:z,material:material==='wall'?'wall-concrete':material});}});
  const transitions=heights.slice(1).filter((h,i)=>h!==heights[i]).length;
  const present=[roads.length&&'road',rivers.length&&'river',fences.length&&'fence',walls.length&&'wall',transitions&&'cliff'].filter(Boolean);
  if(present.length>1)throw Error(direction+': only one element may meet this boundary.');

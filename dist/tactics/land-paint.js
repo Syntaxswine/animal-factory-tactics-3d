@@ -1,3 +1,4 @@
+import {MAP_LEVELS,mapLevelCount} from './map-layers.js';
 // Editor ownership only. Gameplay uses the ordinary floors and cliff props baked by the brush.
 // Each sparse column records [plateau height, original ground] to support boundary rebuilding.
 export function landErrors(map,size=240,grounds=[]){
@@ -6,7 +7,7 @@ export function landErrors(map,size=240,grounds=[]){
  if(!land||typeof land!=='object'||Array.isArray(land))return ['Invalid painted-land footprint.'];
  for(const [key,value]of Object.entries(land)){
   const [x,y]=key.split(',').map(Number);
-  if(key!==`${x},${y}`||!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0||x>=size||y>=size||!Array.isArray(value)||value.length!==2||![1,2].includes(value[0])||!['yard','floor','woodland',...grounds].includes(value[1]))return ['Invalid painted-land column: '+key];
+  if(key!==`${x},${y}`||!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0||x>=size||y>=size||!Array.isArray(value)||value.length!==2||(!Number.isInteger(value[0])||value[0]<1||value[0]>=Math.min(MAP_LEVELS,mapLevelCount(map)))||!['yard','floor','woodland',...grounds].includes(value[1]))return ['Invalid painted-land column: '+key];
  }
  for(const p of map.props||[])if(p.landAuto!==undefined&&(p.landAuto!==true||p.kind!=='cliff-ledge'||(p.cliffMask??15)!==15||!land[`${p.x},${p.y}`]||!Number.isInteger(p.z??0)||(p.z??0)<0||(p.z??0)>=land[`${p.x},${p.y}`][0]))return ['Invalid automatic cliff ownership.'];
  return [];

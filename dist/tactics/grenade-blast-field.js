@@ -1,4 +1,5 @@
 import {GRENADE} from './grenade-ballistics.js';
+import {MAP_LEVELS} from './map-layers.js';
 import {grenadeWorld,sweepGrenade,GRENADE_FLOOR} from './grenade-geometry.js';
 import {TOWERS,TOWER_HEIGHT} from './tower-geometry.js';
 export const BLAST_RAYS=96;
@@ -11,7 +12,7 @@ export function grenadeBlastLevel(state,p){
  for(const tower of state.props||[]){const f=TOWERS[tower.kind];if(!f)continue;const h=p.h-(tower.z||0)*GRENADE_FLOOR;
   if(h>=TOWER_HEIGHT-.2&&h<=TOWER_HEIGHT+3&&p.x>=tower.x-.5&&p.x<tower.x+(tower.rotated?f.h:f.w)-.5&&p.y>=tower.y-.5&&p.y<tower.y+(tower.rotated?f.w:f.h)-.5)return tower.z||0;
  }
- return Math.max(0,Math.min(3,p.z??Math.floor(p.h/GRENADE_FLOOR)));
+ return Math.max(0,Math.min(MAP_LEVELS-1,p.z??Math.floor(p.h/GRENADE_FLOOR)));
 }
 export const blastCellKey=(x,y,z)=>z?`${x},${y},${z}`:`${x},${y}`;
 export function grenadeBlastField(state,shot,origin=resolvedGrenadeBlast(shot)){

@@ -11,7 +11,7 @@ import {createBiomeObstacleMaterials} from './biome-obstacle-paint.js';
 import {createBiomePlantFactory} from './biome-foliage-models.js';
 import {createBiomeTerrain} from './biome-terrain.js';
 import {createTerrainFill} from './biome-terrain-fill.js';
-import {createMapGroundPaint,biomeMixAt} from './biome-map-paint.js';
+import {createMapGroundPaint,createBiomeMixSampler} from './biome-map-paint.js';
 import {biomePlans,biomeEnabled,biomeTree,biomeFamilyAt,biomeSeed} from './biome-gameplay.js';
 import {groundHash} from './biome-ground-composition.js';
 import {DIMENSIONS} from './hybrid-world.js';
@@ -35,10 +35,10 @@ export function biomeVisibilitySummary(data,size){
 }
 
 export function mixedBiomeFill(plan,map){
- const fills=new Map(),cache=new Map(),get=family=>{if(!fills.has(family))fills.set(family,createTerrainFill(plan,family));return fills.get(family);};
- const blend=(method,x,y)=>{const mix=biomeMixAt(map,x,y,plan.level);return mix.reduce((n,p)=>n+get(p.family)[method](x,y)*p.weight,0);};
+ const fills=new Map(),cache=new Map(),sampleBiome=createBiomeMixSampler(map,plan.level),get=family=>{if(!fills.has(family))fills.set(family,createTerrainFill(plan,family));return fills.get(family);};
+ const blend=(method,x,y)=>{const mix=sampleBiome(x,y);return mix.reduce((n,p)=>n+get(p.family)[method](x,y)*p.weight,0);};
  const height=(x,y)=>{const key=x.toFixed(4)+','+y.toFixed(4);if(!cache.has(key))cache.set(key,blend('height',x,y)*(.25+.75*plan.densityAt(Math.floor(x+.5),Math.floor(y+.5))));return cache.get(key);};
- return {height,distance:(x,y)=>get(plan.family).distance(x,y),color:(x,y)=>biomeMixAt(map,x,y,plan.level).reduce((rgb,p)=>{const c=get(p.family).color(x,y);return rgb.map((v,i)=>v+c[i]*p.weight);},[0,0,0]),normal(x,y){const e=.08,dx=(height(x+e,y)-height(x-e,y))/(2*e),dy=(height(x,y+e)-height(x,y-e))/(2*e),n=Math.hypot(dx,1,dy);return [-dx/n,1/n,-dy/n];}};
+ return {height,distance:(x,y)=>get(plan.family).distance(x,y),color:(x,y)=>sampleBiome(x,y).reduce((rgb,p)=>{const c=get(p.family).color(x,y);return rgb.map((v,i)=>v+c[i]*p.weight);},[0,0,0]),normal(x,y){const e=.08,dx=(height(x+e,y)-height(x-e,y))/(2*e),dy=(height(x,y+e)-height(x,y-e))/(2*e),n=Math.hypot(dx,1,dy);return [-dx/n,1/n,-dy/n];}};
 }
 export class BiomeScene{
  constructor(scene,loader,onReady=()=>{},onError=()=>{},{planSource=biomePlans}={}){

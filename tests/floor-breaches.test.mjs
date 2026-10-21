@@ -31,7 +31,7 @@ test('separate holes merge, diagonal holes remain separate, and isolated survivo
  const elbow=floorBreachFixture({layout:'elbow',size:3}).state;assert.equal(edges(elbow),12);
  let previous=0;for(let size=1;size<=5;size++){const f=floorBreachFixture({layout:'island',size});assert.ok(f.removed.length>previous);previous=f.removed.length;assert.ok(passable(f.state,f.worker));}
 });
-test('authored voids, stairs, cliffs, roof modules, canopy levels and ground erasures never invent slab damage',()=>{
+test('authored voids, stairs, cliffs, roof modules, decorative roofs and ground erasures never invent slab damage',()=>{
  const {state}=floorBreachFixture({size:0});assert.equal(edges(state),0);delete state.definition;delete state.upper[0]['7,7'];assert.equal(edges(state),0);
  for(const kind of ['stairs','cliff','roof']){
   const {state:s}=floorBreachFixture({size:0});
@@ -40,7 +40,7 @@ test('authored voids, stairs, cliffs, roof modules, canopy levels and ground era
   if(kind==='roof')s.definition.props=[{x:7,y:7,z:1,kind:'roof-corrugated-flat'}];
   delete s.upper[0]['7,7'];assert.equal(edges(s),0,kind+' original omitted slab');
  }
- const s=floorBreachFixture({size:0}).state;s.upper.push({'7,7':'floor','8,7':'floor'});s.definition.upper.push({'7,7':'floor','8,7':'floor'});delete s.upper[2]['7,7'];s.map[7][7]='void';assert.equal(edges(s),0);
+ const s=floorBreachFixture({size:0}).state;s.upper.push({'7,7':'floor','8,7':'floor'});s.definition.upper.push({'7,7':'floor','8,7':'floor'});delete s.upper[2]['7,7'];s.map[7][7]='void';assert.equal(edges(s),1,'an ordinary fourth-layer floor can break');s.definition.canopies=[{kind:'roof-corrugated-flat',x:7,y:7,z:3}];assert.equal(edges(s),0,'decorative roof cells never acquire structural damage');
  s.upper[0]['7,7']='void';assert.equal(edges(s),4);s.definition.upper[0]['7,7']='void';assert.equal(edges(s),0);
 });
 test('retained floor paints and physical transforms are unchanged while rims use vertex color',()=>{
