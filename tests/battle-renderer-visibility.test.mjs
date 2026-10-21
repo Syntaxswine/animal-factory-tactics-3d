@@ -6,6 +6,7 @@ import {BattleCombat} from '../dist/tactics/battle-combat.js';
 import {HybridRenderer} from '../dist/tactics/hybrid-renderer.js';
 import {toWorld,buildWorld} from '../dist/tactics/hybrid-world.js';
 import {MapGeometryCache} from '../dist/tactics/map-geometry-cache.js';
+import {MAP_LEVELS} from '../dist/tactics/map-layers.js';
 
 // Exercise both renderer draw stages with the real presentation clock. Only
 // WebGL, model loading and effects are replaced; visibility/picking are real.
@@ -58,15 +59,16 @@ test('battle draws every level, keeps fog gates, and only picks people on the in
  r.rebuild=(world,seen,level)=>rebuilt.push(level);r.paintedEnvironment={barrelHit:()=>null};r.fire.pick=()=>null;
  r.lights={update:(state,level)=>lit.push(level),render(){}};
  try{
-  for(const level of [0,1,2,0]){
+  const levels=[...Array(MAP_LEVELS).keys(),0];
+  for(const level of levels){
    assert.deepEqual(r.draw({drawImage(){}},state,{x:210,y:280,zoom:1},700,600,level).map(p=>p.id),[0,1,2]);
    for(const id of [0,1,2]){
     const p=r.actors.get(id).position.clone().project(r.camera),hit=r.pick((p.x+1)*350,(1-p.y)*300,700,600);
     assert.equal(hit,units[id].z===level?id:null,`visible character ${id} with level ${level} selected`);
    }
   }
-  assert.deepEqual(rebuilt,[3],'switching the interaction layer does not rebuild or cut away higher scenery');
-  assert.deepEqual(lit,[3,3,3,3],'lamps on every displayed level remain lit');
+  assert.deepEqual(rebuilt,[MAP_LEVELS-1],'switching the interaction layer does not rebuild or cut away higher scenery');
+  assert.deepEqual(lit,levels.map(()=>MAP_LEVELS-1),'lamps on every displayed level remain lit');
   assert.equal(r.actors.has(3),false,'explored floors do not reveal unspotted guards');
   assert.equal(r.actors.has(4),false,'explored floors do not reveal unseen bodies');
  }finally{for(const mesh of r.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}}

@@ -90,7 +90,7 @@ test('persistent ground flames restore directly from saves, follow visible dry c
  }finally{q.dispose();}
 });
 test('queued tank shots wait for their own discharge rather than an earlier burn on the same wearer',async()=>{
- const {s,fire}=fixture(),q=await controllers();try{q.frame(s,0);fire();const event=s.effect.sequence[0];s.effect.sequence=[{...event,explosions:[],burns:[],downed:[]},event];q.frame(s,10);
+ const {s,fire}=fixture(),q=await controllers();try{q.frame(s,0);fire();const event=s.effect.sequence[0];s.effect.sequence=[{...event,attackId:'shot:0',dischargeId:'shot:0/d:0',bodyImpacts:[],explosions:[],burns:[],downed:[]},event];q.frame(s,10);
   assert.equal(q.r.fire.entries.get(4).waiting,true);assert.equal([...q.r.tankEffects.bursts.values()][0].waiting,true);q.frame(s,1200);assert.equal(q.r.fire.entries.get(4).start,1580);
  }finally{q.dispose();}
 });

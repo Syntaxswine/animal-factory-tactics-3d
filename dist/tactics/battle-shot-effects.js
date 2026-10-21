@@ -1,23 +1,34 @@
-import {TOWERS,TOWER_HEIGHT,unitBaseHeight} from './tower-geometry.js';
 import * as T from './vendor/three.module.js';
-import {DIMENSIONS} from './hybrid-world.js';
-function visualTower(state,p){return state?.props?.find(t=>{const f=TOWERS[t.kind];if(!f)return false;const h=p.y-(t.z||0)*DIMENSIONS.floorSpacing;return h>=TOWER_HEIGHT-.2&&h<=TOWER_HEIGHT+3&&p.x>=t.x-.5&&p.x<t.x+(t.rotated?f.h:f.w)-.5&&p.z>=t.y-.5&&p.z<t.y+(t.rotated?f.w:f.h)-.5;});}
-export function shotPoint(p,state){
- const victim=state?.units?.find(u=>u.id===p.unitId);if(victim?.towerPost||victim?.cliffSupport)return new T.Vector3(p.x,unitBaseHeight(victim,DIMENSIONS.floorSpacing)+(p.h-unitBaseHeight(victim))*DIMENSIONS.standing/1.8,p.y);
- const tower=visualTower(state,{x:p.x,y:p.h,z:p.y});if(tower)return new T.Vector3(p.x,(tower.z||0)*DIMENSIONS.floorSpacing+(p.h-(tower.z||0)*3),p.y);
-const z=Math.max(0,Math.floor((p.h||0)/3));return new T.Vector3(p.x,z*DIMENSIONS.floorSpacing+((p.h||0)-z*3)*DIMENSIONS.standing/1.8,p.y);}
-const visible=(state,p)=>{const tower=visualTower(state,p),z=tower?(tower.z||0):Math.max(0,Math.min(2,Math.floor(p.y/DIMENSIONS.floorSpacing))),x=Math.round(p.x),y=Math.round(p.z);return state.visible.has(z?`${x},${y},${z}`:`${x},${y}`);};
-// Clip to actual current visibility, even when Easy reveals all scenery.
+import {shotPoint,shotVisible} from './shot-coordinates.js';
+export {shotPoint} from './shot-coordinates.js';
+export const TRACE_VERTICES=8192;
+// Independent visible runs can enter and leave fog; never join across a hidden
+// gap or require a visible muzzle. Easy's scenery reveal is not sight.
+export function visibleShotSegments(state,points){
+ const result=[];
+ for(let i=1;i<points.length;i++){
+  const a=points[i-1],b=points[i],steps=Math.max(1,Math.ceil(a.distanceTo(b)/.15));let previous=a;
+  for(let j=1;j<=steps;j++){
+   const p=a.clone().lerp(b,j/steps);
+   if(a.shotLevel===b.shotLevel)p.shotLevel=a.shotLevel;else if(j===steps)p.shotLevel=b.shotLevel;
+   if(shotVisible(state,previous)&&shotVisible(state,p))result.push(previous,p);
+   previous=p;
+  }
+ }
+ return result;
+}
+// Compatibility helper for callers needing the first continuous visible run.
 export function visibleShotPath(state,points){
- if(!points.length||!visible(state,points[0]))return [];
- const result=[points[0]];
- for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],steps=Math.max(1,Math.ceil(a.distanceTo(b)/.15));for(let j=1;j<=steps;j++){const p=a.clone().lerp(b,j/steps);if(!visible(state,p))return result;result.push(p);}}
+ const segments=visibleShotSegments(state,points);if(!segments.length)return [];
+ const result=[segments[0],segments[1]];
+ for(let i=2;i<segments.length&&segments[i].equals(result.at(-1));i+=2)result.push(segments[i+1]);
  return result;
 }
 export class BattleShotEffects {
  constructor(scene){
   this.flash=new T.Mesh(new T.SphereGeometry(.035,8,6),new T.MeshBasicMaterial({color:0xffdf83,toneMapped:false}));this.flash.scale.set(2.8,1,1);
   this.trace=new T.LineSegments(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffd893,transparent:true,opacity:.8,toneMapped:false}));
+  this.trace.geometry.setAttribute('position',new T.BufferAttribute(new Float32Array(TRACE_VERTICES*3),3).setUsage(T.DynamicDrawUsage));this.trace.geometry.setDrawRange(0,0);this.trace.frustumCulled=false;
   this.impact=new T.Mesh(new T.OctahedronGeometry(.07),new T.MeshBasicMaterial({color:0xd5b78a,transparent:true,opacity:.8,toneMapped:false}));
   scene.add(this.flash,this.trace,this.impact);this.hide();
  }
@@ -25,20 +36,21 @@ export class BattleShotEffects {
  update(active,state,muzzle){
   const {event,phase}=active,shot=event.trajectories[0];if(!shot)return;
   const endpoint=shotPoint(shot,state);
-  if(muzzle&&phase.flash&&visible(state,muzzle.origin)){this.flash.visible=true;this.flash.position.copy(muzzle.origin);this.flash.quaternion.setFromUnitVectors(new T.Vector3(1,0,0),muzzle.direction);}
+  if(muzzle&&active.shooterVisible!==false&&phase.flash&&shotVisible(state,muzzle.origin)){this.flash.visible=true;this.flash.position.copy(muzzle.origin);this.flash.quaternion.setFromUnitVectors(new T.Vector3(1,0,0),muzzle.direction);}
   if(phase.trace){
    // Use the actual model muzzle when available. Rendering never retraces or
    // changes damage; every endpoint comes from the resolved gameplay event.
-   if(!active.traceOrigin)active.traceOrigin=muzzle?.origin.clone()||(shot.origin?shotPoint({...shot.origin,unitId:event.shooter},state):null);
+   if(!active.traceOrigin){active.traceOrigin=muzzle?.origin.clone()||(shot.origin?shotPoint({...shot.origin,unitId:event.shooter},state):null);if(active.traceOrigin&&shot.origin?.support)active.traceOrigin.shotLevel=shot.origin.support.level;}
    const segments=[];
    if(active.traceOrigin)for(const trajectory of event.trajectories){
-    const path=visibleShotPath(state,[active.traceOrigin,...(trajectory.path||[trajectory]).map(p=>shotPoint(p,state))]);
-    for(let i=1;i<path.length;i++)segments.push(path[i-1],path[i]);
+    segments.push(...visibleShotSegments(state,[active.traceOrigin,...(trajectory.path||[trajectory]).map(p=>shotPoint(p,state))]));
    }
-   if(segments.length){const old=this.trace.geometry;this.trace.geometry=new T.BufferGeometry().setFromPoints(segments);old.dispose();this.trace.visible=true;}
+   const count=Math.min(TRACE_VERTICES,segments.length),position=this.trace.geometry.attributes.position;
+   for(let i=0;i<count;i++)position.setXYZ(i,segments[i].x,segments[i].y,segments[i].z);
+   this.trace.geometry.setDrawRange(0,count);position.needsUpdate=true;this.trace.visible=count>0;
   }
   const knownVictim=shot.kind!=='unit'||active.knownUnitIds.includes(shot.unitId)||state.units.some(u=>u.id===shot.unitId&&u.team==='squad');
-  if(phase.impact&&shot.kind!=='range'&&visible(state,endpoint)&&knownVictim){this.impact.visible=true;this.impact.position.copy(endpoint);this.impact.material.color.setHex(shot.kind==='unit'?0xd18463:0xd5b78a);}
+  if(phase.impact&&shot.kind!=='range'&&shotVisible(state,endpoint)&&knownVictim){this.impact.visible=true;this.impact.position.copy(endpoint);this.impact.material.color.setHex(shot.kind==='unit'?0xd18463:0xd5b78a);}
  }
  dispose(){for(const mesh of [this.flash,this.trace,this.impact]){mesh.removeFromParent();mesh.geometry.dispose();mesh.material.dispose();}}
 }

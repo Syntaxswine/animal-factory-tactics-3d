@@ -21,7 +21,7 @@ test('other firearms display resolved pellet paths from their model muzzle witho
  try{
   effects.update(active,state,muzzle);assert.equal(effects.flash.visible,true);assert.equal(effects.trace.visible,true);assert.equal(effects.trace.isLineSegments,true);
   const p=effects.trace.geometry.attributes.position;
-  assert.ok(Math.abs(p.getX(0)-muzzle.origin.x)<1e-6);assert.ok(Math.abs(p.getZ(p.count-1)-.3)<1e-6);assert.deepEqual(event,before);
+  assert.ok(Math.abs(p.getX(0)-muzzle.origin.x)<1e-6);assert.ok(Math.abs(p.getZ(effects.trace.geometry.drawRange.count-1)-.3)<1e-6);assert.deepEqual(event,before);
   effects.hide();active.phase=shotPhase(10,false,true);effects.update(active,state,muzzle);assert.equal(effects.flash.visible,false);assert.equal(effects.trace.visible,false);
  }finally{effects.dispose();}assert.equal(scene.children.length,0);
 });

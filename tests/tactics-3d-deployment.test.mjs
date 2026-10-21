@@ -31,6 +31,7 @@ test('3D distribution includes the encounter, editor, title, overmap and sprite 
   assert.deepEqual(fs.readFileSync(new URL('../.pages-output/tactics/intro-sprites/'+relative.replaceAll(path.sep,'/'),import.meta.url)),fs.readFileSync(source),relative);
  }
  for(const file of ['loading-screen.js','loading-screen.css','sector-loading.js','battle-entry.js','loading-tracker.js','battle-control-icons.js'])assert.deepEqual(fs.readFileSync(new URL('../.pages-output/tactics/'+file,import.meta.url)),fs.readFileSync(new URL('../dist/tactics/'+file,import.meta.url)));
+ for(const file of ['gunshot-impacts.js','shot-coordinates.js','gunshot-impact-debug.js','gunshot-impact-map.js','fixtures/gunshot-impacts.v1.json'])assert.deepEqual(fs.readFileSync(new URL('../.pages-output/tactics/'+file,import.meta.url)),fs.readFileSync(new URL('../dist/tactics/'+file,import.meta.url)),file);
  assert.match(fs.readFileSync(new URL('../.pages-output/tactics/battle-3d.html',import.meta.url),'utf8'),/src="battle-entry.js"/);
  for(const relative of [
   'assets/ui/loading-screen/command-room-v1.png',

@@ -35,11 +35,11 @@ for(const p of profiles.filter(p=>!p.unarmed))test(p.id+': near and steep aiming
 
 test('renderer suppresses unavailable discharge for the whole shot, keeps impact, and recovers on the next shot',()=>{
  const scene=new T.Scene(),fx=new BattleShotEffects(scene),root=new T.Group(),worker={root:new T.Group(),parts:[],skeleton:{update(){}},diagnostics(){return{};}},sample={x:0,y:0,z:0,heading:0,blend:0,pose:{prone:1}},unit={id:1,name:'Test',species:'horse',weapon:'rifle',hp:100};
- let available=true;const model={root,worker,profile:{},weapon:'rifle',paint:{},posture:{},firing:{apply(){return {origin:new T.Vector3(),direction:new T.Vector3(1,0,0),supported:available,reason:available?null:'endpoint-not-aligned'};},muzzle(){return available?{origin:new T.Vector3(),direction:new T.Vector3(1,0,0)}:null;}}};
+ let available=true;const model={root,worker,profile:{},weapon:'rifle',paint:{},posture:{},offhand:{sync(){}},firing:{apply(){return {origin:new T.Vector3(),direction:new T.Vector3(1,0,0),supported:available,reason:available?null:'endpoint-not-aligned'};},muzzle(){return available?{origin:new T.Vector3(),direction:new T.Vector3(1,0,0)}:null;}}};
  const state={units:[unit],visible:new Set(['0,0','1,0']),detected:new Set()},before=structuredClone(state);
  const renderer={models:new Map([[1,model]]),motion:{sample:()=>sample},combat:{},fire:{pose:()=>false},grenades:{prepareActor(){},pose:()=>false,afterActor(){}},state,shotEffects:fx,diagnostics:[],firingDiagnostic:BattleRenderer.prototype.firingDiagnostic};
  const shot=start=>({start,rifle:true,knownUnitIds:[],event:{shooter:1,ax:0,ay:0,trajectories:[{x:1,y:0,h:0,kind:'wall'}]},phase:shotPhase(380)});
- const draw=()=>{fx.hide();BattleRenderer.prototype.actor.call(renderer,unit);};
+ const draw=()=>{fx.hide();BattleRenderer.prototype.actor.call(renderer,unit);fx.update(renderer.combat.active,state,renderer.combat.active.frameMuzzle);};
  try{
   renderer.combat.active=shot(1);draw();assert.equal(fx.flash.visible,true);assert.ok(renderer.combat.active.traceOrigin);
   available=false;renderer.combat.active.phase=shotPhase(390);draw();assert.equal(fx.flash.visible,false);assert.equal(fx.trace.visible,false);assert.equal(fx.impact.visible,true);assert.equal(renderer.combat.active.traceOrigin,null);assert.match(renderer.diagnostics[0],/shot outcome unchanged/);

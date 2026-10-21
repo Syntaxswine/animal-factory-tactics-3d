@@ -1,3 +1,4 @@
+import {beginGunshotAction,stampGunshotEvent,prepareBodyImpact,commitBodyImpact} from '../gunshot-impacts.js';
 import {attackWeapon,handAttackReady,handWeapons,pairedInHand} from '../one-handed.js';
 import {settleSquadAmmo} from '../squad-ammo.js';
 import {tutorialCrateLoot} from '../tutorial-mission.js';
@@ -422,7 +423,7 @@ function attackQueryAction(s,a,b,burst=false,byAI=false,zone='torso',reaction=fa
  spendStamina(a,WEAPONS[a.weapon].mag?2:6);if(!reaction&&combatCosts(s))a.ap-=p.cost; // no charge on a map with nothing left to fight (a blast on a won map)
  const trajectories=[],explosions=[],sequence=[];
  // A stack suspends the current burst while a reply resolves; ammunition bounds chains.
- const frames=[{a,b,p,zone,left:p.rounds,weapon:a.weapon,aim:{...b},reply:false}];
+ const frames=[{a,b,p,zone,left:p.rounds,weapon:a.weapon,aim:{...b},reply:false,impactAction:beginGunshotAction(s)}];
  cascade(s,()=>{while(frames.length){ // one attack, replies included, is one trigger for the guards it alerts
   const f=frames.at(-1);if(f.p.dualWeapons&&f.left)f.weapon=f.p.dualWeapons[f.p.rounds-f.left];const shooter=f.a,target=f.b,w=WEAPONS[f.weapon];
   if(!f.left||!alive(shooter)||shooter.burningTurns||w.mag&&shooter.ammo[f.weapon]<1){frames.pop();continue;}
@@ -442,7 +443,7 @@ function attackQueryAction(s,a,b,burst=false,byAI=false,zone='torso',reaction=fa
   }
   if(shot)trajectories.push(...(pellets||[shot]));
   const victim=ballistic?s.units.find(u=>u.id===shot.unitId):accurate&&alive(target)?target:null;
-  const event={shooter:shooter.id,target:target.id,ax:shooter.x,ay:shooter.y,bx:f.aim.x,by:f.aim.y,az:levelOf(shooter),bz:levelOf(f.aim),hit:!!victim,incendiary:!!w.incendiary,trajectories:pellets||(shot?[shot]:[]),explosions:[],downed:[],reply:f.reply,shotChance,shotRoll,weapon:f.weapon,...f.p.dualWeapons?{dual:true}: {}};if(w.thrown)event.grenade={shooter:structuredClone(shooter),release:1.92,recovery:4.6};sequence.push(event);
+  const event={shooter:shooter.id,target:target.id,ax:shooter.x,ay:shooter.y,bx:f.aim.x,by:f.aim.y,az:levelOf(shooter),bz:levelOf(f.aim),hit:!!victim,incendiary:!!w.incendiary,trajectories:pellets||(shot?[shot]:[]),explosions:[],downed:[],reply:f.reply,shotChance,shotRoll,weapon:f.weapon,...f.p.dualWeapons?{dual:true}: {}};if(w.thrown)event.grenade={shooter:structuredClone(shooter),release:1.92,recovery:4.6};sequence.push(event);if(ballistic&&!w.blast)stampGunshotEvent(event,f.impactAction,shooter,s.units);
   const flame=w.incendiary?flameShape(s,shooter,f.aim,w):null;
   const flameStructures=flame?planFlameStructureDamage(s,flame,w.damage):[],flameBarrelHits=flame?flameBarrels(s,flame):[];
   const flameHits=flame?flameVictims(s,shooter,flame).map(unit=>({unit,zone:'torso',damage:Math.max(1,unit.hp)})):null;
@@ -455,16 +456,16 @@ function attackQueryAction(s,a,b,burst=false,byAI=false,zone='torso',reaction=fa
   const barrelHits=[...(pellets||(shot?[shot]:[])).filter(p=>p.propId).map(p=>p.propId),...(blastResult?.barrels||[]),...flameBarrelHits];
   appendBarrelBlasts(s,event,explosions,barrelHits,shooter);
   if(!victim&&!blastResult&&!pellets&&!flame){settleAttackStructures(s,event,shooter);if(!event.hit)log(s,`${shooter.name} → ${target.name}: miss${f.reply?' / retaliation':''}.`);continue;}
-  const pelletHits=pellets?.map(p=>({unit:s.units.find(u=>u.id===p.unitId),zone:p.zone,damage:Math.round(w.damage*AIM_ZONES[p.zone||f.zone].damage*(shooter.team==='guard'?.65:1))})).filter(p=>p.unit);
+  const pelletHits=pellets?.map(p=>({trajectory:p,unit:s.units.find(u=>u.id===p.unitId),zone:p.zone,damage:Math.round(w.damage*AIM_ZONES[p.zone||f.zone].damage*(shooter.team==='guard'?.65:1))})).filter(p=>p.unit);
   if(pellets){event.hit=event.hit||pelletHits.length>0;if(!event.hit)log(s,`${shooter.name} → ${target.name}: pellets missed.`);}
   const impacts=flameHits||(blastResult?blastResult.hits:pelletHits)||[{unit:victim,damage:Math.round(Math.round(weaponDamage(w,Math.hypot(shooter.x-victim.x,shooter.y-victim.y))*AIM_ZONES[shot?.zone||f.zone].damage)*(shooter.team==='guard'&&!w.incendiary?.65:1))}];
   const reacted=new Set();
-  for(const {unit:victim,damage:rawAmount,zone:pelletZone}of impacts){if(!alive(victim)&&!incapacitated(victim))continue;const amount=flame?rawAmount:damageAfterResistance(victim,rawAmount);
+  for(const {unit:victim,damage:rawAmount,zone:pelletZone,trajectory=shot}of impacts){if(!alive(victim)&&!incapacitated(victim))continue;const amount=flame?rawAmount:damageAfterResistance(victim,rawAmount);
   const hitZone=w.blast?'torso':pelletZone||shot?.zone||f.zone;damageHeldWeapon(s,victim,hitZone,rawAmount);
   if(victim.team==='guard')targeted(s,victim,shooter);
   const tankChance=w.mag?tankExplosionChance(victim,hitZone):0,standing=s.units.filter(alive);
   if(tankChance>0&&random(s)<tankChance){const blast=explodeTanks(s,victim,shooter);explosions.push(blast);event.explosions.push(blast);(event.burns??=[]).push(...blast.burns);appendBarrelBlasts(s,event,explosions,s.props.filter(p=>isExplosiveBarrel(p)&&fuelBlastReaches(victim,p)),shooter);}
-  else {combatDamage(s,victim,amount,!!w.incendiary||incapacitated(victim),shooter);if(!w.blast&&hitZone==='legs'&&amount>0)woundLeg(victim);if(w.incendiary){if(victim.hp<=0)recordBurn(s,victim,'ash');ignite(s,victim);(event.burns??=[]).push(victim.id);}}
+  else {const bodyImpact=ballistic&&!w.blast?prepareBodyImpact(event,f.impactAction,trajectory,victim,amount):null;combatDamage(s,victim,amount,!!w.incendiary||incapacitated(victim)||!!bodyImpact?.fatalHead,shooter);commitBodyImpact(event,bodyImpact,victim);if(!w.blast&&hitZone==='legs'&&amount>0)woundLeg(victim);if(w.incendiary){if(victim.hp<=0)recordBurn(s,victim,'ash');ignite(s,victim);(event.burns??=[]).push(victim.id);}}
   // Units this impact put down (a tank blast can take neighbours too), so the renderer can time their fall.
   for(const u of standing)if(!alive(u)&&!event.downed.includes(u.id))event.downed.push(u.id);
   const friendly=victim.team===shooter.team;
@@ -474,7 +475,7 @@ function attackQueryAction(s,a,b,burst=false,byAI=false,zone='torso',reaction=fa
    const armed=WEAPONS[victim.weapon].mag>0,turned={...victim,heading:headingTo(victim,shooter),ap:WEAPONS[victim.weapon].cost};
    const reply=armed&&alive(shooter)?previewAttack(s,turned,shooter,false,'torso',retaliationToken):{ok:false};
    const response=friendlyReaction(s,victim,shooter,amount,reply.ok);
-   if(response){event.dialogue=`${response.speaker}: “${response.line}”`;log(s,event.dialogue);if(response.retaliate){frames.push({a:victim,b:shooter,p:reply,zone:'torso',left:1,weapon:victim.weapon,aim:{...shooter},reply:true});}}
+   if(response){event.dialogue=`${response.speaker}: “${response.line}”`;log(s,event.dialogue);if(response.retaliate){frames.push({a:victim,b:shooter,p:reply,zone:'torso',left:1,weapon:victim.weapon,aim:{...shooter},reply:true,impactAction:beginGunshotAction(s)});}}
   }
  }
  settleAttackStructures(s,event,shooter);

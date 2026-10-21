@@ -34,6 +34,7 @@ import {barrelTarget,presentBarrel} from './explosive-barrels.js';
 import {CharacterBatches,CHARACTER_PICK_LAYER} from './character-batches.js';
 import {createOffhandEquipment} from './offhand-equipment.js';
 import {handWeapons,pairedInHand} from './one-handed.js';
+import {GunshotImpactDebug} from './gunshot-impact-debug.js';
 
 // Reuse only the environment/camera presentation. No hybrid combat mode.
 export class BattleRenderer extends HybridRenderer {
@@ -42,6 +43,7 @@ export class BattleRenderer extends HybridRenderer {
   this.sceneryAssets=new SceneryScene(this.scene,this.loader,()=>{this.world=null;onReady();},e=>this.diagnostics.push('Scenery: '+e.message),this.renderer);this.sites=new StrategicSiteScene(this.scene,this.loader,()=>{this.world=null;onReady();},e=>this.diagnostics.push('Strategic sites: '+e.message));this.cliffs=new CliffMapScene(this.scene);this.interiorFog=new InteriorFogScene(this.scene,this.wallXray);this.lights=new LightingScene(this.scene,this.loader,onReady,e=>this.diagnostics.push('Lighting: '+e.message));
   this.loot=new BattleLoot(this.scene);this.motion=new BattleMotion();this.reducedMotion=motionPreference();
   this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
+  this.impactDebug=new GunshotImpactDebug(this.scene,{enabled:new URLSearchParams(globalThis.location?.search||'').get('impactDebug')==='1'||new URLSearchParams(globalThis.location?.search||'').get('study')==='gunshot-impacts'});
   this.flameEffects=new BattleFlameEffects(this.scene);
   this.grenades=new BattleGrenades(this.scene,{loader:this.loader,onError:message=>this.diagnostics.push(message)});
   this.fire=new BattleFire(this);
@@ -133,7 +135,7 @@ export class BattleRenderer extends HybridRenderer {
   if(shot){
    const gun=shot.event.dual&&shot.event.weapon!==unit.weapon?model.offhand.gun:model.equipment,anchor=gun?.anchors?.muzzle;
    const muzzle=shot.rifle?(!shot.presentationUnsupported&&model.firing?model.firing.muzzle():null):anchor&&gun.root.visible?{origin:anchor.getWorldPosition(new T.Vector3()),direction:new T.Vector3(1,0,0).transformDirection((gun.barrel||gun.root).matrixWorld)}:null;
-   if(shot.event.flame)this.flameEffects.update(shot,this.state,muzzle);else if(!shot.event.grenade)this.shotEffects.update(shot,this.state,muzzle);
+   if(shot.event.flame)this.flameEffects.update(shot,this.state,muzzle);else if(!shot.event.grenade)shot.frameMuzzle=muzzle;
   }
   this.grenades.afterActor(model,unit,shot);
   return root;
@@ -142,7 +144,7 @@ export class BattleRenderer extends HybridRenderer {
   if(model.aimWarning){const i=this.diagnostics.indexOf(model.aimWarning);if(i>=0)this.diagnostics.splice(i,1);model.aimWarning=null;}
   if(result&&!result.supported){model.aimWarning=`${unit.name||unit.species}: firing animation unavailable (${result.reason}); shot outcome unchanged.`;this.diagnostics.push(model.aimWarning);}
  }
- prune(){this.sceneryAssets.update((this.presentationNow??performance.now())/1000,this.camera,{reducedMotion:!!this.reducedMotion?.matches});this.grenades.update(this.combat.active,this.state,this.camera);this.tankEffects.draw(this.camera);for(const model of this.models.values())if(model.root.visible)model.batches.sync();} // Runs after posing, before rendering.
+ prune(){const shot=this.combat.active;if(shot&&!shot.event.flame&&!shot.event.grenade)this.shotEffects.update(shot,this.state,shot.frameMuzzle);this.impactDebug.update(shot,this.state);this.sceneryAssets.update((this.presentationNow??performance.now())/1000,this.camera,{reducedMotion:!!this.reducedMotion?.matches});this.grenades.update(shot,this.state,this.camera);this.tankEffects.draw(this.camera);for(const model of this.models.values())if(model.root.visible)model.batches.sync();} // Runs after posing, before rendering, even when the shooter has no visible model.
  pick(x,y,width,height,level=this.presentationLevel??this.level,{selectBody=false}={}){
   const ray=new T.Raycaster();ray.layers.enable(CHARACTER_PICK_LAYER);ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
   const barrel=[this.paintedEnvironment.barrelHit(ray,level),this.sites.hit(ray,level)].filter(Boolean).sort((a,b)=>a.distance-b.distance)[0],onLevel=id=>(this.state.units.find(u=>u.id===id)?.z||0)===level;
@@ -165,6 +167,7 @@ export class BattleRenderer extends HybridRenderer {
  draw(ctx,state,...args){
   this.loot.sync(state,null);
   this.state=state;this.presentationLevel=args[3];this.captureCombat(state);this.shotEffects.hide();this.flameEffects.hide();
+  if(this.combat.active)this.combat.active.frameMuzzle=null;
   const units=state.units.filter(u=>personVisible(state,u)||this.combat.falling.has(u.id)).map(u=>this.traversal.active?.event.unitId===u.id?{...u,presentationLevel:args[3]}:this.fire.display(this.combat.display(u)));
   this.motion.update(units,(this.presentationNow??performance.now()),!!this.reducedMotion?.matches);
   // Visibility was resolved from committed units before animation changed HP
@@ -202,7 +205,7 @@ export class BattleRenderer extends HybridRenderer {
   this.generation++;this.wallXray.dispose();
   this.sceneryAssets.dispose();this.sites.dispose();this.loot.dispose();this.cliffs.dispose();this.interiorFog.dispose();this.lights.dispose();this.daylight.dispose();
   this.motion.clear();
-  this.grenades.dispose();this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();this.fire.dispose();this.tankEffects.dispose();
+  this.grenades.dispose();this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.impactDebug.dispose();this.flameEffects.dispose();this.fire.dispose();this.tankEffects.dispose();
   this.paintedEnvironment.dispose();
   for(const {worker,paint,root,equipment,locomotion,cap,draw,batches,offhand}of this.models.values()){batches.dispose();this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();offhand?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();

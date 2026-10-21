@@ -1,0 +1,2066 @@
+{
+  "format": "animal-factory-body-impact-fixture",
+  "version": 1,
+  "coordinates": "tactical-x-y-height-v1",
+  "source": {
+    "revision": "a2747452225e912255aa0525fd5caddd38b75d50",
+    "hashFormat": "sha256-utf8-lf",
+    "sourceSha256": {
+      "dist/tactics/gunshot-impacts.js": "da3e218fb673c83f8832a57d1dfaa69b2a13d728b793c99c36092e21204485f7",
+      "dist/tactics/core/engine.js": "6c05dd9a65999e0914650d6b8ffdd7edacb9fa4712f6f7ad8d05fe9e5dff8584",
+      "dist/tactics/ballistic-shot.js": "27d6184bc33937304eaf27e26cd71a746b3c9a7594e32a1a9a61fe053d1e2d3c",
+      "dist/tactics/core/projectiles.js": "95fb8924c6fd1eb82f36c183c5395f55e7bc135742c685620bcf10c481ccb5d9",
+      "tools/core-gunshot-impacts-adapter.mjs": "d7e5404e5ce02ed6b82d533660b56250ef395918565952db99f51c5c189c5e80",
+      "tools/gunshot-impact-cases.mjs": "fc2b0519ea30ab696066c390a251d87d9b58757c4bffcf6499c884fecf744bc4",
+      "tools/generate-gunshot-impact-fixture.mjs": "6f39c5a1c67b732d7cb18b7f68c5eaae1b52ee4d4a80578fc9918de828ed9dca"
+    }
+  },
+  "fatalHeadRule": {
+    "remainingHpMultiplier": 2,
+    "maxHpFloor": 0.5
+  },
+  "cases": [
+    {
+      "id": "torso",
+      "options": {
+        "weapon": "pistol",
+        "hp": 200
+      },
+      "seed": 1,
+      "shooterId": 0,
+      "intendedTargetId": 4,
+      "actions": [
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:0",
+          "weapon": "pistol",
+          "shotRoll": {
+            "die": 5,
+            "critical": "ordinary",
+            "ordinaryChance": 0.9222222222222223,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 15.659999999999997,
+                "y": 10,
+                "h": 1.2962266666666662
+              },
+              "incoming": {
+                "x": 0.9999997777778519,
+                "y": 0,
+                "h": -0.000666666518518655
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 16,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 200,
+              "hpAtActionStart": 200,
+              "maxHp": 200,
+              "injuryDamage": 27,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 400,
+              "qualificationReason": "not-head",
+              "visualSeed": 577726379,
+              "hpAfter": 173,
+              "casualtyAfter": "alive"
+            }
+          ]
+        }
+      ],
+      "result": {
+        "seed": 1586005467,
+        "ap": 92,
+        "ammo": {
+          "hands": 0,
+          "knife": 0,
+          "pistol": 7,
+          "pistol-offhand": 8,
+          "rifle": 5,
+          "assault": 30,
+          "smg": 35,
+          "hmg": 50,
+          "shotgun": 6,
+          "sniper": 5,
+          "grenade": 3,
+          "launcher": 1,
+          "rpg": 1,
+          "flamethrower": 4
+        },
+        "hp": [
+          {
+            "id": 0,
+            "hp": 110,
+            "casualty": null
+          },
+          {
+            "id": 1,
+            "hp": 90,
+            "casualty": null
+          },
+          {
+            "id": 2,
+            "hp": 120,
+            "casualty": null
+          },
+          {
+            "id": 3,
+            "hp": 100,
+            "casualty": null
+          },
+          {
+            "id": 4,
+            "hp": 173,
+            "casualty": null
+          }
+        ]
+      },
+      "impactCount": 1
+    },
+    {
+      "id": "legs",
+      "options": {
+        "weapon": "pistol",
+        "zone": "legs",
+        "hp": 200
+      },
+      "seed": 1,
+      "shooterId": 0,
+      "intendedTargetId": 4,
+      "actions": [
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:0",
+          "weapon": "pistol",
+          "shotRoll": {
+            "die": 5,
+            "critical": "ordinary",
+            "ordinaryChance": 0.8111111111111111,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 15.659999999999998,
+                "y": 10,
+                "h": 0.5491066666666662
+              },
+              "incoming": {
+                "x": 0.9913142656657274,
+                "y": 0,
+                "h": -0.13151435924498664
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "legs",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 16,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 200,
+              "hpAtActionStart": 200,
+              "maxHp": 200,
+              "injuryDamage": 23,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 400,
+              "qualificationReason": "not-head",
+              "visualSeed": 577726379,
+              "hpAfter": 177,
+              "casualtyAfter": "alive"
+            }
+          ]
+        }
+      ],
+      "result": {
+        "seed": 1586005467,
+        "ap": 92,
+        "ammo": {
+          "hands": 0,
+          "knife": 0,
+          "pistol": 7,
+          "pistol-offhand": 8,
+          "rifle": 5,
+          "assault": 30,
+          "smg": 35,
+          "hmg": 50,
+          "shotgun": 6,
+          "sniper": 5,
+          "grenade": 3,
+          "launcher": 1,
+          "rpg": 1,
+          "flamethrower": 4
+        },
+        "hp": [
+          {
+            "id": 0,
+            "hp": 110,
+            "casualty": null
+          },
+          {
+            "id": 1,
+            "hp": 90,
+            "casualty": null
+          },
+          {
+            "id": 2,
+            "hp": 120,
+            "casualty": null
+          },
+          {
+            "id": 3,
+            "hp": 100,
+            "casualty": null
+          },
+          {
+            "id": 4,
+            "hp": 177,
+            "casualty": null
+          }
+        ]
+      },
+      "impactCount": 1
+    },
+    {
+      "id": "nonfatal-head",
+      "options": {
+        "weapon": "pistol",
+        "zone": "head",
+        "hp": 200
+      },
+      "seed": 1,
+      "shooterId": 0,
+      "intendedTargetId": 4,
+      "actions": [
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:0",
+          "weapon": "pistol",
+          "shotRoll": {
+            "die": 5,
+            "critical": "ordinary",
+            "ordinaryChance": 0.6444444444444445,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 15.66,
+                "y": 10,
+                "h": 1.6358266666666668
+              },
+              "incoming": {
+                "x": 0.998244411758449,
+                "y": 0,
+                "h": 0.05922916843100133
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "head",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 16,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 200,
+              "hpAtActionStart": 200,
+              "maxHp": 200,
+              "injuryDamage": 41,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 400,
+              "qualificationReason": "below-threshold",
+              "visualSeed": 577726379,
+              "hpAfter": 159,
+              "casualtyAfter": "alive"
+            }
+          ]
+        }
+      ],
+      "result": {
+        "seed": 1586005467,
+        "ap": 92,
+        "ammo": {
+          "hands": 0,
+          "knife": 0,
+          "pistol": 7,
+          "pistol-offhand": 8,
+          "rifle": 5,
+          "assault": 30,
+          "smg": 35,
+          "hmg": 50,
+          "shotgun": 6,
+          "sniper": 5,
+          "grenade": 3,
+          "launcher": 1,
+          "rpg": 1,
+          "flamethrower": 4
+        },
+        "hp": [
+          {
+            "id": 0,
+            "hp": 110,
+            "casualty": null
+          },
+          {
+            "id": 1,
+            "hp": 90,
+            "casualty": null
+          },
+          {
+            "id": 2,
+            "hp": 120,
+            "casualty": null
+          },
+          {
+            "id": 3,
+            "hp": 100,
+            "casualty": null
+          },
+          {
+            "id": 4,
+            "hp": 159,
+            "casualty": null
+          }
+        ]
+      },
+      "impactCount": 1
+    },
+    {
+      "id": "ordinary-lethal-head",
+      "options": {
+        "weapon": "rifle",
+        "zone": "head",
+        "hp": 45
+      },
+      "seed": 1,
+      "shooterId": 0,
+      "intendedTargetId": 4,
+      "actions": [
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:0",
+          "weapon": "rifle",
+          "shotRoll": {
+            "die": 5,
+            "critical": "ordinary",
+            "ordinaryChance": 1,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 15.66,
+                "y": 10,
+                "h": 1.6358266666666668
+              },
+              "incoming": {
+                "x": 0.998244411758449,
+                "y": 0,
+                "h": 0.05922916843100133
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "head",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 16,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 45,
+              "hpAtActionStart": 45,
+              "maxHp": 45,
+              "injuryDamage": 72,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 90,
+              "qualificationReason": "below-threshold",
+              "visualSeed": 577726379,
+              "hpAfter": 0,
+              "casualtyAfter": "dead"
+            }
+          ]
+        }
+      ],
+      "result": {
+        "seed": 1586005467,
+        "ap": 88,
+        "ammo": {
+          "hands": 0,
+          "knife": 0,
+          "pistol": 8,
+          "pistol-offhand": 8,
+          "rifle": 4,
+          "assault": 30,
+          "smg": 35,
+          "hmg": 50,
+          "shotgun": 6,
+          "sniper": 5,
+          "grenade": 3,
+          "launcher": 1,
+          "rpg": 1,
+          "flamethrower": 4
+        },
+        "hp": [
+          {
+            "id": 0,
+            "hp": 110,
+            "casualty": null
+          },
+          {
+            "id": 1,
+            "hp": 90,
+            "casualty": null
+          },
+          {
+            "id": 2,
+            "hp": 120,
+            "casualty": null
+          },
+          {
+            "id": 3,
+            "hp": 100,
+            "casualty": null
+          },
+          {
+            "id": 4,
+            "hp": 0,
+            "casualty": null
+          }
+        ]
+      },
+      "impactCount": 1
+    },
+    {
+      "id": "fatal-head",
+      "options": {
+        "weapon": "sniper",
+        "zone": "head",
+        "hp": 45,
+        "fatal": true
+      },
+      "seed": 1,
+      "shooterId": 0,
+      "intendedTargetId": 4,
+      "actions": [
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:0",
+          "weapon": "sniper",
+          "shotRoll": {
+            "die": 5,
+            "critical": "ordinary",
+            "ordinaryChance": 1,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 15.66,
+                "y": 10,
+                "h": 1.6358266666666668
+              },
+              "incoming": {
+                "x": 0.998244411758449,
+                "y": 0,
+                "h": 0.05922916843100133
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "head",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 16,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 45,
+              "hpAtActionStart": 45,
+              "maxHp": 45,
+              "injuryDamage": 113,
+              "casualtyBefore": "alive",
+              "fatalHead": true,
+              "threshold": 90,
+              "qualificationReason": "qualified",
+              "visualSeed": 577726379,
+              "hpAfter": 0,
+              "casualtyAfter": "dead"
+            }
+          ]
+        }
+      ],
+      "result": {
+        "seed": 1586005467,
+        "ap": 84,
+        "ammo": {
+          "hands": 0,
+          "knife": 0,
+          "pistol": 8,
+          "pistol-offhand": 8,
+          "rifle": 5,
+          "assault": 30,
+          "smg": 35,
+          "hmg": 50,
+          "shotgun": 6,
+          "sniper": 4,
+          "grenade": 3,
+          "launcher": 1,
+          "rpg": 1,
+          "flamethrower": 4
+        },
+        "hp": [
+          {
+            "id": 0,
+            "hp": 110,
+            "casualty": null
+          },
+          {
+            "id": 1,
+            "hp": 90,
+            "casualty": null
+          },
+          {
+            "id": 2,
+            "hp": 120,
+            "casualty": null
+          },
+          {
+            "id": 3,
+            "hp": 100,
+            "casualty": null
+          },
+          {
+            "id": 4,
+            "hp": 0,
+            "casualty": "dead",
+            "fatalHead": {
+              "version": 1,
+              "impactId": "shot:1/d:0/p:0/body:4"
+            }
+          }
+        ]
+      },
+      "impactCount": 1
+    },
+    {
+      "id": "wounded-fatal-head",
+      "options": {
+        "weapon": "pistol",
+        "zone": "head",
+        "hp": 20,
+        "maxHp": 45,
+        "fatal": true
+      },
+      "seed": 1,
+      "shooterId": 0,
+      "intendedTargetId": 4,
+      "actions": [
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:0",
+          "weapon": "pistol",
+          "shotRoll": {
+            "die": 5,
+            "critical": "ordinary",
+            "ordinaryChance": 0.6444444444444445,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 15.66,
+                "y": 10,
+                "h": 1.6358266666666668
+              },
+              "incoming": {
+                "x": 0.998244411758449,
+                "y": 0,
+                "h": 0.05922916843100133
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "head",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 16,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 20,
+              "hpAtActionStart": 20,
+              "maxHp": 45,
+              "injuryDamage": 41,
+              "casualtyBefore": "alive",
+              "fatalHead": true,
+              "threshold": 40,
+              "qualificationReason": "qualified",
+              "visualSeed": 577726379,
+              "hpAfter": 0,
+              "casualtyAfter": "dead"
+            }
+          ]
+        }
+      ],
+      "result": {
+        "seed": 1586005467,
+        "ap": 92,
+        "ammo": {
+          "hands": 0,
+          "knife": 0,
+          "pistol": 7,
+          "pistol-offhand": 8,
+          "rifle": 5,
+          "assault": 30,
+          "smg": 35,
+          "hmg": 50,
+          "shotgun": 6,
+          "sniper": 5,
+          "grenade": 3,
+          "launcher": 1,
+          "rpg": 1,
+          "flamethrower": 4
+        },
+        "hp": [
+          {
+            "id": 0,
+            "hp": 110,
+            "casualty": null
+          },
+          {
+            "id": 1,
+            "hp": 90,
+            "casualty": null
+          },
+          {
+            "id": 2,
+            "hp": 120,
+            "casualty": null
+          },
+          {
+            "id": 3,
+            "hp": 100,
+            "casualty": null
+          },
+          {
+            "id": 4,
+            "hp": 0,
+            "casualty": "dead",
+            "fatalHead": {
+              "version": 1,
+              "impactId": "shot:1/d:0/p:0/body:4"
+            }
+          }
+        ]
+      },
+      "impactCount": 1
+    },
+    {
+      "id": "incidental-victim",
+      "options": {
+        "weapon": "sniper",
+        "zone": "head",
+        "range": 8,
+        "incidental": true,
+        "hp": 200
+      },
+      "seed": 1,
+      "shooterId": 0,
+      "intendedTargetId": 4,
+      "actions": [
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:0",
+          "weapon": "sniper",
+          "shotRoll": {
+            "die": 5,
+            "critical": "ordinary",
+            "ordinaryChance": 1,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:0/body:1",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:0",
+              "projectileIndex": 0,
+              "victimId": 1,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 12.66,
+                "y": 10,
+                "h": 1.4183700000000001
+              },
+              "incoming": {
+                "x": 0.9990113430988043,
+                "y": 0,
+                "h": 0.044456004767896816
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "goat",
+                "stance": "standing",
+                "heading": 45,
+                "x": 13,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 90,
+              "hpAtActionStart": 90,
+              "maxHp": 90,
+              "injuryDamage": 75,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 180,
+              "qualificationReason": "not-head",
+              "visualSeed": 628059236,
+              "hpAfter": 15,
+              "casualtyAfter": "alive"
+            }
+          ]
+        },
+        {
+          "attackId": "shot:2",
+          "dischargeId": "shot:2/d:0",
+          "weapon": "rifle",
+          "shotRoll": {
+            "die": 11,
+            "critical": "ordinary",
+            "ordinaryChance": 0.8555555555555555,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:2/d:0/p:0/body:0",
+              "attackId": "shot:2",
+              "dischargeId": "shot:2/d:0",
+              "projectileId": "shot:2/d:0/p:0",
+              "projectileIndex": 0,
+              "victimId": 0,
+              "shooterId": 1,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 10.340000000000003,
+                "y": 10,
+                "h": 1.2964533333333335
+              },
+              "incoming": {
+                "x": -0.9999991111122961,
+                "y": 0,
+                "h": -0.0013333321481496785
+              },
+              "origin": {
+                "x": 13,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "horse",
+                "stance": "standing",
+                "heading": 0,
+                "x": 10,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 110,
+              "hpAtActionStart": 110,
+              "maxHp": 110,
+              "injuryDamage": 48,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 220,
+              "qualificationReason": "not-head",
+              "visualSeed": 2415333004,
+              "hpAfter": 62,
+              "casualtyAfter": "alive"
+            }
+          ]
+        }
+      ],
+      "result": {
+        "seed": 3027450565,
+        "ap": 84,
+        "ammo": {
+          "hands": 0,
+          "knife": 0,
+          "pistol": 8,
+          "pistol-offhand": 8,
+          "rifle": 5,
+          "assault": 30,
+          "smg": 35,
+          "hmg": 50,
+          "shotgun": 6,
+          "sniper": 4,
+          "grenade": 3,
+          "launcher": 1,
+          "rpg": 1,
+          "flamethrower": 4
+        },
+        "hp": [
+          {
+            "id": 0,
+            "hp": 62,
+            "casualty": null
+          },
+          {
+            "id": 1,
+            "hp": 15,
+            "casualty": null
+          },
+          {
+            "id": 2,
+            "hp": 120,
+            "casualty": null
+          },
+          {
+            "id": 3,
+            "hp": 100,
+            "casualty": null
+          },
+          {
+            "id": 4,
+            "hp": 200,
+            "casualty": null
+          }
+        ]
+      },
+      "impactCount": 2
+    },
+    {
+      "id": "burst",
+      "options": {
+        "weapon": "assault",
+        "burst": true,
+        "hp": 500,
+        "minImpacts": 3
+      },
+      "seed": 1,
+      "shooterId": 0,
+      "intendedTargetId": 4,
+      "actions": [
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:0",
+          "weapon": "assault",
+          "shotRoll": {
+            "die": 5,
+            "critical": "ordinary",
+            "ordinaryChance": 1,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 15.659999999999997,
+                "y": 10,
+                "h": 1.2962266666666662
+              },
+              "incoming": {
+                "x": 0.9999997777778519,
+                "y": 0,
+                "h": -0.000666666518518655
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 16,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 500,
+              "hpAtActionStart": 500,
+              "maxHp": 500,
+              "injuryDamage": 26,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 1000,
+              "qualificationReason": "not-head",
+              "visualSeed": 577726379,
+              "hpAfter": 474,
+              "casualtyAfter": "alive"
+            }
+          ]
+        },
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:1",
+          "weapon": "assault",
+          "shotRoll": {
+            "die": 11,
+            "critical": "ordinary",
+            "ordinaryChance": 0.9111111111111111,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:1/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:1",
+              "projectileId": "shot:1/d:1/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 15.659999999999997,
+                "y": 10,
+                "h": 1.2962266666666662
+              },
+              "incoming": {
+                "x": 0.9999997777778519,
+                "y": 0,
+                "h": -0.000666666518518655
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 16,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 474,
+              "hpAtActionStart": 500,
+              "maxHp": 500,
+              "injuryDamage": 26,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 1000,
+              "qualificationReason": "not-head",
+              "visualSeed": 496679346,
+              "hpAfter": 448,
+              "casualtyAfter": "alive"
+            }
+          ]
+        },
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:2",
+          "weapon": "assault",
+          "shotRoll": {
+            "die": 2,
+            "critical": "ordinary",
+            "ordinaryChance": 0.8222222222222222,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:2/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:2",
+              "projectileId": "shot:1/d:2/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 15.659999999999997,
+                "y": 10,
+                "h": 1.2962266666666662
+              },
+              "incoming": {
+                "x": 0.9999997777778519,
+                "y": 0,
+                "h": -0.000666666518518655
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 16,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 448,
+              "hpAtActionStart": 500,
+              "maxHp": 500,
+              "injuryDamage": 26,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 1000,
+              "qualificationReason": "not-head",
+              "visualSeed": 4132762209,
+              "hpAfter": 422,
+              "casualtyAfter": "alive"
+            }
+          ]
+        }
+      ],
+      "result": {
+        "seed": 1587069247,
+        "ap": 88,
+        "ammo": {
+          "hands": 0,
+          "knife": 0,
+          "pistol": 8,
+          "pistol-offhand": 8,
+          "rifle": 5,
+          "assault": 27,
+          "smg": 35,
+          "hmg": 50,
+          "shotgun": 6,
+          "sniper": 5,
+          "grenade": 3,
+          "launcher": 1,
+          "rpg": 1,
+          "flamethrower": 4
+        },
+        "hp": [
+          {
+            "id": 0,
+            "hp": 110,
+            "casualty": null
+          },
+          {
+            "id": 1,
+            "hp": 90,
+            "casualty": null
+          },
+          {
+            "id": 2,
+            "hp": 120,
+            "casualty": null
+          },
+          {
+            "id": 3,
+            "hp": 100,
+            "casualty": null
+          },
+          {
+            "id": 4,
+            "hp": 422,
+            "casualty": null
+          }
+        ]
+      },
+      "impactCount": 3
+    },
+    {
+      "id": "shotgun",
+      "options": {
+        "weapon": "shotgun",
+        "hp": 500,
+        "range": 2,
+        "minImpacts": 6
+      },
+      "seed": 1,
+      "shooterId": 0,
+      "intendedTargetId": 4,
+      "actions": [
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:0",
+          "weapon": "shotgun",
+          "shotRoll": {
+            "die": 5,
+            "critical": "ordinary",
+            "ordinaryChance": 1,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 11.66,
+                "y": 10,
+                "h": 1.2966799999999998
+              },
+              "incoming": {
+                "x": 0.999998000006,
+                "y": 0,
+                "h": -0.001999996000012105
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 12,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 500,
+              "hpAtActionStart": 500,
+              "maxHp": 500,
+              "injuryDamage": 27,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 1000,
+              "qualificationReason": "not-head",
+              "visualSeed": 577726379,
+              "hpAfter": 473,
+              "casualtyAfter": "alive"
+            },
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:1/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:1",
+              "projectileIndex": 1,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 11.698554352738231,
+                "y": 10.15725940908872,
+                "h": 1.292410380334621
+              },
+              "incoming": {
+                "x": 0.9957315795048928,
+                "y": 0.09218907805421869,
+                "h": -0.004449209390954344
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 12,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 473,
+              "hpAtActionStart": 500,
+              "maxHp": 500,
+              "injuryDamage": 27,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 1000,
+              "qualificationReason": "not-head",
+              "visualSeed": 3611176342,
+              "hpAfter": 446,
+              "casualtyAfter": "alive"
+            },
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:2/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:2",
+              "projectileIndex": 2,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 11.677174455705638,
+                "y": 9.893305726718587,
+                "h": 1.3317161537425322
+              },
+              "incoming": {
+                "x": 0.9978049802531344,
+                "y": -0.06347585183074525,
+                "h": 0.018868959070484984
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 12,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 446,
+              "hpAtActionStart": 500,
+              "maxHp": 500,
+              "injuryDamage": 27,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 1000,
+              "qualificationReason": "not-head",
+              "visualSeed": 1353043685,
+              "hpAfter": 419,
+              "casualtyAfter": "alive"
+            },
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:3/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:3",
+              "projectileIndex": 3,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 11.660659223680844,
+                "y": 9.978837827920742,
+                "h": 1.1617655586731332
+              },
+              "incoming": {
+                "x": 0.996473044900812,
+                "y": -0.012698290984584491,
+                "h": -0.08294711684064254
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 12,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 419,
+              "hpAtActionStart": 500,
+              "maxHp": 500,
+              "injuryDamage": 27,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 1000,
+              "qualificationReason": "not-head",
+              "visualSeed": 2398324440,
+              "hpAfter": 392,
+              "casualtyAfter": "alive"
+            },
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:4/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:4",
+              "projectileIndex": 4,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 11.6941839969496,
+                "y": 9.851418129375492,
+                "h": 1.3120645673945288
+              },
+              "incoming": {
+                "x": 0.9961512334503946,
+                "y": -0.08736360038665454,
+                "h": 0.007093759422084097
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 12,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 392,
+              "hpAtActionStart": 500,
+              "maxHp": 500,
+              "injuryDamage": 27,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 1000,
+              "qualificationReason": "not-head",
+              "visualSeed": 3506212255,
+              "hpAfter": 365,
+              "casualtyAfter": "alive"
+            },
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:5/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:5",
+              "projectileIndex": 5,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 11.660000166930942,
+                "y": 10.00033691692369,
+                "h": 1.4155384002365037
+              },
+              "incoming": {
+                "x": 0.9975865644595641,
+                "y": 0.00020247214615286372,
+                "h": 0.06943346034005708
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 12,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 365,
+              "hpAtActionStart": 500,
+              "maxHp": 500,
+              "injuryDamage": 27,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 1000,
+              "qualificationReason": "not-head",
+              "visualSeed": 3737940682,
+              "hpAfter": 338,
+              "casualtyAfter": "alive"
+            }
+          ]
+        }
+      ],
+      "result": {
+        "seed": 1814098701,
+        "ap": 90,
+        "ammo": {
+          "hands": 0,
+          "knife": 0,
+          "pistol": 8,
+          "pistol-offhand": 8,
+          "rifle": 5,
+          "assault": 30,
+          "smg": 35,
+          "hmg": 50,
+          "shotgun": 5,
+          "sniper": 5,
+          "grenade": 3,
+          "launcher": 1,
+          "rpg": 1,
+          "flamethrower": 4
+        },
+        "hp": [
+          {
+            "id": 0,
+            "hp": 110,
+            "casualty": null
+          },
+          {
+            "id": 1,
+            "hp": 90,
+            "casualty": null
+          },
+          {
+            "id": 2,
+            "hp": 120,
+            "casualty": null
+          },
+          {
+            "id": 3,
+            "hp": 100,
+            "casualty": null
+          },
+          {
+            "id": 4,
+            "hp": 338,
+            "casualty": null
+          }
+        ]
+      },
+      "impactCount": 6
+    },
+    {
+      "id": "dual-pistols",
+      "options": {
+        "weapon": "pistol",
+        "dual": true,
+        "burst": true,
+        "hp": 500,
+        "minImpacts": 2
+      },
+      "seed": 1,
+      "shooterId": 0,
+      "intendedTargetId": 4,
+      "actions": [
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:0",
+          "weapon": "pistol",
+          "shotRoll": {
+            "die": 5,
+            "critical": "ordinary",
+            "ordinaryChance": 0.7555555555555555,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 15.659999999999997,
+                "y": 10,
+                "h": 1.2962266666666662
+              },
+              "incoming": {
+                "x": 0.9999997777778519,
+                "y": 0,
+                "h": -0.000666666518518655
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 16,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 500,
+              "hpAtActionStart": 500,
+              "maxHp": 500,
+              "injuryDamage": 27,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 1000,
+              "qualificationReason": "not-head",
+              "visualSeed": 577726379,
+              "hpAfter": 473,
+              "casualtyAfter": "alive"
+            }
+          ]
+        },
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:1",
+          "weapon": "pistol-offhand",
+          "shotRoll": {
+            "die": 11,
+            "critical": "ordinary",
+            "ordinaryChance": 0.6666666666666666,
+            "rolledHit": false
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:1/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:1",
+              "projectileId": "shot:1/d:1/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 15.7393383239656,
+                "y": 10.218301375733036,
+                "h": 1.5300555419732274
+              },
+              "incoming": {
+                "x": 0.9984767566192998,
+                "y": 0.037978045081832106,
+                "h": 0.040022925714720436
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 1.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 0,
+                "baseHeight": 0,
+                "offset": 0
+              },
+              "zone": "head",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 16,
+                "y": 10,
+                "z": 0,
+                "support": {
+                  "kind": "layer",
+                  "level": 0,
+                  "baseHeight": 0,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 473,
+              "hpAtActionStart": 500,
+              "maxHp": 500,
+              "injuryDamage": 41,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 1000,
+              "qualificationReason": "below-threshold",
+              "visualSeed": 496679346,
+              "hpAfter": 432,
+              "casualtyAfter": "alive"
+            }
+          ]
+        }
+      ],
+      "result": {
+        "seed": 1587069247,
+        "ap": 88,
+        "ammo": {
+          "hands": 0,
+          "knife": 0,
+          "pistol": 7,
+          "pistol-offhand": 7,
+          "rifle": 5,
+          "assault": 30,
+          "smg": 35,
+          "hmg": 50,
+          "shotgun": 6,
+          "sniper": 5,
+          "grenade": 3,
+          "launcher": 1,
+          "rpg": 1,
+          "flamethrower": 4
+        },
+        "hp": [
+          {
+            "id": 0,
+            "hp": 110,
+            "casualty": null
+          },
+          {
+            "id": 1,
+            "hp": 90,
+            "casualty": null
+          },
+          {
+            "id": 2,
+            "hp": 120,
+            "casualty": null
+          },
+          {
+            "id": 3,
+            "hp": 100,
+            "casualty": null
+          },
+          {
+            "id": 4,
+            "hp": 432,
+            "casualty": null
+          }
+        ]
+      },
+      "impactCount": 2
+    },
+    {
+      "id": "layer-six",
+      "options": {
+        "weapon": "pistol",
+        "z": 5,
+        "hp": 200
+      },
+      "seed": 1,
+      "shooterId": 0,
+      "intendedTargetId": 4,
+      "actions": [
+        {
+          "attackId": "shot:1",
+          "dischargeId": "shot:1/d:0",
+          "weapon": "pistol",
+          "shotRoll": {
+            "die": 5,
+            "critical": "ordinary",
+            "ordinaryChance": 0.9222222222222223,
+            "rolledHit": true
+          },
+          "bodyImpacts": [
+            {
+              "version": 1,
+              "id": "shot:1/d:0/p:0/body:4",
+              "attackId": "shot:1",
+              "dischargeId": "shot:1/d:0",
+              "projectileId": "shot:1/d:0/p:0",
+              "projectileIndex": 0,
+              "victimId": 4,
+              "shooterId": 0,
+              "coordinates": "tactical-x-y-height-v1",
+              "contact": {
+                "x": 15.659999999999997,
+                "y": 10,
+                "h": 16.296226666666662
+              },
+              "incoming": {
+                "x": 0.9999997777778519,
+                "y": 0,
+                "h": -0.0006666665185193211
+              },
+              "origin": {
+                "x": 10,
+                "y": 10,
+                "h": 16.3
+              },
+              "originSupport": {
+                "kind": "layer",
+                "level": 5,
+                "baseHeight": 15,
+                "offset": 0
+              },
+              "zone": "torso",
+              "victim": {
+                "species": "pig-foreman",
+                "stance": "standing",
+                "heading": 225,
+                "x": 16,
+                "y": 10,
+                "z": 5,
+                "support": {
+                  "kind": "layer",
+                  "level": 5,
+                  "baseHeight": 15,
+                  "offset": 0
+                }
+              },
+              "hpBefore": 200,
+              "hpAtActionStart": 200,
+              "maxHp": 200,
+              "injuryDamage": 27,
+              "casualtyBefore": "alive",
+              "fatalHead": false,
+              "threshold": 400,
+              "qualificationReason": "not-head",
+              "visualSeed": 577726379,
+              "hpAfter": 173,
+              "casualtyAfter": "alive"
+            }
+          ]
+        }
+      ],
+      "result": {
+        "seed": 1586005467,
+        "ap": 92,
+        "ammo": {
+          "hands": 0,
+          "knife": 0,
+          "pistol": 7,
+          "pistol-offhand": 8,
+          "rifle": 5,
+          "assault": 30,
+          "smg": 35,
+          "hmg": 50,
+          "shotgun": 6,
+          "sniper": 5,
+          "grenade": 3,
+          "launcher": 1,
+          "rpg": 1,
+          "flamethrower": 4
+        },
+        "hp": [
+          {
+            "id": 0,
+            "hp": 110,
+            "casualty": null
+          },
+          {
+            "id": 1,
+            "hp": 90,
+            "casualty": null
+          },
+          {
+            "id": 2,
+            "hp": 120,
+            "casualty": null
+          },
+          {
+            "id": 3,
+            "hp": 100,
+            "casualty": null
+          },
+          {
+            "id": 4,
+            "hp": 173,
+            "casualty": null
+          }
+        ]
+      },
+      "impactCount": 1
+    }
+  ]
+}

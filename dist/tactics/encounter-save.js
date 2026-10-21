@@ -1,3 +1,4 @@
+import {validFatalHead} from './gunshot-impacts.js';
 import {validAmmoPouches,migrateSquadAmmo} from './squad-ammo.js';
 import {tutorialRoleErrors} from './tutorial-mission.js';
 import {isScenery,SCENERY_ROTATIONS} from './scenery-catalog.js';
@@ -42,6 +43,8 @@ export function validateSavedState(s,{population=false,unitIds=null}={}){
  for(const u of s.units)if(!validPatrolState(u)||u.pack.some(i=>!itemValid(i))||Object.values(u.ammo).some(n=>!finite(n)))fail();
  if(!validAmmoPouches(s.units,WEAPONS))fail();
  for(const u of s.units)if(u.burnedRemains!==undefined&&(typeof u.burnedRemains!=='boolean'||u.burnedRemains&&u.hp>0))fail();
+ if(s.gunshotSequence!==undefined&&(!Number.isSafeInteger(s.gunshotSequence)||s.gunshotSequence<0))fail();
+ for(const u of s.units)if(!validFatalHead(u))fail();
  for(const p of s.loot)if(!p||p.container&&(!p.container.id||typeof p.container.name!=='string'||typeof p.container.locked!=='boolean'||typeof p.searched!=='boolean')||!Array.isArray(p.items)||p.items.some(i=>!itemValid(i))||![p.x,p.y,p.z??0].every(Number.isFinite))fail();
  for(const key of ['seed','perceptionSeed','interactionSeed','lootSeed','jamSeed','climbSeed'])if(s[key]!==undefined&&!Number.isFinite(s[key]))fail();
  if(s.dialogue)validateDialogueActors(s.dialogue,s.units);
