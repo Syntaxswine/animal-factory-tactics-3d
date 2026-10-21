@@ -60,4 +60,8 @@ checkModuleClosure(new URL('.pages-output/',root),['tactics/battle-entry.js','ta
 checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-hedges-study.js','tactics/foliage-skins-review.js','tactics/editor-foliage-preview-worker.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-hedges-study.html']);
 
+for(const file of ['natural-arch-data.js','natural-rock-arches.js','natural-arches-study.js','natural-arches-study.html','natural-arches-study.css'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+fs.cpSync(new URL('dist/assets/environment/natural-rock-arches/',root),new URL('.pages-output/assets/environment/natural-rock-arches/',root),{recursive:true});
+checkModuleClosure(new URL('.pages-output/',root),['tactics/natural-arches-study.html']);
+
 checkModuleClosure(new URL('.pages-output/',root),['tactics/dialogue-audition.js','tactics/dialogue-speech-worker.js','tactics/speaking-heads-viewer.js']);
