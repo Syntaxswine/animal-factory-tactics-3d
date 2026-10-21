@@ -6,6 +6,7 @@ import {shotAim,supportsAim} from './aim-levels.js';
 import {weaponAccuracy} from './character-stats.js';
 import {accuracyPenalty,roundChance} from './combat-state.js';
 import {heldWeaponJammed} from './loot-policy.js';
+import {handAttackReady,handWeapons} from './one-handed.js';
 
 export function barrelSight(s,a,b){
  if(!a||!b||!presentBarrel(s,b)||s.difficulty!=='easy'&&!s.seen.has(barrelKey(b))||a.team!=='squad'&&!inCone(a,b))return false;
@@ -26,7 +27,7 @@ export function previewBarrelAttack(s,a,b,w,charges,burst=false,aimLevel='hip'){
  else if(a.burningTurns)reason='On fire: running in panic';
  else if(!barrelSight(s,a,b))reason=a.team==='squad'?'Barrel unseen or line of fire blocked':'Line of fire blocked or outside personal sight cone';
  else if(range>effectiveRange)reason='Out of range';
- else if(a.ammo[a.weapon]<rounds)reason='Reload required';
+ else if(!handAttackReady(a,w,rounds))reason=w.dual?'Both pistols must be loaded and unjammed':'Reload required';
  else if(charges&&a.ap<cost)reason='Not enough AP';
- return {ok:!reason,reason,cost,rounds,chance,shotChances:Array.from({length:rounds},(_,i)=>roundChance(chance,i)),aimLevel:aiming?.level,zone:'torso',range:effectiveRange,barrel:true};
+ return {ok:!reason,reason,cost,rounds,...w.dual?{dualWeapons:handWeapons(a)}:{},chance,shotChances:Array.from({length:rounds},(_,i)=>roundChance(chance,i)),aimLevel:aiming?.level,zone:'torso',range:effectiveRange,barrel:true};
 }

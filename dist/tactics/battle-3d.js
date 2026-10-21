@@ -1,3 +1,4 @@
+import {attackWeapon,burstAvailable,dualPistols} from './one-handed.js';
 import {tutorialObjective} from './tutorial-mission.js';
 import {createBattleDialogue} from './battle-dialogue.js';
 import {DialogueOrder} from './dialogue-order.js';
@@ -45,6 +46,8 @@ import {projectBattlePoint,battleFloorPoint,rotateBattleView,focusBattleView,ove
 import {MOVEMENT_MS,queuedMovementDuration} from './battle-motion.js';
 import {rectangleMembers,pruneSelection,toggleSelection,selectable,selectionModifier,stanceSelection,setSelectionStance,movementSelection,setSelectionMovement} from './battle-selection.js';
 import {readSettings} from './settings-3d.js';
+import {createQuickPlayGame} from './quickplay-game.js';
+import {quickPlayEntry,normalizeQuickPlayTeam,validQuickPlayTeam,quickPlayTeamFromSearch} from './quickplay-presets.js';
 import {createBattleHud} from './battle-hud.js';
 
 const $=id=>document.getElementById(id),canvas=$('battle'),ctx=canvas.getContext('2d');
@@ -59,6 +62,7 @@ if(new URLSearchParams(location.search).has('editorPlaytest')){
  document.querySelector('aside h1').textContent='Playtest: '+definition.name;
 }
 if(new URLSearchParams(location.search).get('study')==='wall-xray'||new URLSearchParams(location.search).get('study')==='climbing')document.querySelector('aside h1').textContent=definition.name;
+let quickPlayTeam=quickPlayEntry(location.search,initialState)?initialState?normalizeQuickPlayTeam(initialState.quickPlayTeam):quickPlayTeamFromSearch(location.search,readSettings().quickPlayTeam):null;
 let cliffViewState=null,cliffViewId=0;
 let renderer,state,targetId=null,tileTarget=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false,lastLadderPreparing=false;
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
@@ -124,12 +128,12 @@ function syncLevelButtons(){for(const b of document.querySelectorAll('#battle-le
 function center(){const u=selected();level=u.z||0;$('floor').value=level;syncLevelButtons();focus(u.x,u.y);}
 function overview(){overviewMode=true;overviewBattleView(view,definition.width,definition.height,width,height);$('hint').textContent='Click the map to inspect an area · WASD / arrows or drag to pan · Q / E rotate camera · Scroll to zoom · Center returns to your squad';}
 function resize(){const box=canvas.getBoundingClientRect(),oldWidth=width,oldHeight=height;width=box.width;height=box.height;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(state){if(overviewMode)overview();else if(oldWidth>1&&oldHeight>1){view.x+=(width-oldWidth)/2;view.y+=(height-oldHeight)/2;}else center();}}
-function restart(){dialogueUI?.close();defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();dialogueOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});prepareDialogueResources();startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;lastAuto=performance.now();autoRound=state.round;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Exteriors revealed. Look through doors or windows to discover interiors. People still need line of sight.':'Explore to reveal the map.');sync();}
+function restart(){dialogueUI?.close();defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();dialogueOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=quickPlayTeam?createQuickPlayGame(1947,definition,true,$('difficulty').value,quickPlayTeam):createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});prepareDialogueResources();startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;lastAuto=performance.now();autoRound=state.round;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Exteriors revealed. Look through doors or windows to discover interiors. People still need line of sight.':'Explore to reveal the map.');sync();}
 async function saveGame(id){
  if(storageBusy)throw Error('A save or load is already in progress.');settleEncounterRounds(state);const record=campaign?null:captureEncounter(state);storageBusy=true;frameClock.reset();
  try{if(!campaign&&id==='auto'&&autoTokenError)throw autoTokenError;const saved=campaign?await campaign.save(id):id==='auto'?await checkpointSave(id,record,autoToken):await putSave(id,record);if(!campaign&&id==='auto')autoToken=saveToken(saved);lastAuto=performance.now();autoRound=state.round;campaignSavedRevision=state.revision;autoDisabled=false;return saved;}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}
 }
-function installState(restored){dialogueUI?.close();defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();dialogueOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=restored;definition=state.definition;prepareDialogueResources();$('difficulty').value=state.difficulty;selectedIds=new Set([state.selected]);targetId=null;drag=null;userPaused=true;presentationTime=0;renderer.presentationNow=0;lastStep=0;stepDelay=MOVEMENT_MS;lastClockCombat=undefined;lastUI='';lastAuto=performance.now();autoRound=state.round;frameClock.reset();center();sync();message('Encounter loaded and paused. Press Resume to continue.');}
+function installState(restored){dialogueUI?.close();defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();dialogueOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=restored;definition=state.definition;quickPlayTeam=quickPlayEntry(location.search,restored)&&validQuickPlayTeam(restored.quickPlayTeam)?normalizeQuickPlayTeam(restored.quickPlayTeam):null;prepareDialogueResources();$('difficulty').value=state.difficulty;selectedIds=new Set([state.selected]);targetId=null;drag=null;userPaused=true;presentationTime=0;renderer.presentationNow=0;lastStep=0;stepDelay=MOVEMENT_MS;lastClockCombat=undefined;lastUI='';lastAuto=performance.now();autoRound=state.round;frameClock.reset();center();sync();message('Encounter loaded and paused. Press Resume to continue.');}
 async function loadGame(id){return sectorLoading.run(()=>loadEncounterSave(id),{message:'Restoring saved sector'});}
 async function prepareView(){await prepareSectorView(renderer,()=>{ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);},{status:text=>sectorLoading.status(text)});}
 async function loadEncounterSave(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{if(campaign){const restored=await campaign.load(id);if(restored)installState(restored);}else{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);autoToken=saveToken(await getSave('auto'));autoTokenError=null;installState(restored);}if(state)await prepareView();}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}}
@@ -142,7 +146,7 @@ function sync(){
  syncLevelButtons();
  selectedIds=pruneSelection(state,selectedIds);
  if(selectedIds.size&&!selectedIds.has(state.selected))state.selected=[...selectedIds][0];
- const u=selected(),t=target();if(t?.ground||t?.barrel||t?.structure||!supportsAim(WEAPONS[u.weapon]))shotZone='torso';if(!(WEAPONS[u.weapon].burstRounds>1))shotBurst=false;const preview=t?previewAttack(state,u,t,shotBurst,shotZone,null,$('aim-level').value):null;
+ const u=selected(),t=target();if(t?.ground||t?.barrel||t?.structure||!supportsAim(WEAPONS[u.weapon]))shotZone='torso';if(!burstAvailable(u,WEAPONS))shotBurst=false;const preview=t?previewAttack(state,u,t,shotBurst,shotZone,null,$('aim-level').value):null;
  flamePlanner.refresh(state,u,{blocked:paused(true)||renderer.busy,level});
  grenadePlanner.refresh(state,u,{blocked:paused(true)||renderer.busy});
  const signature=JSON.stringify([state.revision,state.phase,state.round,state.selected,level,[...selectedIds],state.queue.length,state.units.filter(v=>v.team==='squad').map(v=>[v.name,v.species,v.outfit,v.weapon,v.slots,v.pack,v.away,v.hp,v.ap,Math.floor(v.stamina),v.medkits,v.pinned,v.legWound,heldWeaponJammed(v),v.ammo[v.weapon],v.stance,v.sneaking,v.running,v.casualty,v.bleedTurns]),t?.id,preview,renderer.diagnostics,renderer.busy,renderer.traversal.preparing,userPaused,paused()]);
@@ -156,11 +160,11 @@ function sync(){
  $('selection').textContent+=(u.pinned?' · PINNED':'')+(legImpaired(u)?' · Leg wound: movement ×2, −3 AP':'');
  grenadeButton.hidden=!WEAPONS[u.weapon].thrown;grenadeButton.disabled=!canPlanFlame();grenadeButton.textContent='Lob grenade · '+WEAPONS[u.weapon].cost+' AP';
  flameButton.hidden=!WEAPONS[u.weapon].incendiary;flameButton.disabled=!canPlanFlame();flameButton.textContent='Aim flame cone · '+WEAPONS[u.weapon].cost+' AP';
- $('burst-fire').disabled=!(WEAPONS[u.weapon].burstRounds>1);if($('burst-fire').disabled){shotBurst=false;$('burst-fire').checked=false;}
+ $('burst-fire').disabled=!burstAvailable(u,WEAPONS);$('burst-label').textContent=dualPistols(u)?'Fire both pistols · −15 accuracy each':'Burst fire';if($('burst-fire').disabled){shotBurst=false;$('burst-fire').checked=false;}
  if(!t&&shotDialog.open)shotDialog.close();
  if(shotDialog.open)renderShotPlanner($('shot-planner'),state,u,t,{zone:shotZone,aim:$('aim-level').value,burst:shotBurst,onSelect:(zone,aim)=>{shotZone=zone;$('aim-level').value=aim;lastUI='';sync();}});
  $('target').textContent=WEAPONS[u.weapon].incendiary?'Aim flame cone, place the template, then confirm. Allies in the spray are also hit.':t?`${t.name} · ${preview.ok?`${shotZone} · ${preview.cost} AP`:preview.reason}`:'Select a visible opponent to inspect a shot.';
- for(const [key,aim] of Object.entries(AIM_LEVELS))$('aim-level').querySelector('[value='+key+']').textContent=aim.label+' · '+shotAim(WEAPONS[u.weapon],key,shotBurst).cost+' AP';
+ for(const [key,aim] of Object.entries(AIM_LEVELS))$('aim-level').querySelector('[value='+key+']').textContent=aim.label+' · '+shotAim(attackWeapon(u,WEAPONS,shotBurst),key,shotBurst).cost+' AP';
  $('aim-level').disabled=!supportsAim(WEAPONS[u.weapon]);
  $('fire').disabled=paused(true)||renderer.busy||!preview?.ok||!canControl(state,u)||!!state.queue.length;
  const climb=climbPreview(state,u,level);climbButton.hidden=!climb.ok&&!climb.destination;climbButton.textContent=climb.label+(combatCosts(state)?' · '+(climb.cost??3)+' AP':climb.kind==='tower'?' · 30 sec':'');climbButton.textContent+=(climb.risk?' · '+climb.risk:'');climbButton.disabled=paused()||renderer.busy||!climb.ok;climbButton.title=climb.reason||(climb.kind==='roof'?'Climb this roof edge.':climb.kind==='tower'?'Use the stairs or ladder at the gold entrance ring.':'Use this ladder or stair connection.');

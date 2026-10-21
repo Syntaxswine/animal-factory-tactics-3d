@@ -159,7 +159,7 @@ export const WEAPON_FRAMES=Object.freeze({
  }
 });
 export const WEAPON_ICONS=Object.freeze(Object.fromEntries(Object.keys(WEAPON_FRAMES).map(kind=>[kind,'../assets/equipment/painted-ui/'+kind+'.png'])));
-export const weaponIcon=kind=>WEAPON_ICONS[kind]||null;
+export const weaponIcon=kind=>WEAPON_ICONS[kind==='pistol-offhand'?'pistol':kind]||null;
 
 // A CSS viewport fits the visible painting without stretching or rewriting it.
 // The outer box preserves the same hit target and row height for every weapon.
@@ -169,6 +169,7 @@ export function createWeaponSprite(kind=null,{height=34,source=null}={}){
  host.dataset.height=height;setWeaponSprite(host,kind,source);return host;
 }
 export function setWeaponSprite(host,kind,source=null){
+ if(kind==='pistol-offhand')kind='pistol';
  const src=weaponIcon(kind)||source;
  if(host.dataset.source===(src||''))return;
  host.dataset.source=src||'';host.replaceChildren();if(!src)return;

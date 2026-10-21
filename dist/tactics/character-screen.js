@@ -1,4 +1,5 @@
 import {sharedAmmoRows} from './squad-ammo.js';
+import {pairedInHand} from './one-handed.js';
 import {isDeceased} from './mercenary-status.js';
 import {inventoryAction,transferPreview,nearbyRecipients,nearbyLoot,itemName} from './battle-inventory.js';
 import {carryCapacity,loadMultiplier} from './inventory-tools.js';
@@ -19,7 +20,7 @@ export function equipmentBlockReason(state,u,{busy=false}={}){
 }
 export function characterSheet(u,{equipmentState='carried',state=null}={}){
  const legacy={medical:u.medical,perception:u.perception,sneak:u.stealth},stats=CHARACTER_STATS.map(([key,label])=>({key,label,value:bounded(u.stats?.[key]??legacy[key])}));
- const equipment=(u.slots||[]).filter(Boolean).map(kind=>({type:kind==='wireCutters'?'utility':'weapon',kind,held:kind===u.weapon,stowed:kind===u.weapon&&equipmentState==='stowed',jammed:u.pack?.find(i=>i.type==='weapon'&&i.kind===kind)?.jammed,condition:u.pack?.find(i=>i.type==='weapon'&&i.kind===kind)?.condition??100,drawing:kind===u.weapon&&equipmentState==='drawing',rounds:u.ammo?.[kind]}));
+ const equipment=(u.slots||[]).filter(Boolean).map(kind=>({type:kind==='wireCutters'?'utility':'weapon',kind,held:kind===u.weapon||pairedInHand(u,kind),stowed:kind===u.weapon&&equipmentState==='stowed',jammed:u.pack?.find(i=>i.type==='weapon'&&i.kind===kind)?.jammed,condition:u.pack?.find(i=>i.type==='weapon'&&i.kind===kind)?.condition??100,drawing:kind===u.weapon&&equipmentState==='drawing',rounds:u.ammo?.[kind]}));
  if(u.weapon==='hands')equipment.unshift({type:'weapon',kind:'hands',held:true});
  const layout=gridLayout(u),backpack=gridEntries(u).map(e=>({...e,
   // Firing updates u.ammo; the carried item's rounds may still be cached.
@@ -55,7 +56,7 @@ export function createCharacterScreen({getState,beforeOpen,onOpen,onClose,getEqu
    if(reason&&!held)card.append(el('small','equipment-block-reason',reason));
    draw.onclick=()=>{if(!draw.disabled&&onEquip(u.id,item.kind))dialog.close();else{inventoryNotice='Could not equip this weapon. Check AP and backpack space.';render();}};
   }return card;};
-  gear.append(el('h3','','Held & ready equipment'),el('p','dossier-note','Click a weapon to equip it. Ready weapons cost 2 AP in combat; backpack weapons cost 3 AP.'));
+  gear.append(el('h3','','Held & ready equipment'),el('p','dossier-note','Click a weapon to equip it. Two one-handed ready items are held together; choosing either is free. Other ready swaps cost 2 AP in combat; backpack draws cost 3 AP.'));
   if(blockReason){const notice=el('div','equipment-notice',blockReason);notice.setAttribute('role','status');if(state.queue.length&&onStopMovement&&canControl(state,u)&&canEquip(u)){const stop=el('button','','Stop squad movement');stop.onclick=()=>{if(onStopMovement(u.id))inventoryNotice='Movement stopped. Choose a weapon to equip.';render();};notice.append(stop);}gear.append(notice);}
   const equipped=el('div','dossier-equipment');for(const item of sheet.equipment){const card=equipmentCard(item),key=item.kind==='wireCutters'?'wireCutters':String(u.pack.findIndex(i=>i.type==='weapon'&&i.kind===item.kind));management(card,item,key,u.slots.indexOf(item.kind));equipped.append(card);}if(!sheet.equipment.length)equipped.append(el('p','','No equipment'));gear.append(equipped);
   const ammunition=el('section','dossier-ammunition');ammunition.setAttribute('aria-label','Shared squad ammunition');ammunition.append(el('h3','','Squad ammunition'),el('p','dossier-note','Shared within this sector. No backpack space or carry weight. Loaded magazines stay with each weapon.'));

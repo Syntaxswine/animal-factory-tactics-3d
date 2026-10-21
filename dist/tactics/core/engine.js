@@ -1,3 +1,4 @@
+import {attackWeapon,handAttackReady,handWeapons,pairedInHand} from '../one-handed.js';
 import {settleSquadAmmo} from '../squad-ammo.js';
 import {tutorialCrateLoot} from '../tutorial-mission.js';
 import {initializeDialogue,ensureDialogueUnitIds,pinDialogue} from '../dialogue-state.js';
@@ -56,6 +57,7 @@ export const WEAPONS={
  hands:{name:'Workers’ fists',short:'Hands',cost:3,range:1,damage:16,mag:0},
  knife:{name:'NR-40 knife',short:'NR-40',cost:3,range:1,damage:27,mag:0},
  pistol:{name:'TT-33 pistol',short:'TT-33',cost:4,range:12,damage:27,mag:8,penetrationClass:'pistol',accuracy:-20,rangeLoss:35},
+ 'pistol-offhand':{name:'TT-33 pistol · second',short:'TT-33 II',cost:4,range:12,damage:27,mag:8,penetrationClass:'pistol',accuracy:-20,rangeLoss:35},
  rifle:{name:'Mosin-Nagant',short:'Mosin',cost:6,range:24,damage:48,mag:5,accuracy:5,rangeLoss:18},
  assault:{name:'AK-47',short:'AK-47',cost:4,range:24,damage:26,mag:30,burstRounds:3,rangeLoss:26},
  smg:{name:'PPSh submachine gun',short:'SMG',cost:4,range:20,damage:27,mag:35,burstRounds:3,penetrationClass:'pistol',rangeLoss:30},
@@ -326,7 +328,7 @@ export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel
   if(!presentBarrel(s,b))return {ok:false,reason:'Barrel already destroyed'};
   if(WEAPONS[a.weapon].incendiary)return flamePreview(s,a,{...b,ground:true},WEAPONS[a.weapon],combatCosts(s));
   if(WEAPONS[a.weapon].blast)return explosivePreview(s,a,b,WEAPONS[a.weapon]);
-  return previewBarrelAttack(s,a,b,WEAPONS[a.weapon],combatCosts(s),burst,aimLevel);
+  return previewBarrelAttack(s,a,b,attackWeapon(a,WEAPONS,burst),combatCosts(s),burst,aimLevel);
  }
  if(WEAPONS[a.weapon].incendiary){
   const p=flamePreview(s,a,b,WEAPONS[a.weapon],combatCosts(s));
@@ -334,19 +336,19 @@ export function previewAttack(s,a,b,burst=false,zone='torso',token=null,aimLevel
   return p;
  }
  if(WEAPONS[a.weapon].blast)return explosivePreview(s,a,b,WEAPONS[a.weapon]);
- if(b.ground)return previewGroundFire(s,a,b,WEAPONS[a.weapon],combatCosts(s),burst,aimLevel);
+ if(b.ground)return previewGroundFire(s,a,b,attackWeapon(a,WEAPONS,burst),combatCosts(s),burst,aimLevel);
  if(!Object.hasOwn(AIM_ZONES,zone))return {ok:false,reason:'Choose an aim location'};
- const aiming=shotAim(WEAPONS[a.weapon],aimLevel,burst);if(!aiming)return {ok:false,reason:'Choose an aim level'};
+ const aiming=shotAim(attackWeapon(a,WEAPONS,burst),aimLevel,burst);if(!aiming)return {ok:false,reason:'Choose an aim level'};
  const aim=AIM_ZONES[zone];
- const w=WEAPONS[a.weapon],rounds=burst?(w.burstRounds||1):1,cost=aiming.cost,melee=w.mag===0,range=melee?(levelOf(a)===levelOf(b)?Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y)):Infinity):Math.hypot(a.x-b.x,a.y-b.y);
+ const w=attackWeapon(a,WEAPONS,burst),rounds=burst?(w.burstRounds||1):1,cost=aiming.cost,melee=w.mag===0,range=melee?(levelOf(a)===levelOf(b)?Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y)):Infinity):Math.hypot(a.x-b.x,a.y-b.y);
  const visible=token!==retaliationToken&&a.team==='squad'?squad(s).some(p=>canSee(s,p,b)):canSee(s,a,b);
  const cover=!melee&&coverAgainst(s,a,b),heightCover=!melee&&levelOf(b)>levelOf(a)&&(a.x!==b.x||a.y!==b.y),coverPenalty=cover?25:heightCover?15:0,rangePenalty=melee?0:Math.max(0,levelOf(b)-levelOf(a)),effectiveRange=Math.max(0,w.range-rangePenalty);
  const chance=Math.max(supportsAim(w)?5:10,Math.min(95,weaponAccuracy(a)+(melee?10:0)+(w.accuracy||0)+aim.accuracy+aiming.accuracy-(melee?0:Math.max(0,range+rangePenalty-3)/Math.max(1,w.range-3)*(w.rangeLoss??25))-coverPenalty-(melee?0:accuracyPenalty(a))));
  let reason='';
- if(a.pinned&&aiming.level!=='hip')reason='Pinned: only hip fire available';else if(heldWeaponJammed(a))reason='Weapon jammed: clear jam with Reload';else if(a.burningTurns>0)reason='On fire: running in panic';else if(melee&&zone!=='torso')reason='Aimed shots require a firearm';else if(!visible)reason='Target not visible';else if(a.team!=='squad'&&!inCone(a,b))reason='Outside personal sight cone';else if(range>effectiveRange)reason='Out of range';else if(!lineOfSight(s,a,b))reason='Line of fire blocked';else if(!canAimAt(s,a,b))reason='Selected merc has not identified this target';else if(!melee&&!zoneVisible(s,a,b,zone))reason=AIM_ZONES[zone].label+' hidden by cover';else if(w.mag&&a.ammo[a.weapon]<rounds)reason='Reload required';else if(combatCosts(s)&&a.ap<cost)reason='Not enough AP';
+ if(a.pinned&&aiming.level!=='hip')reason='Pinned: only hip fire available';else if(heldWeaponJammed(a))reason='Weapon jammed: clear jam with Reload';else if(a.burningTurns>0)reason='On fire: running in panic';else if(melee&&zone!=='torso')reason='Aimed shots require a firearm';else if(!visible)reason='Target not visible';else if(a.team!=='squad'&&!inCone(a,b))reason='Outside personal sight cone';else if(range>effectiveRange)reason='Out of range';else if(!lineOfSight(s,a,b))reason='Line of fire blocked';else if(!canAimAt(s,a,b))reason='Selected merc has not identified this target';else if(!melee&&!zoneVisible(s,a,b,zone))reason=AIM_ZONES[zone].label+' hidden by cover';else if(w.mag&&!handAttackReady(a,w,rounds))reason=w.dual?'Both pistols must be loaded and unjammed':'Reload required';else if(combatCosts(s)&&a.ap<cost)reason='Not enough AP';
  let obstruction=null;
  if(!reason&&!melee&&!w.incendiary){const path=bulletTrajectory(s,a,b,{accurate:true,zone,reach:w.range*1.5},()=>0);if(path.unitId!==b.id){const unit=s.units.find(u=>u.id===path.unitId);obstruction=unit?{kind:'unit',id:unit.id,name:unit.name,friendly:unit.team===a.team}:{kind:path.kind};}}
- return {ok:!reason,reason,cost,rounds,aimLevel:aiming.level,chance:Math.round(chance),shotChances:Array.from({length:rounds},(_,i)=>roundChance(chance,i)),cover,heightCover,coverPenalty,rangePenalty,damage:damageAfterResistance(b,Math.round(weaponDamage(w,range)*aim.damage)),rawDamage:Math.round(weaponDamage(w,range)*aim.damage),pellets:w.pellets||1,zone,range:effectiveRange,tankChance:melee?0:tankExplosionChance(b,zone),obstruction};
+ return {ok:!reason,reason,cost,rounds,...w.dual?{dualWeapons:handWeapons(a)}:{},aimLevel:aiming.level,chance:Math.round(chance),shotChances:Array.from({length:rounds},(_,i)=>roundChance(chance,i)),cover,heightCover,coverPenalty,rangePenalty,damage:damageAfterResistance(b,Math.round(weaponDamage(w,range)*aim.damage)),rawDamage:Math.round(weaponDamage(w,range)*aim.damage),pellets:w.pellets||1,zone,range:effectiveRange,tankChance:melee?0:tankExplosionChance(b,zone),obstruction};
 }
 function random(s){s.seed=(Math.imul(s.seed,1664525)+1013904223)>>>0;return s.seed/4294967296;}
 function combatDamage(s,u,damage,fatal=false,source=null){provokeCharacter(s,u,source);
@@ -422,7 +424,7 @@ function attackQueryAction(s,a,b,burst=false,byAI=false,zone='torso',reaction=fa
  // A stack suspends the current burst while a reply resolves; ammunition bounds chains.
  const frames=[{a,b,p,zone,left:p.rounds,weapon:a.weapon,aim:{...b},reply:false}];
  cascade(s,()=>{while(frames.length){ // one attack, replies included, is one trigger for the guards it alerts
-  const f=frames.at(-1),shooter=f.a,target=f.b,w=WEAPONS[f.weapon];
+  const f=frames.at(-1);if(f.p.dualWeapons&&f.left)f.weapon=f.p.dualWeapons[f.p.rounds-f.left];const shooter=f.a,target=f.b,w=WEAPONS[f.weapon];
   if(!f.left||!alive(shooter)||shooter.burningTurns||w.mag&&shooter.ammo[f.weapon]<1){frames.pop();continue;}
   if(weaponJams(s,shooter,f.weapon,w)){shooter.overwatch=null;log(s,shooter.name+': '+w.short+' jammed. Clear jam before firing.');frames.pop();continue;}
   f.left--;shooter.overwatch=null;shooter.heading=headingTo(shooter,f.aim);shooter.facing=(f.aim.x-shooter.x)-(f.aim.y-shooter.y)>=0?1:-1;
@@ -440,7 +442,7 @@ function attackQueryAction(s,a,b,burst=false,byAI=false,zone='torso',reaction=fa
   }
   if(shot)trajectories.push(...(pellets||[shot]));
   const victim=ballistic?s.units.find(u=>u.id===shot.unitId):accurate&&alive(target)?target:null;
-  const event={shooter:shooter.id,target:target.id,ax:shooter.x,ay:shooter.y,bx:f.aim.x,by:f.aim.y,az:levelOf(shooter),bz:levelOf(f.aim),hit:!!victim,incendiary:!!w.incendiary,trajectories:pellets||(shot?[shot]:[]),explosions:[],downed:[],reply:f.reply,shotChance,shotRoll};if(w.thrown)event.grenade={shooter:structuredClone(shooter),release:1.92,recovery:4.6};sequence.push(event);
+  const event={shooter:shooter.id,target:target.id,ax:shooter.x,ay:shooter.y,bx:f.aim.x,by:f.aim.y,az:levelOf(shooter),bz:levelOf(f.aim),hit:!!victim,incendiary:!!w.incendiary,trajectories:pellets||(shot?[shot]:[]),explosions:[],downed:[],reply:f.reply,shotChance,shotRoll,weapon:f.weapon,...f.p.dualWeapons?{dual:true}: {}};if(w.thrown)event.grenade={shooter:structuredClone(shooter),release:1.92,recovery:4.6};sequence.push(event);
   const flame=w.incendiary?flameShape(s,shooter,f.aim,w):null;
   const flameStructures=flame?planFlameStructureDamage(s,flame,w.damage):[],flameBarrelHits=flame?flameBarrels(s,flame):[];
   const flameHits=flame?flameVictims(s,shooter,flame).map(unit=>({unit,zone:'torso',damage:Math.max(1,unit.hp)})):null;
@@ -482,9 +484,9 @@ function attackQueryAction(s,a,b,burst=false,byAI=false,zone='torso',reaction=fa
 }
 
 export function groundTarget(point){return {...point,barrel:false,id:'ground',name:'Terrain',team:'terrain',hp:1,ground:true,weapon:'hands'};}
-export function attackGround(s,u,point){if(!WEAPONS[u?.weapon]?.mag)return false;return attack(s,u,groundTarget(point));}
+export function attackGround(s,u,point,burst=false,aimLevel='hip'){if(!WEAPONS[u?.weapon]?.mag)return false;return attack(s,u,groundTarget(point),burst,false,'torso',false,aimLevel);}
 export const READY_SWAP_AP=2;
-export function equipCost(s,u,id){return !combatCosts(s)||id==='hands'||u.weapon===id?0:!u.slots.includes(id)?3:READY_SWAP_AP;}
+export function equipCost(s,u,id){return !combatCosts(s)||id==='hands'||u.weapon===id||pairedInHand(u,id)?0:!u.slots.includes(id)?3:READY_SWAP_AP;}
 export function equip(s,u,id,slot=1){if(!canControl(s,u)||s.queue.length||!WEAPONS[id]||u.weapon===id||!(id==='hands'||u.pack.some(i=>i.type==='weapon'&&i.kind===id)))return false;const stored=id!=='hands'&&!u.slots.includes(id),cost=equipCost(s,u,id);if(combatCosts(s)&&u.ap<cost)return false;const slots=[...u.slots];if(stored)slots[slot===0?0:1]=id;const layout=gridLayout({...u,slots});if(!layout.ok)return false;if(combatCosts(s))u.ap-=cost;u.slots=slots;storeLayout(u,layout);u.weapon=id;if(u.stats)u.accuracy=weaponAccuracy(u);if(id==='flamethrower')delete u.tanksExploded;u.overwatch=null;log(s,u.name+' equipped '+WEAPONS[id].name+'.');return true;}
 export function equipCutters(s,u,slot){
  if(!canControl(s,u)||s.queue.length||!u.wireCutters||![0,1].includes(slot)||u.slots.includes('wireCutters'))return false;

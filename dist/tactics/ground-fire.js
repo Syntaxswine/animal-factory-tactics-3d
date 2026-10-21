@@ -4,6 +4,7 @@ import {shotAim,supportsAim} from './aim-levels.js';
 import {weaponAccuracy} from './character-stats.js';
 import {accuracyPenalty,roundChance} from './combat-state.js';
 import {heldWeaponJammed} from './loot-policy.js';
+import {handAttackReady,handWeapons} from './one-handed.js';
 
 // A terrain aim point is not an invented person: no identification, body-part
 // bonus, or guaranteed victim. The ordinary projectile trace resolves impacts.
@@ -20,12 +21,12 @@ export function previewGroundFire(s,a,b,w,charges,burst=false,aimLevel='hip'){
  else if(a.pinned&&aim.level!=='hip')reason='Pinned: only hip fire available';
  else if(heldWeaponJammed(a))reason='Weapon jammed: clear jam with Reload';
  else if(distance>range)reason='Out of range';
- else if(a.ammo[a.weapon]<rounds)reason='Reload required';
+ else if(!handAttackReady(a,w,rounds))reason=w.dual?'Both pistols must be loaded and unjammed':'Reload required';
  else if(charges&&a.ap<cost)reason='Not enough AP';
  // A preview may show known cover, but must not name or expose hidden people.
  const known={...s,units:s.units.filter(u=>u===a||u.team===a.team||s.detected.has(u.id))};
  const path=!reason?bulletTrajectory(known,a,b,{accurate:true,zone:'torso',reach:w.range*1.5},()=>0):null;
  const blocker=path?.unitId!==undefined?known.units.find(u=>u.id===path.unitId):null;
- return {ok:!reason,reason,cost,rounds,chance,shotChances:Array.from({length:rounds},(_,i)=>roundChance(chance,i)),aimLevel:aim?.level,zone:'torso',range,distance,ground:true,
+ return {ok:!reason,reason,cost,rounds,...w.dual?{dualWeapons:handWeapons(a)}:{},chance,shotChances:Array.from({length:rounds},(_,i)=>roundChance(chance,i)),aimLevel:aim?.level,zone:'torso',range,distance,ground:true,
   obstruction:blocker?{kind:'unit',name:blocker.name,friendly:blocker.team===a.team}:path&&['wall','cover','prop'].includes(path.kind)?{kind:path.kind}:null};
 }

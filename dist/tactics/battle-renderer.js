@@ -32,6 +32,8 @@ import {BattleTankEffects} from './battle-tank-effects.js';
 import {motionPreference} from './settings-3d.js';
 import {barrelTarget,presentBarrel} from './explosive-barrels.js';
 import {CharacterBatches,CHARACTER_PICK_LAYER} from './character-batches.js';
+import {createOffhandEquipment} from './offhand-equipment.js';
+import {handWeapons,pairedInHand} from './one-handed.js';
 
 // Reuse only the environment/camera presentation. No hybrid combat mode.
 export class BattleRenderer extends HybridRenderer {
@@ -69,7 +71,7 @@ export class BattleRenderer extends HybridRenderer {
    for(const part of worker.parts)part.material=paint.material;
    const root=new T.Group();root.add(worker.root);
    const posture=createBattlePosture(worker,profile),locomotion=createWorkerLocomotion(worker,profile);
-   this.models.set(unit.id,{worker,paint,root,profile,locomotion,posture,cap,batches:new CharacterBatches(worker,root)});this.actors.set(unit.id,root);this.scene.add(root);
+   this.models.set(unit.id,{worker,paint,root,profile,locomotion,posture,cap,offhand:createOffhandEquipment(worker),batches:new CharacterBatches(worker,root)});this.actors.set(unit.id,root);this.scene.add(root);
   }catch(error){cap?.dispose();paint?.dispose();worker?.dispose();this.loading.fail(error);this.diagnostics.push(error.message);if(this.traversal?.active?.event.unitId===unit.id)this.traversal.finish();}
   finally{this.loading.end();if(generation===this.generation)this.onReady();}
  }
@@ -77,6 +79,7 @@ export class BattleRenderer extends HybridRenderer {
   const model=this.models.get(unit.id);
   if(!model){if(!this.pending.has(unit.id))this.loadModel(unit);return null;}
   if(this.traversal?.active?.event.unitId===unit.id){
+   model.offhand.hide();
    if(this.grenades.session?.model===model)this.grenades.finish();
    this.fire.remove(unit.id);
    model.draw?.dispose();model.draw=null;model.drawRequested=false;
@@ -87,17 +90,17 @@ export class BattleRenderer extends HybridRenderer {
   const sample=this.traversal?.preparing&&this.traversal.active?.event.unitId===unit.id?{...this.motion.sample(unit),...this.traversal.display(unit),blend:0,pose:{}}:shot&&!fallen?{...this.motion.sample(unit),x:shot.event.ax,y:shot.event.ay,z:shot.event.az||0,blend:0}:this.motion.sample(unit);
   const now=this.presentationNow??performance.now();
   this.grenades.prepareActor(model,unit,shot);
-  if(this.fire.pose(model,unit,shot,now,this.state,this.camera))return model.root;
-  if(this.grenades.pose(model,unit,shot,now))return model.root;
+  if(this.fire.pose(model,unit,shot,now,this.state,this.camera)){model.offhand.hide();return model.root;}
+  if(this.grenades.pose(model,unit,shot,now)){model.offhand.sync(unit,{primary:model.equipment});return model.root;}
   if(unit.hp<=0||this.reducedMotion?.matches)model.drawRequested=false;
   if(model.draw&&(unit.hp<=0||model.weapon!==unit.weapon||this.reducedMotion?.matches)){model.draw.dispose();model.draw=null;model.drawRequested=false;}
-  const signature=`${model.drawRequested||model.draw?now:''}:${JSON.stringify(sample.pose)}:${unit.casualty}:${unit.weapon}:${sample.heading}:${unit.hp>0}:${sample.blend}:${sample.blend?sample.distance:0}:${shot?.start}:${shot?.phase.aim}:${shot?.phase.recoil}`;
+  const signature=`${handWeapons(unit).join(',')}:${model.drawRequested||model.draw?now:''}:${JSON.stringify(sample.pose)}:${unit.casualty}:${unit.weapon}:${sample.heading}:${unit.hp>0}:${sample.blend}:${sample.blend?sample.distance:0}:${shot?.start}:${shot?.phase.aim}:${shot?.phase.recoil}`;
   if(model.signature!==signature){
    // Authoring rigs solve carry grips in model space. Position only after posing.
    root.position.set(0,0,0);root.updateMatrixWorld(true);
    model.signature=signature;
    if(!profile.unarmed&&model.weapon!==unit.weapon){
-    const old=model.equipment;model.drawRequested=!!old&&model.drawSkipWeapon!==unit.weapon&&unit.weapon!=='hands'&&!this.reducedMotion?.matches;model.equipment=createWeaponModel(unit.weapon);worker.equipWeapon(model.equipment);old?.dispose();model.weapon=unit.weapon;
+    const old=model.equipment;model.drawRequested=!!old&&!pairedInHand(unit,model.weapon)&&model.drawSkipWeapon!==unit.weapon&&unit.weapon!=='hands'&&!this.reducedMotion?.matches;model.equipment=createWeaponModel(unit.weapon);worker.equipWeapon(model.equipment);old?.dispose();model.weapon=unit.weapon;
    }
    worker.root.position.set(0,0,0);worker.root.rotation.set(0,0,0);
    if(unit.hp>0&&!(sample.pose?.down>0)&&shot?.rifle&&!profile.unarmed){
@@ -126,8 +129,9 @@ export class BattleRenderer extends HybridRenderer {
    model.placement=placement;root.updateMatrixWorld(true);worker.skeleton.update();
    for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}
   }
+  model.offhand.sync(unit,{primary:model.equipment,aim:shot?.event.dual?shotPoint(shot.event.trajectories[0],this.state):null,hidden:unit.hp<=0||!!model.draw});
   if(shot){
-   const gun=model.equipment,anchor=gun?.anchors?.muzzle;
+   const gun=shot.event.dual&&shot.event.weapon!==unit.weapon?model.offhand.gun:model.equipment,anchor=gun?.anchors?.muzzle;
    const muzzle=shot.rifle?(!shot.presentationUnsupported&&model.firing?model.firing.muzzle():null):anchor&&gun.root.visible?{origin:anchor.getWorldPosition(new T.Vector3()),direction:new T.Vector3(1,0,0).transformDirection((gun.barrel||gun.root).matrixWorld)}:null;
    if(shot.event.flame)this.flameEffects.update(shot,this.state,muzzle);else if(!shot.event.grenade)this.shotEffects.update(shot,this.state,muzzle);
   }
@@ -200,7 +204,7 @@ export class BattleRenderer extends HybridRenderer {
   this.motion.clear();
   this.grenades.dispose();this.traversal.clear();this.combat.clear();this.shotEffects.dispose();this.flameEffects.dispose();this.fire.dispose();this.tankEffects.dispose();
   this.paintedEnvironment.dispose();
-  for(const {worker,paint,root,equipment,locomotion,cap,draw,batches}of this.models.values()){batches.dispose();this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
+  for(const {worker,paint,root,equipment,locomotion,cap,draw,batches,offhand}of this.models.values()){batches.dispose();this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();offhand?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();
  }
 }

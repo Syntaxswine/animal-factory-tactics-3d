@@ -32,7 +32,7 @@ fs.copyFileSync(new URL('dist/assets/equipment/painted-ui/grenade-surface.png',r
 for(const file of ['battle-context-menu.js','pickup-order.js','ground-fire.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.copyFileSync(new URL('dist/tactics-3d.html',root),new URL('.pages-output/index.html',root));
 for(const file of ['tactics-3d.html','tactics-3d-gallery.html'])fs.copyFileSync(new URL('dist/'+file,root),new URL('.pages-output/'+file,root));
-for(const file of ['title-3d.css','title-3d.js','title-3d-scene.js','settings-3d.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+for(const file of ['one-handed.js','offhand-equipment.js','quickplay-presets.js','quickplay-game.js','quickplay-menu.js','title-3d.css','title-3d.js','title-3d-scene.js','settings-3d.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['flame-cone.js','flame-planner.js','battle-flame-effects.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['fire-events.js','battle-fire.js','painted-fire-state.js','painted-fire-motion.js','painted-fire-effects.js','painted-fire-actor.js','painted-fire-equipment.js','painted-fire-hen.js','painted-fire-zones.js','painted-fire-study.html','painted-fire-study.css','painted-fire-study.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.cpSync(new URL('dist/assets/effects/painted-fire/',root),new URL('.pages-output/assets/effects/painted-fire/',root),{recursive:true});

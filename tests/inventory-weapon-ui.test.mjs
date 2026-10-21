@@ -6,10 +6,13 @@ import {blankMap} from '../dist/tactics/core/maps.js';
 import {characterSheet,equipmentBlockReason} from '../dist/tactics/character-screen.js';
 import {WEAPON_ICONS,WEAPON_FRAMES,weaponIcon} from '../dist/tactics/weapon-icons.js';
 import {BattleRenderer} from '../dist/tactics/battle-renderer.js';
+import {baseWeapon} from '../dist/tactics/one-handed.js';
 
 test('every weapon has a distinct transparent painted PNG with a valid display frame',()=>{
- assert.deepEqual(Object.keys(WEAPON_ICONS).sort(),Object.keys(WEAPONS).sort());
- const sources=Object.keys(WEAPONS).map(kind=>{
+ const kinds=Object.keys(WEAPONS).filter(kind=>baseWeapon(kind)===kind);
+ assert.deepEqual(Object.keys(WEAPON_ICONS).sort(),kinds.sort());
+ assert.equal(weaponIcon('pistol-offhand'),weaponIcon('pistol'));
+ const sources=kinds.map(kind=>{
   const png=fs.readFileSync(new URL('../dist/tactics/'+weaponIcon(kind),import.meta.url));
   assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
   const size=[png.readUInt32BE(16),png.readUInt32BE(20)],{size:expected,frame:[x,y,w,h]}=WEAPON_FRAMES[kind];

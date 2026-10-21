@@ -3,6 +3,7 @@ import {tileKey,levelOf} from './maps.js';
 // Shared inventory and ground-loot sprites; legacy casualty dressing only before loot transfer.
 export const LOOT_WEAPONS=['pistol','rifle','assault'];
 export function inventoryArt(item){
+ if(item.kind==='pistol-offhand')item={...item,kind:'pistol'};
  if(item.kind==='largeMedicalKit')return '../assets/equipment/large-medical-kit.svg';
  if(['grenade','launcher','rpg','shotgun','sniper','smg','hmg'].includes(item.kind)&&['weapon','ammo'].includes(item.type))return '../assets/equipment/'+item.kind+'.svg';
  if(item.kind==='flamethrower'&&['weapon','ammo'].includes(item.type))return '../assets/equipment/'+(item.type==='weapon'?'flamethrower':'fuel')+'.svg';

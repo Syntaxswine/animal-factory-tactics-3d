@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import {baseWeapon} from './one-handed.js';
 import {createGrenadeModel} from './grenade-model.js';
 import {createWorkerRifle} from './horse-rifle.js';
 
@@ -11,6 +12,7 @@ export const WEAPON_MODELS={
 const V=a=>new THREE.Vector3(...a);
 const defaultCarry={position:[.24,1.005,.035],axis:[.20,.38,-.90],hands:[1,-1]};
 export function createWeaponModel(id,texture=null){
+ id=baseWeapon(id);
  if(!WEAPON_MODELS[id])throw Error('Unknown weapon model: '+id);
  if(id==='grenade')return createGrenadeModel();
  if(id==='rifle'){const asset=createWorkerRifle(texture);return {...asset,id,...WEAPON_MODELS[id],carry:defaultCarry,muzzleMesh:asset.parts.find(p=>p.name==='muzzle opening')};}
