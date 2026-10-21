@@ -1,14 +1,15 @@
 import {HELICOPTER_DATA} from './helicopter-gameplay-data.js';
-import {sceneryRule,isHelicopter,isMachine,isPhysicalScenery,sceneryLocal,scenerySize,sceneryDirection,SCENERY_FLOOR} from './scenery-catalog.js';
+import {sceneryRule,isHelicopter,isMachine,isStoneArch,isPhysicalScenery,sceneryLocal,scenerySize,sceneryDirection,SCENERY_FLOOR} from './scenery-catalog.js';
+import {stoneArchData} from './stone-arch-geometry.js';
 import {geometryHit,geometryBoxHit} from './scenery-collision.js';
 import {SceneryIndex} from './scenery-index.js';
 import {factoryData} from './factory-gameplay.js';
 export const helicopterData=p=>isHelicopter(p)?HELICOPTER_DATA[sceneryRule(p).state]:null;
-export const sceneryData=p=>helicopterData(p)||factoryData(p);
+export const sceneryData=p=>helicopterData(p)||factoryData(p)||(isStoneArch(p)?stoneArchData(p.kind):null);
 const clearances=p=>{const d=sceneryData(p);return d?(Array.isArray(d.clearance)?d.clearance:[d.clearance]):[];};
 export function sceneryBlocked(p,q){if(!isPhysicalScenery(p))return false;const a=sceneryLocal(p,q),level=(q.z||0)-(p.z||0);return clearances(p)[level]?.rows[Math.round(a.y)]?.[Math.round(a.x)]==='#';}
 const linkCache=new WeakMap();
-const placements=new SceneryIndex(props=>{const index=new Map();for(const p of props)if(isPhysicalScenery(p)){const {w,h}=scenerySize(p),margin=isMachine(p)?1:0;for(const [level]of clearances(p).entries())for(let y=-margin;y<h+margin;y++)for(let x=-margin;x<w+margin;x++){const key=`${p.x+x},${p.y+y},${(p.z||0)+level}`;if(!index.has(key))index.set(key,[]);index.get(key).push(p);}}return index;});
+const placements=new SceneryIndex(props=>{const index=new Map();for(const p of props)if(isPhysicalScenery(p)){const {w,h}=scenerySize(p),margin=isMachine(p)||isStoneArch(p)?1:0;for(const [level]of clearances(p).entries())for(let y=-margin;y<h+margin;y++)for(let x=-margin;x<w+margin;x++){const key=`${p.x+x},${p.y+y},${(p.z||0)+level}`;if(!index.has(key))index.set(key,[]);index.get(key).push(p);}}return index;});
 function at(map,q){
  return placements.get(map).get(`${q.x},${q.y},${q.z||0}`)||[];
 }

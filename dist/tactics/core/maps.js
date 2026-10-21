@@ -6,6 +6,7 @@ import {climbingMapErrors} from '../climbing.js';
 import {invalidateMapGeometry} from '../map-geometry-cache.js';
 import {localEnvironmentErrors} from '../environment-regions.js';
 import {spotlightErrors} from '../light-sources.js';
+import {archTerrainAt} from '../stone-arches.js';
 import {sceneryMoveAllowed} from '../scenery-rules.js';
 import {isScenery,SCENERY_ROTATIONS} from '../scenery-catalog.js';
 import {sceneryPlacementErrors} from '../scenery-placement.js';
@@ -31,7 +32,7 @@ export const levelOf=p=>p.z??0;
 export const tileKey=(x,y,z=0)=>z?`${x},${y},${z}`:`${x},${y}`;
 export const edgeKey=(axis,x,y,z=0)=>`${axis}:${x}:${y}${z?':'+z:''}`;
 export const inBounds=(x,y,z=0)=>Number.isInteger(x)&&Number.isInteger(y)&&Number.isInteger(z)&&x>=0&&y>=0&&x<W&&y<H&&z>=0&&z<LEVELS;
-export function terrainAt(m,x,y,z=0){if(!inBounds(x,y,z))return 'void';if(m.knowledge&&!m.knowledge.has(tileKey(x,y,z)))return z?'floor':'yard';return z===0?(m.terrain||m.map)[y][x]:(m.upper?.[z-1]?.[tileKey(x,y)]||'void');}
+export function terrainAt(m,x,y,z=0){if(!inBounds(x,y,z))return 'void';if(m.knowledge&&!m.knowledge.has(tileKey(x,y,z)))return z?'floor':'yard';return z===0?(m.terrain||m.map)[y][x]:(m.upper?.[z-1]?.[tileKey(x,y)]||archTerrainAt(m,x,y,z)||'void');}
 export function setTerrain(m,x,y,z,value){if(!inBounds(x,y,z))return false;if(m.foliage&&!foliageGround(value))delete m.foliage[foliageKey(x,y,z)];if(!z)m.terrain[y][x]=value;else if(value==='void')delete m.upper[z-1][tileKey(x,y)];else m.upper[z-1][tileKey(x,y)]=value;invalidateMapGeometry(m);return true;}
 export const passable=(m,p)=>floorTerrain(terrainAt(m,p.x,p.y,levelOf(p)))&&!foliageBlocks(m,p.x,p.y,levelOf(p))&&!propBlocks(m,p.x,p.y,levelOf(p));
 export function edgeBetween(a,b){if(levelOf(a)!==levelOf(b)||Math.abs(a.x-b.x)+Math.abs(a.y-b.y)!==1)return null;return a.x!==b.x?edgeKey('e',Math.min(a.x,b.x),a.y,levelOf(a)):edgeKey('s',a.x,Math.min(a.y,b.y),levelOf(a));}

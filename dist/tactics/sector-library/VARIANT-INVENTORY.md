@@ -77,6 +77,7 @@ Generated from the organized authoring collection. Placeholder recipes and rotat
 | tutorial | tutorial-step-3 | 1 | in-progress |
 | tutorial | tutorial-step-4 | 1 | in-progress |
 | tutorial | tutorial-step-5 | 1 | in-progress |
+| tutorial | tutorial-step-6 | 1 | in-progress |
 | village | village--land-road-e | 0 | placeholder |
 | village | village--land-road-en | 0 | placeholder |
 | village | village--land-road-ens | 0 | placeholder |

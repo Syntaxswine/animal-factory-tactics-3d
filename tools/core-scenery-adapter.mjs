@@ -1,15 +1,17 @@
 export const sceneryOverrides={
+ 'blocks.js':'Copy authored upper floors without materializing arch-owned surfaces into detached floors.',
  'environment.js':'Register scenery with four orientations and physical body clearance; invalidate footprint indexes after in-place edits.',
- 'maps.js':'Use baked scenery movement clearance, validate full orientation and machine headroom, and preserve authored squad facing.',
+ 'maps.js':'Use physical scenery movement clearance and derived stone-arch tops, validate full orientation and headroom, and preserve authored squad facing.',
  'editor-model.js':'Persist full scenery orientation and reject machine headroom conflicts before committing a prop.',
  'projectiles.js':'Scenery bodies use the visible model triangles for bullet and rocket collisions.',
  'visibility.js':'Physical scenery shields sight while leaving real openings clear.',
- 'explosives.js':'A blast can affect its own scenery surface without treating other machines as transparent.',
+ 'explosives.js':'A blast can affect its own scenery surface without treating other machines as transparent; natural stone arches share the cliff-terrain blast policy.',
  'engine.js':'Keep the authored squad-start facing on entry into gameplay.'
 };
 export function adaptCoreScenery(name,data){
  if(!sceneryOverrides[name])return data;let s=data.toString();
  const once=(a,b)=>{if(s.split(a).length!==2)throw Error('Scenery adapter anchor changed: '+a);s=s.replace(a,b);};
+ if(name==='blocks.js')once('const t=terrainAt(m,x+dx,y+dy,z);', "const t=m.upper?.[z-1]?.[tileKey(x+dx,y+dy)]||'void';");
  if(name==='environment.js'){
   s="import {SceneryIndex} from '../scenery-index.js';\nimport {SCENERY_PROPS,isScenery,scenerySize} from '../scenery-catalog.js';\nimport {sceneryBlockedAt} from '../scenery-rules.js';\n"+s;
   once('const w=p.rotated?rule.h:rule.w,h=p.rotated?rule.w:rule.h;', 'const {w,h}=isScenery(p)?scenerySize(p):{w:p.rotated?rule.h:rule.w,h:p.rotated?rule.w:rule.h};');
@@ -19,7 +21,8 @@ export function adaptCoreScenery(name,data){
   s+='\nObject.assign(PROPS,SCENERY_PROPS);\n';
  }
  if(name==='maps.js'){
-  s="import {sceneryMoveAllowed} from '../scenery-rules.js';\nimport {isScenery,SCENERY_ROTATIONS} from '../scenery-catalog.js';\nimport {sceneryPlacementErrors} from '../scenery-placement.js';\n"+s;
+  s="import {archTerrainAt} from '../stone-arches.js';\nimport {sceneryMoveAllowed} from '../scenery-rules.js';\nimport {isScenery,SCENERY_ROTATIONS} from '../scenery-catalog.js';\nimport {sceneryPlacementErrors} from '../scenery-placement.js';\n"+s;
+  once("return z===0?(m.terrain||m.map)[y][x]:(m.upper?.[z-1]?.[tileKey(x,y)]||'void');", "return z===0?(m.terrain||m.map)[y][x]:(m.upper?.[z-1]?.[tileKey(x,y)]||archTerrainAt(m,x,y,z)||'void');");
   once('&&siteMoveAllowed(m,p,b)','&&siteMoveAllowed(m,p,b)&&sceneryMoveAllowed(m,p,b)');
   once("return [...errors,'Invalid environment props.'];", "return [...errors,'Invalid environment props.'];\n if((raw.props||[]).some(p=>isScenery(p)&&p.rotation!==undefined&&!SCENERY_ROTATIONS.includes(p.rotation)))return [...errors,'Scenery orientation must be 0°, 90°, 180° or 270°.'];\n errors.push(...sceneryPlacementErrors(raw,null,PROPS,EDGES));");
   once("return [...errors,'Place exactly four valid squad starts.'];","return [...errors,'Place exactly four valid squad starts.'];\n for(const p of raw.starts)if(p.heading!==undefined&&(!Number.isFinite(p.heading)||p.heading<0||p.heading>=360))errors.push('Squad facing must be between 0 and 359 degrees.');");
@@ -43,7 +46,8 @@ export function adaptCoreScenery(name,data){
  }
  if(name==='engine.js')once("if(p.outfit)s.units.at(-1).outfit=p.outfit;", "if(p.heading!==undefined){const u=s.units.at(-1);u.heading=p.heading;const angle=p.heading*Math.PI/180;u.facing=Math.cos(angle)-Math.sin(angle)>=0?1:-1;}if(p.outfit)s.units.at(-1).outfit=p.outfit;");
  if(name==='explosives.js'){
-  s="import {isPhysicalScenery,sceneryId} from '../scenery-catalog.js';\n"+s;
+  s="import {isPhysicalScenery,isStoneArch,sceneryId} from '../scenery-catalog.js';\n"+s;
+  once('if(isExplosiveBarrel(prop)||isStrategicSite(prop)||', 'if(isExplosiveBarrel(prop)||isStrategicSite(prop)||isStoneArch(prop)||');
   once('candidates.push({...nearest,remove:', 'candidates.push({...nearest,propId:isPhysicalScenery(prop)?sceneryId(prop):null,remove:');
   once('if(blastClear(s,impact,c.point))', 'if(blastClear(s,impact,c.point,c.propId))');
  }

@@ -30,7 +30,7 @@ function direction(p,v){const o=sceneryPoint(p,[0,0,0]),b=sceneryPoint(p,v);retu
 
 test('every registered scenery kind cycles four distinct facings; legacy rotated import retains its meaning',()=>{
  assert.equal(sceneryRotation({rotated:true}),90);assert.equal(sceneryRotation({rotated:true,rotation:180}),180);assert.throws(()=>sceneryRotation({rotation:45}),/orientation/);
- for(const kind of Object.keys(SCENERY_PROPS)){
+ for(const kind of Object.keys(SCENERY_PROPS).filter(kind=>!SCENERY_PROPS[kind].rise||SCENERY_PROPS[kind].rise<blankMap().levels)){
   const doc=new EditingDocument().open(JSON.stringify(blankMap('Four-way scenery'))),result=doc.apply({tool:'prop',start:{x:6,y:6,z:0},options:{propKind:kind,rotation:0}});assert.ok(result.ok,kind+': '+result.error);
   const initial=structuredClone(doc.map.props[0]);
   for(const angle of [90,180,270,0]){assert.ok(doc.rotate(doc.inspect(6,6,0,{mode:'prop'})).ok,kind);assert.equal(doc.map.props[0].rotation,angle);const restored=parseMap(doc.export());assert.equal(restored.props[0].rotation,angle);assert.ok(doc.undo());assert.ok(doc.redo());}

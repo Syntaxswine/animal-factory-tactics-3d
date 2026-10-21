@@ -1,6 +1,7 @@
 import {isMachine,isScenery,sceneryRule,sceneryRotation,scenerySize,sceneryLocal,SCENERY_FLOOR} from './scenery-catalog.js';
 import {factoryData} from './factory-gameplay.js';
 import {geometryBoxHit} from './scenery-collision.js';
+import {archPlacementErrors} from './stone-arches.js';
 
 // Placement uses actual machine surfaces, not an invented operator footprint.
 // This module stays independent of core/ and THREE for authored and live maps.
@@ -29,5 +30,5 @@ export function sceneryPlacementErrors(map,extra=null,rules={},boundaries={}){
    const rule=sceneryRule(q)||rules[q.kind]||{},height=rule.height??(rule.tall?2:rule.solid?.8:0);if(!height)continue;const size=isScenery(q)?scenerySize(q):{w:q.rotated?rule.h||1:rule.w||1,h:q.rotated?rule.w||1:rule.h||1};if(intersects(p,data,[q.x-.5,q.y-.5,z*SCENERY_FLOOR],[q.x+size.w-.5,q.y+size.h-.5,z*SCENERY_FLOOR+height]))errors.push('The machine intersects an object on another level.');
   }
  }
- return [...new Set(errors)];
+ return [...new Set([...errors,...archPlacementErrors(map,extra,rules,boundaries)])];
 }

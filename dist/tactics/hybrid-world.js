@@ -1,6 +1,7 @@
 import {isHedge} from './hedge-data.js';
 import {synchronizeFoliage,foliageSegment} from './foliage-obstacles.js';
 import {isScenery} from './scenery-catalog.js';
+import {archSurfaces} from './stone-arches.js';
 import {isStrategicSite} from './strategic-site-rules.js';
 import {trellisParts,trellisSegment,TRELLIS_KIND,TRELLIS_ARCH_KIND} from './bridge-trellis.js';
 import {canopyPresentation} from './editor-canopies.js';
@@ -28,7 +29,7 @@ const supportedProps=new Set(Object.keys(PROPS));
 const grounds=new Set(['yard','floor','bridge','woodland','woodland-dense','water',...GROUNDS]);
 const chunk=8, D=DIMENSIONS;
 export function buildWorld(map){map=canopyPresentation(map);
- const boxes=[],diagnostics=[],ids=new Set();
+ const boxes=[],diagnostics=[],ids=new Set(),archTops=archSurfaces(map),archKeys=new Set(archTops.map(q=>`${q.x},${q.y},${q.z}`));
  let hasWoodland=!!Object.keys(map.foliage||{}).length;
  const roofs=new Map();for(const p of map.props||[])if(p.kind.startsWith('roof-'))for(const q of propCells(p))roofs.set(`${q.x},${q.y},${q.z}`,p);
  function box(id,kind,material,center,size,source,policies={}){
@@ -41,12 +42,13 @@ export function buildWorld(map){map=canopyPresentation(map);
   if(!grounds.has(terrain)&&terrain!=='crate'){diagnostics.push({source:`tile:${x},${y},${z}`,kind:terrain,message:'Unsupported terrain'});return;}
   // Existing stairs leave the upper slab open; movement remains a simulation rule.
   const roof=roofs.get(`${x},${y},${z}`);
-  if(!cliffSupportAt(map,{x,y,z})&&(!z||!(map.stairs||[]).some(p=>p.x===x&&p.y===y&&p.z===z-1)))box(`floor:${x},${y},${z}`,roof?'roof':'floor',roof?.kind||terrain,[x,z*DIMENSIONS.floorSpacing-D.slab/2,y],[1,D.slab,1],{x,y,z});
+  if(!cliffSupportAt(map,{x,y,z})&&(!z||!(map.stairs||[]).some(p=>p.x===x&&p.y===y&&p.z===z-1)))box(`floor:${x},${y},${z}`,roof?'roof':'floor',roof?.kind||terrain,[x,z*DIMENSIONS.floorSpacing-D.slab/2,y],[1,D.slab,1],{x,y,z},{archSurface:archKeys.has(`${x},${y},${z}`)});
   if(terrain==='crate')box(`cover:${x},${y},${z}`,'cover','crate-wood',[x,z*DIMENSIONS.floorSpacing+D.lowCover/2,y],[1,D.lowCover,1],{x,y,z});
  }
  const terrain=map.terrain||map.map;
  for(let y=0;y<terrain.length;y++)for(let x=0;x<terrain[y].length;x++)tile(x,y,0,terrain[y][x]);
  for(const [level,layer]of (map.upper||[]).entries())for(const [key,t]of Object.entries(layer)){const [x,y]=key.split(',').map(Number);tile(x,y,level+1,t);}
+ for(const {x,y,z}of archTops)if(!map.upper?.[z-1]?.[`${x},${y}`])tile(x,y,z,'ground-gravel');
  for(const [key,kind]of Object.entries(map.edges||{})){
   const [axis,sx,sy,sz='0']=key.split(':'),x=Number(sx),y=Number(sy),z=Number(sz),rule=EDGES[kind];
   const part=(suffix,a,b,bottom,top,material=kind,thickness=D.wallThickness)=>box(`edge:${key}:${suffix}`,'wall',material,

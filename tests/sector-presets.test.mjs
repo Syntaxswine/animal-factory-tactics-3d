@@ -13,12 +13,12 @@ test('preset browser includes every published configuration, tutorial map, and s
  assert.deepEqual(entries.map(e=>e.id),index.entries.map(e=>e.id));
  for(const role of ['town','village','city','countryside','fortress','tutorial','special'])assert.ok(filterPresets(entries,{role}).length,role);
  for(let step=1;step<=4;step++)assert.ok(entries.find(e=>e.id==='tutorial-step-'+step).variants.includes('rough-plateau.json'));
- assert.ok(entries.find(e=>e.id==='tutorial-step-5').variants.includes('rough-plateau.json'));
+ for(const step of [5,6])assert.ok(entries.find(e=>e.id==='tutorial-step-'+step).variants.includes('rough-plateau.json'));
 });
 test('search combines role, terrain, facilities and variant names',()=>{
  const rivers=filterPresets(entries,{role:'city',feature:'river',query:'factory workshop'});assert.ok(rivers.length);
  assert.ok(rivers.every(e=>e.role==='city'&&e.config.feature.kind==='river'));
- assert.equal(filterPresets(entries,{query:'rough plateau'}).length,5);
+ assert.equal(filterPresets(entries,{query:'rough plateau'}).length,6);
  assert.equal(filterPresets(entries,{query:'not-a-real-sector'}).length,0);
 });
 test('opening a base layout preserves geometry through editing and a new variant',async()=>{

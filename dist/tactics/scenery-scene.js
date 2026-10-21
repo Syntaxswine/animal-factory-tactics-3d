@@ -5,6 +5,7 @@ import {createChairLibrary,CHAIR_PAINT} from './painted-chairs.js';
 import {createGuardhouseMachineLibrary,GUARDHOUSE_MACHINE_PAINT} from './guardhouse-machines.js';
 import {sceneryRule,isScenery,sceneryId,sceneryPoint,sceneryRotation,scenerySize} from './scenery-catalog.js';
 import {createFactoryMachineLibrary} from './factory-machine-library.js';
+import {createStoneArchLibrary} from './stone-arch-scene.js';
 import {machinePaintPath} from './factory-machine-paint.js';
 import {terrainKnown} from './battle-visibility.js';
 import {DIMENSIONS} from './hybrid-world.js';
@@ -18,6 +19,7 @@ export class SceneryScene{
  }
  load(family){
   if(this.pending.has(family))return;
+  if(family==='stone-arch'){this.loaded.set(family,{library:createStoneArchLibrary()});this.pending.set(family,Promise.resolve());this.onReady();return;}
   if(family.startsWith('machine-')){
    const form=family.slice(8),started=performance.now(),url=new URL(`./machine-${form}-10k-data.json`,import.meta.url);this.loader.manager?.itemStart(url.href);
    const promise=Promise.all([fetch(url).then(r=>{if(!r.ok)throw Error(`Machine mesh could not load (HTTP ${r.status})`);return r.json();}),this.loader.loadAsync(machinePaintPath(form)).then(texture=>{if(this.disposed)texture.dispose();else this.textures.add(texture);return texture;})]).then(([data,texture])=>{
