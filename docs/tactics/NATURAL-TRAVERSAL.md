@@ -803,7 +803,7 @@ The gate on the horse, same rig, against the committed window (f70faa0):
 | left hand short of the floor at 2.03 s (cm) | | 0.9 | 12.8 | 3.7 | 10.2 | 11.0 | 11.4 | 8.8 | | 4.1 | 11.5 |
 
 - The donkey's right hand, pushed off its leg, folds into its own shoulder (7.1 cm at 4.43 s).
-- The cow's and the rabbit's right upper arm touch the trunk as the roll starts (4.1 and 3.9 cm, as before).
+- The cow's and the rabbit's right upper arm touch the trunk as the roll starts (4.1 and 3.9 cm; 4.5 and 4.6 before).
 - The left hand's shortfall was there before, 1 to 3 cm worse (bull 13.3, sheep 14.3 cm): their arms reach the floor
   later than the horse's.
 - The goat's legs are short of the get-up's step marks by up to 9.9 cm, from 13.8 cm short of its stance at the end.
@@ -812,7 +812,7 @@ The gate on the horse, same rig, against the committed window (f70faa0):
 
 **Left in the window:**
 - the lift-off from the seat (one sample at 121%, 3.86 s) and the step into the planner's hold (50%, 2.75 s);
-- "Reach for the floor" (20% at 1.79 s, as before), the last step (19%) and the stand (14%);
+- "Reach for the floor" (19% at 1.79 s; 21% before), the last step (19%) and the stand (14%);
 - the donkey's arm, and the left hand's reach on most species.
 
 ## Integration
