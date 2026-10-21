@@ -91,7 +91,7 @@ function reachedTargets(m,targets){
 }
 export function validateMap(raw,{connectivity=true}={}){
  const errors=[],point=p=>p&&inBounds(p.x,p.y,levelOf(p))&&levelOf(p)<raw.levels;
- if(!raw||raw.version!==2||raw.width!==W||raw.height!==H||!validLayerCount(raw.levels))return ['Expected a version 2 map: 240 × 240 tiles and 3–5 layers.'];
+ if(!raw||raw.version!==2||raw.width!==W||raw.height!==H||!validLayerCount(raw.levels))return ['Expected a version 2 map: 240 × 240 tiles and 3–6 layers.'];
  if(typeof raw.name!=='string'||raw.name.length<1||raw.name.length>60)errors.push('Map name must contain 1–60 characters.');
  if(!Array.isArray(raw.terrain)||raw.terrain.length!==H||raw.terrain.some(r=>!Array.isArray(r)||r.length!==W||r.some(t=>!['yard','floor','crate','void','water','bridge','woodland','woodland-dense',...GROUNDS].includes(t))))return [...errors,'Invalid ground terrain.'];
  if(!Array.isArray(raw.upper)||raw.upper.length!==raw.levels-1)return [...errors,'Expected one sparse upper floor per declared layer above ground.'];
@@ -100,7 +100,7 @@ export function validateMap(raw,{connectivity=true}={}){
  for(const [key,value]of Object.entries(raw.edgeLocks||{}))if(!EDGES[raw.edges?.[key]]?.opensTo||!Number.isInteger(value)||value<1||value>100)return [...errors,'Door locks require closed doors and difficulty 1-100.'];
  for(const p of raw.props||[])if(p.condition!==undefined&&(!Number.isInteger(p.condition)||p.condition<0||p.condition>100))return [...errors,'Fixture condition must be 0-100.'];
  if(!raw.edges||typeof raw.edges!=='object'||Array.isArray(raw.edges))return [...errors,'Missing edge barriers.'];
- for(const [k,v]of Object.entries(raw.edges)){const p=/^(e|s):(-?\d+):(-?\d+)(?::([1-4]))?$/.exec(k);if(!p)return [...errors,'Invalid edge key.'];const x=Number(p[2]),y=Number(p[3]),z=Number(p[4]||0);if(!Object.hasOwn(EDGES,v)||k!==edgeKey(p[1],x,y,z)||(p[1]==='e'?(x< -1||x>=W||y<0||y>=H):(x<0||x>=W||y< -1||y>=H)))return [...errors,'Invalid edge location or type.'];}
+ for(const [k,v]of Object.entries(raw.edges)){const p=/^(e|s):(-?\d+):(-?\d+)(?::([1-5]))?$/.exec(k);if(!p)return [...errors,'Invalid edge key.'];const x=Number(p[2]),y=Number(p[3]),z=Number(p[4]||0);if(!Object.hasOwn(EDGES,v)||k!==edgeKey(p[1],x,y,z)||(p[1]==='e'?(x< -1||x>=W||y<0||y>=H):(x<0||x>=W||y< -1||y>=H)))return [...errors,'Invalid edge location or type.'];}
  if(!Array.isArray(raw.starts)||raw.starts.length!==4||raw.starts.some(p=>!point(p)))return [...errors,'Place exactly four valid squad starts.'];
  for(const p of raw.starts)if(p.heading!==undefined&&(!Number.isFinite(p.heading)||p.heading<0||p.heading>=360))errors.push('Squad facing must be between 0 and 359 degrees.');
  if(!Array.isArray(raw.guards)||raw.guards.length>MAX_GUARDS||raw.guards.some(g=>!point(g)||!SPECIES.includes(g.species)||!WEAPON_IDS.includes(g.weapon)||(g.outfit!==undefined&&!['normal','red-hats'].includes(g.outfit)&&!(g.species==='donkey'&&g.outfit==='blue-hawaiian'))))return [...errors,'Use at most 46 guards (50 characters including the squad).'];

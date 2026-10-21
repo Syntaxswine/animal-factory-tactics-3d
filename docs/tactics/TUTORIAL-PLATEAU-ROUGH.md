@@ -22,7 +22,7 @@ Town roads are asphalt at ground level, six cells wide. The east–west band occ
 
 ## Stone arches and extended layers
 
-The user specified the large arch’s walkable top on **layer 4**, and the small arch’s on **layer 2**, counting ground as layer 1. The map engine and editor now support four ordinary playable layers plus a fifth for authored high terrain, roofs and other fringe cases. This plateau explicitly uses that fifth layer for its summit. Legacy three-layer maps and their layer-4 decorative roofs keep their existing data and heights; new decorative roofs use layer 5 and do not themselves create gameplay floors.
+The user specified the large arch’s walkable top on **layer 4**, and the small arch’s on **layer 2**, counting ground as layer 1. The map engine and editor now support five ordinary playable layers plus a sixth for authored roofs, towers and other fringe cases. The plateau summit remains on layer 5. Legacy maps and decorative roofs on layers 4 and 5 keep their saved heights; new decorative roofs use layer 6 and do not themselves create gameplay floors.
 
 - Sector 5 reserves the large landmark at x=184, y=114, ground level, rotation 90°. Its 12-tile span crosses the six-tile road, with an eight-tile clear opening and one ground tile on either side. The reservation is stored as `archLandmark` metadata and drawn dashed in the plan. It remains a reservation until the artist’s finished arch asset and contact geometry are integrated; raising the plateau does not adopt that separate art handoff.
 - Sector 6 contains the small six-tile arch at x=172, y=152. A four-tile opening carries a two-tile dirt footpath. Separate timber ramps connect to its layer-2 top.
@@ -52,3 +52,13 @@ The supplied first-sector draft already has four connectivity warnings: impassab
 Packaged visual review confirms the complete four-step cliff stack, preserved clearings and forest on layer 5. Foliage terrain paint reuses integer biome samples for each rebuild, with tests confirming exact interpolation and fresh results after edits; no cache survives into a later rebuild.
 
 ![Four-high authored plateau in the packaged editor](review-images/tutorial-four-high-plateau.png)
+
+## Sixth layer · 2026-10-21
+
+Layer 6 adds headroom for structures above the four-high plateau; it does not raise or rewrite the tutorial terrain. Editor and battle selectors and shortcuts 1–6 address the same absolute layers. All layers stay visible by default, while picking and movement remain on the selected layer. New decorative roofs sit on layer 6 without making that roof walkable. Ordinary authored floors, stairs, walls, foliage and objects may use the supported high layers when explicitly placed.
+
+Maps still grow their declared sparse floors only when higher terrain is authored. Existing three- and five-layer maps round-trip unchanged. Tests cover layer-6 editing and undo, a roof over the layer-5 plateau, independent floor selection, stairs, block placement, foliage collision, visibility, encounter save/load with partially damaged walls and floors, grenade trajectories, floor destruction and falls. Invalid seventh-layer edits and damaged save references remain rejected.
+
+Verification: 259 focused tests, the packaged build, asset audit and generated-core check pass. Packaged editor review confirms that selecting 6 also selects the layer-6 Land height; gameplay review confirms the sixth button and keyboard shortcut. Both previews logged no errors. The four-high terrain data remains unchanged.
+
+![Six-layer editor controls above the four-high plateau](review-images/tutorial-six-layer-editor.png)

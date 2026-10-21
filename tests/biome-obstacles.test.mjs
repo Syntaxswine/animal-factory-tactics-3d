@@ -21,7 +21,7 @@ function setup(){
 function vertices(root,visit){root.updateMatrixWorld(true);const world=new T.Matrix4(),matrix=new T.Matrix4(),v=new T.Vector3();root.traverse(o=>{if(!o.isMesh)return;for(let n=0;n<(o.isInstancedMesh?o.count:1);n++){if(o.isInstancedMesh){o.getMatrixAt(n,matrix);world.multiplyMatrices(o.matrixWorld,matrix);}else world.copy(o.matrixWorld);for(let i=0;i<o.geometry.attributes.position.count;i++)visit(v.fromBufferAttribute(o.geometry.attributes.position,i).applyMatrix4(world),o);}});}
 
 test('large study preserves the saved plateau and declares its foliage-mask provenance',()=>{
- const before=JSON.stringify(map),p=tutorialFoliagePlan(map);assert.equal(JSON.stringify(map),before);assert.equal(p.width*p.depth,57600);assert.equal(p.cells.length,p.blocked.reduce((a,b)=>a+b,0));assert(p.cells.length>30000);assert.equal(p.source.props,642);assert.match(p.source.foliage,/Screenshot-inspired/);
+ const before=JSON.stringify(map),p=tutorialFoliagePlan(map);assert.equal(JSON.stringify(map),before);assert.equal(p.width*p.depth,57600);assert.equal(p.cells.length,p.blocked.reduce((a,b)=>a+b,0));assert(p.cells.length>30000);assert.equal(p.source.props,1284);assert.match(p.source.foliage,/Screenshot-inspired/);
  for(let z=0;z<p.depth;z++)for(let x=0;x<p.width;x++){
   let expected=0;for(let level=0;level<map.upper.length;level++)if(map.upper[level][x+','+z]&&map.upper[level][x+','+z]!=='void')expected=(level+1)*DIMENSIONS.floorSpacing;
   assert(Math.abs(p.heightAt(x,z)-expected)<1e-6);assert.equal(p.blockedAt(x,z),!!p.blocked[z*p.width+x]);

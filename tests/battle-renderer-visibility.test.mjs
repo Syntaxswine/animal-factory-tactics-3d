@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from '../dist/tactics/map-layers.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../dist/tactics/vendor/three.module.js';
@@ -65,8 +66,8 @@ test('battle draws every level, keeps fog gates, and only picks people on the in
     assert.equal(hit,units[id].z===level?id:null,`visible character ${id} with level ${level} selected`);
    }
   }
-  assert.deepEqual(rebuilt,[3],'switching the interaction layer does not rebuild or cut away higher scenery');
-  assert.deepEqual(lit,[3,3,3,3],'lamps on every displayed level remain lit');
+  assert.deepEqual(rebuilt,[MAP_LEVELS-1],'switching the interaction layer does not rebuild or cut away higher scenery');
+  assert.deepEqual(lit,Array(4).fill(MAP_LEVELS-1),'lamps on every displayed level remain lit');
   assert.equal(r.actors.has(3),false,'explored floors do not reveal unspotted guards');
   assert.equal(r.actors.has(4),false,'explored floors do not reveal unseen bodies');
  }finally{for(const mesh of r.actors.values()){mesh.geometry.dispose();mesh.material.dispose();}}

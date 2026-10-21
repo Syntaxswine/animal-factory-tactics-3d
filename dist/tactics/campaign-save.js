@@ -1,3 +1,4 @@
+import {migrateSquadAmmo} from './squad-ammo.js';
 import {initializeDialogue,validateDialogueState,validateDialogueActors} from './dialogue-state.js';
 import {validateSavedState} from './encounter-save.js';
 import {migrateClimbing} from './character-stats.js';
@@ -74,7 +75,7 @@ export function restoreCampaign(record){
  const c=structuredClone(record.data);if(!plain(c)||!plain(c.characters)||!plain(c.sectors)||!plain(c.assignments)||record.campaignId!==c.id||record.revision!==c.revision)fail();
  for(const [index,sector]of Object.entries(c.sectors))if(sector.state){if(!Array.isArray(sector.unitIds)||sector.unitIds.some(id=>!c.characters[id]))fail();sector.state.units=sector.unitIds.map(id=>c.characters[id].unit);sector.state.definition=c.assignments[index]?.map;delete sector.unitIds;}
  initializeDialogue(c);for(const r of Object.values(c.characters))migrateClimbing(r?.unit);
- validateCampaign(c);
+ validateCampaign(c);try{migrateSquadAmmo(Object.values(c.characters).map(r=>r.unit));}catch{fail();}
  for(const sector of Object.values(c.sectors))if(sector.state)observeRoundTime(sector.state.clock,sector.state);
  return bindCampaign(c);
 }

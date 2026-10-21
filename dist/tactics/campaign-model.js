@@ -1,3 +1,4 @@
+import {migrateSquadAmmo,settleSquadAmmo,distributeSquadAmmo} from './squad-ammo.js';
 import {initializeDialogue,pinDialogue} from './dialogue-state.js';
 import {tutorialRoleErrors,tutorialCrateLoot} from './tutorial-mission.js';
 import {trackMapGeometry} from './map-geometry-cache.js';
@@ -28,6 +29,7 @@ export function sectorRecord(c,index){return c.sectors[index]??= {initialized:fa
 export function groupMembers(c,g){return g.memberIds.map(id=>c.characters[id].unit);}
 export function travelState(c,g){return {...g.travel,clock:{...c.clock},members:groupMembers(c,g)};}
 export function bindCampaign(c){
+ migrateSquadAmmo(Object.values(c.characters).map(r=>r.unit));
  for(const [index,sector]of Object.entries(c.sectors))if(sector.state)bindSectorInventory(trackMapGeometry(sector.state),{present:u=>u&&atSector(c,u.campaignId,+index)&&c.characters[u.campaignId]?.unit===u,contested:()=>c.incidents.some(i=>i.sector===+index&&i.status==='pending')});
  return c;
 }
@@ -108,7 +110,7 @@ export function landingPlan(c,index,side,ids,{reserved=[]}={}){
 function removePopulation(c,id,{history=false}={}){const r=c.characters[id];if(r.location.kind==='sector'){const s=sectorRecord(c,r.location.sector);s.population=s.population.filter(p=>p!==id);if(s.state&&(!history||c.active?.sector!==r.location.sector))s.state.units=s.state.units.filter(u=>u.campaignId!==id);}}
 function depart(c,g){
  if(!g.travel.route.length||g.waitMinutes>1e-8)return;
- const edge=g.travel.route[0];for(const id of g.memberIds){removePopulation(c,id);c.characters[id].location={kind:'travel',group:g.id,from:edge.from,to:edge.to};}
+ const edge=g.travel.route[0];if(g.faction==='player')distributeSquadAmmo(sectorRecord(c,edge.from).population.map(id=>c.characters[id].unit));for(const id of g.memberIds){removePopulation(c,id);c.characters[id].location={kind:'travel',group:g.id,from:edge.from,to:edge.to};}
 }
 function prepareArrivals(c,groups,index,from,reservations){
  const side=direction(index,from);if(!side)fail('Arrival must cross a neighboring sector boundary.');
@@ -139,7 +141,7 @@ function enqueueContacts(c){
  }
 }
 export function reconcileCampaign(c){
- for(const [index,sector]of Object.entries(c.sectors))if(sector.state){for(const p of sector.state.loot)if(!p.id)p.id=c.id+':sector:'+index+':drop:'+(sector.nextLoot=(sector.nextLoot||0)+1);for(const u of sector.state.units){
+ for(const [index,sector]of Object.entries(c.sectors))if(sector.state){settleSquadAmmo(sector.state);for(const p of sector.state.loot)if(!p.id)p.id=c.id+':sector:'+index+':drop:'+(sector.nextLoot=(sector.nextLoot||0)+1);for(const u of sector.state.units){
   const r=c.characters[u.campaignId];if(!r||r.unit!==u)fail('Campaign and encounter character records disagree.');syncWeapons(u);
   if(retired(u)&&r.location.kind!=='removed'){removePopulation(c,r.id,{history:true});r.location={kind:'removed',reason:u.casualty==='quit'?'quit':'dead'};}
  }}
@@ -173,6 +175,7 @@ export function splitCampaignGroup(c,id,ids){
  const g=c.groups.find(g=>g.id===id&&g.faction==='player'),chosen=new Set(ids);
  if(!g||g.travel.route.length||g.travel.progress||g.waitMinutes||c.active?.sector===g.travel.position||!sectorPeace(c,g.travel.position))fail('Split a stationary group outside an encounter.');
  if(!ids.length||chosen.size!==ids.length||ids.some(i=>!g.memberIds.includes(i))||ids.length===g.memberIds.length)fail('Choose some mercs, leaving others in the original group.');
+ distributeSquadAmmo(sectorRecord(c,g.travel.position).population.map(id=>c.characters[id].unit));
  const number=c.nextGroup++,next={...structuredClone(g),id:'group-'+number,name:'Group '+number,memberIds:ids};g.memberIds=g.memberIds.filter(i=>!chosen.has(i));c.groups.push(next);c.selectedGroup=next.id;c.revision++;return next;
 }
 function settleSectorContracts(c,s){

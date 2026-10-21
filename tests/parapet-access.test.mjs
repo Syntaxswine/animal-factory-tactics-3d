@@ -1,3 +1,4 @@
+import {CANOPY_LEVEL} from '../dist/tactics/map-layers.js';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {GAP_ROOF_KINDS,parapetEdges,parapetBlocks} from '../dist/tactics/climbable-roofs.js';
 import {blankMap,setTerrain,roofNeighbors,roofValid,neighbors,blockedEdge} from '../dist/tactics/core/maps.js';
@@ -9,4 +10,4 @@ test('every gap and rotation has exactly one traversable one-tile opening, match
 test('ladder reaches the exterior landing then enters the roof through the gap; gap does not grant free mantling',()=>{const m=fixture('roof-flat-parapet-gap-west'),low={x:9,y:10,z:0},landing={...low,z:1};m.stairs=[{...low,kind:'ladder'}];assert.ok(neighbors(m,low).some(q=>q.x===9&&q.y===10&&q.z===1));assert.ok(neighbors(m,landing).some(q=>q.x===10&&q.y===10&&q.z===1));setTerrain(m,9,10,1,'void');assert.equal(roofValid(m,{...low,dx:1,dy:0}),false);});
 test('gap roof variants survive editor undo, export/import and blocks',()=>{for(const kind of GAP_ROOF_KINDS){const d=new EditingDocument().open(JSON.stringify(blankMap()));assert.ok(d.apply({tool:'roof-tile',start:{x:10,y:10,z:1},options:{propKind:kind,rotated:true}}).ok);const json=d.export();d.undo();assert.equal(d.map.props.length,0);d.redo();assert.equal(d.export(),json);const copy=new EditingDocument().open(json),block=copy.capture(0,0),other=new EditingDocument().open(JSON.stringify(blankMap()));other.place(block,1,1);assert.ok(other.map.props.some(p=>p.kind===kind&&p.rotated));}});
 
-test('gap modules remain available on the decorative fourth roof level',()=>{const d=new EditingDocument().open(JSON.stringify(blankMap()));assert.ok(d.apply({tool:'roof-tile',start:{x:10,y:10,z:3},options:{propKind:GAP_ROOF_KINDS[0]}}).ok);assert.equal(new EditingDocument().open(d.export()).map.canopies[0].kind,GAP_ROOF_KINDS[0]);});
+test('gap modules remain available on the decorative fringe layer',()=>{const d=new EditingDocument().open(JSON.stringify(blankMap()));assert.ok(d.apply({tool:'roof-tile',start:{x:10,y:10,z:CANOPY_LEVEL},options:{propKind:GAP_ROOF_KINDS[0]}}).ok);assert.equal(new EditingDocument().open(d.export()).map.canopies[0].kind,GAP_ROOF_KINDS[0]);});

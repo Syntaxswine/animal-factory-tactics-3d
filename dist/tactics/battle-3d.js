@@ -24,7 +24,7 @@ import {GrenadePlanner} from './grenade-planner.js';
 import {legImpaired} from './combat-state.js';
 let shotZone='torso',shotBurst=false;
 import {heldWeaponJammed} from './loot-policy.js';
-import {edgeCells} from './core/maps.js';
+import {edgeCells,LEVELS} from './core/maps.js';
 import {nearbyCliffClimbs} from './cliff-actions.js';
 import {captureEncounter,restoreEncounter} from './encounter-save.js';
 import {getSave,putSave,checkpointSave,saveToken} from './save-store.js';
@@ -196,7 +196,7 @@ function contextChoices(info,merc){
   entries.push({id:'stance',label:'Stance',icon:'↕',children:Object.keys(STANCES).map(value=>{const p=stanceSelection(state,new Set([u.id]),value);return entry('stance-'+value,({standing:'Stand',kneeling:'Kneel',prone:'Lie prone'})[value],'·',{kind:'stance',value},free&&!!p.ready.length,p.all?'Already in this stance.':'',combatCosts(state)?'2 AP':'Free');})});
   entries.push({id:'movement',label:'Movement mode',icon:'↗',children:Object.keys(MOVEMENT_MODES).map(value=>{const p=movementSelection(state,new Set([u.id]),value);return entry('mode-'+value,value[0].toUpperCase()+value.slice(1),'·',{kind:'mode',value},free&&!!p.ready.length,p.all?'Already using this mode.':'');})});
   entries.push({id:'equipment',label:'Held equipment',icon:'◇',children:[...new Set(['hands',...u.pack.filter(i=>i.type==='weapon').map(i=>i.kind)])].map(weapon=>{const cost=equipCost(state,u,weapon);return entry('equip-'+weapon,WEAPONS[weapon].name,'·',{kind:'equip',weapon},ready&&u.weapon!==weapon&&u.ap>=cost,u.weapon===weapon?'Already held.':u.ap<cost?'Needs '+cost+' AP; '+u.ap+' available.':'',cost?cost+' AP':'Free');})});
-  const w=WEAPONS[u.weapon],jam=heldWeaponJammed(u),canReload=jam||w.mag&&u.ammo[u.weapon]<w.mag&&reserve(u,u.weapon)>0;
+  const w=WEAPONS[u.weapon],jam=heldWeaponJammed(u),canReload=jam||w.mag&&u.ammo[u.weapon]<w.mag&&reserve(u,u.weapon,state)>0;
   entries.push(entry('reload',jam?'Clear jam':'Reload','↻',{kind:'reload'},ready&&canReload&&(!combatCosts(state)||u.ap>=3),!canReload?'Magazine full or no matching ammunition.':'',combatCosts(state)?'3 AP':''));
   const interactions=nearbyInteractions(state,u).map(e=>entry('interact-'+e.kind,e.label,'✚',{kind:'interact',entry:e},free&&e.preview.ok,e.preview.reason,e.preview.cost?e.preview.cost+' AP':'1 minute'));
   const climb=climbPreview(state,u,level);if(climb.destination)interactions.push(entry('climb',climb.label,'↟',{kind:'climb'},ready&&climb.ok,climb.reason,[combatCosts(state)?climb.cost+' AP':'',climb.risk].filter(Boolean).join(' · ')));
@@ -331,7 +331,7 @@ function cancelMovementOrders(){const talking=!!dialogueOrder.pending;pickupOrde
 document.addEventListener('keydown',e=>{if(e.defaultPrevented||dialogueUI.open||sectorLoading.active||characterScreen.open||savePanel.open)return;if(e.key==='Escape'&&grenadePlanner.open){e.preventDefault();grenadePlanner.cancel();return;}if(e.key==='Escape'&&flamePlanner.open){e.preventDefault();flamePlanner.cancel();return;}if(e.key==='Escape'&&(!paused()||dialogueOrder.pending)){cancelMovementOrders();drag=null;targetId=null;tileTarget=null;sync();}});
 document.addEventListener('keydown',e=>{
  if(contextMenu.open||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||characterScreen.open||savePanel.open||document.hidden||e.target.isContentEditable||e.target.closest?.('input,select,textarea,[role="textbox"],#stance-menu,#command-drawer')||document.querySelector('dialog[open]'))return;
- if(/^[1-5]$/.test(e.key)){e.preventDefault();document.querySelector(`#battle-levels [data-level="${+e.key-1}"]`).click();return;}
+ if(/^[1-9]$/.test(e.key)&&+e.key<=LEVELS){e.preventDefault();document.querySelector(`#battle-levels [data-level="${+e.key-1}"]`).click();return;}
  if(['q','e'].includes(e.key.toLowerCase())){e.preventDefault();if(!e.repeat&&!drag){rotateBattleView(view,e.key.toLowerCase()==='q'?-1:1,width,height,level);clearHover();renderer.wallXray.setPointer(null,null);}return;}
  const delta={w:[0,40],ArrowUp:[0,40],s:[0,-40],ArrowDown:[0,-40],a:[40,0],ArrowLeft:[40,0],d:[-40,0],ArrowRight:[-40,0]}[e.key.length===1?e.key.toLowerCase():e.key];
  if(!delta)return;e.preventDefault();view.x+=delta[0];view.y+=delta[1];

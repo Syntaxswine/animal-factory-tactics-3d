@@ -20,7 +20,7 @@ test('flag clicks add points and 15-second waits without changing the three-poin
  const before=structuredClone(points);points=clickSpotlightPoint(points,point(12));points=clickSpotlightPoint(points,point(12));
  assert.equal(points[0].waitSeconds,30);assert.equal(points.length,3);assert.equal(before[0].waitSeconds,0);
  assert.throws(()=>clickSpotlightPoint(points,point(19)),/three/);
- for(const bad of [point(-1),point(240),point(12,15,0,5),point(12,15,-15),point(12,15,16),point(12,15,NaN),point(12,15,86415)])assert.ok(spotlightPathError([bad]));
+ for(const bad of [point(-1),point(240),point(12,15,0,6),point(12,15,-15),point(12,15,16),point(12,15,NaN),point(12,15,86415)])assert.ok(spotlightPathError([bad]));
  assert.throws(()=>clickSpotlightPoint([point(12,15,86400)],point(12)),/24 hours/);
 });
 test('spotlight flag edits, waits and clearing survive undo, redo and map export/import',()=>{
@@ -33,9 +33,9 @@ test('spotlight flag edits, waits and clearing survive undo, redo and map export
 });
 test('aiming can target water, obstructed tiles and upper air without a walkable floor',()=>{
  const {d,selection}=fixture(),map=structuredClone(d.map);map.terrain[15][12]='water';d.replace(map);
- d.lightTargets(selection,[point(12),point(10,10),point(15,15,15,4)]);
- assert.deepEqual(validateMap(d.map,{connectivity:false}),[]);assert.deepEqual(spotlightAimPoints(d.map.props[0]),[point(12),point(10,10),point(15,15,15,4)]);
- assert.deepEqual(spotlightAimPoints(new EditingDocument().open(d.export()).map.props[0]),[point(12),point(10,10),point(15,15,15,4)]);
+ d.lightTargets(selection,[point(12),point(10,10),point(15,15,15,5)]);
+ assert.deepEqual(validateMap(d.map,{connectivity:false}),[]);assert.deepEqual(spotlightAimPoints(d.map.props[0]),[point(12),point(10,10),point(15,15,15,5)]);
+ assert.deepEqual(spotlightAimPoints(new EditingDocument().open(d.export()).map.props[0]),[point(12),point(10,10),point(15,15,15,5)]);
  d.apply({tool:'erase-prop',start:point(10,10),options:{}});assert.throws(()=>d.lightTargets(selection,[point(12)]),/no longer exists/);
 });
 test('tower flags retain waits and relative offsets through rotation and reusable blocks',()=>{
@@ -51,7 +51,7 @@ test('legacy aims have zero wait; invalid waits, duplicate flags and non-spotlig
  const {d,selection}=fixture();d.lightTargets(selection,[point(12),point(15,15,15)]);
  const raw=JSON.parse(d.export());delete raw.props[0].lightTargets[0].waitSeconds;
  assert.equal(spotlightAimPoints(new EditingDocument().open(JSON.stringify(raw)).map.props[0])[0].waitSeconds,0);
- for(const targets of [null,{},[null],[{x:2,y:3,waitSeconds:-15}],[{x:2,y:3,waitSeconds:1}],[{x:2,y:3,waitSeconds:null}],[{x:2,y:3,z:5}],[{x:2,y:3},{x:2,y:3}]]){
+ for(const targets of [null,{},[null],[{x:2,y:3,waitSeconds:-15}],[{x:2,y:3,waitSeconds:1}],[{x:2,y:3,waitSeconds:null}],[{x:2,y:3,z:6}],[{x:2,y:3},{x:2,y:3}]]){
   const bad=structuredClone(raw);bad.props[0].lightTargets=targets;assert.throws(()=>new EditingDocument().open(JSON.stringify(bad)),/Spotlight|spotlight|Duplicate/);
  }
  const block=d.capture(0,0);block.props[0].lightTargets[0].waitSeconds=Infinity;assert.throws(()=>validateBlock(block),/Spotlight|spotlight/);

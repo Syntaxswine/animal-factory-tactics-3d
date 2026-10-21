@@ -11,7 +11,7 @@ import {isRamp,rampInfo} from './cliff-ramps.js';
 export function paintFoliage(map,command,size=240,{preview=false}={}){
  const {start,end=start,options={},path,tool}=command,z=start.z||0,mode=options.foliageShape||'rectangle';
  if(!['round','square','rectangle'].includes(mode))throw Error('Choose a round brush, square brush or rectangle.');
- if(z<0||z>=MAP_LEVELS)throw Error('Foliage needs outdoor ground on layers 1–5.');
+ if(z<0||z>=MAP_LEVELS)throw Error('Foliage needs outdoor ground on layers 1–6.');
  const preset=options.foliagePreset;if(preset!==undefined&&!FOLIAGE_PRESETS[preset])throw Error('Choose a supported foliage preset.');
  const clearing=tool==='clear-foliage',mix=options.foliageTreeCover??'brush-v1',coverOnly=options.foliageMode==='tree-cover';
  if(!clearing&&(coverOnly||denseTreePreset(preset))&&!Object.hasOwn(TREE_COVER,mix))throw Error('Choose one tree-cover setting before painting.');

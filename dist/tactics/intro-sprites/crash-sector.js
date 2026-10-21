@@ -1,5 +1,5 @@
 // Crash sector of the intro, painted in 2D from the real tutorial map.
-// Terrain = sector-library/tutorial-step-1 (two-tier plateau, 240 x 240);
+// Terrain = crash-sector-map.json (approved two-tier tutorial set, 240 x 240);
 // woodland = the user's marked map, digitized per tile (crash-sector-woodland.json).
 // The wide shots use the game camera (azimuth 45 deg, elevation 30 deg: a 2:1
 // tile diamond); closeup.js paints the same solid through a perspective lens.

@@ -8,7 +8,7 @@ const neighbors=[[1,0],[-1,0],[0,1],[0,-1]],key=p=>`${p.x},${p.y}`;
 // Mutate the controller's disposable candidate, never the live document.
 export function paintLand(map,command,size=240){
  const {start,end=start,options={},path}=command,height=options.landHeight??1,surface=options.groundKind||'ground-grass';
- if((!Number.isInteger(height)||height<0||height>=MAP_LEVELS))throw Error('Land height must be on layers 1–5.');
+ if((!Number.isInteger(height)||height<0||height>=MAP_LEVELS))throw Error('Land height must be on layers 1–6.');
  if(!GROUNDS.includes(surface))throw Error('Choose a ground surface for the land.');
  const cells=landBrushCells(start,end,options,size,path),old=map.landPaint||{},land={...old},affected=new Set(),styles=new Map(),changed=new Set(cells.map(key));
  for(const p of cells){

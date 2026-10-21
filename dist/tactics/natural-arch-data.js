@@ -1,6 +1,7 @@
 import {DIMENSIONS} from './hybrid-world.js';
 
-// Asset contract for the agreed four ordinary layers plus a roof/fringe layer.
+// Minimum asset contract: four ordinary layers plus a roof/fringe layer.
+// Runtime maps may support more layers without changing either arch's height.
 // The schema supports these heights; this art still needs gameplay integration.
 export const ARCH_ELEVATION_PLAN=Object.freeze({ordinaryLayers:4,totalLayers:5,roofLayer:4,spacing:DIMENSIONS.floorSpacing});
 export const NATURAL_ARCH_PAINT='../assets/environment/natural-rock-arches/paint-atlas-v1.webp';

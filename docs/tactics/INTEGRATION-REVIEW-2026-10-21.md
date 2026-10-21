@@ -1,5 +1,65 @@
 # October 21 integration review
 
+## Sixth layer, common ammunition and release repair: `615b3340`, `977841bd`
+
+**Approved with release repairs.** Maps now support five ordinary layers and a
+sixth fringe layer above the tutorial summit. Legacy three-, four- and five-layer
+documents retain their declared capacity and heights. The painted arches still
+require the same layer-four and layer-two tops; their exported five-layer plan
+describes minimum asset needs, not a maximum for the map engine.
+
+Reserve ammunition is now common within a sector, without backpack cells or
+carry weight. Loaded magazines remain on individual weapons, quantities remain
+finite, and reload/AP/jam rules remain. Serialized shares travel with people;
+splitting groups and crossing sectors conserves quantities without drawing
+supplies from a remote sector. New hires, deaths and old-save migration are
+covered by the submitted regression tests. Guards retain personal reserves.
+
+### Repairing the previous failed deployment
+
+The full Pages check for `f1337165` failed, so that integration did not deploy.
+Its 12 failures exposed remaining coupling to old map assumptions:
+
+- The approved intro and its repaint tools read the editable tutorial terrain.
+  Raising the cliffs changed the camera/terrain relationship. They now use
+  `intro-sprites/crash-sector-map.json`, byte-identical to the map on the last
+  successful canonical `7c025a11` (normalized SHA-256
+  `18911c2ea7b399d2898e8aea703133ded8e85c789d3f8010d43405da83695b91`).
+  Composition, clearance and cliff-plant checks pass against that pinned set.
+  No approved sprite frames or blended intro audio were repainted or replaced.
+- The foliage source manifest was stale after the layer migration. It was
+  regenerated with its existing exporter. The foliage study's provenance now
+  checks the deliberately doubled 1,284 cliff props rather than the old 642.
+- Renderer and roof tests still treated the old decorative fourth layer as the
+  current maximum. They now use the shared limits while retaining checks for
+  roof isolation, invalid occupants, overlap, undo and block preservation.
+
+I also corrected the physical height in the earlier upper-blast regression:
+its height and explicit floor had used inconsistent units, hidden by the old
+clamp. Fall, impact and effect-visibility regressions now exercise every upper
+layer supported by the shared constant.
+
+### Verification
+
+The 100-check release-repair set passes. A full local run then completed
+**2,809 tests: 2,802 passed, one failed, six existing TODOs**. Its only failure
+was an obsolete character-sheet assertion expecting ammo inside the backpack.
+After that test-only correction, the character-sheet and shared-ammo files pass
+18/18. The full 23-minute run was not repeated after that assertion update;
+the deployment workflow will run it again. No runtime behavior was changed to
+make the assertion pass.
+
+Core reproduction, changed-JavaScript syntax checks and the asset audit pass.
+Source-browser review collected eight pistol rounds and verified the reserve
+changed from 64 to 72 on both Yakov's and Anya's sheets; rifle reserves stayed at
+20 and ammunition occupied neither backpack. All six gameplay level buttons
+were present. The editor imported an independently generated connected six-layer
+fixture and selected layer six. That is an import/control check, not a complete
+interactive six-floor playthrough. Browser application warning/error logs were
+empty on the ammunition view.
+
+![Common ammunition after pickup and switching to Anya](images/oct21-integration-review/shared-ammo.jpg)
+
 ## Painted natural arches: `39db2e79`
 
 **Approved as reusable art and a packaged study.** The warm limestone, broad

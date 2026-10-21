@@ -39,7 +39,7 @@ export const plateView=(g=plateGeometry())=>makeView({w:PLATE_TILE,anchor:[0,0,0
 const load=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(Error('Missing '+src));i.src=src;});
 const json=async p=>{const r=await fetch(p);if(!r.ok)throw Error('Missing '+p);return r.json();};
 export async function loadProofAssets({paint=false}={}){
- const [map,woodland,seq,smoke]=await Promise.all([json('../sector-library/tutorial-step-1/rough-plateau.json'),json('crash-sector-woodland.json'),json('heli-seq/sequence.json'),load('../../assets/effects/painted-fire/smoke-atlas-v1.png')]);
+ const [map,woodland,seq,smoke]=await Promise.all([json('crash-sector-map.json'),json('crash-sector-woodland.json'),json('heli-seq/sequence.json'),load('../../assets/effects/painted-fire/smoke-atlas-v1.png')]);
  // Decode every sheet up front: the browser otherwise decodes a 2048 px WebP on
  // its first draw, which stalled playback 35-92 ms at each new sheet.
  const bitmap=async src=>createImageBitmap(await load(src));

@@ -13,7 +13,7 @@ import {closeupView,closeupSpec,traceRay,sky,CLOSEUP_ATMOSPHERE} from '../dist/t
 import {planFlora} from '../dist/tactics/intro-sprites/painted-trees.js';
 
 const dir=new URL('../dist/tactics/intro-sprites/',import.meta.url),read=p=>JSON.parse(readFileSync(new URL(p,dir)));
-const map=JSON.parse(readFileSync(new URL('../dist/tactics/sector-library/tutorial-step-1/rough-plateau.json',import.meta.url))),woodland=read('crash-sector-woodland.json');
+const map=read('crash-sector-map.json'),woodland=read('crash-sector-woodland.json');
 let crash4;const C4=()=>crash4??=buildSector(map,woodland,{heightScale:HEIGHT_SCALE.closeup,extend:true,detail:ROCK_DETAIL.closeup});
 
 test('the shots tile the first 20.2 s and hand over to the crash player', ()=>{

@@ -48,7 +48,7 @@ if(isMainThread){
 }else{
  const {cfg,W,H,x0,y0,CW}=workerData;
  const S=await import(CS+'crash-sector.js');
- const map=rd('dist/tactics/sector-library/tutorial-step-1/rough-plateau.json'),woodland=rd('dist/tactics/intro-sprites/crash-sector-woodland.json');
+ const map=rd('dist/tactics/intro-sprites/crash-sector-map.json'),woodland=rd('dist/tactics/intro-sprites/crash-sector-woodland.json');
  let paintBand;
  if(cfg.shot==='closeup'){
   const C=await import(CS+'closeup.js'),P=await import(CS+'plate.js');

@@ -32,7 +32,7 @@ export async function loadAmbushAssets({crash:withCrash=true}={}){
   if(!plates.has(name)){const spec=shotSpec(s);let plate=null,source='painted live';
    try{const meta=await json(`plate/${name}.json`);if(JSON.stringify(meta.spec)===JSON.stringify(spec)){plate=await bitmap(`plate/${name}.webp`);source=`plate/${name}.webp`;}else source='painted live (the stored plate is stale)';}catch{}
    if(!plate){painter??=await Promise.all([loadGroundTextures(),loadFloraSprites()]);
-    crash??=await Promise.all([json('../sector-library/tutorial-step-1/rough-plateau.json'),json('crash-sector-woodland.json')]).then(([map,woodland])=>({map,woodland}));
+    crash??=await Promise.all([json('crash-sector-map.json'),json('crash-sector-woodland.json')]).then(([map,woodland])=>({map,woodland}));
     plate=paintCloseupPlate({sector:shotSector(s,crash),textures:painter[0],flora:painter[1]},closeupView(s.camera),{keepClear:shotKeepClear(s),atmosphere:spec.atmosphere}).canvas;}
    plates.set(name,{plate,source});}
   if(!frames.has(s.frames)){const seq=await json(`${s.frames}/sequence.json`);frames.set(s.frames,{seq,sheets:await Promise.all(seq.sheets.map(f=>bitmap(`${s.frames}/${f}`)))});}

@@ -15,7 +15,7 @@ export function hudPortrait(u){
 }
 export function weaponReadout(state,u,kind,{blocked=false}={}){
  if(!kind)return {kind:null,name:'Empty ready slot',short:'Empty slot',image:null,amount:null,canEquip:false,canReload:false,reason:'Choose a second ready weapon in Inventory.'};
- const w=WEAPONS[kind],held=kind===u.weapon,rounds=Math.max(0,Math.floor(u.ammo?.[kind]??0)),spare=reserve(u,kind),jammed=!!u.pack?.find(i=>i.type==='weapon'&&i.kind===kind)?.jammed;
+ const w=WEAPONS[kind],held=kind===u.weapon,rounds=Math.max(0,Math.floor(u.ammo?.[kind]??0)),spare=reserve(u,kind,state),jammed=!!u.pack?.find(i=>i.type==='weapon'&&i.kind===kind)?.jammed;
  const available=!blocked&&canControl(state,u)&&!state.queue.length,cost=w?equipCost(state,u,kind):0,reloadCost=combatCosts(state)?3:0;
  return {kind,held,name:w?.name||'Wire cutters',short:w?.short||'Cutters',image:weaponIcon(kind)||inventoryArt({type:w?'weapon':'utility',kind}),amount:w?.mag?rounds:null,capacity:w?.mag||0,reserve:spare,unit:w?.thrown?'grenades':w?.incendiary?'bursts':'rounds',jammed,cost,reloadCost,
   canEquip:available&&!!w&&!held&&u.ap>=cost,
