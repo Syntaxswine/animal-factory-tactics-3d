@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {blankMap,setTerrain,terrainAt,validateMap,parseMap,neighbors,passable} from '../dist/tactics/core/maps.js';
+import {blankMap,setTerrain,terrainAt,validateMap,parseMap,neighbors,passable,addStairs} from '../dist/tactics/core/maps.js';
 import {createGame} from '../dist/tactics/core/engine.js';
 import {EditingDocument} from '../dist/tactics/editor-3d-controller.js';
 import {extractBlock,openBlock,placeBlock} from '../dist/tactics/core/blocks.js';
@@ -20,16 +20,16 @@ import {synchronizeFoliage} from '../dist/tactics/foliage-obstacles.js';
 import {traceProjectile} from '../dist/tactics/core/projectiles.js';
 import {biomeMixAt,createBiomeMixSampler} from '../dist/tactics/biome-map-paint.js';
 
-function highMap(){
- const m=blankMap('High plateau test');for(let y=10;y<=18;y++)for(let x=10;x<=18;x++)setTerrain(m,x,y,4,'ground-grass');
- m.starts=[{x:10,y:10,z:4},{x:12,y:10,z:4},{x:10,y:12,z:4},{x:12,y:12,z:4}];m.exits=[{x:14,y:14,z:4}];return m;
+function highMap(z=4){
+ const m=blankMap('High plateau test');for(let y=10;y<=18;y++)for(let x=10;x<=18;x++)setTerrain(m,x,y,z,'ground-grass');
+ m.starts=[{x:10,y:10,z},{x:12,y:10,z},{x:10,y:12,z},{x:12,y:12,z}];m.exits=[{x:14,y:14,z}];return m;
 }
 
 test('legacy maps retain three layers; authoring high terrain expands and round-trips only as needed',()=>{
  const old=blankMap('Legacy'),snapshot=structuredClone(old);assert.deepEqual(parseMap(JSON.stringify(old)),snapshot);
  setTerrain(old,30,30,4,'void');assert.deepEqual(old,snapshot,'erasing absent upper floors does not migrate a map');
  const m=highMap();assert.equal(m.levels,5);assert.equal(m.upper.length,4);assert.deepEqual(validateMap(m),[]);assert.deepEqual(parseMap(JSON.stringify(m)),m);
- for(const n of [2,6,4.5])assert.ok(validateMap({...m,levels:n}).length);assert.ok(validateMap({...m,upper:m.upper.slice(0,3)}).length);
+ for(const n of [2,7,4.5])assert.ok(validateMap({...m,levels:n}).length);assert.ok(validateMap({...m,upper:m.upper.slice(0,3)}).length);
 });
 
 test('the selected upper layer can be inspected, edited and undone without changing floors beneath',()=>{
@@ -93,4 +93,40 @@ test('destroying a structural floor on layer five leaves a hole and drops its oc
  const receipt=damageStructure(s,{x:10,y:10,z:4},200);assert.ok(receipt?.destroyed);assert.equal(terrainAt(s,10,10,4),'void');
  assert.ok(floorBreachMasks(s).has('11,10,4'));
  const fall=settleStructureCollapse(s,[receipt]);assert.equal(fall.falls.length,1);assert.equal(fall.falls[0].height,4);assert.equal(u.z,0);
+});
+
+test('layer six terrain, walls and foliage survive editing and reusable blocks without altering layer five',()=>{
+ const m=highMap(5);setTerrain(m,16,16,4,'ground-dirt');m.edges['e:16:16:5']='wall-brick';
+ assert.ok(addStairs(m,15,15,4));assert.ok(neighbors(m,{x:15,y:15,z:4}).some(p=>p.z===5));assert.ok(neighbors(m,{x:15,y:15,z:5}).some(p=>p.z===4));
+ assert.equal(m.levels,6);assert.equal(m.upper.length,5);assert.deepEqual(validateMap(m),[]);assert.deepEqual(parseMap(JSON.stringify(m)),m);
+ assert.equal(setTerrain(m,16,16,6,'floor'),false);assert.equal(m.upper.length,5);
+ const d=new EditingDocument().open(JSON.stringify(m)),before=d.export();assert.equal(d.inspect(16,16,5,{mode:'floor'}).label,'ground-grass');
+ assert.ok(d.apply({tool:'texture',start:{x:16,y:16,z:5},options:{groundKind:'ground-concrete'}}).ok);
+ assert.equal(terrainAt(d.map,16,16,5),'ground-concrete');assert.equal(terrainAt(d.map,16,16,4),'ground-dirt');assert.ok(d.undo());assert.equal(d.export(),before);assert.ok(d.redo());
+ paintFoliage(d.map,{tool:'foliage',start:{x:17,y:17,z:5},options:{foliageDensity:65,foliageBlocked:true,foliageShape:'rectangle'}});
+ assert.equal(passable(d.map,{x:17,y:17,z:5}),false);assert.equal(synchronizeFoliage(d.map).screens.filter(p=>p.z===5).length,1);assert.equal(biomePlans(d.map).find(p=>p.level===5).cells.length,1);
+ const block=extractBlock(d.map),placed=placeBlock(blankMap('Six-layer assembly'),block,2,2);assert.equal(block.levels,6);assert.equal(block.upper.length,5);
+ assert.equal(terrainAt(placed,64,64,5),'ground-concrete');assert.equal(terrainAt(placed,64,64,4),'ground-dirt');assert.equal(placed.edges['e:64:64:5'],'wall-brick');assert.deepEqual(validateMap(placed),[]);
+});
+
+test('a roof on layer six covers the layer-five plateau without creating a walkable roof floor',()=>{
+ const d=new EditingDocument().open(JSON.stringify(highMap())),original=structuredClone(d.map.upper);
+ assert.ok(d.apply({tool:'roof-tile',start:{x:14,y:12,z:5},options:{propKind:'roof-corrugated-flat'}}).ok);
+ assert.equal(d.map.canopies[0].z,5);assert.deepEqual(d.map.upper,original);assert.equal(terrainAt(d.map,14,12,4),'ground-grass');assert.equal(passable(d.map,{x:14,y:12,z:5}),false);
+ const presented=canopyPresentation(d.map),box=buildWorld(presented).boxes.find(b=>b.id==='floor:14,12,5');assert.ok(box);assert.equal(box.center[1],5*DIMENSIONS.floorSpacing-DIMENSIONS.slab/2);
+ assert.equal(d.inspect(14,12,5).type,'prop');assert.equal(d.inspect(14,12,4).type,'tile');assert.ok(d.rotate(d.inspect(14,12,5)).ok);
+ const loaded=new EditingDocument().open(d.export());assert.equal(loaded.map.canopies[0].z,5);assert.deepEqual(loaded.map.upper,original);
+ const block=extractBlock(loaded.map),placed=placeBlock(blankMap('Roof assembly'),block,2,2);assert.equal(placed.canopies[0].z,5);assert.equal(terrainAt(placed,62,60,5),'void');
+ const state=createGame(42,loaded.map,true,'easy',{statSystem:true});startEncounterClock(state);assert.ok(damageStructure(state,{x:14,y:12,z:5},20));const restored=restoreEncounter(captureEncounter(state,123));assert.deepEqual(restored.canopies,state.canopies);assert.deepEqual(restored.structureHealth,state.structureHealth);
+});
+
+test('layer six movement, sight, partial structural damage and grenades survive encounter save/load',()=>{
+ const m=highMap(5);setTerrain(m,10,10,5,'ground-concrete');setTerrain(m,11,10,5,'ground-concrete');m.edges['e:16:16:5']='wall-brick';
+ const s=createGame(42,m,true,'easy',{statSystem:true,awareness:true}),u=s.units[0];startEncounterClock(s);assert.ok(s.visible.has('11,10,5'));
+ assert.ok(neighbors(s,{x:12,y:13,z:5}).some(p=>p.x===13&&p.y===13&&p.z===5));assert.ok(neighbors(s,{x:12,y:13,z:5}).every(p=>p.z===5));
+ damageStructure(s,{edge:'e:16:16:5'},20);damageStructure(s,{x:10,y:10,z:5},20);
+ const loaded=restoreEncounter(captureEncounter(s,123));assert.deepEqual(captureEncounter(loaded,123),captureEncounter(s,123));assert.ok(loaded.units.every(p=>p.z===5));assert.equal(loaded.upper.length,5);
+ u.weapon='grenade';u.ammo.grenade=1;s.seen.add('14,10,5');const preview=grenadePreview(s,u,{x:14,y:10,z:5},{cost:6});assert.equal(preview.reason,'');assert.equal(preview.trajectory.z,5);
+ const receipt=damageStructure(s,{x:10,y:10,z:5},200);assert.ok(receipt.destroyed);assert.ok(floorBreachMasks(s).has('11,10,5'));const fall=settleStructureCollapse(s,[receipt]);assert.equal(fall.falls[0].height,5);assert.equal(u.z,0);
+ const corrupt=captureEncounter(loaded,123);corrupt.state.structureHealth={'tile:10,10,6':{kind:'ground-concrete',hp:50}};assert.throws(()=>restoreEncounter(corrupt),/damag|save|structure/i);
 });

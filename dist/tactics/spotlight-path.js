@@ -11,7 +11,7 @@ export function spotlightPathError(points,size=240){
  const seen=new Set();
  for(const p of points){
   // Older authored lighting studies use precise positions between tile centres.
-  if(!p||![p.x,p.y,p.z??0].every(Number.isFinite)||(p.z??0)<0||(p.z??0)>=MAP_LEVELS||size!==null&&(p.x<0||p.y<0||p.x>=size||p.y>=size))return 'Spotlight aim points must be positions on layers 1–5 inside the map.';
+  if(!p||![p.x,p.y,p.z??0].every(Number.isFinite)||(p.z??0)<0||(p.z??0)>=MAP_LEVELS||size!==null&&(p.x<0||p.y<0||p.x>=size||p.y>=size))return 'Spotlight aim points must be positions on layers 1–6 inside the map.';
   if(!Number.isInteger(p.waitSeconds)||p.waitSeconds<0||p.waitSeconds>MAX_PATROL_WAIT||p.waitSeconds%PATROL_WAIT_STEP)return 'Spotlight waits must be multiples of 15 seconds, up to 24 hours.';
   const key=[p.x,p.y,p.z||0].join(',');if(seen.has(key))return 'Duplicate spotlight aim point: add wait time to its flag instead.';seen.add(key);
  }

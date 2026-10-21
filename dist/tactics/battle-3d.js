@@ -24,7 +24,7 @@ import {GrenadePlanner} from './grenade-planner.js';
 import {legImpaired} from './combat-state.js';
 let shotZone='torso',shotBurst=false;
 import {heldWeaponJammed} from './loot-policy.js';
-import {edgeCells} from './core/maps.js';
+import {edgeCells,LEVELS} from './core/maps.js';
 import {nearbyCliffClimbs} from './cliff-actions.js';
 import {captureEncounter,restoreEncounter} from './encounter-save.js';
 import {getSave,putSave,checkpointSave,saveToken} from './save-store.js';
@@ -331,7 +331,7 @@ function cancelMovementOrders(){const talking=!!dialogueOrder.pending;pickupOrde
 document.addEventListener('keydown',e=>{if(e.defaultPrevented||dialogueUI.open||sectorLoading.active||characterScreen.open||savePanel.open)return;if(e.key==='Escape'&&grenadePlanner.open){e.preventDefault();grenadePlanner.cancel();return;}if(e.key==='Escape'&&flamePlanner.open){e.preventDefault();flamePlanner.cancel();return;}if(e.key==='Escape'&&(!paused()||dialogueOrder.pending)){cancelMovementOrders();drag=null;targetId=null;tileTarget=null;sync();}});
 document.addEventListener('keydown',e=>{
  if(contextMenu.open||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing||characterScreen.open||savePanel.open||document.hidden||e.target.isContentEditable||e.target.closest?.('input,select,textarea,[role="textbox"],#stance-menu,#command-drawer')||document.querySelector('dialog[open]'))return;
- if(/^[1-5]$/.test(e.key)){e.preventDefault();document.querySelector(`#battle-levels [data-level="${+e.key-1}"]`).click();return;}
+ if(/^[1-9]$/.test(e.key)&&+e.key<=LEVELS){e.preventDefault();document.querySelector(`#battle-levels [data-level="${+e.key-1}"]`).click();return;}
  if(['q','e'].includes(e.key.toLowerCase())){e.preventDefault();if(!e.repeat&&!drag){rotateBattleView(view,e.key.toLowerCase()==='q'?-1:1,width,height,level);clearHover();renderer.wallXray.setPointer(null,null);}return;}
  const delta={w:[0,40],ArrowUp:[0,40],s:[0,-40],ArrowDown:[0,-40],a:[40,0],ArrowLeft:[40,0],d:[-40,0],ArrowRight:[-40,0]}[e.key.length===1?e.key.toLowerCase():e.key];
  if(!delta)return;e.preventDefault();view.x+=delta[0];view.y+=delta[1];

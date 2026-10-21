@@ -63,11 +63,11 @@ export function validStructureHealth(s){
  for(const [id,entry]of Object.entries(s.structureHealth)){
   if(!entry||typeof entry.kind!=='string'||!Number.isInteger(entry.hp)||entry.hp<=0)return false;
   let target;
-  if(/^edge:[es]:-?\d+:-?\d+(?::[0-4])?$/.test(id)){
+  if(/^edge:[es]:-?\d+:-?\d+(?::[0-5])?$/.test(id)){
    const [,axis,a,b,c='0']=id.split(':'),x=Number(a),y=Number(b),z=Number(c);
    if(x<(axis==='e'?-1:0)||y<(axis==='s'?-1:0)||x>=map[0].length||y>=map.length)return false;
    target={edge:id.slice(5)};
-  }else if(/^(tile|roof):\d+,\d+,[0-4]$/.test(id)){
+  }else if(/^(tile|roof):\d+,\d+,[0-5]$/.test(id)){
    const [x,y,z]=id.split(':')[1].split(',').map(Number);if(x>=map[0].length||y>=map.length)return false;target={x,y,z};
   }else return false;
   const info=structureInfo(s,target);

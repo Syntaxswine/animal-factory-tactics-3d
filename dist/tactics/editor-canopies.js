@@ -4,8 +4,8 @@ export const canopyCells=p=>Array.from({length:4},(_,i)=>({x:p.x+i%2,y:p.y+Math.
 export function canopyErrors(map,size=240){
  if(map.canopies===undefined)return [];if(!Array.isArray(map.canopies)||map.canopies.length>4096)return ['Invalid builder roof layer.'];
  const used=new Set();for(const p of map.canopies){
-  // Keep legacy decorations at their original height; new fringe roofs use 5.
-  if(!p||!Number.isInteger(p.x)||!Number.isInteger(p.y)||![3,CANOPY_LEVEL].includes(p.z)||![...ROOF_KINDS,...GAP_ROOF_KINDS].includes(roofVisualKind(p.kind||''))||(p.rotated!==undefined&&typeof p.rotated!=='boolean'))return ['The fringe layer accepts roof modules only.'];
+  // Keep legacy decorations at their original height; new fringe roofs use 6.
+  if(!p||!Number.isInteger(p.x)||!Number.isInteger(p.y)||(!Number.isInteger(p.z)||p.z<3||p.z>CANOPY_LEVEL)||![...ROOF_KINDS,...GAP_ROOF_KINDS].includes(roofVisualKind(p.kind||''))||(p.rotated!==undefined&&typeof p.rotated!=='boolean'))return ['The fringe layer accepts roof modules only.'];
   for(const q of canopyCells(p)){const key=q.x+','+q.y+','+q.z;if(q.x<0||q.y<0||q.x>=size||q.y>=size||used.has(key))return ['Roof footprints overlap or leave the map.'];used.add(key);}
  }return [];
 }

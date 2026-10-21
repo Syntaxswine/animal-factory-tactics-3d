@@ -32,7 +32,7 @@
       "upstreamSha256": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f"
     },
     "maps.js": {
-      "reason": "Validate embedded data-only dialogue resources. Validate versioned hedge placements and deterministic seeds. Expose physical window, wall and ladder routes and validate ladder condition. Invalidate live geometry when terrain changes or a door opens; editable map clones keep content checks. Validate optional local environment fields while preserving older maps. Validate spotlight aim points and game-clock waits. Use physical scenery movement clearance and derived stone-arch tops, validate full orientation and headroom, and preserve authored squad facing. Validate authored patrol waypoints. Validate ground-preserving foliage overlays on all three levels and honor independent walking restrictions. Validate authored broken walls and floor holes. Validate ground-only strategic sites and follow their baked continuous passage links. Validate automatic-land ownership on import. Trace trellis gaps and beams with the shared sculpted profile. Validate nonwalkable fourth-level roof decoration. Derive roof climbs from marked roof footprints. Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks. Support authored layers 1–5 while retaining legacy map shapes.",
+      "reason": "Validate embedded data-only dialogue resources. Validate versioned hedge placements and deterministic seeds. Expose physical window, wall and ladder routes and validate ladder condition. Invalidate live geometry when terrain changes or a door opens; editable map clones keep content checks. Validate optional local environment fields while preserving older maps. Validate spotlight aim points and game-clock waits. Use physical scenery movement clearance and derived stone-arch tops, validate full orientation and headroom, and preserve authored squad facing. Validate authored patrol waypoints. Validate ground-preserving foliage overlays on all three levels and honor independent walking restrictions. Validate authored broken walls and floor holes. Validate ground-only strategic sites and follow their baked continuous passage links. Validate automatic-land ownership on import. Trace trellis gaps and beams with the shared sculpted profile. Validate nonwalkable fringe roof decoration at its authored height. Derive roof climbs from marked roof footprints. Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks. Support authored layers 1–6 while retaining legacy map shapes.",
       "upstreamSha256": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73"
     },
     "progression.js": {
@@ -58,16 +58,16 @@
   },
   "files": {
     "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
-    "blocks.js": "5ddb7871d9ba08c02a6d545adedfb630ace6be8299664ca4d2e636ddf4150d85",
+    "blocks.js": "f2ab84d27e184269da59a7eb752d1bddb2e28a109baba541c28aa087c91491d7",
     "connections.js": "71d66813df6da52a4761c77fc810ab101501aeaa91847212dfc6049be6739d29",
-    "editor-model.js": "17ee9cba57988a411da814d9e3440597d45d502eb1f73558278a958985045629",
+    "editor-model.js": "2a07bf44786237b44d6469e36981c4961c000e721a890102175afe0adcf336a0",
     "engine.js": "a326bbe6b2dd92d50c025622bc9dd18b78ac1cdc117bf7c16b43351c6c6fae8d",
     "environment.js": "09da91feb7a9526181870b3e6f1d4811d448676b6dd24cc354b0087c40b5950c",
     "explosives.js": "80412c8a0eacc318c8488b831a52833fb13c606d23bf57df3d4bc819d267268a",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "8e63ac2c2783edf5e4884f31c687494dbc4910edbfe620299302911394c539cb",
-    "maps.js": "310586d137183bdcb83f840dcd5e522596f747645b130bb5dd35f64a34fb4d9a",
+    "maps.js": "c5a713d142f303d2de22aba0257729d0cc6e744fba9e5d9bea75e3a61f9ff5a4",
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",

@@ -16,7 +16,7 @@ export function breachErrors(m,size=240){
  if(!object(b)||!object(b.edges)||!Array.isArray(b.upper)||(b.upper.length<2||b.upper.length>=MAP_LEVELS||b.upper.length>(m.upper?.length??MAP_LEVELS-1))||!b.upper.every(object))return ['Invalid broken-wall or floor data.'];
  for(const [key,kind]of Object.entries(b.edges)){
   const p=edgeParts(key);
-  if(!/^[es]:-?\d+:-?\d+(?::[1-4])?$/.test(key)||edgeKey(p)!==key||!edgeCells(p).some(q=>inside(q,0,0,size))||!BREAKABLE_WALLS.has(kind)||m.edges?.[key])return ['Invalid broken wall at '+key+'.'];
+  if(!/^[es]:-?\d+:-?\d+(?::[1-5])?$/.test(key)||edgeKey(p)!==key||!edgeCells(p).some(q=>inside(q,0,0,size))||!BREAKABLE_WALLS.has(kind)||m.edges?.[key])return ['Invalid broken wall at '+key+'.'];
  }
  for(let layer=0;layer<b.upper.length;layer++)for(const [key,kind]of Object.entries(b.upper[layer])){
   const [x,y]=key.split(',').map(Number);

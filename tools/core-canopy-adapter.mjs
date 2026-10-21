@@ -1,4 +1,4 @@
-export const canopyOverrides={'maps.js':'Validate nonwalkable fourth-level roof decoration.','blocks.js':'Preserve builder roof layer through block extraction and placement.','engine.js':'Retain decorative roof layer for rendering.'};
+export const canopyOverrides={'maps.js':'Validate nonwalkable fringe roof decoration at its authored height.','blocks.js':'Preserve builder roof layer through block extraction and placement.','engine.js':'Retain decorative roof layer for rendering.'};
 function once(s,a,b){if(s.split(a).length!==2)throw Error('Canopy adapter anchor: '+a);return s.replace(a,b);}
 export function adaptCoreCanopies(name,data){let s=data.toString();if(name==='maps.js'){s="import {canopyErrors} from '../editor-canopies.js';\n"+s;s=once(s,'errors.push(...validateConnections(raw)', 'errors.push(...canopyErrors(raw));errors.push(...validateConnections(raw)');}
 if(name==='engine.js')s=once(s,'props:structuredClone(definition.props||[]),','props:structuredClone(definition.props||[]),canopies:structuredClone(definition.canopies||[]),');
