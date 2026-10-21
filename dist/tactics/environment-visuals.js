@@ -1,4 +1,5 @@
 import {isHedge} from './hedge-data.js';
+import {isStoneArch} from './scenery-catalog.js';
 import {localEnvironmentFamily} from './environment-regions.js';
 import {biomeTree} from './biome-gameplay-data.js';
 import {isStrategicSite} from './strategic-site-rules.js';
@@ -18,12 +19,12 @@ import {damagedFloorVisuals} from './floor-breaches.js';
 
 // The visual catalog deliberately does not replace simulation collision volumes.
 export function environmentVisuals(world,map,{biomes=false}={}){map=canopyPresentation(map);
- const result=world.boxes.filter(b=>!b.foliageVolume&&b.kind!=='prop'&&!b.id.includes(':slope:')),fallbackTrees=[];
+ const result=world.boxes.filter(b=>!b.archSurface&&!b.foliageVolume&&b.kind!=='prop'&&!b.id.includes(':slope:')),fallbackTrees=[];
  const occupied=new Set((map.coverOccupiedProps||map.props||[]).flatMap(p=>(isStrategicSite(p)?Array.from({length:64},(_,i)=>({x:p.x+i%8,y:p.y+Math.floor(i/8)})):isCliff(p)?[p]:propCells(p)).map(c=>`${c.x},${c.y},${p.z||0}`)));
  const sandyCaps=new Set((map.props||[]).filter(p=>isCliff(p)&&(p.cliffSand??0)>=.5).map(p=>foliageKey(p.x,p.y,(p.z||0)+1)));
  const coverBox=b=>{const {x,y,z=0}=b.source;return {...b,foliage:map.foliage?.[foliageKey(x,y,z)],family:map.environment?localEnvironmentFamily(map.environment,x+.5,y+.5):null,habitat:['ground-dirt','ground-gravel'].includes(b.material)||sandyCaps.has(foliageKey(x,y,z))?'dry':'grass'};};
  // Walls use edge keys, not floor coordinates; only floors can seed foliage.
- for(const b of world.boxes)if(!biomes&&b.kind==='floor'&&!occupied.has(`${b.source.x},${b.source.y},${b.source.z||0}`)){
+ for(const b of world.boxes)if(!b.archSurface&&!biomes&&b.kind==='floor'&&!occupied.has(`${b.source.x},${b.source.y},${b.source.z||0}`)){
   const box=coverBox(b);result.push(...(box.foliage?[]:grassTufts(b)),...coverUndergrowth(box));
   if(b.kind==='floor'&&foliageTreeAt(map,b.source.x,b.source.y,b.source.z||0))fallbackTrees.push({kind:'tree-broadleaf',...b.source,foliageHeight:b.center[1]+D.slab/2});
  }
@@ -35,7 +36,7 @@ export function environmentVisuals(world,map,{biomes=false}={}){map=canopyPresen
  }
  const add=(id,source,kind,material,center,size,shape='box',rotation=[0,0,0])=>result.push({id,source,kind,material,center,size,shape,rotation});
  for(const p of [...(map.props||[]),...fallbackTrees]){
-  if(isHedge(p)||isCliff(p)||biomes&&biomeTree(p.kind))continue;
+  if(isStoneArch(p)||isHedge(p)||isCliff(p)||biomes&&biomeTree(p.kind))continue;
   const bank=bankInfo(p);if(bank){const id='prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind;add(id,{prop:id,x:p.x,y:p.y,z:p.z||0},'ramp-bank',bank.surface==='grass'?'ground-grass':'sand',[p.x,(p.z||0)*D.floorSpacing,p.y],[1,1,1],'rampbank-'+bank.side+'-'+bank.step);result.at(-1).yaw=BANK_YAW[bank.direction];continue;}
   if(isRamp(p)){const r=rampInfo(p),yaw={east:0,south:-Math.PI/2,west:Math.PI,north:Math.PI/2}[r.direction],center=[(r.low.x+r.high.x)/2,r.z*D.floorSpacing+1,(r.low.y+r.high.y)/2],source={x:p.x,y:p.y,z:p.z||0,prop:'prop:'+p.x+','+p.y+','+(p.z||0)+':'+p.kind};
    if(r.surface.startsWith('wood')){for(const [i,part] of woodenRampParts(p,D.floorSpacing).entries())add(source.prop+':timber:'+i,source,'ramp',r.surface==='woodgold'?'ground-wood-planks':'wood',part.center,part.size,'box',part.rotation);continue;}

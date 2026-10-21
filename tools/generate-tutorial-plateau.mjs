@@ -1,9 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {blankMap,setTerrain,validateMap} from '../dist/tactics/core/maps.js';
+import {archApproaches} from '../dist/tactics/stone-arch-fixture.js';
 export const SIZE=240,CENTER=240,OUTER=216,INNER=214;
 export const QUADRANTS=[{step:4,x:0,y:0,label:'Northwest'},{step:3,x:1,y:0,label:'Northeast'},{step:2,x:0,y:1,label:'Southwest'},{step:1,x:1,y:1,label:'Southeast · start'}];
-export const TOWN={step:5,x:0,y:-1,label:'Northern town'};
+export const TOWN={step:5,x:0,y:-1,label:'Northwest town'},TOWN_EAST={step:6,x:1,y:-1,label:'Northeast town'};
+export const TOWNS=[TOWN,TOWN_EAST];
+export const TUTORIAL_LAYOUT={version:2,columns:2,rows:3,steps:[[5,6],[4,3],[2,1]],descent:[4,5]};
 // One global field keeps all sector crops joined; the north spur belongs to step 4.
 export const outerInside=(x,y)=>{
  if(x<24&&y>=0&&y<240)return false;
@@ -31,7 +34,7 @@ const rim=(x,y,r)=>inside(x,y,r)&&[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>!i
 // Horizontal runs keep the exported previews small while depicting exact tile coverage.
 function landSVG(q,combined=false){let out='';for(let y=0;y<SIZE;y++){let x=0;while(x<SIZE){const shade=(x)=>inside(q.x*SIZE+x,q.y*SIZE+y,INNER)?'#a4b57c':inside(q.x*SIZE+x,q.y*SIZE+y,OUTER)?'#cfba8b':null;const color=shade(x),start=x++;while(x<SIZE&&shade(x)===color)x++;if(color)out+='<rect x="'+(start+(combined?q.x*SIZE:0))+'" y="'+(y+(combined?q.y*SIZE:0))+'" width="'+(x-start)+'" height="1" fill="'+color+'"/>';}}return '<g shape-rendering="crispEdges">'+out+'</g>';}
 export function tutorialMap(q){
- const m=blankMap(q.step===5?'Tutorial 5 · northwest town terrain':'Tutorial '+q.step+' · closed two-tier plateau');
+ const town=q.step>=5,m=blankMap(town?'Tutorial '+q.step+' · '+(q.step===5?'northwest':'northeast')+' town':'Tutorial '+q.step+' · closed two-tier plateau');
  for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++){
   const gx=q.x*SIZE+x,gy=q.y*SIZE+y;
   m.terrain[y][x]='ground-grass';
@@ -41,26 +44,40 @@ export function tutorialMap(q){
    else setTerrain(m,x,y,z,'void');
   }
  }
- if(q.step===5)for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++)if((y>=117&&y<=122)||(x>=117&&x<=122&&y<120))m.terrain[y][x]='ground-asphalt';
- const sx=q.step===5?118:q.x?30:209,sy=q.step===5?180:q.y?30:209;
- m.starts=[[sx,sy],[sx+2,sy],[sx,sy+2],[sx+2,sy+2]].map(([x,y])=>({x,y,z:q.step===5?0:2}));m.exits=[q.step===5?{x:120,y:10,z:0}:q.step===4?{x:120,y:0,z:2}:{x:sx+5,y:sy+5,z:2}];
- m.sectorTemplate={id:'tutorial-step-'+q.step,status:'in-progress',tutorialStep:q.step,scope:'Rough terrain only; no lessons or campaign travel wired',plateau:{group:'tutorial-plateau-v1',quadrant:[q.x,q.y],outerRadius:OUTER,shelfWidth:[0,2],townApproach:q.step===4?{side:'north',bounds:[80,160],level:2}:null,center:[CENTER,CENTER],closed:true,notes:'Cliff faces closed; northwest summit continues north between tiles 80 and 160 for future town descent. No ramps, stairs, or climb markers. Rotate only the complete four-sector group.'}};
+ if(town)for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++)if((y>=117&&y<=122)||(q.step===5&&x>=117&&x<=122&&y<120))m.terrain[y][x]='ground-asphalt';
+ if(town){const arch=q.step===5?{kind:'stone-arch-large',x:184,y:114,z:0,rotation:90,rotated:true}:{kind:'stone-arch-small',x:172,y:152,z:0,rotation:0,rotated:false};m.archLandmark={...arch,topLayer:arch.kind==='stone-arch-large'?4:2,pending:m.levels<= (arch.kind==='stone-arch-large'?3:1)};if(!m.archLandmark.pending){m.props.push(arch);archApproaches(m,arch);}
+  if(q.step===6)for(let y=137;y<169;y++)for(let x=174;x<=175;x++)m.terrain[y][x]='ground-dirt';
+  if(q.step===5){
+   // A deliberate three-tile timber descent in the existing northern spur.
+   // All other plateau cliffs and all four southern maps remain unchanged.
+   m.props=m.props.filter(p=>p.x<119||p.x>121||p.y<210||p.y>218||!p.kind.startsWith('cliff-'));
+   for(let x=119;x<=121;x++){
+    for(let y=213;y<=216;y++)setTerrain(m,x,y,1,'ground-wood-planks');
+    for(let y=217;y<222;y++)setTerrain(m,x,y,2,'ground-grass');
+    m.props.push({kind:'ramp-woodgold-south',x,y:210,z:0},{kind:'ramp-woodgold-south',x,y:214,z:1});
+   }
+  }
+ }
+ const sx=town?118:q.x?30:209,sy=town?180:q.y?30:209;
+ m.starts=[[sx,sy],[sx+2,sy],[sx,sy+2],[sx+2,sy+2]].map(([x,y])=>({x,y,z:town?0:2}));m.exits=town?q.step===5?[{x:239,y:120,z:0}]:[{x:0,y:120,z:0}]:[q.step===4?{x:120,y:0,z:2}:{x:sx+5,y:sy+5,z:2}];
+ m.sectorTemplate={id:'tutorial-step-'+q.step,status:'in-progress',tutorialStep:q.step,scope:'Six-sector terrain foundation and town descent; large arch awaits playable layer 4, lessons and campaign transitions remain separate',tutorialGroup:{...TUTORIAL_LAYOUT,position:[q.x,q.y+1]},plateau:{group:'tutorial-plateau-v2',quadrant:[q.x,q.y],outerRadius:OUTER,shelfWidth:[0,2],townApproach:q.step===4?{side:'north',bounds:[80,160],level:2}:null,center:[CENTER,CENTER],closed:!town,notes:'Closed plateau perimeter except the authored timber descent in town sector 5. Rotate only the complete six-sector group.'}};
  return m;
 }
 export function svg(m,q,combined=false){
  const size=combined?480:240,ox=combined?q.x*240:0,oy=combined?q.y*240:0;
- const roads=q.step===5?'<g fill="#696c6b"><rect x="'+ox+'" y="'+(oy+117)+'" width="240" height="6"/><rect x="'+(ox+117)+'" y="'+oy+'" width="6" height="120"/></g>':'';
- return roads+m.props.map(p=>'<rect x="'+(p.x+ox)+'" y="'+(p.y+oy)+'" width="1" height="1" fill="'+(p.z?'#665443':'#79614c')+'"/>').join('');
+ const roads=q.step>=5?'<g fill="#696c6b"><rect x="'+ox+'" y="'+(oy+117)+'" width="240" height="6"/>'+(q.step===5?'<rect x="'+(ox+117)+'" y="'+oy+'" width="6" height="120"/>':'')+'</g>':'';
+ const planned=m.archLandmark?.pending?'<rect x="'+(m.archLandmark.x+ox)+'" y="'+(m.archLandmark.y+oy)+'" width="3" height="12" fill="none" stroke="#ffe2a0" stroke-dasharray="2 1"><title>Large arch reservation · awaits playable layer 4</title></rect>':'';
+ return roads+m.props.map(p=>{const arch=p.kind.startsWith('stone-arch-'),w=arch?(p.rotation===90?3:6):1,h=arch?(p.rotation===90?12:3):1;return '<rect x="'+(p.x+ox)+'" y="'+(p.y+oy)+'" width="'+w+'" height="'+h+'" fill="'+(arch?'#b49361':p.kind.startsWith('ramp-')?'#e6c581':p.z?'#665443':'#79614c')+'"/>';}).join('')+planned;
 }
 export function generate(){
- const root=path.resolve(import.meta.dirname,'../dist/tactics/sector-library'),maps=[...QUADRANTS,TOWN].map(q=>({q,m:tutorialMap(q)}));
+ const root=path.resolve(import.meta.dirname,'../dist/tactics/sector-library'),maps=[...QUADRANTS,...TOWNS].map(q=>({q,m:tutorialMap(q)}));
  for(const {q,m}of maps){const errors=validateMap(m);if(errors.length)throw Error(errors.join('\n'));const dir=path.join(root,'tutorial-step-'+q.step);fs.writeFileSync(path.join(dir,'rough-plateau.json'),JSON.stringify(m)+'\n');const recipePath=path.join(dir,'placeholder.json'),recipe=JSON.parse(fs.readFileSync(recipePath));recipe.status='in-progress';recipe.variants=['rough-plateau.json',...recipe.variants.filter(v=>v!=='rough-plateau.json')];recipe.preview='rough-plateau.svg';fs.writeFileSync(recipePath,JSON.stringify(recipe,null,2)+'\n');
  fs.writeFileSync(path.join(dir,'rough-plateau.svg'),'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><rect width="240" height="240" fill="#778667"/>'+landSVG(q)+svg(m,q)+'<text x="12" y="22" fill="#fff" font-size="12">Tutorial '+q.step+'</text></svg>');
  }
  const links=maps.map(({q})=>'<a href="../editor-3d.html?editing=1&amp;sectorTemplate=tutorial-step-'+q.step+'&amp;orientation=0&amp;variant=rough-plateau.json">'+q.label+' — Tutorial '+q.step+'</a>').join('');
- const picture='<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -264 512 770"><rect x="0" y="-240" width="240" height="240" fill="#778667"/><rect width="480" height="480" fill="#778667"/>'+maps.map(({q})=>landSVG(q,true)).join('')+''+maps.map(({m,q})=>svg(m,q,true)).join('')+'<path d="M0 0H480M240 -240V480M0 240H480" stroke="#eee5ce" stroke-width="1" stroke-dasharray="5 4"/><g fill="#faf3dd" font-family="sans-serif" font-size="12"><text x="12" y="-220">5 · NORTHWEST TOWN</text><text x="12" y="20">4 · NORTHWEST</text><text x="252" y="20">3 · NORTHEAST</text><text x="12" y="470">2 · SOUTHWEST</text><text x="252" y="470">1 · START</text></g><g fill="#f8df9e" stroke="#352c22" stroke-width="1">'+[[24,240],[456,240],[240,24],[240,456],[80,0],[160,0]].map(([x,y])=>'<circle cx="'+x+'" cy="'+y+'" r="3"/>').join('')+'</g><text x="240" y="500" text-anchor="middle" fill="#40392d" font-size="11">Dark fill: ground · tan: lower cliff tier · light fill: summit · grey: road</text></svg>';
+ const picture='<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -264 512 770"><rect x="0" y="-240" width="480" height="240" fill="#778667"/><rect width="480" height="480" fill="#778667"/>'+maps.map(({q})=>landSVG(q,true)).join('')+maps.map(({m,q})=>svg(m,q,true)).join('')+'<path d="M0 0H480M240 -240V480M0 240H480" stroke="#eee5ce" stroke-width="1" stroke-dasharray="5 4"/><g fill="#faf3dd" font-family="sans-serif" font-size="12"><text x="12" y="-220">5 · NORTHWEST TOWN</text><text x="252" y="-220">6 · NORTHEAST TOWN</text><text x="12" y="20">4 · NORTHWEST</text><text x="252" y="20">3 · NORTHEAST</text><text x="12" y="470">2 · SOUTHWEST</text><text x="252" y="470">1 · START</text></g><g fill="#f8df9e" stroke="#352c22" stroke-width="1">'+[[24,240],[456,240],[240,24],[240,456],[80,0],[160,0]].map(([x,y])=>'<circle cx="'+x+'" cy="'+y+'" r="3"/>').join('')+'</g><text x="240" y="500" text-anchor="middle" fill="#40392d" font-size="11">Six sectors · two town / four plateau · gold: arches and timber approaches</text></svg>';
  fs.writeFileSync(path.join(root,'tutorial-plateau.svg'),picture);
- fs.writeFileSync(path.join(root,'tutorial-plateau.html'),'<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tutorial plateau rough maps</title><style>body{margin:0;background:#eee5ce;color:#302e26;font:16px system-ui}main{max-width:1000px;margin:32px auto;padding:0 24px}h1{font-size:28px}section{display:grid;grid-template-columns:minmax(0,2fr) minmax(200px,1fr);gap:28px}img{width:100%;border:1px solid #8a806a}a{display:block;padding:14px;background:#394c3d;color:#fff;margin:12px 0;text-decoration:none}p{line-height:1.5}@media(max-width:700px){section{display:block}}</style><main><h1>Tutorial plateau and northern town.</h1><p>Rough tutorial terrain · two elevated tiers · no ramps or climb links</p><section><img src="tutorial-plateau.svg" alt="Large irregular plateau with a narrow lower shelf and a northwest extension to town"><div>'+links+'<p>In the editor, choose altitude <b>3</b> to show both tiers, then <b>Overview</b>. Altitudes 1 and 2 expose the lower layers.</p><p>The original filled colours are unchanged: dark green is ground; light green is the summit. Tan shows the lower cliff tier, including the two new shapes in sector 5. The upper tier curves into the southern shape. Grey roads are six tiles wide, centred east–west with a north branch.</p><p>The northwest travel marker is at the northern town approach. Cliff faces remain non-climbable. Sector 5 receives the original plateau approach and the sketched lower cliff extensions. Its town terrain is editable; buildings, the actual descent, encounters and campaign transitions are still to be authored.</p></div></section></main>');
- console.log('Generated five validated rough tutorial maps and combined preview.');
+ fs.writeFileSync(path.join(root,'tutorial-plateau.html'),'<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tutorial plateau rough maps</title><style>body{margin:0;background:#eee5ce;color:#302e26;font:16px system-ui}main{max-width:1000px;margin:32px auto;padding:0 24px}h1{font-size:28px}section{display:grid;grid-template-columns:minmax(0,2fr) minmax(200px,1fr);gap:28px}img{width:100%;border:1px solid #8a806a}a{display:block;padding:14px;background:#394c3d;color:#fff;margin:12px 0;text-decoration:none}p{line-height:1.5}@media(max-width:700px){section{display:block}}</style><main><h1>Tutorial plateau and northern town.</h1><p>Six sectors · four plateau, two town · natural stone arches and timber access</p><section><img src="tutorial-plateau.svg" alt="Large irregular plateau with a narrow lower shelf and a northwest extension to town"><div>'+links+'<p>All levels are visible. Choose edit level <b>1</b> for ground routes, <b>2</b> for the small arch top, or <b>3</b> for the plateau. Use <b>Overview</b> to inspect an entire sector. The large arch requires the pending playable layer <b>4</b>.</p><p>The original filled colours are unchanged: dark green is ground; light green is the summit. Tan shows the lower cliff tier, including the two new shapes in sector 5. The upper tier curves into the southern shape. Grey roads are six tiles wide, centred east–west with a north branch.</p><p>The large arch placement is reserved until the deferred playable-layer expansion is integrated. The layout is a full 2 × 3 rectangle: town 5/6, plateau 4/3, plateau 2/1. Sector 5 keeps the original cliff approach and adds a three-tile timber descent. A natural stone arch with its top on playable layer 4 spans its six-tile road with one clear tile on either side. Sector 6 has the matching one-level footpath arch. The small arch’s top and timber approaches are playable now. The large arch and its approaches remain reserved for the layer expansion. The artist’s finished stone assets will replace the integration placeholders. Buildings, encounters and campaign transitions remain to be authored.</p></div></section></main>');
+ console.log('Generated six validated rough tutorial maps, small arch, layer-4 landmark reservation and combined preview.');
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===import.meta.filename)generate();

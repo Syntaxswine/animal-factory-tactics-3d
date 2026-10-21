@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {QUADRANTS,TOWN,tutorialMap,shelfWidth,townUpper} from '../tools/generate-tutorial-plateau.mjs';
+import {QUADRANTS,TOWN,TOWN_EAST,TUTORIAL_LAYOUT,tutorialMap,shelfWidth,townUpper} from '../tools/generate-tutorial-plateau.mjs';
 import {parseMap,terrainAt,roofNeighbors,neighbors,passable} from '../dist/tactics/core/maps.js';
 const maps=QUADRANTS.map(q=>({q,m:tutorialMap(q)}));
 const at=(x,y)=>maps.find(({q})=>q.x===x&&q.y===y).m;
@@ -12,6 +12,19 @@ test('shelf varies from zero to two tiles and upper terrain stays within the low
 test('northwest town approach includes the sketched upper-tier curve and reaches its travel marker',()=>{const m=at(0,0);for(let x=0;x<240;x++)assert.equal(terrainAt(m,x,0,2)!=='void',townUpper(x,0)||(x>=80+shelfWidth(x,0)&&x<160-shelfWidth(x,0)));assert.deepEqual(m.exits,[{x:120,y:0,z:2}]);assert.deepEqual(m.sectorTemplate.plateau.townApproach.bounds,[80,160]);});
 
 test('sector four west face stays at the 24 tile margin',()=>{const m=at(0,0);for(let y=24;y<240;y++){assert.ok(m.props.some(p=>p.x===24&&p.y===y&&p.z===0));assert.equal(terrainAt(m,23,y,2),'void');}});
-test('town variant validates and cliff enters 24 tiles deep with a matching southern seam',()=>{const town=tutorialMap(TOWN),nw=at(0,0),saved=JSON.parse(fs.readFileSync(new URL('../dist/tactics/sector-library/tutorial-step-5/rough-plateau.json',import.meta.url)));assert.deepEqual(saved,town);assert.deepEqual(parseMap(JSON.stringify(town)),town);for(let x=0;x<240;x++)for(let z=0;z<3;z++)assert.equal(terrainAt(town,x,239,z),terrainAt(nw,x,0,z));assert.equal(terrainAt(town,120,215,1),'void');assert.notEqual(terrainAt(town,120,216,1),'void');assert.equal(town.climbs.length,0);assert.equal(town.stairs.length,0);});
+test('town variant validates and cliff enters 24 tiles deep with a matching southern seam',()=>{const town=tutorialMap(TOWN),nw=at(0,0),saved=JSON.parse(fs.readFileSync(new URL('../dist/tactics/sector-library/tutorial-step-5/rough-plateau.json',import.meta.url)));assert.deepEqual(saved,town);assert.deepEqual(parseMap(JSON.stringify(town)),town);for(let x=0;x<240;x++)for(let z=0;z<3;z++)assert.equal(terrainAt(town,x,239,z),terrainAt(nw,x,0,z));assert.equal(terrainAt(town,125,215,1),'void');assert.notEqual(terrainAt(town,120,216,1),'void');assert.equal(town.climbs.length,0);assert.equal(town.stairs.length,0);});
 
 test('town sketch adds lower-tier shapes and an upper-tier southern curve without raising the surrounding ground',()=>{const m=tutorialMap(TOWN);for(const [x,y]of [[40,60],[45,185]]){assert.equal(terrainAt(m,x,y,1),'ground-dirt');assert.equal(terrainAt(m,x,y,2),'void');}assert.equal(terrainAt(m,50,230,2),'ground-grass');assert.equal(terrainAt(m,180,180,0),'ground-grass');assert.equal(terrainAt(m,180,180,1),'void');for(let y=0;y<240;y++)for(let x=0;x<240;x++)assert.equal(terrainAt(m,x,y,0)==='ground-asphalt',(y>=117&&y<=122)||(x>=117&&x<=122&&y<120));for(const [x,y]of [[0,120],[239,120],[120,0],[120,120]])assert.ok(passable(m,{x,y,z:0}));});
+
+test('six-sector layout joins both town maps and preserves the closed northeast seam',()=>{
+ assert.deepEqual(TUTORIAL_LAYOUT.steps,[[5,6],[4,3],[2,1]]);const west=tutorialMap(TOWN),east=tutorialMap(TOWN_EAST),ne=at(1,0);
+ const saved=JSON.parse(fs.readFileSync(new URL('../dist/tactics/sector-library/tutorial-step-6/rough-plateau.json',import.meta.url)));assert.deepEqual(saved,east);assert.deepEqual(parseMap(JSON.stringify(east)),east);
+ for(let n=0;n<240;n++)for(let z=0;z<3;z++){assert.equal(terrainAt(west,239,n,z),terrainAt(east,0,n,z));assert.equal(terrainAt(east,n,239,z),terrainAt(ne,n,0,z));}
+ assert.equal(west.archLandmark.topLayer,4);assert.equal(east.archLandmark.topLayer,2);assert.ok(east.props.some(p=>p.kind==='stone-arch-small'));
+});
+
+test('the authored town descent connects the original summit to ground without opening other cliffs',()=>{
+ const town=tutorialMap(TOWN),points=[];for(let y=239;y>=217;y--)points.push({x:120,y,z:2});for(let y=216;y>=213;y--)points.push({x:120,y,z:1});for(let y=212;y>=209;y--)points.push({x:120,y,z:0});
+ for(let i=1;i<points.length;i++)assert.ok(neighbors(town,points[i-1]).some(q=>q.x===points[i].x&&q.y===points[i].y&&q.z===points[i].z),JSON.stringify(points.slice(i-1,i+1)));
+ for(const p of town.props.filter(p=>p.kind==='cliff-ledge'))assert.equal(passable(town,p),false);
+});

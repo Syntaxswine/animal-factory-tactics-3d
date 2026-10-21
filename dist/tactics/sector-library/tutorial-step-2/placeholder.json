@@ -40,7 +40,7 @@
     "placeholder.json"
   ],
   "notes": [
-    "Layout reservation only. Author plateau perimeter, elevations and the town connection as one five-sector group."
+    "Layout reservation only. Author plateau perimeter, elevations and the town connection as one six-sector group (town 5/6, plateau 4/3, plateau 2/1)."
   ],
   "preview": "rough-plateau.svg"
 }

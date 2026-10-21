@@ -6,7 +6,10 @@ import {climbingMapErrors} from '../climbing.js';
 import {invalidateMapGeometry} from '../map-geometry-cache.js';
 import {localEnvironmentErrors} from '../environment-regions.js';
 import {spotlightErrors} from '../light-sources.js';
-import {helicopterMoveAllowed} from '../scenery-rules.js';
+import {archTerrainAt} from '../stone-arches.js';
+import {sceneryMoveAllowed} from '../scenery-rules.js';
+import {isScenery,SCENERY_ROTATIONS} from '../scenery-catalog.js';
+import {sceneryPlacementErrors} from '../scenery-placement.js';
 import {patrolMapErrors} from '../character-patrol.js';
 import {foliageErrors,foliageBlocks,foliageGround,foliageKey} from '../foliage-data.js';
 import {breachErrors} from '../breach-data.js';
@@ -29,7 +32,7 @@ export const levelOf=p=>p.z??0;
 export const tileKey=(x,y,z=0)=>z?`${x},${y},${z}`:`${x},${y}`;
 export const edgeKey=(axis,x,y,z=0)=>`${axis}:${x}:${y}${z?':'+z:''}`;
 export const inBounds=(x,y,z=0)=>Number.isInteger(x)&&Number.isInteger(y)&&Number.isInteger(z)&&x>=0&&y>=0&&x<W&&y<H&&z>=0&&z<LEVELS;
-export function terrainAt(m,x,y,z=0){if(!inBounds(x,y,z))return 'void';if(m.knowledge&&!m.knowledge.has(tileKey(x,y,z)))return z?'floor':'yard';return z===0?(m.terrain||m.map)[y][x]:(m.upper?.[z-1]?.[tileKey(x,y)]||'void');}
+export function terrainAt(m,x,y,z=0){if(!inBounds(x,y,z))return 'void';if(m.knowledge&&!m.knowledge.has(tileKey(x,y,z)))return z?'floor':'yard';return z===0?(m.terrain||m.map)[y][x]:(m.upper?.[z-1]?.[tileKey(x,y)]||archTerrainAt(m,x,y,z)||'void');}
 export function setTerrain(m,x,y,z,value){if(!inBounds(x,y,z))return false;if(m.foliage&&!foliageGround(value))delete m.foliage[foliageKey(x,y,z)];if(!z)m.terrain[y][x]=value;else if(value==='void')delete m.upper[z-1][tileKey(x,y)];else m.upper[z-1][tileKey(x,y)]=value;invalidateMapGeometry(m);return true;}
 export const passable=(m,p)=>floorTerrain(terrainAt(m,p.x,p.y,levelOf(p)))&&!foliageBlocks(m,p.x,p.y,levelOf(p))&&!propBlocks(m,p.x,p.y,levelOf(p));
 export function edgeBetween(a,b){if(levelOf(a)!==levelOf(b)||Math.abs(a.x-b.x)+Math.abs(a.y-b.y)!==1)return null;return a.x!==b.x?edgeKey('e',Math.min(a.x,b.x),a.y,levelOf(a)):edgeKey('s',a.x,Math.min(a.y,b.y),levelOf(a));}
@@ -45,7 +48,7 @@ export function neighbors(m,p,stairs=stairSet(m),includeDiagonals=true){
  const z=levelOf(p),out=[];
  for(const b of [{x:p.x+1,y:p.y,z},{x:p.x-1,y:p.y,z},{x:p.x,y:p.y+1,z},{x:p.x,y:p.y-1,z}])if(passable(m,b)&&!parapetBlocks(m,p,b)&&(!blockedEdge(m,p,b)||EDGES[m.edges?.[edgeBetween(p,b)]]?.opensTo&&!m.edgeLocks?.[edgeBetween(p,b)]))out.push({...b,cost:1});
  if(includeDiagonals)for(const dx of [-1,1])for(const dy of [-1,1]){const a={x:p.x+dx,y:p.y,z},b={x:p.x,y:p.y+dy,z},q={x:p.x+dx,y:p.y+dy,z};if(passable(m,a)&&passable(m,b)&&passable(m,q)&&!blockedEdge(m,p,a)&&!blockedEdge(m,p,b)&&!blockedEdge(m,a,q)&&!blockedEdge(m,b,q))out.push({...q,cost:1.5});}
- for(const dz of [-1,1])if(stairs.has(stairKey(p.x,p.y,Math.min(z,z+dz)))&&passable(m,{x:p.x,y:p.y,z:z+dz}))out.push({x:p.x,y:p.y,z:z+dz,cost:stairs.get(stairKey(p.x,p.y,Math.min(z,z+dz))),kind:stairs.get(stairKey(p.x,p.y,Math.min(z,z+dz)))===3?'ladder':'stairs',rusty:!!m.stairs?.find(q=>q.x===p.x&&q.y===p.y&&q.z===Math.min(z,z+dz))?.rusty});for(const link of roofNeighbors(m,p))out.push(link);out.push(...boundaryClimbs(m,p));return out.filter(b=>rampMoveAllowed(m,p,b)&&siteMoveAllowed(m,p,b)&&helicopterMoveAllowed(m,p,b)).concat(rampLinks(m,p).filter(b=>passable(m,b)&&!blockedEdge(m,{...p,z:Math.max(levelOf(p),levelOf(b))},{...b,z:Math.max(levelOf(p),levelOf(b))})));
+ for(const dz of [-1,1])if(stairs.has(stairKey(p.x,p.y,Math.min(z,z+dz)))&&passable(m,{x:p.x,y:p.y,z:z+dz}))out.push({x:p.x,y:p.y,z:z+dz,cost:stairs.get(stairKey(p.x,p.y,Math.min(z,z+dz))),kind:stairs.get(stairKey(p.x,p.y,Math.min(z,z+dz)))===3?'ladder':'stairs',rusty:!!m.stairs?.find(q=>q.x===p.x&&q.y===p.y&&q.z===Math.min(z,z+dz))?.rusty});for(const link of roofNeighbors(m,p))out.push(link);out.push(...boundaryClimbs(m,p));return out.filter(b=>rampMoveAllowed(m,p,b)&&siteMoveAllowed(m,p,b)&&sceneryMoveAllowed(m,p,b)).concat(rampLinks(m,p).filter(b=>passable(m,b)&&!blockedEdge(m,{...p,z:Math.max(levelOf(p),levelOf(b))},{...b,z:Math.max(levelOf(p),levelOf(b))})));
 }
 
 // Marked roof edges connect an outdoor foothold to the adjacent upper platform.
@@ -105,6 +108,8 @@ export function validateMap(raw,{connectivity=true}={}){
  if(!Array.isArray(raw.stairs)||raw.stairs.length>4096||raw.stairs.some(p=>!point(p)||!Number.isInteger(p.z)||p.z>=2||(p.kind!==undefined&&!['stairs','ladder'].includes(p.kind))))return [...errors,'Invalid stairs: lower level must be 0 or 1.'];
  if(raw.climbs!==undefined&&(!Array.isArray(raw.climbs)||raw.climbs.length>4096||raw.climbs.some(p=>!point(p)||(p.kind!==undefined&&p.kind!=='cliff')||!Number.isInteger(p.z)||p.z>=2||!Number.isInteger(p.dx)||!Number.isInteger(p.dy)||Math.abs(p.dx)+Math.abs(p.dy)!==1)))return [...errors,'Invalid roof climb: adjacent tiles and exactly one level required.'];
  if(raw.props!==undefined&&(!Array.isArray(raw.props)||raw.props.length>4096||raw.props.some(p=>!point(p)||!Object.hasOwn(PROPS,p.kind)||(p.rotated!==undefined&&typeof p.rotated!=='boolean'))))return [...errors,'Invalid environment props.'];
+ if((raw.props||[]).some(p=>isScenery(p)&&p.rotation!==undefined&&!SCENERY_ROTATIONS.includes(p.rotation)))return [...errors,'Scenery orientation must be 0°, 90°, 180° or 270°.'];
+ errors.push(...sceneryPlacementErrors(raw,null,PROPS,EDGES));
  errors.push(...spotlightErrors(raw),...strategicSiteErrors(raw));errors.push(...localEnvironmentErrors(raw),...hedgeErrors(raw),...foliageErrors(raw),...breachErrors(raw),...canopyErrors(raw));errors.push(...landErrors(raw,W,GROUNDS));errors.push(...validateConnections(raw),...validatePlannedMap(raw));
  if(raw.sectors){errors.push(...validateSectorPlan(raw.sectors));if(!errors.length){const plan=raw.sectors;for(let sy=0;sy<10;sy++)for(let sx=0;sx<10;sx++){const type=plan.cells[sy][sx];if(!['river-ns','bridge-ns','road-ew'].includes(type))continue;for(let y=0;y<24;y++)for(let x=0;x<24;x++){const p=plan.orientation==='ew'?{x:sy*24+y,y:sx*24+x}:{x:sx*24+x,y:sy*24+y},t=terrainAt(raw,p.x,p.y,0);if(['river-ns','bridge-ns'].includes(type)&&x>=9&&x<=14){const crossing=type==='bridge-ns'&&y>=10&&y<=13;if(crossing?!passable(raw,p):t!=='water')errors.push('River rule broken: preserve the water channel and both bridge corridors.');}else if(['road-ew','bridge-ns'].includes(type)&&y>=10&&y<=13&&!passable(raw,p))errors.push('Bridge approach road must remain open.');if(['bridge-ns','road-ew'].includes(type)&&y>=10&&y<=13){const q=plan.orientation==='ew'?{x:p.x,y:p.y+1}:{x:p.x+1,y:p.y};if(inBounds(q.x,q.y)&&blockedEdge(raw,p,q))errors.push('Bridge and approach corridors must not have crossing barriers.');}}}}}
  errors.push(...rampErrors(raw),...cliffMapErrors(raw));for(const p of raw.props||[])if(isRamp(p)){const r=rampInfo(p);if(!passable(raw,r.entry)||!passable(raw,r.exit)||blockedEdge(raw,{...r.high,z:r.exit.z},r.exit))errors.push("Ramp approaches and upper connection must be unobstructed.");}const propPositions=new Set();for(const p of raw.props||[])for(const q of propCells(p)){const k=tileKey(q.x,q.y,q.z);if(propPositions.has(k))errors.push('Overlapping prop footprints.');propPositions.add(k);if(!inBounds(q.x,q.y,q.z)||!(floorTerrain(terrainAt(raw,q.x,q.y,q.z))||isCliff(p)&&terrainAt(raw,q.x,q.y,q.z)==='water'))errors.push('Props need supported floor tiles across their whole footprint.');}

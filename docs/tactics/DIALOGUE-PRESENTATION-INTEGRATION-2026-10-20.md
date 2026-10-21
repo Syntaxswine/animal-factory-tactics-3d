@@ -116,3 +116,16 @@ The Babble runtime remains pinned at 8f1d23c; this change does not incorporate t
 Validation for this follow-up: **71 focused tests passed**, covering talk-range boundaries, movement and interrupted approach orders, fixed speaker identity, checkpoint failure/retry, outgoing speech sequencing, stable merc voices, portrait preparation, existing dialogue/tutorial rules and both packaging closures. The final 3D package built successfully. Packaged browser checks confirmed the actual walk-to-talk flow, two live 3D portrait canvases, voiced player replies preceding NPC responses, the guide with both Yakov and Misha, pause/Continue, no speaker selector, and zero portrait canvases after Leave. The 390 × 844 layout had no horizontal overflow. No browser errors or warnings were observed. This was a focused follow-up run, not another full repository suite.
 
 ![Both participants use close 3D portraits](images/dialogue-presentation-2026-10-20/two-model-portraits.png)
+
+
+## Follow-up: portraits beside the message history
+
+The user’s layout sketch is now the desktop arrangement: large 3D portraits flank the scrolling message history, names and speaking labels sit below the portraits, and the reply list spans the section below. Message text remains 18px rather than being compressed to fit the sketch. Portrait scaling still indicates the current speaker without shifting the other columns.
+
+Replay, Show full line, Continue, conversation settings and Leave share a sticky footer. Settings open in a labelled panel above their button, pause speech, and return focus to the button when dismissed from a control. Playback controls are outside the message bubbles, so scrolling history cannot hide them. At widths of 760px or less, the portraits sit above the message history and the footer uses two rows.
+
+Validation: **31 focused dialogue/presentation and packaging checks passed**, and the final 3D build passed. Packaged browser checks at 1024 × 768 and 390 × 844 covered both 3D portraits, voiced reply sequencing, footer Skip/Replay/Continue, opening settings and changing/restoring Static portrait, long-message scrolling, and leaving via the existing controls. The narrow long answer began 16px below the history viewport’s top; the footer stayed on screen and there was no horizontal overflow. No browser errors or warnings were observed. The existing read-only preview helper was reused with its unchanged October 21, 03:17 EDT expiry.
+
+![Portraits beside the message history](images/dialogue-presentation-2026-10-20/columns-desktop.png)
+
+[Narrow layout and long-message history](images/dialogue-presentation-2026-10-20/columns-narrow.png)

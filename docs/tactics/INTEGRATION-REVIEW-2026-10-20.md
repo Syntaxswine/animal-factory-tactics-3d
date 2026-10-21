@@ -5,6 +5,72 @@ Reviewed canonical `af42810`, coding branch `c29241ae`, and animation branch
 terminal `ee4ae6fb`. Animation checks used an isolated checkout of each pushed
 commit. Other agents' working files were not changed.
 
+## Machines, dialogue columns and tutorial foundations: `c44c6748`
+
+**Approved after two integration corrections.** This merges the coding branch
+through `c44c6748`, including `7117cb4c`'s dialogue layout and `aba1e093`'s
+factory-machine integration. The small stone arch and six-sector tutorial
+terrain are useful foundations. Their current procedural rock appearance is
+temporary; the artist's final geometry and paint need their own review.
+
+The layer expansion is **not implemented by this tranche**. The runtime still
+has three playable layers, counting ground as layer 1. The stated next design is
+four playable layers plus a fifth fringe layer. Sector 5 reserves its large
+arch's layer-4 top as metadata instead of spawning an unusable landmark. The
+small arch's layer-2 top and ground passage are available now. The tutorial's
+`5 6 / 4 3 / 2 1` arrangement remains terrain content, separate from the
+existing two-sector playable campaign.
+
+### Corrections before delivery
+
+- **Campaign routes:** the initial 155-check review batch found 16 campaign
+  failures. The new tutorial generator moved the seed-42 world beneath the
+  foundation's fixed safehouse, checkpoint and reserve assignments. That broke
+  their direct travel edges and a boundary-validation check. The opening now
+  receives a fresh copy of its original canonical strategic world from
+  `campaign-opening-world.js`. Its content version and routes remain compatible;
+  generator changes can no longer silently rearrange this fixed opening. All
+  23 campaign checks pass, including a new direct-edge and independent-copy
+  regression. The new module is included in the deployment build.
+- **Arch submissions:** each arch previously created one material group per
+  triangle: 88 submissions per scene/light pass for an 88-triangle object. It
+  now groups stone and top into two contiguous ranges. A regression failed on
+  the original implementation and passes on the correction, while comparing
+  every oriented rendered triangle against the physical mesh. This reduces
+  submission count; it is not a measured whole-game FPS improvement.
+
+### Fresh verification
+
+All failures in the initial focused batch were in the campaign file. After the
+corrections, the campaign file passes 23/23, arches pass 10/10, and the four
+deployment/module-closure checks pass. Core reproduction, machine and helicopter
+bake reproduction, asset validation and the Pages build also pass. This review
+did not rerun the entire project test suite locally.
+
+Packaged browser review loaded the small arch and switched its interaction
+level; loaded the press fixture and verified a torso shot through its opening
+while the legs were blocked; and opened the integrated dialogue with both
+portraits. The column layout is readable at 1280 × 720. At 390 × 844 the
+portraits move above the messages, footer controls remain visible, and document
+width equals scroll width (390 px). A fresh packaged campaign initialized with
+its four mercs and $20,000. Warning/error logs were empty on these reviewed
+pages. The blended Bright Hen intro assets remain unchanged. The temporary
+review tab and registered server were closed, and port release was verified.
+
+![The press blocks legs while its opening permits a torso shot](images/oct20-integration-review/machine-cover.jpg)
+
+![Dialogue columns at the narrow breakpoint](images/oct20-integration-review/dialogue-columns-narrow.jpg)
+
+### Next layer-migration review
+
+Use one shared layer definition throughout the simulation, renderer and editor.
+Test old encounter/campaign saves, floor selection and visibility, supported
+placement/headroom, cross-layer pathfinding, and sight/projectile/grenade height
+calculations at the new limits. Keep the fifth fringe layer's permitted uses
+explicit. The large arch must gain a real supported route before its reservation
+becomes a placed gameplay object. Neither final arch artwork nor layer-4 travel
+is approved by the current small-arch checks.
+
 ## CRT scanlines and highlight follow-up: `45cefaf6`
 
 **Approved.** The lines now read clearly at the actual portrait size. Drawing

@@ -1,11 +1,12 @@
 import {grenadeWorld,sweepGrenade,grenadeBase,GRENADE_FLOOR} from './grenade-geometry.js';
 import {grenadeDamage,GRENADE} from './grenade-ballistics.js';
-import {propCells} from './environment.js';
+import {propCells} from './core/environment.js';
 import {isExplosiveBarrel,barrelId} from './explosive-barrels.js';
 import {isStrategicSite,intactSite,siteSamples,siteId,destroyStrategicSite} from './strategic-site-rules.js';
 import {planStructureBlast,commitStructureDamage} from './structure-damage.js';
 import {structureInfo,mergeScenery} from './structure-health.js';
 import {invalidateMapGeometry} from './map-geometry-cache.js';
+import {isPhysicalScenery,sceneryId} from './scenery-catalog.js';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.h-b.h);
 export function detonateGrenade(s,impact){
  const radius=GRENADE.blast,world=grenadeWorld(s),clear=(end,id=null)=>{const h=sweepGrenade(world,impact,end,0);return !h||h.t>=.995||id!==null&&h.propId===id;},hits=[],barrels=[],sites=[],removeEdges=new Set(),removeProps=new Set(),removeTiles=[];
@@ -18,7 +19,7 @@ export function detonateGrenade(s,impact){
  for(const p of s.props||[]){
   if(isStrategicSite(p)){if(intactSite(p)&&siteSamples(p).some(q=>distance(impact,q)<=radius&&clear(q,siteId(p))))sites.push(p);continue;}
   const base=grenadeBase(p),samples=isExplosiveBarrel(p)?[{x:p.x,y:p.y,h:base+.4}]:propCells(p).map(q=>({x:Math.max(q.x-.49,Math.min(impact.x,q.x+.49)),y:Math.max(q.y-.49,Math.min(impact.y,q.y+.49)),h:Math.max(base+.04,Math.min(impact.h,base+1.8))}));
-  const affected=samples.some(q=>distance(impact,q)<=radius&&grenadeDamage(distance(impact,q))>=(isExplosiveBarrel(p)?1:20)&&clear(q,isExplosiveBarrel(p)?barrelId(p):null));
+  const affected=samples.some(q=>distance(impact,q)<=radius&&grenadeDamage(distance(impact,q))>=(isExplosiveBarrel(p)?1:20)&&clear(q,isExplosiveBarrel(p)?barrelId(p):isPhysicalScenery(p)?sceneryId(p):null));
   if(affected){if(isExplosiveBarrel(p))barrels.push(p);else if(!/^(cliff-|ramp|roof-)/.test(p.kind))removeProps.add(p);}
  }
  const map=s.map||s.terrain;

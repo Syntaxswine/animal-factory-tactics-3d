@@ -1,4 +1,5 @@
 import {tutorialRoleErrors} from './tutorial-mission.js';
+import {isScenery,SCENERY_ROTATIONS} from './scenery-catalog.js';
 import {initializeDialogue,ensureDialogueUnitIds,validateDialogueState,validateDialogueActors} from './dialogue-state.js';
 import {trackMapGeometry} from './map-geometry-cache.js';
 import {validPatrolState} from './character-patrol.js';
@@ -17,13 +18,14 @@ import {observeRoundTime} from './game-clock.js';
 import {strategicSiteErrors} from './strategic-site-rules.js';
 import {validStructureHealth} from './structure-health.js';
 import {breachErrors} from './breach-data.js';
+import {archPlacementErrors} from './stone-arches.js';
 export const SAVE_VERSION=1;
 const fail=()=>{throw Error('This save is damaged or incomplete. Your current encounter has not been changed.');};
 const terrain=new Set(['yard','floor','crate','void','water','bridge','woodland','woodland-dense',...GROUNDS]);
 const finite=n=>Number.isFinite(n)&&n>=0;
 export function validateSavedState(s,{population=false,unitIds=null}={}){
  if(s?.dialogue!==undefined)validateDialogueState(s.dialogue);
- if(!s||!s.definition||validateMap(s.definition,{connectivity:false}).length||canopyErrors(s).length)fail();
+ if(!s||!s.definition||validateMap(s.definition,{connectivity:false}).length||canopyErrors(s).length||archPlacementErrors(s,null,PROPS,EDGES).length)fail();
  if(!['explore','player','enemy','won','lost'].includes(s.phase)||!Number.isInteger(s.round)||s.round<0||!finite(s.clock?.minutes)||!Number.isInteger(s.enemyIndex)||s.enemyIndex<0)fail();
  if(!Array.isArray(s.map)||s.map.length!==s.definition.height||s.map.some(r=>!Array.isArray(r)||r.length!==s.definition.width||r.some(t=>!terrain.has(t))))fail();
  for(const key of ['upper','props','stairs','climbs','units','loot','log','queue'])if(!Array.isArray(s[key]))fail();
@@ -31,7 +33,7 @@ export function validateSavedState(s,{population=false,unitIds=null}={}){
  for(const key of ['visible','seen','detected'])if(!(s[key] instanceof Set))fail();
  if(s.alerted!==undefined&&!(s.alerted instanceof Set))fail();
  if(s.upper.length!==2||s.upper.some(layer=>!layer||typeof layer!=='object'||Array.isArray(layer)||Object.values(layer).some(t=>!terrain.has(t))))fail();
- if(Object.values(s.edges).some(v=>!EDGES[v])||s.props.some(p=>!p||!PROPS[p.kind]||![p.x,p.y,p.z??0].every(Number.isInteger)))fail();
+ if(Object.values(s.edges).some(v=>!EDGES[v])||s.props.some(p=>!p||!PROPS[p.kind]||![p.x,p.y,p.z??0].every(Number.isInteger)||isScenery(p)&&((p.rotation!==undefined&&!SCENERY_ROTATIONS.includes(p.rotation))||(p.rotated!==undefined&&typeof p.rotated!=='boolean'))))fail();
  if(tutorialRoleErrors(s).length||climbingMapErrors(s).length||localEnvironmentErrors(s).length||spotlightErrors(s).length||foliageErrors(s).length||strategicSiteErrors(s).length||breachErrors(s).length||!validStructureHealth(s))fail();
  if(s.units.length>100||new Set(s.units.map(u=>u.id)).size!==s.units.length||!population&&(!s.units.length||!s.units.some(u=>u.id===s.selected&&u.team==='squad')))fail();
  for(const u of s.units){if(!validCombatState(u,unitIds||new Set(s.units.map(v=>v.id))))fail();if(!Number.isInteger(u.id)||!['squad','guard'].includes(u.team)||typeof u.name!=='string'||typeof u.species!=='string'||!WEAPONS[u.weapon]||![u.x,u.y,u.z??0].every(Number.isFinite)||![u.hp,u.maxHp,u.ap,u.maxAp].every(finite)||!Array.isArray(u.pack)||!Array.isArray(u.slots)||!u.ammo)fail();if(u.stats&&(!finite(u.stamina)||!finite(u.maxStamina)||STAT_DEFINITIONS.some(([key])=>!Number.isInteger(u.stats[key])||u.stats[key]<1||u.stats[key]>100)))fail();}

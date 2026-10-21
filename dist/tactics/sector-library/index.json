@@ -1079,6 +1079,18 @@
       "authoredVariants": 1
     },
     {
+      "id": "tutorial-step-6",
+      "role": "town",
+      "collectionRole": "tutorial",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy"
+      ],
+      "orientations": 4,
+      "authoredVariants": 1
+    },
+    {
       "id": "village--land-road-e",
       "role": "village",
       "collectionRole": "village",

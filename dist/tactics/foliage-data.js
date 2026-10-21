@@ -6,7 +6,7 @@ import {validTreeCover} from './foliage-tree-cover.js';
 import {BIOME_TERRAIN} from './biome-gameplay-data.js';
 import {PROPS} from './environment.js';
 import {SITE_PROPS} from './strategic-site-rules.js';
-import {SCENERY_PROPS} from './scenery-catalog.js';
+import {SCENERY_PROPS,isScenery,scenerySize} from './scenery-catalog.js';
 const natural=new Set(['yard','ground-grass','ground-dirt','ground-gravel','woodland','woodland-dense',...Object.keys(BIOME_TERRAIN)]);
 export const foliageGround=terrain=>natural.has(terrain);
 export const foliageKey=(x,y,z=0)=>`${x},${y},${z}`;
@@ -40,7 +40,7 @@ export function foliageTreeSpaceAvailable(map,x,y,z,radius=2){
  if((map.climbs||[]).some(p=>near(p)||near({x:p.x+p.dx,y:p.y+p.dy,z:p.z+1})))return false;
  for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++)for(const axis of ['e','s'])if(map.edges?.[`${axis}:${x+dx}:${y+dy}${z?':'+z:''}`])return false;
  for(const p of map.coverOccupiedProps||map.props||definition.props||[]){
-  if((p.z||0)<z)continue;const rule=SITE_PROPS[p.kind]||SCENERY_PROPS[p.kind]||PROPS[p.kind]||{w:1,h:1},w=p.rotated?rule.h:rule.w,h=p.rotated?rule.w:rule.h;
+  if((p.z||0)<z)continue;const rule=SITE_PROPS[p.kind]||SCENERY_PROPS[p.kind]||PROPS[p.kind]||{w:1,h:1},w=(isScenery(p)?scenerySize(p).w:p.rotated?rule.h:rule.w),h=(isScenery(p)?scenerySize(p).h:p.rotated?rule.w:rule.h);
   if(p.x<=x+radius&&p.x+w-1>=x-radius&&p.y<=y+radius&&p.y+h-1>=y-radius)return false;
  }
  return true;
@@ -78,6 +78,6 @@ export function foliageRule(map,x,y,z=0){return FOLIAGE_PRESETS[foliagePreset(ma
 // A shared exclusion mask prevents collision where scenery replaces the plants.
 export function foliageOccupied(map){
  const occupied=new Set();
- for(const p of map.coverOccupiedProps||map.props||[]){const rule=SITE_PROPS[p.kind]||SCENERY_PROPS[p.kind]||PROPS[p.kind]||{w:1,h:1},w=p.rotated?rule.h:rule.w,h=p.rotated?rule.w:rule.h;for(let y=0;y<h;y++)for(let x=0;x<w;x++)occupied.add(foliageKey(p.x+x,p.y+y,p.z||0));}
+ for(const p of map.coverOccupiedProps||map.props||[]){const rule=SITE_PROPS[p.kind]||SCENERY_PROPS[p.kind]||PROPS[p.kind]||{w:1,h:1},w=(isScenery(p)?scenerySize(p).w:p.rotated?rule.h:rule.w),h=(isScenery(p)?scenerySize(p).h:p.rotated?rule.w:rule.h);for(let y=0;y<h;y++)for(let x=0;x<w;x++)occupied.add(foliageKey(p.x+x,p.y+y,p.z||0));}
  return occupied;
 }

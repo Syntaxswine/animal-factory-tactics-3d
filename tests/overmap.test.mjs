@@ -53,19 +53,28 @@ test('example river combines straight stretches and bends while keeping attachme
  assert.ok(rivers.filter(r=>r.from.offset===r.to.offset).length>=5);
  assert.ok(rivers.some(r=>r.from.offset<r.to.offset));assert.ok(rivers.some(r=>r.from.offset>r.to.offset));
 });
-test('tutorial includes the town and preserves TOO / XXO / XSO',()=>{
+test('tutorial fills a 2 × 3 rectangle: towns 5/6, plateau 4/3, plateau 2/1',()=>{
  const m=demo(),cells=tutorialCells(2,3,0);
- assert.deepEqual(cells.map(c=>[c.x-2,c.y-3]),[[1,2],[0,2],[1,1],[0,1],[0,0]]);
+ assert.deepEqual(cells.map(c=>[c.x-2,c.y-3]),[[1,2],[0,2],[1,1],[0,1],[0,0],[1,0]]);
  assert.equal(m.sectors.filter(s=>s.role==='tutorial').length,4);assert.equal(m.sectors[cells[0].index].tutorialStep,1);
  assert.equal(m.sectors[cells[4].index].role,'town');assert.equal(m.sectors[cells[4].index].terrain,'plain');
  assert.equal(cells.slice(0,4).flatMap(c=>plateauRim(m,c.index)).filter(r=>r.opening).length,1);
  for(const c of cells){assert.equal(m.sectors[c.index].difficulty,'easy');assert.deepEqual(warnings(m,c.index),[]);}
 });
+
+test('old five-sector placement backups remain readable and upgrade when moved',()=>{
+ const m=placeTutorial(blank(),2,3,0),p=m.tutorialPlacement,sixth=p.underlay.pop();delete p.layoutVersion;
+ m.sectors[sixth.index]=structuredClone(sixth.sector);m.sectors[tutorialCells(2,3)[4].index].travel=['south'];
+ assert.doesNotThrow(()=>validate(m));const moved=placeTutorial(m,12,6,90),cells=tutorialCells(12,6,90);
+ assert.equal(moved.tutorialPlacement.underlay.length,6);assert.equal(moved.tutorialPlacement.layoutVersion,2);
+ assert.equal(moved.sectors[cells[5].index].tutorialStep,6);assert.deepEqual(moved.sectors[sixth.index],sixth.sector);
+ for(const c of cells)assert.deepEqual(warnings(moved,c.index),[]);
+});
 test('all rotations can be placed wherever occupied cells fit and the town is interior',()=>{
  for(const rotation of [0,90,180,270])for(let y=0;y<HEIGHT;y++)for(let x=0;x<WIDTH;x++){
   let cells;try{cells=tutorialCells(x,y,rotation);}catch{continue;}
   const m=placeTutorial(blank(),x,y,rotation),town=cells[4];assert.ok(town.x>0&&town.x<WIDTH-1&&town.y>0&&town.y<HEIGHT-1);
-  assert.equal(cells.length,5);assert.equal(m.sectors[cells[0].index].tutorialStep,1);
+  assert.equal(cells.length,6);assert.equal(m.sectors[cells[0].index].tutorialStep,1);
  }
  assert.throws(()=>placeTutorial(blank(),0,0,0),/town/);
  assert.doesNotThrow(()=>placeTutorial(blank(),1,HEIGHT-3,0));

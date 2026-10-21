@@ -1,7 +1,7 @@
 import {WIDTH as W,HEIGHT as H,SIDES,STEP,OPPOSITE,blank,route,validate,warnings,placeTutorial,tutorialCells} from './overmap-model.js';
 import {generateEnvironments,environmentCoverageErrors} from './environment-regions.js';
 
-export const GENERATOR_VERSION='strategic-plan-11';
+export const GENERATOR_VERSION='strategic-plan-12';
 export const STAGES=['Tutorial','Rivers','Cliffs','Environments','Difficulty zoning','Settlements and fortresses','Roads','Bridges and gates','Validation'];
 export const DEFAULTS={villages:3,towns:4,cities:5,maxAttempts:40};
 export const SETTLEMENT_ZONES={easy:{towns:2,villages:1,cities:[[3,3]]},medium:{towns:1,villages:2,cities:[[3,4],[4,4]]},hard:{towns:1,villages:0,cities:[[3,4],[5,5]]}};
@@ -63,7 +63,7 @@ function settlements(m,tutorial,o,r){
   if(kind==='city'){m.sectors[cells[0]].facilities=['factory'];for(const i of shuffled(cells,r).slice(0,1+Math.floor(r()*3)))m.sectors[i].facilities.push('workshop');}
   cells.forEach(i=>{m.sectors[i].facilityIds=Object.fromEntries(m.sectors[i].facilities.map(f=>[f,`${id}-${f}-${i}`]));});groups.push({id,kind,cells});for(const i of cells)for(const j of all())if(near(i,j))settlementBuffer.add(j);
  };
- const town=tutorial[4].index,second=pick(neighbors(town).filter(i=>land(i)&&interior(i)&&m.sectors[i].difficulty==='easy'),r);if(second===undefined)fail('Starting town has no free adjoining easy sector.');assign('town',[town,second],'town-1');
+ const town=tutorial[4].index,second=tutorial[5].index;assign('town',[town,second],'town-1');
  const serial={town:1,village:0,city:0};
  for(const [difficulty,rule]of Object.entries(SETTLEMENT_ZONES)){
   const requests=[...rule.cities.map(([min,max])=>['city',min+Math.floor(r()*(max-min+1))]),...Array.from({length:rule.towns-(difficulty==='easy'?1:0)},()=>['town',2]),...Array.from({length:rule.villages},()=>['village',2])];
@@ -125,11 +125,11 @@ export function validateGenerated(m){
  check(!all().some(i=>m.sectors[i].difficulty==='easy'&&neighbors(i).some(j=>m.sectors[j].difficulty==='hard')),'Easy and hard regions touch without a medium buffer.');
  const easy=all().filter(i=>m.sectors[i].difficulty==='easy'),seen=new Set(easy.slice(0,1)),queue=[...seen];for(const i of queue)for(const j of neighbors(i))if(m.sectors[j].difficulty==='easy'&&!seen.has(j)){seen.add(j);queue.push(j);}check(seen.size===150,'Easy region is not connected.');
  let tutorial=[];try{const p=m.tutorialPlacement;tutorial=tutorialCells(p.x,p.y,p.rotation);}catch{errors.push('Missing or invalid tutorial placement.');}
- if(tutorial.length){check(tutorial.every(c=>m.sectors[c.index].difficulty==='easy'),'All five tutorial-group sectors must be easy.');check(tutorial.slice(0,4).every((c,n)=>m.sectors[c.index].role==='tutorial'&&m.sectors[c.index].terrain==='plateau'&&m.sectors[c.index].tutorialStep===n+1),'Tutorial footprint or start changed.');check(m.sectors[tutorial[4].index].role==='town','Tutorial town is missing.');
+ if(tutorial.length){check(tutorial.every(c=>m.sectors[c.index].difficulty==='easy'),'All six tutorial-group sectors must be easy.');check(tutorial.slice(0,4).every((c,n)=>m.sectors[c.index].role==='tutorial'&&m.sectors[c.index].terrain==='plateau'&&m.sectors[c.index].tutorialStep===n+1),'Tutorial footprint or start changed.');check(tutorial.slice(4).every((c,i)=>m.sectors[c.index].role==='town'&&m.sectors[c.index].tutorialStep===i+5),'Both tutorial town sectors must occupy their reserved positions.');
   let exits=0;for(const c of tutorial.slice(0,4)){check(m.sectors[c.index].routes.length===0,'A generated route entered the tutorial plateau.');for(const side of m.sectors[c.index].travel){const j=neighbor(c.index,side);if(!tutorial.slice(0,4).some(c=>c.index===j)){exits++;check(j===tutorial[4].index,'Tutorial exit does not lead to its town.');}}}check(exits===1,'Tutorial must have exactly one descent to its town.');
   const group=new Set(tutorial.map(c=>c.index)),reachable=new Set([tutorial[0].index]),pending=[tutorial[0].index];
   for(const i of pending)for(const side of m.sectors[i].travel){const j=neighbor(i,side);if(group.has(j)&&m.sectors[j].travel.includes(OPPOSITE[side])&&!reachable.has(j)){reachable.add(j);pending.push(j);}}
-  check(reachable.size===5,'All five tutorial sectors, including the town, must be reachable from the start through reciprocal declared travel connections.');}
+  check(reachable.size===6,'All six tutorial sectors, including both town sectors, must be reachable from the start through reciprocal declared travel connections.');}
  for(const [z,n]of [['easy',1],['medium',2],['hard',2]])check(count(s=>s.role==='fortress'&&s.difficulty===z)===n,`Expected ${n} ${z} fortress(es).`);
  check(m.sectors.filter(s=>s.role==='fortress').every(s=>s.facilities.length===0),'Fortresses must not have civilian facilities.');
  const fortresses=all().filter(i=>m.sectors[i].role==='fortress');check(fortresses.every((i,n)=>fortresses.slice(n+1).every(j=>sectorDistance(i,j)>=4)),'Every pair of fortresses must be at least four sectors apart, including diagonally.');

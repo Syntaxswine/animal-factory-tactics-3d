@@ -1,6 +1,6 @@
 import {MapGeometryCache} from '../map-geometry-cache.js';
-import {helicopterRayHit} from '../scenery-rules.js';
-import {isHelicopter} from '../scenery-catalog.js';
+import {sceneryRayHit} from '../scenery-rules.js';
+import {isPhysicalScenery} from '../scenery-catalog.js';
 import {foliageSignature,synchronizeFoliage,traceFoliage} from '../foliage-obstacles.js';
 import {isStrategicSite,siteRayHit} from '../strategic-site-rules.js';
 import {unitBaseHeight} from '../tower-geometry.js';
@@ -19,13 +19,13 @@ function buildScene(s){const signature=foliageSignature(s);let c;
  for(const p of s.props||[]){const rule=PROPS[p.kind],height=rule?.tall?2.7:rule?.solid&&rule.cover>0?.8:0;for(const q of propCells(p))tall[index(q.x,q.y,q.z)]=Math.max(tall[index(q.x,q.y,q.z)],height);}
  for(const p of s.stairs||[])holes[index(p.x,p.y,p.z+1)]=1;
  for(const [k,v]of Object.entries(s.edges)){const [axis,x,y,z=0]=k.split(':'),rule=EDGES[v];if(+x>=0&&+y>=0&&rule?.opaque)(axis==='e'?east:south)[index(+x,+y,+z)]=rule.window?2:1;}
- c={helicopters:(s.props||[]).filter(isHelicopter),sites:(s.props||[]).filter(isStrategicSite),hasWoodland:!!Object.keys(s.foliage||{}).length||signature.includes('woodland'),signature,floors,tall,east,south,holes,foliage:synchronizeFoliage(s),observers:new Map()};return c;
+ c={scenery:(s.props||[]).filter(isPhysicalScenery),sites:(s.props||[]).filter(isStrategicSite),hasWoodland:!!Object.keys(s.foliage||{}).length||signature.includes('woodland'),signature,floors,tall,east,south,holes,foliage:synchronizeFoliage(s),observers:new Map()};return c;
 }
 // Cached grid traversal of the same .8-unit cover / 2.7-unit walls used by projectiles.
 // Reveal the destination surface itself; only intervening volumes hide a terrain tile.
 function clear(c,a,b){
  const az=levelOf(a),bz=levelOf(b),dx=b.x-a.x,dy=b.y-a.y,h0=unitBaseHeight(a)+eyeHeight(a),dh=bz*3+eyeHeight(a)-h0;
- if(c.helicopters.length){const length=Math.hypot(dx,dy,dh);if(length>.001&&helicopterRayHit(c.helicopters,{x:a.x,y:a.y,h:h0},{x:dx/length,y:dy/length,h:dh/length},Math.max(0,length-.51)))return false;}
+ if(c.scenery.length){const length=Math.hypot(dx,dy,dh);if(length>.001&&sceneryRayHit(c.scenery,{x:a.x,y:a.y,h:h0},{x:dx/length,y:dy/length,h:dh/length},Math.max(0,length-.51)))return false;}
  if(c.sites.length){const length=Math.hypot(dx,dy,dh);if(length>.001&&siteRayHit(c.sites,{x:a.x,y:a.y,h:h0},{x:dx/length,y:dy/length,h:dh/length},Math.max(0,length-.51)))return false;}
  const length=Math.hypot(dx,dy,dh);if(length>.51){const t=(length-.51)/length;if(traceFoliage(c.foliage,[a.x,h0,a.y],[a.x+dx*t,h0+dh*t,a.y+dy*t],'sight'))return false;}
  if(dh)for(let z=1;z<LEVELS;z++){const t=(z*3-h0)/dh;if(t<=0||t>=1)continue;const fx=a.x+dx*t,fy=a.y+dy*t;for(const x of [Math.round(fx-1e-8),Math.round(fx+1e-8)])for(const y of [Math.round(fy-1e-8),Math.round(fy+1e-8)])if(c.floors[index(x,y,z)]&&!c.holes[index(x,y,z)])return false;}
