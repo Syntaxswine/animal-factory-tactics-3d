@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import {hedgeObstacles} from './hedge-obstacles.js';
 import {isHedge} from './hedge-data.js';
 import {hedgeSurfaceHit,compileHedgeSurface} from './hedge-surfaces.js';
@@ -92,7 +93,7 @@ export function buildFoliageObstacles(m,{denseTreeMix=null,treesOnly=false}={}){
   const cv=p=>[p[0],simBase+(p[1]-worldBase)/SCALE,p[2]],s={...b,min:cv(b.min),max:cv(b.max)};if(b.hedgeTree)s.hedgeSpace={base:worldBase,simBase,scale:SCALE};if(b.beam)s.beam={a:cv(b.beam.a),b:cv(b.beam.b),radius:b.beam.radius};if(b.lobes)s.lobes=b.lobes.map(l=>({center:cv(l.center),radius:[l.radius[0],l.radius[1]/SCALE,l.radius[2]]}));boxes.push(s);
  }
  const candidates=[],infill=[],occupied=foliageOccupied(m);
- for(let z=0;z<=Math.min(2,m.upper?.length||0);z++)for(let y=0;y<depth;y++)for(let x=0;x<width;x++){
+ for(let z=0;z<=Math.min(MAP_LEVELS-1,m.upper?.length||0);z++)for(let y=0;y<depth;y++)for(let x=0;x<width;x++){
   const c=foliageAt(m,x,y,z);if(!c||occupied.has(`${x},${y},${z}`))continue;const rule=foliageRule(m,x,y,z),family=rule.family||biomeFamilyAt(m,x,y,z),[simBase,base]=bases(x,y,z),id=`foliage:${x},${y},${z}`,source={x,y,z};
   if(rule.opaque&&!treesOnly){
    const variation=groundHash(x+origin[0],y+origin[1],seed+43),height=rule.height*(1+.45*variation),lobes=[[.32,.50,.86],[1.10,.92,.89],[height-.75,.75,.86+.12*variation]].map(([h,ry,r])=>({center:[x,base+h,y],radius:[r,ry,r]}));

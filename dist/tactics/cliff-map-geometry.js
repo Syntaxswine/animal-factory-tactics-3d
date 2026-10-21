@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import * as T from './vendor/three.module.js';
 import {CLIFF_HEIGHT} from './cliff-models.js';
 import {cliffTileGeometry} from './cliff-tiles.js';
@@ -10,7 +11,7 @@ export function cliffGeometry(props=[]){
  const signature=JSON.stringify(props.filter(isCliff));
  let entry=cache.get(signature);if(entry)return entry;
  const index=new Map();
- for(let level=0;level<3;level++){
+ for(let level=0;level<MAP_LEVELS;level++){
   const tiles=cliffTiles(props,level);if(!tiles.length)continue;
   const geometry=cliffTileGeometry('mixed',tiles,{weathered:true}),a=geometry.attributes.position;
   for(let i=0;i<a.count;i+=3){

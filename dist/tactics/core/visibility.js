@@ -15,7 +15,7 @@ function scene(s){let cache=caches.get(s);if(!cache){cache=new MapGeometryCache(
 function buildScene(s){const signature=foliageSignature(s);let c;
  const floors=new Uint8Array(N*LEVELS),tall=new Float32Array(N*LEVELS),east=new Uint8Array(N*LEVELS),south=new Uint8Array(N*LEVELS),holes=new Uint8Array(N*LEVELS);
  for(let y=0;y<H;y++)for(let x=0;x<W;x++)tall[index(x,y,0)]=s.map[y][x]==='wall'?2.7:s.map[y][x]==='crate'?.8:0;
- for(let z=1;z<LEVELS;z++)for(const [k,t]of Object.entries(s.upper[z-1])){const [x,y]=k.split(',').map(Number);floors[index(x,y,z)]=1;tall[index(x,y,z)]=t==='wall'?2.7:t==='crate'?.8:0;}
+ for(let z=1;z<LEVELS;z++)for(const [k,t]of Object.entries(s.upper[z-1]||{})){const [x,y]=k.split(',').map(Number);floors[index(x,y,z)]=1;tall[index(x,y,z)]=t==='wall'?2.7:t==='crate'?.8:0;}
  for(const p of s.props||[]){const rule=PROPS[p.kind],height=rule?.tall?2.7:rule?.solid&&rule.cover>0?.8:0;for(const q of propCells(p))tall[index(q.x,q.y,q.z)]=Math.max(tall[index(q.x,q.y,q.z)],height);}
  for(const p of s.stairs||[])holes[index(p.x,p.y,p.z+1)]=1;
  for(const [k,v]of Object.entries(s.edges)){const [axis,x,y,z=0]=k.split(':'),rule=EDGES[v];if(+x>=0&&+y>=0&&rule?.opaque)(axis==='e'?east:south)[index(+x,+y,+z)]=rule.window?2:1;}

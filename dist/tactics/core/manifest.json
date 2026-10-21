@@ -4,15 +4,15 @@
   "revision": "e529f4b3d512d32cea522d701d01ebe8488af013",
   "overrides": {
     "blocks.js": {
-      "reason": "Preserve dialogue definitions when extracting modular blocks. Preserve and validate relative spotlight routes in reusable blocks. Copy authored upper floors without materializing arch-owned surfaces into detached floors. Translate and validate reusable character patrol routes. Preserve and relocate foliage overlays with reusable blocks, including legacy foliage terrain. Preserve and relocate authored breach markers with reusable blocks. Keep painted-land ownership when extracting, placing and replacing blocks. Preserve builder roof layer through block extraction and placement. Preserve authored door locks across block extraction and placement. Preserve and remap character links on block duplication.",
+      "reason": "Preserve dialogue definitions when extracting modular blocks. Preserve and validate relative spotlight routes in reusable blocks. Copy authored upper floors without materializing arch-owned surfaces into detached floors. Translate and validate reusable character patrol routes. Preserve and relocate foliage overlays with reusable blocks, including legacy foliage terrain. Preserve and relocate authored breach markers with reusable blocks. Keep painted-land ownership when extracting, placing and replacing blocks. Preserve builder roof layer through block extraction and placement. Preserve authored door locks across block extraction and placement. Preserve and remap character links on block duplication. Preserve all authored layers through reusable blocks.",
       "upstreamSha256": "4c4961c7c9897640dafca906384569f5337bfabbc2a907adb88ca8e64a733bf4"
     },
     "connections.js": {
-      "reason": "Require neighboring authored doors to agree on lock difficulty.",
+      "reason": "Require neighboring authored doors to agree on lock difficulty. Include all supported heights in boundary profiles.",
       "upstreamSha256": "2bb8904311632f7f1bd7320a9743f08b052ff2eeda8888b0b0fd8f3497a9686f"
     },
     "editor-model.js": {
-      "reason": "Persist hedge version and seed on new placements. Author rusty ladders without changing the portable ladder geometry. Persist full scenery orientation and reject machine headroom conflicts before committing a prop. Paint dense foliage with the same protected occupancy rules as other blocking terrain. Preserve the optional trusted sabotage action when placing a strategic site. Preserve donkey guide outfits and allow supported cliff tiles at water edges. Author tagged cliff links using supported adjacent levels. Assign permanent identities at character creation.",
+      "reason": "Persist hedge version and seed on new placements. Author rusty ladders without changing the portable ladder geometry. Persist full scenery orientation and reject machine headroom conflicts before committing a prop. Paint dense foliage with the same protected occupancy rules as other blocking terrain. Preserve the optional trusted sabotage action when placing a strategic site. Preserve donkey guide outfits and allow supported cliff tiles at water edges. Author tagged cliff links using supported adjacent levels. Assign permanent identities at character creation. Author floors, walls and access links on the extended layers.",
       "upstreamSha256": "efc52683fd45c060242aac64a1c3dc26e468ecc7be8b04589bd792db1a92b262"
     },
     "engine.js": {
@@ -24,7 +24,7 @@
       "upstreamSha256": "424fa8b3f1287ac42a84f24e853ed382dabfd51bae10940fe62caa2b460d123a"
     },
     "explosives.js": {
-      "reason": "Invalidate geometry immediately after each nonstructural blast removal. A blast can affect its own scenery surface without treating other machines as transparent; natural stone arches share the cliff-terrain blast policy. Apply persistent material HP to walls and floors after resolving blast exposure against intact scenery. Hand grenades use stat-scaled ballistic lobs, original-target accuracy, swept bounces and steep cover-shielded damage falloff. Replace exposed strategic structures with persistent wrecks rather than deleting their footprints. Report exposed explosive barrels for the shared fuel-blast pipeline instead of silently deleting them. Use physical tower heights, weapon skills and endurance-aware explosive previews.",
+      "reason": "Invalidate geometry immediately after each nonstructural blast removal. A blast can affect its own scenery surface without treating other machines as transparent; natural stone arches share the cliff-terrain blast policy. Apply persistent material HP to walls and floors after resolving blast exposure against intact scenery. Hand grenades use stat-scaled ballistic lobs, original-target accuracy, swept bounces and steep cover-shielded damage falloff. Replace exposed strategic structures with persistent wrecks rather than deleting their footprints. Report exposed explosive barrels for the shared fuel-blast pipeline instead of silently deleting them. Use physical tower heights, weapon skills and endurance-aware explosive previews. Apply blast geometry across every authored layer.",
       "upstreamSha256": "ab0e3a635edf516022bbe247b3a20651d2323053321573ea0bf6fb1e42525b38"
     },
     "inventory.js": {
@@ -32,7 +32,7 @@
       "upstreamSha256": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f"
     },
     "maps.js": {
-      "reason": "Validate embedded data-only dialogue resources. Validate versioned hedge placements and deterministic seeds. Expose physical window, wall and ladder routes and validate ladder condition. Invalidate live geometry when terrain changes or a door opens; editable map clones keep content checks. Validate optional local environment fields while preserving older maps. Validate spotlight aim points and game-clock waits. Use physical scenery movement clearance and derived stone-arch tops, validate full orientation and headroom, and preserve authored squad facing. Validate authored patrol waypoints. Validate ground-preserving foliage overlays on all three levels and honor independent walking restrictions. Validate authored broken walls and floor holes. Validate ground-only strategic sites and follow their baked continuous passage links. Validate automatic-land ownership on import. Trace trellis gaps and beams with the shared sculpted profile. Validate nonwalkable fourth-level roof decoration. Derive roof climbs from marked roof footprints. Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks.",
+      "reason": "Validate embedded data-only dialogue resources. Validate versioned hedge placements and deterministic seeds. Expose physical window, wall and ladder routes and validate ladder condition. Invalidate live geometry when terrain changes or a door opens; editable map clones keep content checks. Validate optional local environment fields while preserving older maps. Validate spotlight aim points and game-clock waits. Use physical scenery movement clearance and derived stone-arch tops, validate full orientation and headroom, and preserve authored squad facing. Validate authored patrol waypoints. Validate ground-preserving foliage overlays on all three levels and honor independent walking restrictions. Validate authored broken walls and floor holes. Validate ground-only strategic sites and follow their baked continuous passage links. Validate automatic-land ownership on import. Trace trellis gaps and beams with the shared sculpted profile. Validate nonwalkable fourth-level roof decoration. Derive roof climbs from marked roof footprints. Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks. Support authored layers 1–5 while retaining legacy map shapes.",
       "upstreamSha256": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73"
     },
     "progression.js": {
@@ -44,11 +44,11 @@
       "upstreamSha256": "f8b2afc98c686cd892189d17f4fe7cb7ae7c16b8d8f2f8609ca78cf8b3192674"
     },
     "visibility.js": {
-      "reason": "Reuse terrain sight geometry across live actor updates, retaining content checks for mutable editor maps. Physical scenery shields sight while leaving real openings clear. Invalidate terrain visibility when foliage changes. Strategic-site geometry shields terrain without making the entire reserved area opaque.",
+      "reason": "Reuse terrain sight geometry across live actor updates, retaining content checks for mutable editor maps. Physical scenery shields sight while leaving real openings clear. Invalidate terrain visibility when foliage changes. Strategic-site geometry shields terrain without making the entire reserved area opaque. Treat absent legacy upper layers as empty.",
       "upstreamSha256": "17d3de4a6aca835dc176ac3fcc9f460fb12aae83bf5d2c0154b29a789ed5dc48"
     },
     "woodland.js": {
-      "reason": "Density controls foliage concealment independently of passability.",
+      "reason": "Density controls foliage concealment independently of passability. Split cross-level foliage rays at every supported layer.",
       "upstreamSha256": "3b9258e58a2cdfb43b855f11b5b0cba4587237f44ce78bd33ddf32f308e4b0e2"
     },
     "world.js": {
@@ -58,24 +58,24 @@
   },
   "files": {
     "archetypes.js": "470bf7f2bd4ce9b6627c18ee041abf1e63df42769bab7e14e590e93c8ff6756d",
-    "blocks.js": "cb030f3fc3d7c529bd45ebfbb6bcccacbadb518beeea630be903f2a3cdf26b76",
-    "connections.js": "af3e6efc646f7fc67f18fa87ddad5ac54edab58a4a743f2e7a63d15e89f1838d",
-    "editor-model.js": "57d94bb0c16d8c4fa330f8a516ce0b281b9d3592d435d2142ad2859cde7d5f9b",
+    "blocks.js": "5ddb7871d9ba08c02a6d545adedfb630ace6be8299664ca4d2e636ddf4150d85",
+    "connections.js": "71d66813df6da52a4761c77fc810ab101501aeaa91847212dfc6049be6739d29",
+    "editor-model.js": "17ee9cba57988a411da814d9e3440597d45d502eb1f73558278a958985045629",
     "engine.js": "a326bbe6b2dd92d50c025622bc9dd18b78ac1cdc117bf7c16b43351c6c6fae8d",
     "environment.js": "09da91feb7a9526181870b3e6f1d4811d448676b6dd24cc354b0087c40b5950c",
-    "explosives.js": "b214c55c739ba7548f788da8496503f65d19936ed0b4fb3bbf34c57d02989a19",
+    "explosives.js": "80412c8a0eacc318c8488b831a52833fb13c606d23bf57df3d4bc819d267268a",
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "8e63ac2c2783edf5e4884f31c687494dbc4910edbfe620299302911394c539cb",
-    "maps.js": "6377429caaee57b1aff0427b757ab322799c34e8d5bab396a073c61ba19658a0",
+    "maps.js": "310586d137183bdcb83f840dcd5e522596f747645b130bb5dd35f64a34fb4d9a",
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",
     "projectiles.js": "95fb8924c6fd1eb82f36c183c5395f55e7bc135742c685620bcf10c481ccb5d9",
     "recruits.js": "5e4495962cdad3d0b57f0d1784bddbf54fa785e6e00a9ae932cfb7dbbbeeb81b",
     "sector-rules.js": "d20ee872471a503a60ac706655b19f9ba9857c41882dd6cc6a08d61e3572132a",
-    "visibility.js": "01ac5ac79df9fe9f4f4cde1cb1c6d5ef76ebe63c9ef3faca9a319f919e6a8941",
-    "woodland.js": "9ec3ae7a46e4a484151d1a2f4c567f48ffca359248c8bacca47e4083b2d4c58f",
+    "visibility.js": "7de75c00fd525d86fd29ef3d22de58c51fab4de85a0e9e414f0f402028051c94",
+    "woodland.js": "fc1e44c6f18c1bc9936eaabb8db2001e80d96677efc6cca77094aafdb8b7881c",
     "world.js": "f3f516f61b837f5bd3df582d04b5b2d15b54e461ce109e64acdce42cc27de6fe"
   }
 }

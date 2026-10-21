@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import {synchronizeFoliage} from './foliage-obstacles.js';
 import {foliageAt,foliageTerrain,foliageGround,foliageTreeAt,foliageRule,foliageOccupied} from './foliage-data.js';
 import {DIMENSIONS} from './hybrid-world.js';
@@ -15,7 +16,7 @@ export function biomePlans(map,obstacles){
  const occupied=foliageOccupied(map);
  const ledges=new Set((map.props||[]).filter(p=>p.kind==='cliff-ledge'&&(p.cliffMask??15)===15).map(p=>`${p.x},${p.y},${(p.z||0)+1}`));
  const origin=map.environment?.origin?.map(n=>n*240)||[0,0];
- for(let level=0;level<=Math.min(2,map.upper?.length||0);level++){
+ for(let level=0;level<=Math.min(MAP_LEVELS-1,map.upper?.length||0);level++){
   const families=new Map(),heights=new Float64Array(width*depth).fill(NaN),density=new Uint8Array(width*depth),blocked=new Uint8Array(width*depth),natural=new Uint8Array(width*depth),familyAt=new Array(width*depth);
   for(let y=0;y<depth;y++)for(let x=0;x<width;x++){
    const t=foliageTerrain(map,x,y,level),i=y*width+x;if(!foliageGround(t)||occupied.has(`${x},${y},${level}`))continue;

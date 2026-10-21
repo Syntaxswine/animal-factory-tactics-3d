@@ -36,11 +36,18 @@
     }
   ],
   "variants": [
+    "rough-plateau-01-four-high.json",
     "rough-plateau.json",
     "placeholder.json"
   ],
   "notes": [
     "Layout reservation only. Author plateau perimeter, elevations and the town connection as one six-sector group (town 5/6, plateau 4/3, plateau 2/1)."
   ],
-  "preview": "rough-plateau.svg"
+  "preview": "rough-plateau-01-four-high.svg",
+  "variantDetails": {
+    "rough-plateau-01-four-high.json": {
+      "status": "in-progress",
+      "preview": "rough-plateau-01-four-high.svg"
+    }
+  }
 }

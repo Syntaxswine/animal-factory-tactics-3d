@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import * as T from './vendor/three.module.js';
 import {createGrenadeModel} from './grenade-model.js';
 import {createGrenadeThrow} from './grenade-throw-motion.js';
@@ -12,7 +13,7 @@ export function grenadePhase(shot,elapsed){
  return {duration:blast+(shot.reduced?180:GRENADE_BLAST_DURATION*1000),released:elapsed>=release,discharged:elapsed>=blast,flightAge:Math.max(0,(elapsed-release)/1000),blastAge:(elapsed-blast)/1000,time:elapsed/1000,aim:0,recoil:0};
 }
 export function grenadeAt(path,time){let i=1;while(i<path.length-1&&path[i].t<time)i++;const a=path[i-1],b=path[i],t=Math.max(0,Math.min(1,(time-a.t)/Math.max(1e-9,b.t-a.t)));return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,h:a.h+(b.h-a.h)*t};}
-export const visibleGrenade=(s,p)=>[0,1,2,3].some(z=>s.visible.has(z?`${Math.round(p.x)},${Math.round(p.y)},${z}`:`${Math.round(p.x)},${Math.round(p.y)}`));
+export const visibleGrenade=(s,p)=>Array.from({length:MAP_LEVELS},(_,z)=>z).some(z=>s.visible.has(z?`${Math.round(p.x)},${Math.round(p.y)},${z}`:`${Math.round(p.x)},${Math.round(p.y)}`));
 const animatedThrow=(unit,shot)=>shot?.event.grenade&&!shot.reduced&&unit.hp>0&&unit.weapon==='grenade'&&GRENADE_PREPARED[unit.species]&&(shot.shooter.stance||'standing')==='standing'&&shot.phase.time<(shot.event.grenade.recovery??4.6)&&!(unit.burningTurns&&shot.phase.discharged);
 export class BattleGrenades {
  constructor(scene,{loader=null,onError=()=>{}}={}){

@@ -1,9 +1,10 @@
+import {MAP_LEVELS,validLayerCount,ensureMapLayer} from '../map-layers.js';
 import {tutorialRoleErrors} from '../tutorial-mission.js';
 import {dialogueMapErrors} from '../dialogue-schema.js';
 import {hedgeErrors} from '../hedge-data.js';
 import {boundaryClimbs} from '../climbing-routes.js';
 import {climbingMapErrors} from '../climbing.js';
-import {invalidateMapGeometry} from '../map-geometry-cache.js';
+import {invalidateMapGeometry,trackMapGeometry} from '../map-geometry-cache.js';
 import {localEnvironmentErrors} from '../environment-regions.js';
 import {spotlightErrors} from '../light-sources.js';
 import {archTerrainAt} from '../stone-arches.js';
@@ -27,13 +28,13 @@ import {validateConnections} from './connections.js';
 import {GROUNDS,PROPS,EDGES,floorTerrain,propAt,propCells,propBlocks} from './environment.js';
 import {generateSectorPlan,validateSectorPlan} from './sector-rules.js';
 // Shared local-map geometry. Ground keys stay compatible with version-1 drafts.
-export const W=240,H=240,LEVELS=3,SECTOR=24,MAX_GUARDS=46,MAX_MAP_BYTES=4000000;
+export const W=240,H=240,LEVELS=MAP_LEVELS,SECTOR=24,MAX_GUARDS=46,MAX_MAP_BYTES=4000000;
 export const levelOf=p=>p.z??0;
 export const tileKey=(x,y,z=0)=>z?`${x},${y},${z}`:`${x},${y}`;
 export const edgeKey=(axis,x,y,z=0)=>`${axis}:${x}:${y}${z?':'+z:''}`;
 export const inBounds=(x,y,z=0)=>Number.isInteger(x)&&Number.isInteger(y)&&Number.isInteger(z)&&x>=0&&y>=0&&x<W&&y<H&&z>=0&&z<LEVELS;
 export function terrainAt(m,x,y,z=0){if(!inBounds(x,y,z))return 'void';if(m.knowledge&&!m.knowledge.has(tileKey(x,y,z)))return z?'floor':'yard';return z===0?(m.terrain||m.map)[y][x]:(m.upper?.[z-1]?.[tileKey(x,y)]||archTerrainAt(m,x,y,z)||'void');}
-export function setTerrain(m,x,y,z,value){if(!inBounds(x,y,z))return false;if(m.foliage&&!foliageGround(value))delete m.foliage[foliageKey(x,y,z)];if(!z)m.terrain[y][x]=value;else if(value==='void')delete m.upper[z-1][tileKey(x,y)];else m.upper[z-1][tileKey(x,y)]=value;invalidateMapGeometry(m);return true;}
+export function setTerrain(m,x,y,z,value){if(!inBounds(x,y,z))return false;if(m.foliage&&!foliageGround(value))delete m.foliage[foliageKey(x,y,z)];if(z&&value!=='void')ensureMapLayer(m,z);if(!z)m.terrain[y][x]=value;else if(value==='void'){if(m.upper[z-1])delete m.upper[z-1][tileKey(x,y)];}else m.upper[z-1][tileKey(x,y)]=value;invalidateMapGeometry(m);return true;}
 export const passable=(m,p)=>floorTerrain(terrainAt(m,p.x,p.y,levelOf(p)))&&!foliageBlocks(m,p.x,p.y,levelOf(p))&&!propBlocks(m,p.x,p.y,levelOf(p));
 export function edgeBetween(a,b){if(levelOf(a)!==levelOf(b)||Math.abs(a.x-b.x)+Math.abs(a.y-b.y)!==1)return null;return a.x!==b.x?edgeKey('e',Math.min(a.x,b.x),a.y,levelOf(a)):edgeKey('s',a.x,Math.min(a.y,b.y),levelOf(a));}
 export function blockedEdge(m,a,b){const k=edgeBetween(a,b);return !k||parapetBlocks(m,a,b)||!!EDGES[m.edges?.[k]]?.solid;}
@@ -53,7 +54,7 @@ export function neighbors(m,p,stairs=stairSet(m),includeDiagonals=true){
 
 // Marked roof edges connect an outdoor foothold to the adjacent upper platform.
 export const roofTop=p=>({x:p.x+p.dx,y:p.y+p.dy,z:p.z+1});
-export const roofValid=(m,p)=>inBounds(p.x,p.y,p.z)&&p.z<2&&Math.abs(p.dx)+Math.abs(p.dy)===1&&Number.isInteger(p.dx)&&Number.isInteger(p.dy)&&passable(m,p)&&passable(m,roofTop(p))&&!parapetAt(m,roofTop(p))&&terrainAt(m,p.x,p.y,p.z+1)==='void'&&!blockedEdge(m,{x:p.x,y:p.y,z:p.z+1},roofTop(p));
+export const roofValid=(m,p)=>inBounds(p.x,p.y,p.z)&&p.z<LEVELS-1&&Math.abs(p.dx)+Math.abs(p.dy)===1&&Number.isInteger(p.dx)&&Number.isInteger(p.dy)&&passable(m,p)&&passable(m,roofTop(p))&&!parapetAt(m,roofTop(p))&&terrainAt(m,p.x,p.y,p.z+1)==='void'&&!blockedEdge(m,{x:p.x,y:p.y,z:p.z+1},roofTop(p));
 const roofCache=new WeakMap();
 function roofIndex(m){const links=m.climbs;if(!links)return new Map();if(roofCache.has(links))return roofCache.get(links);const index=new Map();for(const p of links)for(const q of [p,roofTop(p)]){const k=tileKey(q.x,q.y,q.z);if(!index.has(k))index.set(k,[]);index.get(k).push(p);}roofCache.set(links,index);return index;}
 export function roofNeighbors(m,p){return [...(roofIndex(m).get(tileKey(p.x,p.y,levelOf(p)))||[]),...automaticRoofLinksAt(m,p)].filter((q,i,all)=>all.findIndex(r=>r.x===q.x&&r.y===q.y&&r.z===q.z&&r.dx===q.dx&&r.dy===q.dy)===i&&roofValid(m,q)).map(q=>({...((levelOf(p)===q.z)?roofTop(q):{x:q.x,y:q.y,z:q.z}),cost:q.kind==='cliff'?8:6,kind:q.kind==='cliff'?'cliff':'roof'}));}
@@ -63,7 +64,7 @@ export function canStep(m,a,b){return neighbors(m,a).some(p=>p.x===b.x&&p.y===b.
 export const SPECIES=['horse','goat','donkey','sheep','cow','hen','pig-foreman','pig-director','skunk'];
 export const WEAPON_IDS=['hands','knife','pistol','rifle','assault','flamethrower','grenade','launcher','rpg','shotgun','sniper','smg','hmg'];
 export function blankMap(name='Untitled local map'){
- return {version:2,width:W,height:H,levels:LEVELS,name,terrain:Array.from({length:H},()=>Array(W).fill('yard')),upper:[{},{}],edges:{},stairs:[],climbs:[],props:[],starts:[{x:3,y:4,z:0},{x:3,y:6,z:0},{x:2,y:5,z:0},{x:2,y:7,z:0}],guards:[],exits:[{x:3,y:5,z:0}]};
+ return {version:2,width:W,height:H,levels:3,name,terrain:Array.from({length:H},()=>Array(W).fill('yard')),upper:[{},{}],edges:{},stairs:[],climbs:[],props:[],starts:[{x:3,y:4,z:0},{x:3,y:6,z:0},{x:2,y:5,z:0},{x:2,y:7,z:0}],guards:[],exits:[{x:3,y:5,z:0}]};
 }
 export function stampRoom(m,x,y,w=7,h=6,z=0){
  if(!inBounds(x,y,z)||!Number.isInteger(w)||!Number.isInteger(h)||w<2||h<2||x+w>W||y+h>H)return false;
@@ -79,7 +80,7 @@ export function factoryMap(){
  [[12,6,'pig-foreman','pistol'],[15,5,'cow','rifle'],[16,9,'pig-foreman','pistol'],[13,9,'donkey','knife'],[21,4,'pig-foreman','flamethrower'],[23,5,'goat','pistol'],[22,9,'cow','rifle'],[23,11,'pig-foreman','pistol'],[18,16,'pig-foreman','pistol'],[22,17,'donkey','knife'],[18,20,'cow','rifle'],[22,20,'pig-foreman','assault']].forEach(([x,y,species,weapon])=>m.guards.push({x,y,z:0,species,weapon}));
  m.guards[0].heading=0; // Face east, away from the west entrance.
  // A visible, accessible three-level training stairwell near the squad start.
- for(let z=1;z<LEVELS;z++)stampRoom(m,1,9,5,5,z);
+ for(let z=1;z<3;z++)stampRoom(m,1,9,5,5,z);
  addStairs(m,3,10,0);addStairs(m,3,12,1,'ladder');m.props=[{x:7,y:10,z:0,kind:'barrel-single'},{x:7,y:17,z:0,kind:'workbench-vise'},{x:4,y:16,z:0,kind:'sandbags'},{x:4,y:18,z:0,kind:'hospital-bed'},{x:5,y:18,z:0,kind:'iv-stand'},{x:4,y:21,z:0,kind:'medicine-cabinet-closed'},{x:9,y:17,z:0,kind:'toolbox-open'},{x:8,y:19,z:0,kind:'spare-parts'},{x:1,y:2,z:0,kind:'tree-broadleaf'},{x:7,y:2,z:0,kind:'tree-pine'},{x:1,y:7,z:0,kind:'bush'},{x:8,y:3,z:0,kind:'reeds'},{x:1,y:9,z:1,kind:'roof-corrugated-flat'},{x:4,y:9,z:1,kind:'roof-corrugated-sloped'},{x:4,y:12,z:2,kind:'roof-flat-parapet'}];return m;
 }
 const index=p=>levelOf(p)*W*H+p.y*W+p.x;
@@ -89,24 +90,24 @@ function reachedTargets(m,targets){
  while(head<tail&&needed.size){const id=queue[head++],z=Math.floor(id/(W*H)),n=id%(W*H),p={x:n%W,y:Math.floor(n/W),z};for(const next of neighbors(m,p,stairs,false)){const v=index(next);if(!visited[v]){visited[v]=1;queue[tail++]=v;needed.delete(v);}}}return needed;
 }
 export function validateMap(raw,{connectivity=true}={}){
- const errors=[],point=p=>p&&inBounds(p.x,p.y,levelOf(p));
- if(!raw||raw.version!==2||raw.width!==W||raw.height!==H||raw.levels!==LEVELS)return ['Expected a version 2 map: 240 × 240 tiles and 3 levels.'];
+ const errors=[],point=p=>p&&inBounds(p.x,p.y,levelOf(p))&&levelOf(p)<raw.levels;
+ if(!raw||raw.version!==2||raw.width!==W||raw.height!==H||!validLayerCount(raw.levels))return ['Expected a version 2 map: 240 × 240 tiles and 3–5 layers.'];
  if(typeof raw.name!=='string'||raw.name.length<1||raw.name.length>60)errors.push('Map name must contain 1–60 characters.');
  if(!Array.isArray(raw.terrain)||raw.terrain.length!==H||raw.terrain.some(r=>!Array.isArray(r)||r.length!==W||r.some(t=>!['yard','floor','crate','void','water','bridge','woodland','woodland-dense',...GROUNDS].includes(t))))return [...errors,'Invalid ground terrain.'];
- if(!Array.isArray(raw.upper)||raw.upper.length!==2)return [...errors,'Expected two sparse upper levels.'];
+ if(!Array.isArray(raw.upper)||raw.upper.length!==raw.levels-1)return [...errors,'Expected one sparse upper floor per declared layer above ground.'];
  for(const layer of raw.upper){if(!layer||typeof layer!=='object'||Array.isArray(layer))return [...errors,'Invalid upper floor.'];for(const [k,v]of Object.entries(layer)){const [x,y]=k.split(',').map(Number);if(k!==tileKey(x,y)||!inBounds(x,y)||!['yard','floor','crate','bridge','woodland','woodland-dense',...GROUNDS].includes(v))return [...errors,'Invalid upper floor tile.'];}}
  if(raw.edgeLocks!==undefined&&(!raw.edgeLocks||typeof raw.edgeLocks!=='object'||Array.isArray(raw.edgeLocks)))return [...errors,'Invalid door locks.'];
  for(const [key,value]of Object.entries(raw.edgeLocks||{}))if(!EDGES[raw.edges?.[key]]?.opensTo||!Number.isInteger(value)||value<1||value>100)return [...errors,'Door locks require closed doors and difficulty 1-100.'];
  for(const p of raw.props||[])if(p.condition!==undefined&&(!Number.isInteger(p.condition)||p.condition<0||p.condition>100))return [...errors,'Fixture condition must be 0-100.'];
  if(!raw.edges||typeof raw.edges!=='object'||Array.isArray(raw.edges))return [...errors,'Missing edge barriers.'];
- for(const [k,v]of Object.entries(raw.edges)){const p=/^(e|s):(-?\d+):(-?\d+)(?::([12]))?$/.exec(k);if(!p)return [...errors,'Invalid edge key.'];const x=Number(p[2]),y=Number(p[3]),z=Number(p[4]||0);if(!Object.hasOwn(EDGES,v)||k!==edgeKey(p[1],x,y,z)||(p[1]==='e'?(x< -1||x>=W||y<0||y>=H):(x<0||x>=W||y< -1||y>=H)))return [...errors,'Invalid edge location or type.'];}
+ for(const [k,v]of Object.entries(raw.edges)){const p=/^(e|s):(-?\d+):(-?\d+)(?::([1-4]))?$/.exec(k);if(!p)return [...errors,'Invalid edge key.'];const x=Number(p[2]),y=Number(p[3]),z=Number(p[4]||0);if(!Object.hasOwn(EDGES,v)||k!==edgeKey(p[1],x,y,z)||(p[1]==='e'?(x< -1||x>=W||y<0||y>=H):(x<0||x>=W||y< -1||y>=H)))return [...errors,'Invalid edge location or type.'];}
  if(!Array.isArray(raw.starts)||raw.starts.length!==4||raw.starts.some(p=>!point(p)))return [...errors,'Place exactly four valid squad starts.'];
  for(const p of raw.starts)if(p.heading!==undefined&&(!Number.isFinite(p.heading)||p.heading<0||p.heading>=360))errors.push('Squad facing must be between 0 and 359 degrees.');
  if(!Array.isArray(raw.guards)||raw.guards.length>MAX_GUARDS||raw.guards.some(g=>!point(g)||!SPECIES.includes(g.species)||!WEAPON_IDS.includes(g.weapon)||(g.outfit!==undefined&&!['normal','red-hats'].includes(g.outfit)&&!(g.species==='donkey'&&g.outfit==='blue-hawaiian'))))return [...errors,'Use at most 46 guards (50 characters including the squad).'];
  if(raw.guards.some(g=>g.heading!==undefined&&(!Number.isFinite(g.heading)||g.heading<0||g.heading>=360)))return [...errors,'Guard facing must be between 0 and 359 degrees.'];
  if(!Array.isArray(raw.exits)||raw.exits.length!==1||!point(raw.exits[0]))return [...errors,'Place one valid travel marker.'];
- if(!Array.isArray(raw.stairs)||raw.stairs.length>4096||raw.stairs.some(p=>!point(p)||!Number.isInteger(p.z)||p.z>=2||(p.kind!==undefined&&!['stairs','ladder'].includes(p.kind))))return [...errors,'Invalid stairs: lower level must be 0 or 1.'];
- if(raw.climbs!==undefined&&(!Array.isArray(raw.climbs)||raw.climbs.length>4096||raw.climbs.some(p=>!point(p)||(p.kind!==undefined&&p.kind!=='cliff')||!Number.isInteger(p.z)||p.z>=2||!Number.isInteger(p.dx)||!Number.isInteger(p.dy)||Math.abs(p.dx)+Math.abs(p.dy)!==1)))return [...errors,'Invalid roof climb: adjacent tiles and exactly one level required.'];
+ if(!Array.isArray(raw.stairs)||raw.stairs.length>4096||raw.stairs.some(p=>!point(p)||!Number.isInteger(p.z)||p.z>=raw.levels-1||(p.kind!==undefined&&!['stairs','ladder'].includes(p.kind))))return [...errors,'Invalid stairs: an upper landing layer is required.'];
+ if(raw.climbs!==undefined&&(!Array.isArray(raw.climbs)||raw.climbs.length>4096||raw.climbs.some(p=>!point(p)||(p.kind!==undefined&&p.kind!=='cliff')||!Number.isInteger(p.z)||p.z>=raw.levels-1||!Number.isInteger(p.dx)||!Number.isInteger(p.dy)||Math.abs(p.dx)+Math.abs(p.dy)!==1)))return [...errors,'Invalid roof climb: adjacent tiles and exactly one level required.'];
  if(raw.props!==undefined&&(!Array.isArray(raw.props)||raw.props.length>4096||raw.props.some(p=>!point(p)||!Object.hasOwn(PROPS,p.kind)||(p.rotated!==undefined&&typeof p.rotated!=='boolean'))))return [...errors,'Invalid environment props.'];
  if((raw.props||[]).some(p=>isScenery(p)&&p.rotation!==undefined&&!SCENERY_ROTATIONS.includes(p.rotation)))return [...errors,'Scenery orientation must be 0°, 90°, 180° or 270°.'];
  errors.push(...sceneryPlacementErrors(raw,null,PROPS,EDGES));
@@ -118,7 +119,7 @@ export function validateMap(raw,{connectivity=true}={}){
  const stairKeys=new Set();for(const p of raw.stairs){const k=stairKey(p.x,p.y,p.z);if(stairKeys.has(k))errors.push('Duplicate stair connection.');stairKeys.add(k);if(!passable(raw,p)||!passable(raw,{...p,z:p.z+1}))errors.push(`Stairs at ${k} need walkable floors at both ends.`);}
  errors.push(...climbingMapErrors(raw),...characterErrors(raw),...dialogueMapErrors(raw),...tutorialRoleErrors(raw),...patrolMapErrors(raw,240,passable));for(const p of raw.starts)if(p.species!==undefined&&!SPECIES.includes(p.species)||p.weapon!==undefined&&!WEAPON_IDS.includes(p.weapon)||p.outfit!==undefined&&!['normal','red-hats'].includes(p.outfit)&&!(p.species==='donkey'&&p.outfit==='blue-hawaiian'))errors.push('Unsupported squad appearance or weapon.');const positions=new Set();for(const p of [...raw.starts,...raw.guards]){const k=tileKey(p.x,p.y,levelOf(p));if(positions.has(k))errors.push(`Overlapping unit starts at ${k}.`);positions.add(k);if(p.towerPost?!towerForUnit(raw,p):!passable(raw,p))errors.push(`Unit start needs a walkable floor or valid tower post at ${k}.`);}
  if(!passable(raw,raw.exits[0]))errors.push('Travel marker needs a walkable floor.');if(errors.length||!connectivity)return [...new Set(errors)];
- const targets=[...raw.starts,...raw.guards,...raw.exits,...raw.guards.flatMap(g=>g.patrol||[])].map(p=>towerForUnit(raw,p)?towerEntry(towerForUnit(raw,p)):p),missing=reachedTargets({...raw,edgeLocks:{}},targets);for(const p of targets)if(missing.has(index(p)))errors.push(`Unreachable start, marker or patrol waypoint at ${p.x},${p.y}, level ${levelOf(p)+1}. Add doors or stairs.`);return errors;
+ const targets=[...raw.starts,...raw.guards,...raw.exits,...raw.guards.flatMap(g=>g.patrol||[])].map(p=>towerForUnit(raw,p)?towerEntry(towerForUnit(raw,p)):p),missing=reachedTargets(trackMapGeometry({...raw,terrain:raw.terrain.slice(),edgeLocks:{}}),targets);for(const p of targets)if(missing.has(index(p)))errors.push(`Unreachable start, marker or patrol waypoint at ${p.x},${p.y}, level ${levelOf(p)+1}. Add doors or stairs.`);return errors;
 }
 export function migrateMap(raw){
  if(raw?.version!==1)return raw;
@@ -131,7 +132,7 @@ export function generateMap(seed=7,name='Generated test',population=MAX_GUARDS,o
  if(options.layout==='river')return generateRiverMap(seed,name,population,options.orientation||'ns');
  let state=Number(seed)>>>0;const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;},m=blankMap(name);
  // One open workshop per sector; corridors and doors are protected from scatter.
- for(let sy=0;sy<10;sy++)for(let sx=0;sx<10;sx++){const x=sx*SECTOR+10,y=sy*SECTOR+9,w=6+Math.floor(random()*3),h=6;stampRoom(m,x,y,w,h);if((sx+sy)%4===0){for(let z=1;z<LEVELS;z++)stampRoom(m,x,y,w,h,z);addStairs(m,x+1,y+1,0);addStairs(m,x+2,y+1,1);}for(let i=0;i<3;i++){const cx=x+2+Math.floor(random()*(w-3)),cy=y+3+Math.floor(random()*2);m.terrain[cy][cx]='crate';}const furnishings=['lab-bench','botanical-chamber','lab-control-console','medical-exam-table','medical-surgical-table','medicine-cabinet','hospital-bed','wheeled-stretcher','scrub-sink','iv-stand','bedside-monitor','instrument-trolley','wooden-crate-closed','supply-chest-open','toolbox-closed'];m.props.push({x:x+3,y:y+1,z:0,kind:furnishings[(sy*10+sx)%furnishings.length]});}
+ for(let sy=0;sy<10;sy++)for(let sx=0;sx<10;sx++){const x=sx*SECTOR+10,y=sy*SECTOR+9,w=6+Math.floor(random()*3),h=6;stampRoom(m,x,y,w,h);if((sx+sy)%4===0){for(let z=1;z<3;z++)stampRoom(m,x,y,w,h,z);addStairs(m,x+1,y+1,0);addStairs(m,x+2,y+1,1);}for(let i=0;i<3;i++){const cx=x+2+Math.floor(random()*(w-3)),cy=y+3+Math.floor(random()*2);m.terrain[cy][cx]='crate';}const furnishings=['lab-bench','botanical-chamber','lab-control-console','medical-exam-table','medical-surgical-table','medicine-cabinet','hospital-bed','wheeled-stretcher','scrub-sink','iv-stand','bedside-monitor','instrument-trolley','wooden-crate-closed','supply-chest-open','toolbox-closed'];m.props.push({x:x+3,y:y+1,z:0,kind:furnishings[(sy*10+sx)%furnishings.length]});}
  for(let i=0;i<Math.min(MAX_GUARDS,Math.max(0,population));i++){const sector=(i*17+12)%100,sx=sector%10,sy=Math.floor(sector/10),x=sx*SECTOR+11,y=sy*SECTOR+11,z=(sx+sy)%4===0?i%3:0;m.guards.push({x,y,z,species:['pig-foreman','cow','donkey','goat'][i%4],weapon:['pistol','rifle','knife','assault'][i%4],outfit:'red-hats'});}return m;
 }
 

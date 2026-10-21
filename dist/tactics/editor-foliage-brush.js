@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import {FOLIAGE_PRESETS} from './foliage-presets.js';
 import {biomeFamilyAt} from './biome-family.js';
 import {landBrushCells} from './land-paint.js';
@@ -10,7 +11,7 @@ import {isRamp,rampInfo} from './cliff-ramps.js';
 export function paintFoliage(map,command,size=240,{preview=false}={}){
  const {start,end=start,options={},path,tool}=command,z=start.z||0,mode=options.foliageShape||'rectangle';
  if(!['round','square','rectangle'].includes(mode))throw Error('Choose a round brush, square brush or rectangle.');
- if(z<0||z>2)throw Error('Foliage needs outdoor ground on levels 1, 2 or 3.');
+ if(z<0||z>=MAP_LEVELS)throw Error('Foliage needs outdoor ground on layers 1–5.');
  const preset=options.foliagePreset;if(preset!==undefined&&!FOLIAGE_PRESETS[preset])throw Error('Choose a supported foliage preset.');
  const clearing=tool==='clear-foliage',mix=options.foliageTreeCover??'brush-v1',coverOnly=options.foliageMode==='tree-cover';
  if(!clearing&&(coverOnly||denseTreePreset(preset))&&!Object.hasOwn(TREE_COVER,mix))throw Error('Choose one tree-cover setting before painting.');

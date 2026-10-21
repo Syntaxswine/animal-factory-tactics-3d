@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import {grenadeWorld,sweepGrenade,grenadeBase,GRENADE_FLOOR} from './grenade-geometry.js';
 import {grenadeDamage,GRENADE} from './grenade-ballistics.js';
 import {propCells} from './core/environment.js';
@@ -23,7 +24,7 @@ export function detonateGrenade(s,impact){
   if(affected){if(isExplosiveBarrel(p))barrels.push(p);else if(!/^(cliff-|ramp|roof-)/.test(p.kind))removeProps.add(p);}
  }
  const map=s.map||s.terrain;
- for(let z=0;z<4;z++)for(let y=Math.max(0,Math.floor(impact.y-radius));y<Math.min(map.length,Math.ceil(impact.y+radius+1));y++)for(let x=Math.max(0,Math.floor(impact.x-radius));x<Math.min(map[0].length,Math.ceil(impact.x+radius+1));x++){
+ for(let z=0;z<MAP_LEVELS;z++)for(let y=Math.max(0,Math.floor(impact.y-radius));y<Math.min(map.length,Math.ceil(impact.y+radius+1));y++)for(let x=Math.max(0,Math.floor(impact.x-radius));x<Math.min(map[0].length,Math.ceil(impact.x+radius+1));x++){
   const kind=z?s.upper?.[z-1]?.[`${x},${y}`]:map[y][x];if(kind!=='crate')continue;
   const p={x:Math.max(x-.5,Math.min(impact.x,x+.5)),y:Math.max(y-.5,Math.min(impact.y,y+.5)),h:Math.max(z*GRENADE_FLOOR+.04,Math.min(impact.h,z*GRENADE_FLOOR+(kind==='wall'?2:.8)))},dist=distance(impact,p);
   if(dist<=radius&&grenadeDamage(dist)>=(kind==='wall'?50:20)&&clear(p))removeTiles.push({x,y,z});

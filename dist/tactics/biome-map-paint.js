@@ -5,15 +5,20 @@ import {BIOME_GROUNDS} from './biome-foliage-data.js';
 import {atlasRect} from './biome-foliage-paint.js';
 import {panelAverage} from './biome-atlas-lod.js';
 export const BIOME_ORDER=['jungle','temperate','snow','dry','wetlands'];
-export function biomeMixAt(map,x,y,level=0){
+const biomeCellMix=(map,x,y,level)=>{const explicit=biomeOverride(map,x,y,level);return explicit?[{family:explicit,weight:1}]:map.environment?localEnvironmentMix(map.environment,x+.5,y+.5):[{family:biomeFamilyAt(map,x,y,level),weight:1}];};
+function interpolateMix(x,y,cellMix){
  const cx=Math.floor(x),cy=Math.floor(y),u=x-cx,v=y-cy,result=new Map();
  for(const [a,b,w]of [[cx,cy,(1-u)*(1-v)],[cx+1,cy,u*(1-v)],[cx,cy+1,(1-u)*v],[cx+1,cy+1,u*v]]){
-  if(!w)continue;const explicit=biomeOverride(map,a,b,level);
-  const mix=explicit?[{family:explicit,weight:1}]:map.environment?localEnvironmentMix(map.environment,a+.5,b+.5):[{family:biomeFamilyAt(map,a,b,level),weight:1}];
+  if(!w)continue;const mix=cellMix(a,b);
   for(const p of mix){const family=p.family==='dry-grassland'?'dry':p.family;result.set(family,(result.get(family)||0)+p.weight*w);}
  }
  return [...result].map(([family,weight])=>({family,weight}));
 }
+export const biomeMixAt=(map,x,y,level=0)=>interpolateMix(x,y,(a,b)=>biomeCellMix(map,a,b,level));
+// One terrain rebuild owns this sampler. Cache integer cells, not interpolated
+// positions, so dense vertex painting cannot rescan every cliff per sample.
+// Never share it across edits: a new rebuild receives a fresh sampler.
+export function createBiomeMixSampler(map,level=0){const cells=new Map();return (x,y)=>interpolateMix(x,y,(a,b)=>{const key=a+','+b;if(!cells.has(key))cells.set(key,biomeCellMix(map,a,b,level));return cells.get(key);});}
 // Every layer samples all five atlas panels with a common position and weights.
 // The same shader is borrowed by forest margins, so there is no painted seam
 // between a path and its thicket or between two environment families.

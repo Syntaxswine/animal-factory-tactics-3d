@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import {isMachine,isScenery,sceneryRule,sceneryRotation,scenerySize,sceneryLocal,SCENERY_FLOOR} from './scenery-catalog.js';
 import {factoryData} from './factory-gameplay.js';
 import {geometryBoxHit} from './scenery-collision.js';
@@ -13,10 +14,10 @@ export function sceneryPlacementErrors(map,extra=null,rules={},boundaries={}){
  for(const p of props){
   if(isScenery(p))try{sceneryRotation(p);}catch(e){errors.push(e.message);continue;}
   if(!isMachine(p))continue;const data=factoryData(p),{w,h}=scenerySize(p),base=(p.z||0)*SCENERY_FLOOR,top=base+data.bounds[5];
-  for(let z=0;z<=3;z++){
+  for(let z=0;z<MAP_LEVELS;z++){
    if(z<=(p.z||0)||z*SCENERY_FLOOR-.12>=top)continue;
    for(let y=p.y;y<p.y+h;y++)for(let x=p.x;x<p.x+w;x++){
-    const terrain=z===3?(map.canopies||[]).some(q=>x>=q.x&&y>=q.y&&x<q.x+2&&y<q.y+2):map.upper?.[z-1]?.[`${x},${y}`];
+    const terrain=map.upper?.[z-1]?.[`${x},${y}`]||(map.canopies||[]).some(q=>q.z===z&&x>=q.x&&y>=q.y&&x<q.x+2&&y<q.y+2);
     const stairs=(map.stairs||[]).some(q=>q.x===x&&q.y===y&&q.z===z-1);
     if(terrain&&terrain!=='void'&&!stairs&&intersects(p,data,[x-.5,y-.5,z*SCENERY_FLOOR-.12],[x+.5,y+.5,z*SCENERY_FLOOR]))errors.push('Insufficient headroom: the machine intersects an upper floor or ceiling.');
    }

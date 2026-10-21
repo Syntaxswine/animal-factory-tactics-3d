@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import {previewAttack,groundTarget,WEAPONS,canControl} from './core/engine.js';
 import {grenadeBase} from './grenade-geometry.js';
 
@@ -28,7 +29,7 @@ export class GrenadePlanner {
  }
  draw(ctx,s,project,zoom){
   const p=this.preview,shot=p?.trajectory;if(!shot)return;
-  const at=q=>project({x:q.x,y:q.y,z:0,h:q.h}),known=q=>[0,1,2,3].some(z=>s.seen.has(z?`${Math.round(q.x)},${Math.round(q.y)},${z}`:`${Math.round(q.x)},${Math.round(q.y)}`));
+  const at=q=>project({x:q.x,y:q.y,z:0,h:q.h}),known=q=>Array.from({length:MAP_LEVELS},(_,z)=>z).some(z=>s.seen.has(z?`${Math.round(q.x)},${Math.round(q.y)},${z}`:`${Math.round(q.x)},${Math.round(q.y)}`));
   const ring=(q,r,color,dash=[])=>{ctx.strokeStyle=color;ctx.setLineDash(dash);ctx.beginPath();for(let i=0;i<=64;i++){const a=i/64*Math.PI*2,v={...q,x:q.x+Math.cos(a)*r,y:q.y+Math.sin(a)*r},v2=at(v);if(i===0)ctx.moveTo(v2.x,v2.y);else ctx.lineTo(v2.x,v2.y);}ctx.stroke();ctx.setLineDash([]);};
   ctx.save();ctx.lineWidth=2;let before=null;const contact=shot.collisions[0]?.t??Infinity;
   for(const q of shot.path){if(!known(q))break;const v=at(q);if(before){ctx.strokeStyle=q.t>contact?'#eda652':'#88dce0';ctx.beginPath();ctx.moveTo(before.x,before.y);ctx.lineTo(v.x,v.y);ctx.stroke();}before=v;}

@@ -1,3 +1,4 @@
+import {MAP_LEVELS} from './map-layers.js';
 import {EDGES} from './environment.js';
 
 const key=(x,y,z)=>z?`${x},${y},${z}`:`${x},${y}`;
@@ -9,7 +10,7 @@ export function interiorCells(map){
  const ground=map.terrain||map.map||[],height=ground.length,width=ground[0]?.length||0,n=width*height,interiors=[];
  if(!n)return interiors;
  const edges=map.edges||{},at=(x,y,z)=>z?map.upper?.[z-1]?.[`${x},${y}`]:ground[y]?.[x];
- for(let z=0;z<3;z++){
+ for(let z=0;z<MAP_LEVELS;z++){
   const visited=new Uint8Array(n);
   for(let start=0;start<n;start++){
    const sx=start%width,sy=Math.floor(start/width),terrain=at(sx,sy,z);

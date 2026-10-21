@@ -1,4 +1,5 @@
 import {grenadeWorld,sweepGrenade,grenadeBase,GRENADE_FLOOR} from './grenade-geometry.js';
+import {MAP_LEVELS} from './map-layers.js';
 import {cliffSupportAt} from './cliff-support.js';
 import {rampSupportAt} from './cliff-ramps.js';
 import {siteSupportAt} from './strategic-site-rules.js';
@@ -50,12 +51,12 @@ export function simulateGrenade(s,origin,velocity,{fuse=GRENADE.fuse,ignoreUnit=
   time+=dt;path.push(sample(p,time));
  }
  const end=sample(p,fuse);
- return {...end,z:clamp(Math.floor((p.h+.001)/GRENADE_FLOOR),0,3),kind:'grenade',grenade:true,origin,path,collisions,fuse,resting};
+ return {...end,z:clamp(Math.floor((p.h+.001)/GRENADE_FLOOR),0,MAP_LEVELS-1),kind:'grenade',grenade:true,origin,path,collisions,fuse,resting};
 }
 export function grenadePreview(s,a,target,w){
  const dest=grenadeTarget(s,target),origin=grenadeOrigin(a,dest),distance=Math.hypot(target.x-a.x,target.y-a.y),maxRange=grenadeRange(a,(grenadeBase(a)-(dest.h-GRENADE.radius))/GRENADE_FLOOR),map=s.map||s.terrain,x=Math.round(target.x),y=Math.round(target.y),z=target.z||0;
  let reason='';
- if(!Number.isFinite(target.x)||!Number.isFinite(target.y)||x<0||y<0||y>=map.length||x>=map[0].length||!Number.isInteger(z)||z<0||z>3)reason='Outside the map';
+ if(!Number.isFinite(target.x)||!Number.isFinite(target.y)||x<0||y<0||y>=map.length||x>=map[0].length||!Number.isInteger(z)||z<0||z>=MAP_LEVELS)reason='Outside the map';
  else if(a.burningTurns)reason='On fire: running in panic';
  else if(a.team==='squad'&&!s.seen.has(z?`${x},${y},${z}`:`${x},${y}`))reason='Choose discovered terrain';
  else if(z&&!s.upper?.[z-1]?.[`${x},${y}`]&&!target.towerPost&&!rampSupportAt(s,target)&&!siteSupportAt(s,target)&&!cliffSupportAt(s,target))reason='No surface on this level';
