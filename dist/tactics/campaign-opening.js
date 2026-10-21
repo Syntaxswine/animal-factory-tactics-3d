@@ -37,6 +37,10 @@ export function openingContent(){
  const overmap=generateWorld(42),{a,b}=openingDefinitions();
  overmap.sectors[70].name=a.name;overmap.sectors[71].name=b.name;
  overmap.sectors[70].routes.push(route('road','center','east',.5,.5));overmap.sectors[71].routes.push(route('road','west','center',.5,.5));
+ // These authored maps have a connected road even when the seeded tutorial
+ // footprint places a closed travel mask on their strategic coordinates.
+ if(!overmap.sectors[70].travel.includes('east'))overmap.sectors[70].travel.push('east');
+ if(!overmap.sectors[71].travel.includes('west'))overmap.sectors[71].travel.push('west');
  const entry=side=>({side,offset:.5,width:6,z:0,depth:8});
  return {seed:42,contentVersion:OPENING_VERSION,overmap,start:70,assignments:{70:{templateId:'opening-safehouse',variant:'foundation-1',orientation:0,map:a,entries:[entry('east')]},71:{templateId:'opening-checkpoint',variant:'foundation-1',orientation:0,map:b,entries:[entry('west'),entry('south')]}},reinforcement:{source:101,destination:71,delay:180,count:3}};
 }

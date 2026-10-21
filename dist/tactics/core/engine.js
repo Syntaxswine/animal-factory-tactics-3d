@@ -1,3 +1,4 @@
+import {settleSquadAmmo} from '../squad-ammo.js';
 import {tutorialCrateLoot} from '../tutorial-mission.js';
 import {initializeDialogue,ensureDialogueUnitIds,pinDialogue} from '../dialogue-state.js';
 import {climbingPreview,rollClimb} from '../climbing.js';
@@ -226,7 +227,7 @@ export function notices(s,a,b){if(a.team==='guard'&&b.team==='squad'&&!playerThr
 // declined a shout is not re-asked by the next guard the same trigger alerts.
 export function refresh(s,...args){return withCombatQueries(s,()=>refreshQueryAction(s,...args));}
 function refreshQueryAction(s){return cascade(s,()=>refreshNow(s));}
-function refreshNow(s){synchronizeFoliage(s);settleCivilianFear(s);updateCliffSupports(s);
+function refreshNow(s){settleSquadAmmo(s);synchronizeFoliage(s);settleCivilianFear(s);updateCliffSupports(s);
  updateAwareness(s,{geometry:geometricPerceive,zones:visibleZones});
  const oldDetected=s.detected,oldVisible=s.visible,oldGlimpses=s.glimpses||{};
  for(const u of s.units){const at=u.x+','+u.y+','+levelOf(u);u.moved=!!u.fired||u.lastAt!==at;u.lastAt=at;u.fired=false;}s.visible=terrainVisibility(s,squad(s));s.detected=new Set(guards(s).filter(g=>squad(s).some(p=>canSee(s,p,g))).map(g=>g.id));
@@ -494,7 +495,7 @@ export function equipCutters(s,u,slot){
 }
 export function stowWeapon(s,u,slot){if(!canControl(s,u)||s.queue.length||![0,1].includes(slot)||!u.slots[slot])return false;const slots=[...u.slots],kind=slots[slot];slots[slot]=null;const layout=gridLayout({...u,slots});if(!layout.ok)return false;u.slots=slots;storeLayout(u,layout);if(u.weapon===kind)u.weapon='hands';u.overwatch=null;log(s,'Equipment moved to backpack.');return true;}
 export function arrangeInventory(s,u,key,cell){if(!canControl(s,u)||s.queue.length||!placeItem(u,key,cell))return false;log(s,'Backpack rearranged.');return true;}
-export function reload(s,u,byAI=false){if(byAI?!(s.phase==='enemy'&&u?.team==='guard'&&alive(u)&&!u.burningTurns):!canControl(s,u))return false;if(heldWeaponJammed(u)){if(s.queue.length||combatCosts(s)&&u.ap<3)return false;if(combatCosts(s))u.ap-=3;delete heldWeaponItem(u).jammed;u.overwatch=null;log(s,u.name+' cleared the weapon jam.');return true;}const w=WEAPONS[u.weapon],count=Math.min(w.mag-u.ammo[u.weapon],reserve(u,u.weapon));if(s.queue.length||!w.mag||count<=0||(combatCosts(s)&&u.ap<3))return false;if(combatCosts(s))u.ap-=3;u.overwatch=null;u.ammo[u.weapon]+=count;consumeAmmo(u,u.weapon,count);syncWeapons(u);log(s,u.name+' reloaded '+count+' rounds.');return true;}
+export function reload(s,u,byAI=false){if(byAI?!(s.phase==='enemy'&&u?.team==='guard'&&alive(u)&&!u.burningTurns):!canControl(s,u))return false;if(heldWeaponJammed(u)){if(s.queue.length||combatCosts(s)&&u.ap<3)return false;if(combatCosts(s))u.ap-=3;delete heldWeaponItem(u).jammed;u.overwatch=null;log(s,u.name+' cleared the weapon jam.');return true;}const w=WEAPONS[u.weapon],count=Math.min(w.mag-u.ammo[u.weapon],reserve(u,u.weapon,s));if(s.queue.length||!w.mag||count<=0||(combatCosts(s)&&u.ap<3)||!consumeAmmo(u,u.weapon,count,s))return false;if(combatCosts(s))u.ap-=3;u.overwatch=null;u.ammo[u.weapon]+=count;syncWeapons(u);log(s,u.name+' reloaded '+count+' rounds.');return true;}
 // Same floor, own tile or a cardinal neighbour, no barrier between: the reach for loot, bodies and hand-overs.
 export const adjacentTo=(s,u,p)=>levelOf(u)===levelOf(p)&&Math.abs(unitBaseHeight(u)-unitBaseHeight(p))<.1&&Math.abs(u.x-p.x)+Math.abs(u.y-p.y)<=1&&(u.x===p.x&&u.y===p.y||!blockedEdge(s,u,p));
 // Loot rolls use their own stream so a body's contents never move a bullet (see socialSeed in personalities.js for the same idea).

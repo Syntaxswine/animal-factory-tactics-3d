@@ -14,10 +14,10 @@ export async function campaignBattle(slot){
   selector.onchange=()=>{s.selected=+selector.value;inventoryView();callbacks.changed();};inventory.append(selector);
   const u=s.units.find(u=>u.id===s.selected);
   if(!canUseSectorInventory(s,u)){inventory.append(el('p','The sector must be peaceful, and this merc must be physically here.'));return;}
-  inventory.append(el('p','Loose supplies and searched containers on every floor. Unsearched contents are excluded.'));
+  inventory.append(el('p','Loose supplies and searched containers on every floor. Unsearched contents are excluded. Collected ammo joins the shared squad supply.'));
   const piles=sectorInventory(s,u);if(!piles.length)inventory.append(el('p','No available items.'));
   for(const pile of piles){const section=el('section'),name=pile.container?.name||(pile.body===undefined?'Loose supplies':'Searched equipment');section.append(el('strong',name+' · '+pile.x+', '+pile.y+' · level '+((pile.z||0)+1)));
-   for(const [index,item]of pile.items.entries()){const row=el('p',itemName(item)+(item.count?' × '+item.count:'')+(item.type==='weapon'?' · '+(item.condition??100)+'% condition · '+item.rounds+' loaded':'')),button=el('button','Take'),action={mode:'take',sector:true,target:pile,index},preview=transferPreview(s,u,action);button.disabled=!preview.ok;button.title=preview.reason;
+   for(const [index,item]of pile.items.entries()){const row=el('p',itemName(item)+(item.count?' × '+item.count:'')+(item.type==='weapon'?' · '+(item.condition??100)+'% condition · '+item.rounds+' loaded':'')),button=el('button',item.type==='ammo'?'Take for squad':'Take'),action={mode:'take',sector:true,target:pile,index},preview=transferPreview(s,u,action);button.disabled=!preview.ok;button.title=preview.reason;
     button.onclick=async()=>{if(session.busy)return;try{if(!transferItem(s,u,action))throw Error(transferPreview(s,u,action).reason||'Item unavailable.');syncCampaignEncounter(session.campaign);await save('continue');notice='Item taken and checkpoint saved.';callbacks.changed();}catch(e){notice=e.message;callbacks.failure(e);}inventoryView();};row.append(button);section.append(row);
    }inventory.append(section);
   }const result=el('p',notice);result.setAttribute('role','status');inventory.append(result);
