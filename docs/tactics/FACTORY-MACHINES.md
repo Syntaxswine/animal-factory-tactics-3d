@@ -27,6 +27,8 @@ The skin uses six rest-space projections with part/depth visibility checks, fore
 
 `node tools/build-factory-machines.mjs` reproduces the two mesh resolutions. `node --test tests/factory-machines.test.mjs` verifies bounds, grounding, finite/valid geometry, exact author-to-reduced vertex provenance, and unobstructed working gaps. `tools/factory-machines-review.mjs --grey` captures references; without the flag it inspects 8 headings at gameplay/fit scales, both meshes, 48 coverage views, browser errors and mobile overflow.
 
-This is an art collection. Factory production behavior, editor placement, collision and machine animation are not integrated.
+The three static machines are integrated into Objects → Factory machines in the 3D editor and into tactical play. All registered scenery now supports 0°, 90°, 180° and 270°, including painted previews, Copy settings, Undo/Redo, saves and reusable scenery blocks. The mill and press require sufficient overhead space. Real reduced-mesh surfaces provide movement clearance, sight, bullet, rocket and swept-grenade collision; genuine openings remain open to shots.
 
-The proposed next delivery is [editor placement and physical cover](FACTORY-MACHINE-EDITOR-PROPOSAL-2026-10-20.md), covering the three static models, their saved orientation, movement clearance, sight and projectile collision.
+Use `editor-3d.html?editing=1&study=factory-machines` for the complete placement fixture or `battle-3d.html?study=factory-machines&layout=cover` for a press opening and body-part cover rehearsal. `node tools/export-factory-gameplay.mjs` reproduces the physical bake; `--check` verifies freshness.
+
+Factory production, operating animations and new machine interactions remain outside this static scenery delivery. See the [integration evidence and measurements](FACTORY-MACHINE-INTEGRATION-2026-10-20.md) and original [implementation handoff](FACTORY-MACHINE-EDITOR-PROPOSAL-2026-10-20.md).

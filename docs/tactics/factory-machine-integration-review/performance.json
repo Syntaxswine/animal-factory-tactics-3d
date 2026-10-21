@@ -1,0 +1,256 @@
+{
+  "measuredDate": "2026-10-20",
+  "scenarios": [
+    {
+      "layout": "baseline",
+      "cpuDrawMs": {
+        "samples": 511,
+        "median": 2.600000023841858,
+        "p95": 3.3000000715255737
+      },
+      "displayCadenceMs": {
+        "samples": 511,
+        "median": 16.600000023841858,
+        "p95": 21.299999952316284
+      },
+      "drawCalls": {
+        "samples": 511,
+        "median": 230,
+        "p95": 231
+      },
+      "submittedTrianglesIncludingShadowPass": {
+        "samples": 511,
+        "median": 440046,
+        "p95": 443118
+      },
+      "queries": {
+        "finiteRayMs": {
+          "samples": 200,
+          "median": 0,
+          "p95": 0
+        },
+        "movementLinkMs": {
+          "samples": 200,
+          "median": 0,
+          "p95": 0
+        },
+        "grenadeSweepMs": {
+          "samples": 200,
+          "median": 0,
+          "p95": 0.10000002384185791
+        },
+        "pathMs": {
+          "samples": 30,
+          "median": 3.4000000953674316,
+          "p95": 4.5
+        }
+      },
+      "families": [],
+      "geometryBytes": 0,
+      "estimatedMachineTextureBytes": 0,
+      "rendererMemory": {
+        "geometries": 107,
+        "textures": 27
+      },
+      "resolution": [
+        1236,
+        394.40625
+      ],
+      "dpr": 1,
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "visibility": "visible",
+      "diagnostics": [],
+      "notes": "Texture estimate includes paint mipmaps, validity mask, projection color/depth target, shared once per family. CPU draw excludes HUD/engine. Display cadence also includes browser scheduling; this is not an isolated GPU timer. Cold preparation excludes network; loadAndPreparation includes network."
+    },
+    {
+      "layout": "small",
+      "cpuDrawMs": {
+        "samples": 510,
+        "median": 3.399999976158142,
+        "p95": 4.099999904632568
+      },
+      "displayCadenceMs": {
+        "samples": 510,
+        "median": 16.699999928474426,
+        "p95": 17
+      },
+      "drawCalls": {
+        "samples": 510,
+        "median": 248,
+        "p95": 249
+      },
+      "submittedTrianglesIncludingShadowPass": {
+        "samples": 510,
+        "median": 486692,
+        "p95": 489128
+      },
+      "queries": {
+        "finiteRayMs": {
+          "samples": 200,
+          "median": 0,
+          "p95": 0
+        },
+        "movementLinkMs": {
+          "samples": 200,
+          "median": 0,
+          "p95": 0
+        },
+        "grenadeSweepMs": {
+          "samples": 200,
+          "median": 0,
+          "p95": 0.10000002384185791
+        },
+        "pathMs": {
+          "samples": 30,
+          "median": 2.899999976158142,
+          "p95": 4.700000047683716
+        }
+      },
+      "families": [
+        {
+          "family": "machine-lathe",
+          "instances": 1,
+          "preparations": 1,
+          "preparationMs": 168.10000002384186,
+          "loadAndPreparationMs": 315.5,
+          "triangles": 9996,
+          "geometryBytes": 294168,
+          "estimatedTextureBytes": 22544384
+        },
+        {
+          "family": "machine-mill",
+          "instances": 1,
+          "preparations": 1,
+          "preparationMs": 134.60000002384186,
+          "loadAndPreparationMs": 449.89999997615814,
+          "triangles": 9996,
+          "geometryBytes": 352824,
+          "estimatedTextureBytes": 22544384
+        },
+        {
+          "family": "machine-press",
+          "instances": 1,
+          "preparations": 1,
+          "preparationMs": 171,
+          "loadAndPreparationMs": 621.1000000238419,
+          "triangles": 9997,
+          "geometryBytes": 354606,
+          "estimatedTextureBytes": 22544384
+        }
+      ],
+      "geometryBytes": 1001598,
+      "estimatedMachineTextureBytes": 67633152,
+      "rendererMemory": {
+        "geometries": 120,
+        "textures": 34
+      },
+      "resolution": [
+        1236,
+        394.40625
+      ],
+      "dpr": 1,
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "visibility": "visible",
+      "diagnostics": [],
+      "notes": "Texture estimate includes paint mipmaps, validity mask, projection color/depth target, shared once per family. CPU draw excludes HUD/engine. Display cadence also includes browser scheduling; this is not an isolated GPU timer. Cold preparation excludes network; loadAndPreparation includes network."
+    },
+    {
+      "layout": "stress",
+      "cpuDrawMs": {
+        "samples": 511,
+        "median": 3.100000023841858,
+        "p95": 4.300000071525574
+      },
+      "displayCadenceMs": {
+        "samples": 511,
+        "median": 16.40000009536743,
+        "p95": 20.5
+      },
+      "drawCalls": {
+        "samples": 511,
+        "median": 474,
+        "p95": 474
+      },
+      "submittedTrianglesIncludingShadowPass": {
+        "samples": 511,
+        "median": 1005882,
+        "p95": 1005882
+      },
+      "queries": {
+        "finiteRayMs": {
+          "samples": 200,
+          "median": 0,
+          "p95": 0.10000002384185791
+        },
+        "movementLinkMs": {
+          "samples": 200,
+          "median": 0,
+          "p95": 0
+        },
+        "grenadeSweepMs": {
+          "samples": 200,
+          "median": 0.6000000238418579,
+          "p95": 1.100000023841858
+        },
+        "pathMs": {
+          "samples": 30,
+          "median": 2.4000000953674316,
+          "p95": 3.299999952316284
+        }
+      },
+      "families": [
+        {
+          "family": "machine-lathe",
+          "instances": 10,
+          "preparations": 1,
+          "preparationMs": 169.89999997615814,
+          "loadAndPreparationMs": 323.10000002384186,
+          "triangles": 9996,
+          "geometryBytes": 294168,
+          "estimatedTextureBytes": 22544384
+        },
+        {
+          "family": "machine-mill",
+          "instances": 10,
+          "preparations": 1,
+          "preparationMs": 176.09999990463257,
+          "loadAndPreparationMs": 499.10000002384186,
+          "triangles": 9996,
+          "geometryBytes": 352824,
+          "estimatedTextureBytes": 22544384
+        },
+        {
+          "family": "machine-press",
+          "instances": 10,
+          "preparations": 1,
+          "preparationMs": 135.69999992847443,
+          "loadAndPreparationMs": 635,
+          "triangles": 9997,
+          "geometryBytes": 354606,
+          "estimatedTextureBytes": 22544384
+        }
+      ],
+      "geometryBytes": 1001598,
+      "estimatedMachineTextureBytes": 67633152,
+      "rendererMemory": {
+        "geometries": 120,
+        "textures": 36
+      },
+      "resolution": [
+        1236,
+        394.40625
+      ],
+      "dpr": 1,
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "visibility": "visible",
+      "diagnostics": [],
+      "notes": "Texture estimate includes paint mipmaps, validity mask, projection color/depth target, shared once per family. CPU draw excludes HUD/engine. Display cadence also includes browser scheduling; this is not an isolated GPU timer. Cold preparation excludes network; loadAndPreparation includes network."
+    }
+  ],
+  "limits": [
+    "10-second fixed-camera samples, with 1.5 seconds of warmup excluded.",
+    "The browser timer has approximately 0.1 ms resolution. Zero query samples mean below resolution.",
+    "Results describe this RTX 3080 desktop and this camera; they are not a low-end hardware or whole-sector FPS guarantee.",
+    "Queries use the live flat factory fixture. Later upper-level movement and blast-removal corrections do not change these sampled queries."
+  ]
+}

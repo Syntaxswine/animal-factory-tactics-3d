@@ -135,7 +135,7 @@ async function prepareView(){await prepareSectorView(renderer,()=>{ctx.clearRect
 async function loadEncounterSave(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{if(campaign){const restored=await campaign.load(id);if(restored)installState(restored);}else{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);autoToken=saveToken(await getSave('auto'));autoTokenError=null;installState(restored);}if(state)await prepareView();}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}}
 async function quickSave(){try{await saveGame('quick');message('Quicksave saved.');}catch(e){message('Could not save: '+e.message);}}
 async function quickLoad(){try{await loadGame('quick');}catch(e){message('Could not load: '+e.message);}}
-function autosave(){if(new URLSearchParams(location.search).get('study')==='tree-cover'||new URLSearchParams(location.search).get('study')==='climbing')return;saveGame('auto').catch(e=>{autoDisabled=true;if(campaign)userPaused=true;sync();message('Autosave failed: '+e.message+' Use Save / Load to retry.');});}
+function autosave(){if(new URLSearchParams(location.search).get('study')==='factory-machines')return;if(new URLSearchParams(location.search).get('study')==='tree-cover'||new URLSearchParams(location.search).get('study')==='climbing')return;saveGame('auto').catch(e=>{autoDisabled=true;if(campaign)userPaused=true;sync();message('Autosave failed: '+e.message+' Use Save / Load to retry.');});}
 function sync(){
  settleEncounterRounds(state);campaign?.update();const combat=turnBased(state);if(combat!==lastClockCombat){frameClock.reset();lastClockCombat=combat;}syncClock();
  if(cliffViewState!==state){cliffViewState=state;cliffViewId=0;}const traversal=state.cliffTraversals?.at(-1);if(traversal&&traversal.id>cliffViewId){cliffViewId=traversal.id;if(traversal.unitId===state.selected){level=selected().z||0;$('floor').value=level;}}
@@ -404,3 +404,5 @@ await prepareView();
 if(new URLSearchParams(location.search).get('study')==='tree-cover'){const {installFoliagePerformanceReview}=await import('./foliage-performance-review.js');installFoliagePerformanceReview(window.battle3d);}
 document.addEventListener('sector-ready',()=>{frameClock.reset();lastUI='';sync();});
 requestAnimationFrame(frame);
+
+if(new URLSearchParams(location.search).get('study')==='factory-machines'){const {installFactoryMachineReview}=await import('./factory-machine-review.js');installFactoryMachineReview(window.battle3d);}

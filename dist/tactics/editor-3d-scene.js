@@ -1,3 +1,4 @@
+import {passable} from './core/maps.js';
 import {EnvironmentPaint} from './environment-paint.js';
 import {BiomeScene} from './biome-scene.js';
 import {SceneryScene} from './scenery-scene.js';
@@ -36,7 +37,7 @@ export class InspectionScene {
   this.highlight=new T.LineSegments(new T.BufferGeometry(),new T.LineBasicMaterial({color:0xffe5a5,depthTest:false}));this.highlight.renderOrder=20;this.scene.add(this.highlight);
   this.markerGeo=new T.RingGeometry(.27,.39,20);this.guardMat=new T.MeshBasicMaterial({color:0xef9e75,side:T.DoubleSide});this.startMat=new T.MeshBasicMaterial({color:0x96dbce,side:T.DoubleSide});this.accessMat=new T.MeshBasicMaterial({color:0xf7d17d,side:T.DoubleSide});
   this.cargo=new BattleEnvironment(this.scene,this.loader,()=>{if(this.document)this.rebuild();},error=>{this.diagnostics.push(error.message);changed();});
-  this.sceneryAssets=new SceneryScene(this.scene,this.loader,()=>{if(this.document)this.rebuild();changed();},e=>{this.diagnostics.push('Scenery: '+e.message);changed();});this.sites=new StrategicSiteScene(this.scene,this.loader,()=>{if(this.document)this.rebuild();changed();},e=>{this.diagnostics.push('Strategic sites: '+e.message);changed();});this.cliffs=new CliffMapScene(this.scene);this.lights=new LightingScene(this.scene,this.loader,changed,e=>{this.diagnostics.push('Lighting: '+e.message);changed();});
+  this.sceneryAssets=new SceneryScene(this.scene,this.loader,()=>{if(this.document)this.rebuild();changed();},e=>{this.diagnostics.push('Scenery: '+e.message);changed();},this.renderer);this.sites=new StrategicSiteScene(this.scene,this.loader,()=>{if(this.document)this.rebuild();changed();},e=>{this.diagnostics.push('Strategic sites: '+e.message);changed();});this.cliffs=new CliffMapScene(this.scene);this.lights=new LightingScene(this.scene,this.loader,changed,e=>{this.diagnostics.push('Lighting: '+e.message);changed();});
   this.options={level:0,showAllLevels:true,roofs:true,walls:true};
  }
  material(kind){
@@ -150,6 +151,7 @@ export class InspectionScene {
   this.biomes.cutawayTargets=targets;
  }
  preview(result){
+  this.sceneryAssets.preview(result?.sceneryPreview);
   if(!this.disposed&&this.document&&(result?.hedgePreview||this.hedgePreview)){
    this.hedgePreview=!!(result?.ok&&result?.hedgePreview);this.biomes.hedges.rebuild(this.hedgePreview?result.map:this.document.map,null,this.visibleLevel,{editor:true,selectedLevel:this.options.level,dim:!this.options.showAllLevels});this.changed();
   }
@@ -168,6 +170,7 @@ export class InspectionScene {
   }
   const geometry=new T.PlaneGeometry(.98,.98),material=new T.MeshBasicMaterial({color:result.ok?0x91ddba:0xff6655,transparent:true,opacity:.4,depthTest:false,side:T.DoubleSide});
   const mesh=new T.InstancedMesh(geometry,material,cells.length),matrix=new T.Matrix4();cells.forEach((p,i)=>{matrix.makeRotationX(-Math.PI/2);matrix.setPosition(p.x,(p.z??z)*D.floorSpacing+.06,p.y);mesh.setMatrixAt(i,matrix);});mesh.renderOrder=19;mesh.frustumCulled=false;this.scene.add(mesh);this.previewMesh=mesh;
+  if(result.sceneryPreview){const p=result.sceneryPreview,reserved=new Set(cells.map(c=>c.x+','+c.y)),near=[];for(const c of cells)for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1]]){const x=c.x+dx,y=c.y+dy,k=x+','+y;if(!reserved.has(k)&&!near.some(q=>q.x===x&&q.y===y)&&passable(this.document.map,{x,y,z:p.z||0}))near.push({x,y});}const g=new T.PlaneGeometry(.9,.9),mat=new T.MeshBasicMaterial({color:0x56ef96,wireframe:true,depthTest:false}),marks=new T.InstancedMesh(g,mat,near.length);this.previewTrees||=new T.Group();this.previewTreeGeometry||=[];this.previewTreeMaterials||=[];this.scene.add(this.previewTrees);this.previewTreeGeometry.push(g);this.previewTreeMaterials.push(mat);near.forEach((q,i)=>{matrix.makeRotationX(-Math.PI/2);matrix.setPosition(q.x,(p.z||0)*D.floorSpacing+.07,q.y);marks.setMatrixAt(i,matrix);});marks.renderOrder=24;this.previewTrees.add(marks);}
   if(result.protectedCells?.length){const g=new T.PlaneGeometry(.86,.86),mat=new T.MeshBasicMaterial({color:0xe68a5b,wireframe:true,depthTest:false}),marks=new T.InstancedMesh(g,mat,result.protectedCells.length);this.previewTrees||=new T.Group();this.previewTreeGeometry||=[];this.previewTreeMaterials||=[];this.scene.add(this.previewTrees);this.previewTreeGeometry.push(g);this.previewTreeMaterials.push(mat);result.protectedCells.forEach((p,i)=>{matrix.makeRotationX(-Math.PI/2);matrix.setPosition(p.x,z*D.floorSpacing+.07,p.y);marks.setMatrixAt(i,matrix);});marks.renderOrder=24;this.previewTrees.add(marks);}
   if(result.orientation&&cells.length){const x=cells.reduce((n,p)=>n+p.x,0)/cells.length,y=cells.reduce((n,p)=>n+p.y,0)/cells.length;this.previewArrow=new T.ArrowHelper(new T.Vector3(result.orientation[0],0,result.orientation[1]),new T.Vector3(x,z*D.floorSpacing+.12,y),1.6,0xffe5a5,.4,.25);for(const part of [this.previewArrow.line,this.previewArrow.cone]){part.material.depthTest=false;part.renderOrder=21;}this.scene.add(this.previewArrow);}
   this.highlight.material.color.setHex(result.ok?0xffe5a5:0xff6655);this.select(result.edges?.length?{type:'edge',edges:result.edges}:{cells});

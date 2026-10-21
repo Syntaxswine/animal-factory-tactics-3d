@@ -1,5 +1,6 @@
-import {helicopterData} from './scenery-rules.js';
-import {sceneryRule,sceneryId,sceneryPoint} from './scenery-catalog.js';
+import {sceneryData} from './scenery-rules.js';
+import {sceneryRule,sceneryId,sceneryPoint,sceneryLocal,sceneryDirection,sceneryRotation} from './scenery-catalog.js';
+import {boundsHit} from './scenery-collision.js';
 import * as T from './vendor/three.module.js';
 import {buildWorld,DIMENSIONS} from './hybrid-world.js';
 import {cliffGeometry} from './cliff-map-geometry.js';
@@ -48,8 +49,8 @@ export function grenadeWorld(s){
    const ps=[[-1,0,0],[1,0,0],[-1,r.run,2],[1,r.run,2],[-1,r.run,0],[1,r.run,0]].map(([side,along,h])=>[c[0]+side*across[0]+r.dx*along,c[1]+h,c[2]+side*across[2]+r.dy*along]);
    for(const ids of [[0,1,3],[0,3,2],[0,2,4],[1,5,3],[2,3,5],[2,5,4]])tri(...ids.map(i=>ps[i]),{kind:'ramp'});
   }
-  const helicopter=helicopterData(p),furnishing=sceneryRule(p);
-  if(helicopter){const ps=helicopter.triangles;for(let i=0;i<ps.length;i+=9){const vs=[];for(let j=0;j<9;j+=3){const q=sceneryPoint(p,ps.slice(i+j,i+j+3));vs.push([q.x,q.h+(p.z||0)*(GRENADE_FLOOR-3),q.y]);}tri(...vs,{kind:'helicopter',propId:sceneryId(p)});}}
+  const physical=sceneryData(p),furnishing=sceneryRule(p);
+  if(physical){const b=physical.nodes[0],corners=[];for(const x of [b[0],b[3]])for(const y of [b[1],b[4]])for(const h of [b[2],b[5]]){const q=sceneryPoint(p,[x,y,h],'render');corners.push([q.x,q.h,q.y]);}add({...bounds(corners),scenery:physical,prop:p,source:{kind:'scenery',propId:sceneryId(p)}});}
   else if(furnishing)add(oriented({center:[p.x,(p.z||0)*GRENADE_FLOOR+.4,p.y],size:[1,.8,1]},{kind:'cover',propId:sceneryId(p)}));
   const data=siteData(p);if(data){const ps=data.triangles;for(let i=0;i<ps.length;i+=9){const vs=[];for(let j=0;j<9;j+=3){const [x,y,h]=ps.slice(i+j,i+j+3);vs.push([p.x+(p.rotated?7-y:x),(p.z||0)*GRENADE_FLOOR+h,p.y+(p.rotated?x:y)]);}tri(...vs,{kind:'site',propId:siteId(p)});}}
  }
@@ -81,6 +82,13 @@ function sphereBox(a,d,b,r){
  if(near<-.00001)return null;
  const n=V([0,0,0]).setComponent(axis,sign).applyQuaternion(b.q);return d.dot(n)<-1e-9?{t:Math.max(0,near),normal:n}:null;
 }
+function sphereScenery(from,to,item,r){
+ const p=sceneryLocal(item.prop,from,'render'),v=sceneryDirection(item.prop,{x:to.x-from.x,y:to.y-from.y,h:to.h-from.h},'render'),a=V([p.x,p.h,p.y]),d=V([v[0],v[2],v[1]]),data=item.scenery,stack=[0],triangle=new T.Triangle();let best=null;
+ while(stack.length){const b=data.nodes[stack.pop()],bounds=[b[0]-r,b[1]-r,b[2]-r,b[3]+r,b[4]+r,b[5]+r];if(!boundsHit([p.x,p.y,p.h],v,bounds,best?.t??1))continue;if(b[6]>=0){stack.push(b[6],b[7]);continue;}
+  for(let j=-b[6]-1,end=j+b[7];j<end;j++){const i=j*9,t=data.triangles;triangle.a.set(t[i],t[i+2],t[i+1]);triangle.b.set(t[i+3],t[i+5],t[i+4]);triangle.c.set(t[i+6],t[i+8],t[i+7]);const hit=sphereTriangle(a,d,triangle,r);if(hit&&(!best||hit.t<best.t))best=hit;}
+ }
+ if(best)best.normal.applyAxisAngle(V([0,1,0]),-sceneryRotation(item.prop)*Math.PI/180);return best;
+}
 export function sweepGrenade(world,from,to,r=.045,{units=[],ignoreUnit=null}={}){
  const a=V(point(from)),d=V(point(to)).sub(a),candidates=new Set();
  const minX=Math.floor((Math.min(from.x,to.x)-r)/CHUNK),maxX=Math.floor((Math.max(from.x,to.x)+r)/CHUNK),minY=Math.floor((Math.min(from.y,to.y)-r)/CHUNK),maxY=Math.floor((Math.max(from.y,to.y)+r)/CHUNK);
@@ -88,7 +96,7 @@ export function sweepGrenade(world,from,to,r=.045,{units=[],ignoreUnit=null}={})
  for(const u of units){if(u.id===ignoreUnit||u.away||u.hp<=0)continue;const h=u.stance==='prone'?.45:u.stance==='kneeling'?1.15:1.65;candidates.add(oriented({center:[u.x,grenadeBase(u)+h/2,u.y],size:[.4,h,.4]},{kind:'unit',unitId:u.id}));}
  let best=null;
  const accept=(hit,source)=>{if(hit&&(!best||hit.t<best.t))best={...hit,...source};};
- for(const b of candidates){if(b.max[1]+r<Math.min(from.h,to.h)||b.min[1]-r>Math.max(from.h,to.h))continue;accept(b.triangle?sphereTriangle(a,d,b.triangle,r):sphereBox(a,d,b,r),b.source);}
+ for(const b of candidates){if(b.max[1]+r<Math.min(from.h,to.h)||b.min[1]-r>Math.max(from.h,to.h))continue;accept(b.scenery?sphereScenery(from,to,b,r):b.triangle?sphereTriangle(a,d,b.triangle,r):sphereBox(a,d,b,r),b.source);}
  // Physical ground and map limits also exist outside painted floor cells.
  for(const [axis,lo,hi]of [[0,-.5+r,world.width-.5-r],[2,-.5+r,world.height-.5-r],[1,r,Infinity]]){const x=a.getComponent(axis),dx=d.getComponent(axis);if(dx<0&&x+dx<lo)accept({t:Math.max(0,(lo-x)/dx),normal:V([0,0,0]).setComponent(axis,1)},{kind:axis===1?'floor':'boundary'});if(dx>0&&x+dx>hi)accept({t:Math.max(0,(hi-x)/dx),normal:V([0,0,0]).setComponent(axis,-1)},{kind:'boundary'});}
  if(!best)return null;const p=a.addScaledVector(d,best.t);return {...best,x:p.x,y:p.z,h:p.y,normal:{x:best.normal.x,y:best.normal.z,h:best.normal.y}};

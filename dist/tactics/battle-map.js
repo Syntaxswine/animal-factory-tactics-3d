@@ -16,6 +16,7 @@ export async function loadBattleMap(fetcher=fetch){
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='hedges')return (await import('./hedge-fixture.js')).hedgeFixtureMap();
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='climbing')return (await import('./climbing-fixture.js')).climbingFixture();
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='tree-cover'){const q=new URLSearchParams(location.search),{foliageReviewFixture}=await import('./foliage-review-fixture.js');return foliageReviewFixture(q.get('family')||'jungle',q.get('mix')||'trees-v1',q.get('layout')||'fill');}
+ if(globalThis.location&&new URLSearchParams(location.search).get('study')==='factory-machines')return (await import('./factory-machine-fixture.js')).factoryMachineFixture(new URLSearchParams(location.search).get('layout')||'review');
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='biomes')return biomeFixture();
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='scenery')return sceneryFixture();
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='grenades')return grenadeFixture();

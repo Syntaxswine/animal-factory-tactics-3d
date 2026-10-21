@@ -6,7 +6,7 @@ export function machinePaintCameras(){return [[1,0,0],[0,0,1],[-1,0,0],[0,0,-1],
  const c=new T.OrthographicCamera(-FRAME.size/2,FRAME.size/2,FRAME.size/2,-FRAME.size/2,FRAME.near,FRAME.far);
  if(i>=4)c.up.set(0,0,i===4?-1:1);c.position.fromArray(FRAME.center).add(new T.Vector3(...d).multiplyScalar(FRAME.distance));c.lookAt(...FRAME.center);c.updateMatrixWorld(true);return c;
 });}
-export function createMachinePaint(renderer,truck,texture){
+export function createMachinePaint(renderer,truck,texture,{lit=false}={}){
  texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=8;
  const canvas=document.createElement('canvas');canvas.width=texture.image.width;canvas.height=texture.image.height;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(texture.image,0,0);
  const mask=new T.DataTexture(paintValidity(ctx.getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height),canvas.width,canvas.height,T.RedFormat);mask.flipY=true;mask.needsUpdate=true;
@@ -33,7 +33,7 @@ export function createMachinePaint(renderer,truck,texture){
  const steel={lathe:[1230,760,70,110],mill:[1240,775,75,100],press:[1170,770,48,130]}[truck.root.name];
  const patches={body:({lathe:[376,225,40,48],mill:[344,177,40,64],press:[252,156,40,64]})[truck.root.name],metal:steel,dark:steel,brass:[steel[0],steel[1],24,24],lamps:steel};
  const details={lathe:{dial:[237,302,19,19],rim:[357,185,8,7],centers:[[.471,1.297,-1,.0861],[.625,.817,.29,.0451]]},mill:{dial:[789,144,12,12],rim:[716,91,8,6],centers:[[.459,1.827,-.41,.0779],[.379,2.057,.53,.0533]]},press:{dial:[1255,175,15,15],rim:[1273,194,4,8],centers:[[.835,1.677,-.15,.0902],[.835,1.677,-.15,.0902]]}}[truck.root.name];
- const debug={value:0},mats=truck.parts.map((p,i)=>new T.ShaderMaterial({toneMapped:false,uniforms:{art:{value:texture},validity:{value:mask},visibility:{value:target.texture},part:{value:i+1},detailMode:{value:p.userData.material==='brass'?2:p.userData.material==='lamps'?1:0},isPress:{value:truck.root.name==='press'?1:0},dial:{value:new T.Vector4(...details.dial)},rim:{value:new T.Vector4(...details.rim)},gaugeCenters:{value:details.centers.map(a=>new T.Vector4(...a))},steelOnly:{value:p.userData.material==='metal'?1:0},swatch:{value:new T.Vector4(...patches[p.userData.material])},debug,base:{value:new T.Color({body:0x697851,canvas:0xb9a16d,tire:0x302c28,metal:0x514b3e,glass:0x52676d,brass:0xad9064,dark:0x282a28,lamps:0xcbb785,wood:0x775534}[p.userData.material||p.name]||0x807762)},calibration:{value:calibration},views:{value:cameras.map(c=>new T.Matrix4().multiplyMatrices(c.projectionMatrix,c.matrixWorldInverse))},dirs:{value:[[1,0,0],[0,0,1],[-1,0,0],[0,0,-1],[0,1,0],[0,-1,0]].map(v=>new T.Vector3(...v))}},
+ const debug={value:0};let mats=truck.parts.map((p,i)=>new T.ShaderMaterial({toneMapped:false,uniforms:{art:{value:texture},validity:{value:mask},visibility:{value:target.texture},part:{value:i+1},detailMode:{value:p.userData.material==='brass'?2:p.userData.material==='lamps'?1:0},isPress:{value:truck.root.name==='press'?1:0},dial:{value:new T.Vector4(...details.dial)},rim:{value:new T.Vector4(...details.rim)},gaugeCenters:{value:details.centers.map(a=>new T.Vector4(...a))},steelOnly:{value:p.userData.material==='metal'?1:0},swatch:{value:new T.Vector4(...patches[p.userData.material])},debug,base:{value:new T.Color({body:0x697851,canvas:0xb9a16d,tire:0x302c28,metal:0x514b3e,glass:0x52676d,brass:0xad9064,dark:0x282a28,lamps:0xcbb785,wood:0x775534}[p.userData.material||p.name]||0x807762)},calibration:{value:calibration},views:{value:cameras.map(c=>new T.Matrix4().multiplyMatrices(c.projectionMatrix,c.matrixWorldInverse))},dirs:{value:[[1,0,0],[0,0,1],[-1,0,0],[0,0,-1],[0,1,0],[0,-1,0]].map(v=>new T.Vector3(...v))}},
  vertexShader:'varying vec3 pos,norm;void main(){pos=position;norm=normal;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
  fragmentShader:`uniform sampler2D art,validity,visibility;uniform mat4 views[6];uniform vec4 calibration[6];uniform vec3 dirs[6],base;uniform vec4 swatch;uniform float part,debug,steelOnly,detailMode,isPress;uniform vec4 dial,rim,gaugeCenters[2];varying vec3 pos,norm;
  bool materialMatch(vec3 c){return steelOnly<.5 || max(c.r,max(c.g,c.b))-min(c.r,min(c.g,c.b))<.13;}
@@ -44,5 +44,12 @@ export function createMachinePaint(renderer,truck,texture){
  if(debug>.5)color=direct>.00001?vec3(.12,.7,.24):(total>.00001?vec3(.08,.23,1.):vec3(1.,0.,.7));gl_FragColor=vec4(color,1.);#include <colorspace_fragment>
  }`.replace(';#include',';\n#include')
  }));
+ if(lit)mats=mats.map(painted=>{
+  // The gallery projection supplies albedo to the normal game lighting path.
+  // Standard materials retain sunlight, local-light passes, shadows and fog.
+  const material=new T.MeshStandardMaterial({color:0xffffff,roughness:.88,metalness:.05}),source=painted.fragmentShader.replace('void main(){','vec3 machinePigment(){').replace('gl_FragColor=vec4(color,1.);','return color;').replace('#include <colorspace_fragment>','');
+  material.onBeforeCompile=shader=>{Object.assign(shader.uniforms,painted.uniforms);shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 pos,norm;').replace('#include <begin_vertex>','#include <begin_vertex>\npos=position;norm=normal;');shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\n'+source).replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb *= machinePigment();');};
+  material.customProgramCacheKey=()=>'factory-machine-painted-lit-v1';material.userData.textureBudget={fragment:3,vertex:0};painted.dispose();return material;
+ });
  return {materials:mats,debug,dispose(){mats.forEach(m=>m.dispose());target.dispose();mask.dispose();}};
 }

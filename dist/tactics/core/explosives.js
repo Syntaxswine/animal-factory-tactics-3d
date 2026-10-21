@@ -1,4 +1,5 @@
 import {invalidateMapGeometry} from '../map-geometry-cache.js';
+import {isPhysicalScenery,sceneryId} from '../scenery-catalog.js';
 import {planStructureBlast,commitStructureDamage} from '../structure-damage.js';
 import {structureInfo} from '../structure-health.js';
 import {grenadePreview,grenadeTrajectory} from '../grenade-ballistics.js';
@@ -57,7 +58,7 @@ export function detonate(s,impact,w){
   const resistance=/concrete|steel|^wall$/.test(kind)?50:/brick/.test(kind)?40:20;
   if(dist<=radius&&w.damage*(1-dist/radius)>=resistance)candidates.push({dist,point:{x:Math.max(Math.min(a.x,b.x),Math.min(impact.x,Math.max(a.x,b.x))),y:Math.max(Math.min(a.y,b.y),Math.min(impact.y,Math.max(a.y,b.y))),h:Math.max(h+.03,Math.min(impact.h,h+2.6))},remove:()=>{delete s.edges[key];}});
  }
- for(const prop of s.props){if(isExplosiveBarrel(prop)||isStrategicSite(prop)||/^(roof-|cliff-|ramp)/.test(prop.kind))continue;const cells=propCells(prop),z=levelOf(prop);let nearest=null;for(const c of cells){const d=boxDistance(impact,c.x-.5,c.y-.5,z*3,c.x+.5,c.y+.5,z*3+2.7);if(!nearest||d<nearest.dist)nearest={dist:d,point:{x:Math.max(c.x-.49,Math.min(impact.x,c.x+.49)),y:Math.max(c.y-.49,Math.min(impact.y,c.y+.49)),h:Math.max(z*3+.03,Math.min(impact.h,z*3+2.6))}};}if(nearest&&nearest.dist<=radius&&w.damage*(1-nearest.dist/radius)>=20)candidates.push({...nearest,remove:()=>{s.props=s.props.filter(p=>p!==prop);}});}
+ for(const prop of s.props){if(isExplosiveBarrel(prop)||isStrategicSite(prop)||/^(roof-|cliff-|ramp)/.test(prop.kind))continue;const cells=propCells(prop),z=levelOf(prop);let nearest=null;for(const c of cells){const d=boxDistance(impact,c.x-.5,c.y-.5,z*3,c.x+.5,c.y+.5,z*3+2.7);if(!nearest||d<nearest.dist)nearest={dist:d,point:{x:Math.max(c.x-.49,Math.min(impact.x,c.x+.49)),y:Math.max(c.y-.49,Math.min(impact.y,c.y+.49)),h:Math.max(z*3+.03,Math.min(impact.h,z*3+2.6))}};}if(nearest&&nearest.dist<=radius&&w.damage*(1-nearest.dist/radius)>=20)candidates.push({...nearest,propId:isPhysicalScenery(prop)?sceneryId(prop):null,remove:()=>{s.props=s.props.filter(p=>p!==prop);}});}
  for(let z=0;z<3;z++)for(let y=Math.max(0,Math.floor(impact.y-radius));y<=Math.min(H-1,Math.ceil(impact.y+radius));y++)for(let x=Math.max(0,Math.floor(impact.x-radius));x<=Math.min(W-1,Math.ceil(impact.x+radius));x++){
   const terrain=terrainAt(s,x,y,z);if(terrain!=='crate')continue;
   const dist=boxDistance(impact,x-.5,y-.5,z*3,x+.5,y+.5,z*3+2.7);
@@ -65,7 +66,7 @@ export function detonate(s,impact,w){
  }
  let destroyed=0;
  // Near surfaces breach first. Floors and surviving structures shield the space beyond.
- for(const c of candidates.sort((a,b)=>a.dist-b.dist))if(blastClear(s,impact,c.point)){c.remove();invalidateMapGeometry(s);destroyed++;}
+ for(const c of candidates.sort((a,b)=>a.dist-b.dist))if(blastClear(s,impact,c.point,c.propId)){c.remove();invalidateMapGeometry(s);destroyed++;}
  const hits=[];
  for(const u of s.units){if(u.away||u.casualty==='quit'||!(u.hp>0||['bleeding','stable'].includes(u.casualty)))continue;/* away: crossed the map edge; quit: left the squad; no body here */const point={x:u.x,y:u.y,h:unitBaseHeight(u)+.8},dist=Math.hypot(u.x-impact.x,u.y-impact.y,point.h-impact.h);if(dist<radius&&blastClear(s,impact,point))hits.push({unit:u,damage:Math.max(1,Math.round(w.damage*(1-dist/radius)))});}
  const barrels=s.props.filter(isExplosiveBarrel).filter(p=>{
