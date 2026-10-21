@@ -165,6 +165,9 @@ for(const [directory,names] of [['sand-cliff',['sand.png','sand-feather.png']],[
  for(const name of names){const file=directory+'/'+name;active.add(file);await checkPNG('assets/environment/'+file,512,512);}
  if(directory==='grass-cliff-meadow'){assert.deepEqual(manifest.atlas,{file:'atlas.png',columns:2,rows:2});active.add(directory+'/atlas.png');await checkPNG('assets/environment/'+directory+'/atlas.png',1024,1024);}
 }
+const archManifest=JSON.parse(await readFile(new URL('assets/environment/natural-rock-arches/manifest.json',root)));
+for(const asset of archManifest.textures){const file='natural-rock-arches/'+asset.file;if(file.endsWith('.png')){active.add(file);await checkPNG('assets/environment/'+file,asset.width,asset.height,2);}assert.equal(createHash('sha256').update(await readFile(new URL('assets/environment/'+file,root))).digest('hex'),asset.sha256,file);}
+for(const model of archManifest.models){for(const [file,hash]of [[model.json,model.jsonSha256],[model.obj,model.objSha256]])assert.equal(createHash('sha256').update(await readFile(new URL('assets/environment/natural-rock-arches/'+file,root))).digest('hex'),hash,file);}
 const superseded=new Set(['door-steel-closed.png','door-wood-closed.png','doorway-concrete-open.png','foliage/river-straight.png','foliage/river-bend.png','foliage/river-banks-atlas.png']);
 const orphaned=(await readdir(new URL('assets/environment/',root),{recursive:true})).map(file=>file.replaceAll('\\','/')).filter(file=>file.endsWith('.png')&&!active.has(file)&&!superseded.has(file));assert.deepEqual(orphaned,[],'Unattached environment assets');
 for(const species of RED_HAT_SPECIES)for(const weapon of ['hands',...ARMED_WEAPONS])for(const stance of ['standing','kneeling','prone']){

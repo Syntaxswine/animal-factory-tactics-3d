@@ -1,5 +1,37 @@
 # October 21 integration review
 
+## Painted natural arches: `39db2e79`
+
+**Approved as reusable art and a packaged study.** The warm limestone, broad
+painted strata and sheltered underside fit the character palette. At gameplay
+size both the landmark and shallow companion read clearly. The flat walking
+strip is legible, with irregular rims around it. Judge their final roots where
+they meet surrounding terrain; the freestanding study does not show that join.
+
+The large and small runtime meshes contain **994 and 952 triangles**, each one
+mesh/material submission per ordinary render pass. Instances share geometry and
+one 564,670-byte WebP atlas (about 6 MiB of decoded RGBA pixels, excluding mipmaps
+and other allocation). This is a reasonable asset budget; no whole-game FPS or
+GPU-memory benchmark was run. Front/rear faces deliberately suppress received
+dynamic shadows to avoid triangulation stripes. The top and underside still
+receive shadows, and the whole rock casts them. Preserve that limited scope.
+
+Eleven focused geometry/actor/packaging tests pass, including the complete
+native-body and fitted-hat clearance check. Packaged browser views of both
+runtime arches at 55 px/tile load without application warnings/errors. Weapons
+are outside that clearance claim. The low companion's clearance is tight; do
+not thicken its underside without repeating the complete-model check.
+
+The merged handoff now acknowledges `0715e800`'s completed layer schema instead
+of asking the coder to repeat that migration. Export metadata was rebuilt to
+match. **These painted models are not yet the gameplay props.** The remaining
+work is the final collision bake, rotations and origin mapping, the independent
+upper walking strip, end approaches, and an above/below save-and-playtest check.
+Retain the open underpass for sight, bullets and grenades. Do not use a solid
+bounding box or imply the artist's contacts are already an engine route.
+
+![Painted landmark at gameplay size](images/oct21-integration-review/painted-arch.jpg)
+
 ## Five authored layers and the raised tutorial: `78cce722`
 
 **Approved after four height-limit corrections.** Four ordinary layers plus a
