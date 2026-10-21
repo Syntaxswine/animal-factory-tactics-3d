@@ -40,7 +40,7 @@ export function boxedPath(c0,wT,wJ,rows,{rho=2e5,iters=1500,tol=1e-8,stride=1}={
   res=0;for(let j=0;j<m;j++){const ax=dot(j,c),zn=clamp(ax+u[j],lo[j],hi[j]);u[j]+=ax-zn;z[j]=zn;res=Math.max(res,Math.abs(ax-zn));}}
  return {c,res};}
 // samples: [{c: [x,y,z] authored centre of mass, kind: 'air' | 'grip' | 'feet' | 'hold', box: [xmin,xmax,zmin,zmax] and
-// hull: [[x,z], ...] counter-clockwise (feet), floor: y}] on a uniform grid dt. 'hold' keeps the authored path (a support this plan does not model, such as a roll).
+// hull: [[x,z], ...] counter-clockwise (feet), floor: y}] on a uniform grid dt. 'hold' keeps the authored path as near as its support allows (a support this plan must not move, such as a seat the hips' own move would lift): weighed in heavily, at its authored height, and across like the feet.
 export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,fmax=FMAX,margin=.01}={}){
  const n=samples.length,d2=dt*dt,c0=[0,1,2].map(ax=>Float64Array.from(samples,s=>s.c[ax])),wT=samples.map(s=>s.kind==='hold'?wH:1),acc=[1,-2,1];
  const ends=ax=>[0,1,n-2,n-1].map(i=>({at:i,c:[1],lo:c0[ax][i<2?0:n-1],hi:c0[ax][i<2?0:n-1]}));
@@ -50,20 +50,24 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,fmax=FMAX,margin=
   else if(s.kind==='feet'){const r=edge(i);ry.push({at:i-1,c:acc,lo:(.3*r-1)*G*d2,hi:(.1+(fmax-.1)*r-1)*G*d2});}else if(s.kind==='grip')ry.push({at:i-1,c:acc,lo:(-fmax-1)*G*d2,hi:(fmax-1)*G*d2});}
  const Y=boxedPath(c0[1],wT,wJ,ry),ay=i=>i>0&&i<n-1?(Y.c[i+1]-2*Y.c[i]+Y.c[i-1])/d2:0;
  const out=[null,Y.c,null],res=[0,Y.res,0];
- // A feet sample's outline is the intersection of its neighbours' within two samples: a foot lifting a sample earlier
- // than planned (moving the hips moves it) left the pressure point outside the one still down (41% of the body's weight).
- const outlineAt=i=>{let P=samples[i].hull;for(let j=i-2;j<=i+2&&P.length>=3;j++)if(j!==i&&samples[j]?.kind==='feet')P=clipConvex(P,samples[j].hull);
+ // A feet (or held) sample's outline is the intersection of its neighbours' within two samples: a foot lifting a sample
+ // earlier than planned (moving the hips moves it) left the pressure point outside the one still down (41% of the body's weight).
+ const sup=s=>(s?.kind==='feet'||s?.kind==='hold')&&s.hull,outlineAt=i=>{let P=samples[i].hull;for(let j=i-2;j<=i+2&&P.length>=3;j++)if(j!==i&&sup(samples[j]))P=clipConvex(P,samples[j].hull);
   return P.length>=3&&areaOf(P)>1e-6?P:samples[i].hull;};
  // Across, x and z together (interleaved: the outline's edges couple them): ballistic in flight, a grip within fmax
  // either way, and on the feet the pressure point inside the support's outline and the push within friction. The
  // outline is the contacts' convex hull, each edge drawn in by margin but never past its centre; their bounding box
  // let the pressure point sit 4 to 11 cm off the line between two hands set down on a diagonal (the window's), where
- // the rig, reading the hull, found 20 to 32% of the body's weight of phantom force.
+ // the rig, reading the hull, found 20 to 32% of the body's weight of phantom force. A held stretch is planned across
+ // as the feet are, near its authored path: held by its weight alone, the plan left it at 2 g in its last samples to
+ // meet the feet's outline after it, where the floor could push it no more than friction allows (as a body rose off
+ // its seat with its centre of mass 7 cm behind its heels: 121% of the body's weight of phantom force).
  const acc2=[1,0,-2,0,1],rows=[];for(const i of [0,1,n-2,n-1])for(const ax of [0,2])rows.push({at:2*i+ax/2,c:[1],lo:c0[ax][i<2?0:n-1],hi:c0[ax][i<2?0:n-1]});
  for(let i=1;i<n-1;i++){const s=samples[i],at=2*(i-1),both=(lo,hi)=>rows.push({at,c:acc2,lo,hi},{at:at+1,c:acc2,lo,hi});
   if(s.kind==='air'){both(0,0);continue;}
   if(s.kind==='grip'){both(-fmax*G*d2,fmax*G*d2);continue;}
-  if(s.kind!=='feet')continue;const fy=Math.max(.3*G,ay(i)+G),h=Math.max(.2,Y.c[i]-(s.floor||0)),k=h/fy,a=-k/d2,b=1+2*k/d2;
+  if(s.kind==='hold'&&!s.hull){const fy=Math.max(.3*G,ay(i)+G);both(-MU*fy*d2,MU*fy*d2);continue;}
+  if(s.kind!=='feet'&&s.kind!=='hold')continue;const fy=Math.max(.3*G,ay(i)+G),h=Math.max(.2,Y.c[i]-(s.floor||0)),k=h/fy,a=-k/d2,b=1+2*k/d2;
   // The pressure point also carries the body's turning: p_x = c_x - k a_x + dL_z / (M fy), p_z = c_z - k a_z - dL_x / (M fy).
   const dx=s.dL?s.dL[2]/(BODY_MASS*fy):0,dz=s.dL?-s.dL[0]/(BODY_MASS*fy):0,H=outlineAt(i),cx=H.reduce((m,p)=>m+p[0],0)/H.length,cz=H.reduce((m,p)=>m+p[1],0)/H.length;
   for(let j=0;j<H.length;j++){const p=H[j],q=H[(j+1)%H.length],ex=q[0]-p[0],ez=q[1]-p[1],l=Math.hypot(ex,ez);if(l<1e-9)continue;const nx=ez/l,nz=-ex/l;
@@ -201,8 +205,8 @@ const KEEP=[...new Set(MASS_SEGMENTS.flatMap(([a,b])=>[a,b]))];
 const ONSET=.02;
 // setMove({shift(t), spin(t)}) hands the motion its hips' move while it is found (spin(t) is null where the body does
 // not turn, or {q, pivot}: a turn about a point); the result's shift and spin are the final ones. hold(t), if given,
-// marks times the plan keeps the authored path ('hold': a support it does not model, such as a seat the hips' own
-// move would lift off the floor, losing the support the plan was leaning on).
+// marks times the plan keeps near the authored path ('hold': a support it must not move, such as a seat the hips' own
+// move would lift off the floor, losing the support the plan was leaning on; see planCentre).
 export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base=null,hold=null,dt=.005,rounds=2,plan:options={}}){
  const n=Math.round(duration/dt)+1,times=Array.from({length:n},(_,i)=>Math.min(duration,i*dt));let c0=null,follow=null,samples=null,plan=null,last=null,settled=false,spin=null,w=times.map(()=>[0,0,0]);
  const turnAt=(theta,pivot)=>{let lo=theta.findIndex(x=>x[0]||x[1]||x[2]),hi=theta.findLastIndex(x=>x[0]||x[1]||x[2]);if(lo<0)return null;lo=Math.max(0,lo-1);hi=Math.min(n-1,hi+1);

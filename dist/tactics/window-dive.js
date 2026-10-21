@@ -12,7 +12,8 @@ import {balanceTraversal,contactProbe,boxedPath} from './traversal-balance.js';
 export const WINDOW={edge:.5,half:.08,sill:.85,top:1.55};
 // The roll's pace is not keyed: it starts spinning at omega (rad/s) and gravity, the contact and the impacts
 // where the contact jumps decide the rest (see rollDynamics).
-export const ROLL=Object.freeze({dir:78,start:2.46,flex:40,back:[.94,-.55],omega:2.2,maxTurn:150});
+// hips: where the hips lie, x and z, as the roll starts (the horse's, set by its mane crest touching at .94, -.55).
+export const ROLL=Object.freeze({dir:78,start:2.46,flex:40,hips:[1.002778,-.173734],omega:2.2,maxTurn:150});
 // Keyed trunk before the roll: time, label, hips [x, y, z], pelvis pitch / roll / heading (degrees: pitch forward,
 // past 180 inverted; heading from +X toward +Z). The last keyed pose before the roll is built from the roll itself.
 // Heights are the horse's; a key the legs hold up (stand) is scaled to each character's legs, and a body deeper in
@@ -74,9 +75,13 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // landing part takes an impact: angular momentum about the new contact is kept, and energy is lost. Once the hooves
  // land it rocks on over the seat to rest (ROCK).
  const s0=shapeOf(shapePre(ROLL.start)),q0=yawQ(ROLL.dir).multiply(bodyQ((270-ROLL.flex)*DEG));
- // A body wider than the horse's starts the roll that much farther from the wall it rolls along.
- const backX=ROLL.back[0]+fitB.wide;let p0=V(backX,.5,ROLL.back[1]);
- for(let i=0;i<4;i++){const tr={hips:p0,hipsQ:q0,...s0,...chestOf(p0,q0,s0.spineQ)};body.pose(posed(tr,tuckLimbs),'roll start');const L=lowest();p0=p0.clone().add(V(backX-L.x,-L.y,ROLL.back[1]-L.z));}
+ // The hips lie where the descent brings them, and the body's lowest point sets only their height: placed by its lowest
+ // point instead (the horse's mane crest, most others' shirt on the back, the goat's horns), each body lay up to 19 cm
+ // along the wall from the horse's (the goat's 30 cm the other way), the left hand's mark under its shoulder with it, out
+ // of reach as that hand came down (8 to 13 cm short on six species). A body wider than the horse's starts the roll
+ // that much farther from the wall it rolls along.
+ let p0=V(ROLL.hips[0]+fitB.wide,.5,ROLL.hips[1]);
+ for(let i=0;i<2;i++){const tr={hips:p0,hipsQ:q0,...s0,...chestOf(p0,q0,s0.spineQ)};body.pose(posed(tr,tuckLimbs),'roll start');p0=p0.clone().add(V(0,-lowest().y,0));}
  // ROCK: how far the body rocks on over its seat once the hooves are down, braked to rest by them.
  const ROCK=32*DEG,rollRows=[],impacts=[],SOFT=.04;let caughtAt=null;{const dth=.5*DEG;let q=q0.clone(),p=p0.clone(),t=0,w=ROLL.omega,E=null,prev=null,u=0,caught=null,brake=0,rocked=0;
   for(let k=0;k*dth<=ROLL.maxTurn*DEG;k++){const tr={hips:p,hipsQ:q,...s0,...chestOf(p,q,s0.spineQ)};const P=body.pose(posed(tr,tuckLimbs),'roll');let L=lowest();if(brake)L=seatLow();
@@ -210,6 +215,11 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // (a narrow push-up). The sill's world-forward elbows folded the right arm across the chest of a body upside down at
  // 58 degrees (18 cm into it, phantom-wrench capsules); out or up, it met the wall or the head.
  const FLOOR_ELBOW={[-1]:[.6,0,1],1:[0,-1,.2]};
+ // As the body lies back onto its hands its right elbow turns up (UP, in the world) by the roll's start: still bent back
+ // along the body, a body lying lower than the horse's (its back's surface nearer its bones: the skunk, cow and rabbit 4
+ // to 5 cm) folded the arm over the hand toward the trunk's middle, and the upper arm went 4 to 6 cm into the lower trunk
+ // (the horse's half a centimetre clear). Turned up, it clears the trunk on every mammal; out to the side is the wall.
+ const UP=[.2,1,.3];
  // The right hand braces on the far face as the body tips over the sill: off the sill top and over its edge onto the
  // face, down the face under the body's weight, then, once the left hand is down, one step onto its floor mark. Pressed
  // on the face it pushes the body out from the wall below the edge, which slows the tip (a belly on the edge is an
@@ -225,7 +235,7 @@ export function createWindowDive(worker,profile={id:'horse'}){
   'leg-1':[[0,rest.leg(-1)],[.55,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,plant:true}],[.90,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.06,-.56,-.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,-.12]}],[HANG,{f:'pelvis',p:[.20,-.56,-.12]}],[DOWN,{f:'pelvis',p:[.12,-.52,-.12]}],[LANDS[1],{f:'pelvis',p:[-.12,-.30,-.13]}],[ROLL.start,{f:'pelvis',p:TUCK['leg-1']}],[FOOT_DOWN-.06,{f:'pelvis',p:TUCK['leg-1']}]],
   leg1:[[0,rest.leg(1)],[.55,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,plant:true}],[.90,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.04,-.56,.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,.12]}],[HANG,{f:'pelvis',p:[.20,-.56,.12]}],[DOWN,{f:'pelvis',p:[.12,-.52,.12]}],[LANDS[1],{f:'pelvis',p:[-.12,-.30,.13]}],[ROLL.start,{f:'pelvis',p:TUCK.leg1}],[FOOT_DOWN-.06,{f:'pelvis',p:TUCK.leg1}]],
   'arm-1':[[0,rest.arm(-1)],[.55,{f:'world',p:[.36,.92,-.42]}],[.90,{f:'world',p:[.44,.91,-.42],palm:0}],[1.25,{f:'world',p:[.47,.91,-.42],palm:0}],[1.60,dangle(1.60,-1,[.35,-1,-.05])],[HANG,aim(HANG,-1,.97)],[LANDS[-1],handAt[-1]],[ROLL.start,handAt[-1]],[ROLL.start+.12,{f:'chest',p:body.offsets.shoulder[-1].clone().add(V(.05,.05,-.24)).toArray(),elbow:TUCK_ELBOW['arm-1']}],[ROLL.start+.24,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}],[ROLL_END,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}]],
-  arm1:[[0,rest.arm(1)],[.55,{f:'world',p:[.36,.92,.02]}],[.90,{f:'world',p:[.44,.91,0],palm:0}],[1.25,{f:'world',p:[.47,.91,-.02],palm:0}],...BRACE.map(([t,k])=>[t,k]),[LANDS[1],handAt[1]],[ROLL.start,handAt[1]],[ROLL.start+.18,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}],[ROLL_END,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}]],
+  arm1:[[0,rest.arm(1)],[.55,{f:'world',p:[.36,.92,.02]}],[.90,{f:'world',p:[.44,.91,0],palm:0}],[1.25,{f:'world',p:[.47,.91,-.02],palm:0}],...BRACE.map(([t,k])=>[t,k]),[LANDS[1],handAt[1]],[ROLL.start,{...handAt[1],elbowTo:UP}],[ROLL.start+.18,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}],[ROLL_END,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}]],
  };
  // After the roll both hooves stay where they landed (turning flat as they take the weight) until the stand,
  // which steps them into the stance on the tile centre.
@@ -292,8 +302,9 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // floor as the body rocked (the rig found nothing holding it), and sank 7.5 cm into it as the pelvis tipped upright
  // (its height found in the tuck). Measured on the final legs (the limbs' fit and bend directions swing the thighs, and
  // the seat's skin with them: measured before, it sank 8.6 cm all the same); the bend directions and turns are then
- // found again for the moved hips.
- {const TOUCH=.006,SINK=.008,FLOOR=.005,[a,b]=[FOOT_DOWN-.06,T('rise')-.10],all=createSurfaceProbe(worker,{stride:1,keep:m=>!/tail/.test(m.name)}),want=[],lo=[],hi=[],ts=[];
+ // found again for the moved hips. A tail's root counts as seat: it rides the hips and cannot bend out of the way (left
+ // out, the skunk's plume root went 9 cm into the floor as the body rocked, the cow's 5 cm).
+ {const TOUCH=.006,SINK=.008,FLOOR=.005,[a,b]=[FOOT_DOWN-.06,T('rise')-.10],all=createSurfaceProbe(worker,{stride:1,keep:(m,i)=>!/tail/.test(m.name)||tails.isRoot(m.name,i)}),want=[],lo=[],hi=[],ts=[];
   for(let t=a;t<=b+1e-9;t+=.005){body.pose(spec(t),'seat');all.update();let seat=Infinity,other=Infinity;
    // the rest of the trunk and the head only: the limbs' own skin (a trouser cuff by a planted hoof) does not move with
    // the hips, and holding it out of the floor threw them 40 cm up

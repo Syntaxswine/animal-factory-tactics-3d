@@ -119,8 +119,12 @@ export function steadyPoles(duration,sample,{step=.005}={}){
    const pn=perp.lengthSq()>1e-12?perp.normalize():cur,ang=smooth((c-.1)/.2)*Math.atan2(cur.clone().cross(pn).dot(axis),clamp(cur.dot(pn),-1,1)),lim=(2+13*smooth((len/l.reach-.9)/.09))*DEG*(dt/.005);
    side=cur.applyAxisAngle(axis,lim*Math.tanh(ang/lim)).normalize();}
   list.push({t,side});}}
- // sampled densely, so plain central slopes
- const tracks=Object.fromEntries(Object.entries(rows).map(([id,list])=>[id,track(list.map(r=>[r.t,...r.side.toArray()]),{},{limit:false})]));
+ // Softened by a triangle over H samples either side (the ends held), then sampled densely, so plain central slopes: a
+ // side starting to turn went at once to its full rate, and a folded knee, a thigh's length off its hip-ankle line, swung
+ // from rest to 1 m/s in 10 ms (100 to 170 m/s^2 as a body rose off its seat). Wider (3 or 4 samples), a side that must
+ // turn fast turned early: the pig director's knee at the vault's spring (35% of its weight of phantom force).
+ const H=2,soft=list=>list.map((r,k)=>{const m=V();for(let j=-H;j<=H;j++)m.addScaledVector(list[clamp(k+j,0,list.length-1)].side,H+1-Math.abs(j));return {t:r.t,side:m.normalize()};});
+ const tracks=Object.fromEntries(Object.entries(rows).map(([id,list])=>[id,track(soft(list).map(r=>[r.t,...r.side.toArray()]),{},{limit:false})]));
  return (id,t)=>{const tr=tracks[id];return tr?V(...tr(clamp(t,0,duration))).normalize():null;};
 }
 // Ways round for partial hand and hoof turns. Sampled every step seconds (turnsAt(t) poses the motion and returns the

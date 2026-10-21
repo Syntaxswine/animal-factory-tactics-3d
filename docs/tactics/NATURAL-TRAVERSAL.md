@@ -813,13 +813,109 @@ only inside the stretches its 0.1 ms re-scan flags, didn't look at it. A/B: the 
 - The left hand's shortfall was there before, up to 3 cm worse (sheep 14.3, bull 13.3 cm): their arms reach the floor
   later than the horse's.
 - The goat's legs are short of the get-up's step marks by up to 9.9 cm, from 13.8 cm short of its stance at the end.
-- The clearance fit's leftovers are within the test's limits on every mammal. `tests/natural-traversal.test.mjs`
-  passes 12/12.
+- The clearance fit's leftovers, as it reports them, are within the test's limits on every mammal (its report is taken
+  before the balance moves the body: on the final motion they are not; see the sixth part).
+  `tests/natural-traversal.test.mjs` passes 12/12.
 
 **Left in the window:**
 - the lift-off from the seat (one sample at 121%, 3.86 s) and the step into the planner's hold (50%, 2.75 s);
 - "Reach for the floor" (19% at 1.79 s; 21% before), the last step (19%) and the stand (14%);
 - the donkey's arm, and the left hand's reach on most species.
+
+### 2026-10-20 (physics balance, sixth part): the left hand on every animal, the donkey's arm, the lift-off, and the clearance no check read
+
+The user: "Next pass: get the left hand onto the floor on every species, fix the donkey's arm, then smooth the seat
+lift-off spike."
+
+**The roll starts where the descent brings the hips.** The roll's start was placed by its lowest point, set on one spot
+(.94, -.55). That point is the horse's mane crest, most others' shirt on the back, and the goat's horns, so each body
+lay up to 19 cm along the wall from the horse's (the goat's 30 cm the other way). The left hand's floor mark is set under
+the shoulder as it lies at the roll's start, so on six species it was out of reach as the hand came down (8 to 13 cm
+short at 2.03 s, down 40 to 120 ms late). Now the hips lie where the horse's do (a wider body farther from the wall,
+as before), and the lowest point sets only their height: a vertical move does not change which vertex is lowest, so the
+height is exact at once. Each roll takes as long as before: its dynamics do not depend on where it starts.
+- The left hand is on the floor by 2.08 s on all eleven mammals, with no shortfall (it was 4 to 13 cm short on eight).
+- The goat's steps reach their marks (9.9 cm short before): its roll had ended 30 cm off.
+- The donkey's right hand no longer folds into its own shoulder (7.1 cm, the elbow at 174 degrees). Lying where it did,
+  the self fit pushed the hand 35 cm up off the thigh beneath it; it now moves it aside, and the elbow peaks at 78.
+- On the horse the new placement moves no point by more than 2.3 mm (a palm, once).
+
+**The right elbow turns up as the body lies back onto its hands.** A body that lies lower at the roll's start than the
+horse's (its back's surface nearer its bones: the skunk, cow and rabbit, 4 to 5 cm) folds its right arm tighter over the
+hand. Bent back along the body, the upper arm went 4 to 6 cm into the lower trunk; the horse's cleared it by half a
+centimetre. Swept round the circle the elbow can lie on (shoulder and wrist fixed), it is clear turned up, on every
+mammal and all the way down; out to the side is the wall. Moving the hand out along the floor instead opened the elbow
+(123 to 118 degrees) and went deeper in: the arm lay more along the trunk. The elbow now turns up (UP, in the world)
+over the lie-back, and the cow and rabbit have no capsule pair over 1 cm.
+
+**The lift-off.** The seat lifts with the centre of mass 7 cm behind the heels. The planner kept the authored path
+while the body sat ('hold'), by a tracking weight alone, and met the feet's outline after the hold in its last samples,
+at 2 g, with nothing holding the push to what the floor can give: 121% of the body's weight of phantom force, the
+shift's acceleration 25 m/s^2. A held sample is now planned across as the feet are, near its authored path: its height as
+authored (so the hips cannot lift the seat, the hold's reason), the pressure point inside the support's outline (seat,
+feet and hands, while sitting) and the push within friction. That gave 33%. The rest was a knee: `steadyPoles` let a bend
+direction start turning at its full rate at once, and a knee folded to 149 degrees, a thigh's length off its hip-ankle
+line, swung from rest to 1 m/s in 10 ms (100 to 170 m/s^2). The sampled directions are now softened by a triangle over
+2 samples either side: 7%. Softened wider (3 or 4 samples), a side that must turn fast turned early: the pig director's
+knee at the vault's spring read 35% of its weight.
+
+**The seat band counts a tail's root as seat:** it rides the hips and cannot bend away, and left out of the band the
+skunk's plume root went 9 cm into the floor as the body rocked.
+
+The gate on the horse, same rig, against 669b9a8:
+
+| | 669b9a8 | now |
+|---|---|---|
+| over the limit (wrench outside impacts) | 0.14 s of 5.71 | 0.04 s |
+| roll (the step into the hold) | 50% | 30% |
+| rise (the lift-off) | 121% | 7% |
+| required force in contact | 3.1 x BW | 3.5 x BW |
+| capsule overlap over 2 cm | 1 pair, 2.4 cm | 1 pair, 2.6 cm (the left hand in its thigh, rising) |
+| point speed, joint range, jumps, pops | pass | pass |
+
+**The vault and the climb under the softened bend directions** read as before on the horse: the vault within the
+phantom limits, the climb 0.15 s over, their capsule and point-speed failures as they were (vault 3.8 cm, 9.6 m/s;
+climb 3.8 cm, 9.1 m/s). On every mammal the vault reads as at 669b9a8: the required force passes on all 11 (3.4 to 4.8
+x BW), and the phantom check on the horse, both pigs and the rabbit; the others have their one short event (the step-in
+ripple, the dog's first 20 ms).
+
+**Clipping across the animals** (the window, every 10 ms; the gate's capsule pairs over 1 cm, worst, cm):
+
+| | horse | goat | bull | cow | donkey | sheep | skunk | pig foreman | pig director | rabbit | dog |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 669b9a8 | 2.4 | 2.2 | 1.2 | 4.1 | 7.1 | 3.3 | 2.8 | 3.7 | 1.8 | 3.9 | 2.7 |
+| now | 2.6 | 2.9 | 1.0 | under 1 | 1.4 | under 1 | under 1 | 3.7 | 1.9 | under 1 | 2.7 |
+
+The left hand reaches the floor on every mammal and the goat's legs their step marks (the reach is short only where it
+was before the window: the step in, and the pig foreman's legs at the sill). `tests/natural-traversal.test.mjs` passes
+12/12.
+
+**The clearance no check read.** The clearance fit's report (`fit.report`), which `tests/natural-traversal.test.mjs`
+caps, is taken before the balance (and the window's bands), which then move the body. Read on the final motion with
+phantom-wrench's `bin/collisions.mjs` (every vertex, every 10 ms, through the battle contract), it is much worse, on the
+committed code as now:
+
+| deepest surface point (cm), the window | horse | goat | bull | cow | donkey | sheep | skunk | pig foreman | pig director | rabbit | dog |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 669b9a8 | 4.7 | 9.0 | 4.4 | 16.7 | 9.1 | 16.6 | 9.9 | 13.8 | 14.7 | 19.2 | 5.9 |
+| now | 4.3 | 5.5 | 4.4 | 13.2 | 8.8 | 16.5 | 8.0 | 13.6 | 14.4 | 18.9 | 5.9 |
+| where, now | trousers, rising | trousers | trousers | tail | trousers | trousers | right arm, the wall | trousers | trousers | trousers | tail |
+
+- In the window, most of it is the trouser legs going 13 to 19 cm into the floor as the body rises, which nothing
+  checks: the test caps the trunk, head and tail, and the gate's capsules are the bones'.
+- In the climb (committed), every head goes 4.5 to 9.8 cm into the wall at 4.6 s (the horse's left forearm 8 cm at
+  4.55 s), and the pig foreman's trousers 40 cm into the floor at 0.63 s. The vault is clean (1.4 cm at most).
+- Re-taking the report after the balance, with a second self fit and the tails bent again on the final motion (parked
+  on `anim/window-honest-wip`), the test fails on three window leftovers: the goat's head (3.0 cm at 2.44 s), the
+  skunk's trunk (1.2) and the dog's (1.5). And bent again, a tail jumps between candidate bends from one 20 ms sample to
+  the next: the dog's swept 39 cm through the floor for 10 ms.
+- The skunk's rock now falls within the wall's span, and its right elbow, bent back and out, points at it: the arm goes
+  8 cm into the wall from 2.96 to 3.12 s (its plume root was 9.9 cm in the floor instead), and the cow's right forearm
+  6 cm from 3.16 s. A world direction for that elbow, tried and not kept, cleared the cow's but not the skunk's.
+
+**Left in the window:** the clearance on the final motion, above, first. Then the roll's step into the hold (30%: the
+balance shift jitters on its 5 ms grid through the roll), "Reach for the floor" (19%), the last step (19%), the stand
+(14%), and build time.
 
 ## Integration
 

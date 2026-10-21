@@ -193,6 +193,9 @@ export function createClearanceFit(duration,{step=.02}={}){
     if(tails?.count){const [a,b]=fit.tail(t);tails.world(a*DEG,b*DEG,v=>note('tail',into(v,way)));}}
    fit.report=left;};
   fit.solveLimbs=({rounds:limbRounds=3,planted=null}={})=>{tracks=null;for(let r=0;r<limbRounds;r++){const need=limbNeed(planted);for(const id of LIMBS)add(id,need[id],free.limbs);}build();report();return fit;};
+  // fit.report is what the motion as it stood at the last solve leaves in the floor and the obstacles. The traversals'
+  // balance (and the window's seat band) move the body after it, so on the final motion the leftovers are larger than
+  // it reports (docs/tactics/NATURAL-TRAVERSAL.md, sixth part: phantom-wrench's bin/collisions.mjs reads the final one).
   // Arms clear of the legs: each arm's capsules (the phantom-wrench rig's: upper arm .045, forearm .04, hand .045) are
   // kept off both legs' (thigh .075, shank .05, hoof .03) by moving the arm's end out the way the two part, twice the
   // overlap for the upper arm and one and a half for the forearm (moving the hand moves the elbow about half as far; at
