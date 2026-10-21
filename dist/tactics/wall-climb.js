@@ -6,7 +6,7 @@ import {balanceTraversal,contactProbe} from './traversal-balance.js';
 // facing on. The top is 0.35 above the head and the standing palm reach is about 1.71, so: a jump to catch the top,
 // hang with the hooves on the face, walk up and pull until the chest is over, hook the right knee up and straddle the
 // 16 cm top, bring the left leg over turning to face the wall, lower down the far face, drop the last few
-// centimetres, then turn round onto the tile centre.
+// centimetres with the palms sliding down it, then turn round onto the tile centre.
 export const WALL=Object.freeze({edge:.5,half:.08,top:2.0});
 // Heights are the horse's (traversal-fit.js): a key the legs hold up (stand) is scaled to each character's legs, a key
 // hanging from the hands (hang) keeps the shoulders where the horse's were, and a body deeper in front stands back while
@@ -19,10 +19,10 @@ const TRUNK=[
  {t:.4,label:'Step in',hips:[.10,.79,0],pitch:4,nod:-10,stand:true,near:true},
  {t:.7,label:'Crouch',hips:[.08,.56,0],push:18,pitch:14,flex:4,nod:-30,turn:40,stand:true,near:true},
  {t:.86,label:'Push off',hips:[.15,.85,0],pitch:2,nod:-16,turn:40,stand:true,near:true,launch:true},
- {t:1.185,label:'Over the top',hips:[.24,1.20,0],pitch:-3,flex:-2,nod:-12,turn:40,apex:.04},
- {t:1.265,label:'Jump and catch',grip:true,catch:true,hips:[.25,1.20,0],pitch:-4,flex:-2,nod:-10,turn:40,hang:true},
- {t:1.505,label:'Hang',grip:true,hips:[.25,1.14,0],pitch:-8,flex:-2,nod:-8,turn:40,hang:true},
- {t:1.905,label:'Walk up the face',grip:true,hips:[.24,1.36,0],pitch:-12,flex:2,nod:-8,turn:40,hang:true},
+ {t:1.185,label:'Over the top',hips:[.24,1.20,0],pitch:-3,flex:-2,nod:-12,turn:40,apex:.04,near:true},
+ {t:1.265,label:'Jump and catch',grip:true,catch:true,hips:[.25,1.20,0],pitch:-4,flex:-2,nod:-10,turn:40,hang:true,near:true},
+ {t:1.505,label:'Hang',grip:true,hips:[.25,1.14,0],pitch:-8,flex:-2,nod:-8,turn:40,hang:true,near:true},
+ {t:1.905,label:'Walk up the face',grip:true,hips:[.24,1.36,0],pitch:-12,flex:2,nod:-8,turn:40,hang:true,near:true},
  {t:2.305,label:'Chest over the top',grip:true,hips:[.30,1.86,0],pitch:34,flex:14,nod:-5,turn:30,hang:true},
  {t:2.705,label:'Right knee up',hips:[.42,2.20,.04],pitch:62,roll:-18,heading:-30,flex:10,nod:-5,turn:15},
  {t:3.065,label:'Straddle',hips:[.50,2.18,0],pitch:28,heading:-90,flex:6,nod:-12},
@@ -40,7 +40,13 @@ const TRUNK=[
 ];
 export function createWallClimb(worker,profile={id:'horse'}){
  const body=createTraversalBody(worker),tails=createTailBend(worker),probe=createSurfaceProbe(worker,{stride:2,keep:(m,i)=>!/tail/.test(m.name)||tails.isRoot(m.name,i)}),fitB=bodyFit(body,probe),back=fitB.back,D=TRUNK.at(-1).t;
- const keys=TRUNK.map(k=>({...k,hips:[k.hips[0]-(k.near?back:0),k.stand?fitB.stand(k.hips[1]):k.hang?fitB.hang(k.hips[1]):k.hips[1],k.hips[2]]}));
+ // Hanging, a body deeper in front stands back too (near) and leans over its belly toward the wall (lean, degrees of
+ // pitch) until its shoulders are where the horse's were. Unadapted, the fit pushed a pig's belly 17 to 26 cm back off
+ // the face, out of its arms' reach of the top; stood back alone, the pig director's shoulders were 52 cm from it, past
+ // its arms' 50. Its hands never gripped, and the balance, finding nothing holding the body until the straddle,
+ // planned a second-long flight and drove the hips 25 to 40 cm into the floor to launch it.
+ const lean=Math.asin(Math.min(1,back/(body.offsets.spine.y+body.offsets.shoulder[1].y)))/DEG;
+ const keys=TRUNK.map(k=>({...k,pitch:(k.pitch||0)+(k.near&&k.hang?lean:0),hips:[k.hips[0]-(k.near?back:0),k.stand?fitB.stand(k.hips[1]):k.hang?fitB.hang(k.hips[1]):k.hips[1],k.hips[2]]}));
  // Gripping keys rise until both hands reach the top at .97 of the arm (the horse's keys left them 13 cm short); the
  // hooves on the face rise with them (rise).
  const top=WALL.top+.07,rise={};
@@ -84,6 +90,13 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // step still 6 cm from done, and slid).
  const over=(s,heading)=>({f:'world',p:[fitB.foot(s,1)[0],ANKLE+.025,fitB.foot(s)[2]],hoof:0,heading});
  const HANG=[-1,0,.8]; // a gripping hand's elbow: back and out from the wall
+ // Letting go, the palms come off the top, out past its far edge and onto the far face, and slide down it as the body
+ // drops, pushing it off the wall until the landing is absorbed (z: the hand's side, 1 for the hand on +Z). Raised
+ // overhead instead, the hands swept down past the face at 8 m/s as the feet landed: the balance counted them gripping
+ // it, carried the drop's turn into the landing and tipped every head and forearm 5 to 8 cm into the wall. Straight
+ // from the top to the face, the fingers cut through its corner (4 cm); arced over it, the hand's turn onto the face
+ // switched its way round 2 ms short of done and popped the palm.
+ const FAR=[1,0,0],SLIDE=z=>[[4.235,{f:'world',p:[.63,2.04,.21*z]}],[4.33,{f:'world',p:[.62,1.80,.22*z],face:FAR}],[4.685,{f:'world',p:[.62,1.10,.26*z],face:FAR}]];
  const LIMB={
   'leg-1':[[0,stance(-1)],[.4,foot(-.035-back,-.20)],[.7,foot(-.035-back,-.20,15)],[.995,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-1.03*fitB.leg,-.20],hoof:55,soft:.03}],[1.195,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-.95*fitB.leg,-.20],hoof:50}],[1.375,{f:'pelvis',p:[.02,-.62,-.13],hoof:20,knee:OUT}],[1.505,{...onFace(true,.46,-.16,1.505),knee:OUT}],[1.905,{...onFace(true,.80,-.16,1.905),knee:OUT}],[2.305,{...onFace(true,1.26,-.16,2.305),knee:OUT}],[2.705,{...onFace(true,1.56,-.16,2.705),knee:OUT}],
    [3.065,{f:'world',p:[.19,1.70,0],hoof:20,heading:-90}],[3.305,{f:'world',p:[.44,2.24,.62],hoof:10,heading:-108}],[3.485,{f:'world',p:[.68,2.12,.66],hoof:40,heading:-140,knee:SIDE}],[3.685,{f:'world',p:[.80,1.36,.20],hoof:20,heading:-170,knee:SIDE}],
@@ -98,8 +111,8 @@ export function createWallClimb(worker,profile={id:'horse'}){
   // once the chest is over and plants ahead before the right knee comes up beside it. Gripping, the elbows bend back
   // and out from the wall (bent down, the forearms lay across its near edge). The arms swing up ahead of the jump, in
   // front of the face, and come down onto the top (reaching straight for it, the forearms went 7 cm into the face).
-  'arm-1':[[0,{f:'chest',p:restWrist(-1)}],[.4,{f:'chest',p:[.20,.15,-.30]}],[.7,{f:'chest',p:[.10,-.05,-.32]}],[.86,{f:'chest',p:[.06,.40,-.26],elbow:HANG}],[1.115,{f:'chest',p:[.04,.56,-.22],elbow:HANG}],[1.265,{f:'world',p:[.45,top,-.18],palm:0,elbow:HANG}],[3.485,{f:'world',p:[.46,top,-.18],palm:0,elbow:HANG}],[3.545,{f:'world',p:[.50,top+.06,.04]}],[3.605,{f:'world',p:[.54,top,.20],palm:-180}],[4.175,{f:'world',p:[.54,top,.20],palm:-180,lift:.3}],[4.255,{f:'chest',p:[.11,.58,-.20]}],[4.505,{f:'chest',p:[.10,.56,-.21]}],[4.685,{f:'chest',p:[.14,-.05,-.32]}],[4.95,{f:'chest',p:[.18,-.18,-.16]}],[5.27,{f:'chest',p:[.16,-.26,-.20]}],[6.1,{f:'chest',p:restWrist(-1)}]],
-  arm1:[[0,{f:'chest',p:restWrist(1)}],[.4,{f:'chest',p:[.20,.15,.30]}],[.7,{f:'chest',p:[.10,-.05,.32]}],[.86,{f:'chest',p:[.06,.40,.26],elbow:HANG}],[1.115,{f:'chest',p:[.04,.56,.22],elbow:HANG}],[1.265,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.345,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.465,{f:'world',p:[.52,top+.06,0]}],[2.585,{f:'world',p:[.54,top,-.10],palm:-40}],[3,{f:'world',p:[.54,top,-.10],palm:-40}],[3.06,{f:'world',p:[.56,top+.06,-.15]}],[3.12,{f:'world',p:[.54,top,-.20],palm:-180}],[3.665,{f:'world',p:[.54,top,-.20],palm:-180}],[4.175,{f:'world',p:[.54,top,-.20],palm:-180,lift:.3}],[4.255,{f:'chest',p:[.11,.58,.20]}],[4.505,{f:'chest',p:[.10,.56,.21]}],[4.685,{f:'chest',p:[.14,-.05,.32]}],[4.95,{f:'chest',p:[.18,-.18,.16]}],[5.27,{f:'chest',p:[.16,-.26,.20]}],[6.1,{f:'chest',p:restWrist(1)}]],
+  'arm-1':[[0,{f:'chest',p:restWrist(-1)}],[.4,{f:'chest',p:[.20,.15,-.30]}],[.7,{f:'chest',p:[.10,-.05,-.32]}],[.86,{f:'chest',p:[.06,.40,-.26],elbow:HANG}],[1.115,{f:'chest',p:[.04,.56,-.22],elbow:HANG}],[1.265,{f:'world',p:[.45,top,-.18],palm:0,elbow:HANG}],[3.485,{f:'world',p:[.46,top,-.18],palm:0,elbow:HANG}],[3.545,{f:'world',p:[.50,top+.06,.04]}],[3.605,{f:'world',p:[.54,top,.20],palm:-180}],[4.175,{f:'world',p:[.54,top,.20],palm:-180,lift:.3}],...SLIDE(1),[4.95,{f:'chest',p:[.18,-.18,-.16]}],[5.27,{f:'chest',p:[.16,-.26,-.20]}],[6.1,{f:'chest',p:restWrist(-1)}]],
+  arm1:[[0,{f:'chest',p:restWrist(1)}],[.4,{f:'chest',p:[.20,.15,.30]}],[.7,{f:'chest',p:[.10,-.05,.32]}],[.86,{f:'chest',p:[.06,.40,.26],elbow:HANG}],[1.115,{f:'chest',p:[.04,.56,.22],elbow:HANG}],[1.265,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.345,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.465,{f:'world',p:[.52,top+.06,0]}],[2.585,{f:'world',p:[.54,top,-.10],palm:-40}],[3,{f:'world',p:[.54,top,-.10],palm:-40}],[3.06,{f:'world',p:[.56,top+.06,-.15]}],[3.12,{f:'world',p:[.54,top,-.20],palm:-180}],[3.665,{f:'world',p:[.54,top,-.20],palm:-180}],[4.175,{f:'world',p:[.54,top,-.20],palm:-180,lift:.3}],...SLIDE(-1),[4.95,{f:'chest',p:[.18,-.18,.16]}],[5.27,{f:'chest',p:[.16,-.26,.20]}],[6.1,{f:'chest',p:restWrist(1)}]],
  };
  const spec=t=>{const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posedFrom(tr,limbs,{poles:steady?id=>steady(id,t):null,offsets:fit?.limb?id=>fit.limb(id,t):null,snaps:fit?.plant?id=>fit.plant(id,t):null,turns:turnRef?b=>turnRef(b,t):null});};
  // Fit this character's surface: trunk, head and tail out of the floor and the wall. The face is the way out until the
@@ -108,7 +121,7 @@ export function createWallClimb(worker,profile={id:'horse'}){
  steady=steadyPoles(D,t=>limbSample(body,spec(t)));
  // The limbs are fitted with their steady bend directions, which are then found again for the moved targets.
  // How planted each limb's end is (a palm on a surface, a hoof set on the floor or a face), for the limb fit.
- const planted=(id,t)=>{const l=keyedLimb(LIMB[id],t,trunkAt(t));if(id.startsWith('arm'))return [l.palm!==undefined?l.palmW:0,[0,1,0]];
+ const planted=(id,t)=>{const l=keyedLimb(LIMB[id],t,trunkAt(t));if(id.startsWith('arm'))return l.palm===undefined&&l.face?[l.faceW,l.face]:[l.palm!==undefined?l.palmW:0,[0,1,0]];
   const [na,nb,u]=l.plant;return [l.plantW||0,na&&nb?na.map((v,j)=>v+(nb[j]-v)*u):na||nb];};
  fit.solveLimbs({planted});steady=steadyPoles(D,t=>limbSample(body,spec(t)));fit.solvePlants({planted});
  // Twice: the first pass unwraps the palms' yaw blends, the second finds the hands' ways round for those continuous
@@ -117,7 +130,9 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // Balance: the centre of mass planned against what holds the body at each moment, the hips moved to follow it. It
  // runs on the hands' final turns (a palm's angle decides when it first touches), which are then found again.
  const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),pose:t=>body.pose(spec(t),'balance'),com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).toArray()});
- balance=bal;turns();
+ // The head and tail are fitted again to the balanced motion, the head held through the flights (traversal-fit.js,
+ // fit.solveHead and fit.solveTail), and the report taken on it.
+ balance=bal;fit.solveHead({air:t=>bal.samples[Math.round(t/(bal.times[1]-bal.times[0]))]?.kind==='air'});fit.solveTail();turns();
  const KEYS=TRUNK.map(k=>({t:k.t,label:k.label}));let state=null;
  const api={duration:D,keys:KEYS,body,probe,obstacle:WALL,fit:fit.report,clearance:fit,balance:bal,phases:KEYS.slice(0,-1).map((k,i)=>({label:KEYS[i+1].label,start:k.t,end:KEYS[i+1].t})),
   at(t){const time=clamp(t,0,D),P=body.pose(spec(time),time.toFixed(3));body.root.updateMatrixWorld(true);worker.skeleton?.update?.();const [tp,ty]=fit.tail(time);tails.set(tp*DEG,ty*DEG);

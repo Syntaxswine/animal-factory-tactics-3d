@@ -243,12 +243,22 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const hoofAt=(p,heading)=>({f:'world',p:p.toArray(),hoof:0,heading,plant:true}),over=(p,heading,arc)=>({f:'world',p:[p.x,ANKLE+.025,p.z],hoof:0,heading,arc});
  // A foot lifts once the weight is over the other (lifted as the weight still crossed, the pressure point had to jump
  // from between the feet to the one left down: 49% of the body's weight).
- LIMB.leg1.push([FOOT_DOWN,hoofAt(feet[1],ROLL.dir)],[T('weightL')+.03,hoofAt(feet[1],ROLL.dir-6)],[T('rightDown')-.04,over(R1,ROLL.dir-52,.05)],[T('rightDown'),hoofAt(R1,ROLL.dir-56)],[END,hoofAt(R1,0)]);
- LIMB['leg-1'].push([FOOT_DOWN,hoofAt(feet[-1],ROLL.dir)],[T('weightR')+.03,hoofAt(feet[-1],ROLL.dir-4)],[T('leftBack')-.04,over(LH,ROLL.dir-28,.06)],[T('leftBack'),hoofAt(LH,ROLL.dir-32)],
+ // The knees point up and out while the body sits, leans and rises over the feet (KNEE_UP, in the pelvis frame), and
+ // forward again through the steps: left to the default (forward), the bend lay along a sitting leg's hip-ankle line,
+ // the side the roll left was carried on, and the knees splayed out and down, into the floor (the rabbit's knees 9 cm
+ // under it, its trousers 19; the sheep's 16, the pigs' 14). Straight up, the thighs met the chest leaning over them
+ // (4 to 5 cm); out at about 30 degrees, it leans between them.
+ const KNEE_UP=[.3,1,.6],up=k=>({...k,knee:KNEE_UP});
+ LIMB.leg1.push([FOOT_DOWN,up(hoofAt(feet[1],ROLL.dir))],[T('weightL')+.03,up(hoofAt(feet[1],ROLL.dir-6))],[T('rightDown')-.04,over(R1,ROLL.dir-52,.05)],[T('rightDown'),hoofAt(R1,ROLL.dir-56)],[END,hoofAt(R1,0)]);
+ LIMB['leg-1'].push([FOOT_DOWN,up(hoofAt(feet[-1],ROLL.dir))],[T('weightR')+.03,up(hoofAt(feet[-1],ROLL.dir-4))],[T('leftBack')-.04,over(LH,ROLL.dir-28,.06)],[T('leftBack'),hoofAt(LH,ROLL.dir-32)],
   [T('weightR2')+.03,hoofAt(LH,ROLL.dir-40)],[T('leftDown')-.04,over(L1,8,.05)],[T('leftDown'),hoofAt(L1,6)],[END,hoofAt(L1,0)]);
- // The arms hang outside the knees while the trunk leans over the thighs (at rest beside the body they went 10 cm
- // into the thighs and shins).
- for(const s of [-1,1])LIMB['arm'+s].push([T('lean')-.12,{f:'chest',p:[.16,-.20,.31*s]}],[T('rise'),{f:'chest',p:[.12,-.26,.31*s]}],[T('weightR'),{f:'chest',p:restWrist(s)}],[END,{f:'chest',p:restWrist(s)}]);};buildLimbs();
+ // The left arm hangs outside the knee while the trunk leans over the thighs (at rest beside the body the arms went
+ // 10 cm into the thighs and shins). The right, on the wall's side, reaches forward past its knee instead, then comes
+ // back out beside the thigh to rest: hung outside the knee, its hand went into the wall (the skunk's 8 cm, the cow's
+ // 6), and kept off the raised thigh it was pushed up through the chest.
+ const ARM_R=[[T('lean')-.12,[.45,-.10,.10]],[T('rise'),[.40,-.16,.10]],[T('weightR'),[.30,-.26,.22]]];
+ LIMB['arm-1'].push([T('lean')-.12,{f:'chest',p:[.16,-.20,-.31]}],[T('rise'),{f:'chest',p:[.12,-.26,-.31]}],[T('weightR'),{f:'chest',p:restWrist(-1)}],[END,{f:'chest',p:restWrist(-1)}]);
+ LIMB.arm1.push(...ARM_R.map(([t,p])=>[t,{f:'chest',p}]),[T('leftBack'),{f:'chest',p:restWrist(1)}],[END,{f:'chest',p:restWrist(1)}]);};buildLimbs();
  function spec(t){const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posed(tr,limbs,t);}
  // Fit this character's surface: trunk, head and tail out of the floor, the sill and the lintel. The roll is computed
  // from the body itself, so the trunk and head are held through it, easing in and out over 0.08 s; the hands are then
@@ -304,15 +314,18 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // the seat's skin with them: measured before, it sank 8.6 cm all the same); the bend directions and turns are then
  // found again for the moved hips. A tail's root counts as seat: it rides the hips and cannot bend out of the way (left
  // out, the skunk's plume root went 9 cm into the floor as the body rocked, the cow's 5 cm).
- {const TOUCH=.006,SINK=.008,FLOOR=.005,[a,b]=[FOOT_DOWN-.06,T('rise')-.10],all=createSurfaceProbe(worker,{stride:1,keep:(m,i)=>!/tail/.test(m.name)||tails.isRoot(m.name,i)}),want=[],lo=[],hi=[],ts=[];
+ // Measured twice: the bend directions found again for the moved hips swing the thighs, and the seat's skin with them
+ // (with the knees up the seat rose 1 to 2.5 cm off the floor through the lean, and the plan, finding the feet alone,
+ // dragged the hips 11 cm toward them and folded the knees to 160 degrees).
+ const seatBand=()=>{const TOUCH=.006,SINK=.008,FLOOR=.005,[a,b]=[FOOT_DOWN-.06,T('rise')-.10],all=createSurfaceProbe(worker,{stride:1,keep:(m,i)=>!/tail/.test(m.name)||tails.isRoot(m.name,i)}),want=[],lo=[],hi=[],ts=[];
   for(let t=a;t<=b+1e-9;t+=.005){body.pose(spec(t),'seat');all.update();let seat=Infinity,other=Infinity;
    // the rest of the trunk and the head only: the limbs' own skin (a trouser cuff by a planted hoof) does not move with
    // the hips, and holding it out of the floor threw them 40 cm up
    for(let i=0;i<all.count;i++){if(/hoof|boot|foot|toe|hand/i.test(all.names[all.part[i]]))continue;const bone=all.boneNames[all.bone[i]];if(bone==='hips')seat=Math.min(seat,all.y[i]);else if(bone==='spine'||bone==='head')other=Math.min(other,all.y[i]);}
    const down=t<=T('lean'),top=Math.min(seat+SINK,other+FLOOR),need=down?Math.min(seat-TOUCH,top):-1;ts.push(t);lo.push(need);hi.push(top);want.push(down?clamp(seat+.002,need,top):Math.min(0,top));}
   const P=boxedPath(want,want.map(()=>1),2e7,want.map((_,i)=>({at:i,c:[1],lo:lo[i],hi:hi[i]})));
-  const tr=track(ts.map((t,i)=>[t,0,-P.c[i]*smooth(Math.min(t-a,b-t)/.08),0]),{},{limit:false});onSeat=t=>t>a&&t<b?V(...tr(t)):V();}
- steady=steadyPoles(D,t=>limbSample(body,spec(t)));turns();
+  const tr=track(ts.map((t,i)=>[t,0,-P.c[i]*smooth(Math.min(t-a,b-t)/.08),0]),{},{limit:false}),prev=onSeat;onSeat=t=>(prev?prev(t):V()).add(t>a&&t<b?V(...tr(t)):V());};
+ seatBand();steady=steadyPoles(D,t=>limbSample(body,spec(t)));seatBand();steady=steadyPoles(D,t=>limbSample(body,spec(t)));turns();
  // Balance: the centre of mass planned against what holds the body at each moment, the hips moved to follow it. It
  // runs on the hands' final turns (a palm's angle decides when it first touches), which are then found again.
  const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(WINDOW.edge,WINDOW.half,[[0,WINDOW.sill],[WINDOW.top,2]]),pose:t=>body.pose(spec(t),'balance'),com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onSill(t)).add(onSeat(t)).toArray(),
@@ -320,7 +333,12 @@ export function createWindowDive(worker,profile={id:'horse'}){
   // finding the feet alone under a centre of mass 30 cm behind them, dragged it forward until the knees locked and the
   // hips ran away (80 to 210 m/s)
   hold:t=>t>=FOOT_DOWN-.05&&t<=T('lean')+.05});
- balance=bal;turns();
+ // On the balanced motion the tails are bent clear of the trunk as it now is (they carry no mass in the balance), and
+ // the fit's report is then the played motion's. The arms are not fitted again here: moved after the balance, they
+ // move the centre of mass it planned (the step in read 44% of the body's weight). Nor is the head (fit.solveHead, as
+ // the climb's is): held through the hop, a turn chosen for the donkey's ears at one moment of it took them 8.3 cm
+ // into the lintel at another (2.8 as fitted before the balance), and no turn clears the goat's horns in the roll.
+ balance=bal;fit.solveTail();turns();
  const KEYS=[...PRE.map(k=>({t:k.t,label:k.label})),{t:ROLL.start,label:'Back to the floor'},{t:(ROLL.start+ROLL_END)/2,label:'Roll'},{t:ROLL_END,label:'Sit up'},{t:T('lean'),label:'Lean over the feet'},{t:T('rise'),label:'Rise over the feet'},{t:T('weightR'),label:'Weight on the right foot'},{t:T('leftBack'),label:'Left foot back'},{t:T('weightL'),label:'Weight on the left foot'},{t:T('rightDown'),label:'Right foot back'},{t:T('weightR2'),label:'Weight on the right again'},{t:T('leftDown'),label:'Left foot round'},{t:END,label:'Stand on the tile'}];
  let state=null;
  const api={duration:D,keys:KEYS,body,probe,roll:{rows:rollRows,dir:ROLL.dir,start:ROLL.start,end:ROLL_END},

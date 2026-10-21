@@ -39,7 +39,7 @@ export function createTailBend(worker){
   for(let i=0;i<n;i++)if(dist[i]<near+.025){pivot.add(P(i));m++;}pivot.divideScalar(m);
   const len=Math.max(...Array.from({length:n},(_,i)=>P(i).distanceTo(pivot))),r1=Math.max(.05,.45*len);
   const blend=Float32Array.from({length:n},(_,i)=>T.MathUtils.smoothstep(P(i).distanceTo(pivot),.015,r1));
-  return {part,pos,nrm,base,baseN,pivot,blend,hi,n,sample:Array.from({length:Math.ceil(n/3)},(_,k)=>3*k).filter(i=>blend[i]>=ROOT)};});
+  return {part,pos,nrm,base,baseN,pivot,blend,hi,n,len,sample:Array.from({length:Math.ceil(n/3)},(_,k)=>3*k).filter(i=>blend[i]>=ROOT)};});
  const byName=new Map(tails.map(t=>[t.part.name,t]));
  const q=Q(),qz=Q(),Y=V(0,1,0),Z=V(0,0,1),M=new T.Matrix4(),B=new T.Matrix4(),v=V(),w=V();
  const turn=(pitch,yaw,b)=>q.setFromAxisAngle(Y,yaw*b).multiply(qz.setFromAxisAngle(Z,pitch*b));
@@ -53,6 +53,11 @@ export function createTailBend(worker){
   frame:()=>tails.map(t=>{const s=t.part.skeleton;return new T.Matrix4().multiplyMatrices(t.part.matrixWorld,t.part.bindMatrixInverse).multiply(B.multiplyMatrices(s.bones[t.hi].matrixWorld,s.boneInverses[t.hi])).multiply(t.part.bindMatrix);}),
   world(pitch,yaw,visit,frame=null){tails.forEach((t,j)=>{if(frame)M.copy(frame[j]);else{const s=t.part.skeleton;M.multiplyMatrices(t.part.matrixWorld,t.part.bindMatrixInverse).multiply(B.multiplyMatrices(s.bones[t.hi].matrixWorld,s.boneInverses[t.hi])).multiply(t.part.bindMatrix);}
    for(const i of t.sample)visit(bent(t,i,pitch,yaw,v).applyMatrix4(M));});},
+  // Each candidate bend's points (pitch, yaw in degrees), bent once in the space a kept frame carries, then their centre
+  // and radius; and each tail's root and reach there, for the planned follow.
+  bends:cands=>tails.map(t=>cands.map(([a,b])=>{const out=new Float32Array(3*t.sample.length+4);let cx=0,cy=0,cz=0;const N=t.sample.length;t.sample.forEach((i,k)=>{bent(t,i,a*DEG,b*DEG,v);out[3*k]=v.x;out[3*k+1]=v.y;out[3*k+2]=v.z;cx+=v.x/N;cy+=v.y/N;cz+=v.z/N;});
+   let r=0;for(let k=0;k<N;k++)r=Math.max(r,Math.hypot(out[3*k]-cx,out[3*k+1]-cy,out[3*k+2]-cz));out.set([cx,cy,cz,r],3*N);return out;})),
+  reach:()=>tails.map(t=>({pivot:t.pivot.clone(),len:t.len})),
   restore(){for(const t of tails){t.pos.array.set(t.base);t.pos.needsUpdate=true;if(t.nrm){t.nrm.array.set(t.baseN);t.nrm.needsUpdate=true;}}}};
 }
 // Clearance. Where the trunk, head or tail would go into the floor or the obstacle, the least correction takes it out.
@@ -79,12 +84,14 @@ const HEAD_TRY=[];for(let a=-40;a<=40;a+=10)for(let b=-60;b<=60;b+=15)for(let c=
 const headCost=h=>1.5*Math.abs(h[0])+1.2*Math.abs(h[1])+Math.abs(h[2]);HEAD_TRY.sort((x,y)=>headCost(x)-headCost(y));
 const BOW_TRY=[];for(let b=-30;b<=45;b+=5)BOW_TRY.push(b);BOW_TRY.sort((x,y)=>Math.abs(x)-Math.abs(y));
 const TAIL_TRY=[];for(let a=-150;a<=150;a+=10)for(let b=-120;b<=120;b+=10)TAIL_TRY.push([a,b]);TAIL_TRY.sort((x,y)=>Math.abs(x[0])+Math.abs(x[1])-Math.abs(y[0])-Math.abs(y[1]));
+// How far a tail's bend may swing from one 20 ms sample to the next (degrees, each way): 2,000 degrees a second.
+const TAIL_STEP=40;
 export function createClearanceFit(duration,{step=.02}={}){
  const n=Math.max(2,Math.round(duration/step)+1),dt=duration/(n-1),times=Array.from({length:n},(_,k)=>k*dt);
  const ch={trunk:times.map(()=>[0,0,0]),bow:times.map(()=>[0]),head:times.map(()=>[0,0,0]),tail:times.map(()=>[0,0]),...Object.fromEntries(LIMBS.flatMap(id=>[[id,times.map(()=>[0,0,0])],['snap:'+id,times.map(()=>[0,0,0])]]))};let tracks=null,last=null;
  const at=(a,t)=>{const x=clamp(t/dt,0,n-1),i=Math.min(n-2,Math.floor(x)),u=x-i;return a[i].map((v,j)=>v+(a[i+1][j]-v)*u);};
  const get=k=>t=>tracks?tracks[k](clamp(t,0,duration)):at(ch[k],t);
- const W=Math.max(1,Math.round(.06/dt)),R=Math.max(1,Math.round(.1/dt)),CHUNK=Math.max(1,Math.round(.24/dt)),TAIL_CHUNK=Math.max(1,Math.round(.12/dt));
+ const W=Math.max(1,Math.round(.06/dt)),R=Math.max(1,Math.round(.1/dt)),R2=Math.max(1,Math.round(.25/dt)),CHUNK=Math.max(1,Math.round(.24/dt)),TAIL_CHUNK=Math.max(1,Math.round(.12/dt));
  // Spread a trunk move: hold the largest need within 2W samples, then two box blurs of W, so the full size holds
  // through the contact and eases in and out around it.
  function envelope(rows){const m=rows[0].length,out=rows.map(()=>new Array(m).fill(0));
@@ -97,10 +104,10 @@ export function createClearanceFit(duration,{step=.02}={}){
  // [first, last].
  const runs=(flags,chunk=CHUNK)=>{const out=[];let s=-1;const close=e=>{for(let a=s;a<=e;a+=chunk)out.push([a,Math.min(e,a+chunk-1)]);s=-1;};
   flags.forEach((f,k)=>{if(f&&s<0)s=k;if(!f&&s>=0)close(k-1);});if(s>=0)close(n-1);return out;};
- // One value held through each stretch, eased in and out over R samples on either side (the nearer stretch wins),
+ // One value held through each stretch, eased in and out over r samples on either side (the nearer stretch wins),
  // softened over three samples where two stretches meet.
- function hold(list,m){const out=times.map(()=>new Array(m).fill(0)),dist=times.map(()=>Infinity);
-  for(const {a,b,v}of list)for(let k=Math.max(0,a-R);k<=Math.min(n-1,b+R);k++){const d=k<a?a-k:k>b?k-b:0;if(d<dist[k]){dist[k]=d;const w=d?smooth(1-d/(R+1)):1;out[k]=v.map(x=>x*w);}}
+ function hold(list,m,r=R){const out=times.map(()=>new Array(m).fill(0)),dist=times.map(()=>Infinity);
+  for(const {a,b,v}of list)for(let k=Math.max(0,a-r);k<=Math.min(n-1,b+r);k++){const d=k<a?a-k:k>b?k-b:0;if(d<dist[k]){dist[k]=d;const w=d?smooth(1-d/(r+1)):1;out[k]=v.map(x=>x*w);}}
   return out.map((r,k)=>r.map((x,j)=>(out[Math.max(0,k-1)][j]+x+out[Math.min(n-1,k+1)][j])/3));}
  // Corrections are zero at the start and the end, where the battle's own pose hands over.
  const ends=t=>smooth(Math.min(t,duration-t)/EASE);
@@ -131,16 +138,23 @@ export function createClearanceFit(duration,{step=.02}={}){
   // One head turn and bow per stretch of contact; returns the trunk moves for what neither clears. The eases in and
   // out must clear too: a moment a neighbouring turn carries into contact joins its stretch, and the stretch is solved
   // again (up to three passes).
-  const solveHead=()=>{const S=bareHeads();let flags=S.map(s=>head.length>0&&headAt(s,[0,0,0],0)>0),pushes;
+  // keepBow: the head alone, against the bow as it is (fit.solveHead, after the balance). air(t), if given: where
+  // nothing holds the body; a turn is held through a flight next to its stretch, never turned there (eased out into
+  // the jump at the climb's push-off, it put 10 N on the flight's peak and 0.01 s more over the limit).
+  const solveHead=(keepBow=false,air=null)=>{const S=bareHeads(),B=keepBow?ch.bow.map(x=>x[0]):null,r=B?R2:R,inAir=k=>!!air?.(times[k]);
+   let flags=S.map((s,k)=>head.length>0&&headAt(s,[0,0,0],B?B[k]:0)>0),pushes;
    for(let pass=0;pass<3;pass++){pushes=times.map(()=>[0,0,0]);const list=[];
     for(const [a,b]of runs(flags)){const run=S.slice(a,b+1);
-     const worst=(c,bw,stop)=>{let m=-Infinity;for(const s of run){m=Math.max(m,headAt(s,c,bw));if(m>=stop)break;}return m;};
+     const worst=(c,bw,stop)=>{let m=-Infinity;for(const [j,s] of run.entries()){m=Math.max(m,headAt(s,c,B?B[a+j]:bw));if(m>=stop)break;}return m;};
      let c=[0,0,0],low=Infinity;for(const h of [[0,0,0],...HEAD_TRY]){const m=worst(h,0,low);if(m<=0){c=h;low=m;break;}if(m<low){low=m;c=h;}}
-     let bw=0;if(low>0){let lowB=Infinity;for(const x of BOW_TRY){const m=worst(c,x,lowB);if(m<=0){bw=x;lowB=m;break;}if(m<lowB){lowB=m;bw=x;}}
+     let bw=0;if(low>0&&!B){let lowB=Infinity;for(const x of BOW_TRY){const m=worst(c,x,lowB);if(m<=0){bw=x;lowB=m;break;}if(m<lowB){lowB=m;bw=x;}}
       if(lowB>0)run.forEach((s,j)=>{let deep=0;headAt(s,c,bw,(q,d)=>{if(d>deep){deep=d;pushes[a+j]=way.clone().multiplyScalar(d).toArray();}});});}
-     list.push({a,b,c,bw});}
-    const hv=hold(list.map(r=>({a:r.a,b:r.b,v:r.c})),3),bv=hold(list.map(r=>({a:r.a,b:r.b,v:[r.bw]})),1);
-    for(let k=0;k<n;k++){const e=ends(times[k]);ch.head[k]=hv[k].map(v=>v*(free.head?.(times[k])??1)*e);ch.bow[k]=[bv[k][0]*(free.trunk?.(times[k])??1)*e];}
+     // a flight within the ease, with no other stretch before it, joins the stretch
+     let a2=a,b2=b;for(let k=b+1;k<=Math.min(n-1,b+r)&&!flags[k];k++)if(inAir(k)){b2=k;while(b2+1<n&&inAir(b2+1))b2++;break;}
+     for(let k=a-1;k>=Math.max(0,a-r)&&!flags[k];k--)if(inAir(k)){a2=k;while(a2>0&&inAir(a2-1))a2--;break;}
+     list.push({a:a2,b:b2,c,bw});}
+    const hv=hold(list.map(q=>({a:q.a,b:q.b,v:q.c})),3,r),bv=hold(list.map(q=>({a:q.a,b:q.b,v:[q.bw]})),1);
+    for(let k=0;k<n;k++){const e=ends(times[k]);ch.head[k]=hv[k].map(v=>v*(free.head?.(times[k])??1)*e);if(!B)ch.bow[k]=[bv[k][0]*(free.trunk?.(times[k])??1)*e];}
     const more=S.map((s,k)=>!flags[k]&&head.length>0&&headAt(s,ch.head[k],ch.bow[k][0])>0);if(!more.some(Boolean))break;flags=flags.map((f,k)=>f||more[k]);}
    return pushes;};
   // The tail, soft, follows from moment to moment: the bend nearest the one before that clears, relaxing back toward
@@ -148,29 +162,95 @@ export function createClearanceFit(duration,{step=.02}={}){
   // at the end, the two joined where they agree best, so it leaves and rejoins the battle's own tail; then softened over
   // three samples. Returns the trunk moves for what no bend clears (a rump that passes too low over the obstacle lifts
   // for its tail).
-  const solveTail=()=>{const S=times.map(t=>{st=stage(t);poseAt(t);return {st,F:tails.frame()};});
+  // The tail's path planned over the whole motion (Viterbi) on the candidate grid: out of contact at the least swing,
+  // leaving rest and coming back to it as the followed path does (from the nearest bend that clears where rest is held
+  // down), drifting home (DRIFT a degree a sample) where nothing touches; a centimetre in for one sample outweighs a 200
+  // degree swing. Planned with GAP to spare (the body moves between the samples), no faster than TAIL_STEP a sample,
+  // and within NEAR of anything one grid step (10 degrees) a sample: planned at the full step there, the skunk's plume
+  // swept 8 cm through the lintel between two samples that cleared. A step must clear half way too (under the poses at
+  // both its ends and between them, H): one that does not is charged as its depth and the path planned again, up to
+  // four times. Each bend's points are bent once and every sample's frame carries them; a sample where no tail can reach
+  // anything, or a bend whose points all lie farther than NEAR from everything, is clear without its points. Returns the
+  // path and the trunk moves for what it leaves in contact, as the followed one does.
+  // into's depth without its way out or any allocation, for the planner's table (the same stage rules; into allocated
+  // the six face distances and spread them, four times the planner's whole cost)
+  const depthAt=(x,y,z)=>{let d=-y;for(const b of obstacles)if(x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]){d=-Infinity;break;}
+   for(const b of obstacles){const f0=x-b.min[0],f1=b.max[0]-x,f2=y-b.min[1],f3=b.max[1]-y,m=Math.min(f0,f1,f2,f3,z-b.min[2],b.max[2]-z);if(m<=d)continue;
+    if(m<=0){d=m;continue;}const k=b.min[1]>.5?2:st==='near'?0:st==='far'?(f1<=f3?1:3):(f0<=f1?(f0<=f3?0:3):(f1<=f3?1:3)),depth=k===0?f0:k===1?f1:k===2?f2:f3;if(depth>d)d=depth;}return d;};
+  const planTail=(S,H)=>{const GAP=.03,NEAR=.05,G=[];for(let a=-150;a<=150;a+=10)for(let b=-120;b<=120;b+=10)G.push([a,b]);const NB=25,NA=31,m=G.length,cache=tails.bends(G),reach=tails.reach();
+   const D=times.map((_,k)=>{st=S[k].st;const F=S[k].F,d=new Float32Array(m).fill(-Infinity);
+    const free=reach.every((r,j)=>{const E=F[j].elements,sc=Math.max(Math.hypot(E[0],E[1],E[2]),Math.hypot(E[4],E[5],E[6]),Math.hypot(E[8],E[9],E[10])),P=r.pivot.clone().applyMatrix4(F[j]),R=r.len*sc+margin+GAP+.01;if(P.y<R)return false;
+     return obstacles.every(b=>Math.hypot(Math.max(b.min[0]-P.x,0,P.x-b.max[0]),Math.max(b.min[1]-P.y,0,P.y-b.max[1]),Math.max(b.min[2]-P.z,0,P.z-b.max[2]))>R);});
+    if(free)return d;
+    for(let j=0;j<reach.length;j++){const E=F[j].elements,sc=Math.max(Math.hypot(E[0],E[1],E[2]),Math.hypot(E[4],E[5],E[6]),Math.hypot(E[8],E[9],E[10]));for(let c=0;c<m;c++){const pts=cache[j][c],N3=pts.length-4;let mx=d[c];
+     {const x=pts[N3],y=pts[N3+1],z=pts[N3+2],R=pts[N3+3]*sc+margin+GAP+NEAR,X=E[0]*x+E[4]*y+E[8]*z+E[12],Y=E[1]*x+E[5]*y+E[9]*z+E[13],Z=E[2]*x+E[6]*y+E[10]*z+E[14];
+      if(Y>R&&obstacles.every(o=>Math.hypot(Math.max(o.min[0]-X,0,X-o.max[0]),Math.max(o.min[1]-Y,0,Y-o.max[1]),Math.max(o.min[2]-Z,0,Z-o.max[2]))>R))continue;}
+     for(let q=0;q<N3;q+=3){const x=pts[q],y=pts[q+1],z=pts[q+2];const dd=depthAt(E[0]*x+E[4]*y+E[8]*z+E[12],E[1]*x+E[5]*y+E[9]*z+E[13],E[2]*x+E[6]*y+E[10]*z+E[14])+margin+GAP;if(dd>mx)mx=dd;}d[c]=mx;}}
+    return d;});
+   const DEPTH=2e4,DRIFT=.05,reachStep=TAIL_STEP/10,cost=new Float64Array(m),prev=new Float64Array(m),from=times.map(()=>new Int16Array(m));
+   const swing=c=>Math.abs(G[c][0])+Math.abs(G[c][1]),node=(k,c)=>(D[k][c]>0?DEPTH*D[k][c]:0)+DRIFT*swing(c);
+   const pen=times.map(()=>null),path=new Int16Array(n),viterbi=()=>{for(let c=0;c<m;c++)cost[c]=node(0,c)+swing(c);
+    for(let k=1;k<n;k++){prev.set(cost);const pk=pen[k],Dk=D[k],Dp=D[k-1];for(let c=0;c<m;c++){const ia=Math.floor(c/NB),ib=c%NB,nearC=Dk[c]>-NEAR;let best=Infinity,arg=-1;
+      for(let da=-reachStep;da<=reachStep;da++){const ja=ia+da;if(ja<0||ja>=NA)continue;for(let db=-reachStep;db<=reachStep;db++){const jb=ib+db;if(jb<0||jb>=NB)continue;const c2=ja*NB+jb;if((nearC||Dp[c2]>-NEAR)&&(da*da>1||db*db>1))continue;const v2=prev[c2]+10*(Math.abs(da)+Math.abs(db))+(pk?.get(c2*m+c)||0);if(v2<best){best=v2;arg=c2;}}}
+      cost[c]=best+node(k,c);from[k][c]=arg;}}
+    let last=Infinity;for(let c=0;c<m;c++)if(cost[c]+swing(c)<last){last=cost[c]+swing(c);path[n-1]=c;}
+    for(let k=n-1;k>0;k--)path[k-1]=from[k][path[k]];};
+   const midDepth=(k,a,b)=>{let mx=-Infinity;for(const X of [S[k-1],H[k],S[k]]){st=X.st;tails.world((a[0]+b[0])/2*DEG,(a[1]+b[1])/2*DEG,v=>{mx=Math.max(mx,into(v,way)+margin);},X.F);}return mx;};
+   for(let it=0;it<4;it++){viterbi();let found=false;
+    for(let k=1;k<n;k++){const a=G[path[k-1]],b=G[path[k]];if(a[0]===b[0]&&a[1]===b[1])continue;const d=midDepth(k,a,b);if(d>0){(pen[k]??=new Map()).set(path[k-1]*m+path[k],DEPTH*d+1e3);found=true;}}
+    if(!found)break;}
+   const out=times.map((_,k)=>G[path[k]].slice()),pushes=times.map(()=>[0,0,0]);
+   for(let k=0;k<n;k++)if(D[k][path[k]]>0){st=S[k].st;let deep=0;tails.world(G[path[k]][0]*DEG,G[path[k]][1]*DEG,v=>{const dd=into(v,way)+margin;if(dd>deep){deep=dd;pushes[k]=way.clone().multiplyScalar(dd).toArray();}},S[k].F);}
+   return {out,pushes};};
+  // planned: where the followed path leaves the tail in contact, at a sample or half way to one, the planned one replaces
+  // it (after the balance, where the tail moves nothing else; the fit's own passes keep the followed one and the trunk
+  // moves it asks).
+  const solveTail=(planned=false)=>{const S=times.map(t=>{st=stage(t);poseAt(t);return {st,F:tails.frame()};});
    const follow=order=>{const out=new Array(n),pushes=times.map(()=>[0,0,0]);let cur=[0,0];
     for(const k of order){st=S[k].st;const depth=(a,b,visit)=>{let m=-Infinity;tails.world(a*DEG,b*DEG,v=>{const d=into(v,way)+margin;if(visit)visit(d);if(d>m)m=d;},S[k].F);return m;};
      const rest=cur.map(v=>Math.round(.8*v));
      if(depth(...rest)<=0)cur=rest;
-     else{const near=c=>Math.abs(c[0]-cur[0])+Math.abs(c[1]-cur[1])+.25*(Math.abs(c[0])+Math.abs(c[1]));let best=cur,low=Infinity;
-      for(const c of [...TAIL_TRY].sort((x,y)=>near(x)-near(y))){const d=depth(...c);if(d<=0){best=c;low=d;break;}if(d<low){low=d;best=c;}}
+     // The nearest bend within TAIL_STEP that clears, and clears half way there from the bend before; else the least deep
+     // of them: a tail held down stays pressed against what holds it. Taken from the whole range, the nearest bend that
+     // cleared swung the tail through the floor between two samples (the cow's 13 cm for 10 ms; the dog's 230 degrees,
+     // 22 cm in).
+     else{const near=c=>Math.abs(c[0]-cur[0])+Math.abs(c[1]-cur[1])+.25*(Math.abs(c[0])+Math.abs(c[1]));let best=null,low=Infinity,end=null,fall=cur,fallLow=depth(...cur);
+      for(const c of TAIL_TRY.filter(c=>Math.abs(c[0]-cur[0])<=TAIL_STEP&&Math.abs(c[1]-cur[1])<=TAIL_STEP).sort((x,y)=>near(x)-near(y))){const d=depth(...c);if(d<=0){if(depth((c[0]+cur[0])/2,(c[1]+cur[1])/2)<=0){best=c;low=d;break;}end??=c;}else if(d<fallLow){fallLow=d;fall=c;}}
+      if(!best){if(end){best=end;low=0;}else{best=fall;low=fallLow;}}
       cur=best;if(low>0){let deep=0;depth(...best,d=>{if(d>deep){deep=d;pushes[k]=way.clone().multiplyScalar(d).toArray();}});}}
      out[k]=cur;}
     return {out,pushes};};
    const f=follow(times.map((_,k)=>k)),b=follow(times.map((_,k)=>n-1-k));
    let join=0,gap=Infinity;for(let k=0;k<n;k++){const g=Math.abs(f.out[k][0]-b.out[k][0])+Math.abs(f.out[k][1]-b.out[k][1]);if(g<=gap){gap=g;join=k;}}
-   const out=times.map((_,k)=>k<=join?f.out[k]:b.out[k]),pushes=times.map((_,k)=>k<=join?f.pushes[k]:b.pushes[k]);
+   // Joined, the two follows may disagree: no faster than TAIL_STEP a sample either way, the swing spread over the samples.
+   let out=times.map((_,k)=>(k<=join?f.out[k]:b.out[k]).slice()),pushes=times.map((_,k)=>k<=join?f.pushes[k]:b.pushes[k]);
+   for(let k=1;k<n;k++)for(const j of [0,1])out[k][j]=clamp(out[k][j],out[k-1][j]-TAIL_STEP,out[k-1][j]+TAIL_STEP);
+   for(let k=n-2;k>=0;k--)for(const j of [0,1])out[k][j]=clamp(out[k][j],out[k+1][j]-TAIL_STEP,out[k+1][j]+TAIL_STEP);
    for(let k=0;k<n;k++)ch.tail[k]=out[k].map((v,j)=>(out[Math.max(0,k-1)][j]+v+out[Math.min(n-1,k+1)][j])/3*smooth(Math.min(times[k],duration-times[k])/(EASE/2)));
    // Where the join or the softening left a bend in contact, the nearest bend that clears replaces it.
    for(let k=0;k<n;k++){st=S[k].st;const depth=(a,b)=>{let m=-Infinity;tails.world(a*DEG,b*DEG,v=>{m=Math.max(m,into(v,way)+margin);},S[k].F);return m;},c0=ch.tail[k];
     if(depth(...c0)<=0||depth(...out[k])>0)continue;const near=c=>Math.abs(c[0]-c0[0])+Math.abs(c[1]-c0[1]);
-    for(const c of [out[k],...[...TAIL_TRY].sort((x,y)=>near(x)-near(y))])if(depth(...c)<=0){ch.tail[k]=c;break;}}
+    for(const c of [out[k],...TAIL_TRY.filter(c=>Math.abs(c[0]-c0[0])<=TAIL_STEP&&Math.abs(c[1]-c0[1])<=TAIL_STEP).sort((x,y)=>near(x)-near(y))])if(depth(...c)<=0){ch.tail[k]=c;break;}}
+   // Followed from moment to moment, a tail held down stays pressed against what holds it: the cow's, sat on in the
+   // window's roll, was pinned at the grid's corner 3 cm in the floor, the clear side 180 degrees away.
+   if(planned){const H=times.map((t,k)=>{if(!k)return null;const h=(times[k-1]+t)/2;st=stage(h);poseAt(h);return {st,F:tails.frame()};});
+    const deep=(X,c)=>{st=X.st;let m=-Infinity;tails.world(c[0]*DEG,c[1]*DEG,v=>{m=Math.max(m,into(v,way)+margin);},X.F);return m;};
+    if(ch.tail.some((c,k)=>deep(S[k],c)>0||k&&deep(H[k],[(c[0]+ch.tail[k-1][0])/2,(c[1]+ch.tail[k-1][1])/2])>0)){const plan=planTail(S,H);for(let k=0;k<n;k++)ch.tail[k]=plan.out[k];return plan.pushes;}}
    return pushes;};
   // Each round the torso moves the trunk, then the head, against the moved trunk, turns, bows and moves it for what is
   // left, then the tail bends and lifts it for what is left; a last pass fits the head and tail to the finished trunk.
   for(let r=0;r<rounds;r++){add('trunk',torsoNeed(),free.trunk);add('trunk',solveHead(),free.trunk);if(tails?.count)add('trunk',solveTail(),free.trunk);}
   solveHead();if(tails?.count)solveTail();
+  // The tail again on the finished motion, for moves made since (a seat set on the floor, the balance): bent for the
+  // trunk as it now is, with no trunk move for what no bend clears. Fitted only before them, the tails went 2 to 13 cm
+  // into the floor as the body rocked and sat.
+  // The report is taken again either way: after the balance it reads the motion as played (the traversal test's caps).
+  fit.solveTail=()=>{if(tails?.count){tracks=null;solveTail(true);build();}report();return fit;};
+  // The head again on the finished motion: turned for the body as the balance left it, the bow kept (the balance was
+  // planned with it) and the turn eased over R2 (eased over R, the climb's push-off turn asked 123 N of the crouch:
+  // 17% of the body's weight; over R2, 65 N). The balance's turn put the long heads 4 to 8 cm into the climb's wall
+  // at the push-off and the landing, where the fit before it saw them clear.
+  fit.solveHead=({air}={})=>{tracks=null;solveHead(true,air);build();report();return fit;};
   // Limbs: the points riding a limb's bones move its end target out (a planted palm rises to lie on the sill, a hoof
   // drops under the lintel, a leg lifts over the wall top). They are fitted afterwards (solveLimbs), once the motion has
   // given its limbs their steady bend directions. planted(id, t) gives [weight, surface normal] for a limb's end; over a
@@ -194,8 +274,9 @@ export function createClearanceFit(duration,{step=.02}={}){
    fit.report=left;};
   fit.solveLimbs=({rounds:limbRounds=3,planted=null}={})=>{tracks=null;for(let r=0;r<limbRounds;r++){const need=limbNeed(planted);for(const id of LIMBS)add(id,need[id],free.limbs);}build();report();return fit;};
   // fit.report is what the motion as it stood at the last solve leaves in the floor and the obstacles. The traversals'
-  // balance (and the window's seat band) move the body after it, so on the final motion the leftovers are larger than
-  // it reports (docs/tactics/NATURAL-TRAVERSAL.md, sixth part: phantom-wrench's bin/collisions.mjs reads the final one).
+  // balance (and the window's seat band) move the body after the fit, so each takes it again on the balanced motion
+  // (fit.solveTail, and the climb's fit.solveHead): taken before, it read the climb's heads clear that went 5 to 8 cm
+  // into its wall (docs/tactics/NATURAL-TRAVERSAL.md, seventh part).
   // Arms clear of the legs: each arm's capsules (the phantom-wrench rig's: upper arm .045, forearm .04, hand .045) are
   // kept off both legs' (thigh .075, shank .05, hoof .03) by moving the arm's end out the way the two part, twice the
   // overlap for the upper arm and one and a half for the forearm (moving the hand moves the elbow about half as far; at
@@ -203,8 +284,12 @@ export function createClearanceFit(duration,{step=.02}={}){
   // For a crouch that draws the knees up to the chest, where no hand-placed arm stays clear of them for long.
   fit.solveSelf=({rounds:selfRounds=6,planted=null,margin:gap=.005}={})=>{tracks=null;for(let r=0;r<selfRounds;r++){const need={'arm-1':[],arm1:[]};
     for(const t of times){st=stage(t);const P=poseAt(t);for(const s of [-1,1]){const id='arm'+s,pw=planted?.(id,t)?.[0]||0;let best=V();
-     if(pw<.5)for(const [a,b,ra,gain]of SELF_ARM)for(const L of [-1,1])for(const [c,d,rb]of SELF_LEG){const q=segments(P[a+s],P[b+s],P[c+L],P[d+L]),o=ra+rb+gap-q.dist;if(o<=0)continue;
-      const u=q.pa.clone().sub(q.pc),len=u.length();if(len<1e-9)continue;u.multiplyScalar(o*gain*(1-pw)/len);if(u.lengthSq()>best.lengthSq())best=u;}
+     // The forearm and hand are kept off the upper trunk too (chest to neck, .14): kept off a raised thigh alone, a hand
+     // was pushed up across the chest (the rabbit's 18 cm into it). The lower trunk is where a hand may rest (the rig
+     // leaves a hand or forearm against it out).
+     const push=(q,o,gain)=>{const u=q.pa.clone().sub(q.pc),len=u.length();if(len<1e-9)return;u.multiplyScalar(o*gain*(1-pw)/len);if(u.lengthSq()>best.lengthSq())best=u;};
+     if(pw<.5)for(const [a,b,ra,gain]of SELF_ARM){for(const L of [-1,1])for(const [c,d,rb]of SELF_LEG){const q=segments(P[a+s],P[b+s],P[c+L],P[d+L]),o=ra+rb+gap-q.dist;if(o>0)push(q,o,gain);}
+      if(a!=='shoulder'){const q=segments(P[a+s],P[b+s],P.chest,P.neck),o=ra+.14+gap-q.dist;if(o>0)push(q,o,gain);}}
      need[id].push(best.toArray());}}
    for(const id of ['arm-1','arm1'])add(id,need[id],free.limbs);}build();report();return fit;};
   // Planted ends sit on their surface. Each planted end's lowest point, along its surface's normal, is put SNAP off the
@@ -233,7 +318,7 @@ export function createClearanceFit(duration,{step=.02}={}){
     build();}
    report();return fit;};
   build();report();return fit;}
- const fit={trunk:t=>V(...get('trunk')(t)),bow:t=>get('bow')(t)[0],head:get('head'),tail:get('tail'),limb:(id,t)=>V(...get(id)(t)),plant:(id,t)=>V(...get('snap:'+id)(t)),report:null,solve,solveLimbs:()=>fit,solvePlants:()=>fit};
+ const fit={trunk:t=>V(...get('trunk')(t)),bow:t=>get('bow')(t)[0],head:get('head'),tail:get('tail'),limb:(id,t)=>V(...get(id)(t)),plant:(id,t)=>V(...get('snap:'+id)(t)),report:null,solve,solveLimbs:()=>fit,solvePlants:()=>fit,solveTail:()=>fit,solveHead:()=>fit};
  return fit;
 }
 // The rig's obstacle boxes (phantom-wrench rigs/traversal.mjs): one tile wide on the edge at x = edge.

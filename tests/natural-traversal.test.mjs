@@ -8,12 +8,18 @@ import {naturalTraversal,createNaturalTraversal} from '../dist/tactics/natural-t
 const MAMMALS=ANIMAL_MOTION_CATALOG.filter(p=>p.id!=='hen'),KINDS=['window','low-wall','wall'];
 const model=p=>{const worker=p.create(JSON.parse(readFileSync(new URL('../dist/tactics/'+p.file,import.meta.url),'utf8')));return {worker,profile:p,posture:createBattlePosture(worker,p),locomotion:createWorkerLocomotion(worker,p)};};
 const crossing=kind=>({id:1,unitId:1,kind,from:{x:0,y:0,z:0},to:{x:1,y:0,z:0}});
-// The deepest trunk, head and tail point the clearance fit leaves in the floor or the obstacle, in cm: about a
-// centimetre, except the named gaps, which may only shrink. 8 cm is right through the 16 cm wall.
-const LEFT={'window/pig-foreman/trunk':3,'window/pig-director/trunk':3,
- 'window/donkey/head':9,'window/rabbit/head':6,'window/dog/head':3, // long ears graze the lintel at the hop for ~20 ms
- 'wall/pig-foreman/trunk':8,'wall/pig-director/trunk':8, // a pig's belly keeps it off the face: it needs its own hang
- 'wall/dog/trunk':8}; // the dog's utility belt as its legs go over the top
+// The deepest trunk, head and tail point each crossing leaves in the floor or the obstacle as it is played (the
+// clearance fit's report, taken again after the balance; a tail's root counts as trunk), in cm: about a centimetre,
+// except the named gaps, which may only shrink. 8 cm is right through the 16 cm wall; past that the way out is up.
+// Read before the balance (to d3fec1f), the report missed the window's tails, the climb's heads 5 to 8 cm in its wall
+// and the pigs 25 to 40 cm in its floor; read here, the pigs' straddle shows what it hid.
+const LEFT={'window/pig-foreman/trunk':2,'window/pig-director/trunk':3, // the belly on the sill as the body tips over
+ 'window/donkey/head':3,'window/rabbit/head':6, // long ears graze the lintel at the hop for ~20 ms
+ 'window/goat/head':4, // the horns in the floor in the roll: no turn of the head within the neck clears them
+ 'window/skunk/trunk':2, // the plume's root, which rides the hips, on the floor in the roll
+ 'window/dog/trunk':2,'wall/dog/trunk':2, // the dog's utility pouch on the sill's far edge, and on the face in the hang
+ 'low-wall/pig-director/trunk':2, // the waistcoat on the wall's near edge at the spring
+ 'wall/pig-foreman/trunk':16,'wall/pig-director/trunk':8}; // a pig's belly through the 16 cm top: it needs its own straddle
 // The hen hops on her wings (hen-crossing.js). Her body parts stay within 4 cm of clear of the floor and the obstacle,
 // except the tail fan in the last 0.3 s: spreading back to her standing pose, it reaches .54 behind her, into the wall.
 test('the hen hops up and down every obstacle, ends on the next tile and is given back whole',()=>{

@@ -917,6 +917,121 @@ committed code as now:
 balance shift jitters on its 5 ms grid through the roll), "Reach for the floor" (19%), the last step (19%), the stand
 (14%), and build time.
 
+### 2026-10-21 (physics balance, seventh part): the clearance on the played motion
+
+The user: "Fix the clearance on the played motion next: the window's trouser legs, tails and the skunk's arm first,
+then the climb's heads and the pigs, and make the traversal test read the final motion."
+
+**The window's trouser legs.** Bent along a sitting leg's hip-ankle line (the default), the knees took whichever side
+the roll left them on and splayed out and down into the floor as the body sat, leaned and rose: the rabbit's knees
+9 cm under it, its trousers 19. The knees now point up and out through those keys (`KNEE_UP`, in the pelvis frame;
+straight up, the thighs met the chest leaning over them). With the knees up, the seat rose 1 to 2.5 cm off the floor
+through the lean once the bend directions were found again for the moved hips, and the plan, finding the feet alone,
+dragged the hips 11 cm toward them and folded the knees to 160 degrees. The seat band is now measured twice, and a
+held sample keeps the support the authored motion had (measured again on the moved hips, the seat lifted off the floor
+and the lean read 78% of the body's weight).
+
+**The skunk's arm.** Hung outside the knee while the trunk leans over the thighs, the right hand (on the wall's side)
+went into the wall: the skunk's 8 cm, the cow's 6. It now reaches forward past its knee, then comes out beside the
+thigh to rest. The self fit keeps the forearm and hand off the upper trunk too (chest to neck, .14): kept off a raised
+thigh alone, a hand was pushed up through the chest (the rabbit's 18 cm into it).
+
+**Tails.** Re-bent on the final motion, a tail swung between candidate bends from one 20 ms sample to the next (the
+dog's 230 degrees, 22 cm through the floor for 10 ms). A bend now moves no faster than 40 degrees a sample, and each
+step must clear half way. Followed from moment to moment, a tail held down stays pressed against what holds it: the
+cow's, sat on in the roll, was pinned at the grid's corner 3 cm in the floor with the clear side 180 degrees away; the
+dog's lay 4 cm in for 1.5 s. After the balance, where the followed path touches (at a sample or half way to one), the
+path is planned over the whole motion instead (Viterbi on the candidate grid). Planned at its samples alone it took
+steps whose middle went through the lintel (the skunk's plume, 8 cm for 10 ms): it now checks each step's midpoint
+under the poses at both ends and between them, moves one grid step (10 degrees) a sample within 5 cm of anything, plans
+with 3 cm to spare, and is played as planned (smoothed and snapped afterwards, it rebuilt the step it had avoided).
+Bending each candidate once, skipping bends whose bounding sphere is clear, and an allocation-free depth put its cost
+inside the build's run-to-run noise.
+
+**The climb's drop.** Raised overhead, the hands swept down past the far face at 8 m/s as the feet landed. The balance
+counted them gripping it, so the drop's flight ended at the grip, not the feet, and its turn was carried into the
+landing: 21.5 degrees toward the wall at 4.60 s, every head 4.6 to 8 cm into it, every forearm 6 to 8. Taken off the face,
+the landing read 924 N of phantom force (126% of the body's weight): the rig's grip on the sliding hands had been
+holding the landing's turn. So the palms now come off the top, out past its far edge and onto the far face, and slide
+down it as the body drops, pushing it off the wall until the landing is absorbed. The balance sees a grip, not a
+flight, and adds at most 2.8 degrees of turn. Straight from the top to the face, the fingers cut through its corner
+(4 cm); arced over it, the hand's turn onto the face switched its way round 2 ms short of done and popped the palm, so
+they pass a point just past the edge.
+
+**The climb's push-off.** The balance winds the body up before the jump (14 degrees toward the wall at 0.76 s), and the
+long heads went 4 to 6 cm into the near face (the horse's 2.4), where the fit before the balance saw them clear. Standing the crouch back
+made it worse (the longer jump leans further). The head is now fitted again after the balance (`fit.solveHead`): its
+bow kept (the balance was planned with it), the turn eased over 0.25 s (over 0.1, the crouch read 17% of the body's
+weight), and held through a flight next to it (eased out into the jump, it asked 0.03 s more phantom torque in the air).
+Tried in the window too and not kept: held through the hop, a turn chosen for the donkey's ears at one moment took them
+8.3 cm into the lintel at another, and no turn of the head clears the goat's horns in the roll.
+
+**The pigs' hang.** Unadapted, the fit pushed a pig's belly 17 to 26 cm back off the face in the hang, out of its arms'
+reach of the top. Its hands never gripped; the balance, finding nothing holding the body until the straddle, planned a
+second-long flight and drove the hips 25 to 40 cm into the floor to launch it. The hang keys now stand back like the
+approach (`near`), so the grip rise sees the stand-back, and lean over the belly toward the wall until the shoulders are
+where the horse's were (stood back alone, the pig director's shoulders were 52 cm from the top, past its arms' 50).
+Both pigs now grip from the catch to the straddle. Their climb gate goes from 2.5 and 2.8 s over the limit (required
+force up to 1130 x BW, knees at 154 m/s, 44 capsule pairs) to 1.3 and 1.2 s (6 to 10 x BW); their bellies still pass
+through the 16 cm top in the straddle.
+
+**The test reads the played motion.** Every crossing now takes the fit's report again after the balance (the vault and
+the window bend the tails again, the climb the head and tails), so the leftovers the test caps are the motion's as
+played. The named gaps are set to it.
+
+The gate on the horse, same rig, against d3fec1f:
+
+| | d3fec1f | now |
+|---|---|---|
+| window: over the limit | 0.04 s of 5.71 | 0.07 s |
+| window: the lean over the feet; the rise | 0; 7% | 27% (198 N at 3.805 s); 0 |
+| window: the roll | 30% | 31% |
+| window: required force in contact | 3.5 x BW | 3.0 x BW |
+| window: capsule overlap over 2 cm | 1 pair, 2.6 cm (left hand in its thigh, 3.92 s) | 1 pair, 2.2 cm (right hand in its thigh, 4.33 s) |
+| climb: over the limit | 0.15 s of 6.10 | 0.14 s |
+| climb: the drop; the weight onto the right foot | 81 N (11%); 135 N (18%) | 25 N (3%); 0 |
+| climb: the crouch | 8 N (1%) | 65 N (9%: the head turned clear) |
+| climb: points over 8 m/s | 7 (the wrists at 9.1 as the arms swung down at the landing) | 4 (as before: the push-off, the left leg over) |
+| vault | within the phantom limits, 3.7 x BW | the same |
+
+On every gate the capsule failures, and the vault's and climb's point-speed failures, are as they were (the climb's
+fewer). The window's balance is the one thing worse: with this pass's changes to its sit and rise (the knees, the
+right arm, the seat band measured twice, the held support), the lean over the feet reads 27% late in it, where it
+read nothing.
+
+**Clipping across the animals** (phantom-wrench's `bin/collisions.mjs`: the deepest surface point, every vertex, every
+10 ms, through the battle contract; cm):
+
+| | horse | goat | bull | cow | donkey | sheep | skunk | pig foreman | pig director | rabbit | dog |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| window, d3fec1f | 4.3 | 5.5 | 4.4 | 13.2 | 8.8 | 16.5 | 8.0 | 13.6 | 14.4 | 18.9 | 5.9 |
+| window, now | 4.1 | 4.3 | 3.7 | 3.4 | 2.9 | 3.5 | 4.1 | 1.3 | 2.6 | 3.5 | 2.8 |
+| climb, d3fec1f | 8.0 | 8.0 | 8.0 | 8.0 | 8.0 | 8.0 | 8.0 | 40.2 | 35.6 | 8.0 | 8.0 |
+| climb, now | 3.5 | 5.6 | 3.2 | 4.0 | 3.7 | 3.5 | 4.1 | 8.0 | 8.0 | 8.0 | 3.9 |
+| vault, d3fec1f | 2.8 | 3.8 | 3.9 | 4.4 | 7.9 | 3.4 | 3.4 | 5.4 | 5.4 | 2.9 | 2.9 |
+| vault, now | 2.8 | 3.8 | 3.9 | 3.0 | 3.2 | 3.4 | 3.4 | 5.4 | 5.4 | 2.9 | 2.9 |
+
+- In the window, every animal's deepest point is now a hand or forearm on the sill as it slides over (1.26 to 1.30
+  s), or a pig's shirt on it; before, it was the trouser legs in the floor as the body rose, the tails and the skunk's
+  arm.
+- In the climb, the heads and forearms that went 8 cm into the wall at the drop are out. What is left is the legs
+  coming over the top (the trousers at 3.6 s: the goat's 5.6, the rabbit's 8.0, both as before), the feet leaving the
+  far face (4.1 s), and the pigs' bellies through the top in the straddle.
+- In the vault, the cow's and donkey's tails are out (4.4 and 7.9 before); the rest is as it was.
+- The traversal test passes on every mammal with the report read on the played motion. Switched off, the tail planner
+  leaves the cow's and dog's tails 3.3 cm in the floor, and the test's cap catches it.
+
+**Left:**
+- The window's balance, 0.07 s over the limit (0.04 at d3fec1f): the lean over the feet (27%, new), the roll's step
+  into the hold (31%), the reach (19%), the left foot round (19%), the step in (18%) and the stand (14%).
+- The climb's push-off and the flight over the top (60 and 63%), the right foot's step round (48%).
+- The pigs' straddle: their bellies pass through the 16 cm top (the foreman's 15.6 cm under it at 3.70 s, the
+  director's 7.9), and their climb gate (1.3 and 1.2 s over, 9.6 and 6.4 x BW). A pig needs its own straddle.
+- The goat's horns in the window's roll (3.6 cm), the donkey's and rabbit's ears at the lintel (2.8 and 5.1); hands
+  and forearms on the sill and the wall's edges (up to 5 cm: the test caps no limb); the climb's left leg over the top
+  (the rabbit's trousers 8 cm in, the goat's 5.6) and the feet leaving the far face (4 cm).
+- Build time.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

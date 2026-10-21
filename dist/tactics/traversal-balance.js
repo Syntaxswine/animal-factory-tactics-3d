@@ -221,8 +221,13 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  // Two rounds: the second measures the schedule and the turning again on the balanced motion (four gave the climb no
  // more: 0.23 s against 0.21 s over). With more, the schedule is held from the second on: moved by each round's hips, a
  // toe-off came 5 ms earlier every round (the plan, pushing to reach it, raised the hips that lifted the hoof).
- let held=null;
- for(let r=0;r<rounds&&!settled;r++){const {S,dL,L,I}=measure();if(held)S.forEach((x,i)=>{if(x.kind!==held[i].kind)Object.assign(x,{...held[i],c:x.c});});else if(r===1)held=S.map(x=>({...x}));const key=S.map(x=>x.kind).join();history.push(runs(S));
+ // A held sample keeps the support the authored motion had (its premise is the authored path): measured again on the
+ // moved hips, a seat carried on raised thighs rose off the floor, and the plan, finding the feet alone 17 cm ahead of
+ // the centre of mass, dragged the hips 11 cm toward them (the window's lean, 78% of the body's weight).
+ let held=null,authored=null;
+ for(let r=0;r<rounds&&!settled;r++){const {S,dL,L,I}=measure();
+  if(!authored)authored=S.map(x=>({...x}));else S.forEach((x,i)=>{if(x.kind==='hold'&&authored[i].kind==='hold')Object.assign(x,{...authored[i],c:x.c});});
+  if(held)S.forEach((x,i)=>{if(x.kind!==held[i].kind)Object.assign(x,{...held[i],c:x.c});});else if(r===1)held=S.map(x=>({...x}));const key=S.map(x=>x.kind).join();history.push(runs(S));
   if(!c0)c0=S.map(x=>x.c);const turn=bodyTurn(w,S,L,I,dt);settled=key===last&&turn.delta<TURN_TOL;last=key;if(settled)break;
   samples=S.map((x,i)=>({...x,c:c0[i],dL:dL[i]}));plan=planCentre(samples,dt,options);w=turn.w;spin=turnAt(turn.theta,plan);
   // The turn refined REFINE times on the flight samples alone, posed with the turn so far: by rounds alone, a flight's
