@@ -12,7 +12,7 @@ import {balanceTraversal,contactProbe,boxedPath} from './traversal-balance.js';
 export const WINDOW={edge:.5,half:.08,sill:.85,top:1.55};
 // The roll's pace is not keyed: it starts spinning at omega (rad/s) and gravity, the contact and the impacts
 // where the contact jumps decide the rest (see rollDynamics).
-export const ROLL=Object.freeze({dir:78,start:2.40,flex:40,back:[.94,-.55],omega:2.2,maxTurn:150});
+export const ROLL=Object.freeze({dir:78,start:2.46,flex:40,back:[.94,-.55],omega:2.2,maxTurn:150});
 // Keyed trunk before the roll: time, label, hips [x, y, z], pelvis pitch / roll / heading (degrees: pitch forward,
 // past 180 inverted; heading from +X toward +Z). The last keyed pose before the roll is built from the roll itself.
 // Heights are the horse's; a key the legs hold up (stand) is scaled to each character's legs, and a body deeper in
@@ -26,7 +26,7 @@ export const ROLL=Object.freeze({dir:78,start:2.40,flex:40,back:[.94,-.55],omega
 // then holds it with the edge. Keyed 0.1 s slower, the body leant 15 cm past the edge with nothing turning it.
 // HANG: the trunk down the far face; DOWN: the trunk at its lowest on the sill; LANDS: each hand set down on the floor,
 // where it then stays (the right hand once the left is down: it braces on the wall until then).
-const HANG=1.90,DOWN=1.98,LANDS=Object.freeze({[-1]:2.08,1:2.16});
+const HANG=1.90,DOWN=1.98,LANDS=Object.freeze({[-1]:2.08,1:2.18});
 const PRE=[
  {t:0,label:'Ready',hips:[0,.80,0],stand:true},
  {t:.55,label:'Step in',hips:[.08,.79,-.16],pitch:8,stand:true,near:true},
@@ -35,15 +35,19 @@ const PRE=[
  {t:1.60,label:'Slide over',hips:[.50,1.005,-.28],pitch:115,heading:10,over:true},
  {t:HANG,label:'Reach for the floor',hips:[.72,.91,-.32],pitch:166,heading:40,roll:-5,far:true},
  {t:DOWN,label:'Down the wall',hips:[.765,.875,-.32],pitch:167,heading:46,roll:-5,far:true},
- {t:2.22,label:'Hands to the floor',hips:[.95,.76,-.32],pitch:195,heading:58,roll:-5},
+ {t:LANDS[1],label:'Hands to the floor',hips:[.92,.78,-.32],pitch:190,heading:46,roll:-5,far:true},
 ];
 const TURN=35; // the head turns this way coming down, so the muzzle stays off the wall
 // Spine and head (relative to their parents) over the whole motion: flex / side / twist, nod / tilt / turn. The head
 // tucks a little as the hands land (nod 10): tilted back, the goat's ears went 2.3 cm into the floor for 40 ms while the
 // clearance fit swung its head from one turn to the next.
-const SHAPE_PRE=[[0,0,0,0,0,0,0],[.55,5,0,0,0,0,0],[.90,8,0,0,-10,0,0],[1.25,6,0,0,-25,0,0],[1.60,10,0,0,-30,0,0],[HANG,25,0,0,-20,0,TURN],[DOWN,28,0,0,10,0,TURN],[2.22,32,0,0,10,0,TURN],[ROLL.start,ROLL.flex,0,0,0,0,-15]];
-// After the roll, by seconds past its end: unfold to standing.
-const SHAPE_POST=[[.30,15,0,0,-5,0,0],[1.0,0,0,0,0,0,0]],G=9.81;
+const SHAPE_PRE=[[0,0,0,0,0,0,0],[.55,5,0,0,0,0,0],[.90,8,0,0,-10,0,0],[1.25,6,0,0,-25,0,0],[1.60,10,0,0,-30,0,0],[HANG,25,0,0,-20,0,TURN],[DOWN,28,0,0,10,0,TURN],[LANDS[1],32,0,0,10,0,TURN],[ROLL.start,ROLL.flex,0,0,0,0,-15]];
+// After the roll, by seconds past its end (at rest on the seat and the hooves): lean forward over the feet, the seat
+// still down, until the centre of mass is over them; rise; with the weight on the right foot, the left steps back half
+// way; with it on the left, the right steps back to its mark; with it on the right, the left steps round to its mark,
+// turning to face on; settle. The spine and head unfold to standing meanwhile.
+const GETUP=Object.freeze({lean:.46,rise:.84,weightR:1.02,leftBack:1.30,weightL:1.48,rightDown:1.72,weightR2:1.88,leftDown:2.14,stand:2.36});
+const SHAPE_POST=[[GETUP.lean,45,0,0,-8,0,0],[GETUP.rise,15,0,0,-5,0,0],[GETUP.weightL,4,0,0,0,0,0],[GETUP.stand,0,0,0,0,0,0]],G=9.81;
 export function createWindowDive(worker,profile={id:'horse'}){
  // The roll turns about the body's own lowest point: a tail is soft and bends out of the way (fitted below), so only
  // its root, which cannot, is ever the pivot.
@@ -57,52 +61,91 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // floor as the body sits up: 0.7 cm short, measured), arms in.
  const TUCK={'leg-1':[.06,-.33,-.14],leg1:[.06,-.33,.14],'arm-1':[.28,.04,-.26],arm1:[.28,.04,.12]},TUCK_ELBOW={'arm-1':[.3,0,1],arm1:[.8,0,.4]};
  // fit: this character's clearance corrections; steady: its limbs' bend directions (both solved below, null until then).
- let fit=null,steady=null,turnRef=null,balance=null,onSill=null;
+ let fit=null,steady=null,turnRef=null,balance=null,onSill=null,onSeat=null;
  const posed=(tr,limbs,t)=>posedFrom(tr,limbs,{elbowAway:[1,.15,0],poles:steady&&t!==undefined?id=>steady(id,t):null,offsets:fit?.limb&&t!==undefined?id=>fit.limb(id,t):null,snaps:fit?.plant&&t!==undefined?id=>fit.plant(id,t):null,turns:turnRef&&t!==undefined?b=>turnRef(b,t):null});
  const tuckLimbs=Object.fromEntries(Object.entries(TUCK).map(([k,p])=>[k,k.startsWith('leg')?{f:'pelvis',p}:{f:'chest',p,elbow:TUCK_ELBOW[k]}]));
  const lowest=()=>{probe.update();return probe.lowest();};
+ // The seat's lowest point: the lowest the hips bone carries (the trouser legs are the same mesh as the seat).
+ const seatLow=()=>{probe.update();let b={y:Infinity};for(let i=0;i<probe.count;i++)if(probe.boneNames[probe.bone[i]]==='hips'&&probe.y[i]<b.y)b={x:probe.x[i],y:probe.y[i],z:probe.z[i],part:probe.names[probe.part[i]]};return b;};
  const shapeOf=row=>{const [flex,side,twist,nod,tilt,turn]=row;return {spineQ:relQ(flex,side,twist),headQ:relQ(nod,tilt,turn)};};
  // ---- the roll: from the chest-flat start pose the curled body turns about the floor contact under it ----
  // Its pace comes from energy, not keys: kinetic energy about the contact (1/2 I_P w^2) plus gravity, conserved
  // while it rolls. Where the contact jumps from one part of the body to another (neck to back, back to seat), the
- // landing part takes an impact: angular momentum about the new contact is kept, and energy is lost.
+ // landing part takes an impact: angular momentum about the new contact is kept, and energy is lost. Once the hooves
+ // land it rocks on over the seat to rest (ROCK).
  const s0=shapeOf(shapePre(ROLL.start)),q0=yawQ(ROLL.dir).multiply(bodyQ((270-ROLL.flex)*DEG));
  // A body wider than the horse's starts the roll that much farther from the wall it rolls along.
  const backX=ROLL.back[0]+fitB.wide;let p0=V(backX,.5,ROLL.back[1]);
  for(let i=0;i<4;i++){const tr={hips:p0,hipsQ:q0,...s0,...chestOf(p0,q0,s0.spineQ)};body.pose(posed(tr,tuckLimbs),'roll start');const L=lowest();p0=p0.clone().add(V(backX-L.x,-L.y,ROLL.back[1]-L.z));}
- const rollLimbs=()=>tuckLimbs;
- const rollRows=[],impacts=[];{const dth=.5*DEG;let q=q0.clone(),p=p0.clone(),t=0,w=ROLL.omega,E=null,prev=null,u=0;
-  for(let k=0;k*dth<=ROLL.maxTurn*DEG;k++){const tr={hips:p,hipsQ:q,...s0,...chestOf(p,q,s0.spineQ)};const P=body.pose(posed(tr,tuckLimbs),'roll');const L=lowest();
+ // ROCK: how far the body rocks on over its seat once the hooves are down, braked to rest by them.
+ const ROCK=32*DEG,rollRows=[],impacts=[],SOFT=.04;let caughtAt=null;{const dth=.5*DEG;let q=q0.clone(),p=p0.clone(),t=0,w=ROLL.omega,E=null,prev=null,u=0,caught=null,brake=0,rocked=0;
+  for(let k=0;k*dth<=ROLL.maxTurn*DEG;k++){const tr={hips:p,hipsQ:q,...s0,...chestOf(p,q,s0.spineQ)};const P=body.pose(posed(tr,tuckLimbs),'roll');let L=lowest();if(brake)L=seatLow();
    if(Math.abs(L.y)>1e-9){p=p.clone().add(V(0,-L.y,0));for(const n of Object.keys(P))P[n].y-=L.y;}
    const contact=V(L.x,0,L.z),c=body.com(P),IP=inertiaAbout(massPoints(P),contact,axis),U=BODY_MASS*G*c.y;
-   if(E===null)E=.5*IP*w*w+U;
+   // braked as w0 (1 - rocked / ROCK)^.75: to rest over ROCK with the braking itself fading out, so the get-up starts at
+   // rest without a pull (braked evenly, it would hand over a backward turn of 12 rad/s^2)
+   let jumped=false;if(brake){rocked+=dth;w=brake*Math.pow(Math.max(0,1-rocked/ROCK),.75);}else if(E===null)E=.5*IP*w*w+U;
    else if(prev&&contact.distanceTo(prev.contact)>.03){const Ic=IP-BODY_MASS*axis.clone().cross(c.clone().sub(contact)).lengthSq(),vc=axis.clone().cross(c.clone().sub(prev.contact)).multiplyScalar(prev.w);
-    w=Math.max(0,(Ic*prev.w+BODY_MASS*c.clone().sub(contact).cross(vc).dot(axis))/IP);E=.5*IP*w*w+U;impacts.push({t,from:prev.part,to:L.part,lost:prev.E-E});}
+    w=Math.max(0,(Ic*prev.w+BODY_MASS*c.clone().sub(contact).cross(vc).dot(axis))/IP);E=.5*IP*w*w+U;jumped=true;}
    else w=Math.sqrt(Math.max(0,2*(E-U)/IP));
-   const up=V(0,1,0).applyQuaternion(tr.chestQ);rollRows.push({t,p:p.clone(),q:q.clone(),contact:contact.toArray(),part:L.part,w,com:c,upright:up.y,u});
-   // Stop sitting up (chest within 35 degrees of upright) or as a hoof lands, or if the roll runs out of speed.
-   if(w<.25||up.y>Math.cos(35*DEG)||/hoof|boot|foot|toes/.test(L.part))break;
-   const r=Q().setFromAxisAngle(axis,dth);q=r.clone().multiply(q);p=p.clone().sub(contact).applyQuaternion(r).add(contact);t+=dth/w;prev={contact,w,part:L.part,E};}}
- const last=rollRows.at(-1),seat=V(...(/hoof|boot|foot|toes/.test(last.part)?rollRows.at(-2):last).contact),ROLL_T=last.t,ROLL_END=ROLL.start+ROLL_T,CATCH_END=ROLL_END,END=CATCH_END+SHAPE_POST.at(-1)[0];
+   // The hooves land with the seat still down: the body rocks on over the seat, the hooves braking it to rest over ROCK.
+   // Turning about the hoof instead lifted the seat with the centre of mass 40 cm behind the feet and 35 J to rise over
+   // them where it needed 180 (it would fall back); stopped dead on both, it sat 6 cm behind its seat, tipping back.
+   const landed=!brake&&caught===null&&/hoof|boot|foot|toes/.test(L.part);if(landed){brake=prev.w;rocked=dth;w=brake*Math.pow(1-rocked/ROCK,.75);jumped=false;}
+   // Each step's time from its mean spin (the step before's alone ran 12% fast as the body slowed rising about the hoof,
+   // and the curve through the steps had to lose it at the hand-over), across an impact the spin before it.
+   if(prev)t=prev.t+(jumped||prev.w+w<1e-6?dth/prev.w:2*dth/(prev.w+w));if(jumped)impacts.push({t,from:prev.part,to:L.part,lost:prev.E-E});
+   const up=V(0,1,0).applyQuaternion(tr.chestQ),about=landed?prev.contact:contact;rollRows.push({t,p:p.clone(),q:q.clone(),turn:k*dth,contact:about.toArray(),part:L.part,w,com:c,upright:up.y,u,impact:jumped,rock:!!brake});
+   // Stop once the rock has the body at rest, sitting up (chest within 10 degrees of upright), or if the roll runs out
+   // of speed. Stopped at 35 degrees, just before the hooves landed, the get-up had to catch the roll's spin (3.3 rad/s)
+   // itself, with the feet 40 cm ahead of the centre of mass (46% of the body's weight of phantom force).
+   if(landed)caught=t;
+   if(brake?w<.05:w<.25||up.y>Math.cos(10*DEG))break;
+   const r=Q().setFromAxisAngle(axis,dth);q=r.clone().multiply(q);p=p.clone().sub(about).applyQuaternion(r).add(about);prev={contact:about,w,part:L.part,E,t};}
+  caughtAt=caught;}
+ const last=rollRows.at(-1),pivot=V(...last.contact),ROLL_T=last.t,ROLL_END=ROLL.start+ROLL_T,CATCH_END=ROLL_END,END=CATCH_END+SHAPE_POST.at(-1)[0];
  for(const r of rollRows)r.t+=ROLL.start;
- // A landing part of the body is soft, not rigid: each impact's change of velocity is spread over SOFT seconds (a
- // moving average of the trajectory, then re-seated on the floor, the re-seat averaged the same way), so the floor
- // never has to stop it in zero time. Re-seated exactly, sample by sample, the lowest point's jump from the mane to the
- // shoulder and on to the seat came back as a 0.6 m/s step of the hips' fall in 6 ms (14 body weights).
- const SOFT=.04,uni=[];{const t0=rollRows[0].t,t1=rollRows.at(-1).t,n=Math.ceil((t1-t0)/.0025),seg=t=>{let i=0;while(i<rollRows.length-2&&rollRows[i+1].t<t)i++;return i;};
-  const raw=Array.from({length:n+1},(_,k)=>{const t=t0+(t1-t0)*k/n,i=seg(t),a=rollRows[i],b=rollRows[i+1]||a,f=b.t>a.t?(t-a.t)/(b.t-a.t):0;return {t,p:a.p.clone().lerp(b.p,f),q:a.q.clone().slerp(b.q,f)};});
-  // The window narrows symmetrically toward the ends, so the softened roll starts and ends exactly where the keyed
-  // descent hands over and the get-up takes over (a one-sided window shifted them by up to 2 cm: a pop of the whole body).
-  const h=Math.round(SOFT/2/.0025),seated=[];for(let k=0;k<=n;k++){const hk=Math.min(h,k,n-k),lo=k-hk,hi=k+hk,p=V();let q=raw[k].q.clone(),m=0;for(let j=lo;j<=hi;j++){p.add(raw[j].p);m++;}p.divideScalar(m);
-   const ref=raw[k].q,acc=V();for(let j=lo;j<=hi;j++){const dq=raw[j].q.clone().multiply(ref.clone().invert());if(dq.w<0)dq.set(-dq.x,-dq.y,-dq.z,-dq.w);const a=2*Math.acos(clamp(dq.w,-1,1)),sn=Math.sqrt(Math.max(0,1-dq.w*dq.w));if(sn>1e-9)acc.addScaledVector(V(dq.x,dq.y,dq.z).divideScalar(sn),a);}acc.divideScalar(m);
-   const ang=acc.length();q=(ang>1e-9?Q().setFromAxisAngle(acc.clone().divideScalar(ang),ang):Q()).multiply(ref);
-   const tr={hips:p,hipsQ:q,...s0,...chestOf(p,q,s0.spineQ)};body.pose(posed(tr,tuckLimbs),'roll soft');seated.push({t:raw[k].t,p,q,down:-lowest().y});}
-  for(let k=0;k<=n;k++){const hk=Math.min(h,k,n-k);let m=0,y=0;for(let j=k-hk;j<=k+hk;j++){y+=seated[j].down;m++;}uni.push({t:seated[k].t,p:seated[k].p.clone().add(V(0,y/m,0)),q:seated[k].q});}}
  // The roll leaves and rejoins the keyed trunk at its own speed: the hips moving as the body turns about the first
- // contact, and as it turns about the seat at the end.
+ // contact, and as it turns about the seat at the end (all but at rest).
  const rEnd=rollRows.at(-1),D=END,c0=V(...rollRows[0].contact),hipsSpin=axis.clone().cross(p0.clone().sub(c0)).multiplyScalar(ROLL.omega);
- const endSpin=axis.clone().multiplyScalar(rEnd.w),endVel=axis.clone().cross(rEnd.p.clone().sub(seat)).multiplyScalar(rEnd.w);
- const rollPos=track(uni.map(r=>[r.t,...r.p.toArray()]),{0:hipsSpin.toArray(),[uni.length-1]:endVel.toArray()});
+ // At the end the hips also carry the turn's own acceleration (its slowing, and its pull toward the axis), on both sides
+ // of the hand-over: left to each track's own, the roll's ended at none and the get-up's started from its keys', and
+ // the floor's push stepped by 3 body weights there.
+ const endSpin=axis.clone().multiplyScalar(rEnd.w),arm=rEnd.p.clone().sub(pivot),endVel=axis.clone().cross(arm).multiplyScalar(rEnd.w);
+ const rPre=rollRows.at(-2),alpha=rPre&&rEnd.t>rPre.t?(rEnd.w-rPre.w)/(rEnd.t-rPre.t):0,endAcc=axis.clone().cross(arm).multiplyScalar(alpha).add(axis.clone().cross(axis.clone().cross(arm)).multiplyScalar(rEnd.w*rEnd.w));
+ // A landing part of the body is soft, not rigid: each impact's change of velocity is spread over about SOFT seconds
+ // (an average of the trajectory, then re-seated on the floor, the re-seat averaged the same way), so the floor never
+ // has to stop it in zero time. Re-seated exactly, sample by sample, the lowest point's jump from the mane to the
+ // shoulder and on to the seat came back as a 0.6 m/s step of the hips' fall in 6 ms (14 body weights). Between the
+ // roll's steps the hips and the turn about the axis follow smooth curves through them, from and to the roll's own
+ // motion at its ends: joined by straight lines and slerps, they turned at every step (half a degree, 2 to 17 ms apart),
+ // which the averaging hides but its ends do not (the hips' acceleration swung from +10 to -22 m/s^2 in the roll's last
+ // 4 ms, and the turn met the get-up's 0.2 rad/s apart).
+ const uni=[];{const t0=rollRows[0].t,t1=rollRows.at(-1).t,n=Math.ceil((t1-t0)/.0025),last=rollRows.length-1;
+ // The raw path: smooth between the impacts, each a step of the hips' velocity and the spin at its step, from the turn
+ // about the contact before to the turn about the one after (one curve through every step rang about each impact,
+ // which the softening kept: the hips' fall swung by 34 m/s^2 within 5 ms at the hoof's landing).
+  const cuts=[0,...rollRows.flatMap((r,i)=>r.impact&&i>0&&i<last?[i]:[]),last],spinAbout=(r,c,w)=>axis.clone().cross(r.p.clone().sub(V(...c))).multiplyScalar(w);
+  const pieces=cuts.slice(0,-1).map((a,j)=>{const b=cuts[j+1],rs=rollRows.slice(a,b+1),m=rs.length-1,pb=rollRows[b-1];
+   const vA=a?spinAbout(rollRows[a],rollRows[a].contact,rollRows[a].w):hipsSpin,vB=b===last?endVel:spinAbout(rollRows[b],pb.contact,pb.w),end=b===last?{accel:{[m]:endAcc.toArray()}}:{};
+   return {t1:rollRows[b].t,pos:track(rs.map(r=>[r.t,...r.p.toArray()]),{0:vA.toArray(),[m]:vB.toArray()},{limit:false,...end}),
+    turn:track(rs.map(r=>[r.t,r.turn]),{0:[a?rollRows[a].w:ROLL.omega],[m]:[b===last?rEnd.w:pb.w]},{limit:false,...(b===last?{accel:{[m]:[alpha]}}:{})})};});
+  const piece=t=>pieces.find(q=>t<=q.t1+1e-12)||pieces.at(-1),rockFrom=rollRows.find(r=>r.rock)?.t??Infinity;
+  const raw=Array.from({length:n+1},(_,k)=>{const t=t0+(t1-t0)*k/n,q=piece(t);return {t,p:V(...q.pos(t)),a:q.turn(t)[0]};});
+  // Softened by a triangle (the hips' and spin's averages, weights falling off linearly over H samples either side):
+  // a box stepped the floor's push at its edges as they passed each impact. The window is whole wherever it fits and
+  // gives way to the raw path over the next H samples toward each end (a smoothstep), so the softened roll starts and
+  // ends exactly where the keyed descent hands over and the get-up takes over (a one-sided window shifted them by up
+  // to 2 cm: a pop of the whole body; narrowed sample by sample instead, its edge kinked the hips' path, 12 m/s^2).
+  // The roll's impacts are all well inside: the first comes 90 ms after its start, the rock takes 0.6 s.
+  const H=Math.round(.75*SOFT/.0025),W=(H+1)*(H+1),fits=k=>Math.min(k,n-k)>=H,whole=k=>smooth((Math.min(k,n-k)-H)/H),seated=[];
+  for(let k=0;k<=n;k++){let p=raw[k].p.clone(),a=raw[k].a;if(fits(k)){const avg=V();let ang=0;for(let j=k-H;j<=k+H;j++){const f=H+1-Math.abs(j-k);avg.addScaledVector(raw[j].p,f);ang+=f*raw[j].a;}
+    const w=whole(k);p.lerp(avg.divideScalar(W),w);a+=(ang/W-a)*w;}
+   const q=Q().setFromAxisAngle(axis,a).multiply(q0),tr={hips:p,hipsQ:q,...s0,...chestOf(p,q,s0.spineQ)};body.pose(posed(tr,tuckLimbs),'roll soft');seated.push({t:raw[k].t,p,q,down:-(raw[k].t>=rockFrom?seatLow():lowest()).y});}
+  // The re-seat goes with the window: the raw path is on the floor already at every step (re-seated sample by sample
+  // there, the lowest vertex's own jumps came back as a 13 m/s^2 dip of the hips).
+  for(let k=0;k<=n;k++){let y=0;if(fits(k)){for(let j=k-H;j<=k+H;j++)y+=(H+1-Math.abs(j-k))*seated[j].down;y*=whole(k)/W;}uni.push({t:seated[k].t,p:seated[k].p.clone().add(V(0,y,0)),q:seated[k].q});}}
+ const rollPos=track(uni.map(r=>[r.t,...r.p.toArray()]),{0:hipsSpin.toArray(),[uni.length-1]:endVel.toArray()},{accel:{[uni.length-1]:endAcc.toArray()}});
  const rollRot=spinTrack(uni.map((r,i)=>[r.t,r.q,i===0?axis.clone().multiplyScalar(ROLL.omega):i===uni.length-1?endSpin:undefined]));
  const rollAt=t=>{let i=0;while(i<rollRows.length-1&&rollRows[i+1].t<t)i++;return {hips:V(...rollPos(t)),hipsQ:rollRot(t),contact:rollRows[i].contact,part:rollRows[i].part};};
  // Spine and head over the whole motion: the pre-roll keys, the roll's fixed curl, then unfolding.
@@ -111,26 +154,44 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // ---- keyed trunk: before the roll, then from the roll's end up to standing on the tile centre ----
  // The descent hands over at the roll's own spin (the hips moving as the body turns about the contact).
  const preRows=pre.map(k=>({t:k.t,p:V(...k.hips),q:yawQ(k.heading||0).multiply(bodyQ((k.pitch||0)*DEG,(k.roll||0)*DEG))}));
- // The get-up rises in place over the seat: the right foot catches the roll's forward spin just ahead, the left shin
- // lands beside the seat, and the body pivots on both feet to face on as it stands.
- // Until the foot lands the body keeps turning about the seat, slowing from the roll's spin to rest: the catch
- // pose is the roll's end turned a further CATCH about the seat contact, over the time that spin takes to stop.
- // The roll lands in a crouch on both feet; the body rises over them and pivots to face on as it stands.
- const catchT=CATCH_END,kneelT=catchT+.30,catchKey={t:catchT,p:rEnd.p,q:rEnd.q},trEnd={hips:rEnd.p,hipsQ:rEnd.q};
- const ANKLE=body.at0('hoof1').y,feet=Object.fromEntries([-1,1].map(s=>[s,toWorld(trEnd,'pelvis',TUCK['leg'+s]).setY(ANKLE)]));
- const mid=feet[-1].clone().add(feet[1]).multiplyScalar(.5);
- const kneel={t:kneelT,p:mid.clone().addScaledVector(d,-.10).setY(fitB.stand(.55)),q:yawQ(ROLL.dir*.6).multiply(bodyQ(30*DEG))};
- const stand={t:END,p:body.at0('hips').add(V(1,0,0)),q:Q()};
- const trunkRows=[...preRows,{t:ROLL.start,p:p0,q:q0},catchKey,kneel,stand];
+ // The get-up. The hooves land (FOOT_DOWN) 40 cm along the wall from the centre of mass (the roll's own reach:
+ // drawing the heels 14 cm nearer the seat moved them 4 cm), and the roll's momentum after their landing is 35 J where
+ // rising over them takes 180: so the body rocks on over its seat to sitting, leans its weight forward onto the feet
+ // with the seat still down, rises over them, and steps back onto the tile centre, each foot in turn with the weight
+ // over the other, turning to face on: the hips' keys over the support of the moment, heights held up by the legs.
+ // Before, the get-up rose short of the feet and the feet slid 25 and 70 cm into the stance under load.
+ const catchT=CATCH_END,T=k=>CATCH_END+GETUP[k],catchKey={t:catchT,p:rEnd.p,q:rEnd.q},FOOT_DOWN=caughtAt===null?ROLL_END:ROLL.start+caughtAt,rDown=rollRows.find(r=>r.t>=FOOT_DOWN-1e-9)||rEnd;
+ const ANKLE=body.at0('hoof1').y,feet=Object.fromEntries([-1,1].map(s=>[s,toWorld({hips:rDown.p,hipsQ:rDown.q},'pelvis',TUCK['leg'+s]).setY(ANKLE)]));
+ const mid=feet[-1].clone().add(feet[1]).multiplyScalar(.5),R1=V(...fitB.foot(1,1)),L1=V(...fitB.foot(-1,1)),turned=(h,pitch)=>yawQ(h).multiply(bodyQ(pitch*DEG));
+ // LH: the left foot's halfway mark, back toward the tile centre and in from its landing.
+ const LH=V(feet[-1].x+(L1.x-feet[-1].x)*.45,ANKLE,feet[-1].z+(L1.z-feet[-1].z)*.55),hipsOver=(f,y,toward,k=.12)=>f.clone().lerp(toward,k).setY(fitB.stand(y));
+ // The body turns to face on along one smooth curve over the whole get-up (heading), each key leaning (pitch) as it
+ // rises: turned key by key, a turn on one foot asked the hoof for 50 to 140 N·m it cannot twist.
+ const heading=t=>ROLL.dir*(1-smooth((t-CATCH_END)/GETUP.stand)),lean=(k,pitch)=>({t:T(k),h:heading(T(k)),pitch});
+ // The lean keeps the seat on the floor: the hips come down as the pelvis tips up from lying back (turned about the
+ // hips alone, the seat rose off the floor 0.3 s before the centre of mass was over the feet, and the plan dragged it
+ // 20 cm forward). Posed in the tuck, the lowest point the hips bone carries (the seat: the trouser legs are the same
+ // mesh) is set on the floor.
+ const seatOn=(p,q,k)=>{const sh=shapeOf(shape(T(k))),tr={hips:p,hipsQ:q,...sh,...chestOf(p,q,sh.spineQ)};body.pose(posed(tr,tuckLimbs),'seat');probe.update();let lo=Infinity;
+  for(let i=0;i<probe.count;i++)if(probe.boneNames[probe.bone[i]]==='hips')lo=Math.min(lo,probe.y[i]);return p.clone().setY(p.y-lo);};
+ const leanKey=lean('lean',-5),getup=[{...leanKey,p:seatOn(rEnd.p.clone().add(V(0,0,.02)),turned(leanKey.h,360+leanKey.pitch),'lean')},{...lean('rise',28),p:V(mid.x,fitB.stand(.58),mid.z-.06)},{...lean('weightR',18),p:hipsOver(feet[1],.67,feet[-1])},
+  {...lean('leftBack',12),p:feet[1].clone().add(LH).multiplyScalar(.5).setY(fitB.stand(.72))},{...lean('weightL',8),p:hipsOver(LH,.75,feet[1])},
+  {...lean('rightDown',5),p:LH.clone().add(R1).multiplyScalar(.5).setY(fitB.stand(.78))},{...lean('weightR2',3),p:hipsOver(R1,.79,LH)},
+  {...lean('leftDown',1),p:L1.clone().add(R1).multiplyScalar(.5).setY(fitB.stand(.80))}].map(k=>({...k,q:turned(k.h,k.pitch)}));
+ const stand={t:END,p:body.at0('hips').add(V(1,0,0)),q:Q(),h:0,pitch:0};
+ const trunkRows=[...preRows,{t:ROLL.start,p:p0,q:q0},catchKey,...getup,stand];
  const iStart=trunkRows.findIndex(r=>r.t===ROLL.start),iEnd=iStart+1;
- const posTrack=track(trunkRows.map(r=>[r.t,...r.p.toArray()]),{[iStart]:hipsSpin.toArray(),[iEnd]:endVel.toArray()}),rotTrack=spinTrack(trunkRows.map((r,i)=>[r.t,r.q,i===iStart?axis.clone().multiplyScalar(ROLL.omega):i===iEnd?endSpin:undefined]));
+ const posTrack=track(trunkRows.map(r=>[r.t,...r.p.toArray()]),{[iStart]:hipsSpin.toArray(),[iEnd]:endVel.toArray()},{accel:{[iEnd]:endAcc.toArray()}}),rollTurn=rEnd.turn/DEG;
+ // After the roll its own frame carries on: heading ROLL.dir, the roll's turn added to its starting pitch, from the roll's
+ // spin and its slowing (C2, as before the roll; the rotation spline stepped the turning's acceleration at every key).
+ const postRot=angleTrack([[CATCH_END,ROLL.dir,270-ROLL.flex+rollTurn,0],...[...getup,stand].map(k=>[k.t,k.h,360+k.pitch,0])],{0:[0,rEnd.w/DEG,0]},{0:[0,alpha/DEG,0]});
  // Up to the roll the trunk turns by heading, pitch and roll, each on a quintic (C2), from rest into the roll's own
  // spin at its start; the rotation spline's cubic log map stepped the angular acceleration at every key (the hips' centre of mass
  // jolted by 12 m/s^2 at the reach). After the roll, from its arbitrary end, the rotation spline.
  const preRot=angleTrack([...pre.map(k=>[k.t,k.heading||0,k.pitch||0,k.roll||0]),[ROLL.start,ROLL.dir,270-ROLL.flex,0]],{0:[0,0,0],[pre.length]:[0,ROLL.omega/DEG,0]});
  // The clearance corrections are zero until solved, and held at zero through the roll.
- function trunkAt(t){const s=t>ROLL.start&&t<ROLL_END?s0:shapeAt(t);let hips,hipsQ;if(t>ROLL.start&&t<CATCH_END){const r=rollAt(t);hips=r.hips;hipsQ=r.hipsQ;}else{hips=V(...posTrack(t));hipsQ=t<=ROLL.start?preRot(t):rotTrack(t);}
-  if(onSill)hips=hips.clone().add(onSill(t));if(balance)hips=hips.clone().add(balance.shift(t));
+ function trunkAt(t){const s=t>ROLL.start&&t<ROLL_END?s0:shapeAt(t);let hips,hipsQ;if(t>ROLL.start&&t<CATCH_END){const r=rollAt(t);hips=r.hips;hipsQ=r.hipsQ;}else{hips=V(...posTrack(t));hipsQ=t<=ROLL.start?preRot(t):postRot(t);}
+  if(onSill)hips=hips.clone().add(onSill(t));if(onSeat)hips=hips.clone().add(onSeat(t));if(balance)hips=hips.clone().add(balance.shift(t));
   let headQ=s.headQ;if(fit){hips=hips.clone().add(fit.trunk(t));const bow=fit.bow(t);if(bow)hipsQ=hipsQ.clone().multiply(bodyQ(bow*DEG));const [nod,tilt,turn]=fit.head(t);if(nod||tilt||turn)headQ=s.headQ.clone().multiply(relQ(nod,tilt,turn));}
   const sp=balance?.spin?.(t);if(sp){hipsQ=sp.q.clone().multiply(hipsQ);hips=hips.clone().sub(sp.pivot).applyQuaternion(sp.q).add(sp.pivot);}
   return {hips,hipsQ,...s,headQ,...chestOf(hips,hipsQ,s.spineQ)};}
@@ -159,17 +220,25 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // chest tipped. WALL: the face's outward normal; the palm presses against it.
  const WALL=[1,0,0],OUT=[.25,0,1],BRACE=[[1.42,{f:'world',p:[.62,.70,-.04],face:WALL,elbowTo:OUT,arc:.12,arcTo:[.6,.8,0]}],[1.58,{f:'world',p:[.62,.70,-.04],face:WALL,elbowTo:OUT}],
   [1.84,{f:'world',p:[.62,.32,-.12],face:WALL,elbowTo:OUT}],[2.06,{f:'world',p:[.62,.32,-.12],face:WALL,elbowTo:OUT}]];
- let LIMB;const buildLimbs=()=>{const handAt={[-1]:{...floorHand(ROLL.start,-1,[.03,0,-.15],30),elbow:FLOOR_ELBOW[-1],plant:true},1:{...floorHand(2.22,1,[0,0,0],50),elbow:FLOOR_ELBOW[1],plant:true}},
+ let LIMB;const buildLimbs=()=>{const handAt={[-1]:{...floorHand(ROLL.start,-1,[.03,0,-.15],30),elbow:FLOOR_ELBOW[-1],plant:true},1:{...floorHand(LANDS[1],1,[0,0,0],50),elbow:FLOOR_ELBOW[1],plant:true}},
   aim=(t,s,k)=>({...dangle(t,s,handAt[s].p.map((x,j)=>x-shoulderAt(t,s).getComponent(j)),k),soft:.03});LIMB={
-  'leg-1':[[0,rest.leg(-1)],[.55,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,plant:true}],[.90,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.06,-.56,-.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,-.12]}],[HANG,{f:'pelvis',p:[.20,-.56,-.12]}],[DOWN,{f:'pelvis',p:[.12,-.52,-.12]}],[2.22,{f:'pelvis',p:[-.12,-.30,-.13]}],[ROLL.start,{f:'pelvis',p:TUCK['leg-1']}],[ROLL_END-.10,{f:'pelvis',p:TUCK['leg-1']}]],
-  leg1:[[0,rest.leg(1)],[.55,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,plant:true}],[.90,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.04,-.56,.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,.12]}],[HANG,{f:'pelvis',p:[.20,-.56,.12]}],[DOWN,{f:'pelvis',p:[.12,-.52,.12]}],[2.22,{f:'pelvis',p:[-.12,-.30,.13]}],[ROLL.start,{f:'pelvis',p:TUCK.leg1}],[ROLL_END-.10,{f:'pelvis',p:TUCK.leg1}]],
-  'arm-1':[[0,rest.arm(-1)],[.55,{f:'world',p:[.36,.92,-.42]}],[.90,{f:'world',p:[.44,.91,-.42],palm:0}],[1.25,{f:'world',p:[.47,.91,-.42],palm:0}],[1.60,dangle(1.60,-1,[.35,-1,-.05])],[HANG,aim(HANG,-1,.97)],[LANDS[-1],handAt[-1]],[2.22,handAt[-1]],[ROLL.start,handAt[-1]],[ROLL.start+.18,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}],[ROLL_END,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}]],
-  arm1:[[0,rest.arm(1)],[.55,{f:'world',p:[.36,.92,.02]}],[.90,{f:'world',p:[.44,.91,0],palm:0}],[1.25,{f:'world',p:[.47,.91,-.02],palm:0}],...BRACE.map(([t,k])=>[t,k]),[LANDS[1],{...handAt[1],arc:.04,arcTo:[.8,.6,0]}],[2.22,handAt[1]],[ROLL.start,handAt[1]],[ROLL.start+.18,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}],[ROLL_END,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}]],
+  'leg-1':[[0,rest.leg(-1)],[.55,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,plant:true}],[.90,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.06,-.56,-.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,-.12]}],[HANG,{f:'pelvis',p:[.20,-.56,-.12]}],[DOWN,{f:'pelvis',p:[.12,-.52,-.12]}],[LANDS[1],{f:'pelvis',p:[-.12,-.30,-.13]}],[ROLL.start,{f:'pelvis',p:TUCK['leg-1']}],[FOOT_DOWN-.06,{f:'pelvis',p:TUCK['leg-1']}]],
+  leg1:[[0,rest.leg(1)],[.55,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,plant:true}],[.90,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.04,-.56,.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,.12]}],[HANG,{f:'pelvis',p:[.20,-.56,.12]}],[DOWN,{f:'pelvis',p:[.12,-.52,.12]}],[LANDS[1],{f:'pelvis',p:[-.12,-.30,.13]}],[ROLL.start,{f:'pelvis',p:TUCK.leg1}],[FOOT_DOWN-.06,{f:'pelvis',p:TUCK.leg1}]],
+  'arm-1':[[0,rest.arm(-1)],[.55,{f:'world',p:[.36,.92,-.42]}],[.90,{f:'world',p:[.44,.91,-.42],palm:0}],[1.25,{f:'world',p:[.47,.91,-.42],palm:0}],[1.60,dangle(1.60,-1,[.35,-1,-.05])],[HANG,aim(HANG,-1,.97)],[LANDS[-1],handAt[-1]],[ROLL.start,handAt[-1]],[ROLL.start+.12,{f:'chest',p:body.offsets.shoulder[-1].clone().add(V(.05,.05,-.24)).toArray(),elbow:TUCK_ELBOW['arm-1']}],[ROLL.start+.24,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}],[ROLL_END,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}]],
+  arm1:[[0,rest.arm(1)],[.55,{f:'world',p:[.36,.92,.02]}],[.90,{f:'world',p:[.44,.91,0],palm:0}],[1.25,{f:'world',p:[.47,.91,-.02],palm:0}],...BRACE.map(([t,k])=>[t,k]),[LANDS[1],handAt[1]],[ROLL.start,handAt[1]],[ROLL.start+.18,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}],[ROLL_END,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}]],
  };
  // After the roll both hooves stay where they landed (turning flat as they take the weight) until the stand,
  // which steps them into the stance on the tile centre.
- for(const s of [-1,1])LIMB['leg'+s].push([catchT,{f:'world',p:feet[s].toArray(),hoof:0,heading:ROLL.dir,plant:true}],[kneelT+.15,{f:'world',p:feet[s].toArray(),hoof:0,heading:ROLL.dir,plant:true}],[END,{f:'world',p:fitB.foot(s,1),hoof:0,heading:0,plant:true}]);
- for(const s of [-1,1])LIMB['arm'+s].push([kneelT,{f:'chest',p:restWrist(s)}],[END,{f:'chest',p:restWrist(s)}]);};buildLimbs();
+ // Each step comes off its mark, arcs over and arrives over the new one, flat, before setting down (the climb's).
+ const hoofAt=(p,heading)=>({f:'world',p:p.toArray(),hoof:0,heading,plant:true}),over=(p,heading,arc)=>({f:'world',p:[p.x,ANKLE+.025,p.z],hoof:0,heading,arc});
+ // A foot lifts once the weight is over the other (lifted as the weight still crossed, the pressure point had to jump
+ // from between the feet to the one left down: 49% of the body's weight).
+ LIMB.leg1.push([FOOT_DOWN,hoofAt(feet[1],ROLL.dir)],[T('weightL')+.03,hoofAt(feet[1],ROLL.dir-6)],[T('rightDown')-.04,over(R1,ROLL.dir-52,.05)],[T('rightDown'),hoofAt(R1,ROLL.dir-56)],[END,hoofAt(R1,0)]);
+ LIMB['leg-1'].push([FOOT_DOWN,hoofAt(feet[-1],ROLL.dir)],[T('weightR')+.03,hoofAt(feet[-1],ROLL.dir-4)],[T('leftBack')-.04,over(LH,ROLL.dir-28,.06)],[T('leftBack'),hoofAt(LH,ROLL.dir-32)],
+  [T('weightR2')+.03,hoofAt(LH,ROLL.dir-40)],[T('leftDown')-.04,over(L1,8,.05)],[T('leftDown'),hoofAt(L1,6)],[END,hoofAt(L1,0)]);
+ // The arms hang outside the knees while the trunk leans over the thighs (at rest beside the body they went 10 cm
+ // into the thighs and shins).
+ for(const s of [-1,1])LIMB['arm'+s].push([T('lean')-.12,{f:'chest',p:[.16,-.20,.31*s]}],[T('rise'),{f:'chest',p:[.12,-.26,.31*s]}],[T('weightR'),{f:'chest',p:restWrist(s)}],[END,{f:'chest',p:restWrist(s)}]);};buildLimbs();
  function spec(t){const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posed(tr,limbs,t);}
  // Fit this character's surface: trunk, head and tail out of the floor, the sill and the lintel. The roll is computed
  // from the body itself, so the trunk and head are held through it, easing in and out over 0.08 s; the hands are then
@@ -212,15 +281,36 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // How planted each limb's end is (a palm on a surface, a hoof set on the floor or a face), for the limb fit.
  const planted=(id,t)=>{const l=keyedLimb(LIMB[id],t,trunkAt(t));if(id.startsWith('arm'))return l.palm===undefined&&l.face?[l.faceW,l.face]:[l.palm!==undefined?l.palmW:0,[0,1,0]];
   const [na,nb,u]=l.plant;return [l.plantW||0,na&&nb?na.map((v,j)=>v+(nb[j]-v)*u):na||nb];};
- fit.solveLimbs({planted});steady=steadyPoles(D,t=>limbSample(body,spec(t)));fit.solvePlants({planted});
+ fit.solveLimbs({planted});steady=steadyPoles(D,t=>limbSample(body,spec(t)));fit.solvePlants({planted});fit.solveSelf({planted});
  // Twice: the first pass unwraps the palms' yaw blends, the second finds the hands' ways round for those continuous
  // targets (found for the wrapped ones, they named the wrong way where a blend passed 180 degrees: a 47 m/s snap).
  const turnsAt=t=>{body.pose(spec(t),'turns');return body.turns.slice();},turns=()=>{turnRef=null;turnRef=steadyTurns(D,turnsAt);turnRef=steadyTurns(D,turnsAt);};turns();
+ // The seat rests on the floor from the landing until the lean has the weight over the feet, as the belly on the sill:
+ // one smooth push, the seat's lowest point (the hips bone's: the trouser legs are the same mesh) within TOUCH of the
+ // floor and no more than SINK into it, nothing else but the feet and hands in it; as the body rises it only keeps the
+ // seat out of the floor. The overalls' seat rides on the thighs, so with the legs planted it rose 1 to 5 cm off the
+ // floor as the body rocked (the rig found nothing holding it), and sank 7.5 cm into it as the pelvis tipped upright
+ // (its height found in the tuck). Measured on the final legs (the limbs' fit and bend directions swing the thighs, and
+ // the seat's skin with them: measured before, it sank 8.6 cm all the same); the bend directions and turns are then
+ // found again for the moved hips.
+ {const TOUCH=.006,SINK=.008,FLOOR=.005,[a,b]=[FOOT_DOWN-.06,T('rise')-.10],all=createSurfaceProbe(worker,{stride:1,keep:m=>!/tail/.test(m.name)}),want=[],lo=[],hi=[],ts=[];
+  for(let t=a;t<=b+1e-9;t+=.005){body.pose(spec(t),'seat');all.update();let seat=Infinity,other=Infinity;
+   // the rest of the trunk and the head only: the limbs' own skin (a trouser cuff by a planted hoof) does not move with
+   // the hips, and holding it out of the floor threw them 40 cm up
+   for(let i=0;i<all.count;i++){if(/hoof|boot|foot|toe|hand/i.test(all.names[all.part[i]]))continue;const bone=all.boneNames[all.bone[i]];if(bone==='hips')seat=Math.min(seat,all.y[i]);else if(bone==='spine'||bone==='head')other=Math.min(other,all.y[i]);}
+   const down=t<=T('lean'),top=Math.min(seat+SINK,other+FLOOR),need=down?Math.min(seat-TOUCH,top):-1;ts.push(t);lo.push(need);hi.push(top);want.push(down?clamp(seat+.002,need,top):Math.min(0,top));}
+  const P=boxedPath(want,want.map(()=>1),2e7,want.map((_,i)=>({at:i,c:[1],lo:lo[i],hi:hi[i]})));
+  const tr=track(ts.map((t,i)=>[t,0,-P.c[i]*smooth(Math.min(t-a,b-t)/.08),0]),{},{limit:false});onSeat=t=>t>a&&t<b?V(...tr(t)):V();}
+ steady=steadyPoles(D,t=>limbSample(body,spec(t)));turns();
  // Balance: the centre of mass planned against what holds the body at each moment, the hips moved to follow it. It
  // runs on the hands' final turns (a palm's angle decides when it first touches), which are then found again.
- const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(WINDOW.edge,WINDOW.half,[[0,WINDOW.sill],[WINDOW.top,2]]),pose:t=>body.pose(spec(t),'balance'),com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onSill(t)).toArray()});
+ const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(WINDOW.edge,WINDOW.half,[[0,WINDOW.sill],[WINDOW.top,2]]),pose:t=>body.pose(spec(t),'balance'),com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onSill(t)).add(onSeat(t)).toArray(),
+  // sitting, the plan keeps the authored path: its own hips' move lifted the seat off the floor, and the next round,
+  // finding the feet alone under a centre of mass 30 cm behind them, dragged it forward until the knees locked and the
+  // hips ran away (80 to 210 m/s)
+  hold:t=>t>=FOOT_DOWN-.05&&t<=T('lean')+.05});
  balance=bal;turns();
- const KEYS=[...PRE.map(k=>({t:k.t,label:k.label})),{t:ROLL.start,label:'Back to the floor'},{t:(ROLL.start+ROLL_END)/2,label:'Roll'},{t:ROLL_END,label:'Sit up'},{t:kneelT,label:'Rise from the crouch'},{t:END,label:'Stand on the tile'}];
+ const KEYS=[...PRE.map(k=>({t:k.t,label:k.label})),{t:ROLL.start,label:'Back to the floor'},{t:(ROLL.start+ROLL_END)/2,label:'Roll'},{t:ROLL_END,label:'Sit up'},{t:T('lean'),label:'Lean over the feet'},{t:T('rise'),label:'Rise over the feet'},{t:T('weightR'),label:'Weight on the right foot'},{t:T('leftBack'),label:'Left foot back'},{t:T('weightL'),label:'Weight on the left foot'},{t:T('rightDown'),label:'Right foot back'},{t:T('weightR2'),label:'Weight on the right again'},{t:T('leftDown'),label:'Left foot round'},{t:END,label:'Stand on the tile'}];
  let state=null;
  const api={duration:D,keys:KEYS,body,probe,roll:{rows:rollRows,dir:ROLL.dir,start:ROLL.start,end:ROLL_END},
   phases:KEYS.slice(0,-1).map((k,i)=>({label:KEYS[i+1].label,start:k.t,end:KEYS[i+1].t})),

@@ -113,10 +113,14 @@ export function steadyPoles(duration,sample,{step=.005}={}){
   const list=rows[id]||(rows[id]=[]),prev=list.at(-1)?.side;let side;
   if(!prev)side=c>1e-6?perp.normalize():V(1,0,0);
   else{const cur=prev.clone().addScaledVector(axis,-prev.dot(axis));if(cur.lengthSq()<1e-12)cur.copy(perp.lengthSq()>1e-12?perp:V(1,0,0));cur.normalize();
-   const want=c>.2?perp.normalize():cur,ang=Math.atan2(cur.clone().cross(want).dot(axis),clamp(cur.dot(want),-1,1)),lim=(2+13*smooth((len/l.reach-.9)/.09))*DEG*(dt/.005);
-   side=cur.applyAxisAngle(axis,clamp(ang,-lim,lim)).normalize();}
+   // Both softly: toward the pole by smooth((c - .1) / .2) of the way, and at most lim per step through a tanh. Switched
+   // (the pole's side wanted past c = .2, the turn clamped at lim) the side kinked at a sample: an elbow's velocity
+   // turned by 1.9 m/s in 3 ms as an arm let go of the floor (400 to 600 m/s^2).
+   const pn=perp.lengthSq()>1e-12?perp.normalize():cur,ang=smooth((c-.1)/.2)*Math.atan2(cur.clone().cross(pn).dot(axis),clamp(cur.dot(pn),-1,1)),lim=(2+13*smooth((len/l.reach-.9)/.09))*DEG*(dt/.005);
+   side=cur.applyAxisAngle(axis,lim*Math.tanh(ang/lim)).normalize();}
   list.push({t,side});}}
- const tracks=Object.fromEntries(Object.entries(rows).map(([id,list])=>[id,track(list.map(r=>[r.t,...r.side.toArray()]))]));
+ // sampled densely, so plain central slopes
+ const tracks=Object.fromEntries(Object.entries(rows).map(([id,list])=>[id,track(list.map(r=>[r.t,...r.side.toArray()]),{},{limit:false})]));
  return (id,t)=>{const tr=tracks[id];return tr?V(...tr(clamp(t,0,duration))).normalize():null;};
 }
 // Ways round for partial hand and hoof turns. Sampled every step seconds (turnsAt(t) poses the motion and returns the
@@ -148,7 +152,7 @@ const expq=r=>{const a=r.length();return a<1e-12?Q():Q().setFromAxisAngle(r.clon
 // yawQ(heading) x bodyQ(pitch, roll). spinTrack's cubic in the log of the turn steps the angular acceleration at every
 // key, and each key's change is taken about a different reference: the head and chest jerked sideways at a key of the
 // climb's turn onto the tile (headTip 55 m/s^2 within 2 ms; 42% of the body's weight of phantom push).
-export function angleTrack(rows,pins={}){const tr=track(rows,pins);return t=>{const [h,p,r]=tr(t);return yawQ(h).multiply(bodyQ(p*DEG,r*DEG));};}
+export function angleTrack(rows,pins={},accel={}){const tr=track(rows,pins,{accel});return t=>{const [h,p,r]=tr(t);return yawQ(h).multiply(bodyQ(p*DEG,r*DEG));};}
 export function spinTrack(rows){
  const keys=rows.map(([t,q,w])=>({t,q:q.clone().normalize(),pin:w}));for(let i=1;i<keys.length;i++)if(keys[i].q.dot(keys[i-1].q)<0)keys[i].q.set(-keys[i].q.x,-keys[i].q.y,-keys[i].q.z,-keys[i].q.w);
  const d=keys.slice(1).map((k,i)=>logq(k.q.clone().multiply(keys[i].q.clone().invert())));

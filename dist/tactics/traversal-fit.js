@@ -68,6 +68,13 @@ export function createTailBend(worker){
 // of back, up or on; past it, the nearer of on or up. From under an overhead obstacle (a lintel) the way out is always
 // down: duck. The floor always pushes up.
 const EASE=.12,LIMBS=['leg-1','leg1','arm-1','arm1'];
+// The arm and leg capsules the arms are kept off (fit.solveSelf): [from, to, radius(, gain)], points named per side.
+const SELF_ARM=[['shoulder','elbow',.045,2],['elbow','wrist',.04,1.5],['wrist','palm',.045,1]],SELF_LEG=[['hip','knee',.075],['knee','ankle',.05],['ankle','toe',.03]];
+// The closest points of segments p1q1 and p2q2 (Ericson, Real-Time Collision Detection 5.1.9).
+function segments(p1,q1,p2,q2){const d1=q1.clone().sub(p1),d2=q2.clone().sub(p2),r=p1.clone().sub(p2),a=d1.dot(d1),e=d2.dot(d2),f=d2.dot(r);let s=0,t=0;
+ if(a>1e-12||e>1e-12){if(a<=1e-12)t=clamp(f/e);else{const c=d1.dot(r);if(e<=1e-12)s=clamp(-c/a);else{const b=d1.dot(d2),den=a*e-b*b;s=den>1e-12?clamp((b*f-c*e)/den):0;t=(b*s+f)/e;
+  if(t<0){t=0;s=clamp(-c/a);}else if(t>1){t=1;s=clamp((b-c)/a);}}}}
+ const pa=p1.clone().addScaledVector(d1,s),pc=p2.clone().addScaledVector(d2,t);return {dist:pa.distanceTo(pc),pa,pc};}
 const HEAD_TRY=[];for(let a=-40;a<=40;a+=10)for(let b=-60;b<=60;b+=15)for(let c=-48;c<=48;c+=12)HEAD_TRY.push([a,b,c]);
 const headCost=h=>1.5*Math.abs(h[0])+1.2*Math.abs(h[1])+Math.abs(h[2]);HEAD_TRY.sort((x,y)=>headCost(x)-headCost(y));
 const BOW_TRY=[];for(let b=-30;b<=45;b+=5)BOW_TRY.push(b);BOW_TRY.sort((x,y)=>Math.abs(x)-Math.abs(y));
@@ -186,6 +193,17 @@ export function createClearanceFit(duration,{step=.02}={}){
     if(tails?.count){const [a,b]=fit.tail(t);tails.world(a*DEG,b*DEG,v=>note('tail',into(v,way)));}}
    fit.report=left;};
   fit.solveLimbs=({rounds:limbRounds=3,planted=null}={})=>{tracks=null;for(let r=0;r<limbRounds;r++){const need=limbNeed(planted);for(const id of LIMBS)add(id,need[id],free.limbs);}build();report();return fit;};
+  // Arms clear of the legs: each arm's capsules (the phantom-wrench rig's: upper arm .045, forearm .04, hand .045) are
+  // kept off both legs' (thigh .075, shank .05, hoof .03) by moving the arm's end out the way the two part, twice the
+  // overlap for the upper arm and one and a half for the forearm (moving the hand moves the elbow about half as far; at
+  // one for one, three rounds left a bull's forearm 8 cm in its shin), a planted hand left where it is.
+  // For a crouch that draws the knees up to the chest, where no hand-placed arm stays clear of them for long.
+  fit.solveSelf=({rounds:selfRounds=6,planted=null,margin:gap=.005}={})=>{tracks=null;for(let r=0;r<selfRounds;r++){const need={'arm-1':[],arm1:[]};
+    for(const t of times){st=stage(t);const P=poseAt(t);for(const s of [-1,1]){const id='arm'+s,pw=planted?.(id,t)?.[0]||0;let best=V();
+     if(pw<.5)for(const [a,b,ra,gain]of SELF_ARM)for(const L of [-1,1])for(const [c,d,rb]of SELF_LEG){const q=segments(P[a+s],P[b+s],P[c+L],P[d+L]),o=ra+rb+gap-q.dist;if(o<=0)continue;
+      const u=q.pa.clone().sub(q.pc),len=u.length();if(len<1e-9)continue;u.multiplyScalar(o*gain*(1-pw)/len);if(u.lengthSq()>best.lengthSq())best=u;}
+     need[id].push(best.toArray());}}
+   for(const id of ['arm-1','arm1'])add(id,need[id],free.limbs);}build();report();return fit;};
   // Planted ends sit on their surface. Each planted end's lowest point, along its surface's normal, is put SNAP off the
   // surface it rests on, both ways: the phantom-wrench rig counts a contact only within 1 cm, and a palm keyed a fixed
   // height up hovered 1 to 3 cm over a top while a toe-down hoof lifted by the clearance hovered 4 cm over the floor,

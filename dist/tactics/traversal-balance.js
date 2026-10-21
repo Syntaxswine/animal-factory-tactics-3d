@@ -4,8 +4,8 @@ import {V,Q,clamp,smooth,track,MASS_SEGMENTS,BODY_MASS,createSurfaceProbe} from 
 // (the grenade throw's pendulum, grenade-throw-motion.js, generalised to flight and grips).
 // The plan stays as near the authored path as the contacts allow, with low jerk, subject to:
 // - airborne (nothing touching): exactly ballistic, a = -g;
-// - on the feet alone: the pressure point of a linear inverted pendulum, p = c - h a / (g + a_y), inside the soles,
-//   the push within friction, and the floor pushing (never pulling);
+// - on the feet alone: the pressure point of a linear inverted pendulum, p = c - h a / (g + a_y), inside the soles'
+//   outline (their convex hull), the push within friction, and the floor pushing (never pulling);
 // - hands gripping (with or without feet): any direction, each axis within FMAX body weights;
 // - the first and last samples at rest, where the battle's own stance hands over.
 // A convex quadratic programme per axis (the vertical first: the pendulum's stiffness h / (g + a_y) comes from it),
@@ -22,23 +22,25 @@ function cholesky(n,k,A){const w=k+1,L=Float64Array.from(A);
 function cholSolve(n,k,L,b,y=new Float64Array(n),x=new Float64Array(n)){const w=k+1;for(let i=0;i<n;i++){let s=b[i];for(let m=Math.max(0,i-k);m<i;m++)s-=L[i*w+m-i+k]*y[m];y[i]=s/L[i*w+k];}
  for(let i=n-1;i>=0;i--){let s=y[i];for(let m=i+1;m<=Math.min(n-1,i+k);m++)s-=L[m*w+i-m+k]*x[m];x[i]=s/L[i*w+k];}
  return x;}
-// One axis: minimise sum wT (c - c0)^2 + wJ |third difference|^2 subject to lo <= row . c <= hi for every row
-// ({at, c: coefficients, lo, hi}; an equality has lo = hi). Rows are scaled to unit norm.
-export function boxedPath(c0,wT,wJ,rows,{rho=2e5,iters=1500,tol=1e-8}={}){
- const n=c0.length,k=3,w=k+1,M=new Float64Array(n*w),R=rows.map(r=>{const s=Math.hypot(...r.c)||1;return {at:r.at,c:r.c.map(x=>x/s),lo:r.lo/s,hi:r.hi/s};});
+// One channel, or several interleaved (stride 2: x0, z0, x1, z1, ..., each with its own jerk): minimise
+// sum wT (c - c0)^2 + wJ |third difference|^2 subject to lo <= row . c <= hi for every row ({at, c: coefficients, lo,
+// hi}; an equality has lo = hi; a half-plane has lo = -Infinity). Rows are scaled to unit norm.
+export function boxedPath(c0,wT,wJ,rows,{rho=2e5,iters=1500,tol=1e-8,stride=1}={}){
+ const n=c0.length,R=rows.map(r=>{const s=Math.hypot(...r.c)||1;return {at:r.at,c:r.c.map(x=>x/s),lo:r.lo/s,hi:r.hi/s};}),W=R.reduce((m,r)=>Math.max(m,r.c.length),3),k=Math.max(3*stride,W-1),w=k+1,M=new Float64Array(n*w);
+ const jerk=[-1,3,-3,1].flatMap((x,i)=>i?[...new Array(stride-1).fill(0),x]:[x]);
  const outer=(at,cs,f)=>{for(let a=0;a<cs.length;a++){const i=at+a;if(i<0||i>=n)continue;for(let b=0;b<=a;b++){const j=at+b;if(j<0)continue;M[i*w+j-i+k]+=f*cs[a]*cs[b];}}};
- for(let i=0;i<n;i++)M[i*w+k]+=wT[i];for(let i=0;i+3<n;i++)outer(i,[-1,3,-3,1],wJ);for(const r of R)outer(r.at,r.c,rho);
- // the iterations run on flat arrays (rows of up to three coefficients): the same sums in the same order
- const L=cholesky(n,k,M),m=R.length,at=Int32Array.from(R,r=>r.at),len=Uint8Array.from(R,r=>r.c.length),C=new Float64Array(m*3),lo=Float64Array.from(R,r=>r.lo),hi=Float64Array.from(R,r=>r.hi);
- R.forEach((r,j)=>r.c.forEach((x,a)=>{C[j*3+a]=x;}));
- const dot=(j,c)=>{let s=0;for(let a=0;a<len[j];a++)s+=C[j*3+a]*c[at[j]+a];return s;};
+ for(let i=0;i<n;i++)M[i*w+k]+=wT[i];for(let i=0;i+3*stride<n;i++)outer(i,jerk,wJ);for(const r of R)outer(r.at,r.c,rho);
+ // the iterations run on flat arrays (rows of up to W coefficients): the same sums in the same order
+ const L=cholesky(n,k,M),m=R.length,at=Int32Array.from(R,r=>r.at),len=Uint8Array.from(R,r=>r.c.length),C=new Float64Array(m*W),lo=Float64Array.from(R,r=>r.lo),hi=Float64Array.from(R,r=>r.hi);
+ R.forEach((r,j)=>r.c.forEach((x,a)=>{C[j*W+a]=x;}));
+ const dot=(j,c)=>{let s=0;for(let a=0;a<len[j];a++)s+=C[j*W+a]*c[at[j]+a];return s;};
  let c=Float64Array.from(c0);const z=new Float64Array(m),u=new Float64Array(m),b0=Float64Array.from(c0,(x,i)=>wT[i]*x),b=new Float64Array(n),y=new Float64Array(n);for(let j=0;j<m;j++)z[j]=clamp(dot(j,c),lo[j],hi[j]);let res=Infinity;
  for(let it=0;it<iters&&res>tol;it++){b.set(b0);
-  for(let j=0;j<m;j++){const v=rho*(z[j]-u[j]);for(let a=0;a<len[j];a++)b[at[j]+a]+=C[j*3+a]*v;}c=cholSolve(n,k,L,b,y,c===c0?new Float64Array(n):c);
+  for(let j=0;j<m;j++){const v=rho*(z[j]-u[j]);for(let a=0;a<len[j];a++)b[at[j]+a]+=C[j*W+a]*v;}c=cholSolve(n,k,L,b,y,c===c0?new Float64Array(n):c);
   res=0;for(let j=0;j<m;j++){const ax=dot(j,c),zn=clamp(ax+u[j],lo[j],hi[j]);u[j]+=ax-zn;z[j]=zn;res=Math.max(res,Math.abs(ax-zn));}}
  return {c,res};}
-// samples: [{c: [x,y,z] authored centre of mass, kind: 'air' | 'grip' | 'feet' | 'hold', box: [xmin,xmax,zmin,zmax] (feet),
-// floor: y}] on a uniform grid dt. 'hold' keeps the authored path (a support this plan does not model, such as a roll).
+// samples: [{c: [x,y,z] authored centre of mass, kind: 'air' | 'grip' | 'feet' | 'hold', box: [xmin,xmax,zmin,zmax] and
+// hull: [[x,z], ...] counter-clockwise (feet), floor: y}] on a uniform grid dt. 'hold' keeps the authored path (a support this plan does not model, such as a roll).
 export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,fmax=FMAX,margin=.01}={}){
  const n=samples.length,d2=dt*dt,c0=[0,1,2].map(ax=>Float64Array.from(samples,s=>s.c[ax])),wT=samples.map(s=>s.kind==='hold'?wH:1),acc=[1,-2,1];
  const ends=ax=>[0,1,n-2,n-1].map(i=>({at:i,c:[1],lo:c0[ax][i<2?0:n-1],hi:c0[ax][i<2?0:n-1]}));
@@ -48,19 +50,42 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,fmax=FMAX,margin=
   else if(s.kind==='feet'){const r=edge(i);ry.push({at:i-1,c:acc,lo:(.3*r-1)*G*d2,hi:(.1+(fmax-.1)*r-1)*G*d2});}else if(s.kind==='grip')ry.push({at:i-1,c:acc,lo:(-fmax-1)*G*d2,hi:(fmax-1)*G*d2});}
  const Y=boxedPath(c0[1],wT,wJ,ry),ay=i=>i>0&&i<n-1?(Y.c[i+1]-2*Y.c[i]+Y.c[i-1])/d2:0;
  const out=[null,Y.c,null],res=[0,Y.res,0];
- // A feet sample's box is the intersection of its neighbours' within two samples: a foot lifting a sample earlier than
- // planned (moving the hips moves it) left the pressure point outside the one still down (41% of the body's weight).
- const near=(i,j)=>samples[j]?.kind==='feet'?samples[j].box:null,boxAt=i=>{const b=samples[i].box.slice();for(let j=i-2;j<=i+2;j++){const o=near(i,j);if(!o)continue;b[0]=Math.max(b[0],o[0]);b[1]=Math.min(b[1],o[1]);b[2]=Math.max(b[2],o[2]);b[3]=Math.min(b[3],o[3]);}
-  return b[0]<=b[1]&&b[2]<=b[3]?b:samples[i].box;};
- for(const ax of [0,2]){const r=ends(ax);
-  for(let i=1;i<n-1;i++){const s=samples[i];if(s.kind==='air'){r.push({at:i-1,c:acc,lo:0,hi:0});continue;}
-   if(s.kind==='grip'){r.push({at:i-1,c:acc,lo:-fmax*G*d2,hi:fmax*G*d2});continue;}
-   if(s.kind!=='feet')continue;const fy=Math.max(.3*G,ay(i)+G),h=Math.max(.2,Y.c[i]-(s.floor||0)),k=h/fy;
-   // The pressure point also carries the body's turning: p_x = c_x - k a_x + dL_z / (M fy), p_z = c_z - k a_z - dL_x / (M fy).
-   const box=boxAt(i),dl=s.dL?(ax?-s.dL[0]:s.dL[2])/(BODY_MASS*fy):0,lo=box[ax?2:0]+margin-dl,hi=box[ax?3:1]-margin-dl,mid=(box[ax?2:0]+box[ax?3:1])/2-dl;
-   r.push({at:i-1,c:[-k/d2,1+2*k/d2,-k/d2],lo:Math.min(lo,mid),hi:Math.max(hi,mid)},{at:i-1,c:acc,lo:-MU*fy*d2,hi:MU*fy*d2});}
-  const P=boxedPath(c0[ax],wT,wJ,r);out[ax]=P.c;res[ax]=P.res;}
+ // A feet sample's outline is the intersection of its neighbours' within two samples: a foot lifting a sample earlier
+ // than planned (moving the hips moves it) left the pressure point outside the one still down (41% of the body's weight).
+ const outlineAt=i=>{let P=samples[i].hull;for(let j=i-2;j<=i+2&&P.length>=3;j++)if(j!==i&&samples[j]?.kind==='feet')P=clipConvex(P,samples[j].hull);
+  return P.length>=3&&areaOf(P)>1e-6?P:samples[i].hull;};
+ // Across, x and z together (interleaved: the outline's edges couple them): ballistic in flight, a grip within fmax
+ // either way, and on the feet the pressure point inside the support's outline and the push within friction. The
+ // outline is the contacts' convex hull, each edge drawn in by margin but never past its centre; their bounding box
+ // let the pressure point sit 4 to 11 cm off the line between two hands set down on a diagonal (the window's), where
+ // the rig, reading the hull, found 20 to 32% of the body's weight of phantom force.
+ const acc2=[1,0,-2,0,1],rows=[];for(const i of [0,1,n-2,n-1])for(const ax of [0,2])rows.push({at:2*i+ax/2,c:[1],lo:c0[ax][i<2?0:n-1],hi:c0[ax][i<2?0:n-1]});
+ for(let i=1;i<n-1;i++){const s=samples[i],at=2*(i-1),both=(lo,hi)=>rows.push({at,c:acc2,lo,hi},{at:at+1,c:acc2,lo,hi});
+  if(s.kind==='air'){both(0,0);continue;}
+  if(s.kind==='grip'){both(-fmax*G*d2,fmax*G*d2);continue;}
+  if(s.kind!=='feet')continue;const fy=Math.max(.3*G,ay(i)+G),h=Math.max(.2,Y.c[i]-(s.floor||0)),k=h/fy,a=-k/d2,b=1+2*k/d2;
+  // The pressure point also carries the body's turning: p_x = c_x - k a_x + dL_z / (M fy), p_z = c_z - k a_z - dL_x / (M fy).
+  const dx=s.dL?s.dL[2]/(BODY_MASS*fy):0,dz=s.dL?-s.dL[0]/(BODY_MASS*fy):0,H=outlineAt(i),cx=H.reduce((m,p)=>m+p[0],0)/H.length,cz=H.reduce((m,p)=>m+p[1],0)/H.length;
+  for(let j=0;j<H.length;j++){const p=H[j],q=H[(j+1)%H.length],ex=q[0]-p[0],ez=q[1]-p[1],l=Math.hypot(ex,ez);if(l<1e-9)continue;const nx=ez/l,nz=-ex/l;
+   rows.push({at,c:[nx*a,nz*a,nx*b,nz*b,nx*a,nz*a],lo:-Infinity,hi:Math.max(nx*p[0]+nz*p[1]-margin,nx*cx+nz*cz)-nx*dx-nz*dz});}
+  both(-MU*fy*d2,MU*fy*d2);}
+ const XZ=boxedPath(Float64Array.from({length:2*n},(_,j)=>c0[j&1?2:0][j>>1]),Float64Array.from({length:2*n},(_,j)=>wT[j>>1]),wJ,rows,{stride:2});
+ out[0]=Float64Array.from({length:n},(_,i)=>XZ.c[2*i]);out[2]=Float64Array.from({length:n},(_,i)=>XZ.c[2*i+1]);res[0]=res[2]=XZ.res;
  const plan=Array.from(out[0],(x,i)=>[x,out[1][i],out[2][i]]);plan.residual=res;return plan;}
+// The convex hull of points [x, z], counter-clockwise (Andrew's monotone chain), or the box [xmin, xmax, zmin, zmax]
+// as a polygon where the points are too few or in one line.
+const areaOf=P=>{let a=0;for(let i=0;i<P.length;i++){const p=P[i],q=P[(i+1)%P.length];a+=p[0]*q[1]-q[0]*p[1];}return a/2;};
+function hullOf(pts,box){
+ const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]),P=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]),lo=[],up=[];
+ for(const p of P){while(lo.length>=2&&cr(lo.at(-2),lo.at(-1),p)<=0)lo.pop();lo.push(p);}
+ for(let i=P.length-1;i>=0;i--){const p=P[i];while(up.length>=2&&cr(up.at(-2),up.at(-1),p)<=0)up.pop();up.push(p);}
+ const H=lo.slice(0,-1).concat(up.slice(0,-1));
+ return H.length>=3&&areaOf(H)>1e-6?H:[[box[0],box[2]],[box[1],box[2]],[box[1],box[3]],[box[0],box[3]]];}
+// P inside convex Q, both counter-clockwise (Sutherland-Hodgman).
+function clipConvex(P,Q){let out=P;
+ for(let i=0;i<Q.length&&out.length;i++){const a=Q[i],b=Q[(i+1)%Q.length],side=p=>(b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]),inp=out;out=[];
+  for(let j=0;j<inp.length;j++){const p=inp[j],q=inp[(j+1)%inp.length],sp=side(p),sq=side(q);if(sp>=0)out.push(p);if((sp>=0)!==(sq>=0)){const f=sp/(sp-sq);out.push([p[0]+(q[0]-p[0])*f,p[1]+(q[1]-p[1])*f]);}}}
+ return out;}
 // The hips shift that makes the real centre of mass follow the plan: comAt(t, shift) poses the motion with the hips
 // moved by shift ([x,y,z]) and returns its centre of mass. The pelvis carries most of the body, so each pass moves it
 // by GAIN x the miss (the grenade throw's measured inverse sensitivity with the feet planted).
@@ -81,7 +106,8 @@ export function followCentre(times,plan,comAt,{passes=5,base=null,from=null}={})
 // - anything on the floor stands on it (hooves, hands, a back in a roll), and so does a part on an obstacle's top or
 //   its edge (within TOL of the top's height: the rig reads a point just past the edge as touching the edge, pushing up
 //   and out) while the centre of mass is above that top or less than DRAPE below it (a belly on a sill): their extent
-//   is the pressure point's box, the floor's height (or the top's, with nothing on the floor) its plane;
+//   is the pressure point's outline (their convex hull), the floor's height (or the top's, with nothing on the floor)
+//   its plane;
 // - a part against a face, or on a top the body hangs below, is not counted: it can only push, and a plan leaning on
 //   it would ask what it cannot give (the forearms on a wall's edge as the hands come over at a catch);
 // - nothing counted is flight.
@@ -98,15 +124,15 @@ export const contactProbe=worker=>createSurfaceProbe(worker,{stride:1});
 const endsOf=probe=>{let e=ENDS.get(probe);if(!e){const kind=probe.names.map(p=>/hand/.test(p)?1:/hoof|boot|foot|toe/i.test(p)?2:0);e=Uint8Array.from(probe.part,pi=>kind[pi]);ENDS.set(probe,e);}return e;};
 export function supportAt(probe,obstacles,com){
  const over=(x,z)=>obstacles.some(b=>x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]),ends=endsOf(probe),grow=(b,x,z)=>{b[0]=Math.min(b[0],x);b[1]=Math.max(b[1],x);b[2]=Math.min(b[2],z);b[3]=Math.max(b[3],z);};
- let grip=false,top=null;const box=[Infinity,-Infinity,Infinity,-Infinity],onTop=[Infinity,-Infinity,Infinity,-Infinity];
+ let grip=false,top=null;const box=[Infinity,-Infinity,Infinity,-Infinity],onTop=[Infinity,-Infinity,Infinity,-Infinity],pts=[],topPts=[];
  for(let i=0;i<probe.count;i++){const x=probe.x[i],y=probe.y[i],z=probe.z[i],e=ends[i];
-  if(y<TOL&&y>-TOL&&!over(x,z)){grow(box,x,z);continue;}
+  if(y<TOL&&y>-TOL&&!over(x,z)){grow(box,x,z);pts.push([x,z]);continue;}
   for(const o of obstacles){const dx=Math.max(o.min[0]-x,0,x-o.max[0]),dy=Math.max(o.min[1]-y,0,y-o.max[1]),dz=Math.max(o.min[2]-z,0,z-o.max[2]);if(dx>=TOL||dy>=TOL||dz>=TOL)continue;const inside=!dx&&!dy&&!dz;
    const d=inside?Math.min(x-o.min[0],o.max[0]-x,y-o.min[1],o.max[1]-y,z-o.min[2],o.max[2]-z):Math.hypot(dx,dy,dz);if(d>=TOL)continue;
-   if(e===1)grip=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);top=Math.max(top??-Infinity,o.max[1]);}}}
+   if(e===1)grip=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);topPts.push([x,z]);top=Math.max(top??-Infinity,o.max[1]);}}}
  if(grip)return {kind:'grip'};
- if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'feet',box,floor:0};}
- return onTop[0]<=onTop[1]?{kind:'feet',box:onTop,floor:top}:{kind:'air'};}
+ if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'feet',box,hull:hullOf(pts.concat(topPts),box),floor:0};}
+ return onTop[0]<=onTop[1]?{kind:'feet',box:onTop,hull:hullOf(topPts,onTop),floor:top}:{kind:'air'};}
 // The whole pipeline for a motion: pose(t) poses it (with the hips moved by the current trial shift, set through
 // setShift) and returns its points; com(points) is its centre of mass.
 // Angular momentum about the centre of mass at each grid sample, from the posed points (the rig's model: each
@@ -174,8 +200,10 @@ const KEEP=[...new Set(MASS_SEGMENTS.flatMap(([a,b])=>[a,b]))];
 // to brush elsewhere in the next round. Unused, a support the rig sees costs nothing.
 const ONSET=.02;
 // setMove({shift(t), spin(t)}) hands the motion its hips' move while it is found (spin(t) is null where the body does
-// not turn, or {q, pivot}: a turn about a point); the result's shift and spin are the final ones.
-export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base=null,dt=.005,rounds=2,plan:options={}}){
+// not turn, or {q, pivot}: a turn about a point); the result's shift and spin are the final ones. hold(t), if given,
+// marks times the plan keeps the authored path ('hold': a support it does not model, such as a seat the hips' own
+// move would lift off the floor, losing the support the plan was leaning on).
+export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base=null,hold=null,dt=.005,rounds=2,plan:options={}}){
  const n=Math.round(duration/dt)+1,times=Array.from({length:n},(_,i)=>Math.min(duration,i*dt));let c0=null,follow=null,samples=null,plan=null,last=null,settled=false,spin=null,w=times.map(()=>[0,0,0]);
  const turnAt=(theta,pivot)=>{let lo=theta.findIndex(x=>x[0]||x[1]||x[2]),hi=theta.findLastIndex(x=>x[0]||x[1]||x[2]);if(lo<0)return null;lo=Math.max(0,lo-1);hi=Math.min(n-1,hi+1);
   const tr=track(theta.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false}),pv=track(pivot.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false});
@@ -183,7 +211,7 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  const setShift=s=>setMove(s||spin?{shift:()=>s||V(),spin}:null);
  // each round's schedule as runs ('feet 0.000-0.690, ...'), for the diagnostics
  const history=[],runs=S=>{const out=[];S.forEach((s,i)=>{const r=out.at(-1);if(r&&r.kind===s.kind)r.end=times[i];else out.push({kind:s.kind,start:times[i],end:times[i]});});return out.map(r=>`${r.kind} ${r.start.toFixed(3)}-${r.end.toFixed(3)}`).join(', ');};
- const measure=()=>{const frames=[];const S=times.map(t=>{setShift(follow?follow.shift(t):null);const P=pose(t);probe.update();frames.push(Object.fromEntries(KEEP.map(k=>[k,P[k].clone()])));const c=com(P).toArray();return {...supportAt(probe,obstacles,c),c};});
+ const measure=()=>{const frames=[];const S=times.map(t=>{setShift(follow?follow.shift(t):null);const P=pose(t);probe.update();frames.push(Object.fromEntries(KEEP.map(k=>[k,P[k].clone()])));const c=com(P).toArray(),s=supportAt(probe,obstacles,c);return hold?.(t)&&s.kind!=='air'?{...s,kind:'hold',c}:{...s,c};});
   const lag=Math.round(ONSET/dt);for(let i=n-1;i>=0;i--)if(S[i].kind==='grip'){let j=i;while(j>0&&S[j-1].kind==='grip')j--;const end=i-j+1<3*lag?i+1:Math.min(n,j+lag);for(let k=j;k<end;k++)S[k]=j>0?{...S[j-1],c:S[k].c}:S[k];i=j;}
   return {S,...turning(frames,dt)};};
  // Two rounds: the second measures the schedule and the turning again on the balanced motion (four gave the climb no

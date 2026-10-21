@@ -704,6 +704,117 @@ a face only pushes reads 0.39 s over, against 0.36 s: the plan leans on little i
 - the left elbow folds to 160° and whips at 10 m/s as the roll starts;
 - the knees reach 156° in the rise.
 
+### 2026-10-20 (physics balance, fifth part): the brace's hand-over, the roll's release, and the roll to standing
+
+The architect: "Finish the transfer from the wall brace to the floor. Try delaying the remaining torso turn until the
+right hand has landed, so the left arm doesn't have to take that twist alone. Then smooth the left arm's release into
+the shoulder roll, addressing the elbow whip. Keep the improved sill contact and species corrections. Once that
+transition works, tackle the roll → sit-up → rise as the next continuous section. Check the final balanced poses for
+reach and clipping across the animals."
+
+**The hand-over from the brace.**
+- **The torso holds its heading (46°) from "Down the wall" until the right hand is down** (2.18 s, from 2.16), then
+  turns to the roll's 78° along one curve. The roll starts at 2.46 s (from 2.40). The 2.22 s key had held the hips
+  high, so the body fell onto its hands with the floor pushing a third of its weight, then stopped at 2.3 body weights
+  just before the roll. It now comes down at a steady 0.9 m/s.
+- **The new key sits on the committed hips curve.** Keyed lower, it steepened the descent through "Down the wall", and
+  the belly slid 1.1 to 1.4 cm off the sill's edge (20% at 1.95 s).
+- **The right hand's step off the wall has no lift.** The lift took the palm's outward offset away in 30 ms, a 5.4 m/s
+  hump. The hand now slides off the face, 2.06 to 2.18 s.
+- **The balance planner holds the pressure point inside the contacts' outline (their convex hull), not their bounding
+  box,** solving x and z together. With the hands on a diagonal, the box let it sit 4 to 11 cm off the line between
+  them, and the rig, reading the hull, found 20 to 32% of body weight of phantom force in "Back to the floor". It now
+  reads 3%. The solver gained a stride: bit for bit the same on one channel, and on two channels without coupling rows
+  within 2e-7 of two separate solves.
+
+**The release into the roll.**
+- **The left hand leaves the floor for a point beside the shoulder, in the chest's frame, then tucks.** Blended straight
+  from the floor to the tuck, its path passed a few centimetres from the shoulder: the elbow folded to 158° and flicked
+  at 9 m/s. Out to the side in the world, the hand moved too fast (8.7 m/s). The elbows now peak at 142°, and no point
+  passes 8 m/s (the elbow reached 10 m/s before).
+- **Bend directions turn softly (`steadyPoles`).** The side a knee or elbow bends to was clamped at its turn limit, and
+  switched when the pole came within 0.2 of the limb. Each switch kinked it at a 5 ms sample: the right elbow's velocity
+  turned by 1.9 m/s in 3 ms as the arm let go of the floor (400 to 600 m/s^2). The limit is now a tanh and the switch a
+  smoothstep (173 m/s^2, like its neighbours), and the sampled sides are joined with plain slopes.
+
+**The roll.**
+- **The roll's raw path is smooth between impacts.** Each impact is a step of velocity and spin, from the turn about one
+  contact to the turn about the next. Joined by straight lines, the steps kinked the path every half degree. Through
+  one curve, it rang about each impact (34 m/s^2 within 5 ms at the hooves' landing).
+- **The turn about the axis follows a smooth curve,** pinned to the spins at both ends. Slerped, the last step ran at
+  the step before's speed and met the get-up 0.2 rad/s apart.
+- **Each step's time comes from its mean spin.** From the spin before alone, it ran 12% fast as the body slowed.
+- **The softening is a triangle,** whole wherever it fits and blended to the raw path over its half-width at each end.
+  The box stepped the floor's push at its edges as they passed each impact. Narrowed sample by sample at the ends, it
+  kinked the path (12 m/s^2).
+
+**The roll to standing.** The hooves land 40 cm along the wall from the centre of mass. Tucked 14 cm tighter, they land
+earlier and only 4 to 10 cm nearer. The momentum left after their landing is 35 J, where rising over them takes 180.
+Turning on about the hoof, as before, the body would fall back: the plan dragged the centre of mass 30 cm forward over
+the feet, the hips sank between the heels (knees at 167°), and any change made it run away.
+- **The body rocks on over its seat, the hooves braking it to rest over 32°.** The braking fades as it stops, so the
+  get-up starts without a pull.
+- **It leans its weight forward onto the feet with the seat still down.** A band like the sill's holds the seat on the
+  floor, measured on the final legs. The overalls' seat rides on the thighs: with the legs planted it floated 1 to 5 cm
+  above the floor, and sank 7.5 cm into it as the pelvis tipped upright.
+- **While it sits, the plan keeps the authored path** (a new `hold` in `balanceTraversal`). Its own hips' move lifted
+  the seat, and the next round, finding the feet alone under a centre of mass 30 cm behind them, ran the hips away at
+  80 to 210 m/s.
+- **It rises over the feet and steps back onto the tile centre in three steps:** the left foot halfway, the right to its
+  mark, the left round to its mark. Each lifts once the weight is over the other; lifted as the weight crossed, it read
+  49%.
+- **It turns to face on along one smooth curve over the whole get-up,** on heading and pitch angles (C2, as before the
+  roll). Turned key by key, a turn on one foot asked a hoof for 50 to 140 N·m it cannot twist.
+- **The feet no longer slide.** Before, they slid 25 and 70 cm into the stance under load.
+- **The arms are kept off the legs (`fit.solveSelf`).** Each arm's capsules (the rig's radii) are kept off both legs' by
+  moving the arm's end out the way they part. Placed by hand, the arms went 9 to 12 cm into the thighs and shins as the
+  knees came up to the chest.
+- The get-up takes 2.36 s (it was 1.0 s), and the window 5.71 s (it was 3.68 s).
+
+The gate on the horse, same rig, against the committed window (f70faa0):
+
+| | committed | now |
+|---|---|---|
+| over the limit (wrench outside impacts) | 0.36 s of 3.68 | 0.14 s of 5.71 |
+| hands to the floor | 40% | 8% |
+| back to the floor | 32% | 3% |
+| roll | 32% | 50% (one sample, 2.75 s) |
+| sit up | 38% | 0% |
+| lean over the feet | | 4% |
+| rise | 45% | 121% (one sample, 3.86 s) |
+| the steps and weight shifts | | 0 to 5% |
+| left foot round | | 19% |
+| stand on the tile | 11% | 14% |
+| required force in contact | 5.0 x BW | 3.1 x BW |
+| point speed | elbow 10.0 m/s | under 8 m/s |
+| joint range | elbows 160 and 151°, knees 156° | inside |
+| capsule overlap over 2 cm | 2 pairs, 4.3 cm | 1 pair, 2.4 cm |
+
+**The vault and the climb under the shared changes.** The vault stays within the phantom limits. The climb goes from
+0.21 to 0.15 s over. Their capsule and point-speed failures were already there; the vault's capsule overlap moved from
+3.5 to 3.8 cm.
+
+**Reach and clipping across the animals** (the window, every 10 ms; the gate's capsule pairs over 1 cm, worst):
+
+| | horse | goat | bull | cow | donkey | sheep | skunk | pig foreman | pig director | rabbit | dog |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| clipping, committed (cm) | 4.3 | 4.8 | 3.4 | 4.5 | 4.0 | 4.2 | 2.5 | 2.0 | 4.1 | 4.6 | 2.7 |
+| clipping, now (cm) | 2.4 | 2.2 | 1.2 | 4.1 | 7.1 | 3.3 | 2.8 | 3.7 | 1.8 | 3.9 | 2.7 |
+| left hand short of the floor at 2.03 s (cm) | | 0.9 | 12.8 | 3.7 | 10.2 | 11.0 | 11.4 | 8.8 | | 4.1 | 11.5 |
+
+- The donkey's right hand, pushed off its leg, folds into its own shoulder (7.1 cm at 4.43 s).
+- The cow's and the rabbit's right upper arm touch the trunk as the roll starts (4.1 and 3.9 cm, as before).
+- The left hand's shortfall was there before, 1 to 3 cm worse (bull 13.3, sheep 14.3 cm): their arms reach the floor
+  later than the horse's.
+- The goat's legs are short of the get-up's step marks by up to 9.9 cm, from 13.8 cm short of its stance at the end.
+- The clearance fit's leftovers are within the test's limits on every mammal. `tests/natural-traversal.test.mjs`
+  passes 12/12.
+
+**Left in the window:**
+- the lift-off from the seat (one sample at 121%, 3.86 s) and the step into the planner's hold (50%, 2.75 s);
+- "Reach for the floor" (20% at 1.79 s, as before), the last step (19%) and the stand (14%);
+- the donkey's arm, and the left hand's reach on most species.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
