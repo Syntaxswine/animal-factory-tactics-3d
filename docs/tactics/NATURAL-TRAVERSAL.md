@@ -794,6 +794,12 @@ The gate on the horse, same rig, against the committed window (f70faa0):
 0.21 to 0.15 s over. Their capsule and point-speed failures were already there; the vault's capsule overlap moved from
 3.5 to 3.8 cm.
 
+On every mammal, the vault's required force passes (3.4 to 4.8 x BW) and its phantom check passes for four: the horse,
+both pigs and the rabbit. The dog has one short event in its first 20 ms (183 N). The other six each have one at 0.121 s
+in the step-in, 73 to 75 N against a 73.5 N limit. That is a 1 ms ripple in the centre of mass, and the previous commit
+has it too: 11% of body weight at 1 ms on the goat, against 10% now. There the gate's between-sample audit, which looks
+only inside the stretches its 0.1 ms re-scan flags, didn't look at it. A/B: the planner file moves what gets flagged.
+
 **Reach and clipping across the animals** (the window, every 10 ms; the gate's capsule pairs over 1 cm, worst):
 
 | | horse | goat | bull | cow | donkey | sheep | skunk | pig foreman | pig director | rabbit | dog |
@@ -804,7 +810,7 @@ The gate on the horse, same rig, against the committed window (f70faa0):
 
 - The donkey's right hand, pushed off its leg, folds into its own shoulder (7.1 cm at 4.43 s).
 - The cow's and the rabbit's right upper arm touch the trunk as the roll starts (4.1 and 3.9 cm; 4.5 and 4.6 before).
-- The left hand's shortfall was there before, 1 to 3 cm worse (bull 13.3, sheep 14.3 cm): their arms reach the floor
+- The left hand's shortfall was there before, up to 3 cm worse (sheep 14.3, bull 13.3 cm): their arms reach the floor
   later than the horse's.
 - The goat's legs are short of the get-up's step marks by up to 9.9 cm, from 13.8 cm short of its stance at the end.
 - The clearance fit's leftovers are within the test's limits on every mammal. `tests/natural-traversal.test.mjs`
