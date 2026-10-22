@@ -8,7 +8,7 @@ function description(p,root){
  const g=p.geometry,m=p.material;
  if(!p.isSkinnedMesh||p.parent!==root||!m||Array.isArray(m)||m.transparent||g.groups.length||Object.keys(g.morphAttributes).length)return null;
  if(p.matrixAutoUpdate)p.updateMatrix();
- if(!p.matrix.equals(identity)||!g.index||!p.skeleton)return null;
+ if(!p.matrix.equals(identity)||!p.skeleton)return null;
  const names=Object.keys(g.attributes).sort(),count=g.attributes.position.count;
  if(names.some(n=>{const a=g.attributes[n];return a.isInterleavedBufferAttribute||a.count!==count;}))return null;
  const layout=names.map(n=>{const a=g.attributes[n];return `${n}:${a.array.constructor.name}:${a.itemSize}:${a.normalized}:${a.gpuType}`;}).join('|');
@@ -28,7 +28,7 @@ export class CharacterBatches{
   const next=new Map();
   for(const [key,parts]of wanted){
    if(parts.length<2)continue;
-   const layout=parts.map(d=>`${d.p.id}:${d.count}:${d.p.geometry.index.count}`).join(','),old=this.groups.get(key);
+   const layout=parts.map(d=>`${d.p.id}:${d.count}:${d.p.geometry.index?.count??d.count}`).join(','),old=this.groups.get(key);
    let group=old;
    if(!group||group.layout!==layout){if(group)this.release(group);group=this.create(parts,layout);}
    this.update(group,parts);next.set(key,group);
@@ -38,7 +38,7 @@ export class CharacterBatches{
   this.groups=next;
  }
  create(parts,layout){
-  const first=parts[0].p,g=new T.BufferGeometry(),vertices=parts.reduce((n,p)=>n+p.count,0),indices=parts.reduce((n,{p})=>n+p.geometry.index.count,0);
+  const first=parts[0].p,g=new T.BufferGeometry(),vertices=parts.reduce((n,p)=>n+p.count,0),indices=parts.reduce((n,{p,count})=>n+(p.geometry.index?.count??count),0);
   for(const name of parts[0].names){const a=first.geometry.attributes[name],copy=new T.BufferAttribute(new a.array.constructor(vertices*a.itemSize),a.itemSize,a.normalized);copy.gpuType=a.gpuType;copy.setUsage(T.DynamicDrawUsage);g.setAttribute(name,copy);}
   g.setIndex(new T.BufferAttribute(new Uint32Array(indices),1).setUsage(T.DynamicDrawUsage));
   const mesh=new T.SkinnedMesh(g,first.material);mesh.name='Batched character body';mesh.userData.characterBatch=true;
@@ -57,10 +57,10 @@ export class CharacterBatches{
   for(const [i,{p,names,count}]of parts.entries()){
    const row=group.rows[i],source=p.geometry;
    for(const name of names){const a=source.attributes[name],old=row.attributes[name];if(!old||old.attribute!==a||old.version!==a.version){g.attributes[name].array.set(a.array,vertex*a.itemSize);g.attributes[name].needsUpdate=true;row.attributes[name]={attribute:a,version:a.version};}}
-   const start=source.drawRange.start,length=p.visible?Math.max(0,Math.min(source.index.count-start,source.drawRange.count)):0;
-   if(row.index!==source.index||row.version!==source.index.version||row.start!==start||row.length!==length||row.offset!==index){
-    for(let j=0;j<length;j++)g.index.array[index+j]=source.index.getX(start+j)+vertex;
-    indexChanged=true;Object.assign(row,{index:source.index,version:source.index.version,start,length,offset:index});
+   const start=source.drawRange.start,length=p.visible?Math.max(0,Math.min((source.index?.count??count)-start,source.drawRange.count)):0;
+   if(row.index!==source.index||row.version!==source.index?.version||row.start!==start||row.length!==length||row.offset!==index){
+    for(let j=0;j<length;j++)g.index.array[index+j]=(source.index?source.index.getX(start+j):start+j)+vertex;
+    indexChanged=true;Object.assign(row,{index:source.index,version:source.index?.version,start,length,offset:index});
    }
    index+=length;vertex+=count;
    if(p.visible){if(!p.boundingBox)p.computeBoundingBox();group.bounds.union(p.boundingBox);}

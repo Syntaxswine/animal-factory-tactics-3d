@@ -1,7 +1,9 @@
 import * as T from './vendor/three.module.js';
 import {BLOOD_ATLAS} from './painted-blood-spray-data.js';
 import {STAIN_ATLAS} from './painted-blood-followup-data.js';
-import {BloodSprayPool} from './blood-spray-pool.js';
+import {BloodSprayPool,BLOOD_EMITTER_LIMIT,BLOOD_PARTICLE_LIMIT} from './blood-spray-pool.js';
+import {FATAL_HEAD_ATLAS,FATAL_HEAD_CELLS} from './fatal-head-data.js';
+import {createFatalHeadMotion,FATAL_HEAD_DURATION} from './fatal-head-motion.js';
 import {BloodStainBatches} from './blood-stain-batches.js';
 import {gunshotSprayFrame,poseGunshotVictim} from './gunshot-spray-frame.js';
 import {canPresentBodyImpact,shotVisible} from './shot-coordinates.js';
@@ -24,19 +26,19 @@ export function bloodClipPlanes(world,placement){
 export class BattleBlood {
  constructor(scene,{loader,loading,onReady=()=>{},onError=()=>{},mode='full',textures}={}){
   this.scene=scene;this.mode=mode;this.seen=new Set();this.pending=new Map();this.disposed=false;this.textures=[];this.state=null;
-  const install=images=>{if(this.disposed){for(const t of images)t.dispose();return;}this.textures=images;this.pool=new BloodSprayPool(scene,images[0]);this.stains=new BloodStainBatches(images[1]);onReady();};
+  const install=images=>{if(this.disposed){for(const t of new Set(images))t.dispose();return;}this.textures=images;this.pool=new BloodSprayPool(scene,images[0]);this.stains=new BloodStainBatches(images[1]);if(images[2])this.fatalPool=new BloodSprayPool(scene,images[2],{cardCount:48,slotCount:4,duration:FATAL_HEAD_DURATION,motion:createFatalHeadMotion,cells:FATAL_HEAD_CELLS});onReady();};
   if(textures){install(textures);this.ready=Promise.resolve();}
   else {
-   loading?.start();this.ready=Promise.allSettled([BLOOD_ATLAS,STAIN_ATLAS].map(url=>loader.loadAsync(url))).then(results=>{
+   loading?.start();this.ready=Promise.allSettled([BLOOD_ATLAS,STAIN_ATLAS,FATAL_HEAD_ATLAS].map(url=>loader.loadAsync(url))).then(results=>{
     const images=results.filter(r=>r.status==='fulfilled').map(r=>r.value),failure=results.find(r=>r.status==='rejected');
-    if(failure){for(const t of images)t.dispose();if(!this.disposed)onError('Blood effects unavailable: '+failure.reason.message);}
+    if(failure){for(const t of new Set(images))t.dispose();if(!this.disposed)onError('Blood effects unavailable: '+(failure.reason?.message||'atlas could not load'));}
     else install(images);
    }).finally(()=>{loading?.end();if(!this.disposed)onReady();});
   }
  }
  setMode(mode){
   if(!['full','reduced','off'].includes(mode))mode='full';if(mode===this.mode)return;this.mode=mode;
-  this.pool?.clear();this.pending.clear();if(mode==='off')this.stains?.clear();else if(mode==='reduced')this.stains?.reduce();
+  this.pool?.clear();this.fatalPool?.clear();this.pending.clear();if(mode==='off')this.stains?.clear();else if(mode==='reduced')this.stains?.reduce();
  }
  begin(active,state,now,{reducedMotion=false,busy=false}={}){
   this.state=state;this.now=now;this.reducedMotion=reducedMotion;this.pending.clear();this.stampsRemaining=2;
@@ -63,9 +65,12 @@ export class BattleBlood {
    if(!placement.surfaceSource)continue; // No floating spray or empty-air stain.
    this.active.bodyVisualPlacements.set(receipt.projectileId,{placement:placement.placement,correction:placement.correction});
    const visualContact=placement.contact.clone();visualContact.shotLevel=placement.contact.shotLevel;this.active.bodyVisualContacts.set(receipt.projectileId,visualContact);
-   this.pool.spawn(placement,this.now,{seed:receipt.visualSeed,strength:Math.max(.7,Math.min(1.2,.7+.5*receipt.injuryDamage/receipt.maxHp)),reduced:this.mode==='reduced',still:this.reducedMotion,planes:bloodClipPlanes(world,placement)});
-   if(this.stampsRemaining>0&&!stampedRegions.has(receipt.zone)){
-    if(this.stains.stamp(id,model.worker,{...placement,visualSeed:receipt.visualSeed},this.now,{reduced:this.mode==='reduced'}))this.stampsRemaining--;
+   const fatal=receipt.fatalHead&&this.mode==='full'&&!!this.fatalPool&&model.fatalMask?.supported!==false,pool=fatal?this.fatalPool:this.pool;
+   this.pool.expire(this.now);this.fatalPool?.expire(this.now);
+   const emitters=this.pool.active+(this.fatalPool?.active||0),cards=this.pool.active*18+(this.fatalPool?.active||0)*48;
+   if(emitters<BLOOD_EMITTER_LIMIT&&cards+pool.cardCount<=BLOOD_PARTICLE_LIMIT)pool.spawn(placement,this.now,{seed:receipt.visualSeed,strength:Math.max(.7,Math.min(1.2,.7+.5*receipt.injuryDamage/receipt.maxHp)),reduced:this.mode==='reduced',still:this.reducedMotion,planes:bloodClipPlanes(world,placement)});
+   if(!fatal&&this.stampsRemaining>0&&!stampedRegions.has(receipt.zone)){
+    if(this.stains.stamp(id,model.worker,{...placement,zone:receipt.zone,visualSeed:receipt.visualSeed},this.now,{reduced:this.mode==='reduced'}))this.stampsRemaining--;
     stampedRegions.add(receipt.zone);
    }
   }
@@ -73,15 +78,17 @@ export class BattleBlood {
  }
  update(now,camera){
   this.pending.clear();this.stains?.sync();
-  if(this.reducedMotion&&this.pool)for(const slot of this.pool.slots)slot.still=true;
-  this.lastStats=this.pool?.update(now,camera,p=>this.mode!=='off'&&shotVisible(this.state,p));return this.lastStats;
+  if(this.reducedMotion)for(const pool of [this.pool,this.fatalPool])if(pool)for(const slot of pool.slots)slot.still=true;
+  const visible=p=>this.mode!=='off'&&shotVisible(this.state,p),ordinary=this.pool?.update(now,camera,visible),fatal=this.fatalPool?.update(now,camera,visible);
+  this.lastStats=ordinary&&{liveCards:ordinary.liveCards+(fatal?.liveCards||0),capacity:BLOOD_PARTICLE_LIMIT,drawCalls:ordinary.drawCalls+(fatal?.drawCalls||0)};return this.lastStats;
  }
  warm(renderer,camera,model){
   if(this.warmed||!this.pool||!model||!renderer.compile)return;
   this.warmed=true;const spray=this.pool.effect.mesh,slot=this.stains.slots[0],mesh=slot.mesh,parent=mesh.parent,visible=mesh.visible,rootVisible=model.root.visible;
-  spray.visible=true;mesh.skeleton=model.worker.skeleton;mesh.bindMatrix.copy(model.worker.parts[0].bindMatrix);mesh.bindMatrixInverse.copy(model.worker.parts[0].bindMatrixInverse);model.worker.root.add(mesh);mesh.visible=true;
-  model.root.visible=true;try{renderer.compile(this.scene,camera);}finally{model.root.visible=rootVisible;spray.visible=false;mesh.visible=visible;mesh.removeFromParent();if(parent)parent.add(mesh);}
+  const fatal=this.fatalPool?.effect.mesh,masked=model.fatalMask?.destroyed;
+  spray.visible=true;if(fatal)fatal.visible=true;model.fatalMask?.setDestroyed(true);mesh.skeleton=model.worker.skeleton;mesh.bindMatrix.copy(model.worker.parts[0].bindMatrix);mesh.bindMatrixInverse.copy(model.worker.parts[0].bindMatrixInverse);model.worker.root.add(mesh);mesh.visible=true;
+  model.root.visible=true;try{renderer.compile(this.scene,camera);}finally{model.root.visible=rootVisible;model.fatalMask?.setDestroyed(masked);spray.visible=false;if(fatal)fatal.visible=false;mesh.visible=visible;mesh.removeFromParent();if(parent)parent.add(mesh);}
  }
- clear(){this.pool?.clear();this.stains?.clear();this.pending.clear();this.seen.clear();this.active=null;}
- dispose(){if(this.disposed)return;this.disposed=true;this.clear();this.pool?.dispose();this.stains?.dispose();for(const t of this.textures)t.dispose();this.textures=[];}
+ clear(){this.pool?.clear();this.fatalPool?.clear();this.stains?.clear();this.pending.clear();this.seen.clear();this.active=null;}
+ dispose(){if(this.disposed)return;this.disposed=true;this.clear();this.pool?.dispose();this.fatalPool?.dispose();this.stains?.dispose();for(const t of new Set(this.textures))t.dispose();this.textures=[];}
 }

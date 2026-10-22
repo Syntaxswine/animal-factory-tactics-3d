@@ -36,7 +36,7 @@ export class BattleCombat {
     shot.paintedFire=!!event.flame&&paintedOperatorSupported(shooter);
     shot.heldCasualties=[...new Set([...(event.downed||[]),...(event.bodyImpacts||[]).filter(r=>r.fatalHead).map(r=>r.victimId)])];
     this.queue.push(shot);
-    for(const id of shot.heldCasualties){const prior=this.previous.get(id);if(prior)this.held.set(id,prior);}
+    for(const id of shot.heldCasualties){const receipt=event.bodyImpacts?.find(r=>r.victimId===id),victim=state.units.find(u=>u.id===id),prior=this.previous.get(id)||(receipt&&victim?{...victim,hp:receipt.hpBefore,casualty:receipt.casualtyBefore,fatalHead:undefined}:null);if(prior)this.held.set(id,prior);}
     for(const fall of event.falls||[])if(this.previous.has(fall.id)&&!this.falling.has(fall.id))this.falling.set(fall.id,fall.from);
    }
   }

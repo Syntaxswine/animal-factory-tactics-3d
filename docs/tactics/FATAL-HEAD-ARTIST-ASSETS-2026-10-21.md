@@ -2,6 +2,11 @@
 
 Artist delivery · 21 October 2026 · Independent visual review: **9/10**
 
+Builder follow-up, 22 October: live gameplay now consumes these assets through
+the character batches and casualty equipment path. See
+[integration behavior, budgets and validation](GUNSHOT-IMPACT-INTEGRATION.md#fatal-presentation-and-released-weapons).
+The original study contract and its limits are retained below.
+
 This supplies the missing artist presentation for a **fatal-head outcome already
 resolved by the game**: a brief painted burst, a few falling generic fragments,
 reversible head removal and a sealed painted neck. It reuses the existing

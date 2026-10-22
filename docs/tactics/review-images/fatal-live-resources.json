@@ -1,0 +1,516 @@
+{
+  "measuredAt": "2026-10-22T06:59:14.289Z",
+  "runtime": "v24.15.0",
+  "cpu": "AMD Ryzen 7 5800X 8-Core Processor             ",
+  "logicalCpus": 16,
+  "scope": "Warm Node CPU timings and geometry/draw accounting. No WebGL, browser/GPU, rendering passes or full-sector FPS measurement. Mask preparation belongs to asset loading; steady timing excludes rig posing. Settings switches include bounding-box skinning and batch rebuild. Background OS workloads are uncontrolled.",
+  "milliseconds": {
+    "stableMaskAndBatches": {
+      "operationsPerSample": 50,
+      "samples": 100,
+      "p50": 0.029573999999997796,
+      "p95": 0.048391999999998915,
+      "max": 0.05689600000000155
+    },
+    "settingSwitch": {
+      "operationsPerSample": 5,
+      "samples": 40,
+      "p50": 0.8767199999999775,
+      "p95": 1.460719999999992,
+      "max": 1.938779999999997
+    }
+  },
+  "roster": [
+    {
+      "species": "horse",
+      "prepareMs": 23.438799999999986,
+      "trianglesBefore": 10300,
+      "trianglesAfter": 8059,
+      "sealDraws": 1,
+      "batchDraws": 1,
+      "supported": true,
+      "reason": "ready",
+      "cutoff": 0.45,
+      "maskedParts": [
+        {
+          "name": "unified skull jaw neck and ears",
+          "before": 2498,
+          "after": 557,
+          "discardedComponents": 1
+        },
+        {
+          "name": "mane crest",
+          "before": 300,
+          "after": 0,
+          "discardedComponents": 0
+        }
+      ],
+      "closureLoops": 1,
+      "closureTriangles": 67,
+      "attachments": 0
+    },
+    {
+      "species": "goat",
+      "prepareMs": 14.849699999999984,
+      "trianglesBefore": 9994,
+      "trianglesAfter": 7283,
+      "sealDraws": 1,
+      "batchDraws": 1,
+      "supported": true,
+      "reason": "ready",
+      "cutoff": 0.45,
+      "maskedParts": [
+        {
+          "name": "unified goat skull ears and swept horns",
+          "before": 2798,
+          "after": 287,
+          "discardedComponents": 0
+        },
+        {
+          "name": "goat beard",
+          "before": 200,
+          "after": 0,
+          "discardedComponents": 0
+        }
+      ],
+      "closureLoops": 1,
+      "closureTriangles": 59,
+      "attachments": 0
+    },
+    {
+      "species": "bull",
+      "prepareMs": 13.847999999999956,
+      "trianglesBefore": 9998,
+      "trianglesAfter": 7672,
+      "sealDraws": 1,
+      "batchDraws": 1,
+      "supported": true,
+      "reason": "ready",
+      "cutoff": 0.45,
+      "maskedParts": [
+        {
+          "name": "unified bull skull ears and short horns",
+          "before": 2720,
+          "after": 394,
+          "discardedComponents": 0
+        }
+      ],
+      "closureLoops": 1,
+      "closureTriangles": 62,
+      "attachments": 0
+    },
+    {
+      "species": "cow",
+      "prepareMs": 12.836000000000013,
+      "trianglesBefore": 10184,
+      "trianglesAfter": 8128,
+      "sealDraws": 1,
+      "batchDraws": 1,
+      "supported": true,
+      "reason": "ready",
+      "cutoff": 0.45,
+      "maskedParts": [
+        {
+          "name": "unified cow skull ears and forehead tuft",
+          "before": 2460,
+          "after": 404,
+          "discardedComponents": 0
+        }
+      ],
+      "closureLoops": 1,
+      "closureTriangles": 64,
+      "attachments": 0
+    },
+    {
+      "species": "donkey",
+      "prepareMs": 18.4212,
+      "trianglesBefore": 10110,
+      "trianglesAfter": 7587,
+      "sealDraws": 1,
+      "batchDraws": 1,
+      "supported": true,
+      "reason": "ready",
+      "cutoff": 0.45,
+      "maskedParts": [
+        {
+          "name": "unified donkey skull muzzle and long ears",
+          "before": 2596,
+          "after": 323,
+          "discardedComponents": 0
+        },
+        {
+          "name": "donkey mane crest",
+          "before": 250,
+          "after": 0,
+          "discardedComponents": 0
+        }
+      ],
+      "closureLoops": 1,
+      "closureTriangles": 69,
+      "attachments": 0
+    },
+    {
+      "species": "sheep",
+      "prepareMs": 12.594000000000051,
+      "trianglesBefore": 10476,
+      "trianglesAfter": 8134,
+      "sealDraws": 1,
+      "batchDraws": 1,
+      "supported": true,
+      "reason": "ready",
+      "cutoff": 0.45,
+      "maskedParts": [
+        {
+          "name": "unified sheep skull ears and wool",
+          "before": 2600,
+          "after": 258,
+          "discardedComponents": 0
+        }
+      ],
+      "closureLoops": 1,
+      "closureTriangles": 72,
+      "attachments": 0
+    },
+    {
+      "species": "skunk",
+      "prepareMs": 14.382099999999923,
+      "trianglesBefore": 9998,
+      "trianglesAfter": 8290,
+      "sealDraws": 1,
+      "batchDraws": 1,
+      "supported": true,
+      "reason": "ready",
+      "cutoff": 0.45,
+      "maskedParts": [
+        {
+          "name": "unified skunk skull rounded ears and muzzle",
+          "before": 2000,
+          "after": 292,
+          "discardedComponents": 0
+        }
+      ],
+      "closureLoops": 1,
+      "closureTriangles": 56,
+      "attachments": 0
+    },
+    {
+      "species": "pig-foreman",
+      "prepareMs": 12.931500000000028,
+      "trianglesBefore": 9988,
+      "trianglesAfter": 7584,
+      "sealDraws": 1,
+      "batchDraws": 1,
+      "supported": true,
+      "reason": "ready",
+      "cutoff": 0.45,
+      "maskedParts": [
+        {
+          "name": "unified pig skull folded ears and snout",
+          "before": 2050,
+          "after": 346,
+          "discardedComponents": 0
+        },
+        {
+          "name": "skull service cap crown band and visor",
+          "before": 700,
+          "after": 0,
+          "discardedComponents": 0
+        }
+      ],
+      "closureLoops": 1,
+      "closureTriangles": 70,
+      "attachments": 0
+    },
+    {
+      "species": "pig-director",
+      "prepareMs": 7.57770000000005,
+      "trianglesBefore": 9998,
+      "trianglesAfter": 8032,
+      "sealDraws": 1,
+      "batchDraws": 1,
+      "supported": true,
+      "reason": "ready",
+      "cutoff": 0.45,
+      "maskedParts": [
+        {
+          "name": "unified director skull folded ears and snout",
+          "before": 2150,
+          "after": 184,
+          "discardedComponents": 0
+        }
+      ],
+      "closureLoops": 1,
+      "closureTriangles": 54,
+      "attachments": 0
+    },
+    {
+      "species": "rabbit",
+      "prepareMs": 25.432199999999966,
+      "trianglesBefore": 10156,
+      "trianglesAfter": 8185,
+      "sealDraws": 1,
+      "batchDraws": 1,
+      "supported": true,
+      "reason": "ready",
+      "cutoff": 0.45,
+      "maskedParts": [
+        {
+          "name": "unified rabbit skull and leaf ears",
+          "before": 2490,
+          "after": 519,
+          "discardedComponents": 0
+        }
+      ],
+      "closureLoops": 1,
+      "closureTriangles": 73,
+      "attachments": 0
+    },
+    {
+      "species": "dog",
+      "prepareMs": 13.63650000000007,
+      "trianglesBefore": 10446,
+      "trianglesAfter": 8689,
+      "sealDraws": 1,
+      "batchDraws": 1,
+      "supported": true,
+      "reason": "ready",
+      "cutoff": 0.45,
+      "maskedParts": [
+        {
+          "name": "unified dog skull and upright ears",
+          "before": 2250,
+          "after": 493,
+          "discardedComponents": 0
+        }
+      ],
+      "closureLoops": 1,
+      "closureTriangles": 75,
+      "attachments": 0
+    },
+    {
+      "species": "hen",
+      "prepareMs": 14.948199999999815,
+      "trianglesBefore": 10348,
+      "trianglesAfter": 8076,
+      "sealDraws": 1,
+      "batchDraws": 1,
+      "supported": true,
+      "reason": "ready",
+      "cutoff": 0.8,
+      "maskedParts": [
+        {
+          "name": "head and feathered neck",
+          "before": 1330,
+          "after": 610,
+          "discardedComponents": 0
+        },
+        {
+          "name": "rounded comb",
+          "before": 522,
+          "after": 0,
+          "discardedComponents": 0
+        },
+        {
+          "name": "short hooked beak",
+          "before": 650,
+          "after": 0,
+          "discardedComponents": 0
+        },
+        {
+          "name": "paired wattles",
+          "before": 380,
+          "after": 0,
+          "discardedComponents": 0
+        }
+      ],
+      "closureLoops": 1,
+      "closureTriangles": 74,
+      "attachments": 0
+    }
+  ],
+  "weapons": [
+    {
+      "weapon": "knife",
+      "draws": 4,
+      "components": 1,
+      "triangles": 724,
+      "creationMilliseconds": {
+        "operationsPerSample": 5,
+        "samples": 30,
+        "p50": 1.529800000000023,
+        "p95": 2.550019999999995,
+        "max": 2.916820000000007
+      }
+    },
+    {
+      "weapon": "pistol",
+      "draws": 4,
+      "components": 1,
+      "triangles": 464,
+      "creationMilliseconds": {
+        "operationsPerSample": 5,
+        "samples": 30,
+        "p50": 0.9834800000000087,
+        "p95": 1.8929200000000037,
+        "max": 1.9605599999999868
+      }
+    },
+    {
+      "weapon": "rifle",
+      "draws": 3,
+      "components": 1,
+      "triangles": 480,
+      "creationMilliseconds": {
+        "operationsPerSample": 5,
+        "samples": 30,
+        "p50": 0.9707800000000134,
+        "p95": 2.191200000000026,
+        "max": 3.398660000000018
+      }
+    },
+    {
+      "weapon": "assault",
+      "draws": 5,
+      "components": 1,
+      "triangles": 1340,
+      "creationMilliseconds": {
+        "operationsPerSample": 5,
+        "samples": 30,
+        "p50": 3.102779999999984,
+        "p95": 5.184580000000006,
+        "max": 5.510699999999997
+      }
+    },
+    {
+      "weapon": "smg",
+      "draws": 5,
+      "components": 1,
+      "triangles": 1112,
+      "creationMilliseconds": {
+        "operationsPerSample": 5,
+        "samples": 30,
+        "p50": 3.8277000000000045,
+        "p95": 4.305940000000009,
+        "max": 5.353499999999985
+      }
+    },
+    {
+      "weapon": "hmg",
+      "draws": 7,
+      "components": 1,
+      "triangles": 2580,
+      "creationMilliseconds": {
+        "operationsPerSample": 5,
+        "samples": 30,
+        "p50": 8.35033999999996,
+        "p95": 11.722299999999995,
+        "max": 11.996500000000015
+      }
+    },
+    {
+      "weapon": "shotgun",
+      "draws": 5,
+      "components": 1,
+      "triangles": 1468,
+      "creationMilliseconds": {
+        "operationsPerSample": 5,
+        "samples": 30,
+        "p50": 4.835159999999997,
+        "p95": 6.803019999999924,
+        "max": 7.928179999999884
+      }
+    },
+    {
+      "weapon": "sniper",
+      "draws": 5,
+      "components": 1,
+      "triangles": 1056,
+      "creationMilliseconds": {
+        "operationsPerSample": 5,
+        "samples": 30,
+        "p50": 3.423160000000098,
+        "p95": 4.667579999999907,
+        "max": 5.4415199999999455
+      }
+    },
+    {
+      "weapon": "grenade",
+      "draws": 4,
+      "components": 1,
+      "triangles": 820,
+      "creationMilliseconds": {
+        "operationsPerSample": 5,
+        "samples": 30,
+        "p50": 2.6889799999999013,
+        "p95": 3.9192399999999905,
+        "max": 4.442739999999867
+      }
+    },
+    {
+      "weapon": "launcher",
+      "draws": 5,
+      "components": 1,
+      "triangles": 1072,
+      "creationMilliseconds": {
+        "operationsPerSample": 5,
+        "samples": 30,
+        "p50": 3.5047800000000278,
+        "p95": 5.107279999999991,
+        "max": 5.163940000000002
+      }
+    },
+    {
+      "weapon": "rpg",
+      "draws": 7,
+      "components": 1,
+      "triangles": 1608,
+      "creationMilliseconds": {
+        "operationsPerSample": 5,
+        "samples": 30,
+        "p50": 5.046419999999853,
+        "p95": 6.522500000000036,
+        "max": 6.872959999999876
+      }
+    },
+    {
+      "weapon": "flamethrower",
+      "draws": 6,
+      "components": 3,
+      "triangles": 2024,
+      "creationMilliseconds": {
+        "operationsPerSample": 5,
+        "samples": 30,
+        "p50": 6.113920000000144,
+        "p95": 8.005619999999908,
+        "max": 8.69398000000001
+      }
+    }
+  ],
+  "budgets": {
+    "liveCards": 216,
+    "allocatedCards": 408,
+    "sprayDraws": 2,
+    "stainDraws": 2,
+    "retainedStainActors": 2,
+    "releasedCasualtyActors": 2,
+    "releasedItemsPerActor": 2,
+    "maxMaterialDrawsPerItem": 9,
+    "decodedAtlasesMiB": 4
+  },
+  "sourceSha256": {
+    "battle-blood.js": "8c22d5f448afeeca5dbd1e7bfff0af7cf20ec13109a4d50bd547d79d5730fcde",
+    "battle-fatal-head.js": "c9598fae2f2cf4372076b83b221f24483b48bd83b22d448208f47f77705de165",
+    "battle-weapon-drops.js": "7c973b12c03d4407934663e91c1405fa5b8314905960736ee7e8ef27987a1aae",
+    "casualty-weapon-assembly.js": "525b637652251d46a30dc7968349833a79bb472275888117e290287c895324b0",
+    "character-batches.js": "fe1504901c0a100eaf773f097aa8d0285ab32ab879d69d568204da7de7f40daf",
+    "blood-stain-batches.js": "d5811517942951979e9f23214eafe4e2036bdae2771d5b6dbcb2f77103b1a177",
+    "fatal-head-mask.js": "137e7745f4e7dd9f87bc473574ab9b047a9b651444e2fac56dd1bf6239ea656f",
+    "fatal-head-motion.js": "928bb8fe86708d235d790b092c1d7b661c5a1cb7b9d18b9d01752af21a6948c7",
+    "rifle-firing.js": "d36112fba074cf6d3745c6985e1de857c9f813114eaa17b1305f783f666caf74",
+    "offhand-equipment.js": "c2626a57ebb85b66dc1da91f5cecd3e66b2d3fd56e3f9be2857be7b2779040a0",
+    "blood-spray-pool.js": "00317d538951a5d89e5f7ffb2775e250d14a9bcac8764c3248059ea810fefdb6",
+    "battle-renderer.js": "a3e313638b90661b9ce311c41660918a35e9d66af35fce43fb23a8e3f719557c",
+    "weapon-models.js": "d41f0a59d7ac32331e095a5019bb93d8d40f5f2817c24c0a8e0c05ecf412253f",
+    "gunshot-spray-frame.js": "75396be9e0fa86bbb512677540de2ab69c760627fab82da27181173077b2a838"
+  }
+}

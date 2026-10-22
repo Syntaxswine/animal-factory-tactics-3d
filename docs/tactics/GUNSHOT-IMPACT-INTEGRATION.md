@@ -1,6 +1,6 @@
 # Gunshot impact integration
 
-Ordinary gunshot wounds now play the artist's painted entry spray and skinned entry stains during battle. Effects consume the resolved body-impact records; ordinary hit and damage rules remain in force. A qualifying head hit commits a permanent death even on Easy, while other lethal gunshots retain their existing casualty rules. Per-species head destruction and gameplay-qualified exit effects remain separate work.
+Ordinary gunshot wounds play the artist's painted entry spray and skinned entry stains during battle. Qualifying fatal heads now use the approved burst, native masks and neck seals in the live character-batching path. Casualties release their displayed weapons, which land before fading. All these effects consume committed outcomes; ordinary hit and damage rules remain in force. A qualifying head hit commits a permanent death even on Easy, while other lethal gunshots retain their existing casualty rules. Gameplay-qualified exit effects remain separate work.
 
 ## Fatal head rule
 
@@ -73,24 +73,37 @@ Open `tactics/battle-3d.html?study=gunshot-impacts` in the packaged build for a 
 
 | Resource | Limit |
 | --- | --- |
-| Concurrent entry emitters | 12 reusable slots |
-| Live cards | 216 total; 18 per Full hit, 5 per Reduced hit |
-| Entry lifetime | 0.48 seconds; still/fade within 0.18 seconds |
-| Spray draw work | One instanced mesh, shared geometry and material |
+| Concurrent emitters | At most 12 across ordinary and fatal effects |
+| Live cards | Shared admission cap of 216; 18 per ordinary Full hit, 48 per fatal Full hit, 5 per Reduced hit |
+| Allocated card storage | 216 ordinary + 192 fatal cards, reused; the shared live cap still applies |
+| Lifetime | Ordinary 0.48 seconds; fatal 0.9 seconds; still/fade within 0.18 seconds |
+| Spray draw work | At most two shared instanced meshes, one per atlas |
 | Retained stains | Four patches on each of the two most recently wounded actors; one actor in Reduced |
 | Stain draw work | One merged skinned mesh per retained actor |
-| Main-pass added draws | At most three, before any additional scene render passes |
+| Spray and stain main-pass draws | At most four, before additional render passes; neck seals and weapon proxies are accounted separately below |
 | Patch geometry | At most 256 triangles per patch, 1,024 per retained actor |
 | Projection work per frame | At most two new stamps; pellets share a retained patch per victim and region |
-| Shared skins | Entry and stain atlases, both 512 × 512; about 2.67 MiB decoded with mipmaps |
+| Shared skins | Entry, stain and fatal atlases, each 512 × 512; about 4 MiB decoded with mipmaps |
 
 Overflow omits cosmetic sprays and retires the oldest retained actor's patches. Older wounds still apply mechanically. Pool meshes, attributes and motion records are reused; no per-hit mesh, material, image decoding or model fetch is needed. Assets and materials are prepared before the first hit. Vertex projection reuses buffers, skins each queried vertex once per call, and invalidates those values on every new pose/contact. An [uncapped projector audit](review-images/gunshot-stain-equivalence.json) against the approved adapter at `00fe001` produced identical stain positions, UVs, selected triangles and bone weights in 25 varied posed contacts. Runtime patches additionally obey the 256-triangle cap above.
 
 A [warm Node CPU benchmark](review-images/gunshot-entry-cpu.json), repeated after the full release run finished, compares the approved projector with this revision on the same horse torso contact. At p95 per-operation wall time fell from 1.50 to 0.35 ms for projection; full capture, including posing, bounds, contact correction and a stain, took 3.58 ms. Updating twelve emitters/216 cards measured 0.21 ms p95, excluding retained stains, rendering and GPU costs. Samples average batches to reduce Windows timer quantization; process CPU counters are included but remain coarse for sub-millisecond operations. This is a CPU-only sample, not proof that hit frames meet 60 FPS; capture and full-game GPU work remain profiling priorities.
 
-## Next visual stage
+## Fatal presentation and released weapons
 
-The special head presentation is separate from this entry-spray tranche and still needs integration with the committed fatal outcome and instance-local species/outfit masks. Until it is integrated, fatal-head outcomes use the normal casualty appearance. Exit spray and exit stains remain artist studies: gameplay receipts do not contain a penetration result or exit contact, so live entry-only effects do not invoke them.
+The [live fatal adapter](../../dist/tactics/battle-fatal-head.js) prepares the artist's instance-local mask during actor loading. Pose/contact solvers use original geometry; the mask is applied afterwards. Character batches now accept both indexed and non-indexed native surfaces and rebuild their render copy when the mask changes. Unknown masks retain the ordinary entry/casualty appearance. Each authored neck boundary adds one small skinned seal while visible; these persistent per-casualty draws are additional to the transient spray/stain budget.
+
+Full uses the committed `fatalHead` marker, after the matching discharge, to remove the head and play the fatal burst. Reduced uses the ordinary small entry spray and an intact-head casualty. Off keeps the intact-head casualty without blood. Reduced motion is independent: Full still uses its selected mask, with one stationary fading mark. Loading a saved fatality applies the selected mask without a historical burst or weapon fall. Visibility/concealment gates effects; later discovery does not replay hidden impacts. An impact on a previously stabilized casualty uses its fallen pre-impact pose for surface placement.
+
+Head-local patches are retired with the head. Remaining patches read their original source vertex indices and current skin bindings; affected triangles crossing the removed boundary are omitted. Body and forearm stains remain under the same global retention cap. Mask disposal restores original geometry before the actor/rig is destroyed, without owning shared paintings, skeletons or atlases. An inactive mask leaves fire/ash attachment visibility to the fire controller.
+
+[BattleWeaponDrops](../../dist/tactics/battle-weapon-drops.js) captures the last displayed living weapon matrices before the casualty pose releases the grasp. Primary and paired one-handed items produce independent cosmetic proxies; unarmed actors produce none. The original held objects are hidden while down. The engine retains its single inventory/loot item, drop chance, ammo and condition. Proxies have no picking or damage behavior and retire if the associated real item is taken, if visibility is lost, on reset/load, or after their fade. Revival returns equipment presentation to the unit's current loadout.
+
+Weapon parts are batched by material while preserving UVs and object-space painted coordinates. There are at most two released casualty assemblies at once, up to two held items each, and nine material draws per item: a conservative limit of 36 transient main-pass draws. Original weapon resources are shared read-only during capture; private proxy geometry and materials are disposed on retirement. The fuel lance, hose and backpack are snapshotted together rather than leaving attached pieces suspended at the old body pose.
+
+The artist's analytic release uses world-down acceleration of 9.81 render units/s² and finds the first contact of the rotating rigid surface with the captured support plane. It remains opaque in flight, settles for 0.12 seconds, then fades for 0.45 seconds. It is a cosmetic rigid approximation, including the frozen hose shape, rather than a calibrated SI rigid-body, flexible-tether or wall/roof-edge collision solver. No blast or dropped-grenade detonation is inferred. Embedded starting poses are rejected rather than translated upwards at death. Living prone one-handed/flame holds are kept level; HMG/RPG holds reuse the supported shoulder/hand solution, including the existing compact RPG carry for short-armed pigs.
+
+Exit spray and exit stains remain artist studies: gameplay receipts do not contain a penetration result or exit contact. Live entry effects do not infer either from body bounds.
 
 The checks cover threshold boundaries, resistance, incidental regions, casualties, per-pellet association, hidden-source traces, saved outcomes, event deduplication, six layers and support snapshots. Fifty pooled saturation/reset cycles retain the same geometry, instance attributes and motion buffers. GPU frame-time targets still require a controlled browser/GPU measurement; bounded draw counts and CPU-only measurements do not establish a 60 FPS claim.
 
@@ -99,3 +112,16 @@ The checks cover threshold boundaries, resistance, incidental regions, casualtie
 Canonical `c87358d` was reconciled in `00fe001`, retaining the shared six-layer coordinate/visibility handling, hidden-source traces and canonical's release repairs. The fresh full release run (`node --test --test-concurrency=4 tests/*.test.mjs`) completed with **2,871 passed, zero failures and six pre-existing speaking-head TODOs**, exit code 0. The final projection, pool, settings, lifetime, ownership, visibility and artist subset was rerun after the last changes: **41 passed**. The integration pass also passed 53 combat/aim/renderer/asset/module-list checks. Core and fixture reproduction, asset audit, release syntax checks and the packaged build pass.
 
 In the packaged game, a normal full-aim torso shot reduced Boris from 70 to 25 HP, with one emitter, 18 cards and one stain batch. Yakov spent 12 AP and one rifle round. Off immediately removed the blood; restoring Full did not replay it. Save/load restored the shot's AP and ammo costs without replaying or restoring cosmetic blood. Checked pages had no browser warning/error messages. The temporary review tab and registered server were closed, with port 4496 released.
+
+### Fatal/weapon follow-up — 22 October 2026
+
+Canonical `781246a` supplies the approved art and review. Live tests cover masked batches on all twelve animals, saved fatalities, matching discharges (including first-observed and already stabilized casualties), body/head stain separation, shared particle limits, pause/settings, transfers, paired sidearms and resource ownership. All twelve weapon kinds have supported surface/fade checks on layer 6; the horse's three living stances and the armed roster's prone HMG/RPG/flamethrower releases are checked through the actual renderer pose path.
+
+The packaged battle used ordinary player commands: a 45-injury torso shot left Boris at 25 HP; a later 69-injury head shot met the resulting 50-point fatal threshold. Full removed the head, Off restored the ordinary casualty, and switching back did not replay the burst. Save/load retained the dead appearance, 0 AP and three loaded Mosin rounds without replaying cosmetics. The checked pages had no application warning/error logs. These are live battle results, not forced rolls or the artist's authored contact probe.
+
+![Full appearance after the committed fatal head hit](review-images/fatal-live-full.png)
+![Off at the same paused hit, with the same permanent outcome](review-images/fatal-live-off.png)
+
+The fresh full regression run completed with **2,916 passed, zero failures and six existing speaking-head TODOs**, exit code 0. Final focused runs passed 74 effect/packaging checks (including the additional stabilized-casualty regression) and 42 pose/offhand checks. The packaged build, asset audit, 11-case impact-fixture reproduction, core reproduction and changed-module syntax checks pass. The review tab and registered temporary server are closed; port 4497 was released and its restart record retained.
+
+After the full test runner exited, `node tools/measure-fatal-live.mjs` recorded [reproducible CPU and resource evidence](review-images/fatal-live-resources.json) on Node 24.15 / Ryzen 7 5800X. For a warm pig-foreman model, the fatal wrapper plus character-batch sync measured **0.048 ms p95**, excluding rig posing. Switching masks, skinning bounds and rebuilding that model's batch measured **1.46 ms p95**. All twelve native animal masks produced one neck-seal draw each. Measured released assemblies used three to seven material draws per item, below the conservative nine-draw cap. The report includes per-model preparation, per-weapon construction timings and source hashes. These are Node wall-time samples with uncontrolled background OS work; they exclude shader compilation, browser/GPU rendering and whole-sector frame time. They do not establish 60 FPS.

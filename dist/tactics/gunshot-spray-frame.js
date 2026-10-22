@@ -12,7 +12,7 @@ const UP=new T.Vector3(0,1,0),SIDE=new T.Vector3(0,0,1);
 export function poseGunshotVictim(model,receipt){
  const {worker,root,posture,locomotion}=model,v=receipt.victim;
  root.position.set(0,0,0);worker.root.position.set(0,0,0);worker.pose('neutral');
- const pose=v.stance==='prone'?{prone:1}:v.stance==='kneeling'?{kneel:1}:{};
+ const fallen=receipt.hpBefore<=0&&['stable','bleeding','dead'].includes(receipt.casualtyBefore),pose=fallen?{down:1,stable:receipt.casualtyBefore==='stable'?1:0,dead:receipt.casualtyBefore==='dead'?1:0}:v.stance==='prone'?{prone:1}:v.stance==='kneeling'?{kneel:1}:{};
  const sample={heading:v.heading,distance:0,blend:0,pose};locomotion.apply(sample);posture.apply(sample,{equipment:false});if(Object.keys(pose).length)posture.ground();
  root.position.set(v.x,v.support.level*DIMENSIONS.floorSpacing+v.support.offset,v.y);root.updateMatrixWorld(true);worker.skeleton.update();
  for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}

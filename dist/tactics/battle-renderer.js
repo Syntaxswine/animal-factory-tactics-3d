@@ -31,6 +31,8 @@ import {BattleFire} from './battle-fire.js';
 import {BattleTankEffects} from './battle-tank-effects.js';
 import {motionPreference,readSettings} from './settings-3d.js';
 import {BattleBlood} from './battle-blood.js';
+import {prepareFatalHead,presentFatalHead} from './battle-fatal-head.js';
+import {BattleWeaponDrops} from './battle-weapon-drops.js';
 import {prepareBloodProjection} from './painted-blood-stain.js';
 import {barrelTarget,presentBarrel} from './explosive-barrels.js';
 import {CharacterBatches,CHARACTER_PICK_LAYER} from './character-batches.js';
@@ -47,6 +49,7 @@ export class BattleRenderer extends HybridRenderer {
   this.traversal=new BattleTraversal(prepareLadderRoute);this.combat=new BattleCombat();this.shotEffects=new BattleShotEffects(this.scene);
   this.impactDebug=new GunshotImpactDebug(this.scene,{enabled:new URLSearchParams(globalThis.location?.search||'').get('impactDebug')==='1'||new URLSearchParams(globalThis.location?.search||'').get('study')==='gunshot-impacts'});
   this.blood=new BattleBlood(this.scene,{loader:this.loader,loading:this.loading,mode:readSettings().blood,onReady,onError:message=>this.diagnostics.push(message)});
+  this.weaponDrops=new BattleWeaponDrops(this.scene,{onError:message=>{if(!this.diagnostics.includes(message))this.diagnostics.push(message);}});
   this.flameEffects=new BattleFlameEffects(this.scene);
   this.grenades=new BattleGrenades(this.scene,{loader:this.loader,onError:message=>this.diagnostics.push(message)});
   this.fire=new BattleFire(this);
@@ -77,11 +80,20 @@ export class BattleRenderer extends HybridRenderer {
    prepareBloodProjection(worker.parts);
    const root=new T.Group();root.add(worker.root);
    const posture=createBattlePosture(worker,profile),locomotion=createWorkerLocomotion(worker,profile);
-   this.models.set(unit.id,{worker,paint,root,profile,locomotion,posture,cap,offhand:createOffhandEquipment(worker),batches:new CharacterBatches(worker,root)});this.actors.set(unit.id,root);this.scene.add(root);
+   await this.blood.ready;
+   if(generation!==this.generation){locomotion.dispose();cap?.dispose();paint.dispose();worker.dispose();return;}
+   const model={worker,paint,root,profile,locomotion,posture,cap,offhand:createOffhandEquipment(worker),batches:new CharacterBatches(worker,root)};model.fatalMask=prepareFatalHead(model,this.blood.textures[2]);
+   this.models.set(unit.id,model);this.actors.set(unit.id,root);this.scene.add(root);
   }catch(error){cap?.dispose();paint?.dispose();worker?.dispose();this.loading.fail(error);this.diagnostics.push(error.message);if(this.traversal?.active?.event.unitId===unit.id)this.traversal.finish();}
   finally{this.loading.end();if(generation===this.generation)this.onReady();}
  }
  actor(unit){
+  const model=this.models.get(unit.id);if(!model)return BattleRenderer.prototype.poseActor.call(this,unit);
+  const now=this.presentationNow??performance.now();this.weaponDrops?.beforeActor(unit,model,this.state,now);
+  const result=presentFatalHead(model,unit,this.blood?.mode,()=>BattleRenderer.prototype.poseActor.call(this,unit),this.blood?.stains);
+  this.weaponDrops?.afterActor(unit,model);return result;
+ }
+ poseActor(unit){
   const model=this.models.get(unit.id);
   if(!model){if(!this.pending.has(unit.id))this.loadModel(unit);return null;}
   this.blood?.warm(this.renderer,this.camera,model);
@@ -103,7 +115,8 @@ export class BattleRenderer extends HybridRenderer {
   if(unit.hp<=0||this.reducedMotion?.matches)model.drawRequested=false;
   if(model.draw&&(unit.hp<=0||model.weapon!==unit.weapon||this.reducedMotion?.matches)){model.draw.dispose();model.draw=null;model.drawRequested=false;}
   const signature=`${handWeapons(unit).join(',')}:${model.drawRequested||model.draw?now:''}:${JSON.stringify(sample.pose)}:${unit.casualty}:${unit.weapon}:${sample.heading}:${unit.hp>0}:${sample.blend}:${sample.blend?sample.distance:0}:${shot?.start}:${shot?.phase.aim}:${shot?.phase.recoil}`;
-  if(model.signature!==signature){
+  const poseChanged=model.signature!==signature;
+  if(poseChanged){
    // Authoring rigs solve carry grips in model space. Position only after posing.
    root.position.set(0,0,0);root.updateMatrixWorld(true);
    model.signature=signature;
@@ -122,7 +135,7 @@ export class BattleRenderer extends HybridRenderer {
     if(!result.supported){shot.traceOrigin=null;if(shot.phase.discharged){shot.presentationUnsupported=true;shot.presentationReason=result.reason;}}
     this.firingDiagnostic(model,shot.presentationUnsupported?{supported:false,reason:shot.presentationReason}:result,unit);
    }
-   else if(unit.hp>0&&!(sample.pose?.down>0)&&sample.pose?.prone>0&&!profile.unarmed&&['rifle','assault','smg','shotgun','sniper'].includes(unit.weapon)){
+   else if(unit.hp>0&&!(sample.pose?.down>0)&&sample.pose?.prone>0&&!profile.unarmed&&['rifle','assault','smg','shotgun','sniper','hmg','rpg'].includes(unit.weapon)){
     model.firing??=createRifleFiring(worker,profile,model.posture);const h=sample.heading*Math.PI/180;const result=model.firing.apply({aim:0,target:new T.Vector3(12*Math.cos(h),.48,12*Math.sin(h)),sample});this.firingDiagnostic(model,result,unit);
    }
    else {this.firingDiagnostic(model,null,unit);model.locomotion.apply({...sample,blend:sample.pose?.prone||sample.pose?.down?0:sample.blend});model.posture.apply(sample);if(Object.values(sample.pose||{}).some(v=>v>0))model.posture.ground();}
@@ -137,7 +150,7 @@ export class BattleRenderer extends HybridRenderer {
    model.placement=placement;root.updateMatrixWorld(true);worker.skeleton.update();
    for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}
   }
-  model.offhand.sync(unit,{primary:model.equipment,aim:shot?.event.dual?shotPoint(shot.event.trajectories[0],this.state):null,hidden:unit.hp<=0||!!model.draw});
+  model.offhand.sync(unit,{primary:model.equipment,aim:shot?.event.dual?shotPoint(shot.event.trajectories[0],this.state):null,hidden:unit.hp<=0||!!model.draw,prone:poseChanged?sample.pose?.prone||0:0});
   if(shot){
    const gun=shot.event.dual&&shot.event.weapon!==unit.weapon?model.offhand.gun:model.equipment,anchor=gun?.anchors?.muzzle;
    const muzzle=shot.rifle?(!shot.presentationUnsupported&&model.firing?model.firing.muzzle():null):anchor&&gun.root.visible?{origin:anchor.getWorldPosition(new T.Vector3()),direction:new T.Vector3(1,0,0).transformDirection((gun.barrel||gun.root).matrixWorld)}:null;
@@ -150,7 +163,7 @@ export class BattleRenderer extends HybridRenderer {
   if(model.aimWarning){const i=this.diagnostics.indexOf(model.aimWarning);if(i>=0)this.diagnostics.splice(i,1);model.aimWarning=null;}
   if(result&&!result.supported){model.aimWarning=`${unit.name||unit.species}: firing animation unavailable (${result.reason}); shot outcome unchanged.`;this.diagnostics.push(model.aimWarning);}
  }
- prune(){const shot=this.combat.active;if(shot&&!shot.event.flame&&!shot.event.grenade)this.shotEffects.update(shot,this.state,shot.frameMuzzle);this.blood?.update(this.presentationNow??performance.now(),this.camera);this.impactDebug.update(shot,this.state,this.blood);this.sceneryAssets.update((this.presentationNow??performance.now())/1000,this.camera,{reducedMotion:!!this.reducedMotion?.matches});this.grenades.update(shot,this.state,this.camera);this.tankEffects.draw(this.camera);for(const model of this.models.values())if(model.root.visible)model.batches.sync();} // Runs after posing, before rendering, even when the shooter has no visible model.
+ prune(){const shot=this.combat.active;if(shot&&!shot.event.flame&&!shot.event.grenade)this.shotEffects.update(shot,this.state,shot.frameMuzzle);this.weaponDrops?.update(this.state,this.presentationNow??performance.now());this.blood?.update(this.presentationNow??performance.now(),this.camera);this.impactDebug.update(shot,this.state,this.blood);this.sceneryAssets.update((this.presentationNow??performance.now())/1000,this.camera,{reducedMotion:!!this.reducedMotion?.matches});this.grenades.update(shot,this.state,this.camera);this.tankEffects.draw(this.camera);for(const model of this.models.values())if(model.root.visible)model.batches.sync();} // Runs after posing, before rendering, even when the shooter has no visible model.
  pick(x,y,width,height,level=this.presentationLevel??this.level,{selectBody=false}={}){
   const ray=new T.Raycaster();ray.layers.enable(CHARACTER_PICK_LAYER);ray.setFromCamera(new T.Vector2(x/width*2-1,1-y/height*2),this.camera);
   const barrel=[this.paintedEnvironment.barrelHit(ray,level),this.sites.hit(ray,level)].filter(Boolean).sort((a,b)=>a.distance-b.distance)[0],onLevel=id=>(this.state.units.find(u=>u.id===id)?.z||0)===level;
@@ -212,9 +225,10 @@ export class BattleRenderer extends HybridRenderer {
   this.generation++;this.wallXray.dispose();
   this.sceneryAssets.dispose();this.sites.dispose();this.loot.dispose();this.cliffs.dispose();this.interiorFog.dispose();this.lights.dispose();this.daylight.dispose();
   this.motion.clear();
-  this.grenades.dispose();this.traversal.clear();this.combat.clear();this.blood?.dispose();this.shotEffects.dispose();this.impactDebug.dispose();this.flameEffects.dispose();this.fire.dispose();this.tankEffects.dispose();
+  this.grenades.dispose();this.traversal.clear();this.combat.clear();this.weaponDrops?.dispose();this.shotEffects.dispose();this.impactDebug.dispose();this.flameEffects.dispose();this.fire.dispose();this.tankEffects.dispose();
   this.paintedEnvironment.dispose();
-  for(const {worker,paint,root,equipment,locomotion,cap,draw,batches,offhand}of this.models.values()){batches.dispose();this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();offhand?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
+  for(const {worker,paint,root,equipment,locomotion,cap,draw,batches,offhand,fatalMask}of this.models.values()){batches.dispose();fatalMask?.dispose();this.scene.remove(root);root.position.set(0,0,0);root.updateMatrixWorld(true);draw?.dispose();offhand?.dispose();locomotion.dispose();cap?.dispose();equipment?.dispose();paint.dispose();worker.dispose();}
+  this.blood?.dispose();
   this.models.clear();this.actors.clear();this.meshData.clear();this.pending.clear();super.dispose();
  }
 }

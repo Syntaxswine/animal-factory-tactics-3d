@@ -21,7 +21,15 @@ export function createOffhandEquipment(worker){
   const root=worker.root,parentQ=root.getWorldQuaternion(Q()),origin=point.clone().sub(asset.anchors.grip.position.clone().applyQuaternion(worldQ));
   asset.root.position.copy(root.worldToLocal(origin));asset.root.quaternion.copy(parentQ.invert().multiply(worldQ));root.updateMatrixWorld(true);
  }
- function sync(u,{primary=worker.weapon,aim=null,hidden=false}={}){
+ function sync(u,{primary=worker.weapon,aim=null,hidden=false,prone=0}={}){
+  // Keep a one-handed item level in the living prone grip. Otherwise the
+  // downward knife carry can start a subsequent release below the floor.
+  if(!hidden&&!aim&&prone>.99&&(primary?.carry?.hands?.length===1||primary?.id==='flamethrower')&&primary.anchors?.grip&&bones.hand1){
+   worker.root.updateMatrixWorld(true);const point=primary.anchors.grip.getWorldPosition(V()),relative=primary.root.getWorldQuaternion(Q()).invert().multiply(bones.hand1.getWorldQuaternion(Q())),direction=worker.root.getWorldQuaternion(Q()),left=bones['hand-1'],support=primary.id==='flamethrower'&&primary.anchors.support,leftOffset=support&&left.worldToLocal(support.getWorldPosition(V())),leftQ=support&&primary.root.getWorldQuaternion(Q()).invert().multiply(left.getWorldQuaternion(Q()));
+   place(primary,point,direction);rotate(bones.hand1,direction.clone().multiply(relative));worker.skeleton.update();
+   if(support)solve(-1,support.getWorldPosition(V()),direction.clone().multiply(leftQ),leftOffset);
+   primary.updateHose?.(worker.root);worker.skeleton.update();for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}
+  }
   const pair=handWeapons(u),next=pair[1];
   if(!next||!bones['hand-1']||!primary?.anchors?.grip){clear();return;}
   if(kind!==next){clear();kind=next;gun=createWeaponModel(next);worker.root.add(gun.root);}

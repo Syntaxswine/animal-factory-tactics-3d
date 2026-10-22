@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.js';
+import {poseRoofMantleCarry} from './roof-mantle-equipment.js';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 class GripRangeError extends Error {}
 const wrap=a=>Math.atan2(Math.sin(a),Math.cos(a));
@@ -9,7 +10,7 @@ export function createRifleFiring(worker,profile,posture=null){
  const rest=new Map(worker.bones.map(b=>[b,b.getWorldPosition(V())]));
  function rotation(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(q));worker.root.updateMatrixWorld(true);}
  function raw(aim,recoil,heading,pitch,sample){
-  const gun=worker.weapon,root=worker.root;root.position.set(0,0,0);root.rotation.set(0,0,0);worker.pose('carry',0);
+  const gun=worker.weapon,root=worker.root;root.position.set(0,0,0);root.rotation.set(0,0,0);poseRoofMantleCarry(worker,profile);
   named.spine.rotation.x=.16*aim;named.spine.rotation.z=-.02*recoil+(profile.proneAim?.torsoFollow||0)*pitch*(sample?.pose?.prone||0)*aim;
   named.head.rotation.z=(pitch*(profile.headPitchSlope??1.5)+(profile.headPitch??-.9))*aim;
   named.head.rotation.y=((profile.headYaw??25)*Math.PI/180+.4*pitch)*aim;root.updateMatrixWorld(true);
@@ -75,7 +76,7 @@ export function createRifleFiring(worker,profile,posture=null){
   // same frame, even if the endpoint could not be aligned. No stale partial IK.
   const accepted=supported?best:(evaluate(heading,0)||firstValid||best);
   if(accepted)raw(aim,recoil,accepted.h,accepted.p,sample);
-  else {worker.root.position.set(0,0,0);worker.root.rotation.set(0,0,0);worker.pose('carry',sample?.heading||0);posture?.apply(sample||{});posture?.ground();}
+  else {worker.root.position.set(0,0,0);worker.root.rotation.set(0,0,0);poseRoofMantleCarry(worker,profile);worker.root.rotation.y=-(sample?.heading||0)*Math.PI/180;posture?.apply(sample||{});posture?.ground();}
   lastResult={...muzzle(),supported,reason:supported?null:firstValid?'endpoint-not-aligned':'grip-range',angularError:accepted?.error??null,reachFailures};return lastResult;
  },muzzle:()=>supported?muzzle():null,get status(){return lastResult;}};
 }

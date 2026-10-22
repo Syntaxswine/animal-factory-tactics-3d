@@ -129,7 +129,8 @@ test('optional asset failure and late completion after disposal release every lo
  let ended=0,failed=0;const texture=new T.Texture();let disposed=0;texture.addEventListener('dispose',()=>disposed++);
  const blood=new BattleBlood(new T.Scene(),{loader:{loadAsync:url=>url.includes('stains')?Promise.reject(Error('test missing skin')):Promise.resolve(texture)},loading:{start(){},end(){ended++;}},onError:()=>failed++});await blood.ready;assert.equal(ended,1);assert.equal(failed,1);assert.equal(disposed,1);blood.dispose();
  let resolve;const late=new T.Texture();let retired=0;late.addEventListener('dispose',()=>retired++);const other=new T.Texture();other.addEventListener('dispose',()=>retired++);
- const pending=new BattleBlood(new T.Scene(),{loader:{loadAsync:url=>url.includes('stains')?Promise.resolve(other):new Promise(r=>resolve=r)}});pending.dispose();resolve(late);await pending.ready;assert.equal(retired,2);
+ const fatal=new T.Texture();fatal.addEventListener('dispose',()=>retired++);
+ const pending=new BattleBlood(new T.Scene(),{loader:{loadAsync:url=>url.includes('fatal-head')?Promise.resolve(fatal):url.includes('stains')?Promise.resolve(other):new Promise(r=>resolve=r)}});pending.dispose();resolve(late);await pending.ready;assert.equal(retired,3);
 });
 
 test('inspection pause requests happen once per discharge and cannot change the combat record',()=>{
