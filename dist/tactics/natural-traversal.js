@@ -19,7 +19,7 @@ export function createNaturalTraversal(model,event,unit){
  const heading=Math.atan2(dy,dx)*180/Math.PI,origin=toWorld(event.from),hen=profile?.id==='hen';
  const motion=hen?createHenCrossing(worker,profile,event.kind):MOTIONS[event.kind](worker,profile);
  let disposed=false;
- return {duration:motion.duration,phases:motion.phases,fit:motion.fit,getup:motion.getup,climb:{skeleton:motion.climb?.skeleton||worker.skeleton,get equipmentState(){return 'carried';}},
+ return {duration:motion.duration,phases:motion.phases,fit:motion.fit,getup:motion.getup,roll:motion.roll,climb:{skeleton:motion.climb?.skeleton||worker.skeleton,get equipmentState(){return 'carried';}},
   apply(progress){if(disposed)throw Error('Traversal already disposed');const r=motion.apply(progress,{origin,heading});return {worldRoot:r.worldRoot,phase:r.phase};},
   dispose(){if(disposed)return;motion.dispose();disposed=true;}};
 }

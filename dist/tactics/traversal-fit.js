@@ -26,8 +26,15 @@ export function bodyFit(body,probe){
 // Tails are meshes named "tail" that ride the hips rigidly. They bend about the root as the game's tower tuck does
 // (tower-tail-tuck.js): the root stays on the rump and the turn grows along the tail. pitch turns about the body's
 // side axis (bind +Z: positive tips the tail up over the back), yaw about its up axis (bind +Y), in radians.
-// The base (where the bend has not yet reached a third of its turn) cannot get out of anything's way: it counts as the
-// body (isRoot), and only the rest of the tail is fitted. restore() puts the surface back exactly.
+// The bend's reach grows along the tail from the hips joint; where it is under a third is the root, which does not turn:
+// it counts as the body (isRoot), and the window's roll, the seat and the trunk's fit find it where it is played (turned
+// a third of the way at its edge, the skunk's plume root rose 2.2 to 3 cm off the floor as the body lay back on it in
+// the window's roll, which turns about it, and the phantom-wrench rig found nothing under the body). The turn grows
+// from the root's edge, so the base just beyond, turned less than half the way, cannot get far out of anything's way
+// either: it is fitted out of the obstacles alone, and pressed into the floor it squashes onto it (squash), as the root
+// does (the roll reads every second point of the body: the bull's rocking seat put a root point between them 3.1 cm in).
+// The rest of the tail is fitted at every point (at every third, the bull's coarse tube hid its underside, 2.2 cm in
+// the floor as it rose). restore() puts the surface back exactly.
 const ROOT=.35;
 export function createTailBend(worker){
  const hips=worker.bones.find(b=>b.name==='hips');
@@ -38,26 +45,34 @@ export function createTailBend(worker){
   const dist=Array.from({length:n},(_,i)=>P(i).distanceTo(joint)),near=Math.min(...dist),pivot=V();let m=0;
   for(let i=0;i<n;i++)if(dist[i]<near+.025){pivot.add(P(i));m++;}pivot.divideScalar(m);
   const len=Math.max(...Array.from({length:n},(_,i)=>P(i).distanceTo(pivot))),r1=Math.max(.05,.45*len);
-  const blend=Float32Array.from({length:n},(_,i)=>T.MathUtils.smoothstep(P(i).distanceTo(pivot),.015,r1));
-  return {part,pos,nrm,base,baseN,pivot,blend,hi,n,len,sample:Array.from({length:Math.ceil(n/3)},(_,k)=>3*k).filter(i=>blend[i]>=ROOT)};});
+  const reach=Float32Array.from({length:n},(_,i)=>T.MathUtils.smoothstep(P(i).distanceTo(pivot),.015,r1)),blend=reach.map(r=>T.MathUtils.smoothstep(r,ROOT,1));
+  // soft: which fitted points are the base's; flat: the root's and the base's points, for squash
+  const sample=Array.from({length:n},(_,i)=>i).filter(i=>reach[i]>=ROOT),flat=Uint32Array.from({length:n},(_,i)=>i).filter(i=>blend[i]<.5);
+  return {part,pos,nrm,base,baseN,pivot,blend,reach,hi,n,len,sample,flat,soft:Uint8Array.from(sample,i=>blend[i]<.5?1:0)};});
  const byName=new Map(tails.map(t=>[t.part.name,t]));
- const q=Q(),qz=Q(),Y=V(0,1,0),Z=V(0,0,1),M=new T.Matrix4(),B=new T.Matrix4(),v=V(),w=V();
+ const q=Q(),qz=Q(),Y=V(0,1,0),Z=V(0,0,1),M=new T.Matrix4(),B=new T.Matrix4(),Ri=new T.Matrix4(),Mi=new T.Matrix4(),v=V(),w=V();
  const turn=(pitch,yaw,b)=>q.setFromAxisAngle(Y,yaw*b).multiply(qz.setFromAxisAngle(Z,pitch*b));
  const bent=(t,i,pitch,yaw,out)=>out.set(t.base[3*i]-t.pivot.x,t.base[3*i+1]-t.pivot.y,t.base[3*i+2]-t.pivot.z).applyQuaternion(turn(pitch,yaw,t.blend[i])).add(t.pivot);
  return {count:tails.length,
-  isRoot:(name,i)=>{const t=byName.get(name);return !!t&&t.blend[i]<ROOT;},
+  isRoot:(name,i)=>{const t=byName.get(name);return !!t&&t.reach[i]<ROOT;},
   set(pitch,yaw){for(const t of tails){for(let i=0;i<t.n;i++){bent(t,i,pitch,yaw,v);t.pos.setXYZ(i,v.x,v.y,v.z);if(t.nrm){w.set(t.baseN[3*i],t.baseN[3*i+1],t.baseN[3*i+2]).applyQuaternion(turn(pitch,yaw,t.blend[i]));t.nrm.setXYZ(i,w.x,w.y,w.z);}}
    t.pos.needsUpdate=true;if(t.nrm)t.nrm.needsUpdate=true;}},
   // Where each tail is carried under the current bones (to keep for later), and the world points of the tail bent by
-  // (pitch, yaw) under a kept frame or the current bones, for fitting.
+  // (pitch, yaw) under a kept frame or the current bones, for fitting, each with whether it is the base's.
   frame:()=>tails.map(t=>{const s=t.part.skeleton;return new T.Matrix4().multiplyMatrices(t.part.matrixWorld,t.part.bindMatrixInverse).multiply(B.multiplyMatrices(s.bones[t.hi].matrixWorld,s.boneInverses[t.hi])).multiply(t.part.bindMatrix);}),
   world(pitch,yaw,visit,frame=null){tails.forEach((t,j)=>{if(frame)M.copy(frame[j]);else{const s=t.part.skeleton;M.multiplyMatrices(t.part.matrixWorld,t.part.bindMatrixInverse).multiply(B.multiplyMatrices(s.bones[t.hi].matrixWorld,s.boneInverses[t.hi])).multiply(t.part.bindMatrix);}
-   for(const i of t.sample)visit(bent(t,i,pitch,yaw,v).applyMatrix4(M));});},
+   t.sample.forEach((i,k)=>visit(bent(t,i,pitch,yaw,v).applyMatrix4(M),t.soft[k]));});},
   // Each candidate bend's points (pitch, yaw in degrees), bent once in the space a kept frame carries, then their centre
-  // and radius; and each tail's root and reach there, for the planned follow.
+  // and radius; and each tail's root and reach there, and which of its fitted points are the base's, for the planned
+  // follow.
   bends:cands=>tails.map(t=>cands.map(([a,b])=>{const out=new Float32Array(3*t.sample.length+4);let cx=0,cy=0,cz=0;const N=t.sample.length;t.sample.forEach((i,k)=>{bent(t,i,a*DEG,b*DEG,v);out[3*k]=v.x;out[3*k+1]=v.y;out[3*k+2]=v.z;cx+=v.x/N;cy+=v.y/N;cz+=v.z/N;});
    let r=0;for(let k=0;k<N;k++)r=Math.max(r,Math.hypot(out[3*k]-cx,out[3*k+1]-cy,out[3*k+2]-cz));out.set([cx,cy,cz,r],3*N);return out;})),
-  reach:()=>tails.map(t=>({pivot:t.pivot.clone(),len:t.len})),
+  reach:()=>tails.map(t=>({pivot:t.pivot.clone(),len:t.len,soft:t.soft})),
+  // The root and the base where they are in the floor, squashed onto it: in the motion's own frame (root, its object),
+  // under the current bones, after set().
+  squash(root){Ri.copy(root.matrixWorld).invert();for(const t of tails){const s=t.part.skeleton;let moved=false;
+   M.multiplyMatrices(Ri,t.part.matrixWorld).multiply(t.part.bindMatrixInverse).multiply(B.multiplyMatrices(s.bones[t.hi].matrixWorld,s.boneInverses[t.hi])).multiply(t.part.bindMatrix);Mi.copy(M).invert();
+   for(const i of t.flat){v.fromBufferAttribute(t.pos,i).applyMatrix4(M);if(v.y<0){v.y=0;v.applyMatrix4(Mi);t.pos.setXYZ(i,v.x,v.y,v.z);moved=true;}}if(moved)t.pos.needsUpdate=true;}},
   restore(){for(const t of tails){t.pos.array.set(t.base);t.pos.needsUpdate=true;if(t.nrm){t.nrm.array.set(t.baseN);t.nrm.needsUpdate=true;}}}};
 }
 // Clearance. Where the trunk, head or tail would go into the floor or the obstacle, the least correction takes it out.
@@ -115,9 +130,10 @@ export function createClearanceFit(duration,{step=.02}={}){
   const torso=[],head=[],hb=body.bones.head,hips=body.bones.hips;
   for(let i=0;i<probe.count;i++){const name=probe.names[probe.part[i]];if(/tail/.test(name)&&!tails?.isRoot(name,probe.vertex[i]))continue;const b=probe.boneNames[probe.bone[i]];if(b==='hips'||b==='spine')torso.push(i);else if(b==='head')head.push(i);}
   const inFoot=(x,z)=>obstacles.some(b=>x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]);
-  // How far a point is inside the floor or an obstacle along the way out (negative: clear of it), and that way.
+  // How far a point is inside the floor or an obstacle along the way out (negative: clear of it), and that way; with
+  // floor false, the obstacles alone (a tail's base, which squashes onto the floor).
   let st='over';
-  const into=(p,out)=>{let d=inFoot(p.x,p.z)?-Infinity:-p.y;out.set(0,1,0);
+  const into=(p,out,floor=true)=>{let d=!floor||inFoot(p.x,p.z)?-Infinity:-p.y;out.set(0,1,0);
    for(const b of obstacles){const f=[p.x-b.min[0],b.max[0]-p.x,p.y-b.min[1],b.max[1]-p.y,p.z-b.min[2],b.max[2]-p.z],m=Math.min(...f);if(m<=d)continue;
     const k=b.min[1]>.5?2:st==='near'?0:st==='far'?(f[1]<=f[3]?1:3):[0,1,3].reduce((x,y)=>f[y]<f[x]?y:x),depth=m>0?f[k]:m;if(depth>d){d=depth;out.set(0,0,0).setComponent(k>>1,k&1?1:-1);}}return d;};
   const p=V(),way=V();
@@ -174,7 +190,7 @@ export function createClearanceFit(duration,{step=.02}={}){
   // path and the trunk moves for what it leaves in contact, as the followed one does.
   // into's depth without its way out or any allocation, for the planner's table (the same stage rules; into allocated
   // the six face distances and spread them, four times the planner's whole cost)
-  const depthAt=(x,y,z)=>{let d=-y;for(const b of obstacles)if(x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]){d=-Infinity;break;}
+  const depthAt=(x,y,z,floor=true)=>{let d=floor?-y:-Infinity;for(const b of obstacles)if(x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]){d=-Infinity;break;}
    for(const b of obstacles){const f0=x-b.min[0],f1=b.max[0]-x,f2=y-b.min[1],f3=b.max[1]-y,m=Math.min(f0,f1,f2,f3,z-b.min[2],b.max[2]-z);if(m<=d)continue;
     if(m<=0){d=m;continue;}const k=b.min[1]>.5?2:st==='near'?0:st==='far'?(f1<=f3?1:3):(f0<=f1?(f0<=f3?0:3):(f1<=f3?1:3)),depth=k===0?f0:k===1?f1:k===2?f2:f3;if(depth>d)d=depth;}return d;};
   const planTail=(S,H)=>{const GAP=.03,NEAR=.05,G=[];for(let a=-150;a<=150;a+=10)for(let b=-120;b<=120;b+=10)G.push([a,b]);const NB=25,NA=31,m=G.length,cache=tails.bends(G),reach=tails.reach();
@@ -182,10 +198,10 @@ export function createClearanceFit(duration,{step=.02}={}){
     const free=reach.every((r,j)=>{const E=F[j].elements,sc=Math.max(Math.hypot(E[0],E[1],E[2]),Math.hypot(E[4],E[5],E[6]),Math.hypot(E[8],E[9],E[10])),P=r.pivot.clone().applyMatrix4(F[j]),R=r.len*sc+margin+GAP+.01;if(P.y<R)return false;
      return obstacles.every(b=>Math.hypot(Math.max(b.min[0]-P.x,0,P.x-b.max[0]),Math.max(b.min[1]-P.y,0,P.y-b.max[1]),Math.max(b.min[2]-P.z,0,P.z-b.max[2]))>R);});
     if(free)return d;
-    for(let j=0;j<reach.length;j++){const E=F[j].elements,sc=Math.max(Math.hypot(E[0],E[1],E[2]),Math.hypot(E[4],E[5],E[6]),Math.hypot(E[8],E[9],E[10]));for(let c=0;c<m;c++){const pts=cache[j][c],N3=pts.length-4;let mx=d[c];
+    for(let j=0;j<reach.length;j++){const E=F[j].elements,soft=reach[j].soft,sc=Math.max(Math.hypot(E[0],E[1],E[2]),Math.hypot(E[4],E[5],E[6]),Math.hypot(E[8],E[9],E[10]));for(let c=0;c<m;c++){const pts=cache[j][c],N3=pts.length-4;let mx=d[c];
      {const x=pts[N3],y=pts[N3+1],z=pts[N3+2],R=pts[N3+3]*sc+margin+GAP+NEAR,X=E[0]*x+E[4]*y+E[8]*z+E[12],Y=E[1]*x+E[5]*y+E[9]*z+E[13],Z=E[2]*x+E[6]*y+E[10]*z+E[14];
       if(Y>R&&obstacles.every(o=>Math.hypot(Math.max(o.min[0]-X,0,X-o.max[0]),Math.max(o.min[1]-Y,0,Y-o.max[1]),Math.max(o.min[2]-Z,0,Z-o.max[2]))>R))continue;}
-     for(let q=0;q<N3;q+=3){const x=pts[q],y=pts[q+1],z=pts[q+2];const dd=depthAt(E[0]*x+E[4]*y+E[8]*z+E[12],E[1]*x+E[5]*y+E[9]*z+E[13],E[2]*x+E[6]*y+E[10]*z+E[14])+margin+GAP;if(dd>mx)mx=dd;}d[c]=mx;}}
+     for(let q=0;q<N3;q+=3){const x=pts[q],y=pts[q+1],z=pts[q+2];const dd=depthAt(E[0]*x+E[4]*y+E[8]*z+E[12],E[1]*x+E[5]*y+E[9]*z+E[13],E[2]*x+E[6]*y+E[10]*z+E[14],!soft[q/3])+margin+GAP;if(dd>mx)mx=dd;}d[c]=mx;}}
     return d;});
    const DEPTH=2e4,DRIFT=.05,reachStep=TAIL_STEP/10,cost=new Float64Array(m),prev=new Float64Array(m),from=times.map(()=>new Int16Array(m));
    const swing=c=>Math.abs(G[c][0])+Math.abs(G[c][1]),node=(k,c)=>(D[k][c]>0?DEPTH*D[k][c]:0)+DRIFT*swing(c);
@@ -195,19 +211,19 @@ export function createClearanceFit(duration,{step=.02}={}){
       cost[c]=best+node(k,c);from[k][c]=arg;}}
     let last=Infinity;for(let c=0;c<m;c++)if(cost[c]+swing(c)<last){last=cost[c]+swing(c);path[n-1]=c;}
     for(let k=n-1;k>0;k--)path[k-1]=from[k][path[k]];};
-   const midDepth=(k,a,b)=>{let mx=-Infinity;for(const X of [S[k-1],H[k],S[k]]){st=X.st;tails.world((a[0]+b[0])/2*DEG,(a[1]+b[1])/2*DEG,v=>{mx=Math.max(mx,into(v,way)+margin);},X.F);}return mx;};
+   const midDepth=(k,a,b)=>{let mx=-Infinity;for(const X of [S[k-1],H[k],S[k]]){st=X.st;tails.world((a[0]+b[0])/2*DEG,(a[1]+b[1])/2*DEG,(v,soft)=>{mx=Math.max(mx,into(v,way,!soft)+margin);},X.F);}return mx;};
    for(let it=0;it<4;it++){viterbi();let found=false;
     for(let k=1;k<n;k++){const a=G[path[k-1]],b=G[path[k]];if(a[0]===b[0]&&a[1]===b[1])continue;const d=midDepth(k,a,b);if(d>0){(pen[k]??=new Map()).set(path[k-1]*m+path[k],DEPTH*d+1e3);found=true;}}
     if(!found)break;}
    const out=times.map((_,k)=>G[path[k]].slice()),pushes=times.map(()=>[0,0,0]);
-   for(let k=0;k<n;k++)if(D[k][path[k]]>0){st=S[k].st;let deep=0;tails.world(G[path[k]][0]*DEG,G[path[k]][1]*DEG,v=>{const dd=into(v,way)+margin;if(dd>deep){deep=dd;pushes[k]=way.clone().multiplyScalar(dd).toArray();}},S[k].F);}
+   for(let k=0;k<n;k++)if(D[k][path[k]]>0){st=S[k].st;let deep=0;tails.world(G[path[k]][0]*DEG,G[path[k]][1]*DEG,(v,soft)=>{const dd=into(v,way,!soft)+margin;if(dd>deep){deep=dd;pushes[k]=way.clone().multiplyScalar(dd).toArray();}},S[k].F);}
    return {out,pushes};};
   // planned: where the followed path leaves the tail in contact, at a sample or half way to one, the planned one replaces
   // it (after the balance, where the tail moves nothing else; the fit's own passes keep the followed one and the trunk
   // moves it asks).
   const solveTail=(planned=false)=>{const S=times.map(t=>{st=stage(t);poseAt(t);return {st,F:tails.frame()};});
    const follow=order=>{const out=new Array(n),pushes=times.map(()=>[0,0,0]);let cur=[0,0];
-    for(const k of order){st=S[k].st;const depth=(a,b,visit)=>{let m=-Infinity;tails.world(a*DEG,b*DEG,v=>{const d=into(v,way)+margin;if(visit)visit(d);if(d>m)m=d;},S[k].F);return m;};
+    for(const k of order){st=S[k].st;const depth=(a,b,visit)=>{let m=-Infinity;tails.world(a*DEG,b*DEG,(v,soft)=>{const d=into(v,way,!soft)+margin;if(visit)visit(d);if(d>m)m=d;},S[k].F);return m;};
      const rest=cur.map(v=>Math.round(.8*v));
      if(depth(...rest)<=0)cur=rest;
      // The nearest bend within TAIL_STEP that clears, and clears half way there from the bend before; else the least deep
@@ -228,13 +244,13 @@ export function createClearanceFit(duration,{step=.02}={}){
    for(let k=n-2;k>=0;k--)for(const j of [0,1])out[k][j]=clamp(out[k][j],out[k+1][j]-TAIL_STEP,out[k+1][j]+TAIL_STEP);
    for(let k=0;k<n;k++)ch.tail[k]=out[k].map((v,j)=>(out[Math.max(0,k-1)][j]+v+out[Math.min(n-1,k+1)][j])/3*smooth(Math.min(times[k],duration-times[k])/(EASE/2)));
    // Where the join or the softening left a bend in contact, the nearest bend that clears replaces it.
-   for(let k=0;k<n;k++){st=S[k].st;const depth=(a,b)=>{let m=-Infinity;tails.world(a*DEG,b*DEG,v=>{m=Math.max(m,into(v,way)+margin);},S[k].F);return m;},c0=ch.tail[k];
+   for(let k=0;k<n;k++){st=S[k].st;const depth=(a,b)=>{let m=-Infinity;tails.world(a*DEG,b*DEG,(v,soft)=>{m=Math.max(m,into(v,way,!soft)+margin);},S[k].F);return m;},c0=ch.tail[k];
     if(depth(...c0)<=0||depth(...out[k])>0)continue;const near=c=>Math.abs(c[0]-c0[0])+Math.abs(c[1]-c0[1]);
     for(const c of [out[k],...TAIL_TRY.filter(c=>Math.abs(c[0]-c0[0])<=TAIL_STEP&&Math.abs(c[1]-c0[1])<=TAIL_STEP).sort((x,y)=>near(x)-near(y))])if(depth(...c)<=0){ch.tail[k]=c;break;}}
    // Followed from moment to moment, a tail held down stays pressed against what holds it: the cow's, sat on in the
    // window's roll, was pinned at the grid's corner 3 cm in the floor, the clear side 180 degrees away.
    if(planned){const H=times.map((t,k)=>{if(!k)return null;const h=(times[k-1]+t)/2;st=stage(h);poseAt(h);return {st,F:tails.frame()};});
-    const deep=(X,c)=>{st=X.st;let m=-Infinity;tails.world(c[0]*DEG,c[1]*DEG,v=>{m=Math.max(m,into(v,way)+margin);},X.F);return m;};
+    const deep=(X,c)=>{st=X.st;let m=-Infinity;tails.world(c[0]*DEG,c[1]*DEG,(v,soft)=>{m=Math.max(m,into(v,way,!soft)+margin);},X.F);return m;};
     if(ch.tail.some((c,k)=>deep(S[k],c)>0||k&&deep(H[k],[(c[0]+ch.tail[k-1][0])/2,(c[1]+ch.tail[k-1][1])/2])>0)){const plan=planTail(S,H);for(let k=0;k<n;k++)ch.tail[k]=plan.out[k];return plan.pushes;}}
    return pushes;};
   // Each round the torso moves the trunk, then the head, against the moved trunk, turns, bows and moves it for what is
@@ -270,7 +286,7 @@ export function createClearanceFit(duration,{step=.02}={}){
     for(const i of torso){p.set(probe.x[i],probe.y[i],probe.z[i]);note('trunk',into(p,way));}
     for(const i of head){p.set(probe.x[i],probe.y[i],probe.z[i]);note('head',into(p,way));}
     for(const id of LIMBS)for(const i of limbPts[id]){p.set(probe.x[i],probe.y[i],probe.z[i]);note(id,into(p,way));}
-    if(tails?.count){const [a,b]=fit.tail(t);tails.world(a*DEG,b*DEG,v=>note('tail',into(v,way)));}}
+    if(tails?.count){const [a,b]=fit.tail(t);tails.world(a*DEG,b*DEG,(v,soft)=>note('tail',into(v,way,!soft)));}}
    fit.report=left;};
   fit.solveLimbs=({rounds:limbRounds=3,planted=null}={})=>{tracks=null;for(let r=0;r<limbRounds;r++){const need=limbNeed(planted);for(const id of LIMBS)add(id,need[id],free.limbs);}build();report();return fit;};
   // fit.report is what the motion as it stood at the last solve leaves in the floor and the obstacles. The traversals'

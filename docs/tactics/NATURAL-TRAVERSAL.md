@@ -1237,6 +1237,83 @@ Tried and not kept:
 so its sit-up reads 260% and its first step 85%. A roll that lands every body's feet needs its physics and the balance
 to agree on the pivot. And the cow's tail-root seat.
 
+### 2026-10-22 (physics balance, eleventh part): the stalled roll turns about the tail's root as played
+
+The user: "Make the stalled roll's physics and the balance agree on its pivot next, so the skunk (and the cow) rolls
+on its tail's root as played and its sit-up comes down from 260%."
+
+**What it was.** Not the balance: through the stall the played hips are within 0.5 cm of the roll's own rows (the
+tenth part keeps the authored path there). It was the tail. The roll turns about the lowest point of the body and the
+tail's root (`isRoot`: the points where the bend's reach is under a third), read on the tail as built. But the bend
+turned every point by its share of the turn, the root's edge by a third of it, and to keep the skunk's plume off the
+floor the fit bends it 40 to 90 degrees down and 80 across. As played, the root rose 2.1 to 3.0 cm off the floor exactly
+while the roll turned about it, and from 2.56 to 2.74 s the phantom-wrench rig found no contact at all: the body was
+airborne, at 425 to 1,282 N of phantom force. The cow's root, 1.0 to 1.4 cm up, came and went at the rig's centimetre.
+The window's "Sit up" phase runs from the roll's middle to its end, so its 260% was the skunk afloat.
+
+**The fix** (`traversal-fit.js`, the tail bend):
+- The root does not turn. The turn grows from the root's edge (a smoothstep of the reach from a third to all of it), so
+  the roll, the window's seat and the trunk's fit find the root where it is played.
+- The base just beyond, turned less than half the way, cannot get out of anything's way either. Pressed into the floor
+  it squashes onto it (`squash`, after `set` in each crossing's `at`), and so does the root: the roll reads every second
+  point of the body, and the bull's rocking seat put a root point between them 3.1 cm in. Unsquashed, with the root
+  rigid, the base went 3.2 to 5.5 cm into the floor under every body that sits or lies on it after the roll.
+- The fit clears the base out of the obstacles only. Fitted out of the floor as well, it swung the skunk's plume round in
+  front of the body to lift the base a few millimetres, and laid the plume's tip on the floor 80 cm out, which the rig
+  took for support (the sit-up's torque peak read 167 N·m with the tip down, 417 without it).
+- The fit reads every point of the tail (92 to 502 a tail), not every third. At every third, the bull's coarse tube hid
+  its underside, 2.2 cm into the floor while the fit's report read 0.
+
+Six mammals' rolls turn about a tail's root for a while. Through those rows the played tail now lies on the floor, its
+lowest point (cm off it, every vertex skinned as the rig does):
+
+| | skunk | cow | bull | dog | donkey | pig director |
+|---|---|---|---|---|---|---|
+| 4a1c49f | 2.1 to 3.0 | 1.0 to 1.4 | -1.4 to -0.1 | -0.6 to 1.2 | 0.7 to 2.0 | -0.3 to 1.7 |
+| now | 0.0 | 0.0 to 0.4 | 0.0 | 0.0 | 0.0 to 1.0 | 0.0 to 3.2 |
+
+The pig director's roll is not stalled, so the balance moves its body there (it rose 1.7 cm before, with part of the
+lift hidden by the bend).
+
+phantom-wrench `--gate`, the window, 4a1c49f -> now (the peaks are % of body weight):
+
+| | skunk | cow | donkey | dog | sheep | pig director |
+|---|---|---|---|---|---|---|
+| over the limit (s) | 0.70 -> 0.49 | 0.67 -> 0.15 | 0.57 -> 0.21 | 0.15 -> 0.07 | 0.08 -> 0.13 | 0.38 -> 0.39 |
+| roll; sit-up | 108; 260 -> 7; 73 | 562; 103 -> 562; 18 | 250; 20 -> 78; 0 | 61; 0 -> 5; 0 | 178; 0 -> 178; 0 | 142; 0 -> 142; 0 |
+| right foot in; left foot in | 85; 53 -> 56; 53 | 78; 36 -> 34; 2 | 5; 1 -> 0; 0 | 1; 0 -> 0; 0 | 2; 0 -> 3; 0 | 0; 0 -> 0; 1 |
+
+- The sheep is worse because a support went that the motion never planned. Its roll never turns about its tail, but
+  the bent root had dipped onto the floor as the body went from waistcoat to seat (2.68 to 2.86 s), and at 2.72 s it was
+  the only thing the rig found under the body. The rigid root no longer reaches the floor there, which uncovers the roll's
+  own phantom (its mean 29 -> 86 N; the peak, 1306 N at 2.695 s, is the same).
+- The bull, rabbit and pig foreman windows read the same, and so do the twelve vaults and climbs gated. The gate ran
+  on the 21 crossings where a tail touches anything or the body moved, at 4a1c49f and now; the other twelve are the
+  same body with no tail within the rig's centimetre in either.
+
+The body moves as before everywhere but six crossings, where the tail fit's pushes on the trunk (for what no bend
+clears) differ: the bull's, cow's, dog's and skunk's vaults (0.8 to 3.4 cm, going over the top), the pig foreman's
+window (a palm, 1.7 cm) and the skunk's window (a knee, 0.7 cm after the roll). Their gates read as before. The tails, every
+5 ms: no tail point more than 1 cm into anything in any crossing (the skunk's one sample at the hop, 1.9 cm, as before).
+The bull's and donkey's windows had 14 and 28 such samples at 4a1c49f, down to 1.4 and 2.0 cm. `bin/collisions.mjs`
+reads all 33 crossings the same (the deepest a hand or the trousers on the obstacle).
+
+`tests/natural-traversal.test.mjs`: a roll that stalls before its hooves land lies on its tail as played, within the
+rig's centimetre at every third row that turns about the tail. Against 4a1c49f's tail bend it fails on the cow (1.3 cm at
+2.63 s) and the skunk (2.2 cm at 2.54 s). The adapter passes the window's roll on for it.
+
+Tried and not kept, in order:
+- The root rigid alone: the base 3.2 to 5.5 cm into the floor in five windows (the bull, cow, dog, donkey and skunk sit
+  or lie on it), and the skunk's plume tip on the floor.
+- The base not fitted at all: 1 to 3.4 cm into five vaults' walls as well.
+- The base squashed up to a third of the turn: points the fit skipped, just past it, 3.4 to 5.0 cm into the floor.
+- The base to half the turn, still read at every third point: the bull's root 3.1 cm in (missed by the roll's probe),
+  then its tube's underside 2.2 cm (missed by the fit's).
+
+**Left:** the skunk's sit-up still reads 73% (387 N·m at 2.755 s, while the legs come down and the roll slows: not
+yet looked at) and its first step 56%. The pig director's and donkey's rolls on their tails' roots, where the balance moves
+the body. The cow's roll-in (562%, 5.6 x BW at 2.475 s). The sheep's hand-over from waistcoat to seat.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
