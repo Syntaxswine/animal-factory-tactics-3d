@@ -29,6 +29,29 @@ Each firing event has an ordered `bodyImpacts` array. `validBodyImpact` in [guns
 
 Use `impactFrame(receipt)` in [shot-coordinates.js](../../dist/tactics/shot-coordinates.js) to obtain rendered contact, origin and incoming direction. It shares the game's floor spacing and body scale and preserves tower/cliff offsets. A bounded correction to the animated skin may adjust presentation only; it cannot select a new victim, region or damage.
 
+## Painted spray placement
+
+The artist's ordinary spray from `work/painted-blood-spray` at `4cdbcd9` is available unchanged in the placement review. Its local **+X** is the emission axis. [gunshotSprayFrame](../../dist/tactics/gunshot-spray-frame.js) maps that axis to **negative incoming**: a short entrance fan back toward the incoming bullet. World up determines roll, with a stable alternate axis for vertical hits. The camera never determines that transform; the emitter uses camera-facing cards to display the painted texture while droplets retain their world trajectories. Gravity remains world down. There is no forward exit jet without an independently resolved exit.
+
+Call the helper once for an eligible impact at the matching discharge. Supply only the actual victim's authored body parts, after posing it at the captured impact stance and heading and updating its bounds. Do this before a casualty fall or head removal alters the surface. The query checks one short ray, extending at most **0.4 tile on each side** of the collider contact. It accepts only an entrance-facing skin triangle in the recorded region, classified by its interpolated bone weights. The torso includes arms; a weapon-region body injury may use torso or arms, but the query excludes held equipment. Wrong-victim, wrong-region, missing-model and distant-surface results retain the authoritative collider contact. The correction changes presentation only. Keep the returned frame fixed throughout the effect rather than following the victim as it moves or falls.
+
+```js
+const placement = gunshotSprayFrame(receipt, {
+  model: {victimId: receipt.victimId, parts: victimModel.worker.parts}
+});
+const spray = createPaintedBloodSpray(sharedAtlas, {seed: placement.visualSeed});
+spray.setFrame(placement.matrix);
+// Add the identity-transformed emitter mesh to the scene. During playback:
+spray.update(elapsedSeconds, camera, {floor: placement.floor});
+// The caller owns visibility gating, pooling, retirement and sharedAtlas.
+```
+
+Open `tactics/gunshot-spray-study.html` in the 3D packaged build to inspect the shared attack fixture with the painted asset. Gold shows the incoming bullet, red the outgoing entrance fan, white the combat contact and green the corrected skin contact. The panel reports the correction and fallback reason. The camera control verifies direction from both sides; Horse and Hen are explicitly labelled art references, while Actual victim uses the species in the receipt. The two panels show close-up and gameplay scale, with pause and scrubbing. Selecting an attack or inspecting the effect never rerolls combat.
+
+The fixture audit anchors 17 of its 20 impacts to a matching surface. Its leg shot, incidental goat hit and sixth shotgun pellet retain the collider contact: those recorded rays do not intersect a matching visible triangle within the correction budget. This is an explicit limitation of the simplified tactical collider. Do not shift the effect to another body part or invent a penetration to conceal it. The helper reports `no-matching-surface`, and the review exposes the fallback. Automated checks cover these cases plus horse and hen head, torso and legs in standing, kneeling and prone poses. The artist's painted root remains at contact and droplet positions remain unchanged when the camera turns.
+
+![Painted spray at the resolved torso contact, shown close up and at gameplay scale](review-images/gunshot-spray-placement.png)
+
 ## Playback and visibility
 
 `BattleCombat.active.event.bodyImpacts` follows the matching discharge. `canPresentBodyImpact` combines character knowledge and current contact visibility. Effects should use normal scene depth testing as well. Easy's revealed scenery and camera cutaways do not grant knowledge of an undiscovered victim. Skip a hidden impact when it occurs; do not queue it for discovery later.
@@ -39,13 +62,15 @@ Open `tactics/battle-3d.html?study=gunshot-impacts` in the packaged build for a 
 
 ## Next visual stage
 
-Connect the artist's ordinary spray to these records first. Add Full, Reduced and Off preferences, independent reduced-motion behavior, a bounded emitter pool and impact-time visibility gating with that effect. The special head presentation then reads the explicit fatal outcome and uses instance-local species/outfit masks. Until that art is integrated, the game uses its ordinary casualty appearance for these deaths.
+The ordinary painted asset is attached to real receipts in the placement review; the live battle still needs the effect lifecycle. Connect the helper at the matching discharge, with Full, Reduced and Off preferences, independent reduced-motion behavior, a bounded emitter pool and impact-time visibility gating. The special head presentation then reads the explicit fatal outcome and uses instance-local species/outfit masks. Until that art is integrated, the game uses its ordinary casualty appearance for these deaths.
 
 The current checks cover threshold boundaries, resistance, actual incidental regions, casualties, per-pellet association, hidden-source traces, saved outcomes, event deduplication, six layers and support snapshots. Fifty repeated trace/debug cycles retain the same geometry and dispose cleanly. Particle/GPU performance budgets require measurement after the artist's effects are connected.
 
 ## Release checks
 
-The relevant combat, casualty, save, ammo, layer, query, fire and packaging suites pass 167 tests. The core reproduction check, real-attack fixture reproduction and asset audit pass. The playable map was checked through the ordinary shot planner, including a damaging hit and a missed shotgun blast.
+The impact foundation passed 167 relevant combat, casualty, save, ammo, layer, query, fire and packaging tests. Its core reproduction check, real-attack fixture reproduction and asset audit passed. The playable map was checked through the ordinary shot planner, including a damaging hit and a missed shotgun blast.
+
+The spray-placement follow-up passes 32 focused tests covering the new transform, actual posed surfaces, painted pivots, camera invariance, artist asset integrity, the existing impact contract and both packaging lists. The 3D packaged build, fixture reproduction and asset audit pass. Browser review covers horse and hen skin contacts, camera changes, layer six, scrubbing and the collider-only/still controls, with no browser console errors. The temporary review server and tab are closed after verification.
 
 The full release run is not green. Its initial 2,830-test run had 17 failures and six existing TODOs. Replaying those failing cases with the pre-change `HEAD` versions of all changed modules reproduced 16 failures; the new discharge deduplication required updating the synthetic two-shot tank fixture to use two different identities. The renderer test now exercises the effect update after posing, and the visibility test covers the shared six-layer limit. All three affected playback/visibility cases pass.
 

@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gunshot spray placement · Animal Factory</title><link rel="icon" href="data:,"><link rel="stylesheet" href="gunshot-spray-study.css"></head><body>
+<header><div><h1>Gunshot spray placement</h1><p>The artist’s painted spray, attached to resolved projectile hits</p></div><a href="battle-3d.html?study=gunshot-impacts">Playable impact review →</a></header>
+<main><section class="controls" aria-label="Impact review controls">
+<label>Real attack <select id="case"></select></label><label>Impact <select id="impact"></select></label>
+<label>Character <select id="reference"><option value="actual">Actual victim</option><option value="horse">Horse art reference</option><option value="hen">Hen art reference</option></select></label>
+<label>Camera <select id="view"><option value="front">From shooter’s side</option><option value="side">Side</option><option value="rear">From victim’s far side</option></select></label>
+<label><input type="checkbox" id="skin" checked>Match painted body</label><label><input type="checkbox" id="axes" checked>Show contact and directions</label>
+<button id="play">Pause</button><button id="restart">Replay</button><label>Time <input id="time" type="range" min="0" max="0.48" step="0.001" value="0.06"><output id="clock">0.060 s</output></label>
+<label>Motion <select id="motion"><option value="full">Full spray</option><option value="reduced">Fewer droplets</option><option value="still">Still / fade</option></select></label>
+</section><div id="viewport"><div id="loading" role="status">Loading impact fixture and painted body…</div><div class="caption close">Contact review</div><div class="caption game">Gameplay size · 55 px / tile</div><div class="divider"></div></div>
+<output id="details" aria-label="Impact placement details"></output><p id="error" role="alert"></p>
+<p class="key">Gold: incoming bullet · Red: entrance spray · Green: painted contact · White: combat collider contact</p>
+<footer>This review reads the shared real-attack fixture. Reference characters change only the art preview. The spray fans back along the incoming ray; it does not invent an exit wound. Camera rotation changes the view, never the world direction.</footer></main><script type="module" src="gunshot-spray-study.js"></script></body></html>

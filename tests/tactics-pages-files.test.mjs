@@ -8,7 +8,8 @@ for(const scope of ['base','3D'])test(`the ${scope} tactics Pages build lists ev
  const dist=new URL('../dist/tactics/',import.meta.url),build3d=readFileSync(new URL('../tools/build-tactics-3d.mjs',import.meta.url),'utf8');
  // This project packages the base list plus the 3D additions. Check both,
  // including dependencies of the additions, rather than the old 2D list alone.
- const base=JSON.parse(source.match(/const files=(\[[^\]]*\])/)[1].replaceAll("'",'"'));
+ const base=[...JSON.parse(source.match(/const files=(\[[^\]]*\])/)[1].replaceAll("'",'"')),
+  ...[...source.matchAll(/files\.push\(([^;]+)\);/g)].flatMap(m=>JSON.parse('['+m[1].replaceAll("'",'"')+']'))];
  const extra=[...build3d.matchAll(/for\(const file of (\[[^\]]*\])/g)].flatMap(m=>JSON.parse(m[1].replaceAll("'",'"'))).filter(f=>existsSync(new URL(f,dist)));
  const files=[...new Set(scope==='base'?base:[...base,...extra])],listed=new Set(files);
  const missing=[];
@@ -19,5 +20,7 @@ for(const scope of ['base','3D'])test(`the ${scope} tactics Pages build lists ev
  }
  assert.deepEqual(missing,[]);
  for(const file of ['flame-effect.js','flame-nozzles.js','flame-art.html','flame-art-review.js'])assert.ok(listed.has(file),file);
+ for(const file of ['gunshot-spray-frame.js','painted-blood-spray.js'])assert.ok(listed.has(file),file);
+ if(scope==='3D')for(const file of ['gunshot-spray-study.html','gunshot-spray-study.js'])assert.ok(listed.has(file),file);
  if(scope==='3D')for(const file of ['foliage-skins-review.html','foliage-skins-review.js','foliage-context-fixture.js','foliage-density-fixture.js','foliage-composition-fixture.js'])assert.ok(listed.has(file),'Native horse foliage review must ship '+file);
 });
