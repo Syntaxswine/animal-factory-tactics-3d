@@ -69,3 +69,7 @@ checkModuleClosure(new URL('.pages-output/',root),['tactics/dialogue-audition.js
 for(const file of ['painted-blood-spray-data.js','painted-blood-spray-motion.js','painted-blood-spray.js','painted-blood-spray-study.js','painted-blood-spray-study.html','painted-blood-spray-study.css'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.cpSync(new URL('dist/assets/effects/painted-blood/',root),new URL('.pages-output/assets/effects/painted-blood/',root),{recursive:true});
 checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-blood-spray-study.html']);
+
+for(const file of ['painted-blood-followup-data.js','painted-blood-exit.js','painted-blood-stain.js','blood-wounds-study.html','blood-wounds-study.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+for(const folder of ['painted-blood-exit','painted-blood-stains'])fs.cpSync(new URL('dist/assets/effects/'+folder+'/',root),new URL('.pages-output/assets/effects/'+folder+'/',root),{recursive:true});
+checkModuleClosure(new URL('.pages-output/',root),['tactics/blood-wounds-study.html']);
