@@ -8,6 +8,10 @@ effect keeps its existing smaller fan and larger droplets. The exit has a wider
 fan, finer droplets and ragged flecks. Both separate, fall and fade; the paint
 remains on the struck surface afterwards.
 
+**Lifetime: the visible wound lasts for the current battle.** Clear the stain
+layers when that battle ends; do not carry them into the campaign view or the
+next encounter. They are cosmetic and do not change injury or treatment state.
+
 [Open the study](http://127.0.0.1:4477/tactics/blood-wounds-study.html). It includes
 all **12 animals, both outfits and the donkey guide (25 combinations)**, close
 and 55-pixel-per-tile views, torso/arm/leg examples, camera changes, backgrounds,
@@ -85,8 +89,8 @@ const stain = blood.stamp({
   kind: 'exit', variant: 1,
   width: 0.25, height: 0.31, depth: 0.085
 });
-// The stain stays indefinitely through subsequent skeletal poses.
-// Clear on treatment, reset, actor replacement, or another chosen game event:
+// The stain follows subsequent skeletal poses for the current battle.
+// Clear when the battle ends or the encounter is reset:
 blood.clear();
 blood.dispose();
 ```
@@ -110,7 +114,9 @@ blood.dispose();
 - This adapter follows skeletal deformation. Morph targets and later CPU edits
   to the source's bind geometry require their own adapter or re-stamping; morph
   targets are rejected explicitly. The native model poses checked here retain
-  exact alignment. Save/load serialization and treatment rules remain builder work.
+  exact alignment. The builder handles reconstructing the same battle's stains
+  when an actor is rebuilt or an ongoing battle is resumed. Discard that cosmetic
+  state at battle end; it must not persist between encounters.
 
 ![Stains remain attached while the model turns and flexes](review-images/blood-wounds/attached.png)
 

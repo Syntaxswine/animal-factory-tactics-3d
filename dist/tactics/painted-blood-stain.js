@@ -40,6 +40,8 @@ export function createBloodStain(texture,{source,point,normal,width=.18,height=.
  let disposed=false;
  return {mesh,source,sourceVertices:selected,triangles:positions.length/9,kind,dispose(){if(disposed)return;disposed=true;mesh.removeFromParent();geometry.dispose();material.dispose();}};
 }
+// Visible wounds belong to the current battle. The encounter owner clears or
+// disposes this layer at battle end/reset; never carry it into the next battle.
 export function createBloodStainLayer(texture,{parts,maxStains=8}={}){
  if(!Array.isArray(parts)||!Number.isInteger(maxStains)||maxStains<1||maxStains>16)throw Error('Body parts and a stain cap of 1–16 are required');
  const allowed=new Set(parts),stains=[];let disposed=false;
