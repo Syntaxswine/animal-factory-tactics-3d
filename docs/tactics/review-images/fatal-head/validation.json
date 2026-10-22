@@ -1,0 +1,23 @@
+{
+  "browserCleanup": {
+    "exited": true,
+    "portReleased": true
+  },
+  "captures": 82,
+  "errors": [],
+  "cancelledLoads": [
+    "boot",
+    "replacement"
+  ],
+  "resources": {
+    "before": {
+      "geometries": 14,
+      "textures": 6
+    },
+    "after": {
+      "geometries": 14,
+      "textures": 6
+    }
+  },
+  "reviewedAt": "2026-10-22T03:34:56.306Z"
+}
