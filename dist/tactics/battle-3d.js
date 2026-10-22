@@ -46,6 +46,7 @@ import {projectBattlePoint,battleFloorPoint,rotateBattleView,focusBattleView,ove
 import {MOVEMENT_MS,queuedMovementDuration} from './battle-motion.js';
 import {rectangleMembers,pruneSelection,toggleSelection,selectable,selectionModifier,stanceSelection,setSelectionStance,movementSelection,setSelectionMovement} from './battle-selection.js';
 import {readSettings,saveSettings} from './settings-3d.js';
+import {createSoundPreferences} from './sound-preferences.js';
 import {createQuickPlayGame} from './quickplay-game.js';
 import {quickPlayEntry,normalizeQuickPlayTeam,validQuickPlayTeam,quickPlayTeamFromSearch} from './quickplay-presets.js';
 import {createBattleHud} from './battle-hud.js';
@@ -67,6 +68,7 @@ if(new URLSearchParams(location.search).get('study')==='wall-xray'||new URLSearc
 let quickPlayTeam=quickPlayEntry(location.search,initialState)?initialState?normalizeQuickPlayTeam(initialState.quickPlayTeam):quickPlayTeamFromSearch(location.search,readSettings().quickPlayTeam):null;
 let cliffViewState=null,cliffViewId=0;
 let renderer,state,targetId=null,tileTarget=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false,lastLadderPreparing=false;
+const soundPreferences=createSoundPreferences({onChange:volume=>renderer?.audio?.setVolume(volume)});$('blood-effects').closest('section').append(soundPreferences.root);
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
 const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastClockCombat,storageBusy=false,lastAuto=performance.now(),autoRound=0,autoDisabled=false;
 const characterScreen=createCharacterScreen({getState:()=>state,beforeOpen:()=>renderer.settleEquipmentDraws(state),onStopMovement:id=>{if(renderer.busy||!canControl(state,state.units.find(u=>u.id===id)))return false;pickupOrder.cancel();dialogueOrder.cancel();state.queue=[];frameClock.reset();lastUI='';sync();return true;},onInventoryChange:()=>{renderer.captureCombat(state);lastUI='';sync();},getEquipmentState:id=>renderer?.equipmentState(id)||'carried',canEquip:()=>!renderer.busy,onEquip:(id,weapon)=>{if(renderer.busy)return false;const ok=equip(state,state.units.find(u=>u.id===id),weapon);if(ok){renderer.captureCombat(state);lastUI='';}return ok;},onOpen:()=>{frameClock.reset();sync();},onClose:()=>{frameClock.reset();sync();}});
@@ -360,7 +362,7 @@ function action(fn){if(paused()||renderer.busy)return;pickupOrder.cancel();dialo
  $('stop').onclick=()=>{if(paused()&&!dialogueOrder.pending)return;cancelMovementOrders();sync();};$('floor').onchange=()=>{contextMenu.close();tileTarget=null;level=+$('floor').value;clearHover();targetId=null;drag=null;flamePlanner.cancel();sync();};
  for(const b of document.querySelectorAll('#battle-levels [data-level]'))b.onclick=()=>{$('floor').value=b.dataset.level;$('floor').dispatchEvent(new Event('change'));};
 $('pause').onclick=()=>{userPaused=!userPaused;frameClock.reset();sync();};
-document.addEventListener('visibilitychange',()=>{renderer.wallXray.setPointer(null,null);frameClock.reset();sync();if(document.hidden&&!dialogueUI.open&&!storageBusy&&!autoDisabled&&(performance.now()-lastAuto>=30000||state.round!==autoRound||campaign&&state.revision!==campaignSavedRevision))autosave();});
+document.addEventListener('visibilitychange',()=>{renderer.wallXray.setPointer(null,null);renderer.audio?.setPaused(paused());frameClock.reset();sync();if(document.hidden&&!dialogueUI.open&&!storageBusy&&!autoDisabled&&(performance.now()-lastAuto>=30000||state.round!==autoRound||campaign&&state.revision!==campaignSavedRevision))autosave();});
 window.addEventListener('pageshow',()=>frameClock.reset());
 function prepareDialogueResources(){
  const owner=campaign?.campaign||state,d=initializeDialogue(owner);
@@ -383,6 +385,7 @@ let lastWorldSize="";
 function frame(now){
  try{
   defeatFlow.tick(state,now,{suspended:document.hidden||savePanel.open,busy:storageBusy||campaign?.busy});
+  renderer.audio?.setPaused(paused());
   const elapsed=frameClock.sample(now,{paused:paused(),mode:turnBased(state)});presentationTime+=elapsed;renderer.presentationNow=presentationTime;tickEncounterClock(state,elapsed,{paused:paused()||renderer.traversal.busy});syncClock();
   if(!paused()&&!renderer.busy&&presentationTime-lastStep>stepDelay){lastStep=presentationTime;stepDelay=queuedMovementDuration(state);if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);renderer.captureCombat(state);sync();}
   // Dialogue owns its own portrait clock. Keep the last world frame while it is open.

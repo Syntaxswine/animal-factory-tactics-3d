@@ -125,3 +125,38 @@ The packaged battle used ordinary player commands: a 45-injury torso shot left B
 The fresh full regression run completed with **2,916 passed, zero failures and six existing speaking-head TODOs**, exit code 0. Final focused runs passed 74 effect/packaging checks (including the additional stabilized-casualty regression) and 42 pose/offhand checks. The packaged build, asset audit, 11-case impact-fixture reproduction, core reproduction and changed-module syntax checks pass. The review tab and registered temporary server are closed; port 4497 was released and its restart record retained.
 
 After the full test runner exited, `node tools/measure-fatal-live.mjs` recorded [reproducible CPU and resource evidence](review-images/fatal-live-resources.json) on Node 24.15 / Ryzen 7 5800X. For a warm pig-foreman model, the fatal wrapper plus character-batch sync measured **0.048 ms p95**, excluding rig posing. Switching masks, skinning bounds and rebuilding that model's batch measured **1.46 ms p95**. All twelve native animal masks produced one neck-seal draw each. Measured released assemblies used three to seven material draws per item, below the conservative nine-draw cap. The report includes per-model preparation, per-weapon construction timings and source hashes. These are Node wall-time samples with uncontrolled background OS work; they exclude shader compilation, browser/GPU rendering and whole-sector frame time. They do not establish 60 FPS.
+
+### Sound follow-up — 22 October 2026
+
+The approved `2300fd72` reconciliation retains the live fatal effects and complete artist weapon study, with separate study and live-snapshot interfaces. The head burst and ordinary releases were already connected in `05abafb`. The artist's supported, strapped-tank/hose pose remains a study; live fuel equipment still uses the documented rigid snapshot. Exit effects still require a confirmed simulation exit.
+
+[BattleAudio](../../dist/tactics/battle-audio.js) connects the Babble Lab `0df4be4` sound audition to committed gameplay. It preserves the supplied **70% timbre morph and 20% music-slice layer**. One report from the AK recording is cut at 135 ms with a 15 ms fade, so three resolved automatic rounds produce three reports, rather than three full recorded bursts. The other ten supplied clips retain their exported bytes. Recipes, source and output hashes, publisher/licence links and the music-bank note accompany the [game audio manifest](../../dist/assets/audio/babble-sfx/manifest.json). Reproduce with `node tools/prepare-battle-sfx.mjs <babble-lab/audition/animal-factory/sfx>`; the game needs no external folder, synthesizer or source archives.
+
+| Committed event | Presentation |
+| --- | --- |
+| Pistol / second pistol | One TT-33 report per discharge |
+| Rifle / sniper | One Mosin report per discharge |
+| Assault rifle / SMG / HMG | One automatic report per discharge |
+| Shotgun | One blast shared by all pellets; pump 350 ms later |
+| Grenade | Explosion at the matching release/fuse outcome |
+| RPG / launcher | Explosion from its actual blast receipt; no invented launch recording |
+| Tank / barrel | Explosion at the matching committed fire sequence, once across both receipt streams |
+| Typed metal, glass or corrugated/tin contact | One material cue per material per discharge; unknown material stays silent |
+| Structural damage | Debris at the recorded impact location |
+
+Queued visual attacks wait for their presented discharge. Audible attacks with no queued visual use their committed event. Older grenade/RPG receipts lack firearm IDs, so a presentation-only binding associates raw events with queued copies; no IDs are added to simulation or saves. Opening planners, discovering a shooter, loading history, changing blood settings or restoring volume does not replay a sound. This layer does not spend AP/ammunition, roll RNG, alter damage, reveal people or extend combat busy time. There is no new flamethrower, voice, footstep or weapon-drop recording in this pack.
+
+**Sound effects volume** is shared between title Options and the battle command drawer, defaults to 70%, and is independent of dialogue volume. An owned Web Audio context unlocks through a real pointer/key gesture. Pause suspends it; visibility changes suspend it directly even when animation frames stop. Subsequent gestures during a pause do not briefly resume it. Mute stops active voices immediately. Disposing the renderer or loading/restarting retires sources and closes its context; slow or failed preparation never blocks the sector or replays a missed cue later. Optional failures keep ordinary silent gameplay available.
+
+At most twelve sources, gains and optional stereo panners play concurrently. Higher-priority explosions can retire older lower-priority cues. A shared mix compressor precedes the volume control. Decoded audio admission is capped at 12 MiB; the eleven WAVs occupy about 1.71 MiB and require about 3.41 MiB of float PCM at their 44.1 kHz source rate. A browser's decoded/resampled lengths are counted against the actual cap. Encoded data is released after decoding. Distance attenuation and camera-relative stereo use nearby living squad members; they are cosmetic approximations, not calibrated acoustics or changes to the hearing/detection rules. These resource bounds do not establish a whole-sector frame-time result.
+
+The recordings retain their [Sonniss GDC licence](https://sonniss.com/gdc-bundle-license/) or [Kenney CC0 provenance](https://kenney.nl/assets/impact-sounds); they are incorporated as game effects, not supplied as a standalone sound library. The supplied Glades music bank is recorded as **non-commercial** in the original recipes, and that note is preserved. This integration does not establish commercial-use clearance for that music layer.
+
+The packaged review uses ordinary player commands: Yakov's full-aim torso shot deals 45 injury to Grigori (70 → 25 HP), spends 12 AP and one Mosin round, and schedules one Mosin cue with all eleven clips decoded. The impact pause suspends the context. Mute removes its voice; returning to 70% leaves the cue count unchanged. Quicksave/load restores 0 AP and four loaded rounds without replaying the shot or sound. Title Options reads the same 70% effects setting alongside the separate dialogue setting. Browser application warning/error logs are empty.
+
+![Normal packaged shot with one synchronized Mosin cue](review-images/sfx-live-rifle.png)
+![Shared effects-volume setting in title Options](review-images/sfx-options.png)
+
+The follow-up passes **181 relevant checks**, with zero failures. The final audio/deployment subset passes 19 checks, including deliberately omitted transitive/worker modules; all 15 audio checks pass again with the intercepted-wall location regression. Asset audit, core reproduction, the eleven real-attack fixtures, changed-module syntax and packaged build pass. This audio follow-up does not rerun the whole project suite; the earlier full-run result above belongs to the fatal/weapon release. The [sound contract record](review-images/battle-sound-contract.json) includes final source and asset hashes, byte budgets, test counts, native playback observations and the scope of those observations.
+
+Both temporary browser tabs are closed. Both registered preview lifetimes exited through their private stop marker, retained their restart bundles and released port 4498. The final native build repeats the ordinary shot with one Mosin cue, eleven decoded clips and a suspended context at the impact pause, with no application warning/error logs. No server from this sound review remains running.

@@ -2,6 +2,8 @@ import './export-sectors.mjs';
 import './build-tactics-pages.mjs';
 import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
+for(const file of ['battle-audio.js','battle-sound-data.js','sound-preferences.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+fs.cpSync(new URL('dist/assets/audio/babble-sfx/',root),new URL('.pages-output/assets/audio/babble-sfx/',root),{recursive:true});
 for(const file of ['gunshot-impacts.js','shot-coordinates.js','gunshot-impact-debug.js','gunshot-impact-map.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['gunshot-spray-frame.js','painted-blood-spray.js','painted-blood-spray-motion.js','painted-blood-spray-data.js','gunshot-spray-study.html','gunshot-spray-study.css','gunshot-spray-study.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['battle-blood.js','blood-spray-pool.js','blood-stain-batches.js','battle-fatal-head.js','battle-weapon-drops.js','casualty-weapon-assembly.js','casualty-equipment-visual.js','fatal-head-data.js','fatal-head-motion.js','fatal-head-mask.js','casualty-weapon-drop.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));

@@ -14,7 +14,7 @@ export class GunshotImpactDebug {
   }
   this.update(null,null);
  }
- update(active,state,blood){
+ update(active,state,blood,audio){
   if(!this.enabled)return;
   const receipts=active?.phase.discharged?(active.event.bodyImpacts||[]).filter(r=>canPresentBodyImpact(r,active,state)).slice(0,32):[];
   let points=0,lines=0;const p=this.points.geometry.attributes.position,a=this.arrows.geometry.attributes.position;
@@ -29,7 +29,7 @@ export class GunshotImpactDebug {
    const placement=active.bodyVisualPlacements?.get(receipt.projectileId);if(placement)text.push(`${placement.placement} · correction ${placement.correction.toFixed(3)} tiles`);
   }
   for(const [mesh,count] of [[this.points,points],[this.arrows,lines]]){mesh.visible=count>0;mesh.geometry.setDrawRange(0,count);mesh.geometry.attributes.position.needsUpdate=true;}
-  if(this.panel){this.panel.hidden=!receipts.length;this.panel.textContent='Resolved body impacts · v1\n'+text.join('\n')+(blood?.lastStats?`\nSpray: ${blood.pool.active+(blood.fatalPool?.active||0)} emitters · ${blood.lastStats.liveCards} cards · ${blood.stains.slots.filter(s=>s.owner!==null).length} stain batches`:'');}
+  if(this.panel){this.panel.hidden=!receipts.length;this.panel.textContent='Resolved body impacts · v1\n'+text.join('\n')+(blood?.lastStats?`\nSpray: ${blood.pool.active+(blood.fatalPool?.active||0)} emitters · ${blood.lastStats.liveCards} cards · ${blood.stains.slots.filter(s=>s.owner!==null).length} stain batches`:'')+(audio?`\nSound: ${audio.lastCue?.id||'none'} · ${audio.played} cues · ${audio.buffers.size} clips · ${audio.voices.length} voices · ${audio.context?.state||'locked'}`:'');}
   if(receipts.length&&blood?.lastStats?.liveCards>0&&this.freezeInput?.checked&&this.lastFrozen!==active.event.dischargeId){this.lastFrozen=active.event.dischargeId;this.pauseRequested=true;}
  }
  consumePause(){const requested=!!this.pauseRequested;this.pauseRequested=false;return requested;}
