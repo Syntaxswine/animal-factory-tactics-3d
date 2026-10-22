@@ -1,6 +1,6 @@
-import {V,Q,DEG,clamp,track,spinTrack,angleTrack,bodyQ,yawQ,relQ,keyedLimb,posedFrom,steadyPoles,steadyTurns,limbSample,createTraversalBody,createSurfaceProbe} from './traversal-pose.js';
+import {V,Q,DEG,clamp,smooth,track,spinTrack,angleTrack,bodyQ,yawQ,relQ,keyedLimb,posedFrom,steadyPoles,steadyTurns,limbSample,createTraversalBody,createSurfaceProbe} from './traversal-pose.js';
 import {bodyFit,createTailBend,createClearanceFit,edgeBoxes} from './traversal-fit.js';
-import {balanceTraversal,contactProbe} from './traversal-balance.js';
+import {balanceTraversal,contactProbe,boxedPath} from './traversal-balance.js';
 // Climb over a 2 m wall (docs/tactics/NATURAL-TRAVERSAL.md). Local frame: start on the tile at the origin facing +X,
 // the wall on the edge at X = .5 (faces .42 and .58, top 2.0), finish standing on the next tile's centre (1, 0, 0)
 // facing on. The top is 0.35 above the head and the standing palm reach is about 1.71, so: a jump to catch the top,
@@ -54,6 +54,27 @@ export function createWallClimb(worker,profile={id:'horse'}){
   for(const s of [-1,1]){const g=V(k.t<3?.45:.54,top,k.t<3?s*.18:-s*.20),A=V(k.hips[0],0,k.hips[2]).add(body.offsets.spine.clone().applyQuaternion(hipsQ)).add(body.offsets.shoulder[s].clone().applyQuaternion(chestQ)),h=Math.hypot(g.x-A.x,g.z-A.z),r=.97*(body.L[s].upper+body.L[s].fore);
    if(h<r)y=Math.max(y,g.y-A.y-Math.sqrt(r*r-h*h));}
   rise[k.t]=y-k.hips[1];k.hips=[k.hips[0],y,k.hips[2]];}
+ // Over the top, a body deeper in front than the horse's (deep: the pigs stand back 16 and 19 cm, every other body
+ // within 1 mm; switched on by the donkey's 1 mm, this moved its legs 22 cm) lies on it differently. The horse's keys
+ // lean its trunk over the 16 cm top, held there by its hands, its seat a few centimetres above it; at those leans a
+ // pig's belly went 8 to 36 cm into the top, and its arms, set wider, fell 3 to 5 cm short of it even with its torso
+ // touching it. So each key over the top takes the change of lean (pitch, searched) and the height that keep the torso
+ // clear of the top, and from the right knee up to the left leg over that set its lowest point resting on it (REST: the
+ // seat carries the body where the hands cannot), the hands' reach to their marks a cost (MARKS: where the arm keys
+ // below plant them on the top, by time). The torso is its points at rest riding the hips or spine; the height for a
+ // lean is exact (a move up or down shifts every point alike).
+ const deep=back>.05;
+ if(deep){probe.update();const h0=body.at0('hips'),s0=body.at0('spine'),hipsPts=[],spinePts=[];
+  for(let i=0;i<probe.count;i++){const b=probe.boneNames[probe.bone[i]],q=V(probe.x[i],probe.y[i],probe.z[i]);if(b==='hips')hipsPts.push(q.sub(h0));else if(b==='spine')spinePts.push(q.sub(s0));}
+  const MARKS={1:[[1.265,2.345,[.45,top,.18]],[2.585,3.0,[.54,top,-.10]],[3.12,4.175,[.54,top,-.20]]],'-1':[[1.265,3.485,[.45,top,-.18]],[3.605,4.175,[.54,top,.20]]]};
+  const reach=.97*(body.L[1].upper+body.L[1].fore),REST=[.006,.009],inTop=q=>q.x>WALL.edge-WALL.half&&q.x<WALL.edge+WALL.half&&Math.abs(q.z)<.5;
+  for(const k of keys){if(k.t<2.265||k.t>=3.685)continue;const resting=k.t>2.5;let best=null;
+   for(let dp=-30;dp<=30;dp+=2){const hipsQ=yawQ(k.heading||0).multiply(bodyQ(((k.pitch||0)+dp)*DEG,(k.roll||0)*DEG)),chestQ=hipsQ.clone().multiply(relQ(k.flex||0,k.side||0,k.twist||0)),H=V(...k.hips),C=H.clone().add(body.offsets.spine.clone().applyQuaternion(hipsQ));
+    let low=Infinity;for(const q of hipsPts){const w=q.clone().applyQuaternion(hipsQ).add(H);if(inTop(w))low=Math.min(low,w.y-WALL.top);}for(const q of spinePts){const w=q.clone().applyQuaternion(chestQ).add(C);if(inTop(w))low=Math.min(low,w.y-WALL.top);}
+    if(low===Infinity)continue;const dy=resting?(REST[0]+REST[1])/2-low:Math.max(0,REST[0]-low);
+    let over=0;for(const s of ['1','-1']){const m=MARKS[s].find(([a,b])=>k.t>=a&&k.t<=b);if(!m)continue;const sh=C.clone().add(V(0,dy,0)).add(body.offsets.shoulder[+s].clone().applyQuaternion(chestQ));over=Math.max(over,sh.distanceTo(V(...m[2]))-reach);}
+    const cost=Math.abs(dp)/10+Math.abs(dy)/.05+30*Math.max(0,over);if(!best||cost<best.cost)best={cost,dp,dy};}
+   if(best){k.pitch=(k.pitch||0)+best.dp;k.hips=[k.hips[0],k.hips[1]+best.dy,k.hips[2]];}}}
  // Flights are keyed as exact parabolas: the apex rises above the catch it comes down onto, and the launch and the catch
  // lie on the arc through it; a drop falls from a still hang to its touchdown. Each flight key is placed on its arc
  // with the arc's speed and an acceleration of -g (the quintics between them are then the parabola). Keyed by speed
@@ -70,9 +91,9 @@ export function createWallClimb(worker,profile={id:'horse'}){
   if(top){k.hips=[k.hips[0],top.hips[1]-g/2*(k.t-top.t)**2,k.hips[2]];pins[i]=[slope(i,0),-g*(k.t-top.t),slope(i,2)];accel[i]=[0,-g,0];}}
  const posTrack=track(keys.map(k=>[k.t,...k.hips]),pins,{accel}),rotTrack=angleTrack(keys.map(k=>[k.t,k.heading||0,k.pitch||0,k.roll||0]));
  const shape=track(keys.map(k=>[k.t,k.flex||0,k.side||0,k.twist||0,k.nod||0,k.tilt||0,k.turn||0]));
- let fit=null,steady=null,turnRef=null,balance=null;
+ let fit=null,steady=null,turnRef=null,balance=null,onTop=null;
  function trunkAt(t){const [flex,side,twist,nod,tilt,turn]=shape(clamp(t,0,D));let hips=V(...posTrack(t)),hipsQ=rotTrack(t),headQ=relQ(nod,tilt,turn);const spineQ=relQ(flex,side,twist);
-  if(balance)hips.add(balance.shift(t));
+  if(onTop)hips.add(onTop(t));if(balance)hips.add(balance.shift(t));
   if(fit){hips.add(fit.trunk(t));const bow=fit.bow(t);if(bow)hipsQ=hipsQ.clone().multiply(bodyQ(bow*DEG));const h=fit.head(t);if(h[0]||h[1]||h[2])headQ=headQ.multiply(relQ(...h));}
   const sp=balance?.spin?.(t);if(sp){hipsQ=sp.q.clone().multiply(hipsQ);hips.sub(sp.pivot).applyQuaternion(sp.q).add(sp.pivot);}
   return {hips,hipsQ,spineQ,headQ,chestQ:hipsQ.clone().multiply(spineQ),chest:hips.clone().add(body.offsets.spine.clone().applyQuaternion(hipsQ))};}
@@ -127,9 +148,26 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // Twice: the first pass unwraps the palms' yaw blends, the second finds the hands' ways round for those continuous
  // targets (found for the wrapped ones, they named the wrong way where a blend passed 180 degrees: a 47 m/s snap).
  const turnsAt=t=>{body.pose(spec(t),'turns');return body.turns.slice();},turns=()=>{turnRef=null;turnRef=steadyTurns(D,turnsAt);turnRef=steadyTurns(D,turnsAt);};turns();
+ // Over the top a body deeper in front rests on it (see the keys): one smooth vertical move holds its torso's lowest
+ // point over the top between TOUCH and REACH above it (the contacts' reach is a centimetre) and never in it, measured
+ // on the final limbs every 5 ms. Between the keys the hips' path lifted a pig's seat off the top, and the balance,
+ // finding nothing holding it, planned a third of a second of flight through the straddle and swung the hips 40 cm.
+ // Past the band the move runs on free until the body hangs on the far face (LOWERED, the lowering's key), easing off
+ // as smoothly as it holds: let go in 80 ms at the band's end, the pig foreman, held 13 cm down onto the top's edge as
+ // it slid off it, rose 12 cm, lifted its hands off the top and fell at 6 g (724% of its weight).
+ const TOP_BAND=[2.55,3.66],LOWERED=4.105;
+ if(deep){const TOUCH=.006,REACH=.009,[a,b]=TOP_BAND,all=createSurfaceProbe(worker,{stride:1,keep:(m,i)=>!/tail/.test(m.name)||tails.isRoot(m.name,i)}),want=[],lo=[],hi=[],ts=[],inTop=(x,z)=>x>WALL.edge-WALL.half&&x<WALL.edge+WALL.half&&Math.abs(z)<.5;
+  for(let t=a;t<=LOWERED+1e-9;t+=.005){body.pose(spec(t),'top');all.update();let low=Infinity;
+   for(let i=0;i<all.count;i++){if(/hoof|boot|foot|toe|hand/i.test(all.names[all.part[i]]))continue;const bone=all.boneNames[all.bone[i]];if(bone!=='hips'&&bone!=='spine'&&bone!=='head')continue;if(inTop(all.x[i],all.z[i]))low=Math.min(low,all.y[i]-WALL.top);}
+   ts.push(t);if(low===Infinity||t>b){want.push(0);lo.push(-1);hi.push(1);}else{want.push(TOUCH-low);lo.push(-low);hi.push(REACH-low);}}
+  const P=boxedPath(want,want.map(()=>1),2e7,want.map((_,i)=>({at:i,c:[1],lo:lo[i],hi:hi[i]})));
+  const tr=track(ts.map((t,i)=>[t,0,P.c[i]*smooth(Math.min(t-a,LOWERED-t)/.08),0]),{},{limit:false});onTop=t=>t>a&&t<LOWERED?V(...tr(t)):V();
+  steady=steadyPoles(D,t=>limbSample(body,spec(t)));turns();}
  // Balance: the centre of mass planned against what holds the body at each moment, the hips moved to follow it. It
- // runs on the hands' final turns (a palm's angle decides when it first touches), which are then found again.
- const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),pose:t=>body.pose(spec(t),'balance'),com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).toArray()});
+ // runs on the hands' final turns (a palm's angle decides when it first touches), which are then found again. Resting
+ // on the top, the plan keeps the authored path (hold): its own hips' move lifted the seat off it.
+ const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),pose:t=>body.pose(spec(t),'balance'),com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onTop?onTop(t):V()).toArray(),
+  hold:deep?t=>t>=TOP_BAND[0]&&t<=TOP_BAND[1]:null});
  // The head and tail are fitted again to the balanced motion, the head held through the flights (traversal-fit.js,
  // fit.solveHead and fit.solveTail), and the report taken on it.
  balance=bal;fit.solveHead({air:t=>bal.samples[Math.round(t/(bal.times[1]-bal.times[0]))]?.kind==='air'});fit.solveTail();turns();

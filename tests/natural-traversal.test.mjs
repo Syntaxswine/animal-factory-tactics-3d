@@ -12,14 +12,14 @@ const crossing=kind=>({id:1,unitId:1,kind,from:{x:0,y:0,z:0},to:{x:1,y:0,z:0}});
 // clearance fit's report, taken again after the balance; a tail's root counts as trunk), in cm: about a centimetre,
 // except the named gaps, which may only shrink. 8 cm is right through the 16 cm wall; past that the way out is up.
 // Read before the balance (to d3fec1f), the report missed the window's tails, the climb's heads 5 to 8 cm in its wall
-// and the pigs 25 to 40 cm in its floor; read here, the pigs' straddle shows what it hid.
+// and the pigs 25 to 40 cm in its floor; read here, it found the pigs' bellies 8 to 16 cm through the top in the straddle.
 const LEFT={'window/pig-foreman/trunk':2,'window/pig-director/trunk':3, // the belly on the sill as the body tips over
  'window/donkey/head':3,'window/rabbit/head':6, // long ears graze the lintel at the hop for ~20 ms
  'window/goat/head':4, // the horns in the floor in the roll: no turn of the head within the neck clears them
  'window/skunk/trunk':2, // the plume's root, which rides the hips, on the floor in the roll
  'window/dog/trunk':2,'wall/dog/trunk':2, // the dog's utility pouch on the sill's far edge, and on the face in the hang
  'low-wall/pig-director/trunk':2, // the waistcoat on the wall's near edge at the spring
- 'wall/pig-foreman/trunk':16,'wall/pig-director/trunk':8}; // a pig's belly through the 16 cm top: it needs its own straddle
+ 'wall/pig-foreman/trunk':2,'wall/pig-director/trunk':3}; // the seat resting on the 16 cm top in the straddle (15.6 and 7.9 through it before)
 // The hen hops on her wings (hen-crossing.js). Her body parts stay within 4 cm of clear of the floor and the obstacle,
 // except the tail fan in the last 0.3 s: spreading back to her standing pose, it reaches .54 behind her, into the wall.
 test('the hen hops up and down every obstacle, ends on the next tile and is given back whole',()=>{
