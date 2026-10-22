@@ -45,13 +45,15 @@ import {BattleRenderer} from './battle-renderer.js';
 import {projectBattlePoint,battleFloorPoint,rotateBattleView,focusBattleView,overviewBattleView} from './isometric-camera.js';
 import {MOVEMENT_MS,queuedMovementDuration} from './battle-motion.js';
 import {rectangleMembers,pruneSelection,toggleSelection,selectable,selectionModifier,stanceSelection,setSelectionStance,movementSelection,setSelectionMovement} from './battle-selection.js';
-import {readSettings} from './settings-3d.js';
+import {readSettings,saveSettings} from './settings-3d.js';
 import {createQuickPlayGame} from './quickplay-game.js';
 import {quickPlayEntry,normalizeQuickPlayTeam,validQuickPlayTeam,quickPlayTeamFromSearch} from './quickplay-presets.js';
 import {createBattleHud} from './battle-hud.js';
 
 const $=id=>document.getElementById(id),canvas=$('battle'),ctx=canvas.getContext('2d');
 $('difficulty').value=readSettings().difficulty;
+$('blood-effects').value=readSettings().blood;
+$('blood-effects').onchange=()=>{saveSettings({...readSettings(),blood:$('blood-effects').value});renderer?.blood?.setMode($('blood-effects').value);};
 let definition,initialState,campaign=null,campaignSavedRevision=-1;
 const dialogueCatalog=await loadDialogueCatalog().catch(e=>({definitions:{},errors:{},error:e.message}));
 let autoToken,autoTokenError;try{autoToken=saveToken(await getSave('auto'));}catch(e){autoTokenError=e;}
@@ -386,7 +388,7 @@ function frame(now){
   // Dialogue owns its own portrait clock. Keep the last world frame while it is open.
   if(!dialogueUI.open||lastWorldSize!==width+"x"+height){
   lastWorldSize=width+"x"+height;
-  renderer.foliageSelectedIds=selectedIds;renderer.foliageRoutes=walkingCache;ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);updateTargetCursor(now);showGuardSight(now);showWalkingRoute();if(!overviewMode){flamePlanner.draw(ctx,state,project,view.zoom);grenadePlanner.draw(ctx,state,project,view.zoom);}
+  renderer.foliageSelectedIds=selectedIds;renderer.foliageRoutes=walkingCache;ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);if(renderer.impactDebug.consumePause()){userPaused=true;frameClock.reset();syncClock();lastUI='';sync();}updateTargetCursor(now);showGuardSight(now);showWalkingRoute();if(!overviewMode){flamePlanner.draw(ctx,state,project,view.zoom);grenadePlanner.draw(ctx,state,project,view.zoom);}
   if(!paused()&&dialogueOrder.pending)updateDialogueOrder();
   if(!paused()&&pickupOrder.pending){const u=state.units.find(u=>u.id===pickupOrder.pending.id),sample=u&&renderer.motion.sample(u),walking=sample&&Math.hypot(sample.x-u.x,sample.y-u.y)>.03;const result=pickupOrder.update(state,{busy:renderer.busy||walking});if(result?.ready)characterScreen.show(result.id,{pile:result.pile});else if(result?.stopped)message(result.reason);}
   if(lastLadderPreparing!==renderer.traversal.preparing||lastUIBusy!==renderer.busy||lastUIDiagnostics!==renderer.diagnostics.join('\n')){lastLadderPreparing=renderer.traversal.preparing;lastUIBusy=renderer.busy;sync();}

@@ -2,10 +2,21 @@ import * as T from './vendor/three.module.js';
 import {impactFrame} from './shot-coordinates.js';
 import {DIMENSIONS} from './hybrid-world.js';
 
-// Render-world units (tiles). Correction is cosmetic and stays on the resolved
-// incoming ray; it cannot change the victim, body region or combat result.
+// Render-world units (tiles). A bounded anatomical correction is cosmetic; it
+// cannot change the victim, body region or combat result.
 export const MAX_SPRAY_CONTACT_CORRECTION=.4;
 const UP=new T.Vector3(0,1,0),SIDE=new T.Vector3(0,0,1);
+
+// Capture the recorded living pose before casualty animation, including when
+// reduced motion would otherwise jump directly to a fallen pose.
+export function poseGunshotVictim(model,receipt){
+ const {worker,root,posture,locomotion}=model,v=receipt.victim;
+ root.position.set(0,0,0);worker.root.position.set(0,0,0);worker.pose('neutral');
+ const pose=v.stance==='prone'?{prone:1}:v.stance==='kneeling'?{kneel:1}:{};
+ const sample={heading:v.heading,distance:0,blend:0,pose};locomotion.apply(sample);posture.apply(sample,{equipment:false});if(Object.keys(pose).length)posture.ground();
+ root.position.set(v.x,v.support.level*DIMENSIONS.floorSpacing+v.support.offset,v.y);root.updateMatrixWorld(true);worker.skeleton.update();
+ for(const part of worker.parts){part.computeBoundingBox?.();part.computeBoundingSphere?.();}
+}
 
 function boneRegion(name){
  if(/^head$/i.test(name))return 'head';
@@ -32,6 +43,24 @@ function matchesRegion(resolved,surface){
  // from an arm/torso; held weapons and their attachments are never queried.
  return resolved==='head'?surface==='head':resolved==='legs'?surface==='legs':surface==='torso'||surface==='arms';
 }
+function nearbyRegionContact(receipt,frame,parts){
+ const limit=MAX_SPRAY_CONTACT_CORRECTION,point=frame.contact,triangle=new T.Triangle(),closest=new T.Vector3(),normal=new T.Vector3();let best=null,bestDistance=limit;
+ for(const source of parts){
+  const g=source.geometry,index=g.index,count=index?index.count:g.attributes.position.count,cache=new Map();
+  const vertex=i=>{if(!cache.has(i))cache.set(i,source.getVertexPosition(i,new T.Vector3()).applyMatrix4(source.matrixWorld));return cache.get(i);};
+  if(source.boundingBox&&source.boundingBox.clone().applyMatrix4(source.matrixWorld).distanceToPoint(point)>limit)continue;
+  for(let i=0;i<count;i+=3){
+   const ia=index?index.getX(i):i,ib=index?index.getX(i+1):i+1,ic=index?index.getX(i+2):i+2,a=vertex(ia),b=vertex(ib),c=vertex(ic);
+   if(point.x<Math.min(a.x,b.x,c.x)-bestDistance||point.x>Math.max(a.x,b.x,c.x)+bestDistance||point.y<Math.min(a.y,b.y,c.y)-bestDistance||point.y>Math.max(a.y,b.y,c.y)+bestDistance||point.z<Math.min(a.z,b.z,c.z)-bestDistance||point.z>Math.max(a.z,b.z,c.z)+bestDistance)continue;
+   triangle.set(a,b,c);triangle.getNormal(normal);if(normal.dot(frame.incoming)>=-1e-6)continue;
+   triangle.closestPointToPoint(point,closest);const distance=closest.distanceTo(point);if(distance>bestDistance)continue;
+   const hit={object:source,point:closest,face:{a:ia,b:ib,c:ic}},inverse=new T.Matrix4().copy(source.matrixWorld).invert();
+   if(!matchesRegion(receipt.zone,faceRegion(hit,a.clone().applyMatrix4(inverse),b.clone().applyMatrix4(inverse),c.clone().applyMatrix4(inverse))))continue;
+   bestDistance=distance;best={contact:closest.clone(),normal:normal.clone(),correction:distance,part:source.name,source,faceIndex:i/3,reason:'region-contact'};
+  }
+ }
+ return best;
+}
 function surfaceContact(receipt,frame,model){
  if(!model)return {reason:'collider-only'};
  if(model.victimId!==receipt.victimId)return {reason:'wrong-victim'};
@@ -50,9 +79,12 @@ function surfaceContact(receipt,frame,model){
   if(normal.dot(frame.incoming)>=-1e-6)continue;
   const correction=hit.point.distanceTo(frame.contact);
   if(correction>MAX_SPRAY_CONTACT_CORRECTION+1e-6)continue;
-  return {contact:hit.point,normal,correction,part:mesh.name,reason:'skin-contact'};
+  return {contact:hit.point,normal,correction,part:mesh.name,source:mesh,faceIndex:hit.faceIndex,reason:'skin-contact'};
  }
- return {reason:'no-matching-surface'};
+ // A probability-resolved hit can cross a gap between posed limbs. Keep its
+ // region, choose the nearest entrance-facing triangle within the same small
+ // radius, and let the trace end there. Never paint the empty collider shell.
+ return nearbyRegionContact(receipt,frame,parts)||{reason:'no-matching-surface'};
 }
 
 // Call once at the discharge, after posing the victim at its captured impact
@@ -69,6 +101,6 @@ export function gunshotSprayFrame(receipt,{model}={}){
  const correction=surface.correction||0;
  return {matrix,contact,colliderContact:frame.contact,origin:frame.origin,incoming:frame.incoming,outgoing,
   normal:surface.normal||null,correction,correctionAlongRay:contact.clone().sub(frame.contact).dot(frame.incoming),
-  surfacePart:surface.part||null,placement:surface.reason,visualSeed:receipt.visualSeed,
+  surfacePart:surface.part||null,surfaceSource:surface.source||null,placement:surface.reason,visualSeed:receipt.visualSeed,
   floor:receipt.victim.support.level*DIMENSIONS.floorSpacing+receipt.victim.support.offset};
 }

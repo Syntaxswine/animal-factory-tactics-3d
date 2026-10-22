@@ -4,6 +4,7 @@ import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
 for(const file of ['gunshot-impacts.js','shot-coordinates.js','gunshot-impact-debug.js','gunshot-impact-map.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['gunshot-spray-frame.js','painted-blood-spray.js','painted-blood-spray-motion.js','painted-blood-spray-data.js','gunshot-spray-study.html','gunshot-spray-study.css','gunshot-spray-study.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+for(const file of ['battle-blood.js','blood-spray-pool.js','blood-stain-batches.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['dialogue-order.js','dialogue-thread.js','dialogue-audition.html','dialogue-audition.js','editor-tutorial-properties.js','tutorial-intro-fixture.js','dialogue-rules.js','dialogue-session.js','dialogue-fixture.js','battle-dialogue.js','battle-dialogue.css','hedge-data.js','hedge-layout.js','hedge-surfaces.js','hedge-obstacles.js','hedge-scene.js','hedge-fixture.js','painted-hedges.js','painted-hedges-study.html','painted-hedges-study.js','climbing-fixture.js','character-mass.js','climbing.js','climbing-routes.js','fall-damage.js','simple-traversal.js','battle-entry.js','foliage-review-fixture.js','foliage-performance-review.js','editor-foliage-preview.js','editor-foliage-preview-worker.js','editor-foliage-preview-client.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['foliage-skins-review.html','foliage-skins-review.js','foliage-context-fixture.js','foliage-density-fixture.js','foliage-composition-fixture.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['biome-fixture.js','biome-atlas-lod.js','biome-obstacle-data.js','biome-obstacle-paint.js','biome-obstacles.js','biome-terrain-plan.js','biome-terrain.js','biome-terrain-fill.js','biome-ground-sprite-layout.js','biome-ground-sprites.js','biome-ground-composition.js','biome-ground-edge.js','biome-connected-ground.js','biome-ground-worker.js','biome-terrain-study.js','biome-terrain-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
@@ -50,6 +51,8 @@ console.log('Built Animal Factory Tactics 3D landing page.');
 
 fs.cpSync(new URL('dist/tactics/sector-library/',root),new URL('.pages-output/tactics/sector-library/',root),{recursive:true});
 fs.cpSync(new URL('dist/tactics/intro-sprites/',root),new URL('.pages-output/tactics/intro-sprites/',root),{recursive:true});
+for(const file of ['painted-blood-followup-data.js','painted-blood-exit.js','painted-blood-stain.js','blood-wounds-study.html','blood-wounds-study.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+for(const folder of ['painted-blood-exit','painted-blood-stains'])fs.cpSync(new URL('dist/assets/effects/'+folder+'/',root),new URL('.pages-output/assets/effects/'+folder+'/',root),{recursive:true});
 import {checkModuleClosure} from './check-module-closure.mjs';
 checkModuleClosure(new URL('.pages-output/',root),['tactics/biome-foliage-study.js','tactics/biome-terrain-study.js','tactics/biome-ground-worker.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/intro-sprites/proof.html','tactics/intro-sprites/keyframes.html','tactics/intro-sprites/closeup.html','tactics/intro-sprites/ambush.html','tactics/intro-sprites/intro.html']);
@@ -73,6 +76,4 @@ for(const file of ['painted-blood-spray-data.js','painted-blood-spray-motion.js'
 fs.cpSync(new URL('dist/assets/effects/painted-blood/',root),new URL('.pages-output/assets/effects/painted-blood/',root),{recursive:true});
 checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-blood-spray-study.html']);
 
-for(const file of ['painted-blood-followup-data.js','painted-blood-exit.js','painted-blood-stain.js','blood-wounds-study.html','blood-wounds-study.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
-for(const folder of ['painted-blood-exit','painted-blood-stains'])fs.cpSync(new URL('dist/assets/effects/'+folder+'/',root),new URL('.pages-output/assets/effects/'+folder+'/',root),{recursive:true});
 checkModuleClosure(new URL('.pages-output/',root),['tactics/blood-wounds-study.html']);

@@ -35,7 +35,7 @@ export class BattleShotEffects {
  hide(){this.flash.visible=this.trace.visible=this.impact.visible=false;}
  update(active,state,muzzle){
   const {event,phase}=active,shot=event.trajectories[0];if(!shot)return;
-  const endpoint=shotPoint(shot,state);
+  const endpoint=active.bodyVisualContacts?.get(shot.projectileId)||shotPoint(shot,state);
   if(muzzle&&active.shooterVisible!==false&&phase.flash&&shotVisible(state,muzzle.origin)){this.flash.visible=true;this.flash.position.copy(muzzle.origin);this.flash.quaternion.setFromUnitVectors(new T.Vector3(1,0,0),muzzle.direction);}
   if(phase.trace){
    // Use the actual model muzzle when available. Rendering never retraces or
@@ -43,14 +43,15 @@ export class BattleShotEffects {
    if(!active.traceOrigin){active.traceOrigin=muzzle?.origin.clone()||(shot.origin?shotPoint({...shot.origin,unitId:event.shooter},state):null);if(active.traceOrigin&&shot.origin?.support)active.traceOrigin.shotLevel=shot.origin.support.level;}
    const segments=[];
    if(active.traceOrigin)for(const trajectory of event.trajectories){
-    segments.push(...visibleShotSegments(state,[active.traceOrigin,...(trajectory.path||[trajectory]).map(p=>shotPoint(p,state))]));
+    const path=(trajectory.path||[trajectory]).map(p=>shotPoint(p,state)),contact=active.bodyVisualContacts?.get(trajectory.projectileId);if(contact)path[path.length-1]=contact;
+    segments.push(...visibleShotSegments(state,[active.traceOrigin,...path]));
    }
    const count=Math.min(TRACE_VERTICES,segments.length),position=this.trace.geometry.attributes.position;
    for(let i=0;i<count;i++)position.setXYZ(i,segments[i].x,segments[i].y,segments[i].z);
    this.trace.geometry.setDrawRange(0,count);position.needsUpdate=true;this.trace.visible=count>0;
   }
   const knownVictim=shot.kind!=='unit'||active.knownUnitIds.includes(shot.unitId)||state.units.some(u=>u.id===shot.unitId&&u.team==='squad');
-  if(phase.impact&&shot.kind!=='range'&&shotVisible(state,endpoint)&&knownVictim){this.impact.visible=true;this.impact.position.copy(endpoint);this.impact.material.color.setHex(shot.kind==='unit'?0xd18463:0xd5b78a);}
+  if(phase.impact&&shot.kind!=='range'&&!(shot.kind==='unit'&&active.paintedBodyImpact&&active.bodyVisualContacts?.has(shot.projectileId))&&shotVisible(state,endpoint)&&knownVictim){this.impact.visible=true;this.impact.position.copy(endpoint);this.impact.material.color.setHex(shot.kind==='unit'?0xd18463:0xd5b78a);}
  }
  dispose(){for(const mesh of [this.flash,this.trace,this.impact]){mesh.removeFromParent();mesh.geometry.dispose();mesh.material.dispose();}}
 }

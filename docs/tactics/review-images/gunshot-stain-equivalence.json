@@ -1,0 +1,159 @@
+{
+  "baseline": "00fe001",
+  "cases": [
+    {
+      "id": "torso",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 89
+    },
+    {
+      "id": "legs",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 84
+    },
+    {
+      "id": "nonfatal-head",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 263
+    },
+    {
+      "id": "ordinary-lethal-head",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 263
+    },
+    {
+      "id": "fatal-head",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 263
+    },
+    {
+      "id": "wounded-fatal-head",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 263
+    },
+    {
+      "id": "incidental-victim",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 122
+    },
+    {
+      "id": "incidental-victim",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 118
+    },
+    {
+      "id": "burst",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 89
+    },
+    {
+      "id": "burst",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 89
+    },
+    {
+      "id": "burst",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 89
+    },
+    {
+      "id": "shotgun",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 92
+    },
+    {
+      "id": "shotgun",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 74
+    },
+    {
+      "id": "shotgun",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 99
+    },
+    {
+      "id": "shotgun",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 229
+    },
+    {
+      "id": "shotgun",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 97
+    },
+    {
+      "id": "shotgun",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 32
+    },
+    {
+      "id": "dual-pistols",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 89
+    },
+    {
+      "id": "dual-pistols",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 100
+    },
+    {
+      "id": "layer-six",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 89
+    },
+    {
+      "id": "horse standing",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 112
+    },
+    {
+      "id": "horse kneeling",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 193
+    },
+    {
+      "id": "horse prone",
+      "matchingSurface": false
+    },
+    {
+      "id": "hen standing",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 49
+    },
+    {
+      "id": "hen kneeling",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 140
+    },
+    {
+      "id": "hen prone",
+      "matchingSurface": true,
+      "identical": true,
+      "triangles": 77
+    }
+  ]
+}

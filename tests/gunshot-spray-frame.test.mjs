@@ -109,8 +109,8 @@ test('the painted root stays at contact and droplets keep their world trajectori
  }finally{effect.dispose();texture.dispose();}
 });
 
-test('real fixture contacts correct to their own posed bodies or explicitly retain the collider at anatomical gaps',()=>{
- const fallbacks=[],before=structuredClone(fixture);let anchored=0;
+test('all real fixture contacts anchor to the recorded body region, including gaps between posed limbs',()=>{
+ const corrected=[],before=structuredClone(fixture);let anchored=0;
  for(const c of fixture.cases)for(const receipt of c.actions.flatMap(a=>a.bodyImpacts)){
   const p=ANIMAL_MOTION_CATALOG.find(p=>p.id===receipt.victim.species),worker=p.create(JSON.parse(fs.readFileSync(new URL('../dist/tactics/'+p.file,import.meta.url)))),posture=createBattlePosture(worker,p),locomotion=createWorkerLocomotion(worker,p);
   try{
@@ -119,9 +119,9 @@ test('real fixture contacts correct to their own posed bodies or explicitly reta
    worker.root.position.add(V(receipt.victim.x,receipt.victim.support.level*DIMENSIONS.floorSpacing+receipt.victim.support.offset,receipt.victim.y));worker.root.updateMatrixWorld(true);worker.skeleton.update();
    for(const part of worker.parts){part.computeBoundingBox();part.computeBoundingSphere();}
    const f=gunshotSprayFrame(receipt,{model:{victimId:receipt.victimId,parts:worker.parts}});
-   if(f.placement==='skin-contact'){anchored++;assert.ok(f.correction<=MAX_SPRAY_CONTACT_CORRECTION);}
-   else {fallbacks.push([c.id,receipt.projectileId]);assert.equal(f.placement,'no-matching-surface');assert.ok(f.contact.distanceTo(impactFrame(receipt).contact)<1e-9);}
+   assert.ok(f.surfaceSource);assert.ok(f.correction<=MAX_SPRAY_CONTACT_CORRECTION);assert.ok(f.normal.dot(f.incoming)<0);anchored++;
+   if(f.placement==='region-contact')corrected.push([c.id,receipt.projectileId]);else assert.equal(f.placement,'skin-contact');
   }finally{locomotion.dispose();worker.skeleton.dispose();worker.dispose();}
  }
- assert.equal(anchored,17);assert.deepEqual(fallbacks,[['legs','shot:1/d:0/p:0'],['incidental-victim','shot:1/d:0/p:0'],['shotgun','shot:1/d:0/p:5']]);assert.deepEqual(fixture,before);
+ assert.equal(anchored,20);assert.deepEqual(corrected,[['legs','shot:1/d:0/p:0'],['incidental-victim','shot:1/d:0/p:0'],['shotgun','shot:1/d:0/p:5']]);assert.deepEqual(fixture,before);
 });

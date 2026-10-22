@@ -19,7 +19,7 @@ export function createPaintedBloodCards(texture,motion,cells){
  const mesh=new T.InstancedMesh(geometry,material,n);mesh.name='Painted blood spray · canonical +X';mesh.frustumCulled=false;mesh.castShadow=mesh.receiveShadow=false;mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);
  const frame=new T.Matrix4(),basis=new T.Matrix3(),dummy=new T.Object3D(),point=new T.Vector3(),velocity=new T.Vector3(),right=new T.Vector3(),up=new T.Vector3(),axis=new T.Vector3(),q=new T.Quaternion(),spin=new T.Quaternion(),Z=new T.Vector3(0,0,1);let disposed=false;
  for(let i=0;i<n;i++)rect.set(cells[motion.buffer.tile[i]].uv,i*4);
- function update(time,camera,{still=false,floor=-Infinity}={}){
+ function update(time,camera,{still=false,floor=-Infinity,floorAt,visibleAt}={}){
   if(disposed)return;const b=motion.sample(time,{still});camera.getWorldQuaternion(q);right.set(1,0,0).applyQuaternion(q);up.set(0,1,0).applyQuaternion(q);basis.setFromMatrix4(frame);
   let visible=0;
   for(let i=0;i<n;i++){
@@ -29,7 +29,7 @@ export function createPaintedBloodCards(texture,motion,cells){
    axis.set(1,0,0).applyQuaternion(dummy.quaternion);point.addScaledVector(axis,(.5-cell.pivot[0])*b.size[s]);axis.set(0,1,0).applyQuaternion(dummy.quaternion);point.addScaledVector(axis,(.5-cell.pivot[1])*b.size[s+1]);
    dummy.position.copy(point);dummy.scale.set(b.size[s],b.size[s+1],1);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
    const halfY=(Math.abs(dummy.matrix.elements[1])+Math.abs(dummy.matrix.elements[5]))*.5;
-   alpha[i]=point.y-halfY<floor?0:b.alpha[i];if(alpha[i]>.015)visible++;
+   alpha[i]=point.y-halfY<(floorAt?floorAt(i):floor)||visibleAt&&!visibleAt(point,i)?0:b.alpha[i];if(alpha[i]>.015)visible++;
   }
   geometry.attributes.sprayAlpha.needsUpdate=true;mesh.instanceMatrix.needsUpdate=true;mesh.visible=visible>0;return {liveCards:visible,capacity:n,drawCalls:visible?1:0};
  }
