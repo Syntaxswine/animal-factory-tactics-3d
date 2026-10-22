@@ -65,3 +65,7 @@ fs.cpSync(new URL('dist/assets/environment/natural-rock-arches/',root),new URL('
 checkModuleClosure(new URL('.pages-output/',root),['tactics/natural-arches-study.html']);
 
 checkModuleClosure(new URL('.pages-output/',root),['tactics/dialogue-audition.js','tactics/dialogue-speech-worker.js','tactics/speaking-heads-viewer.js']);
+
+for(const file of ['painted-blood-spray-data.js','painted-blood-spray-motion.js','painted-blood-spray.js','painted-blood-spray-study.js','painted-blood-spray-study.html','painted-blood-spray-study.css'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+fs.cpSync(new URL('dist/assets/effects/painted-blood/',root),new URL('.pages-output/assets/effects/painted-blood/',root),{recursive:true});
+checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-blood-spray-study.html']);
