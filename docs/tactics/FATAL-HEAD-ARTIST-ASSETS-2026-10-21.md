@@ -17,7 +17,7 @@ death rule or live battle renderer is changed by this delivery.
 [Open the study](http://127.0.0.1:4477/tactics/fatal-head-study.html).
 It covers **12 animals, both outfits and the donkey guide: 25 combinations**,
 with a close view beside a 55-pixel-per-tile gameplay view. Controls include
-standing/kneeling/prone starts, rifle/HMG/unarmed, contrasting backgrounds,
+standing/kneeling/prone starts, all 13 catalog loadouts, contrasting backgrounds,
 four camera angles, scrubbing, slow playback and an independent still/fade mode.
 The hen remains unarmed, matching its native battle rig.
 
@@ -125,14 +125,76 @@ const visualState = drop.update(secondsSinceRelease);
 drop.dispose(); // before the caller disposes the original weapon
 ```
 
-The adapter handles rigid guns; the study fits rifle/HMG releases from standing,
-kneeling and prone. An attached pack or flexible hose needs its own assembly
-adapter. The caller supplies the actual floor level and can supply release
+The direct adapter handles rigid weapons. The assembly wrapper below adds the
+worn flamethrower tank and flexible hose. The caller supplies the actual floor
+level and can supply release
 velocity. This is cosmetic: it does not create, destroy or alter a loot item,
 and it is not a wall/terrain collision solver. It adds transient material draws,
 sharing the original geometry; no extra painting is loaded.
 The study's `casualty-weapon-pose.js` holds one authored preview direction;
 live integration should capture the builder's current supported weapon pose.
+
+## Complete weapon roster · 22 October follow-up
+
+The selector now follows `WEAPON_MODELS`: unarmed, NR-40 knife, TT-33 pistol,
+Mosin-Nagant, AK-47, PPSh, HMG, shotgun, sniper rifle, fragmentation grenade,
+grenade launcher, RPG and backpack flamethrower. All **12 actual weapons** use
+the held, released, grounded and fading sequence. The hen stays unarmed and its
+weapon selector is disabled. No grenade fuse or tank explosion is inferred from
+this supplied fatal outcome.
+
+![All twelve weapons before impact](review-images/fatal-head/extra-weapons.png)
+
+The prone fitting retains the native palm offsets and solves the arms without
+stretching. The cached endpoint rejects actual posed skull containment, surface
+grazing within **0.008 world units**, and thin weapon edges crossing the skull.
+This uses a temporary CPU surface hierarchy, rather than a head bounding-box
+claim. Large heads can turn slightly aside; a heavy gun can rest lower on its
+side. The fit is evaluated once, then its complete pose is restored on each
+frame before blending into the existing casualty. Intact comparisons are now
+captured at **0.20 seconds**, before the head disappears at 0.30 seconds.
+
+![Intact prone fits, including small props and heavy weapons](review-images/fatal-head/extra-weapons-prone.png)
+
+The **flamethrower tank stays strapped to the body**. Its lance drops separately;
+a fixed **216-triangle hose** continues to join the actual tank and lance sockets.
+The lance and hose fade together only after the lance has landed. The tank
+remains visible on the resting casualty. Late in the fall, wearer and tank roll
+onto a supported side rest. Both feet and the lower free hand settle through
+native-length limb rotations; the skunk uses the opposite roll for its offset
+pack. Actual body and tank surfaces clear the supplied floor. These adjustments
+are confined to this equipment study and do not change the shared casualty pose.
+
+![The connected lance drops while the worn tank settles with the body](review-images/fatal-head/flamethrower-drop.png)
+
+Use [createCasualtyWeaponAssembly](../../dist/tactics/casualty-weapon-assembly.js)
+for a complete loadout. Ordinary weapons return the same rigid drop adapter.
+Add its root at identity under an **untransformed render-world parent**: the drop
+and hose use world-space coordinates. Re-evaluate a fresh body pose before each
+`preparePose` call; its side roll and limb settling are not cumulative updates.
+Supply the same render-world floor to preparation and release capture.
+
+```js
+const assembly = createCasualtyWeaponAssembly(worker, profile);
+scene.add(assembly.root); // identity; no transformed parent
+// Each frame, after the caller evaluates and grounds its fresh body pose:
+assembly.preparePose?.({floor: supportWorldY, down: casualtyProgress});
+// Once, at release, after preparation and BEFORE releasing the live grasp:
+assembly.capture(worker.weapon.root.matrixWorld, {floor: supportWorldY});
+// Subsequent frames evaluate the fresh body pose and preparePose again,
+// then hide the original lance/weapon and evaluate the independent drop:
+worker.weapon.root.visible = false;
+assembly.update(secondsSinceRelease);
+assembly.dispose(); // before caller-owned weapon/actor resources
+```
+
+The wrapper owns its proxy materials and fixed hose buffers. Original weapon
+geometry, textures and tank resources stay with the caller. It temporarily
+suppresses the original allocating hose updater and restores that updater, the
+mount fit and original visibility on disposal. The grenade's existing painting
+is awaited and owned by the study's cancelable load; no new textures are added.
+This remains a flat-support visual adapter, not a terrain collision or loot
+system. The builder still owns live equipment, timing, visibility and integration.
 
 ## Native model adapter
 
@@ -215,6 +277,23 @@ match byte-for-byte under matching fresh-start sequences. Fifty armed replay
 cycles retain **24 geometries and 7 textures**; the disposable browser exits and
 releases its port. See the [weapon validation record](review-images/fatal-head/weapon-drop-validation.json).
 
+Complete-roster validation: **42 focused tests pass**, including **396 releases**
+(11 armed species × 12 weapons × three starting stances), exact native replay,
+skull-surface fitting rejection, socket continuity, elevated support at world
+height 2.4, shared-resource ownership, and actual foot/arm support for all 11
+armed species in three stances. The asset audit and packaged build also pass.
+Independent follow-up review is **9/10**. The reviewer independently confirmed
+zero embedded weapon vertices in seven native prone cases and reran four
+focused tests, including all 33 resting-contact cases. **284 roster captures**
+and **28 final fit/rest comparisons** complete without browser errors. Matching
+source and packaged sequences produce identical pixels for the ordinary burst,
+rifle fall and flamethrower standing fall, prone fall and retired state. Fifty
+rifle and fifty flamethrower replay cycles keep allocations bounded; the full
+roster run retains 24 geometries / 7 textures for the rifle and 51 / 7 for the
+flamethrower before and after cycling. Initial, replacement and grenade-paint
+loads can all be canceled safely. Both disposable browsers exited and released
+their ports. See the [complete-roster validation record](review-images/fatal-head/extra-weapons-validation.json).
+
 ![Hen Full and Off at the identical resting pose](review-images/fatal-head/hen-comparison.png)
 
 The disposable review browser closes in `finally`, with verified process exit
@@ -231,7 +310,7 @@ packages. Build before running the packaged review.
 
 ```text
 node tools/prepare-fatal-head.mjs <original-generated-png>
-node --test tests/painted-blood-spray.test.mjs tests/painted-blood-wounds.test.mjs tests/fatal-head-assets.test.mjs tests/casualty-weapon-drop.test.mjs tests/tactics-pages-files.test.mjs
+node --test tests/painted-blood-spray.test.mjs tests/painted-blood-wounds.test.mjs tests/fatal-head-assets.test.mjs tests/casualty-weapon-drop.test.mjs tests/casualty-weapon-roster.test.mjs tests/tactics-pages-files.test.mjs
 node tools/check-assets.mjs
 node tools/build-tactics-3d.mjs
 ```
@@ -242,3 +321,10 @@ Run `tools/review-fatal-head.mjs` with `FATAL_REVIEW_PACKAGED=1` and
 Use `FATAL_REVIEW_DROP=1` for the armed fall/fade cases; combine with Fast for
 the weapon-only follow-up. `tools/compose-fatal-head-review.mjs <evidence-dir>
 --weapon-drop` makes its review sheet and compact validation record.
+Add `FATAL_REVIEW_EXTRA=1` for the complete catalog, intact held frames,
+flamethrower replay/resource checks and source/packaged comparisons. Use
+`FATAL_REVIEW_ASSEMBLY=1` with Fast, Drop and Extra for the shorter intact-fit
+and supported-rest re-review. `tools/compose-fatal-head-review.mjs <evidence-dir>
+--extra-weapons` creates the three complete-roster review sheets and validation.
+Add `--assembly-review=<focused-evidence-dir>` to include the final focused
+browser receipt in that validation record.

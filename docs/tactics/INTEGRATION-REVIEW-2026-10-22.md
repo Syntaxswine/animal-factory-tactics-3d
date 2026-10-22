@@ -1,5 +1,9 @@
 # Integration review — 22 October 2026
 
+This records the earlier `781246a6` release. The subsequent live fatal-head and
+weapon-release wiring is covered by the
+[casualty integration follow-up](CASUALTY-INTEGRATION-REVIEW-2026-10-22.md).
+
 ## Decision
 
 Approve the coder's `cc6ee171` live entry-wound integration and the artist's

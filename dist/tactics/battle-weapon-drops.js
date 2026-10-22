@@ -1,4 +1,4 @@
-import {createCasualtyWeaponAssembly} from './casualty-weapon-assembly.js';
+import {createCasualtyWeaponSnapshot} from './casualty-weapon-assembly.js';
 import {personVisible} from './battle-visibility.js';
 import {shotVisible} from './shot-coordinates.js';
 import {unitBaseHeight} from './tower-geometry.js';
@@ -22,7 +22,7 @@ export class BattleWeaponDrops {
   for(const [i,weapon]of [model.equipment,model.offhand?.gun].entries()){
    if(!weapon||!weapon.root.visible)continue;
    const kind=prior.hands[i]||prior.weapon,item=pile?.items.find(p=>p.type==='weapon'&&p.kind===kind)||unit.pack?.find(p=>p.type==='weapon'&&p.kind===kind);
-   try{const visual=createCasualtyWeaponAssembly(weapon,{floor:unitBaseHeight(unit,DIMENSIONS.floorSpacing)});if(!visual)continue;this.scene.add(visual.root);entries.push({visual,item,kind});}
+   try{const visual=createCasualtyWeaponSnapshot(weapon,{floor:unitBaseHeight(unit,DIMENSIONS.floorSpacing)});if(!visual)continue;this.scene.add(visual.root);entries.push({visual,item,kind});}
    catch(error){this.onError('Weapon release kept its ordinary fallback: '+error.message);}
   }
   if(entries.length)this.actors.set(unit.id,{unitId:unit.id,entries,start:now});

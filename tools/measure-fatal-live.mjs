@@ -8,7 +8,7 @@ import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {prepareFatalHead,presentFatalHead} from '../dist/tactics/battle-fatal-head.js';
 import {CharacterBatches} from '../dist/tactics/character-batches.js';
 import {createWeaponModel,WEAPON_MODELS} from '../dist/tactics/weapon-models.js';
-import {createCasualtyWeaponAssembly} from '../dist/tactics/casualty-weapon-assembly.js';
+import {createCasualtyWeaponSnapshot} from '../dist/tactics/casualty-weapon-assembly.js';
 const percentile=values=>{values.sort((a,b)=>a-b);return {samples:values.length,p50:values[Math.floor(values.length*.5)],p95:values[Math.floor(values.length*.95)],max:values.at(-1)};};
 const measure=(fn,count=60,batch=10)=>{const times=[];for(let i=0;i<count+5;i++){const start=performance.now();for(let j=0;j<batch;j++)fn();if(i>=5)times.push((performance.now()-start)/batch);}return {operationsPerSample:batch,...percentile(times)};};
 fs.mkdirSync('artifacts/fatal-live',{recursive:true});
@@ -26,7 +26,7 @@ try{
  const stableMaskAndBatches=measure(()=>{presentFatalHead(model,unit,'full',()=>model.root);model.batches.sync();},100,50);
  const settingSwitch=measure(()=>{model.fatalMask.setDestroyed(!model.fatalMask.destroyed);for(const p of model.worker.parts)p.computeBoundingBox();model.batches.sync();},40,5);
  for(const id of Object.keys(WEAPON_MODELS).filter(k=>k!=='hands')){const gun=createWeaponModel(id),host=new T.Group();host.add(gun.root);if(gun.mount)host.add(gun.mount);if(gun.hose){host.add(gun.hose);gun.updateHose(host);}host.position.y=1.5;host.updateMatrixWorld(true);let sample;
-  const creation=measure(()=>{const drop=createCasualtyWeaponAssembly(gun,{floor:0});sample={draws:drop.drawCalls,components:drop.sourceRoots.length,triangles:0};drop.root.traverse(p=>{if(p.isMesh)sample.triangles+=p.geometry.attributes.position.count/3;});drop.dispose();},30,5);
+  const creation=measure(()=>{const drop=createCasualtyWeaponSnapshot(gun,{floor:0});sample={draws:drop.drawCalls,components:drop.sourceRoots.length,triangles:0};drop.root.traverse(p=>{if(p.isMesh)sample.triangles+=p.geometry.attributes.position.count/3;});drop.dispose();},30,5);
   weapons.push({weapon:id,...sample,creationMilliseconds:creation});gun.dispose();
  }
  const paths=['battle-blood.js','battle-fatal-head.js','battle-weapon-drops.js','casualty-weapon-assembly.js','character-batches.js','blood-stain-batches.js','fatal-head-mask.js','fatal-head-motion.js','rifle-firing.js','offhand-equipment.js','blood-spray-pool.js','battle-renderer.js','weapon-models.js','gunshot-spray-frame.js'];
