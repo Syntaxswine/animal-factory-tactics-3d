@@ -1,0 +1,68 @@
+{
+  "captures": 284,
+  "resources": {
+    "before": {
+      "geometries": 24,
+      "textures": 7
+    },
+    "after": {
+      "geometries": 24,
+      "textures": 7
+    }
+  },
+  "equipmentResources": {
+    "before": {
+      "geometries": 51,
+      "textures": 7
+    },
+    "after": {
+      "geometries": 51,
+      "textures": 7
+    }
+  },
+  "cancelledLoads": [
+    "boot",
+    "replacement",
+    "equipment"
+  ],
+  "errors": [],
+  "browserCleanup": {
+    "exited": true,
+    "portReleased": true
+  },
+  "reviewedAt": "2026-10-22T06:31:55.015Z",
+  "focusedAssembly": {
+    "captures": 28,
+    "resources": {
+      "before": {
+        "geometries": 23,
+        "textures": 6
+      },
+      "after": {
+        "geometries": 23,
+        "textures": 6
+      }
+    },
+    "equipmentResources": {
+      "before": {
+        "geometries": 50,
+        "textures": 6
+      },
+      "after": {
+        "geometries": 50,
+        "textures": 6
+      }
+    },
+    "cancelledLoads": [
+      "boot",
+      "replacement",
+      "equipment"
+    ],
+    "errors": [],
+    "browserCleanup": {
+      "exited": true,
+      "portReleased": true
+    },
+    "reviewedAt": "2026-10-22T06:33:40.625Z"
+  }
+}

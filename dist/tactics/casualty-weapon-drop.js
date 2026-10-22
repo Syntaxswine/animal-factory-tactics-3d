@@ -1,14 +1,12 @@
 import * as T from './vendor/three.module.js';
+import {createCasualtyEquipmentVisual} from './casualty-equipment-visual.js';
 const V=()=>new T.Vector3(),Q=()=>new T.Quaternion(),smooth=x=>{x=T.MathUtils.clamp(x,0,1);return x*x*(3-2*x);};
 // Cosmetic rigid-weapon release. The caller supplies the last held world matrix
 // and the supporting floor; this does not create or remove a gameplay loot item.
 export function createCasualtyWeaponDrop(weapon,{settle=.12,fade=.45}={}){
  if(!weapon?.root||!weapon.anchors?.grip)return null;
  if(!Number.isFinite(settle)||settle<0||!Number.isFinite(fade)||fade<=0)throw Error('Finite ground-settle and fade times required');
- const root=new T.Group();root.name='Released casualty weapon';root.visible=false;
- const visual=weapon.root.clone(true),materials=new Map(),vertices=[],bounds=new T.Box3();root.add(visual);visual.position.set(0,0,0);visual.quaternion.identity();visual.scale.set(1,1,1);visual.visible=true;visual.updateMatrixWorld(true);
- visual.traverse(mesh=>{if(!mesh.isMesh)return;if(mesh.isSkinnedMesh)throw Error('Weapon drop requires a rigid weapon');const p=mesh.geometry.attributes.position;for(let i=0;i<p.count;i++){const v=V().fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld);vertices.push(v);bounds.expandByPoint(v);}const clone=original=>{if(!materials.has(original)){const material=original.clone();material.onBeforeCompile=original.onBeforeCompile;material.customProgramCacheKey=original.customProgramCacheKey;materials.set(original,{material,opacity:original.opacity,transparent:original.transparent,depthWrite:original.depthWrite});}return materials.get(original).material;};mesh.material=Array.isArray(mesh.material)?mesh.material.map(clone):clone(mesh.material);mesh.castShadow=mesh.receiveShadow=false;mesh.raycast=()=>{};});
- if(!vertices.length)throw Error('Weapon drop requires visible geometry');const center=bounds.getCenter(V());for(const v of vertices)v.sub(center);visual.position.copy(center).negate();
+ const copy=createCasualtyEquipmentVisual(weapon.root),{root,vertices,center}=copy;root.name='Released casualty weapon';
  let snapshot,disposed=false;const rotation=new T.Matrix4(),position=V(),quaternion=Q();
  function lowest(q,scale){rotation.makeRotationFromQuaternion(q);const e=rotation.elements;let minimum=Infinity;for(const p of vertices)minimum=Math.min(minimum,p.x*scale.x*e[1]+p.y*scale.y*e[5]+p.z*scale.z*e[9]);return minimum;}
  function airOrientation(age){return quaternion.copy(snapshot.startQ).slerp(snapshot.landedQ,Math.min(age/snapshot.turnTime,1));}
@@ -30,8 +28,8 @@ export function createCasualtyWeaponDrop(weapon,{settle=.12,fade=.45}={}){
   // Residual horizontal momentum dies away against the floor during settling.
   if(landed){const slide=Math.max(0,settle)*.35*(1-Math.exp(-Math.min(after,settle)*8/Math.max(settle,.0001)));position.x+=snapshot.velocity.x*slide;position.z+=snapshot.velocity.z*slide;}
   root.position.copy(age<0?snapshot.start:position);root.quaternion.copy(age<0?snapshot.startQ:quaternion);root.visible=age>=0&&opacity>0;
-  for(const {material,opacity:base,transparent,depthWrite}of materials.values()){const blend=opacity<1,changed=material.transparent!==(blend||transparent);material.opacity=base*opacity;material.transparent=blend||transparent;material.depthWrite=blend?false:depthWrite;if(changed)material.needsUpdate=true;}
+  copy.setOpacity(opacity);
   root.updateMatrixWorld(true);return {phase:age<0?'held':!landed?'falling':after<settle?'settling':opacity>0?'fading':'retired',visible:root.visible,opacity,flight:snapshot.flight,fadeStart:snapshot.flight+settle,duration:snapshot.flight+settle+fade,minimumY:root.position.y+lowest(root.quaternion,snapshot.scale),floor:snapshot.floor,position:root.position.toArray()};
  }
- return {root,capture,update,dispose(){if(disposed)return;disposed=true;root.removeFromParent();root.visible=false;for(const {material}of materials.values())material.dispose();materials.clear();}};
+ return {root,capture,update,dispose(){if(disposed)return;disposed=true;copy.dispose();}};
 }

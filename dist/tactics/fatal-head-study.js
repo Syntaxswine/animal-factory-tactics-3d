@@ -4,17 +4,18 @@ import {BLOOD_ATLAS} from './painted-blood-spray-data.js';
 import {createFatalHeadBurst} from './fatal-head-motion.js';
 import {createPaintedBloodSpray} from './painted-blood-spray.js';
 import {createFatalHeadMask} from './fatal-head-mask.js';
-import {createCasualtyWeaponDrop} from './casualty-weapon-drop.js';
+import {createCasualtyWeaponAssembly} from './casualty-weapon-assembly.js';
 import {createCasualtyWeaponPose} from './casualty-weapon-pose.js';
 import {ANIMAL_MOTION_CATALOG} from './animal-motion-catalog.js';
 import {createAnimalPaint} from './animal-motion-paint.js';
 import {createBattlePosture} from './battle-posture.js';
 import {createWorkerLocomotion} from './worker-locomotion.js';
-import {createWeaponModel} from './weapon-models.js';
+import {createWeaponModel,WEAPON_MODELS} from './weapon-models.js';
+import {createGrenadeModel} from './grenade-model.js';
 import {createRedHatCap} from './red-hat-model.js';
 import {createPaintedGrass} from './painted-grass.js';
 const $=id=>document.getElementById(id),host=$('viewport'),params=new URLSearchParams(location.search),loader=new T.TextureLoader(),textures=[],cache=new Map(),IMPACT=.3,RELEASE=.42;
-for(const p of ANIMAL_MOTION_CATALOG)$('animal').add(new Option(p.label,p.id));for(const id of ['animal','outfit','weapon','stance','presentation','motion','view','background','speed'])if([...$(id).options].some(o=>o.value===params.get(id)))$(id).value=params.get(id);
+for(const p of ANIMAL_MOTION_CATALOG)$('animal').add(new Option(p.label,p.id));$('weapon').replaceChildren(...Object.entries(WEAPON_MODELS).map(([id,w])=>new Option(w.label,id)));for(const id of ['animal','outfit','weapon','stance','presentation','motion','view','background','speed'])if([...$(id).options].some(o=>o.value===params.get(id)))$(id).value=params.get(id);
 if(!params.has('motion')&&matchMedia('(prefers-reduced-motion: reduce)').matches)$('motion').value='still';if(params.has('fall'))$('fall').checked=params.get('fall')!=='0';
 let time=Number(params.get('time')||.35);if(!Number.isFinite(time))time=.35;time=T.MathUtils.clamp(time,0,3.2);
 let disposed=false,ready=false,playing=!params.has('paused'),raf=0,last=0,version=0,loads=0,rendererDisposed=false,actor,atlas,burst,reduced,observer,state;
@@ -24,9 +25,9 @@ const grass=createPaintedGrass(),plain=new T.MeshBasicMaterial(),floor=new T.Mes
 async function texture(url){const t=await loader.loadAsync(url);if(disposed){t.dispose();throw Error('Study disposed');}t.colorSpace=T.SRGBColorSpace;textures.push(t);return t;}
 function baseSample(down=0){const stance=$('stance').value;return {heading:0,distance:0,blend:0,pose:{down,dead:down,kneel:stance==='kneeling'?1-down:0,prone:stance==='prone'?1-down:0}};}
 function intactPose(a,down){a.heldPose.apply(baseSample(down),{proneStart:$('stance').value==='prone'});}
-function pose(a,down){a.mask?.withIntactGeometry(()=>intactPose(a,down));a.mask.setDestroyed(time>=IMPACT&&$('presentation').value==='full');a.posture.ground();a.worker.root.updateMatrixWorld(true);a.worker.skeleton.update();}
+function pose(a,down){a.mask?.withIntactGeometry(()=>intactPose(a,down));a.mask.setDestroyed(time>=IMPACT&&$('presentation').value==='full');a.posture.ground();a.drop?.preparePose?.({down});a.worker.root.updateMatrixWorld(true);a.worker.skeleton.update();}
 function setupContact(){
- const a=actor;a.mask.setDestroyed(false);a.mask.withIntactGeometry(()=>{intactPose(a,0);a.posture.ground();});
+ const a=actor;a.mask.setDestroyed(false);a.mask.withIntactGeometry(()=>{intactPose(a,0);a.posture.ground();a.drop?.preparePose?.();});
  const primary=a.worker.parts.find(p=>p.name===a.mask.primaryName)||a.worker.parts.find(p=>/skull|head and feathered neck/.test(p.name));
  const skeleton=primary.skeleton,head=skeleton.bones.find(b=>b.name==='head'),delta=head.matrixWorld.clone().multiply(skeleton.boneInverses[skeleton.bones.indexOf(head)]),target=new T.Vector3(...(a.profile.eye||[.06,1.385,.11])).applyMatrix4(delta),outgoing=new T.Vector3(1,0,0).transformDirection(delta),ray=new T.Raycaster(target.clone().addScaledVector(outgoing,3),outgoing.clone().negate(),0,6);ray.layers.enableAll();
  const hit=primary?ray.intersectObject(primary,false)[0]:null;let contact=hit?.point;
@@ -36,14 +37,14 @@ function setupContact(){
  a.drop?.capture(a.worker.weapon.root.matrixWorld,{floor:0});
 }
 async function select(){
- const token=++version,profile=ANIMAL_MOTION_CATALOG.find(p=>p.id===$('animal').value);if(!profile)throw Error('Unknown animal');if($('outfit').value==='blue-hawaiian'&&profile.id!=='donkey')$('outfit').value='normal';if(profile.unarmed)$('weapon').value='hands';
+ const token=++version,profile=ANIMAL_MOTION_CATALOG.find(p=>p.id===$('animal').value);if(!profile)throw Error('Unknown animal');if($('outfit').value==='blue-hawaiian'&&profile.id!=='donkey')$('outfit').value='normal';if(profile.unarmed)$('weapon').value='hands';$('weapon').disabled=!!profile.unarmed;
  const outfit=$('outfit').value,weapon=$('weapon').value;$('loading').hidden=false;let worker,paint,cap,posture,locomotion,gun,mask,drop,heldPose,released=false;const capTextures=[];
  const cancelled=()=>disposed||token!==version,release=()=>{if(released)return;released=true;drop?.dispose();mask?.dispose();locomotion?.dispose();cap?.dispose();paint?.dispose();if(gun&&gun!==worker?.rifle)gun.dispose();worker?.root.removeFromParent();worker?.skeleton.dispose();worker?.dispose();capTextures.forEach(t=>t.dispose());},ownedLoader={loadAsync:async url=>{if(cancelled())throw Error('Cancelled');const t=await loader.loadAsync(url);if(cancelled()){t.dispose();throw Error('Cancelled');}return t;}};loads++;
  try{
   if(!cache.has(profile.file))cache.set(profile.file,fetch('./'+profile.file).then(r=>{if(!r.ok)throw Error('Missing character mesh');return r.json();}).catch(e=>{cache.delete(profile.file);throw e;}));const data=await cache.get(profile.file);if(cancelled()){release();return;}
   worker=profile.create(data);paint=await createAnimalPaint(renderer,worker,profile,ownedLoader,outfit);if(cancelled()){release();return;}for(const p of worker.parts)p.material=paint.material;
   if(outfit==='red-hats'){cap=await createRedHatCap(renderer,worker,profile,{loadAsync:async url=>{const t=await ownedLoader.loadAsync(url);capTextures.push(t);return t;}});if(cancelled()){release();return;}}
-  if(!profile.unarmed){gun=createWeaponModel(weapon);worker.equipWeapon(gun);drop=createCasualtyWeaponDrop(gun);}posture=createBattlePosture(worker,profile);locomotion=createWorkerLocomotion(worker,profile);heldPose=createCasualtyWeaponPose(worker,profile,posture,locomotion);mask=createFatalHeadMask(worker,{species:profile.id,texture:atlas});
+  if(!profile.unarmed){if(weapon==='grenade'){const paint=await ownedLoader.loadAsync('../assets/equipment/painted-ui/grenade-surface.png');paint.colorSpace=T.SRGBColorSpace;capTextures.push(paint);gun=createGrenadeModel(paint);}else gun=createWeaponModel(weapon);worker.equipWeapon(gun);drop=createCasualtyWeaponAssembly(worker,profile);}posture=createBattlePosture(worker,profile);locomotion=createWorkerLocomotion(worker,profile);heldPose=createCasualtyWeaponPose(worker,profile,posture,locomotion);mask=createFatalHeadMask(worker,{species:profile.id,texture:atlas});
   if(cancelled()){release();return;}actor?.dispose();actor={worker,profile,outfit,weapon,paint,cap,posture,locomotion,mask,drop,heldPose,dispose:release};scene.add(worker.root);if(drop)scene.add(drop.root);setupContact();ready=true;$('loading').hidden=true;frame();return state;
  }catch(e){release();if(cancelled())return;$('loading').hidden=true;$('error').textContent=e.message;throw e;}finally{loads--;finishRendererDisposal();}
 }
