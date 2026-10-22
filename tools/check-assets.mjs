@@ -48,7 +48,7 @@ const bloodManifest=JSON.parse(await readFile(new URL('assets/effects/painted-bl
 for(const asset of [bloodManifest.source,bloodManifest.runtime,...(bloodManifest.flipbook?[bloodManifest.flipbook]:[])]){const file='assets/effects/painted-blood/'+asset.file;await checkPNG(file,asset.width,asset.height);assert.equal(createHash('sha256').update(await readFile(new URL(file,root))).digest('hex'),asset.sha256,file);}
 assert.equal(await readFile(new URL('assets/effects/painted-blood/generation-prompt.txt',root),'utf8'),bloodManifest.generation.prompt,'Blood painting prompt provenance');
 if(bloodManifest.preview){const data=await readFile(new URL('assets/effects/painted-blood/'+bloodManifest.preview.file,root));assert.equal(data.subarray(0,3).toString(),'GIF');assert.equal(createHash('sha256').update(data).digest('hex'),bloodManifest.preview.sha256,'Blood review GIF');}
-for(const folder of ['painted-blood-exit','painted-blood-stains']){
+for(const folder of ['painted-blood-exit','painted-blood-stains','fatal-head']){
  const dir='assets/effects/'+folder+'/',manifest=JSON.parse(await readFile(new URL(dir+'manifest.json',root)));
  for(const asset of [manifest.source,manifest.runtime]){await checkPNG(dir+asset.file,asset.width,asset.height);assert.equal(createHash('sha256').update(await readFile(new URL(dir+asset.file,root))).digest('hex'),asset.sha256,dir+asset.file);}
  assert.equal(await readFile(new URL(dir+'generation-prompt.txt',root),'utf8'),manifest.generation.prompt,folder+' prompt provenance');

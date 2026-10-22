@@ -73,3 +73,7 @@ checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-blood-spray-
 for(const file of ['painted-blood-followup-data.js','painted-blood-exit.js','painted-blood-stain.js','blood-wounds-study.html','blood-wounds-study.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const folder of ['painted-blood-exit','painted-blood-stains'])fs.cpSync(new URL('dist/assets/effects/'+folder+'/',root),new URL('.pages-output/assets/effects/'+folder+'/',root),{recursive:true});
 checkModuleClosure(new URL('.pages-output/',root),['tactics/blood-wounds-study.html']);
+
+for(const file of ['fatal-head-data.js','fatal-head-motion.js','fatal-head-mask.js','fatal-head-study.html','fatal-head-study.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+fs.cpSync(new URL('dist/assets/effects/fatal-head/',root),new URL('.pages-output/assets/effects/fatal-head/',root),{recursive:true});
+checkModuleClosure(new URL('.pages-output/',root),['tactics/fatal-head-study.html']);
