@@ -13,9 +13,11 @@ function rockTexture(){
 }
 export function createStoneArchLibrary(){
  const texture=rockTexture(),materials=[new T.MeshStandardMaterial({map:texture,roughness:1,side:T.DoubleSide}),new T.MeshStandardMaterial({map:texture,color:0xc0c49c,roughness:1,side:T.DoubleSide})],geometries=new Map();
- return {build(kind){let geometry=geometries.get(kind);if(!geometry){const data=stoneArchData(kind),positions=[],uv=[];
-   for(let i=0;i<data.triangles.length;i+=9){const face=data.surfaces[i/9];for(let j=0;j<9;j+=3){const [x,y,h]=data.triangles.slice(i+j,i+j+3);positions.push(x,h,y);uv.push(x/3,(face==='top'?y:h)/2);} }
-   geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));geometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));geometry.computeVertexNormals();for(let i=0;i<data.surfaces.length;i++)geometry.addGroup(i*3,3,data.surfaces[i]==='top'?1:0);geometry.computeBoundingSphere();geometries.set(kind,geometry);
+ return {build(kind){let geometry=geometries.get(kind);if(!geometry){const data=stoneArchData(kind),positions=[[],[]],uv=[[],[]];
+   // Group by the two materials once; a group per triangle made this tiny
+   // mesh submit 88 draws in every scene/light pass.
+   for(let i=0;i<data.triangles.length;i+=9){const face=data.surfaces[i/9],material=face==='top'?1:0;for(let j=0;j<9;j+=3){const [x,y,h]=data.triangles.slice(i+j,i+j+3);positions[material].push(x,h,y);uv[material].push(x/3,(face==='top'?y:h)/2);} }
+   geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(positions.flat(),3));geometry.setAttribute('uv',new T.Float32BufferAttribute(uv.flat(),2));geometry.computeVertexNormals();let start=0;for(let material=0;material<positions.length;material++){const count=positions[material].length/3;if(count)geometry.addGroup(start,count,material);start+=count;}geometry.computeBoundingSphere();geometries.set(kind,geometry);
   }
   const root=new T.Group(),mesh=new T.Mesh(geometry,materials);mesh.castShadow=mesh.receiveShadow=true;root.add(mesh);root.name=kind;return {root,dispose(){root.clear();}};
  },dispose(){for(const g of geometries.values())g.dispose();for(const m of materials)m.dispose();texture.dispose();}};

@@ -4,7 +4,7 @@ import {openingContent} from '../dist/tactics/campaign-opening.js';
 import {createCampaign,activeState,initializeSector,openCampaignSector,finishCampaignEncounter,orderCampaignTravel,advanceCampaign,retreatCampaign,splitCampaignGroup,syncCampaignEncounter,reconcileCampaign,resolveCharacterReference,landingPlan} from '../dist/tactics/campaign-model.js';
 import {captureCampaign,restoreCampaign,checkpointTransition} from '../dist/tactics/campaign-save.js';
 import {CampaignSession} from '../dist/tactics/campaign-store.js';
-import {planRoute} from '../dist/tactics/overmap-travel.js';
+import {planRoute,travelEdges} from '../dist/tactics/overmap-travel.js';
 import {canUseSectorInventory,sectorInventory} from '../dist/tactics/sector-inventory.js';
 import {transferItem,inventoryAction} from '../dist/tactics/battle-inventory.js';
 import {refresh,attack,stepEnemy,searchBody,pileOpen,previewAttack} from '../dist/tactics/core/engine.js';
@@ -15,6 +15,14 @@ const guards=(c,index=71)=>c.sectors[index].population.map(id=>c.characters[id].
 function checkpoint(){const c=fresh();orderCampaignTravel(c,'group-1',71);advanceCampaign(c,100);openCampaignSector(c,71);return c;}
 function dead(c,u,drop=true){u.hp=0;u.casualty='dead';u.ap=0;if(drop)activeState(c).loot.push({x:u.x,y:u.y,z:u.z,body:u.id,searched:false,items:[{type:'weapon',kind:'rifle',rounds:3,condition:47}]});}
 function elapsed(c,m){activeState(c).clock.minutes+=m;syncCampaignEncounter(c);}
+
+test('the fixed opening retains direct assigned travel and a detached reserve route as world generation evolves',()=>{
+ const first=openingContent();
+ for(const [from,to]of [[70,71],[71,70],[101,71]])assert.ok(travelEdges(first.overmap,from).some(e=>e.to===to),`${from} to ${to} stays directly connected`);
+ const original=structuredClone(first.overmap);
+ first.overmap.sectors[70].travel.length=0;first.overmap.sectors[71].routes.length=0;
+ assert.deepEqual(openingContent().overmap,original,'a played campaign cannot mutate the next new opening');
+});
 
 test('six residents become four after retreat and return, then seven after an actual travelling reinforcement arrival',()=>{
  let c=checkpoint(),s=activeState(c);const original=guards(c),ids=original.map(u=>u.campaignId);original[2].hp-=17;original[2].ammo.rifle=1;

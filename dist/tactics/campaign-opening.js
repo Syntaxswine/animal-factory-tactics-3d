@@ -1,5 +1,5 @@
 import {blankMap,stampRoom,addStairs} from './core/maps.js';
-import {generateWorld} from './overmap-generator.js';
+import {openingOvermap} from './campaign-opening-world.js';
 import {route} from './overmap-model.js';
 import {medicalChest} from './inventory-tools.js';
 
@@ -34,7 +34,7 @@ export async function loadOpeningContent(fetcher=fetch){
 }
 // Explicit assignments are fixed for this proof; the other 448 sectors remain unassigned.
 export function openingContent(){
- const overmap=generateWorld(42),{a,b}=openingDefinitions();
+ const overmap=openingOvermap(),{a,b}=openingDefinitions();
  overmap.sectors[70].name=a.name;overmap.sectors[71].name=b.name;
  overmap.sectors[70].routes.push(route('road','center','east',.5,.5));overmap.sectors[71].routes.push(route('road','west','center',.5,.5));
  // These authored maps have a connected road even when the seeded tutorial

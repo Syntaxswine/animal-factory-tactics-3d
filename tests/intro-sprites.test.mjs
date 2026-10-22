@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
 import {heliPath,artPitch,cameraAt,PROOF_START,PROOF_END,EVENTS,REST,TOUCHDOWN,CLOSEUP,KEYFRAME_TIMES} from '../dist/tactics/intro-sprites/trajectory.js';
 import {plateGeometry,plateSpec,WIDTH,HEIGHT,PLATE_TILE} from '../dist/tactics/intro-sprites/proof.js';
 import {buildSector,HEIGHT_SCALE,ROCK_DETAIL} from '../dist/tactics/intro-sprites/crash-sector.js';
@@ -12,10 +13,16 @@ import {keepClear} from '../dist/tactics/intro-sprites/plate.js';
 import {splitTone,SPLIT} from '../dist/tactics/intro-sprites/grade.js';
 
 const dir=new URL('../dist/tactics/intro-sprites/',import.meta.url),read=p=>JSON.parse(readFileSync(new URL(p,dir)));
-const map=JSON.parse(readFileSync(new URL('../dist/tactics/sector-library/tutorial-step-1/rough-plateau.json',import.meta.url))),woodland=read('crash-sector-woodland.json');
+const map=read('crash-sector-map.json'),woodland=read('crash-sector-woodland.json');
 // The sectors the plates are painted from: the wide shots' and the close-up's.
 let sector,closeSector;const S=()=>sector??=buildSector(map,woodland,{heightScale:HEIGHT_SCALE.wide,detail:ROCK_DETAIL.wide});
 const SC=()=>closeSector??=buildSector(map,woodland,{heightScale:HEIGHT_SCALE.closeup,extend:true,detail:ROCK_DETAIL.closeup});
+
+test('the approved cinematic set remains pinned independently of editable tutorial heights',()=>{
+ const source=readFileSync(new URL('crash-sector-map.json',dir),'utf8').replace(/\r\n/g,'\n');
+ assert.equal(createHash('sha256').update(source).digest('hex'),'18911c2ea7b399d2898e8aea703133ded8e85c789d3f8010d43405da83695b91');
+ assert.equal(map.levels,3);assert.equal(map.props.length,642);
+});
 
 test('the wreck comes to rest in the centre of the user\'s circle', ()=>{
  assert.deepEqual(REST,[205.5,104]);

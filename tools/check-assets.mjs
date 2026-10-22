@@ -44,6 +44,15 @@ async function checkPNG(path,width,height,channels=6){
  assert.equal(data.readUInt32BE(16),width,path);assert.equal(data.readUInt32BE(20),height,path);
  assert.equal(data[25],channels,`${path} has unexpected PNG channels`);
 }
+const bloodManifest=JSON.parse(await readFile(new URL('assets/effects/painted-blood/manifest.json',root)));
+for(const asset of [bloodManifest.source,bloodManifest.runtime,...(bloodManifest.flipbook?[bloodManifest.flipbook]:[])]){const file='assets/effects/painted-blood/'+asset.file;await checkPNG(file,asset.width,asset.height);assert.equal(createHash('sha256').update(await readFile(new URL(file,root))).digest('hex'),asset.sha256,file);}
+assert.equal(await readFile(new URL('assets/effects/painted-blood/generation-prompt.txt',root),'utf8'),bloodManifest.generation.prompt,'Blood painting prompt provenance');
+if(bloodManifest.preview){const data=await readFile(new URL('assets/effects/painted-blood/'+bloodManifest.preview.file,root));assert.equal(data.subarray(0,3).toString(),'GIF');assert.equal(createHash('sha256').update(data).digest('hex'),bloodManifest.preview.sha256,'Blood review GIF');}
+for(const folder of ['painted-blood-exit','painted-blood-stains']){
+ const dir='assets/effects/'+folder+'/',manifest=JSON.parse(await readFile(new URL(dir+'manifest.json',root)));
+ for(const asset of [manifest.source,manifest.runtime]){await checkPNG(dir+asset.file,asset.width,asset.height);assert.equal(createHash('sha256').update(await readFile(new URL(dir+asset.file,root))).digest('hex'),asset.sha256,dir+asset.file);}
+ assert.equal(await readFile(new URL(dir+'generation-prompt.txt',root),'utf8'),manifest.generation.prompt,folder+' prompt provenance');
+}
 await checkPNG(TRUCK_PAINT.replace('../',''),1536,1024,2);
 const manifest=JSON.parse(await readFile(new URL('assets/characters/manifest.json',root)));
 for(const species of CHARACTER_SPECIES)for(const weapon of ['hands',...ARMED_WEAPONS])for(const stance of ['standing','kneeling','prone']){
@@ -165,6 +174,9 @@ for(const [directory,names] of [['sand-cliff',['sand.png','sand-feather.png']],[
  for(const name of names){const file=directory+'/'+name;active.add(file);await checkPNG('assets/environment/'+file,512,512);}
  if(directory==='grass-cliff-meadow'){assert.deepEqual(manifest.atlas,{file:'atlas.png',columns:2,rows:2});active.add(directory+'/atlas.png');await checkPNG('assets/environment/'+directory+'/atlas.png',1024,1024);}
 }
+const archManifest=JSON.parse(await readFile(new URL('assets/environment/natural-rock-arches/manifest.json',root)));
+for(const asset of archManifest.textures){const file='natural-rock-arches/'+asset.file;if(file.endsWith('.png')){active.add(file);await checkPNG('assets/environment/'+file,asset.width,asset.height,2);}assert.equal(createHash('sha256').update(await readFile(new URL('assets/environment/'+file,root))).digest('hex'),asset.sha256,file);}
+for(const model of archManifest.models){for(const [file,hash]of [[model.json,model.jsonSha256],[model.obj,model.objSha256]])assert.equal(createHash('sha256').update(await readFile(new URL('assets/environment/natural-rock-arches/'+file,root))).digest('hex'),hash,file);}
 const superseded=new Set(['door-steel-closed.png','door-wood-closed.png','doorway-concrete-open.png','foliage/river-straight.png','foliage/river-bend.png','foliage/river-banks-atlas.png']);
 const orphaned=(await readdir(new URL('assets/environment/',root),{recursive:true})).map(file=>file.replaceAll('\\','/')).filter(file=>file.endsWith('.png')&&!active.has(file)&&!superseded.has(file));assert.deepEqual(orphaned,[],'Unattached environment assets');
 for(const species of RED_HAT_SPECIES)for(const weapon of ['hands',...ARMED_WEAPONS])for(const stance of ['standing','kneeling','prone']){

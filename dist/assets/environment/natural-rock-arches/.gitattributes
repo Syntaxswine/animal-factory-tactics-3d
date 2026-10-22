@@ -1,0 +1,5 @@
+*.obj text eol=lf
+*.json text eol=lf
+*.mtl text eol=lf
+*.png binary
+*.webp binary

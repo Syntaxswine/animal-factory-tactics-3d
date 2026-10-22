@@ -23,7 +23,7 @@ fs.cpSync(new URL('dist/assets/environment/guardhouse-consoles/',root),new URL('
 for(const file of ['rpg-flight.js','rpg-flight-effects.js','rpg-flight-study.js','rpg-flight-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['editor-breaches.js','floor-breach-fixture.js','floor-breach-study.js','floor-breach-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['wall-breach-fixture.js','wall-breach-study.js','wall-breach-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
-for(const file of ['campaign-hiring.js','campaign-roster.js','campaign.html','campaign.css','campaign-page.js','campaign-opening.js','campaign-model.js','campaign-save.js','campaign-store.js','campaign-battle.js','sector-inventory.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+for(const file of ['campaign-hiring.js','campaign-roster.js','campaign.html','campaign.css','campaign-page.js','campaign-opening.js','campaign-opening-world.js','campaign-model.js','campaign-save.js','campaign-store.js','campaign-battle.js','sector-inventory.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['mercenary-status.js','mercenary-status.css','battle-defeat.js','weapon-icons.js','battle-hud.js','battle-hud-model.js','battle-hud.css','interior-fog.js','interior-fog-scene.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['explosive-barrels.js','barrel-targeting.js','fuel-blast.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 for(const file of ['strategic-site-fixture.js','strategic-sites.js','strategic-site-clearance.js','strategic-site-rules.js','strategic-site-data.js','strategic-site-damage.js','strategic-site-scene.js','strategic-sites-study.js','strategic-sites-study.html','strategic-sites-study.css'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
@@ -63,4 +63,16 @@ checkModuleClosure(new URL('.pages-output/',root),['tactics/battle-entry.js','ta
 checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-hedges-study.js','tactics/foliage-skins-review.js','tactics/editor-foliage-preview-worker.js']);
 checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-hedges-study.html']);
 
+for(const file of ['natural-arch-data.js','natural-rock-arches.js','natural-arches-study.js','natural-arches-study.html','natural-arches-study.css'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+fs.cpSync(new URL('dist/assets/environment/natural-rock-arches/',root),new URL('.pages-output/assets/environment/natural-rock-arches/',root),{recursive:true});
+checkModuleClosure(new URL('.pages-output/',root),['tactics/natural-arches-study.html']);
+
 checkModuleClosure(new URL('.pages-output/',root),['tactics/dialogue-audition.js','tactics/dialogue-speech-worker.js','tactics/speaking-heads-viewer.js']);
+
+for(const file of ['painted-blood-spray-data.js','painted-blood-spray-motion.js','painted-blood-spray.js','painted-blood-spray-study.js','painted-blood-spray-study.html','painted-blood-spray-study.css'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+fs.cpSync(new URL('dist/assets/effects/painted-blood/',root),new URL('.pages-output/assets/effects/painted-blood/',root),{recursive:true});
+checkModuleClosure(new URL('.pages-output/',root),['tactics/painted-blood-spray-study.html']);
+
+for(const file of ['painted-blood-followup-data.js','painted-blood-exit.js','painted-blood-stain.js','blood-wounds-study.html','blood-wounds-study.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+for(const folder of ['painted-blood-exit','painted-blood-stains'])fs.cpSync(new URL('dist/assets/effects/'+folder+'/',root),new URL('.pages-output/assets/effects/'+folder+'/',root),{recursive:true});
+checkModuleClosure(new URL('.pages-output/',root),['tactics/blood-wounds-study.html']);
