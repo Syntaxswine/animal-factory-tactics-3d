@@ -1,0 +1,23 @@
+{
+  "captures": 52,
+  "resources": {
+    "before": {
+      "geometries": 24,
+      "textures": 7
+    },
+    "after": {
+      "geometries": 24,
+      "textures": 7
+    }
+  },
+  "cancelledLoads": [
+    "boot",
+    "replacement"
+  ],
+  "errors": [],
+  "browserCleanup": {
+    "exited": true,
+    "portReleased": true
+  },
+  "reviewedAt": "2026-10-22T04:15:26.280Z"
+}

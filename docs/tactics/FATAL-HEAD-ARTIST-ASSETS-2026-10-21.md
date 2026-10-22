@@ -5,7 +5,8 @@ Artist delivery · 21 October 2026 · Independent visual review: **9/10**
 This supplies the missing artist presentation for a **fatal-head outcome already
 resolved by the game**: a brief painted burst, a few falling generic fragments,
 reversible head removal and a sealed painted neck. It reuses the existing
-casualty fall and equipment release. No injury qualification, damage, permanent
+casualty fall, with a separate gun drop that lands before fading. No injury
+qualification, damage, permanent
 death rule or live battle renderer is changed by this delivery.
 
 [Open the study](http://127.0.0.1:4477/tactics/fatal-head-study.html).
@@ -81,6 +82,53 @@ burst.dispose();
 The study's contact is an authored surface probe for comparison, not a new
 collision or penetration solver. It must not replace the builder's live contact.
 
+## Released gun: land, then fade · 22 October follow-up
+
+The follow-up keeps the gun visible when the casualty releases its grasp.
+The study releases it at **0.42 seconds**, at the beginning of the body fall.
+Its last held world pose is retained exactly; it falls under world-down gravity
+and rotates onto its side. Contact uses the actual rigid model vertices, not
+the weapon origin or a box corner. The gun remains opaque in flight, settles
+against the supplied floor for **0.12 seconds**, then fades over **0.45 seconds**.
+It follows the same sequence in Full, Reduced and Off presentation.
+
+The study's former prone HMG carry put its bipod and belt underground. Its
+held endpoint now reuses the existing supported prone firing pose, with both
+hands solved to the gun. That endpoint is cached and blended into the existing
+casualty, avoiding a new pose search each frame. The shared gameplay pose code
+is unchanged. All **66 rifle/HMG × armed-species × stance releases** preserve
+their source transform exactly. A penetrating capture is rejected explicitly,
+so a bad held pose cannot be silently corrected by teleporting the gun upward.
+
+![The rifle and HMG remain visible until landing, then fade](review-images/fatal-head/weapon-drop.png)
+
+[createCasualtyWeaponDrop](../../dist/tactics/casualty-weapon-drop.js) prepares a
+visual proxy with shared weapon geometry/textures and its own materials. It
+preserves the painterly shaders and fades without changing the original gun.
+The proxy is independent of the falling body's transform. Replay restores the
+held gun; no history-dependent integration, timers or per-frame cloning is used.
+
+```js
+const drop = createCasualtyWeaponDrop(weapon); // null for unarmed
+scene.add(drop.root); // identity, untransformed render-world parent
+// Capture the live held pose BEFORE evaluating a pose that releases the grasp.
+drop.capture(lastHeldWeaponWorldMatrix, {floor: supportWorldY});
+// At release, hide the original held weapon and evaluate the proxy by age:
+weapon.root.visible = false;
+const visualState = drop.update(secondsSinceRelease);
+// Retire when visualState.phase === 'retired'. On replay, restore the carry pose.
+drop.dispose(); // before the caller disposes the original weapon
+```
+
+The adapter handles rigid guns; the study fits rifle/HMG releases from standing,
+kneeling and prone. An attached pack or flexible hose needs its own assembly
+adapter. The caller supplies the actual floor level and can supply release
+velocity. This is cosmetic: it does not create, destroy or alter a loot item,
+and it is not a wall/terrain collision solver. It adds transient material draws,
+sharing the original geometry; no extra painting is loaded.
+The study's `casualty-weapon-pose.js` holds one authored preview direction;
+live integration should capture the builder's current supported weapon pose.
+
 ## Native model adapter
 
 [createFatalHeadMask](../../dist/tactics/fatal-head-mask.js) prepares an
@@ -149,6 +197,19 @@ model path needs its own builder adapter; the study does not certify those paths
   Identical Full and Off captures preserve the same body pose; this delivery
   fixes the neck seal without changing that existing casualty layer.
 
+Weapon follow-up validation: **35 focused tests pass**, including seven new tests
+for exact release vertex alignment, gravity/contact before fading, all armed
+species in three stances, deterministic replay (including tail geometry after
+arbitrary prone HMG falls), painterly shader preservation and shared-resource
+ownership. Independent follow-up review is **9/10**; the reviewer also reran all
+seven weapon tests. The packaged build passes. Browser follow-up
+also checks rifle/HMG held, falling, grounded, fading and retired frames in all
+three stances, other body sizes, presentation settings and armed replay cycles.
+Its **52 captures** complete without browser errors. Source and packaged views
+match byte-for-byte under matching fresh-start sequences. Fifty armed replay
+cycles retain **24 geometries and 7 textures**; the disposable browser exits and
+releases its port. See the [weapon validation record](review-images/fatal-head/weapon-drop-validation.json).
+
 ![Hen Full and Off at the identical resting pose](review-images/fatal-head/hen-comparison.png)
 
 The disposable review browser closes in `finally`, with verified process exit
@@ -165,7 +226,7 @@ packages. Build before running the packaged review.
 
 ```text
 node tools/prepare-fatal-head.mjs <original-generated-png>
-node --test tests/painted-blood-spray.test.mjs tests/painted-blood-wounds.test.mjs tests/fatal-head-assets.test.mjs tests/tactics-pages-files.test.mjs
+node --test tests/painted-blood-spray.test.mjs tests/painted-blood-wounds.test.mjs tests/fatal-head-assets.test.mjs tests/casualty-weapon-drop.test.mjs tests/tactics-pages-files.test.mjs
 node tools/check-assets.mjs
 node tools/build-tactics-3d.mjs
 ```
@@ -173,3 +234,6 @@ node tools/build-tactics-3d.mjs
 Run `tools/review-fatal-head.mjs` with `FATAL_REVIEW_PACKAGED=1` and
 `FATAL_REVIEW_HEN=1`. `FATAL_REVIEW_OUTPUT` chooses the evidence directory.
 `FATAL_REVIEW_FAST=1` limits roster captures for a focused follow-up.
+Use `FATAL_REVIEW_DROP=1` for the armed fall/fade cases; combine with Fast for
+the weapon-only follow-up. `tools/compose-fatal-head-review.mjs <evidence-dir>
+--weapon-drop` makes its review sheet and compact validation record.
