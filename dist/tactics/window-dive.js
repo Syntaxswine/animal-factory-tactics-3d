@@ -173,7 +173,14 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // them with the seat still down, rises over them, and steps back onto the tile centre, each foot in turn with the
  // weight over the other, turning to face on: the hips' keys over the support of the moment, heights held up by the
  // legs. Before, the get-up rose short of the feet and the feet slid 25 and 70 cm into the stance under load.
- const catchT=CATCH_END,T=k=>CATCH_END+GETUP[k],catchKey={t:catchT,p:rEnd.p,q:rEnd.q},FOOT_DOWN=caughtAt===null?ROLL_END:ROLL.start+caughtAt,rDown=rollRows.find(r=>r.t>=FOOT_DOWN-1e-9)||rEnd;
+ // A roll that ends before its hooves land (the skunk's and cow's run out of spin climbing over their tails' roots, the
+ // feet still tucked up to 50 cm off the floor) brings them down from DROP_STALL before its end, as it slows: pulled
+ // from the tuck in the last 60 ms, the skunk's toes struck at 16.7 m/s, its seat bounced 4.5 cm and its sit-up read
+ // 322% of its weight. Landing later instead (eased down over 0.3 s after the roll), the body lay on its tail's root
+ // with nothing else under it, and the plan moved the hips 9 cm before the roll to meet that (the left elbow folded to
+ // 163 degrees).
+ const DROP_STALL=.18;
+ const catchT=CATCH_END,T=k=>CATCH_END+GETUP[k],catchKey={t:catchT,p:rEnd.p,q:rEnd.q},FOOT_DOWN=caughtAt===null?ROLL_END:ROLL.start+caughtAt,TUCKED=caughtAt===null?Math.max(ROLL.start+.05,ROLL_END-DROP_STALL):FOOT_DOWN-.06,rDown=rollRows.find(r=>r.t>=FOOT_DOWN-1e-9)||rEnd;
  const ANKLE=body.at0('hoof1').y,feet=Object.fromEntries([-1,1].map(s=>[s,toWorld({hips:rDown.p,hipsQ:rDown.q},'pelvis',TUCK['leg'+s]).setY(ANKLE)]));
  const R1=V(...fitB.foot(1,1)),L1=V(...fitB.foot(-1,1)),turned=(h,pitch)=>yawQ(h).multiply(bodyQ(pitch*DEG));
  const hipsOver=(f,y,toward,k=.12)=>f.clone().lerp(toward,k).setY(fitB.stand(y));
@@ -279,8 +286,8 @@ export function createWindowDive(worker,profile={id:'horse'}){
   [1.84,{f:'world',p:[.62,.32,-.12],face:WALL,elbowTo:OUT}],[2.06,{f:'world',p:[.62,.32,-.12],face:WALL,elbowTo:OUT}]];
  let LIMB;const buildLimbs=()=>{const handAt={[-1]:{...floorHand(ROLL.start,-1,[.03,0,-.15],30),elbow:FLOOR_ELBOW[-1],plant:true},1:{...floorHand(LANDS[1],1,[0,0,0],50),elbow:FLOOR_ELBOW[1],plant:true}},
   aim=(t,s,k)=>({...dangle(t,s,handAt[s].p.map((x,j)=>x-shoulderAt(t,s).getComponent(j)),k),soft:.03});LIMB={
-  'leg-1':[[0,rest.leg(-1)],[.55,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,plant:true}],[.90,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.06,-.56,-.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,-.12]}],[HANG,{f:'pelvis',p:[.20,-.56,-.12]}],[DOWN,{f:'pelvis',p:[.12,-.52,-.12]}],[LANDS[1],{f:'pelvis',p:[-.12,-.30,-.13]}],[ROLL.start,{f:'pelvis',p:TUCK['leg-1']}],[FOOT_DOWN-.06,{f:'pelvis',p:TUCK['leg-1']}]],
-  leg1:[[0,rest.leg(1)],[.55,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,plant:true}],[.90,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.04,-.56,.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,.12]}],[HANG,{f:'pelvis',p:[.20,-.56,.12]}],[DOWN,{f:'pelvis',p:[.12,-.52,.12]}],[LANDS[1],{f:'pelvis',p:[-.12,-.30,.13]}],[ROLL.start,{f:'pelvis',p:TUCK.leg1}],[FOOT_DOWN-.06,{f:'pelvis',p:TUCK.leg1}]],
+  'leg-1':[[0,rest.leg(-1)],[.55,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,plant:true}],[.90,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.06,-.56,-.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,-.12]}],[HANG,{f:'pelvis',p:[.20,-.56,-.12]}],[DOWN,{f:'pelvis',p:[.12,-.52,-.12]}],[LANDS[1],{f:'pelvis',p:[-.12,-.30,-.13]}],[ROLL.start,{f:'pelvis',p:TUCK['leg-1']}],[TUCKED,{f:'pelvis',p:TUCK['leg-1']}]],
+  leg1:[[0,rest.leg(1)],[.55,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,plant:true}],[.90,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.04,-.56,.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,.12]}],[HANG,{f:'pelvis',p:[.20,-.56,.12]}],[DOWN,{f:'pelvis',p:[.12,-.52,.12]}],[LANDS[1],{f:'pelvis',p:[-.12,-.30,.13]}],[ROLL.start,{f:'pelvis',p:TUCK.leg1}],[TUCKED,{f:'pelvis',p:TUCK.leg1}]],
   'arm-1':[[0,rest.arm(-1)],[.55,{f:'world',p:[.36,.92,-.42]}],[.90,{f:'world',p:[.44,.91,-.42],palm:0}],[1.25,{f:'world',p:[.47,.91,-.42],palm:0}],[1.60,dangle(1.60,-1,[.35,-1,-.05])],[HANG,aim(HANG,-1,.97)],[LANDS[-1],handAt[-1]],[ROLL.start,handAt[-1]],[ROLL.start+.12,{f:'chest',p:body.offsets.shoulder[-1].clone().add(V(.05,.05,-.24)).toArray(),elbow:TUCK_ELBOW['arm-1']}],[ROLL.start+.24,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}],[ROLL_END,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}]],
   arm1:[[0,rest.arm(1)],[.55,{f:'world',p:[.36,.92,.02]}],[.90,{f:'world',p:[.44,.91,0],palm:0}],[1.25,{f:'world',p:[.47,.91,-.02],palm:0}],...BRACE.map(([t,k])=>[t,k]),[LANDS[1],handAt[1]],[ROLL.start,{...handAt[1],elbowTo:UP}],[ROLL.start+.18,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}],[ROLL_END,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}]],
  };
@@ -376,8 +383,10 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(WINDOW.edge,WINDOW.half,[[0,WINDOW.sill],[WINDOW.top,2]]),pose:t=>body.pose(spec(t),'balance'),com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onSill(t)).add(onSeat(t)).toArray(),
   // sitting, the plan keeps the authored path: its own hips' move lifted the seat off the floor, and the next round,
   // finding the feet alone under a centre of mass 30 cm behind them, dragged it forward until the knees locked and the
-  // hips ran away (80 to 210 m/s)
-  hold:t=>t>=FOOT_DOWN-.05&&t<=T('lean')+.05});
+  // hips ran away (80 to 210 m/s); and through a roll that ends before its hooves land, which turns about its tail's
+  // root: moved by the plan, the skunk's root lifted off the floor and the rig found the body on its shirt and seat,
+  // nothing under the roll's pivot (its roll read 147% of its weight, 108 held)
+  hold:t=>t>=FOOT_DOWN-.05&&t<=T('lean')+.05||caughtAt===null&&t>=ROLL.start+.08&&t<FOOT_DOWN});
  // On the balanced motion the tails are bent clear of the trunk as it now is (they carry no mass in the balance), and
  // the fit's report is then the played motion's. The arms are not fitted again here: moved after the balance, they
  // move the centre of mass it planned (the step in read 44% of the body's weight). Nor is the head (fit.solveHead, as

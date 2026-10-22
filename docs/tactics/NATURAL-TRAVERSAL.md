@@ -1192,6 +1192,51 @@ against lean (it chose 43 to 45 degrees of pitch where 31 did).
 - The window is 0.34 s longer (6.05 s on the horse). Build time: the search adds up to about 2 s (the horse's window
   13.0 -> 14.9 s here; the cow's within its run-to-run noise).
 
+### 2026-10-22 (physics balance, tenth part): the skunk's landing in the roll
+
+The user: "Fix the skunk's hoof landing in the window's roll next: the hooves at 16 m/s and the seat's 3 cm bounce that
+drive its sit-up to 250-320%."
+
+**What it was.** The skunk's roll never lands its feet. From 0.08 s into it the skunk rolls on its plume's root, and
+climbing over the root drains its spin (2.45 to 0.25 rad/s) before its hooves reach the floor: the roll ends at 24
+degrees of turn, the body lying back, the boots still tucked 50 to 58 cm up. The other nine mammals land theirs at 61 to
+68 degrees and rock to rest; the cow stalls too, on its tail's root, at 50. With no landing, the tucked feet were pulled
+to the floor in the roll's last 60 ms: the skunk's toes struck at 16.7 m/s and its seat bounced 4.5 cm (the sit-up 322%
+of its weight); the cow's toes at 8.7 m/s.
+
+**The fix.** For a roll that ends before its hooves land, the legs leave the tuck 0.18 s before its end
+(`DROP_STALL`), as it slows, and land at its end as before. The balance also keeps the authored path through such a roll
+(from 0.08 s in): moved by the plan, the skunk's root lifted off the floor and the rig found the body on its shirt and
+seat with nothing under the roll's pivot. The skunk's toes now peak at 6.7 m/s (the cow's at 3.5) and its seat stays
+within 1 cm through the landing. Every other mammal's window is the same motion (largest point difference 0.0000 cm).
+
+| | skunk, 18a944f | skunk, now | cow, 18a944f | cow, now |
+|---|---|---|---|---|
+| over the limit | 0.84 s | 0.70 s | 0.60 s | 0.67 s |
+| roll; sit-up (peak, % BW) | 194; 322 | 108; 260 | 572; 173 | 562; 103 |
+| right foot in; left foot in | 37; 54 | 85; 53 | 86; 36 | 78; 36 |
+| other gate failures | toes 16.7 m/s; left elbow 151 degrees | none | toes 8.7 m/s; required force 5.7 x BW | required force 5.6 x BW |
+
+`bin/collisions.mjs`: the skunk's deepest point is 4.1 cm and the cow's 3.4, as before (a hand on the sill). The cow's
+total moves within the swing its tail-root seat gives it (its sit-up read 29 to 173% across the ninth part's variants).
+
+Tried and not kept:
+- The feet eased down after the roll instead (over 0.3 s): the body lay on its root with nothing else under it, and the
+  skunk's first step read 195% (0.99 s in all).
+- Landing them a little later (0.18 s centred on the roll's end): the plan moved the hips 9 cm before the roll to meet
+  it, and the left elbow, planted on the floor, folded to 163 degrees.
+- A stronger roll-in (3.4 to 3.8 rad/s for the skunk, 2.6 to 3.0 for the cow, against 2.2): it carries over the root but
+  crawls, the roll holding 360 to 560 N throughout (1.9 to 2.9 s over the limit).
+- The tail's root never a pivot: the skunk's went 13.2 cm into the floor, the cow's 7.4.
+- Less tucked legs: the cow's hooves land, the skunk's never do.
+- The legs swung down inside the roll's own physics (a rock-up: their weight carried the skunk up, its hooves landed at
+  2.7 rad/s). The balance moves the played body up to 18 cm from the roll it was computed on, so a swing worked out on
+  the roll's own pose did not carry into the played motion (1.74 s, spikes of 47 x BW).
+
+**Left:** the stall itself. The skunk still rolls on its plume's root, and the played body keeps it down only in part,
+so its sit-up reads 260% and its first step 85%. A roll that lands every body's feet needs its physics and the balance
+to agree on the pivot. And the cow's tail-root seat.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
