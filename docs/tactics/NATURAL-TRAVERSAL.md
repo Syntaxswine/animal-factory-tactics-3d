@@ -1032,6 +1032,90 @@ read nothing.
   (the rabbit's trousers 8 cm in, the goat's 5.6) and the feet leaving the far face (4 cm).
 - Build time.
 
+### 2026-10-21 (physics balance, eighth part): the pigs' straddle, and what the window's lean is
+
+The user: "Do the pigs' straddle over the climb's top first, then the window's lean."
+
+**The pigs' straddle.** The horse's keys lean its trunk over the 16 cm top, held there by its hands, its seat a few
+centimetres above it. At those leans a pig's belly went 8 to 36 cm into the top, and its arms, set wider, fell 3 to 5 cm
+short of holding it above. For a body that deep in front (`deep`: more than 5 cm; the pigs stand back 16 and 19 cm,
+every other body within 1 mm, and switched on at "more than 0" the donkey's 1 mm moved its legs 22 cm):
+- each key from the chest over the top to the left leg over takes the least change of lean and height that keeps the
+  torso out of the top (its points at rest riding the hips or spine), and from the right knee up on rests the seat on
+  it, 7.5 mm above; the hands' reach to their marks is a cost. The foreman's chest-over-the-top key comes out 20 degrees
+  flatter and 26 cm higher.
+- between the keys one smooth vertical move holds the torso's lowest point over the top 6 to 9 mm above it, measured on
+  the final limbs every 5 ms from 2.55 to 3.66 s, then runs on free until the lowering's key. Let go in 80 ms at the
+  band's end instead, the foreman, held 13 cm down onto the top's edge as it slid off, rose 12 cm, lifted its hands off
+  the top and fell at 6 g (724% of its weight); released slowly, the balance goes from the seat straight to the grip.
+- the balance keeps the authored path on the top (`hold`), and a held sample now keeps the authored support whatever
+  the moved hips touch: the seat rose 5 mm off the top for 40 ms, and the plan, finding it in flight, jerked the body at
+  39 m/s.
+
+Every other climb and every window is the same motion as before (largest point difference 0.0000 cm on all 11
+mammals). The gate, the climb, b11a948 against now (phantom force, peak per phase, % of body weight):
+
+| | pig foreman | pig director |
+|---|---|---|
+| over the limit | 1.34 -> 1.06 s | 1.24 -> 0.71 s |
+| right knee up | 0 -> 55% | 37% -> 0 |
+| straddle | 633% -> 0 | 134% -> 0 |
+| left knee up behind | 6348% -> 70% | 1029% -> 269% |
+| left leg over | 910% -> 493% | 2174% -> 0 |
+| lower down the far face | 14% -> 220% | 170% -> 214% |
+| let go | 118% -> 233% | 165% -> 310% |
+| required force in contact | 9.6 -> 9.4 x BW | 6.4 -> 8.8 x BW (2.40 s, the right knee onto the top) |
+| capsule overlap, deepest | 11.2 -> 3.2 cm | 10.1 -> 6.4 cm |
+| points over 8 m/s; fastest | 20; 55.1 -> 13; 18.2 m/s | 14; 14.2 -> 13; 16.7 m/s |
+
+The fit's report (the test's cap), trunk: 15.6 -> 1.7 cm (foreman), 7.9 -> 2.6 (director). `bin/collisions.mjs`: the
+foreman's deepest point 8.0 cm (the trousers through the top at 2.86 s) -> 6.6 (a boot in the near face in the hang,
+1.48 s); the director's 8.0 (the waistcoat, 2.31 s) -> 7.9 (the trousers as the left leg goes over, 3.60 s).
+
+**The window's lean.** The 27% in the lean over the feet is one 5 ms sample: 198 N at 3.805 s, with the seat and both
+hooves on the floor (the phase's mean is 2 N). The rest of the 0.04 -> 0.07 s is three more samples in the roll. At
+that sample the balance's move of the hips accelerates the body at 28 m/s^2 across the floor, then turns it round
+within 3 ms (along the wall, +16.7 -> -16.7 m/s^2 at 3.806 to 3.809 s) as the seat lifts. What it is answering: once
+the seat is off, the feet are the only support and the centre of mass is outside them, so to keep the pressure point
+on the feet the plan throws the body toward them as the seat lets go.
+
+At the seat's lift-off every mammal's centre of mass is outside its feet's support (cm, the authored path, from the
+balance's own samples):
+
+| horse | goat | bull | cow | donkey | sheep | skunk | pig foreman | pig director | rabbit | dog |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 12.3 | 14.7 | 11.0 | 21.8 | 12.1 | 14.7 | 16.7 | 9.4 | 9.9 | 21.2 | 13.1 |
+
+and the trunk leans back: the lean key's pitch is -5 degrees, and the horse's chest is 5 cm further from its feet than
+its pelvis. The get-up above says the body "leans its weight forward onto the feet with the seat still down"; it never
+did. d3fec1f had the same fault, hidden longer: the horse's left thigh splayed on the floor, both hands on the floor
+behind the hips and the right forearm and sleeve on the wall carried it until 3.90 s, when its centre of mass was still
+9.7 cm outside its feet (the cow's 11.8, the rabbit's 12.8, the skunk's 8.3). The seventh part's clearance fixes (the
+knees up, the right hand forward past its knee) took those contacts away. The right sleeve, which this was first taken
+for, was one of them.
+
+Tried and not kept:
+- A right palm braced on the wall (fourteen variants). The horse's lean went to 0 but its rise to 12% and its total
+  stayed at 0.07 s. The cow went 0.69 -> 0.39 s and the rabbit 0.21 -> 0.14. The skunk sits with its knees up toward
+  the wall, and its upper arm went 11.8 cm through its thigh; its left elbow, already at 148 degrees in the roll
+  (allowed 150), went past its range (158 to 166) in every variant tried.
+- The lean key pitched forward 10, 20 and 28 degrees. The horse's lean went to 4 to 6%, but its right hand, reaching
+  forward in the chest's frame, came down on its hoof (at 20 degrees: at 2 to 3 m/s, two velocity jumps, a 7 cm
+  overlap), and the skunk and rabbit got worse (0.96 and 0.24 s).
+
+Both are supports added at the end of a get-up that does not bring the weight over the feet. The fix is in the get-up
+itself: the weight over the feet before the seat lets go. Either the feet are drawn in under the seat first (each
+stepping in while the seat and the other foot hold the body) and the body leans forward over them and rises, the
+ordinary sit-to-stand; or it rises through a half-kneel, the left knee down and then up over the right foot (d3fec1f's
+accident, made deliberate). Either changes the get-up of every mammal.
+
+**Left:**
+- The window's get-up (above).
+- The pigs' climb: legs 3.5 to 7.9 cm and forearms 5.5 to 6.6 cm in the top's edges as they go over; the lowering and
+  the let-go (2 to 3 x BW); the catch and hang (424 to 524%, unchanged); the director's knee onto the top.
+- The climb's push-off and the flight over the top, the right foot's step round; the goat's horns and the donkey's and
+  rabbit's ears in the window; the climb's left leg over the top; build time.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
