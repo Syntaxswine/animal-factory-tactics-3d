@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.js';
 import {V,Q,DEG,clamp,smooth,track,spinTrack,angleTrack,bodyQ,yawQ,relQ,frameToWorld as toWorld,keyedLimb,posedFrom,steadyPoles,steadyTurns,limbSample,createTraversalBody,createSurfaceProbe,massPoints,inertiaAbout,BODY_MASS} from './traversal-pose.js';
 import {bodyFit,createTailBend,createClearanceFit,edgeBoxes} from './traversal-fit.js';
-import {balanceTraversal,contactProbe,boxedPath} from './traversal-balance.js';
+import {balanceTraversal,contactProbe,boxedPath,supportAt} from './traversal-balance.js';
 // Head-first window entry and roll (docs/tactics/NATURAL-TRAVERSAL.md). Local frame: start on the tile at the
 // origin facing +X, the window on the edge at X = .5 (faces .42 and .58, sill top .85, opening top 1.55),
 // finish standing on the next tile's centre (1, 0, 0) facing on.
@@ -43,11 +43,19 @@ const TURN=35; // the head turns this way coming down, so the muzzle stays off t
 // tucks a little as the hands land (nod 10): tilted back, the goat's ears went 2.3 cm into the floor for 40 ms while the
 // clearance fit swung its head from one turn to the next.
 const SHAPE_PRE=[[0,0,0,0,0,0,0],[.55,5,0,0,0,0,0],[.90,8,0,0,-10,0,0],[1.25,6,0,0,-25,0,0],[1.60,10,0,0,-30,0,0],[HANG,25,0,0,-20,0,TURN],[DOWN,28,0,0,10,0,TURN],[LANDS[1],32,0,0,10,0,TURN],[ROLL.start,ROLL.flex,0,0,0,0,-15]];
-// After the roll, by seconds past its end (at rest on the seat and the hooves): lean forward over the feet, the seat
-// still down, until the centre of mass is over them; rise; with the weight on the right foot, the left steps back half
-// way; with it on the left, the right steps back to its mark; with it on the right, the left steps round to its mark,
-// turning to face on; settle. The spine and head unfold to standing meanwhile.
-const GETUP=Object.freeze({lean:.46,rise:.84,weightR:1.02,leftBack:1.30,weightL:1.48,rightDown:1.72,weightR2:1.88,leftDown:2.14,stand:2.36});
+// After the roll, by seconds past its end (at rest on the seat and the hooves): the right foot slides in toward the
+// seat, then the left, the seat holding the body; lean forward over the feet, the seat still down, until the centre of
+// mass is over them; rise; with the weight on the right foot, the left steps back half way; with it on the left, the
+// right steps back to its mark; with it on the right, the left steps round to its mark, turning to face on; settle. The
+// spine and head unfold to standing meanwhile.
+const GETUP=Object.freeze({inR:.30,inL:.58,lean:.80,rise:1.18,weightR:1.36,leftBack:1.64,weightL:1.82,rightDown:2.06,weightR2:2.22,leftDown:2.48,stand:2.70});
+// The knees point up and out while the body sits, leans and rises over the feet (in the pelvis frame), and forward
+// again through the steps: left to the default (forward), the bend lay along a sitting leg's hip-ankle line, the side
+// the roll left was carried on, and the knees splayed out and down, into the floor (the rabbit's knees 9 cm under it,
+// its trousers 19; the sheep's 16, the pigs' 14). Straight up, the thighs met the chest leaning over them (4 to 5 cm);
+// out at about 30 degrees, it leans between them.
+const KNEE_UP=[.3,1,.6];
+// (The lean's row is set with its pitch: see the sit-to-stand.)
 const SHAPE_POST=[[GETUP.lean,45,0,0,-8,0,0],[GETUP.rise,15,0,0,-5,0,0],[GETUP.weightL,4,0,0,0,0,0],[GETUP.stand,0,0,0,0,0,0]],G=9.81;
 export function createWindowDive(worker,profile={id:'horse'}){
  // The roll turns about the body's own lowest point: a tail is soft and bends out of the way (fitted below), so only
@@ -155,21 +163,20 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const rollAt=t=>{let i=0;while(i<rollRows.length-1&&rollRows[i+1].t<t)i++;return {hips:V(...rollPos(t)),hipsQ:rollRot(t),contact:rollRows[i].contact,part:rollRows[i].part};};
  // Spine and head over the whole motion: the pre-roll keys, the roll's fixed curl, then unfolding.
  const SHAPE=[...SHAPE_PRE,[ROLL_END,...SHAPE_PRE.at(-1).slice(1)],...SHAPE_POST.map(([dt,...v])=>[CATCH_END+dt,...v])];
- const shape=track(SHAPE),shapeAt=t=>shapeOf(shape(clamp(t,0,D)));
+ let shape=track(SHAPE);const shapeAt=t=>shapeOf(shape(clamp(t,0,D)));
  // ---- keyed trunk: before the roll, then from the roll's end up to standing on the tile centre ----
  // The descent hands over at the roll's own spin (the hips moving as the body turns about the contact).
  const preRows=pre.map(k=>({t:k.t,p:V(...k.hips),q:yawQ(k.heading||0).multiply(bodyQ((k.pitch||0)*DEG,(k.roll||0)*DEG))}));
- // The get-up. The hooves land (FOOT_DOWN) 40 cm along the wall from the centre of mass (the roll's own reach:
- // drawing the heels 14 cm nearer the seat moved them 4 cm), and the roll's momentum after their landing is 35 J where
- // rising over them takes 180: so the body rocks on over its seat to sitting, leans its weight forward onto the feet
- // with the seat still down, rises over them, and steps back onto the tile centre, each foot in turn with the weight
- // over the other, turning to face on: the hips' keys over the support of the moment, heights held up by the legs.
- // Before, the get-up rose short of the feet and the feet slid 25 and 70 cm into the stance under load.
+ // The get-up. The hooves land (FOOT_DOWN) 40 cm along the wall from the centre of mass (the roll's own reach: drawing
+ // the heels 14 cm nearer the seat moved them 4 cm), and the roll's momentum after their landing is 35 J where rising
+ // over them takes 180: so the body rocks on over its seat to sitting, draws its feet in, leans its weight forward onto
+ // them with the seat still down, rises over them, and steps back onto the tile centre, each foot in turn with the
+ // weight over the other, turning to face on: the hips' keys over the support of the moment, heights held up by the
+ // legs. Before, the get-up rose short of the feet and the feet slid 25 and 70 cm into the stance under load.
  const catchT=CATCH_END,T=k=>CATCH_END+GETUP[k],catchKey={t:catchT,p:rEnd.p,q:rEnd.q},FOOT_DOWN=caughtAt===null?ROLL_END:ROLL.start+caughtAt,rDown=rollRows.find(r=>r.t>=FOOT_DOWN-1e-9)||rEnd;
  const ANKLE=body.at0('hoof1').y,feet=Object.fromEntries([-1,1].map(s=>[s,toWorld({hips:rDown.p,hipsQ:rDown.q},'pelvis',TUCK['leg'+s]).setY(ANKLE)]));
- const mid=feet[-1].clone().add(feet[1]).multiplyScalar(.5),R1=V(...fitB.foot(1,1)),L1=V(...fitB.foot(-1,1)),turned=(h,pitch)=>yawQ(h).multiply(bodyQ(pitch*DEG));
- // LH: the left foot's halfway mark, back toward the tile centre and in from its landing.
- const LH=V(feet[-1].x+(L1.x-feet[-1].x)*.45,ANKLE,feet[-1].z+(L1.z-feet[-1].z)*.55),hipsOver=(f,y,toward,k=.12)=>f.clone().lerp(toward,k).setY(fitB.stand(y));
+ const R1=V(...fitB.foot(1,1)),L1=V(...fitB.foot(-1,1)),turned=(h,pitch)=>yawQ(h).multiply(bodyQ(pitch*DEG));
+ const hipsOver=(f,y,toward,k=.12)=>f.clone().lerp(toward,k).setY(fitB.stand(y));
  // The body turns to face on along one smooth curve over the whole get-up (heading), each key leaning (pitch) as it
  // rises: turned key by key, a turn on one foot asked the hoof for 50 to 140 N·m it cannot twist.
  const heading=t=>ROLL.dir*(1-smooth((t-CATCH_END)/GETUP.stand)),lean=(k,pitch)=>({t:T(k),h:heading(T(k)),pitch});
@@ -179,8 +186,48 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // mesh) is set on the floor.
  const seatOn=(p,q,k)=>{const sh=shapeOf(shape(T(k))),tr={hips:p,hipsQ:q,...sh,...chestOf(p,q,sh.spineQ)};body.pose(posed(tr,tuckLimbs),'seat');probe.update();let lo=Infinity;
   for(let i=0;i<probe.count;i++)if(probe.boneNames[probe.bone[i]]==='hips')lo=Math.min(lo,probe.y[i]);return p.clone().setY(p.y-lo);};
- const leanKey=lean('lean',-5),getup=[{...leanKey,p:seatOn(rEnd.p.clone().add(V(0,0,.02)),turned(leanKey.h,360+leanKey.pitch),'lean')},{...lean('rise',28),p:V(mid.x,fitB.stand(.58),mid.z-.06)},{...lean('weightR',18),p:hipsOver(feet[1],.67,feet[-1])},
-  {...lean('leftBack',12),p:feet[1].clone().add(LH).multiplyScalar(.5).setY(fitB.stand(.72))},{...lean('weightL',8),p:hipsOver(LH,.75,feet[1])},
+ // The sit-to-stand. Sat after the roll, every body's centre of mass was 9 to 22 cm behind its feet's support, the
+ // trunk leaning back (pitch -5) and the knees already folded 115 to 145 degrees, so the seat could not let go of it:
+ // the plan threw the body at the feet as the seat lifted (28 m/s^2, turned round in 3 ms), and before that the splayed
+ // thigh and the hands on the floor behind the hips had hidden the gap. So each foot first slides in toward a point
+ // WIDE outside its hip joint (IN) until its knee folds to fold degrees (from the leg's lengths), the seat holding the
+ // body; then the lean tips the trunk forward (pitch), the arms reaching forward, until the centre of mass is MARGIN
+ // inside the feet's own support (their skin on the floor, as the balance reads it). Drawn straight in toward its hip,
+ // a shin pressed into the belly as the trunk leant over it (5 cm). The chest leans CHEST degrees in all, the hips'
+ // pitch and the spine's flex for the rest, and the head nods back so the face looks GAZE below level: curled its 45
+ // degrees on top of the hips' pitch, the spine tipped the chest to 80 and hung the head down between the feet.
+ const CHEST=60,GAZE=25,leanShape=pitch=>{const flex=clamp(CHEST-pitch,0,45);return [flex,0,0,clamp(GAZE-pitch-flex,-35,0),0,0];};
+ const FOLD=[125,140],BOW=35,MARGIN=.03,WIDE=.18,KNEE_WALL=.12,feetProbe=createSurfaceProbe(worker,{stride:1,include:m=>/hoof|boot|foot|toe/i.test(m.name)});
+ // The fold is read across the floor: sitting, the hip joints are below the ankles (4 cm off the floor to 12), so
+ // rising they pass the ankles' height, nearest them there (capped at the lean key, the knees folded on to 156-160
+ // degrees as the hips rose).
+ const inMark=(s,hips,q,h,fold)=>{const H=hips.clone().add(body.offsets.thigh[s].clone().applyQuaternion(q)).addScaledVector(V(Math.sin(h*DEG),0,-Math.cos(h*DEG)),-s*WIDE).setY(ANKLE),A=feet[s],E=H.clone().sub(A),D0=A.clone().sub(H),T0=body.L[s].thigh,S0=body.L[s].shin;
+  // the furthest along A -> under the hip joint that keeps the ankle dmin from it (the distance falls along the way)
+  const dmin2=T0*T0+S0*S0-2*T0*S0*Math.cos((180-fold)*DEG),a=E.lengthSq(),b=2*D0.dot(E),c=D0.lengthSq()-dmin2;if(c<=0)return A.clone();
+  const disc=b*b-4*a*c;return A.clone().addScaledVector(E,disc<0?1:clamp((-b-Math.sqrt(disc))/(2*a)));};
+ // An arm reaching forward from its shoulder, a little out and down, kept clear of the wall's face.
+ const reachFwd=(tr,h,s)=>{const F=V(Math.cos(h*DEG),0,Math.sin(h*DEG)),dir=F.clone().addScaledVector(V(0,1,0).cross(F),-s*.2).add(V(0,-.2,0)).normalize(),
+  w=tr.chest.clone().add(body.offsets.shoulder[s].clone().applyQuaternion(tr.chestQ)).addScaledVector(dir,.9*(body.L[s].upper+body.L[s].fore));w.x=Math.max(w.x,WINDOW.edge+WINDOW.half+.12);return w;};
+ const inside=(h,x,z)=>{let d=Infinity,inn=true;for(let i=0;i<h.length;i++){const [ax,az]=h[i],[bx,bz]=h[(i+1)%h.length],ex=bx-ax,ez=bz-az,L=Math.hypot(ex,ez)||1e-9;if(ex*(z-az)-ez*(x-ax)<0)inn=false;
+  const u=clamp(((x-ax)*ex+(z-az)*ez)/(L*L));d=Math.min(d,Math.hypot(x-ax-u*ex,z-az-u*ez));}return inn?d:-d;};
+ const seats={},leanAt=(pitch,fold)=>{const tL=T('lean'),h=heading(tL),q=turned(h,360+pitch),p=seats[pitch]??=seatOn(rEnd.p.clone().add(V(0,0,.02)),q,'lean'),sh=shapeOf(leanShape(pitch)),tr={hips:p,hipsQ:q,...sh,...chestOf(p,q,sh.spineQ)};
+  const IN={[-1]:inMark(-1,p,q,h,fold),1:inMark(1,p,q,h,fold)},limbs={};for(const s of [-1,1]){limbs['leg'+s]={f:'world',p:IN[s].toArray(),hoof:0,heading:ROLL.dir,plant:true,knee:KNEE_UP};limbs['arm'+s]={f:'world',p:reachFwd(tr,h,s).toArray()};}
+  const P=body.pose(posed(tr,limbs),'lean'),c=body.com(P);feetProbe.update();const sup=supportAt(feetProbe,[],c.toArray());
+  return {pitch,fold,p,IN,margin:sup.hull?inside(sup.hull,c.x,c.z):-Infinity,clear:P.knee1.x>=WINDOW.edge+WINDOW.half+KNEE_WALL};};
+ // The least fold that reaches it within BOW degrees of lean (folded deepest, the pig foreman's trouser seat went 4 cm
+ // into the floor), then the deepest fold with the least lean that does, then the nearest (the rabbit's and dog's furry
+ // feet hold from the ankle forward, their heels off the floor). At the lean the right knee is KNEE_WALL clear of the
+ // wall's face.
+ let leanFit=null,deep=null,best=null;
+ for(let fold=FOLD[0];fold<=FOLD[1]&&!leanFit;fold+=3)for(let pitch=-5;pitch<=45;pitch+=2){const e=leanAt(pitch,fold);if(!e.clear)break;if(!best||e.margin>best.margin)best=e;
+  if(e.margin>=MARGIN){if(pitch<=BOW)leanFit=e;else deep=e;break;}}
+ leanFit??=deep??best??leanAt(45,FOLD[0]);
+ shape=track(SHAPE.map(r=>r[0]===T('lean')?[r[0],...leanShape(leanFit.pitch)]:r));
+ const IN=leanFit.IN,midIn=IN[-1].clone().add(IN[1]).multiplyScalar(.5);
+ // LH: the left foot's halfway mark, back toward the tile centre and in from where it stepped in.
+ const LH=V(IN[-1].x+(L1.x-IN[-1].x)*.45,ANKLE,IN[-1].z+(L1.z-IN[-1].z)*.55);
+ const leanKey=lean('lean',leanFit.pitch),getup=[{...leanKey,p:leanFit.p},{...lean('rise',28),p:V(midIn.x,fitB.stand(.58),midIn.z-.06)},{...lean('weightR',18),p:hipsOver(IN[1],.67,IN[-1])},
+  {...lean('leftBack',12),p:IN[1].clone().add(LH).multiplyScalar(.5).setY(fitB.stand(.72))},{...lean('weightL',8),p:hipsOver(LH,.75,IN[1])},
   {...lean('rightDown',5),p:LH.clone().add(R1).multiplyScalar(.5).setY(fitB.stand(.78))},{...lean('weightR2',3),p:hipsOver(R1,.79,LH)},
   {...lean('leftDown',1),p:L1.clone().add(R1).multiplyScalar(.5).setY(fitB.stand(.80))}].map(k=>({...k,q:turned(k.h,k.pitch)}));
  const stand={t:END,p:body.at0('hips').add(V(1,0,0)),q:Q(),h:0,pitch:0};
@@ -243,22 +290,20 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const hoofAt=(p,heading)=>({f:'world',p:p.toArray(),hoof:0,heading,plant:true}),over=(p,heading,arc)=>({f:'world',p:[p.x,ANKLE+.025,p.z],hoof:0,heading,arc});
  // A foot lifts once the weight is over the other (lifted as the weight still crossed, the pressure point had to jump
  // from between the feet to the one left down: 49% of the body's weight).
- // The knees point up and out while the body sits, leans and rises over the feet (KNEE_UP, in the pelvis frame), and
- // forward again through the steps: left to the default (forward), the bend lay along a sitting leg's hip-ankle line,
- // the side the roll left was carried on, and the knees splayed out and down, into the floor (the rabbit's knees 9 cm
- // under it, its trousers 19; the sheep's 16, the pigs' 14). Straight up, the thighs met the chest leaning over them
- // (4 to 5 cm); out at about 30 degrees, it leans between them.
- const KNEE_UP=[.3,1,.6],up=k=>({...k,knee:KNEE_UP});
- LIMB.leg1.push([FOOT_DOWN,up(hoofAt(feet[1],ROLL.dir))],[T('weightL')+.03,up(hoofAt(feet[1],ROLL.dir-6))],[T('rightDown')-.04,over(R1,ROLL.dir-52,.05)],[T('rightDown'),hoofAt(R1,ROLL.dir-56)],[END,hoofAt(R1,0)]);
- LIMB['leg-1'].push([FOOT_DOWN,up(hoofAt(feet[-1],ROLL.dir))],[T('weightR')+.03,up(hoofAt(feet[-1],ROLL.dir-4))],[T('leftBack')-.04,over(LH,ROLL.dir-28,.06)],[T('leftBack'),hoofAt(LH,ROLL.dir-32)],
+ // The knees point up and out while the body sits, draws its feet in, leans and rises (KNEE_UP), and forward again
+ // through the steps back. Once the body sits each foot slides in along the floor off its landing mark, the right first
+ // (lifted, a foot left the seat and the other foot alone holding the body: the skunk's steps read 40 and 80% of its
+ // weight, 30 and 56 sliding).
+ const up=k=>({...k,knee:KNEE_UP});
+ LIMB.leg1.push([FOOT_DOWN,up(hoofAt(feet[1],ROLL.dir))],[T('inR')-.26,up(hoofAt(feet[1],ROLL.dir))],[T('inR'),up(hoofAt(IN[1],ROLL.dir))],[T('weightL')+.03,up(hoofAt(IN[1],ROLL.dir-6))],[T('rightDown')-.04,over(R1,ROLL.dir-52,.05)],[T('rightDown'),hoofAt(R1,ROLL.dir-56)],[END,hoofAt(R1,0)]);
+ LIMB['leg-1'].push([FOOT_DOWN,up(hoofAt(feet[-1],ROLL.dir))],[T('inL')-.26,up(hoofAt(feet[-1],ROLL.dir))],[T('inL'),up(hoofAt(IN[-1],ROLL.dir))],[T('weightR')+.03,up(hoofAt(IN[-1],ROLL.dir-4))],[T('leftBack')-.04,over(LH,ROLL.dir-28,.06)],[T('leftBack'),hoofAt(LH,ROLL.dir-32)],
   [T('weightR2')+.03,hoofAt(LH,ROLL.dir-40)],[T('leftDown')-.04,over(L1,8,.05)],[T('leftDown'),hoofAt(L1,6)],[END,hoofAt(L1,0)]);
- // The left arm hangs outside the knee while the trunk leans over the thighs (at rest beside the body the arms went
- // 10 cm into the thighs and shins). The right, on the wall's side, reaches forward past its knee instead, then comes
- // back out beside the thigh to rest: hung outside the knee, its hand went into the wall (the skunk's 8 cm, the cow's
- // 6), and kept off the raised thigh it was pushed up through the chest.
- const ARM_R=[[T('lean')-.12,[.45,-.10,.10]],[T('rise'),[.40,-.16,.10]],[T('weightR'),[.30,-.26,.22]]];
- LIMB['arm-1'].push([T('lean')-.12,{f:'chest',p:[.16,-.20,-.31]}],[T('rise'),{f:'chest',p:[.12,-.26,-.31]}],[T('weightR'),{f:'chest',p:restWrist(-1)}],[END,{f:'chest',p:restWrist(-1)}]);
- LIMB.arm1.push(...ARM_R.map(([t,p])=>[t,{f:'chest',p}]),[T('leftBack'),{f:'chest',p:restWrist(1)}],[END,{f:'chest',p:restWrist(1)}]);};buildLimbs();
+ // Both arms reach forward as the trunk leans over the feet and rises (their weight ahead of the seat: 2 to 3 cm of the
+ // centre of mass), set from where the shoulders are then and carried with the chest, then come back to rest beside the
+ // body, the right out beside its thigh (at rest beside the body the arms went 10 cm into the thighs and shins).
+ const reachAt=(t,s)=>{const tr=trunkAt(t);return {f:'chest',p:reachFwd(tr,heading(t),s).sub(tr.chest).applyQuaternion(tr.chestQ.clone().invert()).toArray()};};
+ LIMB['arm-1'].push([T('lean'),reachAt(T('lean'),-1)],[T('rise'),reachAt(T('rise'),-1)],[T('leftBack'),{f:'chest',p:restWrist(-1)}],[END,{f:'chest',p:restWrist(-1)}]);
+ LIMB.arm1.push([T('lean'),reachAt(T('lean'),1)],[T('rise'),reachAt(T('rise'),1)],[T('weightR'),{f:'chest',p:[.30,-.26,.22]}],[T('leftBack'),{f:'chest',p:restWrist(1)}],[END,{f:'chest',p:restWrist(1)}]);};buildLimbs();
  function spec(t){const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posed(tr,limbs,t);}
  // Fit this character's surface: trunk, head and tail out of the floor, the sill and the lintel. The roll is computed
  // from the body itself, so the trunk and head are held through it, easing in and out over 0.08 s; the hands are then
@@ -339,9 +384,12 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // the climb's is): held through the hop, a turn chosen for the donkey's ears at one moment of it took them 8.3 cm
  // into the lintel at another (2.8 as fitted before the balance), and no turn clears the goat's horns in the roll.
  balance=bal;fit.solveTail();turns();
- const KEYS=[...PRE.map(k=>({t:k.t,label:k.label})),{t:ROLL.start,label:'Back to the floor'},{t:(ROLL.start+ROLL_END)/2,label:'Roll'},{t:ROLL_END,label:'Sit up'},{t:T('lean'),label:'Lean over the feet'},{t:T('rise'),label:'Rise over the feet'},{t:T('weightR'),label:'Weight on the right foot'},{t:T('leftBack'),label:'Left foot back'},{t:T('weightL'),label:'Weight on the left foot'},{t:T('rightDown'),label:'Right foot back'},{t:T('weightR2'),label:'Weight on the right again'},{t:T('leftDown'),label:'Left foot round'},{t:END,label:'Stand on the tile'}];
+ // The get-up's premise, read on the balance as planned: the centre of mass's least depth inside what holds it (m,
+ // negative outside) from the lean until the body is up, the seat letting go between (the traversal test reads it).
+ let liftoff=Infinity;bal.times.forEach((t,i)=>{const s=bal.samples[i];if(t>=T('lean')&&t<=T('rise')&&s.hull)liftoff=Math.min(liftoff,inside(s.hull,bal.plan[i][0],bal.plan[i][2]));});
+ const KEYS=[...PRE.map(k=>({t:k.t,label:k.label})),{t:ROLL.start,label:'Back to the floor'},{t:(ROLL.start+ROLL_END)/2,label:'Roll'},{t:ROLL_END,label:'Sit up'},{t:T('inR'),label:'Right foot in'},{t:T('inL'),label:'Left foot in'},{t:T('lean'),label:'Lean over the feet'},{t:T('rise'),label:'Rise over the feet'},{t:T('weightR'),label:'Weight on the right foot'},{t:T('leftBack'),label:'Left foot back'},{t:T('weightL'),label:'Weight on the left foot'},{t:T('rightDown'),label:'Right foot back'},{t:T('weightR2'),label:'Weight on the right again'},{t:T('leftDown'),label:'Left foot round'},{t:END,label:'Stand on the tile'}];
  let state=null;
- const api={duration:D,keys:KEYS,body,probe,roll:{rows:rollRows,dir:ROLL.dir,start:ROLL.start,end:ROLL_END},
+ const api={duration:D,keys:KEYS,body,probe,getup:{pitch:leanFit.pitch,fold:leanFit.fold,feet:[IN[-1].toArray(),IN[1].toArray()],liftoff},roll:{rows:rollRows,dir:ROLL.dir,start:ROLL.start,end:ROLL_END},
   phases:KEYS.slice(0,-1).map((k,i)=>({label:KEYS[i+1].label,start:k.t,end:KEYS[i+1].t})),
   at(t){const time=clamp(t,0,D),P=body.pose(spec(time),time.toFixed(3));body.root.updateMatrixWorld(true);worker.skeleton?.update?.();const [tp,ty]=fit.tail(time);tails.set(tp*DEG,ty*DEG);
    const phase=api.phases.find(p=>time<=p.end)?.label||KEYS.at(-1).label;state={time,phase,com:body.com(P).toArray(),points:Object.fromEntries(Object.entries(P).map(([k,v])=>[k,v.toArray()]))};return state;},

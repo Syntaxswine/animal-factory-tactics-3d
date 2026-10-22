@@ -20,6 +20,11 @@ const LEFT={'window/pig-foreman/trunk':2,'window/pig-director/trunk':3, // the b
  'window/dog/trunk':2,'wall/dog/trunk':2, // the dog's utility pouch on the sill's far edge, and on the face in the hang
  'low-wall/pig-director/trunk':2, // the waistcoat on the wall's near edge at the spring
  'wall/pig-foreman/trunk':2,'wall/pig-director/trunk':3}; // the seat resting on the 16 cm top in the straddle (15.6 and 7.9 through it before)
+// As the window's seat lets go the centre of mass is over the feet (cm inside their support, the least from the lean to
+// the rise, as the balance plans it): sat after the roll, every mammal's was 9 to 22 cm behind its feet, and the plan
+// threw the body at them as the seat lifted. The rabbit's and dog's furry feet hold from the ankle forward, their heels
+// off the floor.
+const LIFT={rabbit:-3,dog:-2};
 // The hen hops on her wings (hen-crossing.js). Her body parts stay within 4 cm of clear of the floor and the obstacle,
 // except the tail fan in the last 0.3 s: spreading back to her standing pose, it reaches .54 behind her, into the wall.
 test('the hen hops up and down every obstacle, ends on the next tile and is given back whole',()=>{
@@ -51,6 +56,8 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    assert.ok(Math.abs(a[0]-b[0]-1)<.01&&Math.abs(a[1]-b[1])<.01&&Math.abs(a[2]-b[2])<.01,`${kind} ends at ${a.map(x=>x.toFixed(3))}, not its stance moved one tile (${b.map(x=>x.toFixed(3))})`);
   for(const part of ['trunk','head','tail']){const left=100*motion.fit[part].depth,limit=LEFT[`${kind}/${p.id}/${part}`]??1;
    assert.ok(left<=limit,`${kind}: the ${part} is left ${left.toFixed(1)} cm in at ${motion.fit[part].t.toFixed(2)} s (allowed ${limit})`);}
+  if(kind==='window'){const lift=100*motion.getup.liftoff,least=LIFT[p.id]??2;
+   assert.ok(lift>=least,`window: the centre of mass is ${lift.toFixed(1)} cm inside the feet as the seat lets go (at least ${least})`);}
   // Cut short where the tail is bent (as a casualty ends a crossing), the tail still comes back exactly.
   motion.apply(.6);motion.dispose();for(const [part,base]of tails)assert.deepEqual(part.geometry.attributes.position.array,base,`${kind}: the ${part.name} is not given back`);}
 });

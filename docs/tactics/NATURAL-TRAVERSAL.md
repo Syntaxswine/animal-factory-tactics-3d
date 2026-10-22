@@ -1116,6 +1116,82 @@ accident, made deliberate). Either changes the get-up of every mammal.
 - The climb's push-off and the flight over the top, the right foot's step round; the goat's horns and the donkey's and
   rabbit's ears in the window; the climb's left leg over the top; build time.
 
+### 2026-10-22 (physics balance, ninth part): the window's sit-to-stand
+
+The user, on how the get-up should bring the weight over the feet: "Draw the feet in under the seat first, then lean
+forward over them and rise (the ordinary sit-to-stand), on every mammal."
+
+**The feet in.** Once the body sits after the roll, each foot slides in along the floor off its landing mark, the right
+first (two new phases, Right foot in and Left foot in, 0.30 and 0.28 s: every window is 0.34 s longer). Lifted to step,
+a foot left the seat and the other foot alone holding the body: the skunk's steps read 40 and 80% of its weight, 30 and
+56% sliding. Each slides toward a point 18 cm outside its hip joint (drawn straight in toward the hip, the left shin
+pressed 5 cm into the belly as the trunk leant over it) until its knee folds to the chosen fold. The fold is read across
+the floor: sitting, the hip joints are 4 cm off the floor and the ankles 12, so as the hips rise they pass the ankles'
+height and come nearest them there. Capped on the distance at the lean key, the knees folded on to 156 to 160 degrees as
+the hips rose (the rig allows 155).
+
+**The lean.** The hips' pitch at the lean key (it was -5 degrees: the trunk leaning back) and the fold are searched per
+body: the least fold (125 to 140 degrees) that sets the centre of mass 3 cm inside the feet's own support (their skin on
+the floor, as the balance reads it) within 35 degrees of pitch; failing that, the deepest fold with the least pitch that
+does; failing that, the nearest. At the lean the right knee is kept 12 cm off the wall's face. Both arms reach forward
+from the shoulders (about 2.7 cm of the centre of mass), the left coming back to rest by the left foot's step (back by
+the weight onto the right foot, its palm swung at 8.1 m/s). The chest leans 60 degrees in all, the spine flexing what
+the hips' pitch leaves, and the head nods back so the face looks 25 degrees down: the spine's old 45-degree curl on top
+of the hips' pitch tipped the chest to 80 degrees and hung the head down between the feet (seen on the study page).
+
+| | horse | goat | bull | cow | donkey | sheep | skunk | pig foreman | pig director | rabbit | dog |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| pitch, degrees | 39 | 45 | 45 | 45 | 39 | 45 | 43 | 31 | 33 | 45 | 45 |
+| fold, degrees | 140 | 140 | 140 | 140 | 140 | 140 | 140 | 125 | 125 | 140 | 140 |
+| lift-off, before (cm) | -10.2 | -12.1 | -9.9 | -19.5 | -11.5 | -14.0 | -15.4 | -7.6 | -8.6 | -18.9 | -11.5 |
+| lift-off, now (cm) | 3.9 | 2.8 | 7.4 | 7.2 | 9.4 | 2.3 | 3.8 | 3.7 | 3.1 | -2.7 | -1.7 |
+
+(Lift-off: the planned centre of mass's least depth inside what holds it from the lean key to the rise key, the seat
+letting go between; negative is outside. The rabbit's and dog's furry feet hold from the ankle forward, their heels off
+the floor, so no lean within 45 degrees reaches them.) The window reports it (`getup.liftoff`) and the traversal test
+now caps it: at least 2 cm inside (the rabbit -3, the dog -2). With the old lean and the feet where they landed, the
+test fails it: the horse -9.1 cm, the pig foreman -5.9, the rabbit -17.5.
+
+The gate, every mammal, against 78604a6 (the window unchanged since b11a948), over the limit (s), and the lean over the
+feet, the rise and the new steps (peak, % of body weight):
+
+| | horse | goat | bull | cow | donkey | sheep | skunk | pig foreman | pig director | rabbit | dog |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| over the limit, before | 0.07 | 0.48 | 0.08 | 0.69 | 0.64 | 0.14 | 0.80 | 0.06 | 0.42 | 0.21 | 0.24 |
+| over the limit, now | 0.07 | 0.52 | 0.07 | 0.60 | 0.57 | 0.08 | 0.84 | 0.06 | 0.38 | 0.14 | 0.15 |
+| lean, before -> now | 27 -> 0 | 35 -> 0 | 0 | 100 -> 0 | 17 -> 0 | 45 -> 0 | 66 -> 0 | 0 | 12 -> 0 | 46 -> 0 | 21 -> 0 |
+| rise, before -> now | 0 | 3 -> 2 | 67 -> 18 | 107 -> 21 | 60 -> 20 | 81 -> 0 | 1 -> 0 | 23 -> 0 | 0 | 1 | 67 -> 1 |
+| feet in (right; left) | 5; 0 | 2; 0 | 0; 0 | 86; 36 | 5; 1 | 2; 0 | 37; 54 | 0; 0 | 0; 0 | 4; 1 | 1; 0 |
+
+- Fixed with it: the horse's hand in its thigh (2.2 cm: the horse now passes every rule but the phantom time), the
+  goat's and the cow's capsule overlaps (the cow's six pairs), the donkey's required force (5.2 x BW), the rabbit's knee
+  past its range, the dog's palm snap and arm overlap.
+- Worse: the skunk's left elbow, already at 148 degrees just before the roll (allowed 150), reads 151. The balance
+  spreads the body's turn drift over the whole crossing, so the new get-up turns every earlier pose a little; it also
+  moves the goat's total (0.48 -> 0.52 s) and the skunk's (0.80 -> 0.84) outside the get-up.
+- The cow sits on its tail's root through the sit-up and the right foot's slide, as before: the root at the floor (-0.4
+  to 1.4 cm), its buttocks 5 to 7 cm above (the seat band counts a tail's root as seat). Within the rig's centimetre or
+  just past it, the root's contact comes and goes with the tail's plan, so its sit-up read 29% in one variant (the tail
+  lying on the floor) and 173% here (147% before).
+
+**Clipping** (`bin/collisions.mjs`, every vertex every 10 ms): every mammal's deepest point is unchanged (a hand or
+forearm on the sill as the body slides over, the pig director's waistcoat on it), but the pig foreman's: 1.3 -> 1.7 cm,
+its shirt on the sill. Folded to 143 degrees, the foreman's trouser seat went 4.1 cm into the floor as its left foot
+slid in (the least fold, 125, leaves it under 2 cm); folded to 143, the skunk's right trouser leg went 2.1 cm into the
+wall.
+
+Tried and not kept: lifting the feet to step them in; drawing them straight in toward the hips; a fold cap read on the
+distance at the lean key; the spine's 45-degree curl kept on top of the lean (with a 140-degree cap, the chest bowed to
+90 degrees on six bodies); pinning the hips at rest at the lean key (a degree off the knees); a cost weighing fold
+against lean (it chose 43 to 45 degrees of pitch where 31 did).
+
+**Left:**
+- The skunk: its hooves land at 16 m/s in the roll and its seat bounces 3 cm (2.75 to 2.83 s), so its sit-up reads 250
+  to 320%; its left elbow just past its range.
+- The cow's tail-root seat; the rabbit's and dog's heels; the goat's horns in the roll.
+- The window is 0.34 s longer (6.05 s on the horse). Build time: the search adds up to about 2 s (the horse's window
+  13.0 -> 14.9 s here; the cow's within its run-to-run noise).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
