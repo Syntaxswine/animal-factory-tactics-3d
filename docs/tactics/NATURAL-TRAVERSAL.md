@@ -1314,6 +1314,60 @@ Tried and not kept, in order:
 yet looked at) and its first step 56%. The pig director's and donkey's rolls on their tails' roots, where the balance moves
 the body. The cow's roll-in (562%, 5.6 x BW at 2.475 s). The sheep's hand-over from waistcoat to seat.
 
+### 2026-10-23 (physics balance, twelfth part): what was left of the skunk's sit-up
+
+The user: "Find what still drives the skunk's sit-up to 73% (387 N·m at 2.755 s, while its legs come down in the
+stalled roll) and bring it down."
+
+**What drives it.** The rig's own rows split the "Sit up" phase (the roll's second half) into two moments:
+- From 2.63 to 2.71 s, the floor's push the body needs falls to nothing and below (-171 to -197 N at 2.68 s): the
+  centre of mass is pulled down faster than gravity, and with no push the floor cannot give the 440 to 550 N it needs
+  sideways either (531 N of phantom force). The legs, swung from the tuck to the floor in the roll's last 0.18 s, fall
+  at up to 25 m/s² (-678 N on their 27 kg), and braking them at the landing then needs +748 N.
+- At 2.74 to 2.75 s it needs 640 to 1,190 N toward the wall, which the wall cannot give (481 N and 354 N·m of
+  phantom). The balance's plan moves the hips 2 cm in 50 ms there (15 to 23 m/s²), inside the stretch it holds.
+
+Both come from one thing. The roll is worked out rigid, with the legs tucked, and the legs are keyed down on top of it,
+so nothing holds their swing. Through the held stretch the balance keeps the pressure point inside what holds the body
+(the root), but the authored point lies 20 to 177 cm outside it (the turn's rate up to 186 N·m, the floor's push at
+the planner's 0.3 g floor). The plan can bend only the centre of mass's path, not the turn: the wiggle.
+
+**The fix.** The legs leave the tuck as early as the stall allows, 0.05 s into the roll, or 0.33 s before its end where
+the roll runs longer (`DROP_STALL`: the skunk's drop is 0.285 s, the cow's 0.33). Their accelerations fall by over half,
+and the floor's push the body needs stays positive (its least 152 N, at 2.63 s).
+
+phantom-wrench `--gate`, the window, c97a690 -> now (peak % of body weight, and phantom torque):
+
+| | skunk | cow |
+|---|---|---|
+| over the limit | 0.49 -> 0.47 s | 0.15 -> 0.14 s |
+| sit-up | 73% (387 N·m) -> 20% (30) | 18% (148) -> 2% (14) |
+| right foot in | 56% (215 N·m) -> 15% (89) | 34% (208) -> 13% (120) |
+| roll | 7% (34 N·m) -> 24% (51) | 562% (211) -> 562% (211) |
+| left foot in | 53% -> 53% | 2% -> 2% |
+
+The skunk's roll phase rises because the drop now starts in the roll's first half. Every other mammal's window is the
+same motion (largest point difference 0.0000 cm). `bin/collisions.mjs`: the deepest points as before (the skunk's 4.1
+cm, the cow's 3.4, a hand on the sill). The skunk adds one 10 ms span past 2 cm: its left trouser cuff, 2.0 cm into the
+floor at 2.91 s, with the foot planted after the landing (0.8 cm before).
+
+Tried and not kept:
+- The rock-up worked out in the roll's own physics, in time steps: the legs swing down inside it, and the angular
+  momentum about the floor contact changes only by gravity's turn about it. (The earlier attempt kept the energy, which
+  a body that moves its legs does not keep.) The skunk's feet land, at 0.10 rad/s. But the physics itself asks the root
+  for 2.4 to 3.3 times the friction it has as the roll brakes over it (with a 0.4 s swing, the push 96 to 123 N against
+  233 to 293 N sideways at 2.65 to 2.67 s). With a 0.3 s swing, the push falls to 29 to 35 N. A rock-up that holds needs
+  its physics to check the floor's push and grip, not only the turn.
+- The rock-up's legs keyed every 5 ms: each key is eased in and out, so the legs stopped at every one of them (60 m/s²,
+  spikes of 3.5 kN: the roll 1502%, 131 x BW). The earlier attempt's spikes had the same cause.
+- The balance pinned to the authored roll through the stall: worse (0.56 to 0.57 s over). Its own correction was
+  carrying part of the drop.
+- The balance planning the stall freely: 0.54 s.
+- The drop over 0.28 s: the skunk the same (0.46 s), the cow's first step 34%.
+
+**Left:** the skunk's roll's first half (24%), its left foot in (53%) and its step in (27%); the cow's roll-in (562%,
+5.6 x BW); a rock-up whose physics keeps the floor's push and grip.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

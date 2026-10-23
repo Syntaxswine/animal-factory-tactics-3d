@@ -174,12 +174,14 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // weight over the other, turning to face on: the hips' keys over the support of the moment, heights held up by the
  // legs. Before, the get-up rose short of the feet and the feet slid 25 and 70 cm into the stance under load.
  // A roll that ends before its hooves land (the skunk's and cow's run out of spin climbing over their tails' roots, the
- // feet still tucked up to 50 cm off the floor) brings them down from DROP_STALL before its end, as it slows: pulled
- // from the tuck in the last 60 ms, the skunk's toes struck at 16.7 m/s, its seat bounced 4.5 cm and its sit-up read
- // 322% of its weight. Landing later instead (eased down over 0.3 s after the roll), the body lay on its tail's root
- // with nothing else under it, and the plan moved the hips 9 cm before the roll to meet that (the left elbow folded to
- // 163 degrees).
- const DROP_STALL=.18;
+ // feet still tucked up to 50 cm off the floor) brings them down from DROP_STALL before its end, or from 0.05 s into it
+ // if that is later, as it slows. Pulled from the tuck in the last 60 ms, the skunk's toes struck at 16.7 m/s, its seat
+ // bounced 4.5 cm and its sit-up read 322% of its weight. Over the last 0.18 s, the legs fell faster than gravity off a
+ // trunk that rolls on as if they were still tucked (the floor's push 0 to -200 N), and the plan, keeping the pressure
+ // point on the root, wiggled the hips 2 cm in 50 ms (the sit-up 73%, the first step 56). Landing later instead (eased
+ // down over 0.3 s after the roll), the body lay on its tail's root with nothing else under it, and the plan moved the
+ // hips 9 cm before the roll to meet that (the left elbow folded to 163 degrees).
+ const DROP_STALL=.33;
  const catchT=CATCH_END,T=k=>CATCH_END+GETUP[k],catchKey={t:catchT,p:rEnd.p,q:rEnd.q},FOOT_DOWN=caughtAt===null?ROLL_END:ROLL.start+caughtAt,TUCKED=caughtAt===null?Math.max(ROLL.start+.05,ROLL_END-DROP_STALL):FOOT_DOWN-.06,rDown=rollRows.find(r=>r.t>=FOOT_DOWN-1e-9)||rEnd;
  const ANKLE=body.at0('hoof1').y,feet=Object.fromEntries([-1,1].map(s=>[s,toWorld({hips:rDown.p,hipsQ:rDown.q},'pelvis',TUCK['leg'+s]).setY(ANKLE)]));
  const R1=V(...fitB.foot(1,1)),L1=V(...fitB.foot(-1,1)),turned=(h,pitch)=>yawQ(h).multiply(bodyQ(pitch*DEG));
