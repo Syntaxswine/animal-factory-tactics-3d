@@ -371,13 +371,22 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // Measured twice: the bend directions found again for the moved hips swing the thighs, and the seat's skin with them
  // (with the knees up the seat rose 1 to 2.5 cm off the floor through the lean, and the plan, finding the feet alone,
  // dragged the hips 11 cm toward them and folded the knees to 160 degrees).
- const seatBand=()=>{const TOUCH=.006,SINK=.008,FLOOR=.005,[a,b]=[FOOT_DOWN-.06,T('rise')-.10],all=createSurfaceProbe(worker,{stride:1,keep:(m,i)=>!/tail/.test(m.name)||tails.isRoot(m.name,i)}),want=[],lo=[],hi=[],ts=[];
-  for(let t=a;t<=b+1e-9;t+=.005){body.pose(spec(t),'seat');all.update();let seat=Infinity,other=Infinity;
+ // Its push never drops the hips faster than SEAT_DROP of gravity, nor deepens a drop they already make (an impact): where
+ // keeping the seat on the floor would, the seat is weighed in heavily instead and may float a moment. The skunk, lying
+ // back on its plume's root when its roll stalls, sits up through the feet-in: the push held the root on the floor as
+ // the trunk turned upright and pulled the hips 11 cm down in 0.2 s, the centre of mass falling at 1.5 g (the floor
+ // asked to pull 370 N: its left foot in read 53% of its weight).
+ const SEAT_DROP=.5,SEAT_W=1e4;
+ const seatBand=()=>{const TOUCH=.006,SINK=.008,FLOOR=.005,[a,b]=[FOOT_DOWN-.06,T('rise')-.10],all=createSurfaceProbe(worker,{stride:1,keep:(m,i)=>!/tail/.test(m.name)||tails.isRoot(m.name,i)}),want=[],lo=[],hi=[],ts=[],H=[];
+  for(let t=a;t<=b+1e-9;t+=.005){H.push(body.pose(spec(t),'seat').pelvis.y);all.update();let seat=Infinity,other=Infinity;
    // the rest of the trunk and the head only: the limbs' own skin (a trouser cuff by a planted hoof) does not move with
    // the hips, and holding it out of the floor threw them 40 cm up
    for(let i=0;i<all.count;i++){if(/hoof|boot|foot|toe|hand/i.test(all.names[all.part[i]]))continue;const bone=all.boneNames[all.bone[i]];if(bone==='hips')seat=Math.min(seat,all.y[i]);else if(bone==='spine'||bone==='head')other=Math.min(other,all.y[i]);}
    const down=t<=T('lean'),top=Math.min(seat+SINK,other+FLOOR),need=down?Math.min(seat-TOUCH,top):-1;ts.push(t);lo.push(need);hi.push(top);want.push(down?clamp(seat+.002,need,top):Math.min(0,top));}
-  const P=boxedPath(want,want.map(()=>1),2e7,want.map((_,i)=>({at:i,c:[1],lo:lo[i],hi:hi[i]})));
+  // the push's own drop (its second differences: the hips' height is H less it) against what SEAT_DROP allows
+  const n=want.length,KG=SEAT_DROP*G*.005*.005,cap=i=>Math.max(0,H[i-1]-2*H[i]+H[i+1]+KG),over=c=>{for(let i=1;i<n-1;i++)if(c[i-1]-2*c[i]+c[i+1]>cap(i)+1e-6)return true;return false;};
+  let P=boxedPath(want,want.map(()=>1),2e7,want.map((_,i)=>({at:i,c:[1],lo:lo[i],hi:hi[i]})));
+  if(over(P.c)){const rows=want.map((_,i)=>({at:i,c:[1],lo:-Infinity,hi:hi[i]}));for(let i=1;i<n-1;i++)rows.push({at:i-1,c:[1,-2,1],lo:-Infinity,hi:cap(i)});P=boxedPath(want,want.map((_,i)=>lo[i]>-1?SEAT_W:1),2e7,rows);}
   const tr=track(ts.map((t,i)=>[t,0,-P.c[i]*smooth(Math.min(t-a,b-t)/.08),0]),{},{limit:false}),prev=onSeat;onSeat=t=>(prev?prev(t):V()).add(t>a&&t<b?V(...tr(t)):V());};
  seatBand();steady=steadyPoles(D,t=>limbSample(body,spec(t)));seatBand();steady=steadyPoles(D,t=>limbSample(body,spec(t)));turns();
  // Balance: the centre of mass planned against what holds the body at each moment, the hips moved to follow it. It

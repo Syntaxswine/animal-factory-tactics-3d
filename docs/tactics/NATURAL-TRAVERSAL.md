@@ -1368,6 +1368,52 @@ Tried and not kept:
 **Left:** the skunk's roll's first half (24%), its left foot in (53%) and its step in (27%); the cow's roll-in (562%,
 5.6 x BW); a rock-up whose physics keeps the floor's push and grip.
 
+### 2026-10-23 (physics balance, thirteenth part): the skunk's left foot in, and the seat band's pull
+
+The user: "Find what drives the skunk's \"Left foot in\" phase to 53% in the window and bring it down."
+
+**What drives it.** From 3.13 to 3.19 s, as the left foot slides in, the floor's push the body needs goes below
+nothing (-368 N at 3.16 s, the rig's own rows): the centre of mass falls at 1.5 g, faster than anything but a pull
+could bring it down (387 to 391 N of phantom force). The whole body drops: the hips fall 23 cm in 0.26 s, from 27.5 cm
+to 4.6. The keyed get-up lowers them only 13 cm, gently. The rest is the seat band. The skunk's roll stalls with it lying
+back on its plume's root, its chest 66 degrees from upright (the nine that land their feet end within 3 to 10 of it),
+so it sits up during the feet-in, turning about 110 degrees to the lean where the others turn 35 to 55. The band holds
+the seat's lowest point on the floor, and until 3.24 s that is the root, which the turning trunk would lift 12 cm off
+it. Holding it down, the band pulled the hips 11 cm down in 0.2 s (-10 m/s², then braking at up to +22).
+
+**The fix.** The band's push never drops the hips faster than half of gravity (`SEAT_DROP`), nor deepens a drop they
+already make (a landing's impact). Where keeping the seat on the floor would, the seat is weighed in heavily instead of
+held, and may float a moment. Where the band keeps to that already (the bull's and dog's windows), it is solved as
+before.
+
+phantom-wrench `--gate`, the window, af53de0 -> now:
+
+| | over the limit | changed phases (peak % of body weight) |
+|---|---|---|
+| skunk | 0.47 -> 0.44 s | left foot in 53 -> 15, right foot in 15 -> 17 |
+| cow | 0.14 -> 0.14 s | rise over the feet 21 -> 17 |
+| horse | 0.07 -> 0.06 s | roll 30 -> 28 |
+| goat | 0.52 -> 0.51 s | hands to the floor 27 -> 26 |
+| sheep | 0.13 -> 0.10 s | |
+| donkey, pig foreman, pig director, rabbit | the same | |
+
+The bull's and dog's windows are the same motion (largest point difference 0.0000 cm). Through the feet drawn in, the
+centre of mass now falls at most 1.10 g (the skunk; 1.52 before), the cow 0.85 -> 0.59 g, the others 0.24 to 0.65.
+`bin/collisions.mjs` reads the nine windows the cap touches the same (the deepest a hand or the shirt on the sill).
+
+`tests/natural-traversal.test.mjs`: as the feet are drawn in, the centre of mass falls at most 1.2 g (the floor never
+asked to pull more than a fifth of the body's weight). With the cap off it fails on the skunk (1.52 g).
+
+Tried and not kept:
+- More time to sit up after a roll that ends lying back (the get-up's keys later by the chest's angle past 10 degrees
+  over a rate). At 150 degrees a second the skunk read 0.35 s and its left foot in vanished, but at 100, 125 and 200
+  its right foot in rose to 45 to 58%: where the band's pull fell against the right foot's slide decided it. With the
+  cap as well, 65%.
+- The band's limit at 0.3, 0.4 or 0.7 g. At 0.3 the skunk still fell at 1.04 g (the clearance fit's trunk and the
+  thighs carry the rest), and the cap reached the bull's and dog's sits; at 0.7, the left foot in read 21%.
+
+**Left:** the skunk's roll's first half (22 to 24%), its step in (27%) and left foot round (40%); the cow's roll-in.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
