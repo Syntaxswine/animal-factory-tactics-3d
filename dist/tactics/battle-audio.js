@@ -6,6 +6,21 @@ const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const events=state=>state.effect?.sequence||(state.effect?[state.effect]:[]);
 const point=event=>({x:event.ax,y:event.ay,z:event.az||0});
 const identity=event=>event.dischargeId||event.attackId;
+// Explicit surface identities, not the structural HP tier or intended target.
+// Current windows have open apertures and masonry/metal frames, not glass panes.
+const materialSounds=new Map([
+ ...['glass'].map(k=>[k,'glass']),
+ ...['tin','sheet-metal','corrugated-metal','wall-corrugated','window-corrugated','roof-corrugated-flat','roof-corrugated-sloped'].map(k=>[k,'tin']),
+ ...['metal','steel','iron','door-steel-closed','jail-bars','jail-door-closed','crate-steel','table-steel','workbench-metal','barrel-single','barrels-cluster','barrel-explosive'].map(k=>[k,'metal']),
+ ...['masonry','brick','concrete','stone','wall','wall-brick','wall-concrete','window-brick','window-concrete','ground-concrete','ground-tiles','roof-flat-parapet'].map(k=>[k,'rock-debris'])
+]);
+const materialSound=kind=>typeof kind==='string'?materialSounds.get(kind.replace('roof-climbable-','roof-')):undefined;
+const structureId=p=>p.structure&&(p.structure.edge!==undefined?'edge:'+p.structure.edge:`tile:${p.structure.x},${p.structure.y},${p.structure.z||0}`);
+function structurePoint(receipt){
+ if(receipt.id?.startsWith('edge:')){const [,axis,x,y,z='0']=receipt.id.split(':');return {x:+x+(axis==='e'?.5:0),y:+y+(axis==='s'?.5:0),z:+z};}
+ if(/^(tile|roof):/.test(receipt.id||'')){const [x,y,z]=receipt.id.split(':')[1].split(',').map(Number);return {x,y,z};}
+ return null;
+}
 
 // A cosmetic listener. It reads committed events; it never detects a shooter,
 // consumes simulation RNG, creates an order, or holds the combat queue busy.
@@ -28,7 +43,7 @@ export class BattleAudio {
  }
  setVolume(value){this.volume=Number.isFinite(value)?clamp(value,0,1):.7;if(this.master)this.master.gain.value=this.volume;if(this.volume===0)this.stopAll();}
  setPaused(value){if(this.paused===!!value)return;this.paused=!!value;if(this.context&&this.unlocked)(this.paused?this.context.suspend():this.context.resume()).catch(error=>{if(!this.disposed)this.error(error.message);});}
- setCamera(camera){const e=camera?.matrixWorld?.elements;if(e)this.right={x:e[0],y:e[8]};}
+ setCamera(camera){const e=camera?.matrixWorld?.elements;if(e)this.right={x:e[0],y:e[2]};}
  hearing(state,p,range=60){
   if(!p||![p.x,p.y,p.z||0].every(Number.isFinite))return null;
   const squad=state.units.filter(u=>u.team==='squad'&&u.hp>0&&!u.away);if(!squad.length)return null;
@@ -58,9 +73,17 @@ export class BattleAudio {
   const key=this.bindings.get(event)||identity(event);if(!key||!this.mark(key))return;
   const gun=GUN_SOUND[event.weapon];if(gun){this.play(gun,point(event),state);if(event.weapon==='shotgun')this.play('shotgun-pump',point(event),state,{delay:.35,priority:.5,range:24});}
   // Shotgun pellets striking one surface produce one material cue, not six.
-  const materials=new Set();for(const p of event.trajectories||[]){const material=typeof p.material==='string'?p.material:p.material?.kind,id=p.kind==='window'||material==='glass'?'glass':['tin','sheet-metal','corrugated-metal'].includes(material)||p.objectId?.includes('corrugated')?'tin':p.kind==='barrel'||/metal|steel|iron|rust/.test(material||'')?'metal':null;if(id&&!materials.has(id)){materials.add(id);this.play(id,p,state,{priority:.5,range:24});}}
+  const materials=new Set(),emit=(kind,p)=>{const id=materialSound(kind);if(!id||!p||materials.has(id))return;materials.add(id);this.play(id,p,state,{delay:id==='rock-debris'?.12:0,priority:.5,range:id==='rock-debris'?36:24});};
+  for(const p of event.trajectories||[]){
+   // New contacts retain the surface before destruction. Older receipts can
+   // join the exact struck structure; never look up a now-changed map cell.
+   const id=structureId(p),receipt=id&&event.structures?.find(r=>r.id===id);
+   emit(p.surfaceKind||p.propKind||receipt?.kind||(typeof p.material==='string'?p.material:p.material?.kind),p);
+  }
   for(const blast of event.explosions||[]){if(['tank','barrel'].includes(blast.kind))continue;const p={x:blast.x??event.bx,y:blast.y??event.by,z:blast.z??event.bz??0};this.play(blast.kind==='grenade'?'explosion-large':'explosion-deep',p,state,{priority:2,range:96});}
-  if(event.structures?.length){const contact=event.explosions?.find(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))||event.trajectories?.find(p=>['wall','floor','prop','scenery','site','cover','roof'].includes(p.kind));if(contact)this.play('rock-debris',contact,state,{delay:.12,priority:.5,range:36});}
+  // A blast's structure receipts carry their own identities and coordinates.
+  // Ordinary bullet contacts above already emitted once per material.
+  if(event.explosions?.length)for(const r of event.structures||[])emit(r.kind,structurePoint(r));
  }
  observe(state,combat,now){
   if(this.disposed)return;

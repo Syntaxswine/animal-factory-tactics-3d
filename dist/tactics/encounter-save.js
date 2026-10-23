@@ -25,9 +25,10 @@ export const SAVE_VERSION=1;
 const fail=()=>{throw Error('This save is damaged or incomplete. Your current encounter has not been changed.');};
 const terrain=new Set(['yard','floor','crate','void','water','bridge','woodland','woodland-dense',...GROUNDS]);
 const finite=n=>Number.isFinite(n)&&n>=0;
-export function validateSavedState(s,{population=false,unitIds=null}={}){
+export function validateSavedState(s,{population=false,unitIds=null,definitions}={}){
  if(s?.dialogue!==undefined)validateDialogueState(s.dialogue);
- if(!s||!s.definition||validateMap(s.definition,{connectivity:false}).length||canopyErrors(s).length||archPlacementErrors(s,null,PROPS,EDGES).length)fail();
+ if(!s||!s.definition||!definitions?.has(s.definition)&&validateMap(s.definition,{connectivity:false}).length||canopyErrors(s).length||archPlacementErrors(s,null,PROPS,EDGES).length)fail();
+ definitions?.add(s.definition);
  if(!['explore','player','enemy','won','lost'].includes(s.phase)||!Number.isInteger(s.round)||s.round<0||!finite(s.clock?.minutes)||!Number.isInteger(s.enemyIndex)||s.enemyIndex<0)fail();
  if(!Array.isArray(s.map)||s.map.length!==s.definition.height||s.map.some(r=>!Array.isArray(r)||r.length!==s.definition.width||r.some(t=>!terrain.has(t))))fail();
  for(const key of ['upper','props','stairs','climbs','units','loot','log','queue'])if(!Array.isArray(s[key]))fail();

@@ -1,6 +1,7 @@
 import {sceneryRayHit} from '../scenery-rules.js';
 import {isPhysicalScenery,sceneryId} from '../scenery-catalog.js';
 import {foliageRayHit} from '../foliage-obstacles.js';
+import {structureInfo} from '../structure-health.js';
 import {siteRayHit,isStrategicSite,siteId} from '../strategic-site-rules.js';
 import {barrelRayHit,barrelId} from '../explosive-barrels.js';
 import {bodyIntersection,firearmTrajectory,pelletTrajectories} from '../ballistic-shot.js';
@@ -37,7 +38,7 @@ export function traceProjectile(state,shooter,origin,direction,reach,{purpose='s
  if(siteHit){limit=siteHit.distance;nearest=null;nearestProp=siteHit.prop;}
  const sceneryHit=sceneryRayHit(state.props,origin,d,limit);
  if(sceneryHit){limit=sceneryHit.distance;nearest=null;nearestProp=sceneryHit.prop;}
- const impact=(kind,t,extra={})=>{const p=point(origin,d,t);return {kind,...p,z:Math.max(0,Math.min(LEVELS-1,Math.floor((p.h+EPS)/3))),distance:t,...extra};};
+ const impact=(kind,t,extra={})=>{const p=point(origin,d,t),surfaceKind=extra.propKind||(extra.structure&&structureInfo(state,extra.structure)?.kind);return {kind,...p,...surfaceKind&&{surfaceKind},z:Math.max(0,Math.min(LEVELS-1,Math.floor((p.h+EPS)/3))),distance:t,...extra};};
  const hits=[foliageRayHit(state,origin,d,limit,purpose),bankRayHit(state.props,origin,d,limit),rampRayHit(state.props,origin,d,limit),towerRayHit(state.props,origin,d,limit),cliffRayHit(state.props,origin,d,limit)].filter(t=>t!==null),terrainHit=hits.length?Math.min(...hits):null;if(terrainHit!==null&&terrainHit<limit){limit=terrainHit;nearest=null;nearestProp=null;}
  // Exact grid/level crossings keep thin walls, corner joins and floor slabs solid.
  const crossings=[0,limit];
@@ -60,7 +61,7 @@ export function traceProjectile(state,shooter,origin,direction,reach,{purpose='s
    }
    const z=Math.floor(p.h/3),height=p.h-z*3;
    if(z>=0&&z<LEVELS&&height<=2.7){
-    if(ax!==bx&&ay!==by)for(const [x,y]of [[ax,by],[bx,ay]]){const terrain=terrainAt(state,x,y,z),prop=PROPS[propAt(state,x,y,z)?.kind],top=terrain==='wall'||prop?.tall?2.7:terrain==='crate'||prop?.solid&&!prop.explosive&&prop.cover>0?.8:0;if(top&&height<=top)return impact('cover',t,{...(terrain==='wall'?{structure:{x,y,z}}:{})});}
+    if(ax!==bx&&ay!==by)for(const [x,y]of [[ax,by],[bx,ay]]){const terrain=terrainAt(state,x,y,z),placed=propAt(state,x,y,z),prop=PROPS[placed?.kind],top=terrain==='wall'||prop?.tall?2.7:terrain==='crate'||prop?.solid&&!prop.explosive&&prop.cover>0?.8:0;if(top&&height<=top)return impact('cover',t,{...(terrain==='wall'?{structure:{x,y,z}}:placed?{propKind:placed.kind}:{})});}
     if(ax!==bx)for(const y of new Set([ay,by]))if(sightEdge(state,{x:ax,y,z},{x:bx,y,z},{height,offset:p.y-y+.5}))return impact('wall',t,{structure:{edge:edgeBetween({x:ax,y,z},{x:bx,y,z})}});
     if(ay!==by)for(const x of new Set([ax,bx]))if(sightEdge(state,{x,y:ay,z},{x,y:by,z},{height,offset:p.x-x+.5}))return impact('wall',t,{structure:{edge:edgeBetween({x,y:ay,z},{x,y:by,z})}});
    }
@@ -69,9 +70,9 @@ export function traceProjectile(state,shooter,origin,direction,reach,{purpose='s
   const end=times[i+1],mid=point(origin,d,(t+end)/2),x=Math.round(mid.x),y=Math.round(mid.y),z=Math.floor(mid.h/3);
   if(z<0)return impact('floor',t,{structure:{x,y,z:0}});
   if(z>=LEVELS)continue;
-  const terrain=terrainAt(state,x,y,z),prop=PROPS[propAt(state,x,y,z)?.kind];
+  const terrain=terrainAt(state,x,y,z),placed=propAt(state,x,y,z),prop=PROPS[placed?.kind];
   const height=terrain==='wall'||prop?.tall?2.7:(terrain==='crate'||prop?.solid&&!prop.explosive&&prop.cover>0)?.8:0;
-  if(height){const vertical=slab(origin.h,d.h,z*3,z*3+height);if(vertical){const hit=Math.max(t,vertical[0]);if(hit<=Math.min(end,vertical[1]))return impact('cover',hit,{...(terrain==='wall'?{structure:{x,y,z}}:{})});}}
+  if(height){const vertical=slab(origin.h,d.h,z*3,z*3+height);if(vertical){const hit=Math.max(t,vertical[0]);if(hit<=Math.min(end,vertical[1]))return impact('cover',hit,{...(terrain==='wall'?{structure:{x,y,z}}:placed?{propKind:placed.kind}:{})});}}
  }
  if(terrainHit!==null&&limit===terrainHit)return impact('cover',limit);
  if(nearestProp)return impact('prop',limit,{propId:isPhysicalScenery(nearestProp)?sceneryId(nearestProp):isStrategicSite(nearestProp)?siteId(nearestProp):barrelId(nearestProp),propKind:nearestProp.kind});

@@ -6,7 +6,12 @@ import {BattleAudio,SOUND_VOICES,SOUND_DECODED_BYTES} from '../dist/tactics/batt
 import {BATTLE_SOUNDS} from '../dist/tactics/battle-sound-data.js';
 import {normalizeSettings,saveSettings,readSettings} from '../dist/tactics/settings-3d.js';
 import {BattleCombat,dischargeDelay} from '../dist/tactics/battle-combat.js';
-import {attack} from '../dist/tactics/core/engine.js';
+import {BattleRenderer} from '../dist/tactics/battle-renderer.js';
+import * as T from '../dist/tactics/vendor/three.module.js';
+import {setBattleCamera,projectBattlePoint} from '../dist/tactics/isometric-camera.js';
+import {attack,attackGround} from '../dist/tactics/core/engine.js';
+import {damageStructure,structureInfo} from '../dist/tactics/structure-health.js';
+import {invalidateMapGeometry} from '../dist/tactics/map-geometry-cache.js';
 import {impactScene,resolveImpactCase} from '../tools/gunshot-impact-cases.mjs';
 
 function fixture(options={}){
@@ -17,6 +22,64 @@ function fixture(options={}){
 }
 const quietState=()=>({selected:0,units:[{id:0,team:'squad',hp:100,x:10,y:10,z:0}],detected:new Set(),effect:null,fireAnimations:[]});
 const emptyCombat=()=>({active:null,queue:[]});
+function captureBoundary(audio,combat,reduced=false){
+ const owner={audio,combat,models:new Map(),presentationNow:0,reducedMotion:{matches:reduced},camera:new T.OrthographicCamera(),traversal:{observe(){}},tankEffects:{observe(){}},fire:{observe(){}}};
+ return {owner,capture(paused){BattleRenderer.prototype.captureCombat.call(owner,audio.state,{paused});}};
+}
+
+test('a command leaving the planner resumes before capturing immediate pistol, shotgun, automatic, sniper, rifle and RPG discharges',async()=>{
+ for(const [weapon,burst,expected]of [['pistol',false,1],['shotgun',false,2],['assault',false,1],['assault',true,3],['sniper',false,1],['rifle',false,1],['rpg',false,1]])for(const reduced of [false,true]){
+  const f=fixture(),c=impactScene({weapon,hp:500,range:2}),combat=new BattleCombat();await f.ready();try{
+   combat.observe(c.state,0,reduced);f.audio.observe(c.state,combat,0);f.audio.setPaused(true);
+   assert.ok(attack(c.state,c.shooter,c.target,burst,false,'torso',false,'full'));
+   const committed=structuredClone(c.state),boundary=captureBoundary(f.audio,combat,reduced);
+   boundary.capture(false);
+   for(const now of [380,760,1140,1520]){boundary.owner.presentationNow=now;boundary.capture(false);}
+   assert.equal(f.audio.played,expected,weapon+' '+burst+' reduced='+reduced);
+   assert.equal(f.audio.context.state,'running');assert.deepEqual(c.state,committed);
+  }finally{f.dispose();}
+ }
+});
+
+test('cancelling a planner consumes no cue; genuinely paused or muted discharges stay consumed after resume',async()=>{
+ for(const blocked of ['cancel','pause','mute','hidden']){
+  const f=fixture(),c=impactScene({weapon:'pistol',hp:500,range:2}),combat=new BattleCombat();await f.ready();try{
+   combat.observe(c.state,0);f.audio.observe(c.state,combat,0);f.audio.setPaused(true);const boundary=captureBoundary(f.audio,combat);
+   if(blocked==='cancel'){boundary.capture(false);assert.equal(f.audio.seen.size,0);}
+   else{if(blocked==='mute')f.audio.setVolume(0);assert.ok(attack(c.state,c.shooter,c.target,false,false,'torso',false,'full'));boundary.capture(blocked!=='mute');}
+   f.audio.setVolume(.7);boundary.capture(false);assert.equal(f.audio.played,0,blocked);
+  }finally{f.dispose();}
+ }
+});
+
+test('stereo agrees with the real projected screen direction for both ground axes at every camera rotation',()=>{
+ const f=fixture(),state=quietState();try{
+  for(let turn=0;turn<4;turn++){
+   const camera=new T.OrthographicCamera(),view={x:0,y:0,zoom:1,turn};setBattleCamera(camera,view,1280,720);f.audio.setCamera(camera);
+   for(const [dx,dy]of [[10,0],[-10,0],[0,10],[0,-10],[0,0]]){
+    const p={x:10+dx,y:10+dy,z:0},screen=projectBattlePoint(p,view).x-projectBattlePoint(state.units[0],view).x;
+    assert.equal(Math.sign(f.audio.hearing(state,p).pan)||0,Math.sign(screen)||0,'turn '+turn+' delta '+dx+','+dy);
+   }
+  }
+ }finally{f.dispose();}
+});
+
+test('real intercepted-wall receipts choose tin, steel or masonry, including a destroyed wall and intervening cover',async()=>{
+ for(const [kind,cue]of [['wall-corrugated','tin'],['door-steel-closed','metal'],['wall-brick','rock-debris']])for(const breaking of [false,true]){
+  const f=fixture(),c=impactScene({weapon:'rifle',hp:500});await f.ready();try{
+   c.state.edges['e:12:10']=kind;c.state.edges['e:14:10']='wall-brick';invalidateMapGeometry(c.state);
+   if(breaking)damageStructure(c.state,{edge:'e:12:10'},structureInfo(c.state,{edge:'e:12:10'}).hp-1);
+   for(let x=10;x<=20;x++)c.state.seen.add(x+',10');
+   f.audio.observe(c.state,emptyCombat(),0);assert.ok(attackGround(c.state,c.shooter,{x:18,y:10,z:0},false,'full'));
+   const committed=structuredClone(c.state),cues=[];f.audio.play=(id,p)=>{cues.push({id,p});return true;};
+   for(const e of c.state.effect.sequence)f.audio.attack(e,c.state);
+   assert.deepEqual(cues.map(c=>c.id),['mosin-m38',cue],kind+' breaking='+breaking);
+   assert.equal(c.state.effect.sequence[0].trajectories[0].surfaceKind,kind);assert.equal(cues[1].p.x,12.5);
+   if(breaking)assert.equal(c.state.edges['e:12:10'],undefined);
+   assert.deepEqual(c.state,committed);
+  }finally{f.dispose();}
+ }
+});
 
 test('clips preload without an AudioContext; a gesture decodes once and disposal owns the context and listeners',async()=>{
  const f=fixture();try{await f.audio.ready;assert.equal(f.created,0);assert.equal(f.audio.encoded.size,11);await f.audio.unlock();await f.audio.unlock();assert.equal(f.created,1);assert.equal(f.context.decodes,11);assert.equal(f.audio.buffers.size,11);assert.deepEqual(f.errors,[]);}finally{f.dispose();}assert.equal(f.context.state,'closed');assert.equal(f.listeners.size,0);assert.equal(f.audio.buffers.size,0);
@@ -62,9 +125,9 @@ test('tank/barrel sounds wait for the matching discharge and deduplicate the two
  }finally{f.dispose();}
 });
 
-test('material receipts deduplicate pellets while keeping glass, metal, tin and damaged masonry distinct',async()=>{
+test('explicit material contacts deduplicate pellets, keep unknowns silent and never infer glass from an open window frame',async()=>{
  const f=fixture(),state=quietState(),combat=emptyCombat();await f.ready();try{
-  f.audio.observe(state,combat,0);const trajectories=['glass','glass','steel','tin'].map(material=>({kind:'wall',material,x:12,y:10,z:0})),e={dischargeId:'shot:2/d:0',weapon:'hands',ax:10,ay:10,bx:99,by:99,trajectories,structures:[{damage:20}]};state.effect={sequence:[e]};f.audio.observe(state,combat,0);assert.equal(f.audio.played,4);assert.equal(f.audio.lastCue.id,'rock-debris');assert.equal(f.audio.lastCue.point.x,12,'Debris belongs to the intercepted wall, not the intended target behind it');assert.equal(f.audio.voices.at(-1).source.started,.12);
+  f.audio.observe(state,combat,0);const trajectories=['glass','glass','steel','tin','unknown'].map(material=>({kind:'wall',material,x:12,y:10,z:0}));trajectories.push({kind:'wall',surfaceKind:'window-concrete',x:12,y:10,z:0});const e={dischargeId:'shot:2/d:0',weapon:'hands',ax:10,ay:10,bx:99,by:99,trajectories,structures:[{damage:20}]};state.effect={sequence:[e]};f.audio.observe(state,combat,0);assert.equal(f.audio.played,4);assert.equal(f.audio.lastCue.id,'rock-debris');assert.equal(f.audio.lastCue.point.x,12,'Debris belongs to the intercepted frame, not the intended target behind it');assert.equal(f.audio.voices.at(-1).source.started,.12);
  }finally{f.dispose();}
 });
 

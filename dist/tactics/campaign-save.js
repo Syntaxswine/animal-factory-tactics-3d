@@ -1,6 +1,7 @@
 import {migrateSquadAmmo} from './squad-ammo.js';
 import {initializeDialogue,validateDialogueState,validateDialogueActors} from './dialogue-state.js';
 import {validateSavedState} from './encounter-save.js';
+import {validateMap} from './core/maps.js';
 import {migrateClimbing} from './character-stats.js';
 import {environmentErrors} from './environment-regions.js';
 import {observeRoundTime} from './game-clock.js';
@@ -19,7 +20,11 @@ export function validateCampaign(c,{assignments=true}={}){
  if(environmentErrors(c.overmap.environments).length)fail();
  if(c.dialogue)validateDialogueActors(c.dialogue,Object.values(c.characters).map(r=>r.unit));
  if(Object.values(c.sectors).some(sector=>sector.state?.dialogue!==undefined))fail();
+ // This memo belongs only to this synchronous validation pass. A later edit,
+ // reload or destruction is revalidated; no mutable definition is trusted by age.
+ const definitions=new WeakSet();
  if(assignments)validateAssignments(c);
+ for(const a of Object.values(c.assignments)){if(!assignments&&validateMap(a.map,{connectivity:false}).length)fail();definitions.add(a.map);}
  const numeric=new Set(),physical=new Set(),members=new Set(),groupIds=new Set(c.groups.map(g=>g.id));
  if(groupIds.size!==c.groups.length||c.groups.length>64||c.incidents.length>10000||Object.keys(c.characters).length>10000)fail();
  for(const [id,r]of Object.entries(c.characters)){
@@ -29,14 +34,14 @@ export function validateCampaign(c,{assignments=true}={}){
  }
  const pileIds=new Set();
  const exemplar=Object.values(c.sectors).find(s=>s.state)?.state;if(!exemplar)fail();
- const people=Object.values(c.characters).map(r=>r.unit);for(let i=0;i<people.length;i+=100)validateSavedState({...exemplar,units:people.slice(i,i+100)},{population:true,unitIds:numeric});
+ const people=Object.values(c.characters).map(r=>r.unit);for(let i=0;i<people.length;i+=100)validateSavedState({...exemplar,units:people.slice(i,i+100)},{population:true,unitIds:numeric,definitions});
  for(const [index,sector]of Object.entries(c.sectors)){
   if(!c.overmap.sectors[index]||typeof sector.initialized!=='boolean'||!Array.isArray(sector.population)||!plain(sector.references)||!['player','red-hats','unassigned','neutral'].includes(sector.owner))fail();
   for(const id of sector.population){const r=c.characters[id];if(!r||physical.has(id)||r.location.kind!=='sector'||r.location.sector!==+index||r.unit.casualty==='dead'||r.unit.casualty==='quit')fail();physical.add(id);}
   for(const id of Object.values(sector.references))if(!c.characters[id])fail();
   if(!sector.initialized){if(sector.state!==null)fail();continue;}
   const s=sector.state;if(!s||!c.assignments[index]||s.clock.minutes!==c.clock.minutes)fail();
-  validateSavedState(s,{population:true,unitIds:numeric});
+  validateSavedState(s,{population:true,unitIds:numeric,definitions});
   for(const u of s.units){const r=c.characters[u.campaignId];if(!r||r.unit!==u||r.location.kind!=='removed'&&!sector.population.includes(r.id))fail();}
   if(sector.population.some(id=>!s.units.includes(c.characters[id].unit)))fail();
   for(const p of s.loot){if(typeof p.id!=='string'||pileIds.has(p.id))fail();pileIds.add(p.id);if(p.body!==undefined&&!numeric.has(p.body))fail();}
@@ -66,8 +71,22 @@ export function validateCampaign(c,{assignments=true}={}){
 }
 export function captureCampaign(c,now=Date.now()){
  validateCampaign(c,{assignments:false});
- const data=structuredClone(c);
- for(const sector of Object.values(data.sectors))if(sector.state){const s=sector.state;sector.unitIds=s.units.map(u=>u.campaignId);delete s.units;delete s.definition;for(const key of transient)delete s[key];s.queue=[];s.effect=null;}
+ // Project the persistent graph before cloning it. In particular, do not clone
+ // each map definition and character roster again through every live sector.
+ const sectors=Object.fromEntries(Object.entries(c.sectors).map(([id,sector])=>{
+  if(!sector.state)return [id,sector];
+  const s=Object.fromEntries(Object.entries(sector.state).filter(([key])=>key!=='map'&&key!=='units'&&key!=='definition'&&!transient.includes(key)));
+  return [id,{...sector,unitIds:sector.state.units.map(u=>u.campaignId),state:{...s,queue:[],effect:null}}];
+ }));
+ // These validated grids contain only immutable terrain-name strings. Copying
+ // their rows directly avoids the general graph serializer visiting hundreds
+ // of thousands of primitive cells. Keep aliases within the detached snapshot,
+ // but never share a mutable row with the running campaign.
+ const assignments=Object.fromEntries(Object.entries(c.assignments).map(([id,a])=>{const map={...a.map};delete map.terrain;return [id,{...a,map}];}));
+ const data=structuredClone({...c,assignments,sectors}),grids=new WeakMap(),rows=new WeakMap();
+ const copyGrid=grid=>{if(!grids.has(grid))grids.set(grid,grid.map(row=>{if(!rows.has(row))rows.set(row,row.slice());return rows.get(row);}));return grids.get(grid);};
+ for(const [id,a]of Object.entries(c.assignments))data.assignments[id].map.terrain=copyGrid(a.map.terrain);
+ for(const [id,sector]of Object.entries(c.sectors))if(sector.state)data.sectors[id].state.map=copyGrid(sector.state.map);
  return {format:CAMPAIGN_FORMAT,version:CAMPAIGN_VERSION,savedAt:now,campaignId:c.id,revision:c.revision,mapName:c.active?c.assignments[c.active.sector].map.name:'Valley campaign',round:c.active?c.sectors[c.active.sector].state.round:0,minutes:c.clock.minutes,data};
 }
 export function restoreCampaign(record){

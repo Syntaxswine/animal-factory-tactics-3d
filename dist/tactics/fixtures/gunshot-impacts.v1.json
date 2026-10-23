@@ -3,13 +3,13 @@
   "version": 1,
   "coordinates": "tactical-x-y-height-v1",
   "source": {
-    "revision": "a2747452225e912255aa0525fd5caddd38b75d50",
+    "revision": "04cdcaa3764544c85332f16eb8612192aac5cbb8",
     "hashFormat": "sha256-utf8-lf",
     "sourceSha256": {
       "dist/tactics/gunshot-impacts.js": "da3e218fb673c83f8832a57d1dfaa69b2a13d728b793c99c36092e21204485f7",
       "dist/tactics/core/engine.js": "6c05dd9a65999e0914650d6b8ffdd7edacb9fa4712f6f7ad8d05fe9e5dff8584",
       "dist/tactics/ballistic-shot.js": "27d6184bc33937304eaf27e26cd71a746b3c9a7594e32a1a9a61fe053d1e2d3c",
-      "dist/tactics/core/projectiles.js": "95fb8924c6fd1eb82f36c183c5395f55e7bc135742c685620bcf10c481ccb5d9",
+      "dist/tactics/core/projectiles.js": "7aa7a3028221a46049882263db735792046b52fd319670967c70d956b4afcdae",
       "tools/core-gunshot-impacts-adapter.mjs": "d7e5404e5ce02ed6b82d533660b56250ef395918565952db99f51c5c189c5e80",
       "tools/gunshot-impact-cases.mjs": "fc2b0519ea30ab696066c390a251d87d9b58757c4bffcf6499c884fecf744bc4",
       "tools/generate-gunshot-impact-fixture.mjs": "6f39c5a1c67b732d7cb18b7f68c5eaae1b52ee4d4a80578fc9918de828ed9dca"

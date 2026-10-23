@@ -23,6 +23,19 @@ test('chunk joins retain matching top positions, normals and paint at X/Z 24 and
 test('snow drifts have broad coherent heights and no per-cell crown geometry',()=>{
  const p=fixture(),f=createTerrainFill(p,'snow'),coarse=[],near=[];for(let z=4;z<24;z++)for(let x=4;x<24;x++){coarse.push(Math.abs(f.height(x,z)-f.height(x+6,z)));near.push(Math.abs(f.height(x,z)-f.height(x+.1,z)));}const mean=a=>a.reduce((n,v)=>n+v,0)/a.length;assert(mean(coarse)>mean(near)*12);assert(mean(near)<.02);const s=setup('snow');try{assert.equal(s.terrain.stats.clusters,0);assert.equal(s.terrain.stats.logs,0);assert(s.terrain.groundSkin.composition.stats.paintedLogs>20);for(const c of s.terrain.chunks){assert(c.bounds.max.x-c.bounds.min.x<40);assert(c.bounds.max.z-c.bounds.min.z<40);}}finally{s.dispose();}
 });
+for(const family of ['temperate','jungle','snow','dry','wetlands'])test(family+' shadow proxies reduce submitted detail while preserving color geometry, tree placement, fog and cutaways',()=>{
+ const s=setup(family);try{
+  const {terrain}=s,focus=new T.Vector3(28,0,34),camera=new T.OrthographicCamera(-20,20,15,-15,.1,1000);camera.position.copy(focus).add(new T.Vector3(200,300,200));camera.lookAt(focus);camera.updateProjectionMatrix();
+  const authored=JSON.stringify(terrain.trees),colorGeometry=terrain.chunks.flatMap(c=>c.meshes.filter(m=>!m.userData.shadowProxy).map(m=>m.geometry.attributes.position.array));
+  const count=()=>{let n=0;terrain.root.traverseVisible(m=>{if(m.castShadow&&m.isMesh)n+=(m.geometry.index?.count??m.geometry.attributes.position.count)/3*(m.count||1);});return n;};
+  terrain.update(camera,{focus,ppu:40,shadowDetail:'full'});const full=count();terrain.update(camera,{focus,ppu:40,shadowDetail:'proxy'});assert.ok(count()<full*.45,family+' shadow geometry must have a meaningful budget');
+  assert.equal(JSON.stringify(terrain.trees),authored);assert.deepEqual(terrain.chunks.flatMap(c=>c.meshes.filter(m=>!m.userData.shadowProxy).map(m=>m.geometry.attributes.position.array)),colorGeometry);
+  const shadows=terrain.treeInstances.filter(m=>m.userData.shadowProxy);assert.ok(shadows.length);assert.ok(shadows.every(m=>m.material.colorWrite===false&&m.material.depthWrite===false));
+  for(const c of terrain.chunks)c.shadowKnown=false;terrain.update(camera,{focus,ppu:40});assert.equal(count(),0,'Unknown crowns cannot reveal hidden ground through shadows');
+  terrain.update(camera,{focus,ppu:40,trees:false});assert.ok(shadows.every(m=>!m.parent.visible));
+ }finally{s.dispose();}
+});
+
 test('LOD is exclusive, uses orthographic scale, and follows a translated region',()=>{
  const s=setup('temperate');try{const {terrain}=s,focus=new T.Vector3(28,0,34),camera=new T.OrthographicCamera(-12,12,9,-9,.1,1000);terrain.root.position.set(200,0,-300);focus.add(terrain.root.position);camera.position.copy(focus).add(new T.Vector3(200,300,200));camera.lookAt(focus);camera.updateProjectionMatrix();terrain.update(camera,{focus,ppu:40});assert(terrain.stats.visibleChunks<9);assert(terrain.stats.detailedChunks>0);for(const c of terrain.chunks)assert.notEqual(c.near.visible,c.far.visible);terrain.update(camera,{focus,ppu:2});assert.equal(terrain.stats.detailedChunks,0);assert.equal(terrain.stats.shadowChunks,0);terrain.update(camera,{focus,ppu:40,trees:false});assert(terrain.treeInstances.every(m=>!m.parent.visible));}finally{s.dispose();}
 });

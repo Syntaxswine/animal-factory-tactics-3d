@@ -55,7 +55,7 @@ export function createFoliageScreens(plan,{plantMaterials,screenMaterials,decora
  // Fog is chained through decorate, and each 24x24 chunk can be culled.
  for(const g of surface.chunks){
   if(g.index.length){const geometry=new T.BufferGeometry();for(const [name,array,size]of [['position',g.position,3],['normal',g.normal,3],['uv',g.uv,2],['color',g.color,3]])geometry.setAttribute(name,new T.Float32BufferAttribute(array,size));geometry.setIndex(g.index);geometry.computeBoundingBox();geometry.computeBoundingSphere();geometries.push(geometry);
-  const mesh=new T.Mesh(geometry,material);mesh.name=(plan.family==='snow'?'Snow bed ':'Rooted shrub leaves ')+g.key;mesh.receiveShadow=true;root.add(mesh);}
+  const mesh=new T.Mesh(geometry,material);mesh.name=(plan.family==='snow'?'Snow bed ':'Rooted shrub leaves ')+g.key;mesh.receiveShadow=true;mesh.userData.screenShadow=true;root.add(mesh);}
   for(const [data,paint,list]of [[g.fringe,fringe,nearMeshes],[g.far,fringe,farMeshes],[g.distant,fringe,distantMeshes]])if(paint&&data.index.length){const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(data.position,3));geometry.setAttribute('uv',new T.Float32BufferAttribute(data.uv,2));geometry.setIndex(data.index);geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();geometries.push(geometry);const mesh=new T.Mesh(geometry,paint);mesh.receiveShadow=true;mesh.visible=list===nearMeshes;list.push(mesh);root.add(mesh);}
   if(rootClip&&g.roots?.index.length){const data=g.roots,geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(data.position,3));geometry.setAttribute('uv',new T.Float32BufferAttribute(data.uv,2));geometry.setIndex(data.index);geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();geometries.push(geometry);const mesh=new T.Mesh(geometry,rootClip.material);mesh.receiveShadow=true;mesh.name='Fine rooted twigs '+g.key;root.add(mesh);}
  }
@@ -77,15 +77,20 @@ export function createFoliageScreens(plan,{plantMaterials,screenMaterials,decora
  }
  for(const matrices of wood.values())for(const [geometry,list,name]of [[cylinder,nearWood,'Solid cover boughs'],[branchCard,farWood,'Distant cover boughs']]){const mesh=new T.InstancedMesh(geometry,woodPaint,matrices.length);matrices.forEach((m,i)=>{mesh.setMatrixAt(i,m);mesh.setColorAt(i,woodTone);});mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingBox();mesh.computeBoundingSphere();mesh.receiveShadow=true;mesh.name=name;mesh.visible=list===nearWood;root.add(mesh);instances.push(mesh);list.push(mesh);}
  for(const matrices of supports.values()){const mesh=new T.InstancedMesh(twig,bark,matrices.length);matrices.forEach((m,i)=>{mesh.setMatrixAt(i,m);mesh.setColorAt(i,woodTone);});mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingBox();mesh.computeBoundingSphere();mesh.receiveShadow=true;mesh.name='Rooted fine branch supports';root.add(mesh);instances.push(mesh);fineStems.push(mesh);}
- const meshes=[];root.traverse(o=>{if(o.isMesh){o.userData.screenKnown=true;meshes.push(o);}});
+ for(const m of [...nearWood,...farWood])m.userData.screenShadow=true;
+ const meshes=[];root.traverse(o=>{if(o.isMesh){o.userData.screenKnown=true;o.userData.shadowKnown=true;meshes.push(o);}});
  const bounds=m=>m.isInstancedMesh?m.boundingBox:m.geometry.boundingBox,near=(m,focus,range)=>!focus||bounds(m).distanceToPoint(focus)<range;
  root.userData.ownedTextureBytes=fringeClip?plan.width*plan.depth*16:0;
- return {root,screenCount:surface.cells.length,setVisibility(anyKnown){for(const m of meshes){m.userData.screenKnown=anyKnown(bounds(m));if(!m.userData.screenKnown)m.visible=false;}},update(ppu,focus){
+ return {root,screenCount:surface.cells.length,setVisibility(anyKnown,allKnown=anyKnown){for(const m of meshes){m.userData.screenKnown=anyKnown(bounds(m));m.userData.shadowKnown=allKnown(bounds(m));if(!m.userData.screenKnown)m.visible=false;}},update(ppu,focus,{shadowDetail='proxy'}={}){
   for(const m of meshes)m.visible=m.userData.screenKnown;
   const detail=m=>ppu>=18&&near(m,focus,36)?0:ppu>=9&&near(m,focus,84)?1:2;
   for(const [list,lod]of [[nearMeshes,0],[farMeshes,1],[distantMeshes,2]])for(const m of list)m.visible=m.userData.screenKnown&&detail(m)===lod;
   for(const m of nearWood)m.visible=m.userData.screenKnown&&ppu>=18&&near(m,focus,18);
   for(const m of farWood)m.visible=m.userData.screenKnown&&!(ppu>=18&&near(m,focus,18));
   for(const m of fineStems)m.visible=m.userData.screenKnown&&ppu>=18&&near(m,focus,18);
+  // The existing solid leaf lobes and substantial boughs own nearby shadows.
+  // Fine overlapping cards and twigs remain in color, without multiplying the
+  // same thicket across all six faces of every local-light shadow map.
+  for(const m of meshes){m.castShadow=m.visible&&m.userData.shadowKnown&&(shadowDetail==='full'||ppu>12&&near(m,focus,28)&&!!m.userData.screenShadow);m.userData.noShadow=!m.castShadow;}
  },dispose(){root.removeFromParent();for(const m of instances)m.dispose();for(const g of geometries)g.dispose();fringeClip?.material.dispose();coreClip?.material.dispose();rootClip?.material.dispose();woodPaint.dispose();fringeClip?.mask.dispose();}};
 }

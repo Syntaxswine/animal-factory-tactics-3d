@@ -8,7 +8,7 @@ import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {createWeaponModel,WEAPON_MODELS} from '../dist/tactics/weapon-models.js';
 import {createOffhandEquipment} from '../dist/tactics/offhand-equipment.js';
 import {CharacterBatches} from '../dist/tactics/character-batches.js';
-import {prepareFatalHead,presentFatalHead} from '../dist/tactics/battle-fatal-head.js';
+import {prepareFatalHead,ensureFatalHead,presentFatalHead} from '../dist/tactics/battle-fatal-head.js';
 import {BattleRenderer} from '../dist/tactics/battle-renderer.js';
 import {BattleBlood} from '../dist/tactics/battle-blood.js';
 import {BattleMotion} from '../dist/tactics/battle-motion.js';
@@ -20,6 +20,13 @@ import {DIMENSIONS} from '../dist/tactics/hybrid-world.js';
 import {resolveImpactCase} from '../tools/gunshot-impact-cases.mjs';
 
 const fixture=JSON.parse(fs.readFileSync(new URL('../dist/tactics/fixtures/gunshot-impacts.v1.json',import.meta.url)));
+test('enabling Full after an Off start prepares a late fatal atlas once, while a missing atlas keeps the ordinary model',()=>{
+ const a=actor(),model=a.model,old=model.fatalMask,texture=new T.Texture();try{
+  old.dispose();model.fatalMask=null;assert.equal(ensureFatalHead(model,undefined),null);
+  const prepared=ensureFatalHead(model,texture);assert.ok(prepared);assert.equal(ensureFatalHead(model,texture),prepared);
+  prepared.setDestroyed(true);assert.equal(prepared.destroyed,true);prepared.setDestroyed(false);assert.equal(prepared.destroyed,false);
+ }finally{model.fatalMask??=old;a.dispose();texture.dispose();}
+});
 const receipt=name=>structuredClone(fixture.cases.find(c=>c.id===name).actions[0].bodyImpacts[0]);
 function actor(species='pig-foreman',weapon='rifle'){
  const profile=profiles.find(p=>p.id===species),worker=profile.create(JSON.parse(fs.readFileSync(new URL('../dist/tactics/'+profile.file,import.meta.url)))),root=new T.Group(),material=new T.MeshBasicMaterial();root.add(worker.root);

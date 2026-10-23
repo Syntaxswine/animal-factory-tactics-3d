@@ -24,8 +24,8 @@ export class CampaignSession {
  constructor(c,persist=putCampaignSave){this.campaign=bindCampaign(c);this.persist=persist;this.savedRevision=c.revision;this.busy=false;}
  async save(slot='continue'){
   if(this.busy)throw Error('A campaign checkpoint is already in progress.');this.busy=true;
-  try{syncCampaignEncounter(this.campaign);const candidate=bindCampaign(structuredClone(this.campaign));candidate.revision=Math.max(candidate.revision,this.savedRevision)+1;const record=captureCampaign(candidate);
-   await this.persist('continue',record,{id:this.campaign.id,revision:this.savedRevision});this.savedRevision=candidate.revision;this.campaign.revision=candidate.revision;
+  try{syncCampaignEncounter(this.campaign);const revision=Math.max(this.campaign.revision,this.savedRevision)+1,record=captureCampaign(this.campaign);record.revision=record.data.revision=revision;
+   await this.persist('continue',record,{id:this.campaign.id,revision:this.savedRevision});this.savedRevision=revision;this.campaign.revision=Math.max(this.campaign.revision,revision);
    if(slot!=='continue')await this.persist(slot,record);return record;
   }finally{this.busy=false;}
  }

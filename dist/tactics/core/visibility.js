@@ -1,7 +1,7 @@
 import {MapGeometryCache} from '../map-geometry-cache.js';
 import {sceneryRayHit} from '../scenery-rules.js';
 import {isPhysicalScenery} from '../scenery-catalog.js';
-import {foliageSignature,synchronizeFoliage,traceFoliage} from '../foliage-obstacles.js';
+import {foliageSignature,synchronizeFoliage,foliageOccluded} from '../foliage-obstacles.js';
 import {isStrategicSite,siteRayHit} from '../strategic-site-rules.js';
 import {unitBaseHeight} from '../tower-geometry.js';
 import {woodlandDepth} from './woodland.js';
@@ -27,7 +27,7 @@ function clear(c,a,b){
  const az=levelOf(a),bz=levelOf(b),dx=b.x-a.x,dy=b.y-a.y,h0=unitBaseHeight(a)+eyeHeight(a),dh=bz*3+eyeHeight(a)-h0;
  if(c.scenery.length){const length=Math.hypot(dx,dy,dh);if(length>.001&&sceneryRayHit(c.scenery,{x:a.x,y:a.y,h:h0},{x:dx/length,y:dy/length,h:dh/length},Math.max(0,length-.51)))return false;}
  if(c.sites.length){const length=Math.hypot(dx,dy,dh);if(length>.001&&siteRayHit(c.sites,{x:a.x,y:a.y,h:h0},{x:dx/length,y:dy/length,h:dh/length},Math.max(0,length-.51)))return false;}
- const length=Math.hypot(dx,dy,dh);if(length>.51){const t=(length-.51)/length;if(traceFoliage(c.foliage,[a.x,h0,a.y],[a.x+dx*t,h0+dh*t,a.y+dy*t],'sight'))return false;}
+ const length=Math.hypot(dx,dy,dh);if(length>.51){const t=(length-.51)/length;if(foliageOccluded(c.foliage,[a.x,h0,a.y],[a.x+dx*t,h0+dh*t,a.y+dy*t]))return false;}
  if(dh)for(let z=1;z<LEVELS;z++){const t=(z*3-h0)/dh;if(t<=0||t>=1)continue;const fx=a.x+dx*t,fy=a.y+dy*t;for(const x of [Math.round(fx-1e-8),Math.round(fx+1e-8)])for(const y of [Math.round(fy-1e-8),Math.round(fy+1e-8)])if(c.floors[index(x,y,z)]&&!c.holes[index(x,y,z)])return false;}
  const solid=(x,y,t0,t1)=>{const lo=Math.min(h0+dh*t0,h0+dh*t1),hi=Math.max(h0+dh*t0,h0+dh*t1);for(let z=0;z<LEVELS;z++){const height=c.tall[index(x,y,z)];if(height&&hi>=z*3&&lo<z*3+height-1e-7)return true;}return false;};
  const edge=(axis,x,y,t,offset)=>{const h=h0+dh*t,z=Math.floor(h/3),local=h-z*3;if(local>2.7)return false;const v=(axis===0?c.east:c.south)[index(x,y,z)];return v===1||(v===2&&!(local>=1&&local<=2.4&&offset>=.15&&offset<=.85));};

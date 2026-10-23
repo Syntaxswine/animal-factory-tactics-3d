@@ -1,5 +1,5 @@
 export const structureOverrides={
- 'projectiles.js':'Identify the exact wall or floor struck without changing shot obstruction or hit rolls.',
+ 'projectiles.js':'Identify the exact wall or floor and retain the struck surface kind before destruction, without changing obstruction or hit rolls.',
  'explosives.js':'Apply persistent material HP to walls and floors after resolving blast exposure against intact scenery.',
  'engine.js':'Apply firearm and flame structure damage and retain receipts for gameplay feedback.'
 };
@@ -7,6 +7,7 @@ export function adaptCoreStructures(name,data){
  if(!structureOverrides[name])return data;let s=data.toString();
  const once=(a,b)=>{if(s.split(a).length!==2)throw Error('Structure adapter anchor changed: '+a);s=s.replace(a,b);};
  if(name==='projectiles.js'){
+  s="import {structureInfo} from '../structure-health.js';\n"+s;
   once('terrainAt,levelOf,sightEdge,W,H,LEVELS','terrainAt,levelOf,sightEdge,edgeBetween,W,H,LEVELS');
   once("return impact('floor',t);}","return impact('floor',t,{structure:{x,y,z:upper}});}");
   once("return impact('wall',t);\n    if(ay", "return impact('wall',t,{structure:{edge:edgeBetween({x:ax,y,z},{x:bx,y,z})}});\n    if(ay");
@@ -14,6 +15,11 @@ export function adaptCoreStructures(name,data){
   once("if(top&&height<=top)return impact('cover',t);", "if(top&&height<=top)return impact('cover',t,{...(terrain==='wall'?{structure:{x,y,z}}:{})});");
   once("if(z<0)return impact('floor',t);", "if(z<0)return impact('floor',t,{structure:{x,y,z:0}});");
   once("return impact('cover',hit);", "return impact('cover',hit,{...(terrain==='wall'?{structure:{x,y,z}}:{})});");
+  once("const impact=(kind,t,extra={})=>{const p=point(origin,d,t);return {kind,...p,z:","const impact=(kind,t,extra={})=>{const p=point(origin,d,t),surfaceKind=extra.propKind||(extra.structure&&structureInfo(state,extra.structure)?.kind);return {kind,...p,...surfaceKind&&{surfaceKind},z:");
+  const propAnchor='terrain=terrainAt(state,x,y,z),prop=PROPS[propAt(state,x,y,z)?.kind]';
+  if(s.split(propAnchor).length!==3)throw Error('Projectile cover surface anchors changed');
+  s=s.replaceAll(propAnchor,'terrain=terrainAt(state,x,y,z),placed=propAt(state,x,y,z),prop=PROPS[placed?.kind]');
+  s=s.replaceAll("terrain==='wall'?{structure:{x,y,z}}:{}", "terrain==='wall'?{structure:{x,y,z}}:placed?{propKind:placed.kind}:{}");
  }
  if(name==='explosives.js'){
   s="import {planStructureBlast,commitStructureDamage} from '../structure-damage.js';\nimport {structureInfo} from '../structure-health.js';\n"+s;

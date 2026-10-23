@@ -122,6 +122,26 @@ test('wood detail preserves every beam transform and hidden chunks return when r
  }finally{screens.dispose();for(const m of Object.values(materials))m.dispose();bark.dispose();textures.forEach(t=>t.dispose());}
 });
 
+test('screen shadow budget keeps nearby solid lobes and wood without changing visible plants or gameplay volumes',()=>{
+ const textures=[new T.Texture(),new T.Texture()],materials=createScreenMaterials(...textures),bark=new T.MeshStandardMaterial();
+ try{for(const p of plans.filter(p=>screenSurface(p).cells.length)){
+  const before=JSON.stringify(p.obstacles),screens=createFoliageScreens(p,{plantMaterials:{bark},screenMaterials:materials}),meshes=[];
+  screens.root.traverse(o=>{if(o.isMesh)meshes.push(o);});
+  try{
+   const focus=new T.Vector3(...p.obstacles.screens.find(s=>s.family===p.family&&s.z===p.level).lobes[0].center);
+   screens.update(32,focus,{shadowDetail:'full'});const visible=meshes.filter(m=>m.visible),full=visible.filter(m=>m.castShadow);
+   screens.update(32,focus);const budget=meshes.filter(m=>m.castShadow);
+   assert.deepEqual(meshes.filter(m=>m.visible),visible);assert.ok(budget.length>0);assert.ok(budget.length<full.length);
+   assert.ok(budget.every(m=>m.userData.screenShadow&&m.userData.shadowKnown));
+   assert.ok(meshes.filter(m=>m.name.includes('twigs')||m.name.includes('fine branch')).every(m=>!m.castShadow));
+   screens.setVisibility(()=>true,()=>false);screens.update(32,focus);assert.ok(meshes.every(m=>!m.castShadow),'partly unknown chunks must not leak shadows');
+   screens.setVisibility(()=>true);screens.update(8,focus);assert.ok(meshes.every(m=>!m.castShadow));
+   screens.update(32,new T.Vector3(-100,0,-100));assert.ok(meshes.every(m=>!m.castShadow));
+   assert.equal(JSON.stringify(p.obstacles),before);
+  }finally{screens.dispose();}
+ }}finally{for(const m of Object.values(materials))m.dispose();bark.dispose();textures.forEach(t=>t.dispose());}
+});
+
 test('fog chunk summary agrees with the fragment mask and conservative tile bounds',()=>{
  const size=8,data=Uint8Array.from({length:size*size},(_,i)=>i%7===0?255:0),summary=biomeVisibilitySummary(data,size);
  for(let x=-2;x<10;x+=.5)for(let z=-2;z<10;z+=.5){

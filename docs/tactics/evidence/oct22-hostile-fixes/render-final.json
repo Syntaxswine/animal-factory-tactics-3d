@@ -1,0 +1,1527 @@
+[
+  {
+    "family": "jungle",
+    "mix": "trees-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "foliage-obstacles.js": "434aa0186f94a092b00583473aea97c48507d36aa79f09a0c2c696e1f94cabea",
+      "biome-scene.js": "b3bab158ecd88f966821233bc1a50459591afe498fec9dce8b53897ea785adcc",
+      "biome-terrain.js": "6eb440f4492478041bc90c80766cf61e88187f62d3ce4073447fd669dd24b0c6",
+      "foliage-screen-scene.js": "6aae1675aadf7d656f48ad1e1df3216da89ea629499f9ef3ae9706ed77659df0",
+      "foliage-performance-review.js": "0861a6cafe02dd82a4d16c4d675ce4943fb8eec607292019f53f1402521f2fe6",
+      "foliage-review-fixture.js": "1150caaf8e64cc59ff14b60aedc8b67d61df7bdb8f36bef5bc0d1deae5dbc89c",
+      "hybrid-renderer.js": "f7e63b429f2fa7e141eb00d325679c7e9e58036268f2f2d03a76f72897b161a5",
+      "battle-renderer.js": "197078857a72f0a804387c11259d416cc9758faee71543de3ba24843f754b39f",
+      "offhand-equipment.js": "5f2498d8911ea122edd6d60b2b135d759c3836bfa12f360ebd1a9794a4452edf",
+      "lighting-scene.js": "fcccd6e84cb45372cbd28f37b5cb12a7b9a1112f51f77a39ae445a1bcf0b316f",
+      "static-model-batches.js": "f7b28b387d23f95f5ee00e19e5686cf61f59410cd11ccfc1369740c589e2cc9e",
+      "light-renderer.js": "867028b797ea0ce8f70a336342000f391960a00707d28cdee264798aee22fddf",
+      "daylight-rig.js": "f17fa9943644cce653d7071a4f718c58cadfa46da0eb8540aa51c7e5f998463f"
+    },
+    "difficulty": "easy",
+    "seed": 317944913,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 3209,
+      "median": 6.599999904632568,
+      "p95": 11.899999976158142,
+      "p99": 15.800000071525574
+    },
+    "displayCadenceMs": {
+      "samples": 3209,
+      "median": 16.699999928474426,
+      "p95": 18.600000023841858,
+      "p99": 60.89999997615814
+    },
+    "gpuMs": {
+      "samples": 268,
+      "median": 13.473792,
+      "p95": 16.549888,
+      "p99": 19.61984
+    },
+    "drawCalls": {
+      "samples": 3209,
+      "median": 693,
+      "p95": 800,
+      "p99": 816
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 3209,
+      "median": 1516363,
+      "p95": 1665908,
+      "p99": 1671447
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.10000002384185791,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.20000004768371582,
+        "p95": 0.30000007152557373,
+        "p99": 0.5
+      }
+    },
+    "memory": {
+      "geometryBytes": 64450420,
+      "estimatedTextureBytes": 184364853,
+      "groundPaintTextureBytes": 39126614,
+      "finiteMaskBytes": 921600,
+      "estimatedShadowColorBytes": 41943040,
+      "groundPaintCPUBytes": 32420864,
+      "geometries": 286,
+      "textures": 57,
+      "note": "Deduplicated texture pixels including ground uniforms and finite masks. Geometry is CPU buffers. Shadow color targets and CPU paint buffers are separate estimates; driver allocations, depth buffers and temporary uploads are excluded."
+    },
+    "chunks": [
+      {
+        "detail": 22,
+        "shadows": 0
+      }
+    ],
+    "trees": 1281,
+    "diagnostics": [],
+    "coldLoadMs": 94,
+    "measuredAt": "2026-10-23T04:10:45.551Z",
+    "foliageShadows": "proxy",
+    "shadowCpuMs": {
+      "samples": 3209,
+      "median": 2.4000000953674316,
+      "p95": 3.100000023841858,
+      "p99": 4.199999928474426
+    },
+    "shadowDrawCalls": {
+      "samples": 3209,
+      "median": 479,
+      "p95": 587,
+      "p99": 602
+    },
+    "shadowTriangles": {
+      "samples": 3209,
+      "median": 1193128,
+      "p95": 1344112,
+      "p99": 1344309
+    },
+    "workload": {
+      "moveOrders": 15,
+      "acceptedMoveOrders": 9,
+      "shotOrders": 7,
+      "acceptedShots": 6,
+      "endTurns": 4,
+      "completedMovementSteps": 88
+    },
+    "phases": [
+      {
+        "stage": 0,
+        "workload": {
+          "moveOrders": 4,
+          "acceptedMoveOrders": 1,
+          "shotOrders": 2,
+          "acceptedShots": 2,
+          "endTurns": 1,
+          "completedMovementSteps": 4
+        },
+        "cpuDrawMs": {
+          "samples": 587,
+          "median": 6.399999976158142,
+          "p95": 11.800000071525574,
+          "p99": 13.600000023841858
+        },
+        "shadowCpuMs": {
+          "samples": 587,
+          "median": 2.6999999284744263,
+          "p95": 3.3000000715255737,
+          "p99": 4.599999904632568
+        },
+        "drawCalls": {
+          "samples": 587,
+          "median": 767,
+          "p95": 808,
+          "p99": 816
+        }
+      },
+      {
+        "stage": 1,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 0,
+          "completedMovementSteps": 19
+        },
+        "cpuDrawMs": {
+          "samples": 506,
+          "median": 6.699999928474426,
+          "p95": 13.799999952316284,
+          "p99": 21.699999928474426
+        },
+        "shadowCpuMs": {
+          "samples": 506,
+          "median": 2.700000047683716,
+          "p95": 3.399999976158142,
+          "p99": 4.5
+        },
+        "drawCalls": {
+          "samples": 506,
+          "median": 773,
+          "p95": 817,
+          "p99": 825
+        }
+      },
+      {
+        "stage": 2,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 0,
+          "endTurns": 1,
+          "completedMovementSteps": 16
+        },
+        "cpuDrawMs": {
+          "samples": 532,
+          "median": 6.900000095367432,
+          "p95": 12.200000047683716,
+          "p99": 16.100000023841858
+        },
+        "shadowCpuMs": {
+          "samples": 532,
+          "median": 1.899999976158142,
+          "p95": 2.799999952316284,
+          "p99": 3.5
+        },
+        "drawCalls": {
+          "samples": 532,
+          "median": 669,
+          "p95": 673,
+          "p99": 674
+        }
+      },
+      {
+        "stage": 3,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 1,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 0,
+          "completedMovementSteps": 16
+        },
+        "cpuDrawMs": {
+          "samples": 518,
+          "median": 6.399999976158142,
+          "p95": 11.800000071525574,
+          "p99": 15.399999976158142
+        },
+        "shadowCpuMs": {
+          "samples": 518,
+          "median": 2.399999976158142,
+          "p95": 3,
+          "p99": 4.100000023841858
+        },
+        "drawCalls": {
+          "samples": 518,
+          "median": 693,
+          "p95": 737,
+          "p99": 738
+        }
+      },
+      {
+        "stage": 4,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 2,
+          "completedMovementSteps": 17
+        },
+        "cpuDrawMs": {
+          "samples": 533,
+          "median": 6.600000023841858,
+          "p95": 11.700000047683716,
+          "p99": 16.100000023841858
+        },
+        "shadowCpuMs": {
+          "samples": 533,
+          "median": 2.399999976158142,
+          "p95": 3,
+          "p99": 4.100000023841858
+        },
+        "drawCalls": {
+          "samples": 533,
+          "median": 694,
+          "p95": 731,
+          "p99": 732
+        }
+      },
+      {
+        "stage": 5,
+        "workload": {
+          "moveOrders": 3,
+          "acceptedMoveOrders": 1,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 0,
+          "completedMovementSteps": 16
+        },
+        "cpuDrawMs": {
+          "samples": 533,
+          "median": 6.299999952316284,
+          "p95": 11.100000023841858,
+          "p99": 12.400000095367432
+        },
+        "shadowCpuMs": {
+          "samples": 533,
+          "median": 1.600000023841858,
+          "p95": 1.9000000953674316,
+          "p99": 2.399999976158142
+        },
+        "drawCalls": {
+          "samples": 533,
+          "median": 636,
+          "p95": 637,
+          "p99": 638
+        }
+      }
+    ],
+    "localLightPassSizes": [
+      3
+    ]
+  },
+  {
+    "family": "temperate",
+    "mix": "trees-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "foliage-obstacles.js": "434aa0186f94a092b00583473aea97c48507d36aa79f09a0c2c696e1f94cabea",
+      "biome-scene.js": "b3bab158ecd88f966821233bc1a50459591afe498fec9dce8b53897ea785adcc",
+      "biome-terrain.js": "6eb440f4492478041bc90c80766cf61e88187f62d3ce4073447fd669dd24b0c6",
+      "foliage-screen-scene.js": "6aae1675aadf7d656f48ad1e1df3216da89ea629499f9ef3ae9706ed77659df0",
+      "foliage-performance-review.js": "0861a6cafe02dd82a4d16c4d675ce4943fb8eec607292019f53f1402521f2fe6",
+      "foliage-review-fixture.js": "1150caaf8e64cc59ff14b60aedc8b67d61df7bdb8f36bef5bc0d1deae5dbc89c",
+      "hybrid-renderer.js": "f7e63b429f2fa7e141eb00d325679c7e9e58036268f2f2d03a76f72897b161a5",
+      "battle-renderer.js": "197078857a72f0a804387c11259d416cc9758faee71543de3ba24843f754b39f",
+      "offhand-equipment.js": "5f2498d8911ea122edd6d60b2b135d759c3836bfa12f360ebd1a9794a4452edf",
+      "lighting-scene.js": "fcccd6e84cb45372cbd28f37b5cb12a7b9a1112f51f77a39ae445a1bcf0b316f",
+      "static-model-batches.js": "f7b28b387d23f95f5ee00e19e5686cf61f59410cd11ccfc1369740c589e2cc9e",
+      "light-renderer.js": "867028b797ea0ce8f70a336342000f391960a00707d28cdee264798aee22fddf",
+      "daylight-rig.js": "f17fa9943644cce653d7071a4f718c58cadfa46da0eb8540aa51c7e5f998463f"
+    },
+    "difficulty": "easy",
+    "seed": 9244331,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 2788,
+      "median": 7,
+      "p95": 14.100000023841858,
+      "p99": 25.600000023841858
+    },
+    "displayCadenceMs": {
+      "samples": 2788,
+      "median": 16.699999928474426,
+      "p95": 20.399999976158142,
+      "p99": 126.30000007152557
+    },
+    "gpuMs": {
+      "samples": 233,
+      "median": 12.884992,
+      "p95": 16.077824,
+      "p99": 16.5376
+    },
+    "drawCalls": {
+      "samples": 2788,
+      "median": 707,
+      "p95": 834,
+      "p99": 850
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 2788,
+      "median": 1501831,
+      "p95": 1675770,
+      "p99": 1684086
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.10000002384185791,
+        "p99": 0.19999992847442627
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.20000004768371582,
+        "p95": 0.30000007152557373,
+        "p99": 0.6000000238418579
+      }
+    },
+    "memory": {
+      "geometryBytes": 64548028,
+      "estimatedTextureBytes": 184364853,
+      "groundPaintTextureBytes": 39126614,
+      "finiteMaskBytes": 921600,
+      "estimatedShadowColorBytes": 41943040,
+      "groundPaintCPUBytes": 32420864,
+      "geometries": 283,
+      "textures": 57,
+      "note": "Deduplicated texture pixels including ground uniforms and finite masks. Geometry is CPU buffers. Shadow color targets and CPU paint buffers are separate estimates; driver allocations, depth buffers and temporary uploads are excluded."
+    },
+    "chunks": [
+      {
+        "detail": 21,
+        "shadows": 0
+      }
+    ],
+    "trees": 1281,
+    "diagnostics": [],
+    "coldLoadMs": 73.39999997615814,
+    "measuredAt": "2026-10-23T04:11:59.469Z",
+    "foliageShadows": "proxy",
+    "shadowCpuMs": {
+      "samples": 2788,
+      "median": 2.5999999046325684,
+      "p95": 3.4000000953674316,
+      "p99": 4.700000047683716
+    },
+    "shadowDrawCalls": {
+      "samples": 2788,
+      "median": 496,
+      "p95": 622,
+      "p99": 637
+    },
+    "shadowTriangles": {
+      "samples": 2788,
+      "median": 1134626,
+      "p95": 1324708,
+      "p99": 1331550
+    },
+    "workload": {
+      "moveOrders": 13,
+      "acceptedMoveOrders": 11,
+      "shotOrders": 7,
+      "acceptedShots": 7,
+      "endTurns": 6,
+      "completedMovementSteps": 92
+    },
+    "phases": [
+      {
+        "stage": 0,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 1,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 0,
+          "completedMovementSteps": 4
+        },
+        "cpuDrawMs": {
+          "samples": 245,
+          "median": 7.100000023841858,
+          "p95": 23.800000071525574,
+          "p99": 57.39999997615814
+        },
+        "shadowCpuMs": {
+          "samples": 245,
+          "median": 3,
+          "p95": 5.600000023841858,
+          "p99": 7.899999976158142
+        },
+        "drawCalls": {
+          "samples": 245,
+          "median": 796,
+          "p95": 850,
+          "p99": 850
+        }
+      },
+      {
+        "stage": 1,
+        "workload": {
+          "moveOrders": 3,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 2,
+          "completedMovementSteps": 18
+        },
+        "cpuDrawMs": {
+          "samples": 501,
+          "median": 7.299999952316284,
+          "p95": 12.5,
+          "p99": 49.300000071525574
+        },
+        "shadowCpuMs": {
+          "samples": 501,
+          "median": 2.899999976158142,
+          "p95": 3.5,
+          "p99": 4.700000047683716
+        },
+        "drawCalls": {
+          "samples": 501,
+          "median": 801,
+          "p95": 841,
+          "p99": 851
+        }
+      },
+      {
+        "stage": 2,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 1,
+          "completedMovementSteps": 17
+        },
+        "cpuDrawMs": {
+          "samples": 521,
+          "median": 6.799999952316284,
+          "p95": 12.199999928474426,
+          "p99": 18
+        },
+        "shadowCpuMs": {
+          "samples": 521,
+          "median": 1.899999976158142,
+          "p95": 2.200000047683716,
+          "p99": 2.899999976158142
+        },
+        "drawCalls": {
+          "samples": 521,
+          "median": 661,
+          "p95": 666,
+          "p99": 666
+        }
+      },
+      {
+        "stage": 3,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 1,
+          "completedMovementSteps": 18
+        },
+        "cpuDrawMs": {
+          "samples": 504,
+          "median": 6.700000047683716,
+          "p95": 11.899999976158142,
+          "p99": 18.299999952316284
+        },
+        "shadowCpuMs": {
+          "samples": 504,
+          "median": 2.5,
+          "p95": 3,
+          "p99": 4.100000023841858
+        },
+        "drawCalls": {
+          "samples": 504,
+          "median": 704,
+          "p95": 753,
+          "p99": 754
+        }
+      },
+      {
+        "stage": 4,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 1,
+          "completedMovementSteps": 17
+        },
+        "cpuDrawMs": {
+          "samples": 527,
+          "median": 6.600000023841858,
+          "p95": 11.399999976158142,
+          "p99": 13.300000071525574
+        },
+        "shadowCpuMs": {
+          "samples": 527,
+          "median": 2.600000023841858,
+          "p95": 3,
+          "p99": 3.3000000715255737
+        },
+        "drawCalls": {
+          "samples": 527,
+          "median": 719,
+          "p95": 753,
+          "p99": 754
+        }
+      },
+      {
+        "stage": 5,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 2,
+          "acceptedShots": 2,
+          "endTurns": 1,
+          "completedMovementSteps": 18
+        },
+        "cpuDrawMs": {
+          "samples": 490,
+          "median": 8,
+          "p95": 18.799999952316284,
+          "p99": 22.5
+        },
+        "shadowCpuMs": {
+          "samples": 490,
+          "median": 1.8000000715255737,
+          "p95": 3.799999952316284,
+          "p99": 4.199999928474426
+        },
+        "drawCalls": {
+          "samples": 490,
+          "median": 626,
+          "p95": 630,
+          "p99": 631
+        }
+      }
+    ],
+    "localLightPassSizes": [
+      3
+    ]
+  },
+  {
+    "family": "snow",
+    "mix": "trees-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "foliage-obstacles.js": "434aa0186f94a092b00583473aea97c48507d36aa79f09a0c2c696e1f94cabea",
+      "biome-scene.js": "b3bab158ecd88f966821233bc1a50459591afe498fec9dce8b53897ea785adcc",
+      "biome-terrain.js": "6eb440f4492478041bc90c80766cf61e88187f62d3ce4073447fd669dd24b0c6",
+      "foliage-screen-scene.js": "6aae1675aadf7d656f48ad1e1df3216da89ea629499f9ef3ae9706ed77659df0",
+      "foliage-performance-review.js": "0861a6cafe02dd82a4d16c4d675ce4943fb8eec607292019f53f1402521f2fe6",
+      "foliage-review-fixture.js": "1150caaf8e64cc59ff14b60aedc8b67d61df7bdb8f36bef5bc0d1deae5dbc89c",
+      "hybrid-renderer.js": "f7e63b429f2fa7e141eb00d325679c7e9e58036268f2f2d03a76f72897b161a5",
+      "battle-renderer.js": "197078857a72f0a804387c11259d416cc9758faee71543de3ba24843f754b39f",
+      "offhand-equipment.js": "5f2498d8911ea122edd6d60b2b135d759c3836bfa12f360ebd1a9794a4452edf",
+      "lighting-scene.js": "fcccd6e84cb45372cbd28f37b5cb12a7b9a1112f51f77a39ae445a1bcf0b316f",
+      "static-model-batches.js": "f7b28b387d23f95f5ee00e19e5686cf61f59410cd11ccfc1369740c589e2cc9e",
+      "light-renderer.js": "867028b797ea0ce8f70a336342000f391960a00707d28cdee264798aee22fddf",
+      "daylight-rig.js": "f17fa9943644cce653d7071a4f718c58cadfa46da0eb8540aa51c7e5f998463f"
+    },
+    "difficulty": "easy",
+    "seed": 9244331,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 2819,
+      "median": 6.600000023841858,
+      "p95": 11.700000047683716,
+      "p99": 18.800000071525574
+    },
+    "displayCadenceMs": {
+      "samples": 2819,
+      "median": 16.699999928474426,
+      "p95": 17.699999928474426,
+      "p99": 93.10000002384186
+    },
+    "gpuMs": {
+      "samples": 235,
+      "median": 14.962688,
+      "p95": 16.521216,
+      "p99": 17.606656
+    },
+    "drawCalls": {
+      "samples": 2819,
+      "median": 663,
+      "p95": 776,
+      "p99": 801
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 2819,
+      "median": 1666031,
+      "p95": 1893922,
+      "p99": 1906374
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.20000004768371582,
+        "p95": 0.30000007152557373,
+        "p99": 0.5
+      }
+    },
+    "memory": {
+      "geometryBytes": 76999588,
+      "estimatedTextureBytes": 184364853,
+      "groundPaintTextureBytes": 39126614,
+      "finiteMaskBytes": 921600,
+      "estimatedShadowColorBytes": 41943040,
+      "groundPaintCPUBytes": 32420864,
+      "geometries": 258,
+      "textures": 56,
+      "note": "Deduplicated texture pixels including ground uniforms and finite masks. Geometry is CPU buffers. Shadow color targets and CPU paint buffers are separate estimates; driver allocations, depth buffers and temporary uploads are excluded."
+    },
+    "chunks": [
+      {
+        "detail": 20,
+        "shadows": 0
+      }
+    ],
+    "trees": 1281,
+    "diagnostics": [],
+    "coldLoadMs": 96.60000002384186,
+    "measuredAt": "2026-10-23T04:13:12.868Z",
+    "foliageShadows": "proxy",
+    "shadowCpuMs": {
+      "samples": 2819,
+      "median": 2.399999976158142,
+      "p95": 3.4000000953674316,
+      "p99": 4.699999928474426
+    },
+    "shadowDrawCalls": {
+      "samples": 2819,
+      "median": 480,
+      "p95": 598,
+      "p99": 620
+    },
+    "shadowTriangles": {
+      "samples": 2819,
+      "median": 1291178,
+      "p95": 1526112,
+      "p99": 1539263
+    },
+    "workload": {
+      "moveOrders": 13,
+      "acceptedMoveOrders": 11,
+      "shotOrders": 7,
+      "acceptedShots": 7,
+      "endTurns": 6,
+      "completedMovementSteps": 92
+    },
+    "phases": [
+      {
+        "stage": 0,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 1,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 0,
+          "completedMovementSteps": 4
+        },
+        "cpuDrawMs": {
+          "samples": 256,
+          "median": 6.800000071525574,
+          "p95": 12.899999976158142,
+          "p99": 49.799999952316284
+        },
+        "shadowCpuMs": {
+          "samples": 256,
+          "median": 2.799999952316284,
+          "p95": 3.600000023841858,
+          "p99": 4.899999976158142
+        },
+        "drawCalls": {
+          "samples": 256,
+          "median": 745,
+          "p95": 796,
+          "p99": 796
+        }
+      },
+      {
+        "stage": 1,
+        "workload": {
+          "moveOrders": 3,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 2,
+          "completedMovementSteps": 18
+        },
+        "cpuDrawMs": {
+          "samples": 497,
+          "median": 7.199999928474426,
+          "p95": 15,
+          "p99": 56.10000002384186
+        },
+        "shadowCpuMs": {
+          "samples": 497,
+          "median": 2.799999952316284,
+          "p95": 4,
+          "p99": 5.399999976158142
+        },
+        "drawCalls": {
+          "samples": 497,
+          "median": 756,
+          "p95": 806,
+          "p99": 807
+        }
+      },
+      {
+        "stage": 2,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 1,
+          "completedMovementSteps": 13
+        },
+        "cpuDrawMs": {
+          "samples": 531,
+          "median": 6.199999928474426,
+          "p95": 11.200000047683716,
+          "p99": 14.799999952316284
+        },
+        "shadowCpuMs": {
+          "samples": 531,
+          "median": 1.7999999523162842,
+          "p95": 2.3000000715255737,
+          "p99": 2.899999976158142
+        },
+        "drawCalls": {
+          "samples": 531,
+          "median": 553,
+          "p95": 555,
+          "p99": 562
+        }
+      },
+      {
+        "stage": 3,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 1,
+          "completedMovementSteps": 22
+        },
+        "cpuDrawMs": {
+          "samples": 499,
+          "median": 6.699999928474426,
+          "p95": 11.199999928474426,
+          "p99": 18.700000047683716
+        },
+        "shadowCpuMs": {
+          "samples": 499,
+          "median": 2.399999976158142,
+          "p95": 3.4000000953674316,
+          "p99": 4.899999976158142
+        },
+        "drawCalls": {
+          "samples": 499,
+          "median": 664,
+          "p95": 715,
+          "p99": 716
+        }
+      },
+      {
+        "stage": 4,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 1,
+          "completedMovementSteps": 17
+        },
+        "cpuDrawMs": {
+          "samples": 522,
+          "median": 6.700000047683716,
+          "p95": 11.399999976158142,
+          "p99": 13.600000023841858
+        },
+        "shadowCpuMs": {
+          "samples": 522,
+          "median": 2.5,
+          "p95": 4.100000023841858,
+          "p99": 4.699999928474426
+        },
+        "drawCalls": {
+          "samples": 522,
+          "median": 677,
+          "p95": 707,
+          "p99": 707
+        }
+      },
+      {
+        "stage": 5,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 2,
+          "acceptedShots": 2,
+          "endTurns": 1,
+          "completedMovementSteps": 18
+        },
+        "cpuDrawMs": {
+          "samples": 514,
+          "median": 5.799999952316284,
+          "p95": 10.700000047683716,
+          "p99": 12.600000023841858
+        },
+        "shadowCpuMs": {
+          "samples": 514,
+          "median": 1.5999999046325684,
+          "p95": 1.899999976158142,
+          "p99": 2.5
+        },
+        "drawCalls": {
+          "samples": 514,
+          "median": 518,
+          "p95": 523,
+          "p99": 525
+        }
+      }
+    ],
+    "localLightPassSizes": [
+      3
+    ]
+  },
+  {
+    "family": "dry",
+    "mix": "trees-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "foliage-obstacles.js": "434aa0186f94a092b00583473aea97c48507d36aa79f09a0c2c696e1f94cabea",
+      "biome-scene.js": "b3bab158ecd88f966821233bc1a50459591afe498fec9dce8b53897ea785adcc",
+      "biome-terrain.js": "6eb440f4492478041bc90c80766cf61e88187f62d3ce4073447fd669dd24b0c6",
+      "foliage-screen-scene.js": "6aae1675aadf7d656f48ad1e1df3216da89ea629499f9ef3ae9706ed77659df0",
+      "foliage-performance-review.js": "0861a6cafe02dd82a4d16c4d675ce4943fb8eec607292019f53f1402521f2fe6",
+      "foliage-review-fixture.js": "1150caaf8e64cc59ff14b60aedc8b67d61df7bdb8f36bef5bc0d1deae5dbc89c",
+      "hybrid-renderer.js": "f7e63b429f2fa7e141eb00d325679c7e9e58036268f2f2d03a76f72897b161a5",
+      "battle-renderer.js": "197078857a72f0a804387c11259d416cc9758faee71543de3ba24843f754b39f",
+      "offhand-equipment.js": "5f2498d8911ea122edd6d60b2b135d759c3836bfa12f360ebd1a9794a4452edf",
+      "lighting-scene.js": "fcccd6e84cb45372cbd28f37b5cb12a7b9a1112f51f77a39ae445a1bcf0b316f",
+      "static-model-batches.js": "f7b28b387d23f95f5ee00e19e5686cf61f59410cd11ccfc1369740c589e2cc9e",
+      "light-renderer.js": "867028b797ea0ce8f70a336342000f391960a00707d28cdee264798aee22fddf",
+      "daylight-rig.js": "f17fa9943644cce653d7071a4f718c58cadfa46da0eb8540aa51c7e5f998463f"
+    },
+    "difficulty": "easy",
+    "seed": 287161991,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 3170,
+      "median": 6.700000047683716,
+      "p95": 11.899999976158142,
+      "p99": 15.899999976158142
+    },
+    "displayCadenceMs": {
+      "samples": 3170,
+      "median": 16.699999928474426,
+      "p95": 17.899999976158142,
+      "p99": 62.5
+    },
+    "gpuMs": {
+      "samples": 265,
+      "median": 14.550016,
+      "p95": 16.478208,
+      "p99": 17.206272
+    },
+    "drawCalls": {
+      "samples": 3170,
+      "median": 682,
+      "p95": 788,
+      "p99": 804
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 3170,
+      "median": 1518751,
+      "p95": 1674463,
+      "p99": 1676336
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.20000004768371582,
+        "p95": 0.30000007152557373,
+        "p99": 0.5
+      }
+    },
+    "memory": {
+      "geometryBytes": 64279212,
+      "estimatedTextureBytes": 184364853,
+      "groundPaintTextureBytes": 39126614,
+      "finiteMaskBytes": 921600,
+      "estimatedShadowColorBytes": 41943040,
+      "groundPaintCPUBytes": 32420864,
+      "geometries": 283,
+      "textures": 57,
+      "note": "Deduplicated texture pixels including ground uniforms and finite masks. Geometry is CPU buffers. Shadow color targets and CPU paint buffers are separate estimates; driver allocations, depth buffers and temporary uploads are excluded."
+    },
+    "chunks": [
+      {
+        "detail": 21,
+        "shadows": 0
+      }
+    ],
+    "trees": 1281,
+    "diagnostics": [],
+    "coldLoadMs": 79.10000002384186,
+    "measuredAt": "2026-10-23T04:14:26.885Z",
+    "foliageShadows": "proxy",
+    "shadowCpuMs": {
+      "samples": 3170,
+      "median": 2.600000023841858,
+      "p95": 3.399999976158142,
+      "p99": 4.5
+    },
+    "shadowDrawCalls": {
+      "samples": 3170,
+      "median": 478,
+      "p95": 585,
+      "p99": 600
+    },
+    "shadowTriangles": {
+      "samples": 3170,
+      "median": 1190752,
+      "p95": 1341695,
+      "p99": 1341764
+    },
+    "workload": {
+      "moveOrders": 15,
+      "acceptedMoveOrders": 9,
+      "shotOrders": 7,
+      "acceptedShots": 5,
+      "endTurns": 3,
+      "completedMovementSteps": 88
+    },
+    "phases": [
+      {
+        "stage": 0,
+        "workload": {
+          "moveOrders": 4,
+          "acceptedMoveOrders": 1,
+          "shotOrders": 2,
+          "acceptedShots": 2,
+          "endTurns": 1,
+          "completedMovementSteps": 4
+        },
+        "cpuDrawMs": {
+          "samples": 558,
+          "median": 6.799999952316284,
+          "p95": 12.399999976158142,
+          "p99": 18.300000071525574
+        },
+        "shadowCpuMs": {
+          "samples": 558,
+          "median": 2.8000000715255737,
+          "p95": 3.5,
+          "p99": 4.899999976158142
+        },
+        "drawCalls": {
+          "samples": 558,
+          "median": 755,
+          "p95": 799,
+          "p99": 804
+        }
+      },
+      {
+        "stage": 1,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 0,
+          "completedMovementSteps": 19
+        },
+        "cpuDrawMs": {
+          "samples": 501,
+          "median": 7.200000047683716,
+          "p95": 12.399999976158142,
+          "p99": 22.5
+        },
+        "shadowCpuMs": {
+          "samples": 501,
+          "median": 2.899999976158142,
+          "p95": 3.799999952316284,
+          "p99": 5.099999904632568
+        },
+        "drawCalls": {
+          "samples": 501,
+          "median": 761,
+          "p95": 800,
+          "p99": 807
+        }
+      },
+      {
+        "stage": 2,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 0,
+          "endTurns": 1,
+          "completedMovementSteps": 16
+        },
+        "cpuDrawMs": {
+          "samples": 531,
+          "median": 6.600000023841858,
+          "p95": 11.800000071525574,
+          "p99": 18.200000047683716
+        },
+        "shadowCpuMs": {
+          "samples": 531,
+          "median": 1.9000000953674316,
+          "p95": 2.200000047683716,
+          "p99": 3.100000023841858
+        },
+        "drawCalls": {
+          "samples": 531,
+          "median": 633,
+          "p95": 635,
+          "p99": 635
+        }
+      },
+      {
+        "stage": 3,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 1,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 0,
+          "completedMovementSteps": 16
+        },
+        "cpuDrawMs": {
+          "samples": 518,
+          "median": 6.5,
+          "p95": 11.599999904632568,
+          "p99": 14.100000023841858
+        },
+        "shadowCpuMs": {
+          "samples": 518,
+          "median": 2.5,
+          "p95": 3.100000023841858,
+          "p99": 4.299999952316284
+        },
+        "drawCalls": {
+          "samples": 518,
+          "median": 680,
+          "p95": 719,
+          "p99": 720
+        }
+      },
+      {
+        "stage": 4,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 0,
+          "endTurns": 1,
+          "completedMovementSteps": 17
+        },
+        "cpuDrawMs": {
+          "samples": 534,
+          "median": 6.899999976158142,
+          "p95": 11.699999928474426,
+          "p99": 14.299999952316284
+        },
+        "shadowCpuMs": {
+          "samples": 534,
+          "median": 2.600000023841858,
+          "p95": 3.700000047683716,
+          "p99": 4.5
+        },
+        "drawCalls": {
+          "samples": 534,
+          "median": 682,
+          "p95": 719,
+          "p99": 720
+        }
+      },
+      {
+        "stage": 5,
+        "workload": {
+          "moveOrders": 3,
+          "acceptedMoveOrders": 1,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 0,
+          "completedMovementSteps": 16
+        },
+        "cpuDrawMs": {
+          "samples": 528,
+          "median": 6.199999928474426,
+          "p95": 11.5,
+          "p99": 13.399999976158142
+        },
+        "shadowCpuMs": {
+          "samples": 528,
+          "median": 1.7000000476837158,
+          "p95": 2.0999999046325684,
+          "p99": 2.4000000953674316
+        },
+        "drawCalls": {
+          "samples": 528,
+          "median": 596,
+          "p95": 598,
+          "p99": 599
+        }
+      }
+    ],
+    "localLightPassSizes": [
+      3
+    ]
+  },
+  {
+    "family": "wetlands",
+    "mix": "trees-v1",
+    "layout": "sector",
+    "durationSeconds": 60,
+    "visibility": "visible",
+    "hiddenFrames": 0,
+    "resolution": [
+      1236,
+      394.40625
+    ],
+    "dpr": 1,
+    "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 (0x0000220A) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "sources": {
+      "foliage-cutaway.js": "a05e944dc5a5af5ba8f2a4828081d37f056429c17f482043385c68c89fbdb3da",
+      "foliage-obstacles.js": "434aa0186f94a092b00583473aea97c48507d36aa79f09a0c2c696e1f94cabea",
+      "biome-scene.js": "b3bab158ecd88f966821233bc1a50459591afe498fec9dce8b53897ea785adcc",
+      "biome-terrain.js": "6eb440f4492478041bc90c80766cf61e88187f62d3ce4073447fd669dd24b0c6",
+      "foliage-screen-scene.js": "6aae1675aadf7d656f48ad1e1df3216da89ea629499f9ef3ae9706ed77659df0",
+      "foliage-performance-review.js": "0861a6cafe02dd82a4d16c4d675ce4943fb8eec607292019f53f1402521f2fe6",
+      "foliage-review-fixture.js": "1150caaf8e64cc59ff14b60aedc8b67d61df7bdb8f36bef5bc0d1deae5dbc89c",
+      "hybrid-renderer.js": "f7e63b429f2fa7e141eb00d325679c7e9e58036268f2f2d03a76f72897b161a5",
+      "battle-renderer.js": "197078857a72f0a804387c11259d416cc9758faee71543de3ba24843f754b39f",
+      "offhand-equipment.js": "5f2498d8911ea122edd6d60b2b135d759c3836bfa12f360ebd1a9794a4452edf",
+      "lighting-scene.js": "fcccd6e84cb45372cbd28f37b5cb12a7b9a1112f51f77a39ae445a1bcf0b316f",
+      "static-model-batches.js": "f7b28b387d23f95f5ee00e19e5686cf61f59410cd11ccfc1369740c589e2cc9e",
+      "light-renderer.js": "867028b797ea0ce8f70a336342000f391960a00707d28cdee264798aee22fddf",
+      "daylight-rig.js": "f17fa9943644cce653d7071a4f718c58cadfa46da0eb8540aa51c7e5f998463f"
+    },
+    "difficulty": "easy",
+    "seed": 317944913,
+    "cameraRoute": "6 ten-second phases: close/reverse/wide by day, then by night; fixed gameplay elevation; continuous hover; squad orders every 4.5s and firearm effects every 9s when idle; lit furnished room, interior fog and fire",
+    "cpuDrawMs": {
+      "samples": 3186,
+      "median": 6.299999952316284,
+      "p95": 11.300000071525574,
+      "p99": 15.200000047683716
+    },
+    "displayCadenceMs": {
+      "samples": 3186,
+      "median": 16.699999928474426,
+      "p95": 18.90000009536743,
+      "p99": 61
+    },
+    "gpuMs": {
+      "samples": 266,
+      "median": 13.732864,
+      "p95": 16.355328,
+      "p99": 17.296384
+    },
+    "drawCalls": {
+      "samples": 3186,
+      "median": 722,
+      "p95": 835,
+      "p99": 852
+    },
+    "submittedTrianglesIncludingShadowAndLightPasses": {
+      "samples": 3186,
+      "median": 1764979,
+      "p95": 1948181,
+      "p99": 1954774
+    },
+    "queriesCost": {
+      "sight": {
+        "samples": 50,
+        "median": 0,
+        "p95": 0.10000002384185791,
+        "p99": 0.10000002384185791
+      },
+      "path": {
+        "samples": 50,
+        "median": 0.20000004768371582,
+        "p95": 0.40000009536743164,
+        "p99": 1.3000000715255737
+      }
+    },
+    "memory": {
+      "geometryBytes": 88554764,
+      "estimatedTextureBytes": 184597177,
+      "groundPaintTextureBytes": 39358938,
+      "finiteMaskBytes": 921600,
+      "estimatedShadowColorBytes": 41943040,
+      "groundPaintCPUBytes": 32420864,
+      "geometries": 292,
+      "textures": 58,
+      "note": "Deduplicated texture pixels including ground uniforms and finite masks. Geometry is CPU buffers. Shadow color targets and CPU paint buffers are separate estimates; driver allocations, depth buffers and temporary uploads are excluded."
+    },
+    "chunks": [
+      {
+        "detail": 21,
+        "shadows": 0
+      }
+    ],
+    "trees": 1281,
+    "diagnostics": [],
+    "coldLoadMs": 96.5,
+    "measuredAt": "2026-10-23T04:15:39.237Z",
+    "foliageShadows": "proxy",
+    "shadowCpuMs": {
+      "samples": 3186,
+      "median": 2.399999976158142,
+      "p95": 3.100000023841858,
+      "p99": 3.5
+    },
+    "shadowDrawCalls": {
+      "samples": 3186,
+      "median": 502,
+      "p95": 612,
+      "p99": 627
+    },
+    "shadowTriangles": {
+      "samples": 3186,
+      "median": 1353036,
+      "p95": 1520648,
+      "p99": 1526890
+    },
+    "workload": {
+      "moveOrders": 15,
+      "acceptedMoveOrders": 9,
+      "shotOrders": 7,
+      "acceptedShots": 6,
+      "endTurns": 4,
+      "completedMovementSteps": 88
+    },
+    "phases": [
+      {
+        "stage": 0,
+        "workload": {
+          "moveOrders": 4,
+          "acceptedMoveOrders": 1,
+          "shotOrders": 2,
+          "acceptedShots": 2,
+          "endTurns": 1,
+          "completedMovementSteps": 4
+        },
+        "cpuDrawMs": {
+          "samples": 589,
+          "median": 6.300000071525574,
+          "p95": 11.200000047683716,
+          "p99": 14.800000071525574
+        },
+        "shadowCpuMs": {
+          "samples": 589,
+          "median": 2.600000023841858,
+          "p95": 3.200000047683716,
+          "p99": 3.600000023841858
+        },
+        "drawCalls": {
+          "samples": 589,
+          "median": 793,
+          "p95": 845,
+          "p99": 853
+        }
+      },
+      {
+        "stage": 1,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 0,
+          "completedMovementSteps": 19
+        },
+        "cpuDrawMs": {
+          "samples": 505,
+          "median": 6.700000047683716,
+          "p95": 12.299999952316284,
+          "p99": 20.199999928474426
+        },
+        "shadowCpuMs": {
+          "samples": 505,
+          "median": 2.700000047683716,
+          "p95": 3.299999952316284,
+          "p99": 4.5
+        },
+        "drawCalls": {
+          "samples": 505,
+          "median": 819,
+          "p95": 852,
+          "p99": 852
+        }
+      },
+      {
+        "stage": 2,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 0,
+          "endTurns": 1,
+          "completedMovementSteps": 16
+        },
+        "cpuDrawMs": {
+          "samples": 506,
+          "median": 6.600000023841858,
+          "p95": 12.100000023841858,
+          "p99": 35.89999997615814
+        },
+        "shadowCpuMs": {
+          "samples": 506,
+          "median": 1.8000000715255737,
+          "p95": 2.399999976158142,
+          "p99": 3
+        },
+        "drawCalls": {
+          "samples": 506,
+          "median": 695,
+          "p95": 698,
+          "p99": 699
+        }
+      },
+      {
+        "stage": 3,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 1,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 0,
+          "completedMovementSteps": 16
+        },
+        "cpuDrawMs": {
+          "samples": 518,
+          "median": 5.900000095367432,
+          "p95": 11.200000047683716,
+          "p99": 12.299999952316284
+        },
+        "shadowCpuMs": {
+          "samples": 518,
+          "median": 2.399999976158142,
+          "p95": 2.899999976158142,
+          "p99": 3.100000023841858
+        },
+        "drawCalls": {
+          "samples": 518,
+          "median": 714,
+          "p95": 758,
+          "p99": 759
+        }
+      },
+      {
+        "stage": 4,
+        "workload": {
+          "moveOrders": 2,
+          "acceptedMoveOrders": 2,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 2,
+          "completedMovementSteps": 17
+        },
+        "cpuDrawMs": {
+          "samples": 532,
+          "median": 6.100000023841858,
+          "p95": 11.399999976158142,
+          "p99": 13.700000047683716
+        },
+        "shadowCpuMs": {
+          "samples": 532,
+          "median": 2.399999976158142,
+          "p95": 2.9000000953674316,
+          "p99": 3.299999952316284
+        },
+        "drawCalls": {
+          "samples": 532,
+          "median": 728,
+          "p95": 763,
+          "p99": 763
+        }
+      },
+      {
+        "stage": 5,
+        "workload": {
+          "moveOrders": 3,
+          "acceptedMoveOrders": 1,
+          "shotOrders": 1,
+          "acceptedShots": 1,
+          "endTurns": 0,
+          "completedMovementSteps": 16
+        },
+        "cpuDrawMs": {
+          "samples": 536,
+          "median": 5.600000023841858,
+          "p95": 10.300000071525574,
+          "p99": 11.600000023841858
+        },
+        "shadowCpuMs": {
+          "samples": 536,
+          "median": 1.600000023841858,
+          "p95": 1.899999976158142,
+          "p99": 2
+        },
+        "drawCalls": {
+          "samples": 536,
+          "median": 660,
+          "p95": 661,
+          "p99": 663
+        }
+      }
+    ],
+    "localLightPassSizes": [
+      3
+    ]
+  }
+]

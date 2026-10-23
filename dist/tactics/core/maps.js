@@ -90,12 +90,13 @@ function reachedTargets(m,targets){
  while(head<tail&&needed.size){const id=queue[head++],z=Math.floor(id/(W*H)),n=id%(W*H),p={x:n%W,y:Math.floor(n/W),z};for(const next of neighbors(m,p,stairs,false)){const v=index(next);if(!visited[v]){visited[v]=1;queue[tail++]=v;needed.delete(v);}}}return needed;
 }
 export function validateMap(raw,{connectivity=true}={}){
+ const groundTypes=new Set(['yard','floor','crate','void','water','bridge','woodland','woodland-dense',...GROUNDS]),upperTypes=new Set(['yard','floor','crate','bridge','woodland','woodland-dense',...GROUNDS]);
  const errors=[],point=p=>p&&inBounds(p.x,p.y,levelOf(p))&&levelOf(p)<raw.levels;
  if(!raw||raw.version!==2||raw.width!==W||raw.height!==H||!validLayerCount(raw.levels))return ['Expected a version 2 map: 240 × 240 tiles and 3–6 layers.'];
  if(typeof raw.name!=='string'||raw.name.length<1||raw.name.length>60)errors.push('Map name must contain 1–60 characters.');
- if(!Array.isArray(raw.terrain)||raw.terrain.length!==H||raw.terrain.some(r=>!Array.isArray(r)||r.length!==W||r.some(t=>!['yard','floor','crate','void','water','bridge','woodland','woodland-dense',...GROUNDS].includes(t))))return [...errors,'Invalid ground terrain.'];
+ if(!Array.isArray(raw.terrain)||raw.terrain.length!==H||raw.terrain.some(r=>!Array.isArray(r)||r.length!==W||r.some(t=>!groundTypes.has(t))))return [...errors,'Invalid ground terrain.'];
  if(!Array.isArray(raw.upper)||raw.upper.length!==raw.levels-1)return [...errors,'Expected one sparse upper floor per declared layer above ground.'];
- for(const layer of raw.upper){if(!layer||typeof layer!=='object'||Array.isArray(layer))return [...errors,'Invalid upper floor.'];for(const [k,v]of Object.entries(layer)){const [x,y]=k.split(',').map(Number);if(k!==tileKey(x,y)||!inBounds(x,y)||!['yard','floor','crate','bridge','woodland','woodland-dense',...GROUNDS].includes(v))return [...errors,'Invalid upper floor tile.'];}}
+ for(const layer of raw.upper){if(!layer||typeof layer!=='object'||Array.isArray(layer))return [...errors,'Invalid upper floor.'];for(const [k,v]of Object.entries(layer)){const [x,y]=k.split(',').map(Number);if(k!==tileKey(x,y)||!inBounds(x,y)||!upperTypes.has(v))return [...errors,'Invalid upper floor tile.'];}}
  if(raw.edgeLocks!==undefined&&(!raw.edgeLocks||typeof raw.edgeLocks!=='object'||Array.isArray(raw.edgeLocks)))return [...errors,'Invalid door locks.'];
  for(const [key,value]of Object.entries(raw.edgeLocks||{}))if(!EDGES[raw.edges?.[key]]?.opensTo||!Number.isInteger(value)||value<1||value>100)return [...errors,'Door locks require closed doors and difficulty 1-100.'];
  for(const p of raw.props||[])if(p.condition!==undefined&&(!Number.isInteger(p.condition)||p.condition<0||p.condition>100))return [...errors,'Fixture condition must be 0-100.'];

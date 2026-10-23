@@ -1,0 +1,1559 @@
+{
+  "note": "One instrumented frame, not a timing benchmark.",
+  "calls": 1438,
+  "triangles": 2809141,
+  "casters": [
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall",
+        "PointLight: unnamed"
+      ],
+      "calls": 114
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Solid cover boughs",
+        "PointLight: unnamed"
+      ],
+      "calls": 79
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted fine branch supports",
+        "PointLight: unnamed"
+      ],
+      "calls": 78
+    },
+    {
+      "key": [
+        "scene",
+        "Mesh",
+        "PointLight: unnamed"
+      ],
+      "calls": 58
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Distant cover boughs",
+        "PointLight: unnamed"
+      ],
+      "calls": 55
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 120,144 / Tree shadow silhouettes / Tree shadow proxy",
+        "PointLight: unnamed"
+      ],
+      "calls": 33
+    },
+    {
+      "key": [
+        "scene",
+        "streetlight / Batched static model",
+        "PointLight: unnamed"
+      ],
+      "calls": 26
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 25
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 120,96 / Tree shadow silhouettes / Tree shadow proxy",
+        "PointLight: unnamed"
+      ],
+      "calls": 24
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Distant cover boughs",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 19
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 72,120 / Tree shadow silhouettes / Tree shadow proxy",
+        "PointLight: unnamed"
+      ],
+      "calls": 18
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 4,5",
+        "PointLight: unnamed"
+      ],
+      "calls": 17
+    },
+    {
+      "key": [
+        "scene",
+        "floor-lamp / Batched static model",
+        "PointLight: unnamed"
+      ],
+      "calls": 17
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 4,5",
+        "PointLight: unnamed"
+      ],
+      "calls": 16
+    },
+    {
+      "key": [
+        "scene",
+        "campfire / Batched static model",
+        "PointLight: unnamed"
+      ],
+      "calls": 16
+    },
+    {
+      "key": [
+        "scene",
+        "Mesh",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 13
+    },
+    {
+      "key": [
+        "character",
+        "Batched character body",
+        "PointLight: unnamed"
+      ],
+      "calls": 13
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 144,96 / Tree shadow silhouettes / Tree shadow proxy",
+        "PointLight: unnamed"
+      ],
+      "calls": 13
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 96,96 / Continuous impassable ground",
+        "PointLight: unnamed"
+      ],
+      "calls": 12
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 120,120 / Continuous impassable ground",
+        "PointLight: unnamed"
+      ],
+      "calls": 12
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 5,5",
+        "PointLight: unnamed"
+      ],
+      "calls": 12
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 5,5",
+        "PointLight: unnamed"
+      ],
+      "calls": 12
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 96,144 / Tree shadow silhouettes / Tree shadow proxy",
+        "PointLight: unnamed"
+      ],
+      "calls": 12
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 120,120 / Tree shadow silhouettes / Tree shadow proxy",
+        "PointLight: unnamed"
+      ],
+      "calls": 10
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 4,4",
+        "PointLight: unnamed"
+      ],
+      "calls": 10
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 4,4",
+        "PointLight: unnamed"
+      ],
+      "calls": 9
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 4,6",
+        "PointLight: unnamed"
+      ],
+      "calls": 9
+    },
+    {
+      "key": [
+        "scene",
+        "streetlight",
+        "PointLight: unnamed"
+      ],
+      "calls": 8
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 120,96 / Continuous impassable ground",
+        "PointLight: unnamed"
+      ],
+      "calls": 7
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 120,144 / Continuous impassable ground",
+        "PointLight: unnamed"
+      ],
+      "calls": 7
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 5,4",
+        "PointLight: unnamed"
+      ],
+      "calls": 7
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 5,6",
+        "PointLight: unnamed"
+      ],
+      "calls": 7
+    },
+    {
+      "key": [
+        "scene",
+        "campfire",
+        "PointLight: unnamed"
+      ],
+      "calls": 7
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Solid cover boughs",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted fine branch supports",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 5,4",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 5,6",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 6,6",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 6,6",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide edge",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / pistol grip",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / trigger guard",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / trigger",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / barrel",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / muzzle rim",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / front sight",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / rear sight",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide serration 0",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide serration 1",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide serration 2",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide serration 3",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide serration 4",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / steel blade",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / blade bevel",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / dark handle",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / cross guard",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / handle wrap 0",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / handle wrap 1",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / handle wrap 2",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / handle wrap 3",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / handle wrap 4",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 72,96 / Continuous impassable ground",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 3,4",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 96,144 / Continuous impassable ground",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 4,6",
+        "PointLight: unnamed"
+      ],
+      "calls": 6
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 120,96 / Tree shadow silhouettes / Tree shadow proxy",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 5
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 72,120 / Tree shadow silhouettes / Tree shadow proxy",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 5
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 120,144 / Tree shadow silhouettes / Tree shadow proxy",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 5
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 144,96 / Continuous impassable ground",
+        "PointLight: unnamed"
+      ],
+      "calls": 5
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 6,3",
+        "PointLight: unnamed"
+      ],
+      "calls": 5
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 6,3",
+        "PointLight: unnamed"
+      ],
+      "calls": 5
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 6,4",
+        "PointLight: unnamed"
+      ],
+      "calls": 5
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 6,4",
+        "PointLight: unnamed"
+      ],
+      "calls": 5
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 3,3",
+        "PointLight: unnamed"
+      ],
+      "calls": 5
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 96,96 / Tree shadow silhouettes / Tree shadow proxy",
+        "PointLight: unnamed"
+      ],
+      "calls": 5
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 144,96 / Tree shadow silhouettes / Tree shadow proxy",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 4
+    },
+    {
+      "key": [
+        "character",
+        "Batched character body",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 4
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 5,3",
+        "PointLight: unnamed"
+      ],
+      "calls": 4
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 5,3",
+        "PointLight: unnamed"
+      ],
+      "calls": 4
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 72,120 / Continuous impassable ground",
+        "PointLight: unnamed"
+      ],
+      "calls": 4
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 3,3",
+        "PointLight: unnamed"
+      ],
+      "calls": 4
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 3,4",
+        "PointLight: unnamed"
+      ],
+      "calls": 4
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 3,5",
+        "PointLight: unnamed"
+      ],
+      "calls": 4
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 3,5",
+        "PointLight: unnamed"
+      ],
+      "calls": 4
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 3,6",
+        "PointLight: unnamed"
+      ],
+      "calls": 4
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 96,144 / Tree shadow silhouettes / Tree shadow proxy",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 3
+    },
+    {
+      "key": [
+        "scene",
+        "streetlight / Batched static model",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 3
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / wooden shoulder stock",
+        "PointLight: unnamed"
+      ],
+      "calls": 3
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / receiver",
+        "PointLight: unnamed"
+      ],
+      "calls": 3
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / wooden fore-end",
+        "PointLight: unnamed"
+      ],
+      "calls": 3
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / barrel",
+        "PointLight: unnamed"
+      ],
+      "calls": 3
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / front sight",
+        "PointLight: unnamed"
+      ],
+      "calls": 3
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / trigger guard",
+        "PointLight: unnamed"
+      ],
+      "calls": 3
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / bolt handle",
+        "PointLight: unnamed"
+      ],
+      "calls": 3
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / bolt knob",
+        "PointLight: unnamed"
+      ],
+      "calls": 3
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 3,6",
+        "PointLight: unnamed"
+      ],
+      "calls": 3
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 96,96 / Tree shadow silhouettes / Tree shadow proxy",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 120,120 / Tree shadow silhouettes / Tree shadow proxy",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide edge",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / pistol grip",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / trigger guard",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / trigger",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / barrel",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / muzzle rim",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / front sight",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / rear sight",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide serration 0",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide serration 1",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide serration 2",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide serration 3",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "TT-33 pistol / slide serration 4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / steel blade",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / blade bevel",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / dark handle",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / cross guard",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / handle wrap 0",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / handle wrap 1",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / handle wrap 2",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / handle wrap 3",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "weapon",
+        "NR-40 knife / handle wrap 4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "scene",
+        "floor-lamp / Batched static model",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "scene",
+        "campfire / Batched static model",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 2,3",
+        "PointLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 2,3",
+        "PointLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 144,120 / Continuous impassable ground",
+        "PointLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 6,5",
+        "PointLight: unnamed"
+      ],
+      "calls": 2
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 72,96 / Continuous impassable ground",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 96,96 / Continuous impassable ground",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 120,96 / Continuous impassable ground",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 144,96 / Continuous impassable ground",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 72,120 / Continuous impassable ground",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 120,120 / Continuous impassable ground",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 144,120 / Continuous impassable ground",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 96,144 / Continuous impassable ground",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Biome block 120,144 / Continuous impassable ground",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 2,3",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 2,3",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 3,3",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 3,3",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 4,3",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 4,3",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 5,3",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 5,3",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 3,4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 3,4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 4,4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 4,4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 5,4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 5,4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 6,4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 6,4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 7,4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 7,4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 8,4",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 2,5",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 2,5",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 3,5",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 3,5",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 4,5",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 4,5",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 5,5",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 5,5",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 6,5",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 1,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 2,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 2,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 3,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 3,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 4,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 4,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 5,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 5,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 6,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 6,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 7,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 7,6",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 5,7",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 5,7",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 7,7",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 7,7",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / wooden shoulder stock",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / receiver",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / wooden fore-end",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / barrel",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / front sight",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / trigger guard",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / bolt handle",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "weapon",
+        "worker rifle / bolt knob",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "streetlight",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "campfire",
+        "DirectionalLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Rooted shrub leaves 4,3",
+        "PointLight: unnamed"
+      ],
+      "calls": 1
+    },
+    {
+      "key": [
+        "scene",
+        "Gameplay biomes / Spatial biome terrain / Painted foliage sight screens and solid deadfall / Fine rooted twigs 4,3",
+        "PointLight: unnamed"
+      ],
+      "calls": 1
+    }
+  ]
+}
