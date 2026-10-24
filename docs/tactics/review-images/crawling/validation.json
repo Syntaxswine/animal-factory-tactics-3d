@@ -1,8 +1,9 @@
 {
   "date": "2026-10-23",
-  "baseline": "a20b343",
+  "baseline": "9fdc681",
+  "canonicalBase": "a20b343",
   "branch": "work/crawling-animations",
-  "captures": 219,
+  "captures": 265,
   "errors": [],
   "resources": {
     "horse": {
@@ -24,31 +25,85 @@
         "geometries": 16,
         "textures": 12
       }
+    },
+    "paired": {
+      "before": {
+        "geometries": 31,
+        "textures": 7
+      },
+      "after": {
+        "geometries": 31,
+        "textures": 7
+      }
     }
   },
   "cancelledLoads": [
     "boot",
     "replacement",
-    "equipment"
+    "equipment",
+    "offhand"
   ],
+  "tourWeapons": [
+    "knife",
+    "pistol",
+    "rifle",
+    "assault",
+    "smg",
+    "hmg",
+    "shotgun",
+    "sniper",
+    "grenade",
+    "launcher",
+    "rpg",
+    "flamethrower",
+    "hands"
+  ],
+  "finalControls": {
+    "captures": 20,
+    "errors": [],
+    "tourWeapons": [
+      "knife",
+      "pistol",
+      "rifle",
+      "assault",
+      "smg",
+      "hmg",
+      "shotgun",
+      "sniper",
+      "grenade",
+      "launcher",
+      "rpg",
+      "flamethrower",
+      "hands"
+    ]
+  },
+  "weaponVariations": {
+    "single": 13,
+    "paired": 7,
+    "pairedSpecies": 11,
+    "gameplayWeaponKeys": 14
+  },
   "packagedComparisons": [
     "horse",
     "flame",
     "hen",
-    "guide"
+    "guide",
+    "paired",
+    "heavy"
   ],
   "focusedTests": {
-    "passed": 27,
+    "passed": 33,
     "failed": 0,
     "suites": [
       "crawl-motion",
+      "crawl-loadouts",
       "battle-motion",
       "tactics-pages-files"
     ]
   },
   "artReview": {
     "score": "9/10",
-    "scope": "Independent read-only study review"
+    "scope": "Base motion at 9fdc681; the weapon follow-up has separate fit and browser checks"
   },
   "files": [
     {
@@ -60,6 +115,11 @@
       "name": "roster.png",
       "bytes": 1432729,
       "sha256": "d601fd15e377245b9b16296b295fec96c3a475fa4ab64552a94612884f96af6d"
+    },
+    {
+      "name": "weapons.png",
+      "bytes": 1791478,
+      "sha256": "e54b37123ba91063c5e0bcb3bf14cba84dfac29a6cb09f264e133522aaceaf65"
     }
   ]
 }

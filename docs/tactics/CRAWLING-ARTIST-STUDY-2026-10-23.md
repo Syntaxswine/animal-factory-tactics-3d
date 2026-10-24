@@ -1,6 +1,6 @@
 # Crawling animation study
 
-Artist delivery · 23 October 2026 · Independent art review: **9/10**
+Artist delivery · 23 October 2026 · Base motion review (`9fdc681`): **9/10**
 
 A dedicated low crawl replaces a borrowed walking rhythm in this study. A
 forearm and the opposite toes support a body pull; the free limbs recover,
@@ -10,7 +10,9 @@ The native character dimensions, geometry and painted materials are retained.
 
 [Open the study](http://127.0.0.1:4477/tactics/crawl-study.html).
 The preview includes forward and backward travel, prone rest, scrubbing,
-slow playback, five camera angles, support markers and a skeleton. A close
+slow playback, five camera angles, support markers and a skeleton. **Next weapon**
+steps through the carries; **Weapon tour** advances after each complete clip.
+The **Offhand** selector exposes compatible paired equipment. A close
 view sits beside the **55-pixel-per-tile** gameplay view.
 
 ![Supported crawl sequence](review-images/crawling/sequence.png)
@@ -38,13 +40,46 @@ mounts and a connected, grounded hose.
 
 ![The twelve native animals](review-images/crawling/roster.png)
 
+## Weapon variations
+
+Each of the 13 catalog choices has an explicit carry profile in
+[`crawl-state.js`](../../dist/tactics/crawl-state.js), with its own grip,
+orientation, recovery lift, stride and body sway. These are carrying motions;
+firing remains a separate pose. The second-pistol inventory key uses the same
+native pistol asset and pose.
+
+| Weapon | Handling |
+| --- | --- |
+| Unarmed | Free hands with a full forearm pull |
+| Knife | Closed grip, blade forward and above the ground |
+| Pistol | Tucked wrist with the muzzle forward |
+| Mosin-Nagant | Stock cradled below the forearm; diagonal barrel |
+| AK-47 | Magazine turned sideways out of the dirt |
+| PPSh | Drum held clear with a compact pull |
+| HMG | Short pulls, quiet body sway, receiver cradled on the carrying arm |
+| Shotgun | Long muzzle held clear with a low stock cradle |
+| Sniper rifle | Steadier pulls and room for the scope |
+| Grenade | Cupped casing; intact safety lever and pin |
+| Grenade launcher | Shorter pulls with cylinder and foregrip held clear |
+| RPG | Tube lengthwise, warhead forward, rear venturi outside the body |
+| Flamethrower | Short pulls under the tank load; connected fuel hose |
+
+There are also **seven ordered right/left pairs**: pistol/pistol,
+pistol/knife, pistol/grenade, knife/pistol, knife/grenade, grenade/pistol and
+grenade/knife. Both hands retain their own prop while the forearms provide
+support. The existing game's one-handed equipment rules determine the legal
+combinations. This study does not change inventory, ammunition or action costs.
+
+![Single and paired weapon carries](review-images/crawling/weapons.png)
+
 ## Builder contract
 
-This is **study delivery**, based on canonical `a20b343`, on artist branch
+This is **study delivery**, following the base crawl `9fdc681` and canonical
+`a20b343`, on artist branch
 `work/crawling-animations`. It does not replace the live battle motion driver,
 change prone action costs, weapon rules, pathfinding or saved simulation state.
 
-`createCrawlMotion(worker, profile)` in
+`createCrawlMotion(worker, profile, {offhand = null})` in
 [`crawl-motion.js`](../../dist/tactics/crawl-motion.js) expects an equipped,
 native unit-scale actor. It returns `stride`, `at(distance, options)`,
 `diagnostics()` and an idempotent `dispose()`.
@@ -74,6 +109,13 @@ crawl.at(acceptedTravel, {heading, position: origin, blend: movingBlend});
 crawl.dispose();
 ```
 
+For a paired carry, pass the second caller-owned native prop as `offhand`.
+The primary remains `worker.weapon` throughout playback. The driver fits and
+places both props; do not run the generic offhand pose controller on the same
+frame. Invalid pairs are rejected before changing the actor. Disposal restores
+the borrowed offhand's original parent, transform and visibility without
+releasing its geometry or materials.
+
 Body, forearm and foot fitting runs once when constructing the controller.
 Playback uses the cached fit and native bone lengths. The diagnostic markers
 show joint targets; they do not implement environment collision or IK against
@@ -90,26 +132,35 @@ There are no new character meshes, texture atlases or dependencies in gameplay.
 
 ## Validation and review
 
-- **27 focused tests pass:** the ten crawl tests, fifteen existing battle-motion
-  checks and two packaging/module-closure checks.
+- **33 focused tests pass:** ten base crawl tests, six weapon/pair checks, fifteen
+  existing battle-motion checks and two packaging/module-closure checks.
 - The floor/native-length/grip matrix covers **144 native combinations**:
   11 armed animals × 13 loadouts, plus the unarmed hen, over 25 samples each.
 - Actual posed skull surfaces are checked against every armed loadout over
-  four phases. Actual forearm surfaces are checked against shoulder-butt
+  four phases. An additional **77 paired combinations** (seven pairs × eleven
+  armed animals) check both grips, native bone lengths, support locking, the
+  rendered floor and intact heads. Actual forearm surfaces are checked against
+  shoulder-butt
   vertices and edges over both pulls. The stock neck held by the hand is
   explicitly excluded from the butt check.
 - Contact locking is checked after translation and rotation, along with reverse
   scrubbing, exact restoration, invalid input and repeated hose updates.
-- **219 browser captures** cover the roster/outfits, loadouts, reverse travel,
-  camera angles, contact guides, contrasting ground and mobile layout.
+- **265 browser captures** cover the roster/outfits, loadouts, reverse travel,
+  all seven pairs, camera angles, contact guides, contrasting ground and mobile
+  layout. The complete weapon stepper and automatic tour are exercised.
   No browser, shader or asset-load error was recorded.
+- A final 20-capture pass also verifies readable carry captions, the 13-step
+  weapon tour and the six source/package comparisons.
 - Fresh source and packaged screenshots match exactly for horse, flamethrower,
-  hen and donkey guide. Replaying 50 cycles retains bounded geometry/texture
-  counts. Delayed-load cancellation passes at boot, outfit replacement and
-  grenade loading. Disposable review browsers exited and released their ports.
+  hen, donkey guide, paired items and HMG. Replaying 50 cycles retains bounded
+  geometry/texture counts for horse, hen and paired equipment. Delayed-load
+  cancellation passes at boot, outfit replacement, primary grenade loading and
+  offhand loading. Disposable review browsers exited and released their ports.
 - The Pages build and asset audit pass. These are isolated study checks, not a
   full-battle frame-time result. The independent reviewer cleared both fitting
-  holds and rated the final study **9/10**. A roughly 0.003-unit support-handover
+  holds and rated the base motion at `9fdc681` **9/10**. The weapon follow-up is
+  covered by the additional fit and browser checks above. A roughly 0.003-unit
+  support-handover
   adjustment remains optional polish, below a pixel at the gameplay scale.
 
 The [compact validation record](review-images/crawling/validation.json) preserves
@@ -122,7 +173,7 @@ skips the larger matrix; `CRAWL_REVIEW_FIT=1` reduces the main poses to one time
 
 ## Integration checklist
 
-- [x] Native roster, outfits and loadout studies.
+- [x] Native roster and outfits; 13 authored carries and seven paired setups.
 - [x] Supported forward/backward crawl and settled prone rest.
 - [x] Species-specific pig and hen fitting; stock, ankle and tail review.
 - [x] Playback/restoration tests and packaged browser checks.
