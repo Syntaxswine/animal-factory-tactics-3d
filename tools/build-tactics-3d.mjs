@@ -81,3 +81,6 @@ checkModuleClosure(new URL('.pages-output/',root),['tactics/blood-wounds-study.h
 for(const file of ['fatal-head-data.js','fatal-head-motion.js','fatal-head-mask.js','casualty-equipment-visual.js','casualty-weapon-drop.js','casualty-weapon-clearance.js','casualty-weapon-pose.js','casualty-weapon-assembly.js','fatal-head-study.html','fatal-head-study.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 fs.cpSync(new URL('dist/assets/effects/fatal-head/',root),new URL('.pages-output/assets/effects/fatal-head/',root),{recursive:true});
 checkModuleClosure(new URL('.pages-output/',root),['tactics/fatal-head-study.html']);
+
+for(const file of ['crawl-state.js','crawl-equipment.js','crawl-motion.js','hen-crawl-motion.js','crawl-study.js','crawl-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+checkModuleClosure(new URL('.pages-output/',root),['tactics/crawl-study.html']);

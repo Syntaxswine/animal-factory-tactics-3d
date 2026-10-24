@@ -1,0 +1,107 @@
+{
+  "date": "2026-10-23",
+  "baseline": "9fdc681",
+  "canonicalBase": "a20b343",
+  "branch": "work/crawling-animations",
+  "captures": 265,
+  "errors": [],
+  "resources": {
+    "horse": {
+      "before": {
+        "geometries": 47,
+        "textures": 6
+      },
+      "after": {
+        "geometries": 47,
+        "textures": 6
+      }
+    },
+    "hen": {
+      "before": {
+        "geometries": 16,
+        "textures": 12
+      },
+      "after": {
+        "geometries": 16,
+        "textures": 12
+      }
+    },
+    "paired": {
+      "before": {
+        "geometries": 31,
+        "textures": 7
+      },
+      "after": {
+        "geometries": 31,
+        "textures": 7
+      }
+    }
+  },
+  "cancelledLoads": [
+    "boot",
+    "replacement",
+    "equipment",
+    "offhand"
+  ],
+  "tourWeapons": [
+    "knife",
+    "pistol",
+    "rifle",
+    "assault",
+    "smg",
+    "hmg",
+    "shotgun",
+    "sniper",
+    "grenade",
+    "launcher",
+    "rpg",
+    "flamethrower",
+    "hands"
+  ],
+  "finalControls": null,
+  "weaponVariations": {
+    "single": 13,
+    "paired": 7,
+    "pairedSpecies": 11,
+    "gameplayWeaponKeys": 14
+  },
+  "packagedComparisons": [
+    "horse",
+    "flame",
+    "hen",
+    "guide",
+    "paired",
+    "heavy"
+  ],
+  "focusedTests": {
+    "passed": 33,
+    "failed": 0,
+    "suites": [
+      "crawl-motion",
+      "crawl-loadouts",
+      "battle-motion",
+      "tactics-pages-files"
+    ]
+  },
+  "artReview": {
+    "score": "9/10",
+    "scope": "Base motion at 9fdc681; the weapon follow-up has separate fit and browser checks"
+  },
+  "files": [
+    {
+      "name": "sequence.png",
+      "bytes": 2071110,
+      "sha256": "c42744d1ac284a62ef2df66a200d98488525491945886eed2da32471701d5a01"
+    },
+    {
+      "name": "roster.png",
+      "bytes": 1443557,
+      "sha256": "c2f6042b8bcbb58fea7def0acb550c3611629d5ae2e21f5095646295545fd067"
+    },
+    {
+      "name": "weapons.png",
+      "bytes": 1802324,
+      "sha256": "c72c7867d5f17f4b0cb0a61fe4a0f4d8aa9c6b32a35b6b008aa17eae3712cfc1"
+    }
+  ]
+}
