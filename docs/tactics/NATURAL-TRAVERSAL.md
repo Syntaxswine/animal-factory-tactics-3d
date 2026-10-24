@@ -1457,6 +1457,71 @@ the goat's 14 -> 13, the cow's 8 -> 9. `bin/collisions.mjs`: the deepest points 
 3.2 -> 3.4 cm, the cow's 4.0 -> 4.2, the skunk's 4.1 -> 4.3, the goat's 5.6 -> 5.5), and the spans deeper than 2 cm
 over the 33 crossings fall from 113 to 106.
 
+### 2026-10-24 (physics balance, fifteenth part): the skunk's last step, and the tails as played
+
+The user: "Find what drives the skunk's \"Left foot round\" phase to 40% in the window and bring it down."
+
+**What drives it.** From 5.04 to 5.16 s the skunk steps its left boot round on the right one, and the push its body
+needs lies 6 to 51 cm outside the boots, even with both down (the rig's own rows). The balance had planned the centre of
+mass against a support the body does not have. Its contact probe read every body mesh once, as made, and the motion
+bends a tail in its geometry (the clearance fit's bend, the base squashed onto the floor): to the plan the skunk's plume
+stayed straight, lying back along the floor 31 to 58 cm from anything the played body had there all through the last
+steps, where the played plume rises clear. The plan's support was 87 cm across.
+
+**The fix.** The probe reads the tails again at every update (`createSurfaceProbe`'s `live`), and the balance poses them
+as played before it does (`playTail`: the fit's bend, the base squashed onto the floor). From the lean over the feet on,
+the plan's floor support is now the played body's on every mammal (its farthest corner 3.3 cm off, as the skunk's left
+boot lifts at 5.10 s; 31 to 58 cm on the skunk before, 58 on the donkey).
+
+**What it uncovered: a flight the plan makes itself.** Without its straight tail the sheep's roll lies, at 2.67 s, on a
+patch of its back 18 cm from its centre of mass. The balance's first round moves the hips toward it, and measured again
+on them in the second the back is off the floor for 40 ms: a flight. Planned as one, the hips crouched to spring the
+body over it, and its trunk went 1.8 cm into the floor at 2.60 s (the test allows 1). As played, the sheep's tail, bent
+down by the fit after the balance, props it there. A round now keeps the authored support through a flight shorter
+than `LOST` (60 ms) where the authored motion lay on the floor: the plan's own move lifted the body off what held it,
+as at the hold. The goat's roll (two such flights, 5 and 15 ms) and the pig director's (15 ms) had them before this.
+
+phantom-wrench `--gate`, d82f740 -> now (only windows change):
+
+| | over the limit | changed phases (peak % of body weight) |
+|---|---|---|
+| skunk | 0.44 -> 0.20 s | left foot round 40 -> 18, right foot in 17 -> under 10, left foot in 15 -> 10, back to the floor 18 -> under 10, roll 24 -> 21, sit up 20 -> 18; hands to the floor 18 -> 31, stand on the tile under 10 -> 12 |
+| donkey | 0.21 -> 0.07 s | roll 78 -> 41, rise over the feet 20 -> under 10 |
+| goat | 0.41 -> 0.24 s | back to the floor 18 -> 12; hands to the floor 12 -> 30, roll 304 -> 353 |
+| pig director | 0.20 -> 0.10 s | roll 142 -> 202 |
+| rabbit | 0.14 -> 0.07 s | hands to the floor 13 -> 17 |
+| cow | 0.14 -> 0.09 s | rise over the feet 17 -> under 10; hands to the floor 44 -> 46 |
+| bull | 0.07 -> 0.04 s | rise over the feet 18 -> under 10 |
+| sheep | 0.10 -> 0.11 s | roll 177 -> 205 |
+
+The skunk's time over the limit, phase by phase: its left foot round 135 -> 10 ms, the right foot in 50 -> 0, the left
+foot in 65 -> 30, back to the floor 35 -> 0. The eleven windows read 1.11 s over the limit together (1.90). The horse's,
+pig foreman's and dog's windows and every vault and climb are unchanged. The other rules: the skunk's left elbow folds
+to 151 degrees as it lies back onto its hands (147 before; the rig allows 150), and the goat's left elbow moves at 9.0
+m/s (8.2; it folds to 155, 156 before). `bin/collisions.mjs`: the same, but for one span deeper than 2 cm fewer in the
+goat's window (3 -> 2).
+
+`tests/natural-traversal.test.mjs`: from the lean over the feet on, every corner of the balance's floor support lies
+within 5 cm of something the played body has on the floor. Without the fix it fails on the skunk (4.10 s, 35 cm) and the
+donkey (4.80 s, 58 cm). Before the lean, where contacts come and go, the plan's last round reads them on the hips of the
+round before, and the goat's roll leaves the floor 23 cm from where it was planned on.
+
+**Tried and not kept.**
+- Leaving the tails out of the probe but for their roots, as the clearance fit's own probe does: the nine windows with
+  tails read 1.05 s over the limit together (1.43 before; the played tails 0.92 without the rule, 0.81 with it), the
+  donkey's 0.21 s (it rolls on its tail's base as played, and the plan found it in the air), the skunk's 0.23. The
+  tail's root and base as made: the skunk 0.22 s, the donkey 0.10.
+- A tail bent before the balance is not always the one played: the fit bends the sheep's 0 to 70 degrees up in its roll
+  before the balance and 110 to 120 down after, its follow taking the side that clears first, which a few centimetres of
+  the hips decide. Bending it again between the balance's rounds (the sheep 0.20 s) or in the fit's planned mode before
+  (the skunk 0.23 s) planned no better.
+
+**Left.** As the body lies back onto its hands the balance pulls the hips toward the line between them (the goat's 11 to
+18 cm), and the left elbow folds past the rig's 150 degrees (the goat's 155, the skunk's 151): the hands' marks leave
+the elbows too little room. The skunk's hands to the floor (31%: the left hand alone holds it for 25 ms, which the
+straight plume had hidden). The rolls' peaks (the goat's 353%, the sheep's 205, the pig director's 202, each one sample).
+The steps' over keys (a swing leg lifting at 99.96% of its reach).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

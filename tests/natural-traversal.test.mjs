@@ -71,7 +71,18 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // plume root on the floor as it sat up, the seat band pulled its hips 11 cm down in 0.2 s (1.5 g).
    const ph=l=>motion.phases.find(q=>q.label===l),a=ph('Right foot in').start+.05,b=ph('Lean over the feet').start,h=.005,cy=t=>motion.apply(t/motion.duration).com[1];let fall=0;
    for(let t=a+h;t<=b-h+1e-9;t+=h)fall=Math.max(fall,-(cy(t+h)-2*cy(t)+cy(t-h))/(h*h)/9.81);
-   assert.ok(fall<=1.2,`window: the centre of mass falls at ${fall.toFixed(2)} g as the feet are drawn in`);}
+   assert.ok(fall<=1.2,`window: the centre of mass falls at ${fall.toFixed(2)} g as the feet are drawn in`);
+   // The balance plans against what holds the body as played: from the lean over the feet on, every corner of its
+   // floor support lies within 5 cm of something the played body has on the floor. Read once as made, the skunk's
+   // plume lay straight back along the floor where the played one rose clear of it, and through the last steps the
+   // plan leant on it 31 to 58 cm behind the boots (its last step read 40% of its weight). Before the lean, where
+   // contacts come and go, the plan's last round reads them on the hips of the round before (the goat's roll leaves
+   // the floor 23 cm from where it was planned on, 2.6 s in).
+   const B=motion.balance;
+   for(let i=0;i<B.times.length;i+=20){const s=B.samples[i];if(B.times[i]<b||s.kind!=='feet'||s.floor!==0)continue;motion.apply(B.times[i]/motion.duration);const on=[];
+    for(const part of m.worker.parts){const a=part.geometry.attributes.position;for(let j=0;j<a.count;j++){v.fromBufferAttribute(a,j);part.applyBoneTransform(j,v);v.applyMatrix4(part.matrixWorld);if(Math.abs(v.y)<=.01)on.push(v.x,v.z);}}
+    let far=0;for(const [x,z]of s.hull){let d=Infinity;for(let k=0;k<on.length;k+=2)d=Math.min(d,Math.hypot(x-on[k],z-on[k+1]));far=Math.max(far,d);}
+    assert.ok(far<=.05,`window: at ${B.times[i].toFixed(2)} s the balance leans on the floor ${(100*far).toFixed(0)} cm from anything the body has there`);}}
   // Cut short where the tail is bent (as a casualty ends a crossing), the tail still comes back exactly.
   motion.apply(.6);motion.dispose();for(const [part,base]of tails)assert.deepEqual(part.geometry.attributes.position.array,base,`${kind}: the ${part.name} is not given back`);}
 });

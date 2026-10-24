@@ -122,7 +122,11 @@ const TOL=.01,DRAPE=.15,ENDS=new WeakMap();
 // The contacts' probe: the rig's own surface, every vertex (a fit's probe, every other vertex, found the hooves down 5 to
 // 10 ms before the rig at a landing; every third of the body's missed a belly sliding over the window's sill, touching
 // it between them: every vertex 0.03 to 0.3 cm off it, every third 1.5 to 2.2 cm).
-export const contactProbe=worker=>createSurfaceProbe(worker,{stride:1});
+// The tails are read as the motion poses them before each update: bent, their base squashed onto the floor, as
+// played. Read once, as made, the skunk's plume lay straight back along the floor 31 to 58 cm behind its boots
+// through its last steps, where the played one rises clear, and the plan leant on it (its last step read 40% of its
+// weight).
+export const contactProbe=worker=>createSurfaceProbe(worker,{stride:1,live:m=>/tail/.test(m.name)});
 // Per probe point: 1 a hand, 2 a foot, 0 the rest, by its mesh as the rig names them (a sleeve cuff riding the hand
 // bone is not a grip). Read once the probe has been skinned (its part indices are set by update).
 const endsOf=probe=>{let e=ENDS.get(probe);if(!e){const kind=probe.names.map(p=>/hand/.test(p)?1:/hoof|boot|foot|toe/i.test(p)?2:0);e=Uint8Array.from(probe.part,pi=>kind[pi]);ENDS.set(probe,e);}return e;};
@@ -203,7 +207,7 @@ const KEEP=[...new Set(MASS_SEGMENTS.flatMap(([a,b])=>[a,b]))];
 // touched 40 ms later once the hips moved left the feet braking the body alone), and a touch shorter than 3 ONSET
 // not at all: a hand brushing the wall in flight cannot hold the body, and planned as a grip it moved the hips enough
 // to brush elsewhere in the next round. Unused, a support the rig sees costs nothing.
-const ONSET=.02;
+const ONSET=.02,LOST=.06;
 // setMove({shift(t), spin(t)}) hands the motion its hips' move while it is found (spin(t) is null where the body does
 // not turn, or {q, pivot}: a turn about a point); the result's shift and spin are the final ones. hold(t), if given,
 // marks times the plan keeps near the authored path ('hold': a support it must not move, such as a seat the hips' own
@@ -230,6 +234,10 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  let held=null,authored=null;
  for(let r=0;r<rounds&&!settled;r++){const {S,dL,L,I}=measure();
   if(!authored)authored=S.map(x=>({...x}));else S.forEach((x,i)=>{if(authored[i].kind==='hold')Object.assign(x,{...authored[i],c:x.c});});
+  // A flight shorter than LOST that a round finds where the authored motion lies on the floor is the plan's own: its
+  // last move lifted the body off what held it, and that support stands. Planned as a flight, the sheep's roll (its back
+  // lifted off the floor by the round before) crouched 1.8 cm into the floor to spring over 40 ms of it.
+  if(r)for(let i=0;i<n;i++){if(S[i].kind!=='air')continue;let j=i;while(j+1<n&&S[j+1].kind==='air')j++;if(j-i<LOST/dt&&i>0&&j<n-1&&authored.slice(i,j+1).every(x=>x.kind==='feet'))for(let k=i;k<=j;k++)Object.assign(S[k],{...authored[k],c:S[k].c});i=j;}
   if(held)S.forEach((x,i)=>{if(x.kind!==held[i].kind)Object.assign(x,{...held[i],c:x.c});});else if(r===1)held=S.map(x=>({...x}));const key=S.map(x=>x.kind).join();history.push(runs(S));
   if(!c0)c0=S.map(x=>x.c);const turn=bodyTurn(w,S,L,I,dt);settled=key===last&&turn.delta<TURN_TOL;last=key;if(settled)break;
   samples=S.map((x,i)=>({...x,c:c0[i],dL:dL[i]}));plan=planCentre(samples,dt,options);w=turn.w;spin=turnAt(turn.theta,plan);

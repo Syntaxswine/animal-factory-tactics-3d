@@ -69,12 +69,14 @@ export function createWallVault(worker,profile={id:'horse'}){
  const turnsAt=t=>{body.pose(spec(t),'turns');return body.turns.slice();},turns=()=>{turnRef=null;turnRef=steadyTurns(D,turnsAt);turnRef=steadyTurns(D,turnsAt);};turns();
  // Balance: the centre of mass planned against what holds the body at each moment, the hips moved to follow it. It
  // runs on the hands' final turns (a palm's angle decides when it first touches), which are then found again.
- const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(LOW_WALL.edge,LOW_WALL.half,[[0,LOW_WALL.top]]),pose:t=>body.pose(spec(t),'balance'),com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).toArray()});
+ // the tails as played (the fit's bend, the base squashed onto the floor), for the balance's contacts too
+ const playTail=t=>{const [a,b]=fit.tail(t);tails.set(a*DEG,b*DEG);tails.squash(body.root);};
+ const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(LOW_WALL.edge,LOW_WALL.half,[[0,LOW_WALL.top]]),pose:t=>{const P=body.pose(spec(t),'balance');playTail(t);return P;},com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).toArray()});
  // The tail is fitted again to the balanced motion, and the report taken on it (traversal-fit.js, fit.solveTail).
  balance=bal;fit.solveTail();turns();
  const KEYS=TRUNK.map(k=>({t:k.t,label:k.label}));let state=null;
  const api={duration:D,keys:KEYS,body,probe,obstacle:LOW_WALL,fit:fit.report,clearance:fit,balance:bal,phases:KEYS.slice(0,-1).map((k,i)=>({label:KEYS[i+1].label,start:k.t,end:KEYS[i+1].t})),
-  at(t){const time=clamp(t,0,D),P=body.pose(spec(time),time.toFixed(3));body.root.updateMatrixWorld(true);worker.skeleton?.update?.();const [tp,ty]=fit.tail(time);tails.set(tp*DEG,ty*DEG);tails.squash(body.root);
+  at(t){const time=clamp(t,0,D),P=body.pose(spec(time),time.toFixed(3));body.root.updateMatrixWorld(true);worker.skeleton?.update?.();playTail(time);
    state={time,phase:api.phases.find(p=>time<=p.end)?.label||KEYS.at(-1).label,com:body.com(P).toArray(),points:Object.fromEntries(Object.entries(P).map(([k,v])=>[k,v.toArray()]))};return state;},
   apply(progress,{origin=[0,0,0],heading=0}={}){const r=api.at(clamp(progress)*D),q=Q().setFromAxisAngle(V(0,1,0),-heading*DEG);body.root.quaternion.copy(q);body.root.position.copy(V(...origin));body.root.updateMatrixWorld(true);worker.skeleton?.update?.();r.worldRoot=body.root.position.toArray();return r;},
   diagnostics:()=>state,dispose(){tails.restore();body.root.position.set(0,0,0);body.root.quaternion.identity();worker.pose('neutral');}};

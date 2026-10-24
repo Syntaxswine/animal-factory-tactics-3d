@@ -253,16 +253,17 @@ export function createTraversalBody(worker){
 // The visible surface, skinned exactly (four weights, as three.js does) for a subset of every body mesh's
 // vertices: where the clothes, hooves and hands really are, for placing contacts. bone[i] is the bone that carries
 // the most of point i (named in boneNames), so a fit can tell torso from head; vertex[i] is its index in its mesh.
-// keep(mesh, index) can drop single vertices (a tail but for its root).
-export function createSurfaceProbe(worker,{stride=2,include=()=>true,keep=()=>true}={}){
+// keep(mesh, index) can drop single vertices (a tail but for its root). live(mesh) marks a mesh read again from its
+// geometry at every update: a tail, which the motion bends in its geometry (read once, as made, it stays straight).
+export function createSurfaceProbe(worker,{stride=2,include=()=>true,keep=()=>true,live=()=>false}={}){
  const sets=worker.parts.filter(include).map(mesh=>{const g=mesh.geometry,pos=g.attributes.position,si=g.attributes.skinIndex,sw=g.attributes.skinWeight,idx=[];for(let i=0;i<pos.count;i+=stride)if(keep(mesh,i))idx.push(i);
   const n=idx.length,base=new Float32Array(n*3),bi=new Uint16Array(n*4),bw=new Float32Array(n*4),dom=new Uint16Array(n),vi=Uint32Array.from(idx),v=V();
   idx.forEach((i,k)=>{v.fromBufferAttribute(pos,i).applyMatrix4(mesh.bindMatrix);base[k*3]=v.x;base[k*3+1]=v.y;base[k*3+2]=v.z;let most=-1;for(let j=0;j<4;j++){bi[k*4+j]=si.getComponent(i,j);bw[k*4+j]=sw.getComponent(i,j);if(bw[k*4+j]>most){most=bw[k*4+j];dom[k]=bi[k*4+j];}}});
-  return {mesh,n,base,bi,bw,dom,vi};});
- const count=sets.reduce((s,x)=>s+x.n,0),x=new Float32Array(count),y=new Float32Array(count),z=new Float32Array(count),part=new Uint8Array(count),m=new T.Matrix4(),post=new T.Matrix4();
+  return {mesh,n,base,bi,bw,dom,vi,live:live(mesh)};});
+ const count=sets.reduce((s,x)=>s+x.n,0),x=new Float32Array(count),y=new Float32Array(count),z=new Float32Array(count),part=new Uint8Array(count),m=new T.Matrix4(),post=new T.Matrix4(),lv=V();
  const names=sets.map(s=>s.mesh.name),bone=new Uint16Array(count),vertex=new Uint32Array(count),boneNames=(sets[0]?.mesh.skeleton.bones||[]).map(b=>b.name);
  {let k0=0;for(const s of sets){bone.set(s.dom,k0);vertex.set(s.vi,k0);k0+=s.n;}}
- function update(){let k0=0;sets.forEach((s,pi)=>{const sk=s.mesh.skeleton,mats=sk.bones.map((b,i)=>new T.Matrix4().multiplyMatrices(b.matrixWorld,sk.boneInverses[i]).elements);post.multiplyMatrices(s.mesh.matrixWorld,s.mesh.bindMatrixInverse);const P=post.elements;
+ function update(){let k0=0;sets.forEach((s,pi)=>{if(s.live){const pos=s.mesh.geometry.attributes.position;for(let k=0;k<s.n;k++){lv.fromBufferAttribute(pos,s.vi[k]).applyMatrix4(s.mesh.bindMatrix);s.base[k*3]=lv.x;s.base[k*3+1]=lv.y;s.base[k*3+2]=lv.z;}}const sk=s.mesh.skeleton,mats=sk.bones.map((b,i)=>new T.Matrix4().multiplyMatrices(b.matrixWorld,sk.boneInverses[i]).elements);post.multiplyMatrices(s.mesh.matrixWorld,s.mesh.bindMatrixInverse);const P=post.elements;
   for(let k=0;k<s.n;k++){const bx=s.base[k*3],by=s.base[k*3+1],bz=s.base[k*3+2];let vx=0,vy=0,vz=0;for(let j=0;j<4;j++){const w=s.bw[k*4+j];if(!w)continue;const e=mats[s.bi[k*4+j]];vx+=w*(e[0]*bx+e[4]*by+e[8]*bz+e[12]);vy+=w*(e[1]*bx+e[5]*by+e[9]*bz+e[13]);vz+=w*(e[2]*bx+e[6]*by+e[10]*bz+e[14]);}
    const i=k0+k;x[i]=P[0]*vx+P[4]*vy+P[8]*vz+P[12];y[i]=P[1]*vx+P[5]*vy+P[9]*vz+P[13];z[i]=P[2]*vx+P[6]*vy+P[10]*vz+P[14];part[i]=pi;}k0+=s.n;});return api;}
  // The lowest surface point among those accepted by keep(x,y,z,partName).
