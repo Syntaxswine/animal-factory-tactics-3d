@@ -30,7 +30,9 @@ loadouts, including empty hands. The hen retains her native unarmed role.
 - The hen has a low breast shuffle, tucked legs, balancing wings, a folded
   apron hem and a tail laid back. Her head stays upright enough to look ahead.
 - The skunk's plume folds behind the hips. Long tails reuse the existing low
-  posture treatment. Upper boots and hooves blend with the shins so their
+  posture treatment. Mammal hooves, boots and paws extend backward during
+  rest and travel. Their floor height is fitted from the rotated native
+  surfaces; upper boots and hooves still blend with the shins so their
   closed top caps remain inside the trouser cuffs.
 
 Long guns are carried diagonally on their sides. The hand closes over the
@@ -149,8 +151,9 @@ There are no new character meshes, texture atlases or dependencies in gameplay.
   all seven pairs, camera angles, contact guides, contrasting ground and mobile
   layout. The complete weapon stepper and automatic tour are exercised.
   No browser, shader or asset-load error was recorded.
-- A final 20-capture pass also verifies readable carry captions, the 13-step
-  weapon tour and the six source/package comparisons.
+- The backward-foot correction repeats the complete 265-capture pass above,
+  including readable carry captions and the six source/package comparisons.
+  The sequence, roster and weapon boards show the corrected foot direction.
 - Fresh source and packaged screenshots match exactly for horse, flamethrower,
   hen, donkey guide, paired items and HMG. Replaying 50 cycles retains bounded
   geometry/texture counts for horse, hen and paired equipment. Delayed-load
@@ -158,10 +161,10 @@ There are no new character meshes, texture atlases or dependencies in gameplay.
   offhand loading. Disposable review browsers exited and released their ports.
 - The Pages build and asset audit pass. These are isolated study checks, not a
   full-battle frame-time result. The independent reviewer cleared both fitting
-  holds and rated the base motion at `9fdc681` **9/10**. The weapon follow-up is
-  covered by the additional fit and browser checks above. A roughly 0.003-unit
-  support-handover
-  adjustment remains optional polish, below a pixel at the gameplay scale.
+  holds and rated the base motion at `9fdc681` **9/10**. The weapon follow-up
+  and backward-foot corrections are covered by the fit and browser checks
+  above. A roughly 0.003-unit support-handover adjustment remains optional
+  polish, below a pixel at the gameplay scale.
 
 The [compact validation record](review-images/crawling/validation.json) preserves
 the selected image hashes and replay resource counts. Reproduce browser captures

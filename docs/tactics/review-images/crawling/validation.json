@@ -58,25 +58,7 @@
     "flamethrower",
     "hands"
   ],
-  "finalControls": {
-    "captures": 20,
-    "errors": [],
-    "tourWeapons": [
-      "knife",
-      "pistol",
-      "rifle",
-      "assault",
-      "smg",
-      "hmg",
-      "shotgun",
-      "sniper",
-      "grenade",
-      "launcher",
-      "rpg",
-      "flamethrower",
-      "hands"
-    ]
-  },
+  "finalControls": null,
   "weaponVariations": {
     "single": 13,
     "paired": 7,
@@ -108,18 +90,18 @@
   "files": [
     {
       "name": "sequence.png",
-      "bytes": 2069163,
-      "sha256": "05a857941525f3b76c98802e486a9fbadb791c443d4f0c431573bc67c51af14e"
+      "bytes": 2071110,
+      "sha256": "c42744d1ac284a62ef2df66a200d98488525491945886eed2da32471701d5a01"
     },
     {
       "name": "roster.png",
-      "bytes": 1432729,
-      "sha256": "d601fd15e377245b9b16296b295fec96c3a475fa4ab64552a94612884f96af6d"
+      "bytes": 1443557,
+      "sha256": "c2f6042b8bcbb58fea7def0acb550c3611629d5ae2e21f5095646295545fd067"
     },
     {
       "name": "weapons.png",
-      "bytes": 1791478,
-      "sha256": "e54b37123ba91063c5e0bcb3bf14cba84dfac29a6cb09f264e133522aaceaf65"
+      "bytes": 1802324,
+      "sha256": "c72c7867d5f17f4b0cb0a61fe4a0f4d8aa9c6b32a35b6b008aa17eae3712cfc1"
     }
   ]
 }
