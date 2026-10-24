@@ -163,9 +163,10 @@ function turning(frames,dt){const n=frames.length,mid=(P,a,b)=>P[a].clone().add(
 // - on contacts L* is L averaged over TAU either side, blended into a flight's median over EASE before and after it,
 //   and a turn left from a flight unwinds there over UNWIND.
 // The turn is the integral of w, its drift taken out along the motion so that it ends unturned. w carries over between
-// rounds (each adds what the last missed; delta, the largest, in rad/s, says when it has settled).
+// rounds (each adds what the last missed; delta, the largest, in rad/s, says when it has settled). Without contacts
+// the contacts' w is kept as it comes: a flight's refinement measures the flights alone again.
 const EASE=.25,TAU=.04,UNWIND=.3,TURN_TOL=.02,REFINE=2;
-function bodyTurn(w,S,L,I,dt){
+function bodyTurn(w,S,L,I,dt,contacts=true){
  const n=S.length,k=Math.round(TAU/dt),e=Math.round(EASE/dt),air=S.map(x=>x.kind==='air'),fl=new Float64Array(n),nw=w.map(x=>x.slice());let delta=0;
  const add=(i,target)=>{const d=solve3(I[i],[0,1,2].map(a=>target[a]-L[i][a]));delta=Math.max(delta,Math.hypot(...d));nw[i]=nw[i].map((y,a)=>y+d[a]);};
  // a quintic from (p, v, a) at u = 0 to rest at zero at u = 1, over T
@@ -187,7 +188,7 @@ function bodyTurn(w,S,L,I,dt){
  // out along the motion
  const ref=L.map((_,i)=>{const s=[0,0,0];let m=0;for(let j=Math.max(0,i-k);j<=Math.min(n-1,i+k);j++){for(let a=0;a<3;a++)s[a]+=L[j][a];m++;}return s.map(x=>x/m);});
  const wC=Array.from({length:n},()=>[0,0,0]);
- for(let i=0;i<n;i++){if(air[i])continue;const d=solve3(I[i],[0,1,2].map(a=>ref[i][a]-L[i][a]));delta=Math.max(delta,Math.hypot(...d)*(1-fl[i]));wC[i]=d.map(x=>x*(1-fl[i]));nw[i]=nw[i].map((y,a)=>y+wC[i][a]);}
+ for(let i=0;i<n;i++){if(air[i]||!contacts)continue;const d=solve3(I[i],[0,1,2].map(a=>ref[i][a]-L[i][a]));delta=Math.max(delta,Math.hypot(...d)*(1-fl[i]));wC[i]=d.map(x=>x*(1-fl[i]));nw[i]=nw[i].map((y,a)=>y+wC[i][a]);}
  const thC=[[0,0,0]];for(let i=1;i<n;i++){const p=thC[i-1],q=(1-fl[i])*dt/UNWIND,cw=i=>air[i]?[0,0,0]:nw[i].map((y,a)=>y*(1-fl[i]));const a0=cw(i-1),a1=cw(i);thC.push(p.map((x,a)=>x+dt*(a0[a]+a1[a])/2-q*x));}
  // the drift out along a smoothstep, at rest at both ends (taken out linearly, the turn began at a constant rate from
  // rest: 11% of the body's weight at the first sample)
@@ -233,12 +234,15 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
   if(!c0)c0=S.map(x=>x.c);const turn=bodyTurn(w,S,L,I,dt);settled=key===last&&turn.delta<TURN_TOL;last=key;if(settled)break;
   samples=S.map((x,i)=>({...x,c:c0[i],dL:dL[i]}));plan=planCentre(samples,dt,options);w=turn.w;spin=turnAt(turn.theta,plan);
   // The turn refined REFINE times on the flight samples alone, posed with the turn so far: by rounds alone, a flight's
-  // first samples never settled where the toe-off moved a sample each round (955 N·m at the push-off).
+  // first samples never settled where the toe-off moved a sample each round (955 N·m at the push-off). The contacts
+  // keep the round's turn: their angular momentum is not measured again, and the same correction, added to it at each
+  // refinement, turned them about twice as far (two 5 ms flights in the goat's roll turned its whole window so: its
+  // step in read 30% of its weight, 15 turned once).
   for(let k=0;k<REFINE&&S.some(x=>x.kind==='air');k++){const L2=L.map(x=>x.slice()),I2=I.slice();
    for(let a=0;a<n;a++){if(S[a].kind!=='air')continue;let b=a;while(b+1<n&&S[b+1].kind==='air')b++;const lo=Math.max(0,a-1),hi=Math.min(n-1,b+1),frames=[];
     for(let i=lo;i<=hi;i++){setShift(follow?follow.shift(times[i]):null);const P=pose(times[i]);frames.push(Object.fromEntries(KEEP.map(q=>[q,P[q].clone()])));}
     const tu=turning(frames,dt);for(let i=a;i<=b;i++){L2[i]=tu.L[i-lo];I2[i]=tu.I[i-lo];}a=b;}
-   const t2=bodyTurn(w,S,L2,I2,dt);w=t2.w;spin=turnAt(t2.theta,plan);}
+   const t2=bodyTurn(w,S,L2,I2,dt,false);w=t2.w;spin=turnAt(t2.theta,plan);}
   // the first round's hips only set up the second's measure: three passes; the second starts from them
   follow=followCentre(times,plan,(t,s)=>{setShift(V(...s));return com(pose(t)).toArray();},{base,passes:3,from:follow?.samples});}
  setMove(null);return {...follow,spin:spin||(()=>null),plan,samples,times,settled,history};}

@@ -1414,6 +1414,49 @@ Tried and not kept:
 
 **Left:** the skunk's roll's first half (22 to 24%), its step in (27%) and left foot round (40%); the cow's roll-in.
 
+### 2026-10-23 (physics balance, fourteenth part): a flight's refinements turned the contacts twice
+
+Found on the way to the skunk's left foot round (the fifteenth part).
+
+**What it was.** The balance turns the whole body about its centre of mass (`bodyTurn`). On contacts the turn rate is
+w = I⁻¹ (L* − L), from the angular momentum L measured on the round's motion; w carries over between rounds, each
+adding what the last missed. A round with a flight refines the turn twice more (`REFINE`), measuring the flight's
+samples again with the turn so far. But each refinement ran `bodyTurn` whole, and there the contacts' L, not measured
+again, gave the same correction again. Every contact sample of a crossing with a flight was turned about twice as far
+as the round meant, all through the motion, not only beside the flight (the goat's window: 0.24 degrees at 10 ms, 0.13
+turned once).
+
+**How it showed.** A first try at the skunk's last step left a 5 to 40 ms flight in the donkey's and sheep's rolls,
+which had none, and their windows read 0.37 and 0.30 s over the limit (0.21 and 0.10 before), worst far from the roll:
+the step in at 0.005 s and the last steps. The hips' plan there was the same to a millimetre; the body's turn was twice
+as large (the donkey's 0.85 degrees at 6.32 s, 1.77 with the flight).
+
+**The fix.** `bodyTurn(..., contacts=false)` leaves the contacts' w as it comes; the refinements pass it.
+
+phantom-wrench `--gate`, cd8ba6f -> now (only the crossings with a flight change):
+
+| | over the limit | changed phases (peak % of body weight) |
+|---|---|---|
+| goat, window | 0.51 -> 0.41 s | step in 30 -> 15, hands to the floor 26 -> 12, left foot back 16 -> under 10, right foot back 16 -> under 10, left foot round 36 -> 14; back to the floor 16 -> 18, stand on the tile under 10 -> 11 |
+| pig director, window | 0.39 -> 0.20 s | step in 40 -> 19, slide over 33 -> 28, hands to the floor 15 -> under 10, left foot back 12 -> under 10, right foot back 13 -> under 10, left foot round 42 -> 16 |
+| horse, climb | 0.14 -> 0.07 s | right foot round 48 -> 15 |
+| goat, climb | 0.21 -> 0.14 s | right foot round 52 -> 19, crouch 12 -> under 10 |
+| bull, climb | 0.24 -> 0.16 s | right foot round 53 -> 17, crouch 14 -> under 10 |
+| cow, climb | 0.19 -> 0.12 s | right foot round 54 -> 17, crouch 15 -> 11 |
+| donkey, climb | 0.15 -> 0.10 s | right foot round 46 -> 14 |
+| sheep, climb | 0.20 -> 0.12 s | right foot round 52 -> 20, crouch 12 -> under 10 |
+| skunk, climb | 0.15 -> 0.10 s | right foot round 47 -> 12 |
+| rabbit, climb | 0.29 -> 0.23 s | right foot round 41 -> 20 |
+| dog, climb | 0.29 -> 0.19 s | right foot round 41 -> 15, jump and catch 17 -> 12; left foot round 19 -> 30 |
+| pig foreman, climb | 1.06 -> 1.02 s | drop 39 -> 27, left foot round 44 -> 36, right foot round 25 -> 11 |
+| pig director, climb | 0.71 -> 0.64 s | let go 310 -> 252, right foot round 55 -> 13, left foot round 13 -> under 10; left knee up behind 269 -> 282, drop 33 -> 38, right knee up under 10 -> 12 |
+
+The vaults and the other nine windows have no flight and are unchanged. The other rules: the pig director's window no
+longer passes 8 m/s (its right elbow at 8.1); capsule pairs over 2 cm, the horse's climb 8 -> 6, the bull's 10 -> 8,
+the goat's 14 -> 13, the cow's 8 -> 9. `bin/collisions.mjs`: the deepest points move at most 0.2 cm (the bull's climb
+3.2 -> 3.4 cm, the cow's 4.0 -> 4.2, the skunk's 4.1 -> 4.3, the goat's 5.6 -> 5.5), and the spans deeper than 2 cm
+over the 33 crossings fall from 113 to 106.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
