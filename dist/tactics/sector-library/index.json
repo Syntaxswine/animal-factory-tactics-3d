@@ -1019,6 +1019,18 @@
       "authoredVariants": 0
     },
     {
+      "id": "tutorial-greek-key",
+      "role": "tutorial",
+      "collectionRole": "tutorial",
+      "feature": "land",
+      "facilities": [],
+      "difficulties": [
+        "easy"
+      ],
+      "orientations": 1,
+      "authoredVariants": 1
+    },
+    {
       "id": "tutorial-step-1",
       "role": "tutorial",
       "collectionRole": "tutorial",

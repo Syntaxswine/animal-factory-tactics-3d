@@ -1,0 +1,36 @@
+{
+  "id": "tutorial-greek-key",
+  "kind": "sector-placeholder",
+  "version": 1,
+  "status": "authored",
+  "role": "tutorial",
+  "facilities": [],
+  "difficulties": [
+    "easy"
+  ],
+  "config": {
+    "feature": null,
+    "roads": []
+  },
+  "allowedTransforms": [
+    {
+      "turns": 0,
+      "mirror": false
+    }
+  ],
+  "variants": [
+    "greek-key.json"
+  ],
+  "preview": "greek-key.svg",
+  "variantDetails": {
+    "greek-key.json": {
+      "status": "authored",
+      "preview": "greek-key.svg"
+    }
+  },
+  "notes": [
+    "Four nested square hedges. Enter at the southwest opening and follow the dirt ribbon to the central travel marker.",
+    "Five-tile gates, seven-tile corridors and solid dividers force a continuous Greek key route without corner shortcuts.",
+    "No enemies or scripted lessons. The four unarmed starts use free exploration; the garden is a foundation for later tutorial encounters."
+  ]
+}
