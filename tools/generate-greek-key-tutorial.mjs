@@ -5,45 +5,43 @@ import {HEDGE_VERSION,HEDGE_SEED} from '../dist/tactics/hedge-data.js';
 
 export const ID='tutorial-greek-key';
 export const VARIANT='greek-key.json';
-export const RINGS=Object.freeze([88,96,104,112].map(min=>({min,max:239-min,gate:min+12})));
-export const FINISH={x:120,y:120,z:0};
+export const SCALE=6,REPEATS=3,ORIGIN={x:60,y:102},CORRIDOR_RADIUS=2;
+// Two opposed square curls form one S. Its top-right end is also the next
+// motif's top-left start, producing a repeating Greek key band.
+export const MOTIF=[[0,0],[6,0],[6,4],[2,4],[2,2],[3,2],[3,3],[5,3],[5,1],[1,1],[1,5],[7,5],[7,0]];
+export const ENTRANCE={x:54,y:102,z:0},FINISH={x:192,y:102,z:0};
 export const ROUTE=[
- [100,158],[100,147],[92,147],[92,92],[147,92],[147,147],[108,147],
- [108,139],[100,139],[100,100],[139,100],[139,139],[116,139],
- [116,131],[108,131],[108,108],[131,108],[131,131],[124,131],
- [124,120],[120,120]
+ [ENTRANCE.x,ENTRANCE.y],
+ ...Array.from({length:REPEATS},(_,i)=>MOTIF.slice(i?1:0).map(([x,y])=>[ORIGIN.x+(i*7+x)*SCALE,ORIGIN.y+y*SCALE])).flat(),
+ [FINISH.x,FINISH.y]
 ];
+// A cross-section through each inner curl, away from its corners.
+export const GATES=Array.from({length:REPEATS},(_,i)=>({x:ORIGIN.x+(i*7+3)*SCALE,y:ORIGIN.y+2.5*SCALE,z:0}));
 
 export function greekKeyTutorial(){
- const map=blankMap('Tutorial · Greek Key Garden'),hedges=new Map();
+ const map=blankMap('Tutorial · Greek Key Garden'),floor=new Set(),hedges=new Map();
  for(const row of map.terrain)row.fill('ground-grass');
  const plant=(x,y)=>hedges.set(x+','+y,{kind:'hedge-short',x,y,z:0,hedgeVersion:HEDGE_VERSION,hedgeSeed:HEDGE_SEED});
- for(const {min,max,gate}of RINGS){
-  for(let x=min;x<=max;x++){plant(x,min);if(Math.abs(x-gate)>2)plant(x,max);}
-  for(let y=min;y<=max;y++){plant(min,y);plant(max,y);}
- }
- // Close the near side of each annulus. Its entrance and next gate lie on
- // opposite sides, so walking around the square is the only way forward.
- for(let i=0;i<RINGS.length-1;i++){
-  const outer=RINGS[i],inner=RINGS[i+1];
-  for(let y=inner.max;y<=outer.max;y++)plant(outer.min+16,y);
- }
- map.props=[...hedges.values()].sort((a,b)=>a.y-b.y||a.x-b.x);
- // A three-tile dirt ribbon makes the route legible without narrowing the
- // seven-tile grass corridors or the five-tile openings.
+ const clearing=(x,y,radius)=>{for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++)floor.add((x+dx)+','+(y+dy));};
  for(let i=1;i<ROUTE.length;i++){
   const [ax,ay]=ROUTE[i-1],[bx,by]=ROUTE[i],steps=Math.abs(bx-ax)+Math.abs(by-ay);
   if(ax!==bx&&ay!==by)throw Error('The tutorial route must turn at right angles.');
-  for(let n=0;n<=steps;n++)for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-   const x=ax+Math.sign(bx-ax)*n+dx,y=ay+Math.sign(by-ay)*n+dy;
-   if(!hedges.has(x+','+y))map.terrain[y][x]='ground-dirt';
-  }
+  for(let n=0;n<=steps;n++)clearing(ax+Math.sign(bx-ax)*n,ay+Math.sign(by-ay)*n,CORRIDOR_RADIUS);
  }
- map.starts=[[100,158],[102,158],[100,160],[102,160]].map(([x,y],i)=>({x,y,z:0,species:['horse','goat','donkey','sheep'][i],weapon:'hands',heading:270}));
+ clearing(FINISH.x,FINISH.y,4);
+ // Border both sides of the continuous path, joining shared hedge cells. The
+ // finishing court is closed, so walking outside cannot skip the S sections.
+ for(const cell of floor){
+  const [x,y]=cell.split(',').map(Number);map.terrain[y][x]='ground-dirt';
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(!floor.has((x+dx)+','+(y+dy)))plant(x+dx,y+dy);
+ }
+ for(let dy=-CORRIDOR_RADIUS;dy<=CORRIDOR_RADIUS;dy++)hedges.delete((ENTRANCE.x-CORRIDOR_RADIUS-1)+','+(ENTRANCE.y+dy));
+ map.props=[...hedges.values()].sort((a,b)=>a.y-b.y||a.x-b.x);
+ map.starts=[[54,101],[54,103],[56,101],[56,103]].map(([x,y],i)=>({x,y,z:0,species:['horse','goat','donkey','sheep'][i],weapon:'hands',heading:0}));
  map.exits=[{...FINISH}];
  map.sectorTemplate={id:ID,role:'tutorial',status:'authored',config:{feature:null,roads:[]},transform:{turns:0,mirror:false},scope:'Standalone movement practice; open in the map editor and Playtest.',notes:[
-  'Four nested square hedges. Enter at the southwest opening and follow the dirt ribbon to the central travel marker.',
-  'Five-tile gates, seven-tile corridors and solid dividers force a continuous Greek key route without corner shortcuts.',
+  'Three linked S-shaped square spirals form a repeating Greek key band. Enter from the west and follow the dirt course to the eastern finishing court.',
+  'Five-tile corridors and joined hedge borders keep every square curl connected and prevent an outside shortcut to the finish.',
   'No enemies or scripted lessons. The four unarmed starts use free exploration; the garden is a foundation for later tutorial encounters.'
  ]};
  const errors=validateMap(map);if(errors.length)throw Error(errors.join('\n'));
@@ -51,10 +49,12 @@ export function greekKeyTutorial(){
 }
 
 export function greekKeyPreview(map){
+ const minX=Math.min(...map.props.map(p=>p.x))-6,maxX=Math.max(...map.props.map(p=>p.x))+6,minY=Math.min(...map.props.map(p=>p.y))-6,maxY=Math.max(...map.props.map(p=>p.y))+8;
+ const bounds=`${minX} ${minY} ${maxX-minX} ${maxY-minY}`;
  const hedges=map.props.map(p=>`<rect x="${p.x-.5}" y="${p.y-.5}" width="1" height="1"/>`).join('');
  const dirt=[];
- for(let y=85;y<=163;y++)for(let x=85;x<=154;x++)if(map.terrain[y][x]==='ground-dirt')dirt.push(`<rect x="${x-.5}" y="${y-.5}" width="1" height="1"/>`);
- return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="83 82 74 87" role="img" aria-labelledby="title desc"><title id="title">Greek Key Garden tutorial map</title><desc id="desc">Four square hedge enclosures with staggered south gates and dividers. The dirt path winds around each square from the squad start to the central finish.</desc><rect x="83" y="82" width="74" height="87" fill="#9baa75"/><g fill="#c5ac7e">${dirt.join('')}</g><g fill="#385836">${hedges}</g><g fill="#f8df98" stroke="#3e4932" stroke-width=".35"><circle cx="120" cy="120" r="1.8"/></g><g fill="#277c76" stroke="#fff3d2" stroke-width=".35">${map.starts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r=".7"/>`).join('')}</g><g fill="#203c30" font-family="system-ui,sans-serif" font-size="2.2" font-weight="700"><text x="120" y="116.5" text-anchor="middle">FINISH</text><text x="105" y="160">START ↑</text></g></svg>\n`;
+ for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++)if(map.terrain[y][x]==='ground-dirt')dirt.push(`<rect x="${x-.5}" y="${y-.5}" width="1" height="1"/>`);
+ return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bounds}" role="img" aria-labelledby="title desc"><title id="title">Greek Key Garden tutorial map</title><desc id="desc">Three linked S-shaped square spirals repeat from west to east. Hedges enclose a continuous dirt course from the squad entrance to the eastern finishing court.</desc><rect x="${minX}" y="${minY}" width="${maxX-minX}" height="${maxY-minY}" fill="#9baa75"/><g fill="#c5ac7e">${dirt.join('')}</g><g fill="#385836">${hedges}</g><g fill="#f8df98" stroke="#3e4932" stroke-width=".35"><circle cx="${FINISH.x}" cy="${FINISH.y}" r="1.8"/></g><g fill="#277c76" stroke="#fff3d2" stroke-width=".35">${map.starts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r=".7"/>`).join('')}</g><g fill="#203c30" font-family="system-ui,sans-serif" font-size="2.2" font-weight="700"><text x="${FINISH.x}" y="${FINISH.y-6}" text-anchor="middle">FINISH</text><text x="${ENTRANCE.x}" y="${ENTRANCE.y+7}" text-anchor="middle">START →</text></g></svg>\n`;
 }
 
 export function generate(){
@@ -72,6 +72,6 @@ export function generate(){
  const row={id:ID,role:'tutorial',collectionRole:'tutorial',feature:'land',facilities:[],difficulties:['easy'],orientations:1,authoredVariants:metadata.variants.length};
  index.entries=[...index.entries.filter(e=>e.id!==ID),row].sort((a,b)=>a.id.localeCompare(b.id));
  fs.writeFileSync(indexPath,JSON.stringify(index,null,2)+'\n');
- console.log('Generated Greek Key Garden: '+map.props.length+' hedge cells, four squad starts, four gates and a central finish.');
+ console.log('Generated Greek Key Garden: '+REPEATS+' linked square S spirals, '+map.props.length+' hedge cells and four squad starts.');
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===import.meta.filename)generate();
