@@ -862,7 +862,7 @@
         "hard"
       ],
       "orientations": 8,
-      "authoredVariants": 0
+      "authoredVariants": 1
     },
     {
       "id": "town--land-road-ew",
@@ -890,7 +890,7 @@
         "hard"
       ],
       "orientations": 8,
-      "authoredVariants": 0
+      "authoredVariants": 1
     },
     {
       "id": "town--river-e1-w2-road-ns",
@@ -984,7 +984,7 @@
         "hard"
       ],
       "orientations": 8,
-      "authoredVariants": 0
+      "authoredVariants": 1
     },
     {
       "id": "town-workshop--river-e1-w1-road-ns",

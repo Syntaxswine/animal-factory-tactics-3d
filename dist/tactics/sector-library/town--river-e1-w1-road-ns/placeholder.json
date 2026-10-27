@@ -2,7 +2,7 @@
   "id": "town--river-e1-w1-road-ns",
   "kind": "sector-placeholder",
   "version": 1,
-  "status": "placeholder",
+  "status": "in-progress",
   "role": "town",
   "facilities": [],
   "difficulties": [
@@ -142,7 +142,15 @@
     }
   ],
   "variants": [
+    "floodmark-01.json",
     "placeholder.json"
   ],
-  "notes": []
+  "notes": [],
+  "variantDetails": {
+    "floodmark-01.json": {
+      "status": "in-progress",
+      "preview": "floodmark-01.svg"
+    }
+  },
+  "preview": "floodmark-01.svg"
 }
