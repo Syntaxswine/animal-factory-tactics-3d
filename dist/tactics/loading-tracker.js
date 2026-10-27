@@ -1,18 +1,18 @@
 // Per-renderer requests, including character preparation after texture fetches.
 // This does not use the global Three manager or infer progress from elapsed time.
 export class LoadingTracker {
- constructor(){this.started=0;this.finished=0;this.errors=[];this.waiters=[];}
+ constructor(){this.started=0;this.finished=0;this.errors=[];this.optionalErrors=[];this.waiters=[];}
  get pending(){return this.started-this.finished;}
  start(){this.started++;}
  fail(error){this.errors.push(error instanceof Error?error:Error(String(error)));}
  end(){this.finished++;if(!this.pending)for(const done of this.waiters.splice(0))done();}
  async wait(){if(this.pending)await new Promise(resolve=>this.waiters.push(resolve));if(this.errors.length)throw this.errors[0];}
 }
-export function trackLoadingManager(manager,tracker){
+export function trackLoadingManager(manager,tracker,{required=true}={}){
  const start=manager.itemStart.bind(manager),end=manager.itemEnd.bind(manager),error=manager.itemError.bind(manager);
  manager.itemStart=url=>{tracker.start();start(url);};
  manager.itemEnd=url=>{end(url);tracker.end();};
- manager.itemError=url=>{tracker.fail('Could not load sector artwork: '+url);error(url);};
+ manager.itemError=url=>{if(required)tracker.fail('Could not load sector artwork: '+url);else if(!tracker.optionalErrors.includes(String(url)))tracker.optionalErrors.push(String(url));error(url);};
  return manager;
 }
 

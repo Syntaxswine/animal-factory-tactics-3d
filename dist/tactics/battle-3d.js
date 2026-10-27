@@ -6,6 +6,7 @@ import {loadDialogueCatalog,resolveDialogue} from './dialogue-data.js';
 import {initializeDialogue,pinDialogue} from './dialogue-state.js';
 import {MapGeometryCache} from './map-geometry-cache.js';
 import {drawFoliageHover} from './battle-foliage-focus.js';
+import {AutosaveSchedule} from './autosave-schedule.js';
 import {sectorLoading} from './sector-loading.js';
 import {prepareSectorView} from './loading-tracker.js';
 import {BattleContextMenu,inspectBattleTile} from './battle-context-menu.js';
@@ -46,6 +47,7 @@ import {projectBattlePoint,battleFloorPoint,rotateBattleView,focusBattleView,ove
 import {MOVEMENT_MS,queuedMovementDuration} from './battle-motion.js';
 import {rectangleMembers,pruneSelection,toggleSelection,selectable,selectionModifier,stanceSelection,setSelectionStance,movementSelection,setSelectionMovement} from './battle-selection.js';
 import {readSettings,saveSettings} from './settings-3d.js';
+import {createSoundPreferences} from './sound-preferences.js';
 import {createQuickPlayGame} from './quickplay-game.js';
 import {quickPlayEntry,normalizeQuickPlayTeam,validQuickPlayTeam,quickPlayTeamFromSearch} from './quickplay-presets.js';
 import {createBattleHud} from './battle-hud.js';
@@ -54,7 +56,7 @@ const $=id=>document.getElementById(id),canvas=$('battle'),ctx=canvas.getContext
 $('difficulty').value=readSettings().difficulty;
 $('blood-effects').value=readSettings().blood;
 $('blood-effects').onchange=()=>{saveSettings({...readSettings(),blood:$('blood-effects').value});renderer?.blood?.setMode($('blood-effects').value);};
-let definition,initialState,campaign=null,campaignSavedRevision=-1;
+let definition,initialState,campaign=null;
 const dialogueCatalog=await loadDialogueCatalog().catch(e=>({definitions:{},errors:{},error:e.message}));
 let autoToken,autoTokenError;try{autoToken=saveToken(await getSave('auto'));}catch(e){autoTokenError=e;}
 let dialogueUI;
@@ -67,8 +69,9 @@ if(new URLSearchParams(location.search).get('study')==='wall-xray'||new URLSearc
 let quickPlayTeam=quickPlayEntry(location.search,initialState)?initialState?normalizeQuickPlayTeam(initialState.quickPlayTeam):quickPlayTeamFromSearch(location.search,readSettings().quickPlayTeam):null;
 let cliffViewState=null,cliffViewId=0;
 let renderer,state,targetId=null,tileTarget=null,level=0,picks=[],width=1,height=1,lastStep=0,stepDelay=MOVEMENT_MS,drag=null,lastUI='',overviewMode=false,lastUIBusy=false,lastLadderPreparing=false;
+const soundPreferences=createSoundPreferences({onChange:volume=>renderer?.audio?.setVolume(volume)});$('blood-effects').closest('section').append(soundPreferences.root);
 let selectedIds=new Set(),lastUIDiagnostics='',lastDiagnostic='';
-const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastClockCombat,storageBusy=false,lastAuto=performance.now(),autoRound=0,autoDisabled=false;
+const frameClock=new FrameClock();let userPaused=false,presentationTime=0,lastClockCombat,storageBusy=false,autoDisabled=false;const autosaveSchedule=new AutosaveSchedule({revision:0,round:0},performance.now());
 const characterScreen=createCharacterScreen({getState:()=>state,beforeOpen:()=>renderer.settleEquipmentDraws(state),onStopMovement:id=>{if(renderer.busy||!canControl(state,state.units.find(u=>u.id===id)))return false;pickupOrder.cancel();dialogueOrder.cancel();state.queue=[];frameClock.reset();lastUI='';sync();return true;},onInventoryChange:()=>{renderer.captureCombat(state);lastUI='';sync();},getEquipmentState:id=>renderer?.equipmentState(id)||'carried',canEquip:()=>!renderer.busy,onEquip:(id,weapon)=>{if(renderer.busy)return false;const ok=equip(state,state.units.find(u=>u.id===id),weapon);if(ok){renderer.captureCombat(state);lastUI='';}return ok;},onOpen:()=>{frameClock.reset();sync();},onClose:()=>{frameClock.reset();sync();}});
 const savePanel=createSavePanel({...campaign?.saveOptions,onSave:saveGame,onLoad:loadGame,onOpen:()=>{frameClock.reset();lastUI='';sync();},onClose:()=>{frameClock.reset();lastUI='';sync();if(defeatFlow.stage==='error')defeatNotice.reopen();}});
 const defeatNotice=createDefeatNotice({campaign:!!campaign,onRetry:()=>defeatFlow.finish(),onSaves:()=>savePanel.show()});
@@ -130,12 +133,12 @@ function syncLevelButtons(){for(const b of document.querySelectorAll('#battle-le
 function center(){const u=selected();level=u.z||0;$('floor').value=level;syncLevelButtons();focus(u.x,u.y);}
 function overview(){overviewMode=true;overviewBattleView(view,definition.width,definition.height,width,height);$('hint').textContent='Click the map to inspect an area · WASD / arrows or drag to pan · Q / E rotate camera · Scroll to zoom · Center returns to your squad';}
 function resize(){const box=canvas.getBoundingClientRect(),oldWidth=width,oldHeight=height;width=box.width;height=box.height;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(state){if(overviewMode)overview();else if(oldWidth>1&&oldHeight>1){view.x+=(width-oldWidth)/2;view.y+=(height-oldHeight)/2;}else center();}}
-function restart(){dialogueUI?.close();defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();dialogueOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=quickPlayTeam?createQuickPlayGame(1947,definition,true,$('difficulty').value,quickPlayTeam):createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});prepareDialogueResources();startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;lastAuto=performance.now();autoRound=state.round;selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Exteriors revealed. Look through doors or windows to discover interiors. People still need line of sight.':'Explore to reveal the map.');sync();}
+function restart(){dialogueUI?.close();defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();dialogueOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=quickPlayTeam?createQuickPlayGame(1947,definition,true,$('difficulty').value,quickPlayTeam):createGame(1947,definition,true,$('difficulty').value,{social:true,awareness:true,statSystem:true,rosterSeed:1947});prepareDialogueResources();startEncounterClock(state);frameClock.reset();presentationTime=0;renderer.presentationNow=0;lastStep=0;userPaused=false;autosaveSchedule.reset(state,performance.now());selectedIds=new Set([state.selected]);stepDelay=MOVEMENT_MS;drag=null;targetId=null;view.zoom=1.15;lastUI='';center();message(state.difficulty==='easy'?'Exteriors revealed. Look through doors or windows to discover interiors. People still need line of sight.':'Explore to reveal the map.');sync();}
 async function saveGame(id){
- if(storageBusy)throw Error('A save or load is already in progress.');settleEncounterRounds(state);const record=campaign?null:captureEncounter(state);storageBusy=true;frameClock.reset();
- try{if(!campaign&&id==='auto'&&autoTokenError)throw autoTokenError;const saved=campaign?await campaign.save(id):id==='auto'?await checkpointSave(id,record,autoToken):await putSave(id,record);if(!campaign&&id==='auto')autoToken=saveToken(saved);lastAuto=performance.now();autoRound=state.round;campaignSavedRevision=state.revision;autoDisabled=false;return saved;}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}
+ if(storageBusy)throw Error('A save or load is already in progress.');settleEncounterRounds(state);const snapshot=autosaveSchedule.snapshot(state),record=campaign?null:captureEncounter(state);storageBusy=true;frameClock.reset();
+ try{if(!campaign&&id==='auto'&&autoTokenError)throw autoTokenError;const saved=campaign?await campaign.save(id):id==='auto'?await checkpointSave(id,record,autoToken):await putSave(id,record);if(!campaign&&id==='auto')autoToken=saveToken(saved);autosaveSchedule.saved(snapshot,performance.now());autoDisabled=false;return saved;}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}
 }
-function installState(restored){dialogueUI?.close();defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();dialogueOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=restored;definition=state.definition;quickPlayTeam=quickPlayEntry(location.search,restored)&&validQuickPlayTeam(restored.quickPlayTeam)?normalizeQuickPlayTeam(restored.quickPlayTeam):null;prepareDialogueResources();$('difficulty').value=state.difficulty;selectedIds=new Set([state.selected]);targetId=null;drag=null;userPaused=true;presentationTime=0;renderer.presentationNow=0;lastStep=0;stepDelay=MOVEMENT_MS;lastClockCombat=undefined;lastUI='';lastAuto=performance.now();autoRound=state.round;frameClock.reset();center();sync();message('Encounter loaded and paused. Press Resume to continue.');}
+function installState(restored){dialogueUI?.close();defeatFlow.reset();closeStances();contextMenu.close();pickupOrder.cancel();dialogueOrder.cancel();tileTarget=null;grenadePlanner.cancel();flamePlanner.cancel();renderer?.dispose();renderer=new BattleRenderer(()=>{});state=restored;definition=state.definition;quickPlayTeam=quickPlayEntry(location.search,restored)&&validQuickPlayTeam(restored.quickPlayTeam)?normalizeQuickPlayTeam(restored.quickPlayTeam):null;prepareDialogueResources();$('difficulty').value=state.difficulty;selectedIds=new Set([state.selected]);targetId=null;drag=null;userPaused=true;presentationTime=0;renderer.presentationNow=0;lastStep=0;stepDelay=MOVEMENT_MS;lastClockCombat=undefined;lastUI='';autosaveSchedule.reset(state,performance.now());frameClock.reset();center();sync();message('Encounter loaded and paused. Press Resume to continue.');}
 async function loadGame(id){return sectorLoading.run(()=>loadEncounterSave(id),{message:'Restoring saved sector'});}
 async function prepareView(){await prepareSectorView(renderer,()=>{ctx.clearRect(0,0,width,height);picks=renderer.draw(ctx,state,view,width,height,level);},{status:text=>sectorLoading.status(text)});}
 async function loadEncounterSave(id){if(storageBusy)throw Error('A save or load is already in progress.');storageBusy=true;frameClock.reset();try{if(campaign){const restored=await campaign.load(id);if(restored)installState(restored);}else{const record=await getSave(id);if(!record)throw Error('That save slot is empty.');const restored=restoreEncounter(record);autoToken=saveToken(await getSave('auto'));autoTokenError=null;installState(restored);}if(state)await prepareView();}finally{storageBusy=false;frameClock.reset();lastUI='';sync();}}
@@ -342,7 +345,7 @@ document.addEventListener('keydown',e=>{
  const delta={w:[0,40],ArrowUp:[0,40],s:[0,-40],ArrowDown:[0,-40],a:[40,0],ArrowLeft:[40,0],d:[-40,0],ArrowRight:[-40,0]}[e.key.length===1?e.key.toLowerCase():e.key];
  if(!delta)return;e.preventDefault();view.x+=delta[0];view.y+=delta[1];
 });
-function action(fn){if(paused()||renderer.busy)return;pickupOrder.cancel();dialogueOrder.cancel();const ok=fn();renderer.captureCombat(state);message(ok?'':'Action unavailable.');sync();}
+function action(fn){if(paused()||renderer.busy)return;pickupOrder.cancel();dialogueOrder.cancel();const ok=fn();renderer.captureCombat(state,{paused:paused()});message(ok?'':'Action unavailable.');sync();}
  for(const name of Object.keys(STANCES))$('stance-'+name).onclick=()=>{if(paused()||renderer.busy)return;const result=setSelectionStance(state,selectedIds,name);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' changed to '+name+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'. Check AP and action availability.':''));closeStances(true);sync();};
  for(const mode of Object.keys(MOVEMENT_MODES))$('move-'+mode).onclick=()=>{if(paused()||renderer.busy)return;const result=setSelectionMovement(state,selectedIds,mode);message(result.changed.length+' merc'+(result.changed.length===1?'':'s')+' set to '+mode+'.'+(result.skipped.length?' Could not change: '+result.skipped.join(', ')+'.':''));sync();};
  $('character').onclick=()=>characterScreen.show(state.selected);
@@ -360,7 +363,7 @@ function action(fn){if(paused()||renderer.busy)return;pickupOrder.cancel();dialo
  $('stop').onclick=()=>{if(paused()&&!dialogueOrder.pending)return;cancelMovementOrders();sync();};$('floor').onchange=()=>{contextMenu.close();tileTarget=null;level=+$('floor').value;clearHover();targetId=null;drag=null;flamePlanner.cancel();sync();};
  for(const b of document.querySelectorAll('#battle-levels [data-level]'))b.onclick=()=>{$('floor').value=b.dataset.level;$('floor').dispatchEvent(new Event('change'));};
 $('pause').onclick=()=>{userPaused=!userPaused;frameClock.reset();sync();};
-document.addEventListener('visibilitychange',()=>{renderer.wallXray.setPointer(null,null);frameClock.reset();sync();if(document.hidden&&!dialogueUI.open&&!storageBusy&&!autoDisabled&&(performance.now()-lastAuto>=30000||state.round!==autoRound||campaign&&state.revision!==campaignSavedRevision))autosave();});
+document.addEventListener('visibilitychange',()=>{renderer.wallXray.setPointer(null,null);renderer.audio?.setPaused(paused());frameClock.reset();sync();if(document.hidden&&!dialogueUI.open&&!storageBusy&&!autoDisabled&&autosaveSchedule.due(state,performance.now(),{hidden:true}))autosave();});
 window.addEventListener('pageshow',()=>frameClock.reset());
 function prepareDialogueResources(){
  const owner=campaign?.campaign||state,d=initializeDialogue(owner);
@@ -373,7 +376,7 @@ dialogueUI=createBattleDialogue({catalog:dialogueCatalog,source:()=>({state,camp
   try{if(campaign){state=await campaign.commitDialogue(expected,next);definition=state.definition;}else{
     if(autoTokenError){autoToken=saveToken(await getSave('auto'));autoTokenError=null;}if(state.dialogue.revision!==expected)throw Error('The conversation changed. Review it again.');
     const candidate={...state,dialogue:next},saved=await checkpointSave('auto',captureEncounter(candidate),autoToken);autoToken=saveToken(saved);state.dialogue=next;
-   }lastAuto=performance.now();autoRound=state.round;campaignSavedRevision=state.revision;autoDisabled=false;
+   }autosaveSchedule.reset(state,performance.now());autoDisabled=false;
   }finally{storageBusy=false;frameClock.reset();lastUI='';}
  }});
 new ResizeObserver(resize).observe(canvas);resize();if(initialState)installState(initialState);else restart();
@@ -383,6 +386,7 @@ let lastWorldSize="";
 function frame(now){
  try{
   defeatFlow.tick(state,now,{suspended:document.hidden||savePanel.open,busy:storageBusy||campaign?.busy});
+  renderer.audio?.setPaused(paused());
   const elapsed=frameClock.sample(now,{paused:paused(),mode:turnBased(state)});presentationTime+=elapsed;renderer.presentationNow=presentationTime;tickEncounterClock(state,elapsed,{paused:paused()||renderer.traversal.busy});syncClock();
   if(!paused()&&!renderer.busy&&presentationTime-lastStep>stepDelay){lastStep=presentationTime;stepDelay=queuedMovementDuration(state);if(state.queue.length)stepMovement(state);else if(state.phase==='enemy')stepEnemy(state);else if(['explore','won'].includes(state.phase))stepInvestigation(state);renderer.captureCombat(state);sync();}
   // Dialogue owns its own portrait clock. Keep the last world frame while it is open.
@@ -400,7 +404,7 @@ function frame(now){
   if(target()){const t=target(),p=project(t.ground||t.barrel||t.structure?t:renderer.displayUnit(t));ctx.strokeStyle='#ff9b80';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,18*view.zoom,9*view.zoom,0,0,Math.PI*2);ctx.stroke();}
   if(drag?.select&&drag.moved){const r=canvas.getBoundingClientRect();ctx.fillStyle='#f2cc8325';ctx.strokeStyle='#f2cc83';ctx.lineWidth=1.5;ctx.fillRect(drag.x-r.left,drag.y-r.top,drag.lastX-drag.x,drag.lastY-drag.y);ctx.strokeRect(drag.x-r.left,drag.y-r.top,drag.lastX-drag.x,drag.lastY-drag.y);}
   }
-  if(!defeatFlow.active&&!paused()&&!autoDisabled&&!storageBusy&&(performance.now()-lastAuto>=30000||state.round!==autoRound||campaign&&state.revision!==campaignSavedRevision))autosave();
+  if(!defeatFlow.active&&!paused()&&!autoDisabled&&!storageBusy&&autosaveSchedule.due(state,performance.now()))autosave();
   requestAnimationFrame(frame);
  }catch(error){message('Encounter stopped: '+error.message);console.error(error);}
 }

@@ -13,7 +13,10 @@ import {MapGeometryCache,invalidateMapGeometry} from './map-geometry-cache.js';
 
 // These are physical world heights, with the same local silhouette conversion
 // used by battle-shot-effects. Floor/ledge bases are converted independently.
-const SCALE=1.65/1.8,CHUNK=8,caches=new WeakMap();
+// Dense thickets contain several finite volumes per tile. Two-tile buckets
+// avoid testing an entire 8x8 stand for each terrain-visibility ray. This only
+// narrows candidate lists; exact volumes and nearest-hit tests are unchanged.
+const SCALE=1.65/1.8,CHUNK=2,caches=new WeakMap();
 const keyOf=m=>m.terrain||m.map;
 export function treePlacementRank(m){const origin=m.environment?.origin?.map(n=>n*240)||[0,0],seed=biomeSeed(m);return t=>groundHash(t.x+origin[0],t.y+origin[1],seed+631+t.z*911);}
 export function foliageSignature(m){const d=m.definition||m;return JSON.stringify([keyOf(m),m.upper,m.coverOccupiedProps||m.props,m.foliage,m.environment,m.edges,m.stairs,m.climbs,d.starts,d.guards,d.exits]);}
@@ -37,7 +40,11 @@ export function foliageSegment(start,end,b){
  if(b.lobes){
   // Leaf masses are clipped to their painted tile; paths remain visibly open.
   let lo=0,hi=1;for(let i=0;i<3;i++){const d=end[i]-start[i];if(Math.abs(d)<1e-10){if(start[i]<b.min[i]||start[i]>b.max[i])return null;}else {let a=(b.min[i]-start[i])/d,c=(b.max[i]-start[i])/d;if(a>c)[a,c]=[c,a];lo=Math.max(lo,a);hi=Math.min(hi,c);}}if(lo>hi)return null;
-  let hit=null;for(const l of b.lobes){const o=start.map((v,i)=>(v-l.center[i])/l.radius[i]),d=end.map((v,i)=>(v-start[i])/l.radius[i]),a=d.reduce((n,v)=>n+v*v,0),q=2*d.reduce((n,v,i)=>n+v*o[i],0),c=o.reduce((n,v)=>n+v*v,0)-1,disc=q*q-4*a*c;if(disc<0||a<1e-14)continue;const near=(-q-Math.sqrt(disc))/(2*a),far=(-q+Math.sqrt(disc))/(2*a),t=Math.max(lo,near);if(t<=Math.min(hi,far)&&(hit===null||t<hit))hit=t;}
+  let hit=null;for(const l of b.lobes){
+   const ox=(start[0]-l.center[0])/l.radius[0],oy=(start[1]-l.center[1])/l.radius[1],oz=(start[2]-l.center[2])/l.radius[2],dx=(end[0]-start[0])/l.radius[0],dy=(end[1]-start[1])/l.radius[1],dz=(end[2]-start[2])/l.radius[2];
+   const a=dx*dx+dy*dy+dz*dz,q=2*(dx*ox+dy*oy+dz*oz),c=ox*ox+oy*oy+oz*oz-1,disc=q*q-4*a*c;if(disc<0||a<1e-14)continue;
+   const near=(-q-Math.sqrt(disc))/(2*a),far=(-q+Math.sqrt(disc))/(2*a),t=Math.max(lo,near);if(t<=Math.min(hi,far)&&(hit===null||t<hit))hit=t;
+  }
   return hit;
  }
  if(!b.beam)return segmentBox(start,end,b);
@@ -48,25 +55,32 @@ export function foliageSegment(start,end,b){
  return segmentBox(local(start),local(end),{min:[-radius,0,-radius],max:[radius,length,radius]});
 }
 function indexed(boxes){const index=new Map();for(const b of boxes)for(let x=Math.floor(b.min[0]/CHUNK);x<=Math.floor(b.max[0]/CHUNK);x++)for(let y=Math.floor(b.min[2]/CHUNK);y<=Math.floor(b.max[2]/CHUNK);y++){const k=`${x},${y}`;if(!index.has(k))index.set(k,[]);index.get(k).push(b);}return index;}
-export function traceFoliage(scene,start,end,purpose='shot',space='simulation'){
- const index=space==='world'?scene.worldIndex:scene.index,times=[0,1];
- for(const axis of [0,2]){const d=end[axis]-start[axis];if(!d)continue;for(let p=Math.ceil(Math.min(start[axis],end[axis])/CHUNK)*CHUNK;p<=Math.max(start[axis],end[axis]);p+=CHUNK)times.push((p-start[axis])/d);}
- times.sort((a,b)=>a-b);const visited=new Set(),chunks=new Set();let hit=null;
- for(let i=0;i<times.length;i++){
-  const next=times[i+1]??1;
-  for(const t of [times[i],(times[i]+next)/2]){
-   const key=`${Math.floor((start[0]+(end[0]-start[0])*t)/CHUNK)},${Math.floor((start[2]+(end[2]-start[2])*t)/CHUNK)}`;
-   if(chunks.has(key))continue;chunks.add(key);
-   for(const b of index.get(key)||[]){
+export function traceFoliage(scene,start,end,purpose='shot',space='simulation',anyHit=false){
+ const index=space==='world'?scene.worldIndex:scene.index,dx=end[0]-start[0],dz=end[2]-start[2],sx=Math.sign(dx),sz=Math.sign(dz),visited=new Set();let hit=null,x=Math.floor(start[0]/CHUNK),z=Math.floor(start[2]/CHUNK);
+ if(!Number.isFinite(dx)||!Number.isFinite(dz)||!Number.isFinite(start[1])||!Number.isFinite(end[1]))return null;
+ let tx=dx?((x+(sx>0?1:0))*CHUNK-start[0])/dx:Infinity,tz=dz?((z+(sz>0?1:0))*CHUNK-start[2])/dz:Infinity;const stepX=dx?CHUNK/Math.abs(dx):Infinity,stepZ=dz?CHUNK/Math.abs(dz):Infinity;
+ const visit=(x,z)=>{
+   for(const b of index.get(`${x},${z}`)||[]){
     if(visited.has(b))continue;visited.add(b);if(purpose==='sight'?!b.blocksSight:!b.blocksShot)continue;
     const entry=segmentBox(start,end,b);if(entry===null||hit&&entry>hit.t)continue;
-    const at=foliageSegment(start,end,b);if(at!==null&&(!hit||at<hit.t))hit={t:at,box:b};
+    const at=foliageSegment(start,end,b);if(at!==null&&(!hit||at<hit.t)){hit={t:at,box:b};if(anyHit)return true;}
    }
-  }
-  if(hit&&hit.t<next-1e-10)break;
+   return false;
+ };
+ // Traverse in entry order instead of allocating/sorting every boundary cut.
+ // At a corner also visit both touched side buckets, including reverse rays.
+ while(true){
+  if(visit(x,z))return hit;const next=Math.min(tx,tz);
+  if(hit&&hit.t<Math.min(next,1)-1e-10||next>1)break;
+  if(Math.abs(tx-tz)<1e-10){if(visit(x+sx,z)||visit(x,z+sz))return hit;x+=sx;z+=sz;tx+=stepX;tz+=stepZ;}
+  else if(tx<tz){x+=sx;tx+=stepX;}
+  else {z+=sz;tz+=stepZ;}
  }
  return hit;
 }
+// Terrain reveal needs a yes/no obstruction, not the nearest impact receipt.
+// Firearms, guard/target rays and public trace callers retain nearest-hit order.
+export function foliageOccluded(scene,start,end,space='simulation'){return !!traceFoliage(scene,start,end,'sight',space,true);}
 export function foliageRayHit(m,origin,direction,reach,purpose='shot'){
  const start=[origin.x,origin.h,origin.y],end=[origin.x+direction.x*reach,origin.h+direction.h*reach,origin.y+direction.y*reach],hit=traceFoliage(foliageObstacles(m),start,end,purpose);
  return hit?hit.t*reach:null;

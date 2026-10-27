@@ -5,7 +5,7 @@ const V=()=>new T.Vector3(),Q=()=>new T.Quaternion();
 
 // Cosmetic equipment only. Both items keep their own authoritative inventory
 // records; creating, posing or disposing this controller never spends ammo.
-export function createOffhandEquipment(worker){
+export function createOffhandEquipment(worker,{createWeapon=createWeaponModel}={}){
  const bones=Object.fromEntries(worker.bones.map(b=>[b.name,b]));let gun=null,kind=null;
  function clear(){gun?.root.removeFromParent();gun?.dispose();gun=null;kind=null;}
  function rotate(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(Q()).invert().multiply(q));worker.root.updateMatrixWorld(true);}
@@ -32,7 +32,7 @@ export function createOffhandEquipment(worker){
   }
   const pair=handWeapons(u),next=pair[1];
   if(!next||!bones['hand-1']||!primary?.anchors?.grip){clear();return;}
-  if(kind!==next){clear();kind=next;gun=createWeaponModel(next);worker.root.add(gun.root);}
+  if(kind!==next){clear();kind=next;gun=createWeapon(next);worker.root.add(gun.root);}
   gun.root.visible=!hidden;if(hidden)return;
   worker.root.updateMatrixWorld(true);
   const right=bones.hand1,grip=primary.anchors.grip.getWorldPosition(V()),offset=right.worldToLocal(grip.clone()),relative=primary.root.getWorldQuaternion(Q()).invert().multiply(right.getWorldQuaternion(Q()));

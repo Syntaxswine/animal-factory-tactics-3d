@@ -2,7 +2,7 @@
   "id": "town--land-road-ensw",
   "kind": "sector-placeholder",
   "version": 1,
-  "status": "placeholder",
+  "status": "in-progress",
   "role": "town",
   "facilities": [],
   "difficulties": [
@@ -65,7 +65,15 @@
     }
   ],
   "variants": [
+    "market-clinic-01.json",
     "placeholder.json"
   ],
-  "notes": []
+  "notes": [],
+  "variantDetails": {
+    "market-clinic-01.json": {
+      "status": "in-progress",
+      "preview": "market-clinic-01.svg"
+    }
+  },
+  "preview": "market-clinic-01.svg"
 }

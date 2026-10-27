@@ -1,4 +1,4 @@
-import {CANOPY_LEVEL} from './map-layers.js';
+import {CANOPY_LEVEL,MAP_LEVELS} from './map-layers.js';
 import {embedMapDialogues,resolveDialogue} from './dialogue-data.js';
 import {validateDialogue,mergeDialogueDefinitions} from './dialogue-schema.js';
 import {INTRO_DIALOGUE,TUTORIAL_ROLES} from './tutorial-mission.js';
@@ -136,7 +136,7 @@ export class EditingDocument extends InspectionDocument {
   const row=this.character(id);if(!row)throw Error('This character no longer exists.');
   if(row.field==='starts')throw Error('Squad slots are fixed. Duplicate a placed guard or NPC.');
   if(!point||![point.x,point.y,point.z??0].every(Number.isInteger))throw Error('Choose a destination tile.');
-  if(point.x<0||point.y<0||point.x>=this.size||point.y>=this.size||(point.z||0)<0||(point.z||0)>2)throw Error('Keep the duplicate inside the current map or block.');
+  if(point.x<0||point.y<0||point.x>=this.size||point.y>=this.size||(point.z||0)<0||(point.z||0)>=MAP_LEVELS)throw Error('Keep the duplicate inside the current map or block.');
   const [copy]=copyCharacters([row.p],this.editor.map);if(copy.patrol)copy.patrol=shiftPatrol(copy.patrol,point.x-copy.x,point.y-copy.y,(point.z||0)-(copy.z||0));Object.assign(copy,{x:point.x,y:point.y,z:point.z||0});delete copy.towerPost;
   this.replace({...this.editor.map,guards:[...this.editor.map.guards,copy]});return copy.character.id;
  }

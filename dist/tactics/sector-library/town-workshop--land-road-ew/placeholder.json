@@ -2,7 +2,7 @@
   "id": "town-workshop--land-road-ew",
   "kind": "sector-placeholder",
   "version": 1,
-  "status": "placeholder",
+  "status": "in-progress",
   "role": "town",
   "facilities": [
     "workshop"
@@ -70,7 +70,15 @@
     }
   ],
   "variants": [
+    "last-shift-01.json",
     "placeholder.json"
   ],
-  "notes": []
+  "notes": [],
+  "variantDetails": {
+    "last-shift-01.json": {
+      "status": "in-progress",
+      "preview": "last-shift-01.svg"
+    }
+  },
+  "preview": "last-shift-01.svg"
 }

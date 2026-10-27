@@ -1,0 +1,121 @@
+{
+  "at": "2026-10-23T03:24:56.230Z",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+  "note": "Capture is synchronous campaign preparation. Storage is actual IndexedDB request wall time, including browser serialization; neither is GPU time. Samples include the first checkpoint and five explicit repeated saves.",
+  "results": [
+    {
+      "initializedSectors": 2,
+      "characters": 14,
+      "writesBeforeDeadline": 0,
+      "scheduledCheckpointWrites": 1,
+      "explicitRepeatedWrites": 5,
+      "samples": [
+        {
+          "captureMs": 12.799999952316284,
+          "storageWallMs": 62.800000071525574
+        },
+        {
+          "captureMs": 8.600000023841858,
+          "storageWallMs": 53.699999928474426
+        },
+        {
+          "captureMs": 11.899999976158142,
+          "storageWallMs": 53.800000071525574
+        },
+        {
+          "captureMs": 8.5,
+          "storageWallMs": 56.10000002384186
+        },
+        {
+          "captureMs": 8.799999952316284,
+          "storageWallMs": 55.39999997615814
+        },
+        {
+          "captureMs": 9.399999976158142,
+          "storageWallMs": 51.300000071525574
+        }
+      ],
+      "captureMs": {
+        "median": 9.399999976158142,
+        "p95": 12.799999952316284
+      },
+      "storageWallMs": {
+        "median": 55.39999997615814,
+        "p95": 62.800000071525574
+      },
+      "checkpointWallMs": {
+        "median": 64.60000002384186,
+        "p95": 75.60000002384186
+      },
+      "budget": {
+        "captureP95Ms": 50,
+        "checkpointP95Ms": 300,
+        "passed": true
+      },
+      "recordBytes": 1934511,
+      "identitiesPreserved": true,
+      "reloadPreserved": true,
+      "staleWriteRejected": true,
+      "failedWritePreserved": true,
+      "pendingTransitionRejected": true,
+      "leaveAndRevisitPreserved": true
+    },
+    {
+      "initializedSectors": 6,
+      "characters": 11,
+      "writesBeforeDeadline": 0,
+      "scheduledCheckpointWrites": 1,
+      "explicitRepeatedWrites": 5,
+      "samples": [
+        {
+          "captureMs": 14.699999928474426,
+          "storageWallMs": 131.70000004768372
+        },
+        {
+          "captureMs": 22,
+          "storageWallMs": 135
+        },
+        {
+          "captureMs": 16.399999976158142,
+          "storageWallMs": 138.29999995231628
+        },
+        {
+          "captureMs": 16.100000023841858,
+          "storageWallMs": 147.5
+        },
+        {
+          "captureMs": 15.300000071525574,
+          "storageWallMs": 149.09999990463257
+        },
+        {
+          "captureMs": 15.5,
+          "storageWallMs": 139.40000009536743
+        }
+      ],
+      "captureMs": {
+        "median": 16.100000023841858,
+        "p95": 22
+      },
+      "storageWallMs": {
+        "median": 139.40000009536743,
+        "p95": 149.09999990463257
+      },
+      "checkpointWallMs": {
+        "median": 157,
+        "p95": 164.39999997615814
+      },
+      "budget": {
+        "captureP95Ms": 50,
+        "checkpointP95Ms": 300,
+        "passed": true
+      },
+      "recordBytes": 5201144,
+      "identitiesPreserved": true,
+      "reloadPreserved": true,
+      "staleWriteRejected": true,
+      "failedWritePreserved": true,
+      "pendingTransitionRejected": true,
+      "leaveAndRevisitPreserved": true
+    }
+  ]
+}

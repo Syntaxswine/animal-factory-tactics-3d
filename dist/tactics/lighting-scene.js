@@ -1,6 +1,7 @@
 import {TOWERS,towerEntry} from './tower-geometry.js';
 import {PLAY_MINUTES_PER_SECOND} from './game-clock.js';
 import {LightRenderer} from './light-renderer.js';
+import {StaticModelBatches} from './static-model-batches.js';
 import {DIMENSIONS} from './hybrid-world.js';
 import * as T from './vendor/three.module.js';
 import {createFurnitureLibrary,animateFurnitureFire} from './painted-furniture.js';
@@ -22,18 +23,20 @@ export class LightingScene {
   const signature=JSON.stringify(props);if(signature!==this.signature){
    this.clear();this.signature=signature;
    for(const prop of props){
-    const built=this.library.build(prop.kind),root=built.root,center=fixturePlacement(prop),glows=[],owned=[];
+    const built=this.library.build(prop.kind),root=built.root,center=fixturePlacement(prop),glows=[],owned=[],clones=new Map();
+    const privateMaterial=(source,make=()=>source.clone())=>{if(!clones.has(source)){const value=make();clones.set(source,value);owned.push(value);}return clones.get(source);};
     root.position.set(center.x,center.z*DIMENSIONS.floorSpacing,center.y);root.rotation.y=prop.rotated?-Math.PI/2:0;this.scene.add(root);
     root.traverse(mesh=>{if(!mesh.isMesh)return;const name=mesh.material.name;
-     if(name.includes('flame')){const source=mesh.material;mesh.material=new T.MeshBasicMaterial({map:source.map,color:source.color.clone(),vertexColors:source.vertexColors});mesh.material.userData={...source.userData};mesh.userData.noShadow=true;mesh.castShadow=false;owned.push(mesh.material);}
+     if(name.includes('flame')){const source=mesh.material;mesh.material=privateMaterial(source,()=>{const m=new T.MeshBasicMaterial({map:source.map,color:source.color.clone(),vertexColors:source.vertexColors});m.userData={...source.userData};return m;});mesh.userData.noShadow=true;mesh.castShadow=false;}
      else if(name==='unlit-glass'||name==='pleated-linen'||LIGHT_FORMS[prop.kind].spot&&name==='searchlight-reflector'){
-      mesh.material=mesh.material.clone();mesh.userData.noShadow=true;mesh.castShadow=false;glows.push(mesh.material);owned.push(mesh.material);
+      mesh.material=privateMaterial(mesh.material);mesh.userData.noShadow=true;mesh.castShadow=false;if(!glows.includes(mesh.material))glows.push(mesh.material);
      }
     });
+    const batches=new StaticModelBatches(root);
     const lamps=sampledEmitters(prop,minutes,DIMENSIONS.floorSpacing).map(source=>{
      const lamp=LIGHT_FORMS[prop.kind].spot?new T.SpotLight(0xffefcf,10.5,LIGHT_RANGE,source.angle??SPOT_ANGLE,SPOT_PENUMBRA,0):new T.PointLight(source.color,2.8,LIGHT_RANGE,0);if(lamp.isSpotLight)this.scene.add(lamp.target);lamp.position.set(source.x,source.h,source.y);lamp.castShadow=true;
      lamp.shadow.mapSize.set(512,512);lamp.shadow.camera.near=.08;lamp.shadow.camera.far=LIGHT_RANGE;lamp.shadow.bias=-.0005;lamp.shadow.normalBias=.035;this.scene.add(lamp);return lamp;
-    });let entry=null;if(TOWERS[prop.kind]){const p=towerEntry(prop);entry=new T.Mesh(this.entryGeometry,this.entryMaterial);entry.name='tower-entry';entry.rotation.x=-Math.PI/2;entry.position.set(p.x,p.z*DIMENSIONS.floorSpacing+.035,p.y);entry.userData.noShadow=true;this.scene.add(entry);}this.models.push({prop,root,lamps,glows,owned,entry});
+    });let entry=null;if(TOWERS[prop.kind]){const p=towerEntry(prop);entry=new T.Mesh(this.entryGeometry,this.entryMaterial);entry.name='tower-entry';entry.rotation.x=-Math.PI/2;entry.position.set(p.x,p.z*DIMENSIONS.floorSpacing+.035,p.y);entry.userData.noShadow=true;this.scene.add(entry);}this.models.push({prop,root,lamps,glows,owned,entry,batches});
    }
   }
   this.animated=false;
@@ -51,6 +54,6 @@ export class LightingScene {
   }
  }
  render(renderer,camera){const lamps=this.models.flatMap(m=>m.lamps),frustum=new T.Frustum().setFromProjectionMatrix(new T.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));for(const lamp of lamps)lamp.visible=lamp.visible&&frustum.intersectsSphere(new T.Sphere(lamp.position,LIGHT_RANGE));this.passes.render(renderer,this.scene,camera,lamps);}
- clear(){for(const m of this.models){m.root.removeFromParent();m.entry?.removeFromParent();for(const lamp of m.lamps){lamp.shadow.dispose();lamp.target?.removeFromParent();lamp.removeFromParent();}m.owned.forEach(m=>m.dispose());}this.models=[];}
+ clear(){for(const m of this.models){m.batches?.dispose();m.root.removeFromParent();m.entry?.removeFromParent();for(const lamp of m.lamps){lamp.shadow.dispose();lamp.target?.removeFromParent();lamp.removeFromParent();}m.owned.forEach(m=>m.dispose());}this.models=[];}
  dispose(){this.entryGeometry.dispose();this.entryMaterial.dispose();this.passes.dispose();this.disposed=true;this.clear();this.library?.dispose();this.textures?.forEach(t=>t.dispose());}
 }

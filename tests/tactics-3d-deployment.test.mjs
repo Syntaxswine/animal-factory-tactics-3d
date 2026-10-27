@@ -9,6 +9,8 @@ import {checkModuleClosure} from '../tools/check-module-closure.mjs';
 
 test('3D distribution includes the encounter, editor, title, overmap and sprite intro',()=>{
  execFileSync(process.execPath,['tools/build-tactics-3d.mjs'],{cwd:new URL('../',import.meta.url),stdio:'pipe'});
+ for(const name of ['battle-audio.js','battle-sound-data.js','sound-preferences.js'])assert.deepEqual(fs.readFileSync(new URL('../.pages-output/tactics/'+name,import.meta.url)),fs.readFileSync(new URL('../dist/tactics/'+name,import.meta.url)));
+ const soundRoot=new URL('../dist/assets/audio/babble-sfx/',import.meta.url);for(const name of fs.readdirSync(soundRoot))assert.deepEqual(fs.readFileSync(new URL('../.pages-output/assets/audio/babble-sfx/'+name,import.meta.url)),fs.readFileSync(new URL(name,soundRoot)),name);
  for(const file of ['biome-foliage-data.js','biome-foliage-models.js','biome-foliage-paint.js','biome-foliage-study.js','biome-foliage-study.html','biome-foliage-study.css'])assert.deepEqual(fs.readFileSync(new URL('../.pages-output/tactics/'+file,import.meta.url)),fs.readFileSync(new URL('../dist/tactics/'+file,import.meta.url)));
  const biomeSource=new URL('../dist/assets/environment/biome-foliage/',import.meta.url),biomeOutput=new URL('../.pages-output/assets/environment/biome-foliage/',import.meta.url);
  for(const file of fs.readdirSync(biomeSource,{recursive:true}).filter(file=>fs.statSync(new URL(file.replaceAll('\\','/'),biomeSource)).isFile()))assert.deepEqual(fs.readFileSync(new URL(file.replaceAll('\\','/'),biomeOutput)),fs.readFileSync(new URL(file.replaceAll('\\','/'),biomeSource)));

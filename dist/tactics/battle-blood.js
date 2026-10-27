@@ -27,18 +27,20 @@ export class BattleBlood {
  constructor(scene,{loader,loading,onReady=()=>{},onError=()=>{},mode='full',textures}={}){
   this.scene=scene;this.mode=mode;this.seen=new Set();this.pending=new Map();this.disposed=false;this.textures=[];this.state=null;
   const install=images=>{if(this.disposed){for(const t of new Set(images))t.dispose();return;}this.textures=images;this.pool=new BloodSprayPool(scene,images[0]);this.stains=new BloodStainBatches(images[1]);if(images[2])this.fatalPool=new BloodSprayPool(scene,images[2],{cardCount:48,slotCount:4,duration:FATAL_HEAD_DURATION,motion:createFatalHeadMotion,cells:FATAL_HEAD_CELLS});onReady();};
-  if(textures){install(textures);this.ready=Promise.resolve();}
-  else {
-   loading?.start();this.ready=Promise.allSettled([BLOOD_ATLAS,STAIN_ATLAS,FATAL_HEAD_ATLAS].map(url=>loader.loadAsync(url))).then(results=>{
+  this.load=()=>{
+   if(this.disposed||this.loading||this.pool)return this.ready;
+   this.loading=true;loading?.start();this.ready=Promise.allSettled([BLOOD_ATLAS,STAIN_ATLAS,FATAL_HEAD_ATLAS].map(url=>{try{return loader.loadAsync(url);}catch(error){return Promise.reject(error);}})).then(results=>{
     const images=results.filter(r=>r.status==='fulfilled').map(r=>r.value),failure=results.find(r=>r.status==='rejected');
     if(failure){for(const t of new Set(images))t.dispose();if(!this.disposed)onError('Blood effects unavailable: '+(failure.reason?.message||'atlas could not load'));}
     else install(images);
-   }).finally(()=>{loading?.end();if(!this.disposed)onReady();});
-  }
+   }).finally(()=>{this.loading=false;loading?.end();if(!this.disposed)onReady();});return this.ready;
+  };
+  this.ready=Promise.resolve();if(textures)install(textures);else if(mode!=='off')this.load();
  }
  setMode(mode){
   if(!['full','reduced','off'].includes(mode))mode='full';if(mode===this.mode)return;this.mode=mode;
   this.pool?.clear();this.fatalPool?.clear();this.pending.clear();if(mode==='off')this.stains?.clear();else if(mode==='reduced')this.stains?.reduce();
+  if(mode!=='off'&&!this.pool)this.load();
  }
  begin(active,state,now,{reducedMotion=false,busy=false}={}){
   this.state=state;this.now=now;this.reducedMotion=reducedMotion;this.pending.clear();this.stampsRemaining=2;

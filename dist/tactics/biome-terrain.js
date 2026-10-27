@@ -33,10 +33,13 @@ export function createBiomeTerrain(plan,family,{ground,cliff,surfaceMaterial,pla
  const original=grey?plantMaterials.grey:snow?plantMaterials.snow:obstacleMaterials[BIOME_OBSTACLES[family].paint],fillMaterial=(surfaceMaterial||original).clone();fillMaterial.onBeforeCompile=(surfaceMaterial||original).onBeforeCompile;fillMaterial.customProgramCacheKey=(surfaceMaterial||original).customProgramCacheKey;fillMaterial.vertexColors=true;
  const groundSkin=createConnectedGroundSkin(plan,family,{seed:paintSeed,onChange:onPaintReady,underlay:ground,edgeBlend,...groundSkinOptions,...(grey?{canvasFactory:()=>null}:{})}),fillMaterials=[];groundSkin.setEnabled(groundSprites);
  const leaf=family==='jungle'?'jungle':family==='temperate'?'leaves':snow?'snow':'dry',paint=id=>grey?plantMaterials.grey:(plantMaterials[id]||obstacleMaterials[id]),object=new T.Object3D();
+ // Detailed crowns stay in the color pass. Shadows use the existing bounded
+ // crown/trunk silhouettes; no movement, cover or sight geometry is replaced.
+ const shadowMaterial=new T.MeshBasicMaterial({colorWrite:false,depthWrite:false,depthTest:false,side:T.DoubleSide});
  const cols=Math.ceil(plan.width/BIOME_CHUNK_SIZE);
  for(let z=0;z<plan.depth;z+=BIOME_CHUNK_SIZE)for(let x=0;x<plan.width;x+=BIOME_CHUNK_SIZE){
-  const group=new T.Group(),near=new T.Group(),far=new T.Group();group.name=`Biome block ${x},${z}`;near.name='Detailed trees';far.name='Distant tree silhouettes';group.add(near,far);root.add(group);
-  chunks.push({x,z,index:chunks.length,group,near,far,baseBatches:new Map(),nearBatches:new Map(),farBatches:new Map(),meshes:[],dense:null,nearActive:false});near.visible=false;
+  const group=new T.Group(),near=new T.Group(),far=new T.Group(),shadows=new T.Group();group.name=`Biome block ${x},${z}`;near.name='Detailed trees';far.name='Distant tree silhouettes';shadows.name='Tree shadow silhouettes';group.add(near,far,shadows);root.add(group);
+  chunks.push({x,z,index:chunks.length,group,near,far,shadows,baseBatches:new Map(),nearBatches:new Map(),farBatches:new Map(),meshes:[],dense:null,nearActive:false});near.visible=false;
  }
  const chunkAt=(x,z)=>chunks[Math.floor(z/BIOME_CHUNK_SIZE)*cols+Math.floor(x/BIOME_CHUNK_SIZE)];
  function mesh(positions,material,name,chunk,colors,normals){if(!positions.length)return null;const m=new T.Mesh(own(geometry(positions,colors,normals)),material);m.name=name;m.receiveShadow=true;m.userData.chunk=chunk.index;chunk.group.add(m);chunk.meshes.push(m);return m;}
@@ -122,6 +125,9 @@ export function createBiomeTerrain(plan,family,{ground,cliff,surfaceMaterial,pla
  for(const chunk of chunks){
   for(const level of ['base','near','far'])for(const spec of chunk[level+'Batches'].values()){
    const m=new T.InstancedMesh(spec.g,spec.m,spec.matrices.length);spec.matrices.forEach((matrix,i)=>m.setMatrixAt(i,matrix));m.instanceMatrix.needsUpdate=true;m.computeBoundingBox();m.computeBoundingSphere();m.name=level==='base'?'Grouped ground cover':level==='near'?'Trees':'Distant trees';m.receiveShadow=true;m.userData.chunk=chunk.index;(level==='base'?chunk.group:chunk[level]).add(m);instances.push(m);if(level!=='base')treeInstances.push(m);chunk.meshes.push(m);
+   if(level==='far'){
+    const shadow=new T.InstancedMesh(spec.g,shadowMaterial,spec.matrices.length);spec.matrices.forEach((matrix,i)=>shadow.setMatrixAt(i,matrix));shadow.instanceMatrix.needsUpdate=true;shadow.computeBoundingBox();shadow.computeBoundingSphere();shadow.name='Tree shadow proxy';shadow.userData.shadowProxy=true;shadow.userData.chunk=chunk.index;chunk.shadows.add(shadow);instances.push(shadow);treeInstances.push(shadow);chunk.meshes.push(shadow);
+   }
   }
   // Include crown height/overhang in bounds; culling a ground square alone can
   // incorrectly hide a visible treetop at a screen edge.
@@ -130,7 +136,7 @@ export function createBiomeTerrain(plan,family,{ground,cliff,surfaceMaterial,pla
  let fullTriangles=0,baseTriangles=0;root.traverse(o=>{if(o.isMesh){fullTriangles+=triangles(o);if(!o.isInstancedMesh)baseTriangles+=triangles(o);}});
  const stats={terrainCells:plan.width*plan.depth,blockedCells:plan.cells.length,trees:trees.length,clusters,logs,reeds,groundSprites:groundSkin?.stats??null,baseTriangles,storedTriangles:fullTriangles,batches:instances.length,chunks:chunks.length,chunkSize:BIOME_CHUNK_SIZE};
  const frustum=new T.Frustum(),projection=new T.Matrix4(),worldBounds=new T.Box3();let disposed=false;
- function update(camera,{focus,ppu=1,trees:showTrees=true}={}){
+ function update(camera,{focus,ppu=1,trees:showTrees=true,shadowDetail='proxy'}={}){
   if(disposed)return;camera.updateMatrixWorld();frustum.setFromProjectionMatrix(projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));let visible=0,detailed=0,shadowed=0;
   root.updateMatrixWorld(true);const localFocus=root.worldToLocal(focus?.clone()??new T.Vector3()),fx=localFocus.x,fz=localFocus.z;
   for(const c of chunks){
@@ -141,12 +147,13 @@ export function createBiomeTerrain(plan,family,{ground,cliff,surfaceMaterial,pla
    const treePixels=ppu*(c.treeHeight||0);
    c.nearActive=treePixels>(c.nearActive?22:26)&&(inView||distance<(c.nearActive?52:44));const shadows=ppu>12&&distance<28;
    c.group.visible=inView||shadows;c.near.visible=showTrees&&c.nearActive;c.far.visible=showTrees&&!c.nearActive;
-   for(const m of c.meshes){m.castShadow=shadows&&c.shadowKnown!==false&&m.name!=='Saved tutorial terrain'&&m.name!=='Distant trees';m.userData.noShadow=!m.castShadow;}
+   c.shadows.visible=showTrees&&shadows&&c.shadowKnown!==false&&shadowDetail==='proxy';
+   for(const m of c.meshes){const allowed=shadowDetail==='full'?!m.userData.shadowProxy&&m.name!=='Distant trees':m.userData.shadowProxy||!m.isInstancedMesh;m.castShadow=shadows&&c.shadowKnown!==false&&allowed&&m.name!=='Saved tutorial terrain';m.userData.noShadow=!m.castShadow;}
    if(inView){visible++;if(c.near.visible)detailed++;}if(shadows)shadowed++;
   }
   groundSkin.update(chunks,localFocus,ppu);stats.groundSprites=groundSkin.stats;
-  root.updateMatrixWorld(true);let visibleTriangles=0,visibleBatches=0;root.traverseVisible(o=>{if(o.isMesh&&frustum.intersectsObject(o)){visibleTriangles+=triangles(o);visibleBatches++;}});
+  root.updateMatrixWorld(true);let visibleTriangles=0,visibleBatches=0;root.traverseVisible(o=>{if(o.isMesh&&!o.userData.shadowProxy&&frustum.intersectsObject(o)){visibleTriangles+=triangles(o);visibleBatches++;}});
   Object.assign(stats,{visibleChunks:visible,detailedChunks:detailed,shadowChunks:shadowed,visibleTriangles,visibleBatches});return stats;
  }
- return {root,chunks,denseMeshes,groundMeshes,trees,treeInstances,fill,groundSkin,stats,update,dispose(){if(disposed)return;disposed=true;root.removeFromParent();instances.forEach(m=>m.dispose());owned.forEach(g=>g.dispose());fillMaterials.forEach(m=>m.dispose());fillMaterial.dispose();groundSkin?.dispose();rimMaterial.dispose();}};
+ return {root,chunks,denseMeshes,groundMeshes,trees,treeInstances,fill,groundSkin,stats,update,coversGround:(x,z)=>(!plan.includeAt||plan.includeAt(x,z))&&plan.heightAt(x,z)===0,dispose(){if(disposed)return;disposed=true;root.removeFromParent();instances.forEach(m=>m.dispose());owned.forEach(g=>g.dispose());fillMaterials.forEach(m=>m.dispose());fillMaterial.dispose();shadowMaterial.dispose();groundSkin?.dispose();rimMaterial.dispose();}};
 }

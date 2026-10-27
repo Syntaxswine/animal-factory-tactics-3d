@@ -1,0 +1,147 @@
+{
+  "recordedAt": "2026-10-22T20:43:56.316Z",
+  "base": "2300fd72849553b4d259a5f575eab1058a335ab8",
+  "soundSource": "Babble Lab 0df4be4",
+  "sourceSha256": {
+    "dist/tactics/battle-audio.js": "014d40b1b2de06cde84c283fa5f148a382b3d415bd89abc356480dacecca08b9",
+    "dist/tactics/battle-sound-data.js": "896335fea9c6418838aae7c5f1a3427f73de1a0f3cc1de9327bf0cf842271a6c",
+    "dist/tactics/sound-preferences.js": "f8e126892be178c74e21b07a69b5b153b764a2abdcb0ce2d9abc5c6fdf7d7cdd",
+    "dist/tactics/battle-renderer.js": "725c985ef5e008a4557ed52d67d83c8344415fd5035998bf6ac4a5fb3a27f561",
+    "dist/tactics/battle-3d.js": "e1301516be2712740ee51d1f8104ea5b2a10cc4523b2ef8a8c769dcc029da22d",
+    "dist/tactics/settings-3d.js": "18d9c902f9bc772b53f185ae23f07255ee24fa8a7da4dc67796ca26e47d9847b",
+    "dist/tactics/title-3d.js": "3812dbe9db5b1c861592c387b2e4c8109f4abc705c8e34caca4e11aaa163132b",
+    "dist/tactics/gunshot-impact-debug.js": "76facbac7b3726a719d99e26526e0471d3fe89aa486768d4f07f4d25f63a8f66",
+    "tools/build-tactics-3d.mjs": "2ada956b80fd7c7d5d63ceaf7c63ad27d32ac412c32305d27966784f94436701",
+    "tools/prepare-battle-sfx.mjs": "89de432c0a12e95fe43290304723175f19ec0ab835f9d5f3307cdf28f8363cb0"
+  },
+  "assets": [
+    {
+      "id": "tt33",
+      "file": "tt33.wav",
+      "bytes": 150866,
+      "sourceFrames": 75411,
+      "sha256": "6020cda4fd90c5e5836ccdf0cd956d8383318d99e1fada546893361f8ffe1a1a"
+    },
+    {
+      "id": "mosin-m38",
+      "file": "mosin-m38.wav",
+      "bytes": 252296,
+      "sourceFrames": 126126,
+      "sha256": "f6d995444a2b9ddee61d32b973b3571f697daa1e09c5f935d51f566d8011680b"
+    },
+    {
+      "id": "ak47-shot",
+      "file": "ak47-shot.wav",
+      "bytes": 11952,
+      "sourceFrames": 5954,
+      "sha256": "b7bf100df3e00d0f88b770c5941dfca1a1581c102f6c14d0acaff34706c0f5b0"
+    },
+    {
+      "id": "shotgun-fire",
+      "file": "shotgun-fire.wav",
+      "bytes": 208196,
+      "sourceFrames": 104076,
+      "sha256": "e88a172c79f3bfff16c101f22fea232bd454da29d8c7ebbd5fd239275842c327"
+    },
+    {
+      "id": "explosion-deep",
+      "file": "explosion-deep.wav",
+      "bytes": 481500,
+      "sourceFrames": 240728,
+      "sha256": "c1edacabeb24aa87aa5f0769a10392185f4f5e885fc110804cffdbac8bde3680"
+    },
+    {
+      "id": "explosion-large",
+      "file": "explosion-large.wav",
+      "bytes": 319440,
+      "sourceFrames": 159698,
+      "sha256": "bf9957ce624c72549b13fdae78faaecc716c36573c6cece10b6145f23438a9f9"
+    },
+    {
+      "id": "shotgun-pump",
+      "file": "shotgun-pump.wav",
+      "bytes": 82332,
+      "sourceFrames": 41144,
+      "sha256": "a98f15ff563da14f9f777d8b09763c35b64af630ed863b55b52f571003da63f8"
+    },
+    {
+      "id": "rock-debris",
+      "file": "rock-debris.wav",
+      "bytes": 217158,
+      "sourceFrames": 108557,
+      "sha256": "d121738c69b0aef5470ce5e6f41b93ca0a0f274e970b79517fdb491bb9b14906"
+    },
+    {
+      "id": "metal",
+      "file": "metal.wav",
+      "bytes": 19868,
+      "sourceFrames": 9912,
+      "sha256": "b514813b6ff155349c0f3539bedefd0a02b3594e23a33f29b0f72a18b29cdb0d"
+    },
+    {
+      "id": "glass",
+      "file": "glass.wav",
+      "bytes": 26356,
+      "sourceFrames": 13156,
+      "sha256": "25a2326660838c8ceaefcad194c78e0818b26c3caebdc76655e4f18d004ecaca"
+    },
+    {
+      "id": "tin",
+      "file": "tin.wav",
+      "bytes": 19078,
+      "sourceFrames": 9517,
+      "sha256": "f9f8e9c0ab421689cb6a8f48605eff09c4ff8b2d44b04d0e22496eae11f509fd"
+    }
+  ],
+  "encodedBytes": 1789042,
+  "floatPcmBytesAtSourceRate": 3577116,
+  "resourceLimits": {
+    "voices": 12,
+    "decodedAdmissionBytes": 12582912,
+    "encodedClipBytes": 2097152
+  },
+  "verification": {
+    "focused": {
+      "passed": 181,
+      "failed": 0
+    },
+    "finalAudioAndPackaging": {
+      "passed": 19,
+      "failed": 0
+    },
+    "finalAudio": {
+      "passed": 15,
+      "failed": 0
+    },
+    "wholeProjectRerun": false,
+    "packagedBrowser": {
+      "normalCommands": true,
+      "shooter": "Yakov",
+      "target": "Grigori",
+      "damage": 45,
+      "hpBefore": 70,
+      "hpAfter": 25,
+      "apBefore": 12,
+      "apAfter": 0,
+      "loadedBefore": 5,
+      "loadedAfter": 4,
+      "decodedClips": 11,
+      "scheduledMosinCues": 1,
+      "pausedContext": "suspended",
+      "muteRetiresVoice": true,
+      "unmuteDoesNotReplay": true,
+      "quickloadRetainsCostsWithoutReplay": true,
+      "sharedTitleSetting": 0.7,
+      "warningAndErrorLogs": []
+    },
+    "scope": "Decoded/scheduled native browser playback and deterministic event/lifecycle tests. No listening verdict, hardware loudness calibration, acoustic simulation or full-sector CPU/GPU/FPS claim."
+  },
+  "cleanup": {
+    "temporaryTabsClosed": [
+      56,
+      57
+    ],
+    "port4498Released": true,
+    "registeredHelpersRetired": true
+  }
+}

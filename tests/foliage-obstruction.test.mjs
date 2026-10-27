@@ -9,7 +9,7 @@ import {traceProjectile} from '../dist/tactics/core/projectiles.js';
 import {traceProjectile as legacyTrace} from '../dist/tactics/projectiles.js';
 import {buildWorld,traceWorld} from '../dist/tactics/hybrid-world.js';
 import {hybridWorld,synchronizeHybrid} from '../dist/tactics/hybrid-combat.js';
-import {buildFoliageObstacles,synchronizeFoliage,foliageObstacles,traceFoliage,foliageSegment} from '../dist/tactics/foliage-obstacles.js';
+import {buildFoliageObstacles,synchronizeFoliage,foliageObstacles,traceFoliage,foliageSegment,foliageOccluded} from '../dist/tactics/foliage-obstacles.js';
 import {foliageErrors,foliagePreset} from '../dist/tactics/foliage-data.js';
 import {EditingDocument} from '../dist/tactics/editor-3d-controller.js';
 import {extractBlock,placeBlock} from '../dist/tactics/core/blocks.js';
@@ -102,9 +102,22 @@ test('an elevated head can be identified when its ray really clears the finite s
 test('indexed foliage rays agree with brute force across chunk boundaries in both directions',()=>{
  const m=blankMap();m.foliage={};for(let y=7;y<27;y++)for(let x=7;x<27;x++)if(x!==16)m.foliage[`${x},${y},0`]=[100,true];
  const scene=buildFoliageObstacles(m);let seed=9213;const random=()=>((seed=Math.imul(seed,1664525)+1013904223>>>0)/4294967296);
- for(let i=0;i<120;i++){
-  const start=[random()*35,random()*4,random()*35],end=[random()*35,random()*4,random()*35],purpose=i%2?'sight':'shot';
-  const ts=scene.worldBoxes.filter(b=>purpose==='sight'?b.blocksSight:b.blocksShot).map(b=>foliageSegment(start,end,b)).filter(t=>t!==null),want=ts.length?Math.min(...ts):null,actual=traceFoliage(scene,start,end,purpose,'world')?.t??null;
+ for(let i=0;i<360;i++)for(const space of ['world','simulation']){
+  const start=[i%6?random()*35:16,random()*4,i%9?random()*35:8],end=i%37?[random()*35,random()*4,random()*35]:[...start],purpose=i%2?'sight':'shot';
+  const boxes=space==='world'?scene.worldBoxes:scene.boxes,ts=boxes.filter(b=>purpose==='sight'?b.blocksSight:b.blocksShot).map(b=>foliageSegment(start,end,b)).filter(t=>t!==null),want=ts.length?Math.min(...ts):null,actual=traceFoliage(scene,start,end,purpose,space)?.t??null;
   if(want===null)assert.equal(actual,null);else assert.ok(Math.abs(actual-want)<1e-9);
+  assert.equal(foliageOccluded(scene,start,end,space),!!traceFoliage(scene,start,end,'sight',space));
  }
+});
+
+test('allocation-free leaf intersections agree with the original clipped ellipsoid equation',()=>{
+ const scene=buildFoliageObstacles(screen()),b=scene.boxes.find(b=>b.lobes);let seed=7581;const random=()=>((seed=Math.imul(seed,1664525)+1013904223>>>0)/4294967296);
+ function original(start,end){let lo=0,hi=1;for(let i=0;i<3;i++){const d=end[i]-start[i];if(Math.abs(d)<1e-10){if(start[i]<b.min[i]||start[i]>b.max[i])return null;}else{let a=(b.min[i]-start[i])/d,c=(b.max[i]-start[i])/d;if(a>c)[a,c]=[c,a];lo=Math.max(lo,a);hi=Math.min(hi,c);}}if(lo>hi)return null;
+  let hit=null;for(const l of b.lobes){const o=start.map((v,i)=>(v-l.center[i])/l.radius[i]),d=end.map((v,i)=>(v-start[i])/l.radius[i]),a=d.reduce((n,v)=>n+v*v,0),q=2*d.reduce((n,v,i)=>n+v*o[i],0),c=o.reduce((n,v)=>n+v*v,0)-1,disc=q*q-4*a*c;if(disc<0||a<1e-14)continue;const near=(-q-Math.sqrt(disc))/(2*a),far=(-q+Math.sqrt(disc))/(2*a),t=Math.max(lo,near);if(t<=Math.min(hi,far)&&(hit===null||t<hit))hit=t;}return hit;
+ }
+ for(let i=0;i<2000;i++){const a=[8+random()*4,random()*5,6+random()*4],c=i%41?[8+random()*4,random()*5,6+random()*4]:[...a],want=original(a,c),actual=foliageSegment(a,c,b);if(want===null)assert.equal(actual,null);else assert.ok(Math.abs(actual-want)<1e-12);}
+});
+
+test('malformed nonfinite foliage rays terminate without an impact',()=>{
+ const scene=buildFoliageObstacles(screen());for(const value of [NaN,Infinity,-Infinity])for(let axis=0;axis<3;axis++){const point=[10,1,10];point[axis]=value;assert.equal(traceFoliage(scene,point,[12,1,10]),null);assert.equal(traceFoliage(scene,[8,1,10],point),null);}
 });

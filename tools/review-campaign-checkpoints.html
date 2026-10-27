@@ -1,0 +1,49 @@
+<!doctype html><meta charset="utf-8"><title>Campaign checkpoint review</title>
+<style>body{background:#192f27;color:#f9e7bc;font:16px system-ui;padding:24px;max-width:1000px}button{padding:12px}pre{white-space:pre-wrap}</style>
+<h1>Campaign checkpoint review</h1><p>Disposable test data on a separate preview origin. Refuses to replace an existing non-test campaign. Uses the real campaign, movement, snapshot validation and IndexedDB compare-and-swap paths. Copy this file beside the packaged campaign modules to run it.</p>
+<button id="run">Run checkpoint journey</button> <button id="render-reports">Show saved rendering reports</button><p id="status" role="status">Ready</p><pre id="result"></pre>
+<script type="module">
+import {openingContent} from './campaign-opening.js';
+import {createCampaign,initializeSector,openCampaignSector,activeState,finishCampaignEncounter} from './campaign-model.js';
+import {CampaignSession,putCampaignSave,getCampaignSave} from './campaign-store.js';
+import {captureCampaign,restoreCampaign} from './campaign-save.js';
+import {AutosaveSchedule} from './autosave-schedule.js';
+import {move,stepMovement} from './core/engine.js';
+const check=(ok,why)=>{if(!ok)throw Error(why);},quantiles=a=>{a=[...a].sort((x,y)=>x-y);return {median:a[Math.floor(a.length*.5)],p95:a[Math.floor(a.length*.95)]};};
+document.querySelector('#render-reports').onclick=()=>{document.querySelector('#result').textContent=JSON.stringify(JSON.parse(localStorage.getItem('aft-tree-cover-performance-v2')||'[]'),null,2);document.querySelector('#status').textContent='Saved rendering reports';};
+async function runCase(count){
+ const content=openingContent();
+ if(count>2){const base=content.assignments[70];content.assignments=Object.fromEntries(Array.from({length:count},(_,i)=>[70+i,{...structuredClone(base),entries:['north','east','south','west'].map(side=>({side,offset:.5,width:6,z:0,depth:8}))}]));}
+ const c=createCampaign(content,{id:'checkpoint-review-'+crypto.randomUUID()});for(const id of Object.keys(c.assignments))initializeSector(c,+id);
+ const s=openCampaignSector(c,70),u=s.units.find(u=>u.id===s.selected),policy=new AutosaveSchedule(s,0),samples=[];let writes=0,start,record;
+ const priorRecord=await getCampaignSave('continue');check(!priorRecord||priorRecord.campaignId?.startsWith('checkpoint-review-'),'Use a separate preview origin: its checkpoint belongs to a non-test campaign');
+ await putCampaignSave('continue',captureCampaign(c),priorRecord?{id:priorRecord.campaignId,revision:priorRecord.revision}:undefined);
+ const persist=async(slot,next,expected)=>{const captureMs=performance.now()-start,at=performance.now();await putCampaignSave(slot,next,expected);samples.push({captureMs,storageWallMs:performance.now()-at});record=next;writes++;};
+ const session=new CampaignSession(c,persist);
+ check(move(s,u,u.x+5,u.y,u.z||0),'The walking order was rejected');
+ for(let i=1;i<=5;i++){stepMovement(s);check(!policy.due(s,i*1000),'A tile caused an immediate autosave');}
+ const writesBeforeDeadline=writes;check(policy.due(s,30000),'Continuous movement postponed its checkpoint deadline');
+ const stamp=policy.snapshot(s);start=performance.now();await session.save();policy.saved(stamp,30000);
+ for(let i=0;i<5;i++){start=performance.now();await session.save();}
+ check(activeState(session.campaign)===s&&s.units.includes(u),'An ordinary checkpoint replaced live actor/state identities');
+ const loaded=restoreCampaign(await getCampaignSave('continue'));check(activeState(loaded).units.find(v=>v.campaignId===u.campaignId).x===u.x,'The saved walking position changed');
+ const source=captureCampaign(c),a=new CampaignSession(restoreCampaign(source)),b=new CampaignSession(restoreCampaign(source));await a.save();let staleRejected=false;
+ try{await b.save();}catch(e){staleRejected=/Another tab/.test(e.message);}check(staleRejected,'A stale tab overwrote a newer checkpoint');
+ const failed=new CampaignSession(restoreCampaign(await getCampaignSave('continue')),async()=>{throw Error('Controlled storage failure');}),prior=failed.savedRevision;
+ try{await failed.save();throw Error('Failure was ignored');}catch(e){check(e.message==='Controlled storage failure',e.message);}check(failed.savedRevision===prior&&!failed.busy,'Failure advanced the durable revision or left saving locked');
+ let release,gated=true;const pending=new CampaignSession(restoreCampaign(await getCampaignSave('continue')),async(...args)=>{if(gated){gated=false;await new Promise(resolve=>release=resolve);}await putCampaignSave(...args);});
+ const saving=pending.save();let transitionRejected=false;try{await pending.transition(n=>n.money--);}catch(e){transitionRejected=/in progress/.test(e.message);}check(transitionRejected,'A transition raced a pending checkpoint');release();await saving;
+ await pending.transition(n=>finishCampaignEncounter(n));check(!pending.campaign.active,'The peaceful encounter could not be left');
+ await pending.transition(n=>openCampaignSector(n,70));const revisit=restoreCampaign(await getCampaignSave('continue'));
+ check(activeState(revisit).units.find(v=>v.campaignId===u.campaignId).x===u.x,'Leaving and revisiting lost tactical state');
+ const captureMs=quantiles(samples.map(s=>s.captureMs)),storageWallMs=quantiles(samples.map(s=>s.storageWallMs)),checkpointWallMs=quantiles(samples.map(s=>s.captureMs+s.storageWallMs));
+ check(captureMs.p95<=50,'Checkpoint preparation exceeded its 50 ms p95 budget');check(checkpointWallMs.p95<=300,'Checkpoint wall time exceeded its 300 ms p95 budget');
+ return {initializedSectors:count,characters:Object.keys(c.characters).length,writesBeforeDeadline,scheduledCheckpointWrites:1,explicitRepeatedWrites:writes-1,samples,captureMs,storageWallMs,checkpointWallMs,budget:{captureP95Ms:50,checkpointP95Ms:300,passed:true},recordBytes:new TextEncoder().encode(JSON.stringify(record,(_,v)=>v instanceof Set?[...v]:v)).length,identitiesPreserved:true,reloadPreserved:true,staleWriteRejected:staleRejected,failedWritePreserved:true,pendingTransitionRejected:transitionRejected,leaveAndRevisitPreserved:true};
+}
+document.querySelector('#run').onclick=async()=>{
+ const button=document.querySelector('#run'),status=document.querySelector('#status');button.disabled=true;
+ try{const results=[];for(const count of [2,6]){status.textContent='Measuring '+count+' initialized sectors…';results.push(await runCase(count));}
+ document.querySelector('#result').textContent=JSON.stringify({at:new Date().toISOString(),browser:navigator.userAgent,note:'Capture is synchronous campaign preparation. Storage is actual IndexedDB request wall time, including browser serialization; neither is GPU time. Samples include the first checkpoint and five explicit repeated saves.',results},null,2);status.textContent='All checkpoint journeys passed';}
+ catch(e){status.textContent='Failed: '+e.message;console.error(e);}finally{button.disabled=false;}
+};
+</script>

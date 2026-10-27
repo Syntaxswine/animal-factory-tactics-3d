@@ -2,6 +2,12 @@ import {createFatalHeadMask} from './fatal-head-mask.js';
 import {validFatalHead} from './gunshot-impacts.js';
 
 export function prepareFatalHead(model,texture){return texture?createFatalHeadMask(model.worker,{species:model.profile.id,texture}):null;}
+// Off can now skip the optional atlases. Install a mask once if the player later
+// enables Full; an unsupported rig is not retried on every animation frame.
+export function ensureFatalHead(model,texture){
+ if(!texture||model.fatalMaskTexture===texture)return model.fatalMask;
+ model.fatalMask?.dispose();model.fatalMaskTexture=texture;return model.fatalMask=prepareFatalHead(model,texture);
+}
 
 // Pose solvers retain original vertex indices. The mask is a render-only view
 // applied after those solvers, before rebuilding the character's merged draw.
