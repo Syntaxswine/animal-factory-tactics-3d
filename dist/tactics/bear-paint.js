@@ -13,5 +13,18 @@ export function createBearPaint(renderer,worker,texture){
    float useCloth=max(missing,rim);
    diffuseColor.rgb=mix(diffuseColor.rgb,cloth*(.87+.13*abs(n.y)),useCloth);coverage*=1.-useCloth;filled=max(filled,useCloth);
   }
+  // Both paintings place the fur bob below its original grey reference.
+  // Clear that flat copy from the trousers with adjacent rear cloth, then
+  // reuse the painted fur on the separately fitted tail. No extra texture.
+  if(abs(vPaintPart-2.)<.1){
+   float oldTail=(1.-smoothstep(.85,1.2,length(vec2(p.z/.068,(p.y-.745)/.077))))*(1.-smoothstep(-.11,-.06,p.x));
+   vec2 clothUV=vec2((2.5+(p.z*.2+.08)/1.18)/4.,.5+(p.y-.84)/2.36);
+   vec3 cloth=.5*(texture2D(uModelPaint,clothUV).rgb+texture2D(uModelPaint,clothUV-vec2(.16/(1.18*4.),0.)).rgb);
+   diffuseColor.rgb=mix(diffuseColor.rgb,cloth,oldTail);coverage*=1.-oldTail;filled=max(filled,oldTail);
+  }
+  if(vPaintPart>7.5){
+   vec2 furUV=vec2((2.5+p.z*.8/1.18)/4.,.5+(.745+(p.y-.836)*.68-.84)/2.36);
+   diffuseColor.rgb=texture2D(uModelPaint,furUV).rgb*(.78+.22*max(0.,-n.x));coverage=0.;filled=1.;
+  }
  `}});
 }

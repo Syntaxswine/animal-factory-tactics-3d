@@ -9,14 +9,14 @@
   "surfaces": 8,
   "neutralBounds": {
     "min": [
-      -0.2815303,
+      -0.2695302963256836,
       0,
-      -0.4857703
+      -0.48577028151027646
     ],
     "max": [
-      0.2328318,
-      1.6708453,
-      0.4859749
+      0.23283180594444275,
+      1.6708452701568604,
+      0.4859749169270491
     ]
   },
   "outfits": [
@@ -56,7 +56,7 @@
     },
     {
       "name": "crawl",
-      "sha256": "a16317979d35b8e2487e199721abf57ce52e71a8e8efb106eca044d4d413c6f7"
+      "sha256": "3fc38d204cc8426370d48b1ee0fb49dd100be8f654edea7627d2e3cd6dcbdd43"
     },
     {
       "name": "rpg",
@@ -64,7 +64,7 @@
     },
     {
       "name": "author",
-      "sha256": "d71bab0441f66add7e8c7522e87e98b613d7e8ea3acfeca65850834f588b375e"
+      "sha256": "65149b34629c4b49a2b16446f34d9f8e0975a524c572320673d33c0414ead1c4"
     }
   ],
   "review": "Artist self-review and automated checks complete; independent architect review pending.",
@@ -78,10 +78,10 @@
     },
     {
       "name": "docs/tactics/review-images/bear/turnaround-review.png",
-      "bytes": 1033961,
+      "bytes": 1031587,
       "width": 2000,
       "height": 940,
-      "sha256": "0fd8179fb6d1cb57799c5a85ffb2751262c9375bf686d35fc7258d292f589269"
+      "sha256": "8b1360d09e5901d1c5b48cd7d44edae49cf7ba092a774b40ce662e58a7d7893d"
     },
     {
       "name": "docs/tactics/review-images/bear/neutral-paint-reference.png",

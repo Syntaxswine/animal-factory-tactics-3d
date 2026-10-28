@@ -71,7 +71,11 @@ function reduce(name,g,target,tolerance){
 }
 const bonePositions={};for(const s of [-1,1])for(const [name,p]of Object.entries({upperArm:[-.045,1.191,.260],forearm:[.022,.991,.399],hand:[.061,.742,.410],fingers:[.072,.712,.410]}))bonePositions[name+s]=[p[0],p[1],s*p[2]];
 function save(file,parts,sourceTriangles){
- const data={schema:1,species:'bear',source:'Brown bear worker: broad adapted work garments, new short-muzzled head, rounded ears, plantigrade paws and short tail; widened shared worker skeleton',bonePositions,sourceTriangles,triangles:parts.reduce((n,p)=>n+p.triangles,0),parts};
+ // Attach the tail at the upper rear pelvis, above the fullest part of the
+ // rump. Keep the original registration coordinates separate from physical
+ // fitting so both outfits can reuse their paintings without repainting.
+ const fitted=parts.map(p=>p.name==='short bear tail'?{...p,paintPosition:p.position,position:p.position.map((v,i)=>+(v+[.012,.085,0][i%3]).toFixed(7))}:p);
+ const data={schema:1,species:'bear',source:'Brown bear worker: broad adapted work garments, new short-muzzled head, rounded ears, plantigrade paws and short tail; widened shared worker skeleton',bonePositions,sourceTriangles,triangles:parts.reduce((n,p)=>n+p.triangles,0),parts:fitted};
  fs.writeFileSync(new URL('../dist/tactics/'+file,import.meta.url),JSON.stringify(data)+'\n');console.log(file,data.triangles,parts.map(p=>[p.name,p.triangles,p.errorWorld]));return data;
 }
 const author=geometries.map(({name,g})=>reduce(name,g,name.includes('skull')?7500:name.includes('tail')?600:name.includes('foot')?1100:name.includes('shirt')?6700:name.includes('overalls')?8500:3000,.005));

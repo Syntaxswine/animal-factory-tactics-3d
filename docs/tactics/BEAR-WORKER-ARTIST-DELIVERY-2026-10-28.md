@@ -60,6 +60,14 @@ projection still borrows paint for hidden surfaces; this is not a conventional
 UV atlas or proof that every hidden texel was separately authored. Coverage mode
 distinguishes direct projection, reused paint and fallback.
 
+The tail correction raises its attachment **0.085 tile** and tucks it forward
+**0.012 tile**, above the fullest part of the rump. Both mesh levels preserve
+the original paint registration separately from the fitted physical positions.
+The paintings' lower tail copy is covered with adjacent rear trouser paint;
+their existing fur is reused on the higher tail. This fixes both the side
+silhouette and the apparent second tail in the rear view without changing the
+paint sheets. Reused patches remain marked as borrowed paint in coverage mode.
+
 ## Files and builder use
 
 | Asset | File |
@@ -112,7 +120,8 @@ Reproduce geometry with `node tools/build-bear-worker.mjs`. Run
 `node --test tests/bear-worker.test.mjs` for the bear checks. Build with
 `node tools/build-tactics-3d.mjs` before running `tools/review-bear-worker.mjs`
 with `PLAYWRIGHT_PATH` and `BEAR_REVIEW_PACKAGED=1`. The `--grey` option also
-recreates the exact paint target; preserve that target if later changing geometry.
+recreates the original paint target from the stored registration positions;
+the main viewer's grey mode shows the currently fitted physical geometry.
 
 The [painting provenance and prompts](BEAR-WORKER-PAINT-PROMPTS-2026-10-28.md)
 record all selected bitmap assets. The [compact validation record](review-images/bear/validation.json)
