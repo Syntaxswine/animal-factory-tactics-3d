@@ -78,5 +78,5 @@ function buildHenLadderMotion(worker,definition){
  function restore(){for(const {p,position,normal,si,sw}of saved){for(const[k,a]of Object.entries({position,normal,skinIndex:si,skinWeight:sw}))p.geometry.setAttribute(k,a.clone());}worker.pose();for(const b of bones){b.position.copy(positions.get(b));b.quaternion.identity();}root.position.copy(entry.p);root.quaternion.copy(entry.q);root.updateMatrixWorld(true);skeleton.update();result=null;}
  for(const p of phases)for(const u of[0,.5,1])apply((p.start+(p.end-p.start)*u)/6);
  restore();
- return{definition:d,duration:6,phases:phases.map(({label,start,end})=>({label,start,end})),limbs,skeleton,rest,apply,reset,solve,restore,folded,tail,diagnostics:()=>result,dispose(){if(disposed)return;restore();ends.forEach(b=>b.removeFromParent());owned?.dispose();root.position.copy(entry.p);root.quaternion.copy(entry.q);root.updateMatrixWorld(true);disposed=true;}};
+ return{definition:d,duration:6,phases:phases.map(({label,start,end})=>({label,start,end})),limbs,skeleton,rest,apply,reset,solve,restore,folded,tail,apron,tie,toes,diagnostics:()=>result,dispose(){if(disposed)return;restore();ends.forEach(b=>b.removeFromParent());owned?.dispose();root.position.copy(entry.p);root.quaternion.copy(entry.q);root.updateMatrixWorld(true);disposed=true;}};
 }
