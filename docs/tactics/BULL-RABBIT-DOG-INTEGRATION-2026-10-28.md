@@ -62,8 +62,10 @@ The new physics checks found and corrected these fits:
 The animation index includes armed idle, walk/aim/fire, stances and casualties,
 crawl, grenade throwing, roof/cliff mantling and descent, both tower ladders,
 burning, fuel-pack rupture, fatal reaction, sitting/rising and speaking. It carries
-the chosen animal, outfit and equipment into each appropriate study. Chair motion
-remains unarmed; grenade and fuel-pack studies use their own equipment. The older
+the chosen animal, outfit and equipment into each appropriate study. The new
+crawl clip is not yet invoked by live battle movement. Chair motion remains an
+unarmed study, with no new world sitting interaction; grenade and fuel-pack
+studies use their own equipment. The older
 weighted-window experiments are absent from this checkout; existing simple game
 window/wall traversal uses the registered native models.
 

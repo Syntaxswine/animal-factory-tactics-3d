@@ -21,7 +21,7 @@ The index carries the selected outfit and weapon into the appropriate studies.
 | Standing, walking, running, kneeling and prone | Native skeleton, grounded paws, shared stance transitions and sighted rifle fitting |
 | Guard and mercenary idle | Both outfits, every weapon, measured collision limits and equipment-inclusive balance |
 | Aiming and firing | Existing battle weapon paths; fitted bear eye/sight relationship and native hand anchors |
-| Crawling | All equipment, forward and backward travel, seven legal paired carries, actual skull and floor clearance |
+| Crawling study | All equipment, forward and backward travel, seven legal paired carries, actual skull and floor clearance; the new crawl clip is not yet invoked by live battle movement |
 | Grenades | Prepared bear trajectory and release point, both outfits, shared grenade model |
 | Roof and cliff ascent | Chest first, sideways transfer, belly support, planted hands and broad-paw clearance |
 | Roof and cliff descent | Every bear weapon; stow, crouch, edge contact, supported drop and draw |
@@ -32,9 +32,11 @@ The index carries the selected outfit and weapon into the appropriate studies.
 | Sitting and rising | Shared chair study accepts the bear; common seat and planted paw/palm contacts across the chair library |
 | Speaking | Native sculpted jaw, lips, cavity, teeth and tongue; both outfits in the viewer and actual dialogue portrait renderer |
 
-Chair motion remains an unarmed study. Grenade throwing and fuel-tank rupture use
+Chair motion remains an unarmed study. Crawling and chair playback in the index
+do not add new live gameplay actions. Grenade throwing and fuel-tank rupture use
 their corresponding equipment. The older weighted-window experiments are absent
-from this checkout; the table describes the current shared game presentation.
+from this checkout; the table distinguishes study coverage from the current
+shared game presentation.
 
 ## Native fits
 
