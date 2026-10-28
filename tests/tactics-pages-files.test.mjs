@@ -22,5 +22,6 @@ for(const scope of ['base','3D'])test(`the ${scope} tactics Pages build lists ev
  for(const file of ['flame-effect.js','flame-nozzles.js','flame-art.html','flame-art-review.js'])assert.ok(listed.has(file),file);
  for(const file of ['gunshot-spray-frame.js','painted-blood-spray.js'])assert.ok(listed.has(file),file);
  if(scope==='3D')for(const file of ['gunshot-spray-study.html','gunshot-spray-study.js'])assert.ok(listed.has(file),file);
+ if(scope==='3D')for(const file of ['character-fitting-study.html','character-fitting-viewer.js','character-animation-study.html','bear-worker.html','bear-worker-viewer.js','bear-worker.js','bear-paint.js','bear-10k-data.json','bear-author-data.json','bear-roster-fixture.js','fitted-character-roster.js','character-roster-fixture.js'])assert.ok(listed.has(file),'Completed animal roster must ship '+file);
  if(scope==='3D')for(const file of ['foliage-skins-review.html','foliage-skins-review.js','foliage-context-fixture.js','foliage-density-fixture.js','foliage-composition-fixture.js'])assert.ok(listed.has(file),'Native horse foliage review must ship '+file);
 });

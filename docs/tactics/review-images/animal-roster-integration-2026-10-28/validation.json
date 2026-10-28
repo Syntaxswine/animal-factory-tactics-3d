@@ -1,0 +1,210 @@
+{
+  "date": "2026-10-28",
+  "checkedAt": "2026-10-28T15:41:44.955Z",
+  "branch": "work/editor-3d",
+  "canonicalBase": "d3b0ccc",
+  "artistDelivery": "3c14cd090b0f7786737f33dd24f0c46aa598a1bf",
+  "species": [
+    "bear",
+    "bull",
+    "rabbit",
+    "dog"
+  ],
+  "scope": "Integrate the delivered native models, outfits, equipment, animation fittings, editor appearances, recruitment and portraits. Existing authored casts remain unchanged.",
+  "tests": {
+    "initialRegression": {
+      "tests": 906,
+      "pass": 905,
+      "fail": 1,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 712583.6458,
+      "files": [
+        "tests/animal-ledge-descent.test.mjs",
+        "tests/animal-mantle-style.test.mjs",
+        "tests/animal-motion.test.mjs",
+        "tests/animal-motion-paint-lifecycle.test.mjs",
+        "tests/animal-prone.test.mjs",
+        "tests/animal-roof-mantle.test.mjs",
+        "tests/animal-stance-refinement.test.mjs",
+        "tests/armed-idle.test.mjs",
+        "tests/armed-idle-rifle.test.mjs",
+        "tests/authored-town-maps.test.mjs",
+        "tests/battle-fire-roster.test.mjs",
+        "tests/battle-hud.test.mjs",
+        "tests/battle-map.test.mjs",
+        "tests/bear-integration.test.mjs",
+        "tests/bear-worker.test.mjs",
+        "tests/bull-worker.test.mjs",
+        "tests/campaign.test.mjs",
+        "tests/campaign-hiring.test.mjs",
+        "tests/character-screen.test.mjs",
+        "tests/completed-character-integration.test.mjs",
+        "tests/crawl-loadouts.test.mjs",
+        "tests/crawl-motion.test.mjs",
+        "tests/dialogue-integration.test.mjs",
+        "tests/dialogue-presentation.test.mjs",
+        "tests/dog-guard.test.mjs",
+        "tests/editor-3d.test.mjs",
+        "tests/editor-3d-editing.test.mjs",
+        "tests/editor-character-layers.test.mjs",
+        "tests/encounter-save.test.mjs",
+        "tests/extended-map-layers.test.mjs",
+        "tests/fatal-head-assets.test.mjs",
+        "tests/greek-key-tutorial.test.mjs",
+        "tests/grenade-roster.test.mjs",
+        "tests/ladder-equipment-journey.test.mjs",
+        "tests/ladder-journey.test.mjs",
+        "tests/ledge-descent-gameplay.test.mjs",
+        "tests/painted-fire-roster.test.mjs",
+        "tests/rabbit-worker.test.mjs",
+        "tests/roof-mantle-weapons.test.mjs",
+        "tests/skin-holds.test.mjs",
+        "tests/squad-ammo.test.mjs",
+        "tests/tactics-3d-deployment.test.mjs",
+        "tests/tactics-maps.test.mjs",
+        "tests/tactics-pages-files.test.mjs",
+        "tests/wooden-ladder-journey.test.mjs"
+      ]
+    },
+    "resolvedFailure": "The base package copied the three original model studies, whose new footer shortcuts referenced 3D-only roster pages. Production shortcuts now live in the 3D gallery; both base and 3D dependency checks pass. The checks were retained and expanded for the completed roster.",
+    "packagingRecheck": {
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 635.5403
+    },
+    "additionalPersistenceAndQuickPlay": {
+      "tests": 25,
+      "pass": 25,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 25615.5151
+    },
+    "speakingLineageGeometryAndPositiveControl": {
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 7718.6327
+    },
+    "effectiveDistinctPassing": 934,
+    "unresolvedFailures": 0,
+    "method": "45-file regression run followed by rechecks of the sole corrected packaging failure, plus separate persistence/Quick Play and speaking checks. The entire 934-case set was not rerun as one invocation."
+  },
+  "delivery": {
+    "coreModules": 20,
+    "pinnedCoreRevision": "e529f4b3d512d32cea522d701d01ebe8488af013",
+    "coreReproduces": true,
+    "assetAuditPasses": true,
+    "packagedBuildPasses": true,
+    "baseApplicationFiles": 441,
+    "sectorConfigurations": 82,
+    "nativePortraitCopiesIdentical": true,
+    "portraitSHA256": {
+      "assets/characters/bear-idle.png": "99dec7af533716ad0888b5fba6bc6fd79e215a6a928cb99c2fadad9eaa427c30",
+      "assets/characters/red-hats/bear-idle.png": "5f7f528786c6a35229a5a4d60bdbc20cb827ea1f91c16ef3505ab2bb6337ee04",
+      "assets/characters/bull-idle.png": "f48653bfc0934fd9656320050468d68cea454e0e60ba02007e673fd43c58c807",
+      "assets/characters/red-hats/bull-idle.png": "fce78ae619fcf56ad3385637893ba16e9b2474a7430d1118739c6869c46d0de2",
+      "assets/characters/rabbit-idle.png": "99456e7f3f7f86bbf6d6c9221325cf487476a1b5140998ac65f7afdf63979e9f",
+      "assets/characters/red-hats/rabbit-idle.png": "7f3809094475718802c06d45469476df9eee911c3d898d0154143f6f397f2571",
+      "assets/characters/dog-idle.png": "5a774e8223d266aebb31e5cd98c4cb82aedbabd332fedaca53deb395c09d1efb",
+      "assets/characters/red-hats/dog-idle.png": "d2a6cafa7d34a7a24ffe124832cd47f3a2c8d8753d127079141c72d3de4963a6"
+    }
+  },
+  "browser": {
+    "galleryPortraits": [
+      {
+        "height": 256,
+        "loaded": true,
+        "src": "assets/characters/bear-idle.png",
+        "width": 256
+      },
+      {
+        "height": 256,
+        "loaded": true,
+        "src": "assets/characters/red-hats/bear-idle.png",
+        "width": 256
+      },
+      {
+        "height": 256,
+        "loaded": true,
+        "src": "assets/characters/bull-idle.png",
+        "width": 256
+      },
+      {
+        "height": 256,
+        "loaded": true,
+        "src": "assets/characters/red-hats/bull-idle.png",
+        "width": 256
+      },
+      {
+        "height": 256,
+        "loaded": true,
+        "src": "assets/characters/rabbit-idle.png",
+        "width": 256
+      },
+      {
+        "height": 256,
+        "loaded": true,
+        "src": "assets/characters/red-hats/rabbit-idle.png",
+        "width": 256
+      },
+      {
+        "height": 256,
+        "loaded": true,
+        "src": "assets/characters/dog-idle.png",
+        "width": 256
+      },
+      {
+        "height": 256,
+        "loaded": true,
+        "src": "assets/characters/red-hats/dog-idle.png",
+        "width": 256
+      }
+    ],
+    "animationIndexControls": "Bear/Red Hat/HMG selections produced the matching study URLs; the four species and thirteen equipment options were present.",
+    "graphicsProbe": [
+      {
+        "type": "webgl2",
+        "available": false,
+        "vendor": "",
+        "renderer": "",
+        "error": "",
+        "event": "Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Disabled, GL_RENDERER = Disabled, Sandboxed = yes, Optimus = no, AMD switchable = no, Reset notification strategy = 0x0000, ErrorMessage = BindToCurrentSequence failed: ."
+      },
+      {
+        "type": "webgl",
+        "available": false,
+        "vendor": "",
+        "renderer": "",
+        "error": "",
+        "event": "Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Disabled, GL_RENDERER = Disabled, Sandboxed = yes, Optimus = no, AMD switchable = no, Reset notification strategy = 0x0000, ErrorMessage = BindToCurrentSequence failed: ."
+      }
+    ],
+    "visualStatus": "Fresh live 3D rendering is blocked in the connected in-app browser. An independent page with no game code or artwork fails both WebGL 2 and WebGL 1 creation with the same disabled-renderer error. Gallery evidence shows shipped PNG portraits, not a fresh live-model render.",
+    "screenshot": "gallery.png"
+  },
+  "limitations": [
+    "This is a focused integration check, not a new full repository run or a sector-performance benchmark.",
+    "Artist model and animation self-review evidence is preserved in its own delivery records; it is not relabeled as a fresh independent visual signoff."
+  ],
+  "preview": {
+    "port": 4485,
+    "existingOwnerReused": true,
+    "unchangedAutomaticDeadline": "2026-10-29T04:26:40.601Z",
+    "temporaryTabsClosed": [
+      77,
+      79
+    ],
+    "retainedGalleryTab": 78
+  }
+}
