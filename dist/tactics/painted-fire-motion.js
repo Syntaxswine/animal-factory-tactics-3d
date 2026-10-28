@@ -15,7 +15,7 @@ export function createPaintedFireMotion(worker,profile={id:'horse'}){
  let contacts=[],feet={},state,gripError=0,drop=null,equipmentDestroyed=false;
  const equipment=createFireEquipment(worker,profile),pig=profile.id.startsWith('pig'),tail=createDescentTail(worker,profile.id==='skunk'?{id:'none'}:profile),attachments=[];
  bones.head.traverse(o=>{if(o.isMesh)attachments.push(o);});
- const collapseDrop=profile.id==='pig-foreman'?.42:profile.id==='pig-director'?.47:.50,groundHand=V(pig?.16:.25,.109,pig?-.29:-.25);
+ const collapseDrop=profile.id==='pig-foreman'?.42:profile.id==='pig-director'?.47:profile.id==='bear'?.47:.50,groundHand=V(pig?.16:profile.id==='bear'?.19:.25,.109,pig?-.29:-.25);
  const supportPose=worker.weapon?.carry?.handPoses?.support,leftPalm=supportPose?.palm?V(...supportPose.palm):palm,groundPalmQ=Q().setFromAxisAngle(V(0,0,1),equipment.id==='hmg'?-Math.PI/2:Math.PI/2);
  if(equipment.id==='hmg'){
   // Keep the fitted closed glove after letting go, then bear on its knuckles.
@@ -57,7 +57,7 @@ export function createPaintedFireMotion(worker,profile={id:'horse'}){
   const compression=.07*enter+(.065+.025*Math.sin(beat)**2)*stride+collapseDrop*c;
   bones.hips.position.copy(rest.get(bones.hips));bones.hips.position.y-=compression;bones.hips.position.x+=.055*c;
   bones.hips.position.z=.028*Math.sin(beat)*stride;
-  bones.spine.rotation.set(.13*Math.sin(beat*.53)*panic,.14*Math.sin(beat*.61)*stride,.20*startle-.12*enter-.18*stride-(pig?1.55:1.33)*c);
+  bones.spine.rotation.set(.13*Math.sin(beat*.53)*panic,.14*Math.sin(beat*.61)*stride,.20*startle-.12*enter-.18*stride-(pig?1.55:profile.id==='bear'?1.47:1.33)*c);
   bones.head.rotation.set(.055*Math.sin(beat*.71)*panic,.17*Math.sin(beat*.47)*panic,(.24+.075*Math.sin(beat*.79))*panic+.08*c);
   tail.set(.72*c);root.updateMatrixWorld(true);
  }

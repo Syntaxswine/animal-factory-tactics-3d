@@ -379,6 +379,27 @@ const greyHorse={kind:'grey-horse',scale:0.9989431320935266,lift:1.3477587429283
 const henPlace={kind:'hen',top:1.6927851438522339,bottom:0.008999999612569809};
 const none={kind:'none',map:p=>p};
 
+function bear(x,y,z){
+ let d=E(x,y,z,[-.069,1.306,0],[.128,.155,.131]);
+ d=blend(d,E(x,y,z,[-.038,1.479,0],[.145,.145,.147]),.035);
+ d=blend(d,E(x,y,z,[.023,1.415,0],[.137,.092,.142]),.027);
+ // A wide, short muzzle, broad nose and squared jaw distinguish the bear.
+ d=blend(d,E(x,y,z,[.113,1.453,0],[.108,.065,.095]),.026);
+ d=blend(d,E(x,y,z,[.199,1.477,0],[.034,.030,.064]),.012);
+ d=blend(d,E(x,y,z,[.111,1.414,0],[.099,.034,.094]),.018);
+ for(const s of [-1,1]){
+  d=blend(d,E(x,y,z,[-.061,1.610,s*.127],[.054,.061,.055]),.020);
+  // Shallow ear cups and restrained orbital shelves; fine fur is painted.
+  d=-blend(-d,E(x,y,z,[-.020,1.618,s*.128],[.023,.038,.035]),.005);
+  d=blend(d,E(x,y,z,[.051,1.535,s*.099],[.053,.022,.038]),.017);
+  d=-blend(-d,E(x,y,z,[.097,1.507,s*.115],[.028,.022,.025]),.006);
+  d=blend(d,E(x,y,z,[.079,1.515,s*.107],[.022,.016,.021]),.005);
+  d=blend(d,E(x,y,z,[-.022,1.423,s*.125],[.091,.071,.043]),.022);
+ }
+ d+=.002*Math.exp(-1*((y-1.425)/.004)**2)*smooth(x,.15,.20);
+ return d;
+}
+
 // Each character's skull part, its 10k data, the sculpt's box and step, and the two reductions
 // its tool made (author, then 10k). `targets` are triangle counts, `tolerance` world units.
 export const HEADS=[
@@ -393,6 +414,7 @@ export const HEADS=[
  {id:'pig-director',file:'pig-director-10k-data.json',part:'unified director skull folded ears and snout',field:pigDirector,min:[-.24,1.17,-.35],max:[.30,1.68,.35],step:.0045,place:directorPlace(1.6499963998794556),earNormals:true,author:{target:6100,tolerance:.006},low:{target:2150,tolerance:.008}},
  {id:'rabbit',file:'rabbit-10k-data.json',part:'unified rabbit skull and leaf ears',field:rabbit,min:[-.20,1.10,-.23],max:[.20,1.78,.23],step:.0045,place:none,author:{target:7200,tolerance:.006},low:{target:2490,tolerance:.015}},
  {id:'dog',file:'dog-guard-10k-data.json',part:'unified dog skull and upright ears',field:dog,min:[-.23,1.10,-.21],max:[.24,1.73,.21],step:.0045,place:none,author:{target:5950,tolerance:.006},low:{target:2250,tolerance:.015}},
+ {id:'bear',file:'bear-10k-data.json',part:'unified bear skull rounded ears and muzzle',field:bear,min:[-.23,1.12,-.22],max:[.26,1.70,.22],step:.0048,place:none,author:{target:7500,tolerance:.005},low:{target:3100,tolerance:.008}},
  {id:'hen',file:'hen-10k-data.json',part:'short hooked beak',field:henBeak,min:[.08,1.38,-.074],max:[.30,1.49,.074],step:.0025,place:henPlace,head:{part:'head and feathered neck',field:henHead,min:[-.205,1.035,-.19],max:[.192,1.605,.19],step:.0045},author:{target:1500*.97,tolerance:.012},low:{target:650,tolerance:.0045}}
 ];
 export const HEAD=Object.fromEntries(HEADS.map(h=>[h.id,h]));
@@ -417,6 +439,7 @@ export const PAINT={
  'pig-director':{sheet:lowpoly+'pig-director-model-paint-v1.png',frame:{width:1.16,height:2.32,centerY:.825}},
  rabbit:{sheet:lowpoly+'rabbit-woman-model-paint-v1.png',frame:{width:.975,height:1.95,centerY:.875}},
  dog:{sheet:lowpoly+'dog-woman-model-paint-v1.png',frame:{width:.975,height:1.95,centerY:.875}},
+ bear:{sheet:lowpoly+'bear-worker-model-paint-v1.png',frame:{width:1.18,height:2.36,centerY:.84}},
  hen:{sheet:lowpoly+'hen-model-paint-v1.png',frame:{width:1.16,height:2.32,centerY:.825}}
 };
 

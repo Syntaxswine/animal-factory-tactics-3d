@@ -1,5 +1,6 @@
 // Mechanical coverage and localized visual review do not imply gameplay readiness.
 export const ANIMAL_MOTION_FINDINGS={
+ bear:{status:'Integrated review candidate',note:'Native broad shoulders and paws, fitted rifle sights and both painted outfits. Shared animation and equipment checks cover the bear; architect review remains pending.'},
  dog:{status:'Approved motion baseline',note:'Published dog motion retained. Cautious gait and kneeling trouser compression remain known limitations.'},
  goat:{status:'Review candidate',note:'No new blocking defect in the inspected poses. This transfer has not received architect approval.'},
  'pig-director':{status:'Review candidate',note:'Forward rifle placement and a more oblique stance clear the heavier torso. Architect motion approval remains pending.'},

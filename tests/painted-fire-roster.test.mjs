@@ -15,9 +15,9 @@ function minY(objects,filter=()=>true){let y=Infinity;const v=V();for(const part
 function bodyMeshes(worker){const out=[...worker.parts];for(const glove of worker.gripHands||[])if(glove.visible)glove.traverse(o=>{if(o.isMesh)out.push(o);});return out;}
 function propMeshes(worker){const out=[];for(const root of [worker.weapon?.root,worker.weapon?.mount,worker.weapon?.hose].filter(Boolean))root.traverse(o=>{if(o.isMesh)out.push(o);});return out;}
 
-test('coverage is 25 outfits, 289 supported target loadouts and 22 operators',()=>{
+test('coverage is 27 outfits, 315 supported target loadouts and 24 operators',()=>{
  let variants=0,targets=0,operators=0;for(const p of profiles)for(const outfit of ['normal','red-hats',...(p.id==='donkey'?['blue-hawaiian']:[])]){variants++;const unarmed=p.unarmed||outfit==='blue-hawaiian';for(const id of unarmed?['hands']:Object.keys(WEAPON_MODELS)){assert.equal(fireSelection(p.id,outfit,id).weapon,id);targets++;}if(!unarmed){assert.equal(fireSelection(p.id,outfit,'rifle',true).weapon,'flamethrower');operators++;}}
- assert.deepEqual([variants,targets,operators],[25,289,22]);assert.equal(fireSelection('hen','red-hats','rifle').weapon,'hands');assert.equal(fireSelection('donkey','blue-hawaiian','hmg').weapon,'hands');assert.throws(()=>fireSelection('hen','normal','flamethrower',true));assert.throws(()=>fireSelection('horse','blue-hawaiian','hands'));
+ assert.deepEqual([variants,targets,operators],[27,315,24]);assert.equal(fireSelection('hen','red-hats','rifle').weapon,'hands');assert.equal(fireSelection('donkey','blue-hawaiian','hmg').weapon,'hands');assert.throws(()=>fireSelection('hen','normal','flamethrower',true));assert.throws(()=>fireSelection('horse','blue-hawaiian','hands'));
 });
 for(const p of profiles){
  test(p.id+': all loadouts keep reachable limbs, reversible poses and grounded equipment',()=>{

@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import {ANIMAL_MOTION_CATALOG} from './animal-motion-catalog.js';
 import {createAnimalPaint} from './animal-motion-paint.js';
+import {createRedHatCap} from './red-hat-model.js';
 import {GAME_CAMERA} from './hybrid-world.js';
 import {speakingHeadFile,withSpeakingHead,rigSpeakingHead,jawAt,speechOpen} from './speaking-head.js';
 
@@ -13,7 +14,7 @@ const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:tru
 const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera();scene.add(new THREE.HemisphereLight(0xfff9ec,0x737775,2));const key=new THREE.DirectionalLight(0xfff2dc,2.3);key.position.set(3,5,4);scene.add(key);const fill=new THREE.DirectionalLight(0xffffff,.7);fill.position.set(-2,2,-3);scene.add(fill);
 const loader=new THREE.TextureLoader(),json=r=>{if(!r.ok)throw Error(r.url+' '+r.status);return r.json();};
 for(const p of ANIMAL_MOTION_CATALOG)$('animal').append(new Option(p.label,p.id));
-for(const [id,value] of [['animal',params.get('animal')],['level',params.get('level')],['view',params.get('view')],['scale',params.get('scale')],['elevation',params.get('elevation')]])if(value)$(id).value=value;
+for(const [id,value] of [['animal',params.get('animal')],['outfit',params.get('outfit')],['level',params.get('level')],['view',params.get('view')],['scale',params.get('scale')],['elevation',params.get('elevation')]])if(value)$(id).value=value;
 if(params.has('jaw'))$('jaw').value=params.get('jaw');
 if(params.has('lit'))$('lit').checked=params.get('lit')!=='0';
 
@@ -27,7 +28,7 @@ const authorFile=p=>p.id==='horse'?'horse-light-data.json':p.file.replace('10k',
 // dispose() leaves the mammals' skeletons, createLightHorse's and its kin's, to their callers, and
 // each character change kept two; the hen's disposes hers, and a second dispose is harmless)
 function release(c){if(!c)return;const skeletons=new Set();for(const w of [c.original,c.speaking])w.root.traverse(o=>{if(o.isSkinnedMesh)skeletons.add(o.skeleton);});
- for(const w of [c.original,c.speaking])scene.remove(w.root);c.speech.dispose();c.paints.forEach(p=>p.dispose());c.weightMaterial.dispose();c.original.dispose();c.speaking.dispose();
+ for(const w of [c.original,c.speaking])scene.remove(w.root);c.caps.forEach(p=>p.dispose());c.speech.dispose();c.paints.forEach(p=>p.dispose());c.weightMaterial.dispose();c.original.dispose();c.speaking.dispose();
  for(const skeleton of skeletons)skeleton.dispose();}
 async function load(){
  const id=$('animal').value,level=$('level').value,profile=ANIMAL_MOTION_CATALOG.find(p=>p.id===id),mine=++generation;
@@ -35,7 +36,8 @@ async function load(){
  try{
   const [data,head]=await Promise.all([fetch('./'+(level==='10k'?profile.file:authorFile(profile))).then(json),fetch(speakingHeadFile(id,level)).then(json)]);
   const original=profile.create(data),speaking=profile.create(withSpeakingHead(data,head)),speech=rigSpeakingHead(speaking,head);
-  const lit=$('lit').checked,paints=await Promise.all([createAnimalPaint(renderer,original,profile,loader,'normal',lit),createAnimalPaint(renderer,speaking,profile,loader,'normal',lit)]);
+  const lit=$('lit').checked,outfit=$('outfit').value,paints=await Promise.all([createAnimalPaint(renderer,original,profile,loader,outfit,lit),createAnimalPaint(renderer,speaking,profile,loader,outfit,lit)]);
+  const caps=outfit==='red-hats'?(await Promise.all([createRedHatCap(renderer,original,profile,loader,lit),createRedHatCap(renderer,speaking,profile,loader,lit)])).filter(Boolean):[];
   speech.applyPaint(paints[1]);
   // Framing: the head (its skin's box) and the mouth (the middle of its lips' faces: the vertices
   // that fold shut at rest).
@@ -43,7 +45,7 @@ async function load(){
   for(let i=0;i<P.count;i++)if(fold[i]>.5){mouth.x+=P.getX(i);mouth.y+=P.getY(i);mouth.z+=P.getZ(i);count++;}mouth.divideScalar(Math.max(1,count));
   // Jaw weights.
   const weightMaterial=new THREE.MeshBasicMaterial({vertexColors:true}),weightColors=new THREE.Float32BufferAttribute(Array.from(head.parts[0].jaw).flatMap(w=>[.18+.8*w,.25,.95-.8*w]),3);
-  const next={id,level,profile,data,head,original,speaking,speech,paints,center,mouth,weightMaterial,weightColors,ownColors:skin.geometry.getAttribute('color')};
+  const next={id,level,outfit,profile,data,head,original,speaking,speech,paints,caps,center,mouth,weightMaterial,weightColors,ownColors:skin.geometry.getAttribute('color')};
   if(mine!==generation){release(next);return;}
   release(current);current=next;scene.add(original.root,speaking.root);
   drawSheet(head.reference);render();
@@ -59,6 +61,7 @@ function applyModes(){
  c.original.parts.forEach(p=>p.material=grey?c.original.grey:c.paints[0].material);
  c.speaking.parts.forEach(p=>p.material=grey?c.speaking.grey:c.paints[1].material);
  c.speech.setGrey(grey);
+ c.caps.forEach(p=>p.setGrey(grey));
  const g=c.speech.skin.geometry;
  if(weights){g.setAttribute('color',c.weightColors);c.speech.skin.material=c.weightMaterial;}
  else if(c.ownColors)g.setAttribute('color',c.ownColors);else g.deleteAttribute('color');
@@ -114,7 +117,7 @@ async function drawSheet(reference){
  sheetContext.fillStyle='#000a';sheetContext.fillRect(0,0,240,30);sheetContext.fillRect(half,0,240,30);sheetContext.fillStyle='#fff';sheetContext.font='18px system-ui';sheetContext.fillText('Side (painted sheet)',10,21);sheetContext.fillText('Front (painted sheet)',half+10,21);
 }
 
-for(const id of ['animal','level','lit'])$(id).addEventListener('input',load);
+for(const id of ['animal','outfit','level','lit'])$(id).addEventListener('input',load);
 for(const id of ['view','scale','heading','elevation','jaw','painted','grey','wire','coverage','weights'])$(id).addEventListener('input',render);
 $('say').addEventListener('click',()=>{saying=saying?null:performance.now();$('say').textContent=saying?'Stop':'Say a line';render();});
 const resized=new ResizeObserver(()=>render());resized.observe(host);
@@ -167,7 +170,7 @@ function traceMouth(view='side',{ppu=5000,reach=.025,before=.07,half=.06}={}){
 }
 window.speakingHeads={get current(){return current;},load:async(id,level='10k')=>{$('animal').value=id;$('level').value=level;await load();},render,coverage,capture,traceMouth,
  // (a character, a mesh level or Lit loads the pair again: resolve it before capturing)
- async set(options){let again=false;for(const [k,v] of Object.entries(options)){const el=$(k),was=el.type==='checkbox'?el.checked:el.value;if(el.type==='checkbox')el.checked=v;else el.value=v;if(['animal','level','lit'].includes(k)&&was!==(el.type==='checkbox'?el.checked:el.value))again=true;}if(again)await load();render();},
+ async set(options){let again=false;for(const [k,v] of Object.entries(options)){const el=$(k),was=el.type==='checkbox'?el.checked:el.value;if(el.type==='checkbox')el.checked=v;else el.value=v;if(['animal','outfit','level','lit'].includes(k)&&was!==(el.type==='checkbox'?el.checked:el.value))again=true;}if(again)await load();render();},
  diagnostics(){const c=current;return {id:c.id,level:c.level,triangles:c.head.triangles,characterTriangles:c.data.triangles,parts:c.head.parts.map(p=>({name:p.name,triangles:p.triangles})),bones:c.speech.skin.skeleton.bones.length,jawParent:c.speech.jaw.parent?.name};},
  // (what the renderer holds, and whether a frame is pending: a character change must not grow the
  // one, and the other is one request at most)

@@ -7,7 +7,7 @@ function setup(p){const w=p.create(data(p)),m=p.unarmed?createHenMotion(w):creat
 function surface(mesh,predicate=()=>true){const a=mesh.geometry.attributes.position,points=[];for(let i=0;i<a.count;i++)if(predicate(a,i))points.push(mesh.applyBoneTransform(i,new T.Vector3().fromBufferAttribute(a,i)).applyMatrix4(mesh.matrixWorld));return points;}
 // Static environment models share the reduced-mesh suffix but have no character rig.
 const staticModels=new Set(['canvas-truck-10k-data.json',... ['lathe','mill','press'].map(k=>'machine-'+k+'-10k-data.json')]);
- test('motion catalog includes every completed reduced character exactly once',()=>{const files=fs.readdirSync(new URL('../dist/tactics/',import.meta.url)).filter(f=>f.endsWith('-10k-data.json')&&!staticModels.has(f));assert.deepEqual(roster.map(p=>p.file).sort(),files.sort());assert.equal(new Set(roster.map(p=>p.id)).size,12);});
+ test('motion catalog includes every completed reduced character exactly once',()=>{const files=fs.readdirSync(new URL('../dist/tactics/',import.meta.url)).filter(f=>f.endsWith('-10k-data.json')&&!staticModels.has(f));assert.deepEqual(roster.map(p=>p.file).sort(),files.sort());assert.equal(new Set(roster.map(p=>p.id)).size,13);});
 for(const p of roster){
  test(p.id+': dense motion preserves bone lengths, planted soles, hand surfaces and floor clearance',()=>{const {w,m,dispose}=setup(p);try{
   const lengths=new Map(m.skeleton.bones.filter(b=>b.parent.isBone).map(b=>[b,b.position.length()])),feet=[-1,1].map(s=>w.parts.find(m=>/hoof|boot|foot|toes/.test(m.name)&&m.name.endsWith(' '+s)));let previous;

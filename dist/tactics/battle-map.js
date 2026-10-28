@@ -11,6 +11,7 @@ import {receivePlaytest} from './editor-playtest.js';
 export async function loadBattleMap(fetcher=fetch){
  const token=globalThis.location?new URLSearchParams(location.search).get('editorPlaytest'):null;
  if(token)return receivePlaytest(token);
+ if(globalThis.location&&new URLSearchParams(location.search).get('study')==='bear')return (await import('./bear-roster-fixture.js')).bearRosterFixture();
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='gunshot-impacts')return (await import('./gunshot-impact-map.js')).gunshotImpactMap();
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='tutorial-intro')return (await import('./tutorial-intro-fixture.js')).tutorialIntroFixture(fetcher);
  if(globalThis.location&&new URLSearchParams(location.search).get('study')==='dialogue')return (await import('./dialogue-fixture.js')).dialogueFixture(fetcher);

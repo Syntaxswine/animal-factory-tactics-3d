@@ -21,6 +21,7 @@ export function fitIdleCarry(worker,profile,weapon){
   'pig-director':{assault:[.45,1.16,.035],smg:[.42,1.22,.035],pistol:[.42,1.16,.35],launcher:[.42,1.16,.035],flamethrower:[.42,1.16,.035],rpg:[.38,1.18,0]},
   'pig-foreman':{assault:[.43,1.16,.035],smg:[.43,1.16,.035],pistol:[.40,1.08,.29]},
   sheep:{smg:[.37,1.04,.035]},hen:{smg:[.37,1.04,.035]},
+  bear:{smg:[.29,1.04,.035],hmg:[.29,.95,.055],rpg:[.24,1.12,.06]},
  }[profile.id]?.[id];if(fitted)carry.position=fitted;
  if(profile.id==='pig-director'&&id==='rpg')carry.axis=[-.5,.2,-1];
  if(id==='rifle'&&!bird&&!pig){
@@ -29,7 +30,7 @@ export function fitIdleCarry(worker,profile,weapon){
   carry.position=[.24,profile.id==='sheep'?.965:.97,.035];carry.axis=[.55,.35,-.977];
   const axis=v(carry.axis).normalize(),gunQ=q().setFromUnitVectors(v([1,0,0]),axis);
   const handQ=q().setFromUnitVectors(v([0,-1,0]),axis).multiply(q().setFromAxisAngle(v([0,1,0]),Math.PI*1.20));
-  carry.handPoses={...carry.handPoses,grip:{...carry.handPoses.grip,elbowPole:[1,-.4,.8],quaternion:gunQ.invert().multiply(handQ).toArray()}};
+  carry.handPoses={...carry.handPoses,grip:{...carry.handPoses.grip,...(profile.id==='bear'?{palm:[.052,-.01,.03]}:{}),elbowPole:[1,-.4,.8],quaternion:gunQ.invert().multiply(handQ).toArray()}};
  }
  weapon.carry=carry;return carry;
 }
@@ -61,6 +62,11 @@ export function createArmedIdle(original,profile,{mood='guard',phase=0,weapon=or
    const low=Math.min(...points.map(p=>p.y)),position=bone.getWorldPosition(v());position.y-=low;feet[side]={p:position,q:bone.getWorldQuaternion(q()),sole:points.map(p=>p.add(v([0,-low,0])))};
   }
   const centre=new T.Box3().setFromPoints([...feet[-1].sole,...feet[1].sole]).getCenter(v());
+  // The bear's raised toes are longer than its flat heel pad. Keep pressure
+  // over the actual floor contacts instead of the whole paw outline.
+  if(profile.id==='bear'){
+   new T.Box3().setFromPoints([...feet[-1].sole,...feet[1].sole].filter(p=>p.y<.001)).getCenter(centre);
+  }
   const hands=weapon.carry.hands.map(side=>{const b=named['hand'+side],name=side===1?'grip':'support',point=weapon.anchors[name].getWorldPosition(v());return {side,name,palm:b.worldToLocal(point.clone()),rotation:weapon.root.getWorldQuaternion(q()).invert().multiply(b.getWorldQuaternion(q()))};});
   const bodyParts=[['hips','spine',.281],['spine','head',.216],['head','head',.081],...[-1,1].flatMap(s=>[['upperArm'+s,'forearm'+s,.028],['forearm'+s,'hand'+s,.022],['thigh'+s,'shin'+s,.10],['shin'+s,'hoof'+s,.0465],['hoof'+s,'hoof'+s,.0145]])];
   const totalFraction=bodyParts.reduce((s,p)=>s+p[2],0),bodyMass=IDLE_BODY_MASS[profile.id],loads=IDLE_LOADS[weapon.id];
@@ -83,7 +89,7 @@ export function createArmedIdle(original,profile,{mood='guard',phase=0,weapon=or
    for(let i=0;i<4;i++){raw(s,offset);const c=centreOfMass();offset.x+=centre.x-c.x;offset.z+=centre.z+s.shift-c.z;}
    raw(s,offset);weapon.updateHose?.(root);root.getObjectByName('fitted glove cuff')?.update?.();
    contacts=hands.map(h=>{const palm=named['hand'+h.side].localToWorld(h.palm.clone()),grip=weapon.anchors[h.name].getWorldPosition(v());return {side:h.side,name:h.name,palm:palm.toArray(),grip:grip.toArray(),error:palm.distanceTo(grip)};});
-   state={...s,animal:profile.id,contacts,com:centreOfMass().toArray(),equipmentMass:loads[0]+loads[1],feet:Object.fromEntries([-1,1].map(side=>[side,named['hoof'+side].getWorldPosition(v()).toArray()])),experimentalWingGrip:!!rig};return state;
+   state={...s,animal:profile.id,contacts,com:centreOfMass().toArray(),supportCentre:centre.toArray(),equipmentMass:loads[0]+loads[1],feet:Object.fromEntries([-1,1].map(side=>[side,named['hoof'+side].getWorldPosition(v()).toArray()])),experimentalWingGrip:!!rig};return state;
   }
   at(0);return {worker,weapon,bones:named,at,duration:IDLE_MOODS[mood].duration,footMesh:foot,centreOfMass,diagnostics:()=>state,dispose};
  }catch(e){dispose();throw e;}

@@ -10,6 +10,7 @@ import {createPigDirector,PIG_DIRECTOR_PAINT,PIG_DIRECTOR_FRAME} from './pig-dir
 import {createRabbitWorker,RABBIT_PAINT,RABBIT_PAINT_FRAME} from './rabbit-worker.js';
 import {createDogWorker,DOG_PAINT,DOG_PAINT_FRAME} from './dog-guard.js';
 import {createHen,HEN_PAINT,HEN_FRAME} from './hen-worker.js';
+import {BEAR_PROFILE} from './bear-worker.js';
 import {MODEL_PAINT,PAINT_FRAME} from './horse-model-paint.js';
 
 // Published smaller meshes, in their authored dimensions. No rescaling to fit.
@@ -25,6 +26,7 @@ export const ANIMAL_MOTION_CATALOG=[
  {id:'pig-director',label:'Pig director',create:createPigDirector,paint:PIG_DIRECTOR_PAINT,frame:PIG_DIRECTOR_FRAME,eye:[.093,1.53,.12]},
  {id:'rabbit',label:'Rabbit worker',create:createRabbitWorker,paint:RABBIT_PAINT,frame:RABBIT_PAINT_FRAME,eye:[.042,1.453,.09]},
  {id:'dog',label:'Dog guard',file:'dog-guard-10k-data.json',create:createDogWorker,paint:DOG_PAINT,frame:DOG_PAINT_FRAME,eye:[.04,1.47,.075]},
+ BEAR_PROFILE,
  {id:'hen',label:'Hen worker',create:createHen,paint:HEN_PAINT,frame:HEN_FRAME,unarmed:true}
 ].map(p=>({file:p.id+'-10k-data.json',frame:PAINT_FRAME,...p,...({
  horse:{kneelDrop:.3706,headPitch:-.8562,headYaw:27.734,headPitchSlope:1.459,proneAim:{stock:[.025,.03,.065],torsoFollow:.9,tuckHem:true}},

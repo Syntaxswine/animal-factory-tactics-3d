@@ -10,6 +10,7 @@ import {henPaintLayers} from './hen-paint-layers.js';
 import {animalMotionRepairPaint} from './animal-motion-repair-paint.js';
 import {applyRedHatUniform,RED_HAT_UNIFORM_PAINT} from './red-hat-uniform.js';
 import {applyTailoredRedHat} from './red-hat-tailored-paint.js';
+import {bearPaintLayers} from './bear-paint.js';
 export async function createAnimalPaint(renderer,worker,profile,loader,outfit='normal',sceneLighting=false){
  let released=false,paint,disposePaint,disposeUniform,guideHat,disposeHawaiian;
  const options={species:profile.id,frame:profile.frame,sceneLighting},textures=[],load=async url=>{const t=await loader.loadAsync(url);if(released)t.dispose();else textures.push(t);return t;},base='../assets/characters/lowpoly-proof/';
@@ -17,7 +18,8 @@ export async function createAnimalPaint(renderer,worker,profile,loader,outfit='n
  // their ownership here, including textures that finish after a sibling fails.
  function dispose(){if(released)return;released=true;guideHat?.dispose();disposeHawaiian?.();disposeUniform?.();if(disposePaint)disposePaint();else {options.paintLayers?.dispose();options.preparedProjection?.dispose();}textures.forEach(t=>t.dispose());}
  try{
- const main=await load(profile.paint);
+ const main=await load(profile.outfitPaints?.[outfit]||profile.paint);
+ if(profile.id==='bear')options.paintLayers=bearPaintLayers();
  if(profile.id==='cow')options.paintLayers=cowNeckPaint(await load(COW_NECK_PAINT),renderer);
  if(profile.id==='rabbit')options.paintLayers=rabbitPaintLayers(await load(RABBIT_CLOTH_PAINT),renderer,await load(RABBIT_EYE_PAINT));
  if(profile.id==='dog')options.paintLayers=dogMotionPaint(await load(DOG_CLOTH_PAINT),renderer,await load(DOG_EYE_PAINT));
@@ -29,7 +31,7 @@ export async function createAnimalPaint(renderer,worker,profile,loader,outfit='n
  if(loader.prepareProjection)options.preparedProjection=await loader.prepareProjection(worker,profile.frame);
  paint=createModelPaint(renderer,worker,main,options);disposePaint=paint.dispose;
  const tailored=profile.id==='hen'||profile.id==='pig-director';
- disposeUniform=outfit==='red-hats'&&profile.id!=='pig-foreman'?(tailored?await applyTailoredRedHat(renderer,paint.material,await load(base+profile.id+'-red-hat-paint-v1.png'),profile):await applyRedHatUniform(renderer,paint.material,await load(RED_HAT_UNIFORM_PAINT),profile)):null;
+ disposeUniform=outfit==='red-hats'&&profile.id!=='pig-foreman'&&!profile.outfitPaints?.[outfit]?(tailored?await applyTailoredRedHat(renderer,paint.material,await load(base+profile.id+'-red-hat-paint-v1.png'),profile):await applyRedHatUniform(renderer,paint.material,await load(RED_HAT_UNIFORM_PAINT),profile)):null;
  guideHat=profile.id==='donkey'&&outfit===DONKEY_GUIDE_OUTFIT?createDonkeyStrawHat(worker):null;
  disposeHawaiian=profile.id==='donkey'&&outfit===DONKEY_GUIDE_OUTFIT?applyDonkeyHawaiian(paint.material):null;
  paint.dispose=dispose;return paint;

@@ -1,0 +1,611 @@
+{
+  "reviewedAt": "2026-10-28T06:51:08.654Z",
+  "browsers": [
+    {
+      "folder": "artifacts/bear/integration-review-source-final/",
+      "checks": 66,
+      "errors": [],
+      "stopped": {
+        "pid": 8480,
+        "executable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+        "creationFileTime": "134376422450585626",
+        "stoppedAt": "2026-10-28T06:28:08.439Z",
+        "exited": true,
+        "portReleased": true
+      }
+    },
+    {
+      "folder": "artifacts/bear/integration-review-packaged/",
+      "checks": 66,
+      "errors": [],
+      "stopped": {
+        "pid": 38992,
+        "executable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+        "creationFileTime": "134376422540617215",
+        "stoppedAt": "2026-10-28T06:28:22.736Z",
+        "exited": true,
+        "portReleased": true
+      }
+    },
+    {
+      "folder": "artifacts/bear/integration-review-dialogue/",
+      "checks": 5,
+      "errors": [],
+      "stopped": {
+        "pid": 31136,
+        "executable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+        "creationFileTime": "134376425595643546",
+        "stoppedAt": "2026-10-28T06:29:35.952Z",
+        "exited": true,
+        "portReleased": true
+      }
+    },
+    {
+      "folder": "artifacts/bear/integration-keyframes-source/",
+      "checks": 5,
+      "errors": [],
+      "stopped": {
+        "pid": 62756,
+        "executable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+        "creationFileTime": "134376429010767575",
+        "stoppedAt": "2026-10-28T06:35:25.042Z",
+        "exited": true,
+        "portReleased": true
+      }
+    },
+    {
+      "folder": "artifacts/bear/integration-keyframes-packaged/",
+      "checks": 5,
+      "errors": [],
+      "stopped": {
+        "pid": 50292,
+        "executable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+        "creationFileTime": "134376429025654815",
+        "stoppedAt": "2026-10-28T06:35:26.861Z",
+        "exited": true,
+        "portReleased": true
+      }
+    },
+    {
+      "folder": "artifacts/bear/integration-battle-source/",
+      "checks": 1,
+      "errors": [],
+      "stopped": {
+        "pid": 54624,
+        "executable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+        "creationFileTime": "134376430684527818",
+        "stoppedAt": "2026-10-28T06:38:02.968Z",
+        "exited": true,
+        "portReleased": true
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "file": "burn-normal.png",
+      "width": 1330,
+      "height": 635,
+      "changedPixels": 0,
+      "sourceSHA256": "59331c150518943d98972603fb047bc05644c956effff1e04f0e522eb6f15055",
+      "packagedSHA256": "59331c150518943d98972603fb047bc05644c956effff1e04f0e522eb6f15055"
+    },
+    {
+      "file": "burn-red-hats.png",
+      "width": 1330,
+      "height": 635,
+      "changedPixels": 0,
+      "sourceSHA256": "386bb0129034760cb5e5de99b2292230764ae23d2bc19531e3c59a246f15d045",
+      "packagedSHA256": "386bb0129034760cb5e5de99b2292230764ae23d2bc19531e3c59a246f15d045"
+    },
+    {
+      "file": "chair-normal.png",
+      "width": 1330,
+      "height": 635,
+      "changedPixels": 0,
+      "sourceSHA256": "77caace3bc5a6bbe324f11c4ae745e6252ba3d5ef754efc68d19a454976ea710",
+      "packagedSHA256": "77caace3bc5a6bbe324f11c4ae745e6252ba3d5ef754efc68d19a454976ea710"
+    },
+    {
+      "file": "chair-red-hats.png",
+      "width": 1330,
+      "height": 635,
+      "changedPixels": 0,
+      "sourceSHA256": "5327b194d44b9115d1e7aacd69fdbfb6d3503a25796e28fd4a150bb658d0f492",
+      "packagedSHA256": "5327b194d44b9115d1e7aacd69fdbfb6d3503a25796e28fd4a150bb658d0f492"
+    },
+    {
+      "file": "cliff-mantle-normal.png",
+      "width": 1380,
+      "height": 765,
+      "changedPixels": 0,
+      "sourceSHA256": "5584533fe5eedb1bef7cbce302550ee49425a6b4ae2851e2cefbb135e29ae90a",
+      "packagedSHA256": "5584533fe5eedb1bef7cbce302550ee49425a6b4ae2851e2cefbb135e29ae90a"
+    },
+    {
+      "file": "cliff-mantle-red-hats.png",
+      "width": 1380,
+      "height": 765,
+      "changedPixels": 0,
+      "sourceSHA256": "fa1fe2ab3dbe058e9f79f1601771c972b09516b79fd7ac84d9924742e440344f",
+      "packagedSHA256": "fa1fe2ab3dbe058e9f79f1601771c972b09516b79fd7ac84d9924742e440344f"
+    },
+    {
+      "file": "crawl-normal.png",
+      "width": 1330,
+      "height": 619,
+      "changedPixels": 0,
+      "sourceSHA256": "ba0342554ce144527a6f3520341ea5c1777c1891e5196f7f512853f07a8faf50",
+      "packagedSHA256": "ba0342554ce144527a6f3520341ea5c1777c1891e5196f7f512853f07a8faf50"
+    },
+    {
+      "file": "crawl-red-hats.png",
+      "width": 1330,
+      "height": 619,
+      "changedPixels": 0,
+      "sourceSHA256": "d5b854bdb605083e85926dfe3f3469e08768d5d91e1d2be9a37e32f8d375a2ff",
+      "packagedSHA256": "d5b854bdb605083e85926dfe3f3469e08768d5d91e1d2be9a37e32f8d375a2ff"
+    },
+    {
+      "file": "descent-normal.png",
+      "width": 1380,
+      "height": 765,
+      "changedPixels": 0,
+      "sourceSHA256": "6e8790752c682d615aa702aed480fc42fd9b9453db1d6fe64bab8a0fc354844b",
+      "packagedSHA256": "6e8790752c682d615aa702aed480fc42fd9b9453db1d6fe64bab8a0fc354844b"
+    },
+    {
+      "file": "descent-red-hats.png",
+      "width": 1380,
+      "height": 765,
+      "changedPixels": 0,
+      "sourceSHA256": "f2a1433fd19039ae3f9002479e3c81c3d445ef92e2fa89191ae09cf291d121dd",
+      "packagedSHA256": "f2a1433fd19039ae3f9002479e3c81c3d445ef92e2fa89191ae09cf291d121dd"
+    },
+    {
+      "file": "fatal-normal.png",
+      "width": 1330,
+      "height": 619,
+      "changedPixels": 0,
+      "sourceSHA256": "c215be3aa726e74c17d2a8a471ba8c7bf2d7ea25f9cfef62cc065cf986c375bc",
+      "packagedSHA256": "c215be3aa726e74c17d2a8a471ba8c7bf2d7ea25f9cfef62cc065cf986c375bc"
+    },
+    {
+      "file": "fatal-red-hats.png",
+      "width": 1330,
+      "height": 619,
+      "changedPixels": 0,
+      "sourceSHA256": "78b3b96d9d6dc7b89328bf20b6b5a075483011015405075997ca84a051917c32",
+      "packagedSHA256": "78b3b96d9d6dc7b89328bf20b6b5a075483011015405075997ca84a051917c32"
+    },
+    {
+      "file": "grenade-normal.png",
+      "width": 1380,
+      "height": 741,
+      "changedPixels": 0,
+      "sourceSHA256": "a9e8c4b192a322b1e947b4b160c16ed1508c7a79cc271420f5e672d031335cee",
+      "packagedSHA256": "a9e8c4b192a322b1e947b4b160c16ed1508c7a79cc271420f5e672d031335cee"
+    },
+    {
+      "file": "grenade-red-hats.png",
+      "width": 1380,
+      "height": 741,
+      "changedPixels": 0,
+      "sourceSHA256": "5e16d6092fc86863deed4e7765bc86cb18080ab7bb6aa4880e37b448a2d5552b",
+      "packagedSHA256": "5e16d6092fc86863deed4e7765bc86cb18080ab7bb6aa4880e37b448a2d5552b"
+    },
+    {
+      "file": "idle-normal-flamethrower.png",
+      "width": 1380,
+      "height": 702,
+      "changedPixels": 0,
+      "sourceSHA256": "fd3a89ff3ab368d4cc9152e0eb0d5ff900dc50052a0541e6910c58cb90d9cf8a",
+      "packagedSHA256": "fd3a89ff3ab368d4cc9152e0eb0d5ff900dc50052a0541e6910c58cb90d9cf8a"
+    },
+    {
+      "file": "idle-normal-hmg.png",
+      "width": 1380,
+      "height": 702,
+      "changedPixels": 0,
+      "sourceSHA256": "3c0a87fe2a589de4994cefea4c8b24be3b13fd9003e2d966eda6363a82bb0cfa",
+      "packagedSHA256": "3c0a87fe2a589de4994cefea4c8b24be3b13fd9003e2d966eda6363a82bb0cfa"
+    },
+    {
+      "file": "idle-normal-rifle.png",
+      "width": 1380,
+      "height": 702,
+      "changedPixels": 0,
+      "sourceSHA256": "912f8a0c3fd1541e85170936a9bf98bdf31594fc5ca8c43f486b779211abcefc",
+      "packagedSHA256": "912f8a0c3fd1541e85170936a9bf98bdf31594fc5ca8c43f486b779211abcefc"
+    },
+    {
+      "file": "idle-normal-rpg.png",
+      "width": 1380,
+      "height": 702,
+      "changedPixels": 0,
+      "sourceSHA256": "4fc16a4698d75c00732f8433419a77685963786ba835ac783d3c151d9605e8f2",
+      "packagedSHA256": "4fc16a4698d75c00732f8433419a77685963786ba835ac783d3c151d9605e8f2"
+    },
+    {
+      "file": "idle-red-hats-flamethrower.png",
+      "width": 1380,
+      "height": 702,
+      "changedPixels": 0,
+      "sourceSHA256": "d54af2597ae18ae56e3459b774aa46fa9c8664b3dedb1f343f12e01e566fcf00",
+      "packagedSHA256": "d54af2597ae18ae56e3459b774aa46fa9c8664b3dedb1f343f12e01e566fcf00"
+    },
+    {
+      "file": "idle-red-hats-hmg.png",
+      "width": 1380,
+      "height": 702,
+      "changedPixels": 0,
+      "sourceSHA256": "09d622fe3f67d79cedbe037e5d068a05a2ef51fb22e3914ae0f324793bb9fbee",
+      "packagedSHA256": "09d622fe3f67d79cedbe037e5d068a05a2ef51fb22e3914ae0f324793bb9fbee"
+    },
+    {
+      "file": "idle-red-hats-rifle.png",
+      "width": 1380,
+      "height": 702,
+      "changedPixels": 0,
+      "sourceSHA256": "543fbfb2deee7dcc745250bc73c977f50297cd1a1c9e12f74643b288bc39efe2",
+      "packagedSHA256": "543fbfb2deee7dcc745250bc73c977f50297cd1a1c9e12f74643b288bc39efe2"
+    },
+    {
+      "file": "idle-red-hats-rpg.png",
+      "width": 1380,
+      "height": 702,
+      "changedPixels": 0,
+      "sourceSHA256": "70de177bb9c0af5e8af49fe9a7dba054218ec2c81487a63945af491a4981f99d",
+      "packagedSHA256": "70de177bb9c0af5e8af49fe9a7dba054218ec2c81487a63945af491a4981f99d"
+    },
+    {
+      "file": "iron-ladder-normal.png",
+      "width": 1380,
+      "height": 804,
+      "changedPixels": 0,
+      "sourceSHA256": "94fb1636c34fd12ebc47b8e9d2d35372fd36096a7ddecfbdbd11a3200dbdd4bb",
+      "packagedSHA256": "94fb1636c34fd12ebc47b8e9d2d35372fd36096a7ddecfbdbd11a3200dbdd4bb"
+    },
+    {
+      "file": "iron-ladder-red-hats.png",
+      "width": 1380,
+      "height": 804,
+      "changedPixels": 0,
+      "sourceSHA256": "ae3da03791a192e139b5608cd348ec050ac30a587ae678f694a8fed7bca51ccc",
+      "packagedSHA256": "ae3da03791a192e139b5608cd348ec050ac30a587ae678f694a8fed7bca51ccc"
+    },
+    {
+      "file": "roof-mantle-normal.png",
+      "width": 1380,
+      "height": 765,
+      "changedPixels": 0,
+      "sourceSHA256": "34ef2dd957c979fe5fae21b7da8a92642d9bc53a670990c69e59b2af4d23cf07",
+      "packagedSHA256": "34ef2dd957c979fe5fae21b7da8a92642d9bc53a670990c69e59b2af4d23cf07"
+    },
+    {
+      "file": "roof-mantle-red-hats.png",
+      "width": 1380,
+      "height": 765,
+      "changedPixels": 0,
+      "sourceSHA256": "e608b780c741d5d47e5ed2eecac8ce2e63fb50b6936d9970c5c97a74c624d3e1",
+      "packagedSHA256": "e608b780c741d5d47e5ed2eecac8ce2e63fb50b6936d9970c5c97a74c624d3e1"
+    },
+    {
+      "file": "speaking-closed-normal.png",
+      "width": 1000,
+      "height": 520,
+      "changedPixels": 0,
+      "sourceSHA256": "7cb8767c757ef6e6633a3c508b10558a6bfeb1b58308b07beacf40c438ec673f",
+      "packagedSHA256": "7cb8767c757ef6e6633a3c508b10558a6bfeb1b58308b07beacf40c438ec673f"
+    },
+    {
+      "file": "speaking-closed-red-hats.png",
+      "width": 1000,
+      "height": 520,
+      "changedPixels": 0,
+      "sourceSHA256": "55bc9be848f1a7394a9e8c4dadd5bba7db06b9a3b37fc6cc7cc00eb1f7bc7c5b",
+      "packagedSHA256": "55bc9be848f1a7394a9e8c4dadd5bba7db06b9a3b37fc6cc7cc00eb1f7bc7c5b"
+    },
+    {
+      "file": "speaking-normal.png",
+      "width": 1000,
+      "height": 520,
+      "changedPixels": 0,
+      "sourceSHA256": "2a7afb8eb325392162d3c6e3876ec4635966d2a8350a0d76110f6dbdf473fe79",
+      "packagedSHA256": "2a7afb8eb325392162d3c6e3876ec4635966d2a8350a0d76110f6dbdf473fe79"
+    },
+    {
+      "file": "speaking-red-hats.png",
+      "width": 1000,
+      "height": 520,
+      "changedPixels": 0,
+      "sourceSHA256": "d03ee11223a12428f75a8287b6445e0adce5e5c2e23f65adba77086bf5193575",
+      "packagedSHA256": "d03ee11223a12428f75a8287b6445e0adce5e5c2e23f65adba77086bf5193575"
+    },
+    {
+      "file": "stances-normal.png",
+      "width": 1380,
+      "height": 777,
+      "changedPixels": 0,
+      "sourceSHA256": "b7437137371cae1e7e46e130cf208155d71884a71264111a0ee2d94f30c89537",
+      "packagedSHA256": "b7437137371cae1e7e46e130cf208155d71884a71264111a0ee2d94f30c89537"
+    },
+    {
+      "file": "stances-red-hats.png",
+      "width": 1380,
+      "height": 777,
+      "changedPixels": 0,
+      "sourceSHA256": "57e1c1cb3b70123b37374c9c3ff8270cbf2ac290d77407cbc2916b19809f8a8d",
+      "packagedSHA256": "57e1c1cb3b70123b37374c9c3ff8270cbf2ac290d77407cbc2916b19809f8a8d"
+    },
+    {
+      "file": "tank-normal.png",
+      "width": 1330,
+      "height": 635,
+      "changedPixels": 0,
+      "sourceSHA256": "4967cb8535adbc7322bc805be2739e3bcf1133b675e244b54bd0e9524d58091b",
+      "packagedSHA256": "4967cb8535adbc7322bc805be2739e3bcf1133b675e244b54bd0e9524d58091b"
+    },
+    {
+      "file": "tank-red-hats.png",
+      "width": 1330,
+      "height": 635,
+      "changedPixels": 21,
+      "sourceSHA256": "803b63653d2b22a46cb5006f9228e50de6a40666662c1c92938f4c10588fd77d",
+      "packagedSHA256": "4f12e92c2991fe4a5531a9517cac570e4c370e1698ef47a1a49a73e7c54a7175"
+    },
+    {
+      "file": "walk-aim-normal.png",
+      "width": 1100,
+      "height": 330,
+      "changedPixels": 0,
+      "sourceSHA256": "25a239a45f3a1712f5bd4f79fba87d25b599794b3ec4a917269fa294c20b6fcf",
+      "packagedSHA256": "25a239a45f3a1712f5bd4f79fba87d25b599794b3ec4a917269fa294c20b6fcf"
+    },
+    {
+      "file": "walk-aim-red-hats.png",
+      "width": 1100,
+      "height": 331,
+      "changedPixels": 0,
+      "sourceSHA256": "0264c17ef1aa4f126edd5eb2c9debd7bd575e5606a414c65fc8c6593e396e82d",
+      "packagedSHA256": "0264c17ef1aa4f126edd5eb2c9debd7bd575e5606a414c65fc8c6593e396e82d"
+    },
+    {
+      "file": "wood-ladder-normal.png",
+      "width": 1380,
+      "height": 804,
+      "changedPixels": 0,
+      "sourceSHA256": "55e5189c8782ec92a98d47af81d7c7124bf31c2d6c59363d31bc890bede42078",
+      "packagedSHA256": "55e5189c8782ec92a98d47af81d7c7124bf31c2d6c59363d31bc890bede42078"
+    },
+    {
+      "file": "wood-ladder-red-hats.png",
+      "width": 1380,
+      "height": 804,
+      "changedPixels": 0,
+      "sourceSHA256": "ae78e250c98fa1e3cad15f0e93acb40627e94bb07611f566dc4e0bfa958bbadd",
+      "packagedSHA256": "ae78e250c98fa1e3cad15f0e93acb40627e94bb07611f566dc4e0bfa958bbadd"
+    }
+  ],
+  "boardSHA256": "1948196a0fef9714a739af253322a89d821712daf7acf11c945f27076da168fd",
+  "regression": {
+    "initial": {
+      "tests": 3114,
+      "pass": 3099,
+      "fail": 9,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 6,
+      "duration_ms": 2091449.2688
+    },
+    "rechecks": [
+      {
+        "file": "integration-rechecked.log",
+        "tests": 10,
+        "pass": 10,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 60303.9642
+      },
+      {
+        "file": "integration-rechecked-draw-crawl.log",
+        "tests": 11,
+        "pass": 11,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 136917.8387
+      },
+      {
+        "file": "integration-rechecked-idle-arches-descent.log",
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 33044.4442
+      },
+      {
+        "file": "integration-rechecked-speaking-sides.log",
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 31818.1466
+      },
+      {
+        "file": "bear-assault-stow-recheck.log",
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 82183.6445
+      },
+      {
+        "file": "bear-integration-final.log",
+        "tests": 17,
+        "pass": 17,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 41642.7937
+      },
+      {
+        "file": "speaking-bear-final-closed.log",
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 26808.3581
+      }
+    ],
+    "resolvedFailures": [
+      "Recorded core adapter list now includes bear recruitment",
+      "Casualty roster count updated from 396 to 432 after all physical cases completed",
+      "Crawl roster count updated from 144 to 157 after all physical cases completed",
+      "Assault-rifle sling moved forward to maintain native pickup reach",
+      "Bear idle pins its independently fitted 25/40/15 degree neck envelope; other collision and movement bars unchanged",
+      "Unsupported-descent error retains the documented supports wording",
+      "Arch clearance roster count updated from 24 to 26; standing geometry and margin bars unchanged",
+      "Bear author/game mouth-side shares are recorded at 91/93 percent; existing seventy-percent requirement and five-point ratchet unchanged",
+      "The obstructed-mouth positive control compares against those newly recorded bear baselines"
+    ],
+    "effective": {
+      "pass": 3108,
+      "fail": 0,
+      "todo": 6,
+      "method": "Complete suite plus successful targeted reruns of every failing check; a second complete suite is not claimed"
+    },
+    "unresolvedFailures": 0
+  },
+  "speakingProvenance": {
+    "from": "466aae4",
+    "beforeHash": "93629c487b41f816",
+    "sourceHash": "c9538d172e9d3cdf",
+    "unchangedMeshes": 24,
+    "updated": [
+      {
+        "file": "dist/tactics/speaking-heads/horse-author.json",
+        "partsHash": "2e38243e3a55dc41180a39699a0422a88d23838f4e75206ff36c09fc15995f17"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/horse-10k.json",
+        "partsHash": "68eb198a5ea795dd94269a26d152f20888ca56af09ad463551f9034ab67c35ac"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/goat-author.json",
+        "partsHash": "70fcc0578352828e1528e49e2621eeb5260bcf46b3bfdc0cb4ec5680fa7f82bc"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/goat-10k.json",
+        "partsHash": "5fb56da8ad6aca130388edfd42a34d01105ca6f6921106fecf403076e35a9bc8"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/bull-author.json",
+        "partsHash": "e14b30f141408ddbce2f6b672e42ab6ccc142d227229efc8989f84b660ef8b5a"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/bull-10k.json",
+        "partsHash": "e586ef16f38110a2fab153a582c9720c58b2763e9fd001fc7c26c7faacae635d"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/cow-author.json",
+        "partsHash": "4862be6c4eaeb2b38cd03c7e4fd23d0ed15941693d191ebdca2803ecec5ba135"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/cow-10k.json",
+        "partsHash": "607b8d4d52077a187a461ca4c9a486d71d1d8e6c446a9f1988c169b9b6c3c385"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/donkey-author.json",
+        "partsHash": "f4b93dcd7359e53d9e65230d871be597b1fff976dbb48fd3067ce86eae18d1c7"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/donkey-10k.json",
+        "partsHash": "2368a725c3211db54487ed67bf5efbb90ade97961449538e67c8af81dc79bb57"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/sheep-author.json",
+        "partsHash": "690619e953aa248693acdb47739499f15db44ef273fa4ce138d8c822b2b498e1"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/sheep-10k.json",
+        "partsHash": "f6f5b8b4ae09b2b19b6548032ae1ce6518a11f1f3f49f5cc06272359e3decbc3"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/skunk-author.json",
+        "partsHash": "82bc26561bb81b22fd57cfc56aa48b97fd2b90ce31367868c5b00ef7f4e6cb28"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/skunk-10k.json",
+        "partsHash": "50939c516e67843258de0c6c4d0ffcc43388750f49bb15c296b1c05710adfeee"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/pig-foreman-author.json",
+        "partsHash": "d48cedce2d0dccb5ecf80838db75458cc6c6ece1dcd843f83130f60b90a7fc85"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/pig-foreman-10k.json",
+        "partsHash": "6db46b306f18389fce674ae3ae08500a31e0e2e76a81e46f6b39d641d61ccaff"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/pig-director-author.json",
+        "partsHash": "a095f6c894ed4aaca895aad7833ee692392af326436e0f7f6c455bc054631a7d"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/pig-director-10k.json",
+        "partsHash": "5511116313dd65b347ec914f7df8d8b5ff9fe8436e9893a71fa5f8df33b4e9a3"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/rabbit-author.json",
+        "partsHash": "508b81471b58218c03a6b86c388abb9e7123f1680a1f558955fe7baf9947cb56"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/rabbit-10k.json",
+        "partsHash": "8c51be9295a0627b0221294a44bbdc8a19ca3b0e3fc234136729cd0047430918"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/dog-author.json",
+        "partsHash": "863fb49c6d95c1a213e4c2998cc8676d67195b9dde2ae94066190c2e0902b733"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/dog-10k.json",
+        "partsHash": "2992b38292cff13db7de880e4535e4c419bd58dbbf4b52aa636af1d80f4900a1"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/hen-author.json",
+        "partsHash": "f34bba8c5847b2ab2307db68652c3c0a7c8f2ebc44efc35c8f3ed64dfbb3b1ee"
+      },
+      {
+        "file": "dist/tactics/speaking-heads/hen-10k.json",
+        "partsHash": "81a8d0a8eb28aa91f07eabf7ede786ac7297370a7fa9ef16b465e0b4b4a0b812"
+      }
+    ]
+  },
+  "assets": {
+    "portraits": [
+      {
+        "file": "dist/assets/characters/bear-idle.png",
+        "sha256": "99dec7af533716ad0888b5fba6bc6fd79e215a6a928cb99c2fadad9eaa427c30"
+      },
+      {
+        "file": "dist/assets/characters/red-hats/bear-idle.png",
+        "sha256": "5f7f528786c6a35229a5a4d60bdbc20cb827ea1f91c16ef3505ab2bb6337ee04"
+      }
+    ],
+    "nativeBodyTriangles": 10050,
+    "speakingHeadTriangles": 4416,
+    "speakingBodyTriangles": 11616,
+    "capTriangles": 700
+  }
+}

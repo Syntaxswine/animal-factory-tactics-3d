@@ -12,7 +12,7 @@ export const ROOF_MANTLE_PHASES=Object.freeze([['Stow weapon',.65],['Crouch to j
 // Authored mammal roof study. Local +X enters the ledge; face X=0, top Y=2.
 // Progress is absolute and deterministic: review scrubbing never advances state.
 export function createRoofMantle(worker,profile){
- if(!['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog'].includes(profile.id)||!supportsStow(worker.weapon?.id||'rifle'))throw Error('Roof mantle supports the reviewed mammals with supported equipment');
+ if(!['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog','bear'].includes(profile.id)||!supportsStow(worker.weapon?.id||'rifle'))throw Error('Roof mantle supports the reviewed mammals with supported equipment');
  const unarmed=worker.weapon?.id==='hands',phases=unarmed?Object.freeze(ROOF_MANTLE_PHASES.map((p,i)=>Object.freeze({...p,label:i===0?'Prepare to climb':i===11?'Settle stance':p.label}))):ROOF_MANTLE_PHASES;
  const root=worker.root,bones=worker.bones,named=Object.fromEntries(bones.map(b=>[b.name,b]));
  const entryObjects=[];root.traverse(o=>entryObjects.push({o,p:o.position.clone(),q:o.quaternion.clone(),s:o.scale.clone(),visible:o.visible}));
@@ -70,7 +70,7 @@ export function createRoofMantle(worker,profile){
  const free=keys.map(k=>{worker.pose('neutral');body(k);return Object.fromEntries(limbs.map(l=>[l.id,{p:l.c.localToWorld(l.offset.clone()),q:l.c.getWorldQuaternion(Q())}]));});
  // Wide paws/boots need raised toes in the flat pose and must lift before
  // advancing through the face. Hooved characters retain the approved path.
- const footLift={skunk:.045,rabbit:.09,dog:.035}[profile.id]||0;for(const i of [8,9])for(const side of [-1,1])free[i]['foot'+side].p.y+=footLift;
+ const footLift={skunk:.045,rabbit:.09,dog:.035,bear:.045}[profile.id]||0;for(const i of [8,9])for(const side of [-1,1])free[i]['foot'+side].p.y+=footLift;
  const foot=(x,y,z)=>V(x,y,z),edge=s=>V(0,2,s*(adaptation?.edgeSpan??.26));
  const feet=[
   [foot(-.685,0,-.232),foot(-.685,0,.232)], [foot(-.685,0,-.232),foot(-.685,0,.232)], [foot(-.685,0,-.232),foot(-.685,0,.232)],

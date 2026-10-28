@@ -12,6 +12,7 @@ export function readyWeapons(u){
  return [held,alternate];
 }
 export function hudPortrait(u){
+ if(u.species==='bear')return '../assets/characters/'+(u.outfit==='red-hats'?'red-hats/':'')+'bear-idle.png';
  return unitArt({...u,weapon:'hands',stance:'standing'}).src;
 }
 export function weaponReadout(state,u,kind,{blocked=false}={}){

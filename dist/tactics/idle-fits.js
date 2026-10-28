@@ -23,4 +23,6 @@ export const IDLE_FITS={
  "kad38a135":{"nod":20,"up":10,"tilt":5,"yaw":{"1":40,"-1":40},"twist":{"1":30,"-1":30},"swing":{"lean":{"1":0,"-1":0},"round":0},"ease":1,"shrug":1,"weightShift":1,"rounding":10},
  // dog
  "kd9f072b7":{"nod":20,"up":10,"tilt":5,"yaw":{"1":40,"-1":40},"twist":{"1":30,"-1":30},"swing":{"lean":{"1":0,"-1":0},"round":0},"ease":1,"shrug":1,"weightShift":1,"rounding":7.5},
+ // bear
+ "k169a1ef9":{"nod":15,"up":10,"tilt":5,"yaw":{"1":25,"-1":40},"twist":{"1":0,"-1":25},"swing":{"lean":{"1":0,"-1":0},"round":0},"ease":1,"shrug":1,"weightShift":0.75,"rounding":2.5},
 };

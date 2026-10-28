@@ -2,7 +2,7 @@ import * as T from './vendor/three.module.js';
 // Native head/neck surfaces are authored per species. Unknown or changed models
 // keep their ordinary casualty appearance rather than guessing a destructive cut.
 export const FATAL_HEAD_PROFILES={
- horse:'unified skull jaw neck and ears',goat:'unified goat skull ears and swept horns',bull:'unified bull skull ears and short horns',cow:'unified cow skull ears and forehead tuft',donkey:'unified donkey skull muzzle and long ears',sheep:'unified sheep skull ears and wool',skunk:'unified skunk skull rounded ears and muzzle','pig-foreman':'unified pig skull folded ears and snout','pig-director':'unified director skull folded ears and snout',rabbit:'unified rabbit skull and leaf ears',dog:'unified dog skull and upright ears',hen:'head and feathered neck'
+ horse:'unified skull jaw neck and ears',goat:'unified goat skull ears and swept horns',bull:'unified bull skull ears and short horns',cow:'unified cow skull ears and forehead tuft',donkey:'unified donkey skull muzzle and long ears',sheep:'unified sheep skull ears and wool',skunk:'unified skunk skull rounded ears and muzzle','pig-foreman':'unified pig skull folded ears and snout','pig-director':'unified director skull folded ears and snout',rabbit:'unified rabbit skull and leaf ears',dog:'unified dog skull and upright ears',hen:'head and feathered neck',bear:'unified bear skull rounded ears and muzzle'
 };
 // The donkey's lower jaw shares low head weights with its long neck. Its
 // authored collar envelope removes the connected anterior shelf as well.

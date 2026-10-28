@@ -19,7 +19,7 @@ function fixture(profile,id,fn){const w=load(profile),gun=createWeaponModel(id);
 function assertGrip(w,id){for(const side of w.weapon.carry.hands){const name=side===1?'grip':'support',palm=w.weapon.carry.handPoses?.[name]?.palm||[.052,-.010,0],bone=w.bones.find(b=>b.name==='hand'+side),a=w.weapon.anchors[name].getWorldPosition(V()),b=bone.localToWorld(V().fromArray(palm));assert(a.distanceTo(b)<1e-5,id+' authored '+name+' contact '+a.distanceTo(b));}}
 
 test('weapon mantle matrix includes every authored equipment mode and every completed mammal',()=>{
- assert.equal(mammals.length,11);assert.equal(weapons.length,13);assert.deepEqual(new Set(weapons),new Set(Object.keys(STOW_MODES)));
+ assert.equal(mammals.length,12);assert.equal(weapons.length,13);assert.deepEqual(new Set(weapons),new Set(Object.keys(STOW_MODES)));
  assert.deepEqual(new Set(weapons.map(id=>STOW_MODES[id])),new Set(['empty','sheath','holster','pouch','sling','pack']));
 });
 

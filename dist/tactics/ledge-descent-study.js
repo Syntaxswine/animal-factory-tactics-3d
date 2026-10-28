@@ -5,7 +5,7 @@ import {createRedHatCap} from './red-hat-model.js';
 import {LIGHT_ATLAS} from './horse-light-model.js';
 import {createLedgeDescent} from './ledge-descent.js';
 import {createHenLedgeDescent} from './hen-ledge-descent.js';
-import {createWeaponModel} from './weapon-models.js';
+import {createWeaponModel,WEAPON_MODELS} from './weapon-models.js';
 import {createCliffMantleSurface} from './cliff-mantle.js';
 import {createPaintedGrass} from './painted-grass.js';
 
@@ -13,6 +13,7 @@ const $=id=>document.getElementById(id),params=new URLSearchParams(location.sear
 for(const p of ANIMAL_MOTION_CATALOG){
  const option=document.createElement('option');option.value=p.id;option.textContent=p.label;$('animal').append(option);
 }
+for(const [id,w]of Object.entries(WEAPON_MODELS))if(![...$('weapon').options].some(o=>o.value===id))$('weapon').add(new Option(w.label,id));
 let profile=ANIMAL_MOTION_CATALOG[0];
 const selections=['animal','outfit','weapon','surface','view','scale'];
 for(const id of selections)if([...$(id).options].some(o=>o.value===params.get(id)))$(id).value=params.get(id);
@@ -60,14 +61,14 @@ async function load(){
  guideOption.disabled=animal!=='donkey';
  if(guideOption.disabled&&$('outfit').value==='blue-hawaiian')$('outfit').value='normal';
  const outfit=$('outfit').value,unarmed=profile.unarmed||outfit==='blue-hawaiian';
- $('weapon').value=unarmed?'hands':'rifle';$('weapon').disabled=true;
+ if(animal!=='bear')$('weapon').value=unarmed?'hands':'rifle';$('weapon').disabled=animal!=='bear';
  const weapon=$('weapon').value;
  try{
   disposeActor();
   const response=await fetch(profile.file);if(!response.ok)throw Error(profile.label+' mesh failed to load');
   const data=await response.json();if(closed)return;
   worker=profile.create(data,texture);
-  if(!profile.unarmed&&weapon==='hands'){selectedWeapon=createWeaponModel('hands',texture);worker.equipWeapon(selectedWeapon);}
+  if(!profile.unarmed&&weapon!=='rifle'){selectedWeapon=createWeaponModel(weapon,texture);worker.equipWeapon(selectedWeapon);}
   paint=await createAnimalPaint(renderer,worker,profile,loader,outfit);
   for(const p of worker.parts){p.material=paint.material;p.castShadow=p.receiveShadow=true;}
   cap=outfit==='red-hats'?await createRedHatCap(renderer,worker,profile,loader):null;

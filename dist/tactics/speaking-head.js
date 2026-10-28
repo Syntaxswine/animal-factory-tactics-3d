@@ -25,7 +25,7 @@ export const speakingHeadFile=(id,level='10k')=>`./speaking-heads/${id}-${level}
 // the front (the lever is the jaw joint to the lips' front, head.jaw.lever), within 3 to 9
 // degrees. speechOpen(head) is the rule; SPEECH_OPEN the built heads' values (tested equal).
 export const speechOpen=head=>Math.min(.15,Math.max(.05,.025/head.jaw.lever));
-export const SPEECH_OPEN={horse:.079,goat:.1092,bull:.0998,cow:.1116,donkey:.0927,sheep:.1214,skunk:.1231,'pig-foreman':.1046,'pig-director':.0902,rabbit:.1496,dog:.0994,hen:.15};
+export const SPEECH_OPEN={bear:.0969,horse:.079,goat:.1092,bull:.0998,cow:.1116,donkey:.0927,sheep:.1214,skunk:.1231,'pig-foreman':.1046,'pig-director':.0902,rabbit:.1496,dog:.0994,hen:.15};
 
 // The mouth's paint, as display (sRGB) colours: inner lip, gum and the shadowed back of the
 // mouth, by depth below the approved surface, plus the teeth and tongue. The shaders work in
@@ -34,6 +34,7 @@ export const SPEECH_OPEN={horse:.079,goat:.1092,bull:.0998,cow:.1116,donkey:.092
 // lipDepth: the depths over which the inner lip turns to gum (by default 3 to 11 mm).
 const MOUTH={lip:[.44,.18,.17],gum:[.66,.20,.25],back:[.36,.07,.10],teeth:[.93,.89,.77],root:[.74,.64,.50],tongue:[.80,.42,.42]};
 export const MOUTH_PAINT={
+ bear:{...MOUTH,lip:[.24,.12,.07],gum:[.46,.22,.23]},
  // the horse's quieter (the architect's review, 15 October 2026: "soften the exposed gum band and
  // make the tooth row less mechanical"; the user's choice of three, "B: dusky gum, ivory teeth")
  horse:{...MOUTH,lip:[.27,.18,.16],gum:[.56,.28,.28],back:[.30,.11,.11],lipDepth:[.005,.018],teeth:[.87,.82,.69],root:[.64,.54,.42],toothShade:.6,tongue:[.70,.42,.41]},

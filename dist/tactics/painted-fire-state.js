@@ -1,6 +1,6 @@
 // Presentation clocks and recorded paths only. No damage or target selection.
 export const FIRE_TIME=Object.freeze({ignite:.32,cutoff:1.02,travel:.56,recover:2.1,hit:.64,duration:5.4});
-const FIRE_SPECIES=new Set(['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog','hen']);
+const FIRE_SPECIES=new Set(['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog','hen','bear']);
 export const paintedBurnSupported=u=>FIRE_SPECIES.has(u?.species)&&(u.stance||'standing')==='standing';
 export const paintedOperatorSupported=u=>paintedBurnSupported(u)&&u.species!=='hen'&&u.outfit!=='blue-hawaiian'&&u.weapon==='flamethrower';
 export const paintedFlamePhase=(elapsed,reduced=false)=>({duration:reduced?180:2100,discharged:reduced||elapsed>=FIRE_TIME.hit*1000,aim:0,recoil:0,elapsed,flame:!reduced&&elapsed>=320&&elapsed<1580});

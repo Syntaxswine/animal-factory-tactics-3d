@@ -17,7 +17,7 @@ function fixture(profile,fn){
 }
 const boneState=m=>Object.values(m.bones).map(b=>[...b.position.toArray(),...b.quaternion.toArray()]);
 test('roster exposes exactly the 25 authored combinations and rejects invalid selections',()=>{
- const combos=GRENADE_CHARACTERS.flatMap(p=>grenadeOutfits(p.id).map(o=>grenadeSelection(p.id,o)));assert.equal(combos.length,25);
+ const combos=GRENADE_CHARACTERS.flatMap(p=>grenadeOutfits(p.id).map(o=>grenadeSelection(p.id,o)));assert.equal(combos.length,27);
  assert.throws(()=>grenadeSelection('camel'));assert.throws(()=>grenadeSelection('pig-director','blue-hawaiian'));
 });
 for(const profile of GRENADE_CHARACTERS){

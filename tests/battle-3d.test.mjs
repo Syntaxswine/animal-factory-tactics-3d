@@ -9,7 +9,8 @@ import {terrainKnown,personVisible} from '../dist/tactics/battle-visibility.js';
 test('3D simulation dependency matches the pinned modules and recorded clock adapters',()=>{
  const root=new URL('../dist/tactics/core/',import.meta.url),manifest=JSON.parse(fs.readFileSync(new URL('manifest.json',root)));
  assert.equal(manifest.revision,'e529f4b3d512d32cea522d701d01ebe8488af013');
- assert.deepEqual(Object.keys(manifest.overrides),['blocks.js','connections.js','editor-model.js','engine.js','environment.js','explosives.js','inventory.js','maps.js','progression.js','projectiles.js','visibility.js','woodland.js','world.js']);
+ assert.deepEqual(Object.keys(manifest.overrides),['blocks.js','connections.js','editor-model.js','engine.js','environment.js','explosives.js','inventory.js','maps.js','progression.js','projectiles.js','recruits.js','visibility.js','woodland.js','world.js']);
+ assert.match(manifest.overrides['maps.js'].reason,/bear/i);assert.match(manifest.overrides['recruits.js'].reason,/bear/i);
  for(const [file,hash]of Object.entries(manifest.files))assert.equal(createHash('sha256').update(fs.readFileSync(new URL(file,root))).digest('hex'),hash,file);
 });
 test('Easy reveals distant scenery without revealing people or changing perception',()=>{

@@ -224,12 +224,14 @@ test('glances down are glances: the gaze comes back up after one, stays below 12
   finally{motion.dispose();worker.skeleton.dispose();worker.dispose();}}
  assert.ok(longest<=4,`the gaze stays below 12 degrees down ${longest.toFixed(2)} s at a stretch`);assert.ok(most<=.25,`the gaze spends ${(most*100).toFixed(0)}% of a loop below 12 degrees down`);
 });
-test('every mammal stands and looks about: over four of its loops its head turns 120 degrees a minute or more and sweeps 9 or more, its hips sway 3 cm or more and its elbows ease; all but the two whose clothes hold their heads reach 44 degrees or more to each side and 10 or more down',()=>{
- // A fit that collapsed (a measure that counted every slid crossing, say) would leave a character staring ahead. The two
+test('every mammal stands and looks about: over four loops its head turns at least 120 degrees a minute and sweeps 9, its hips sway 3 cm and elbows ease; three constrained necks keep their measured limits, the others reach 44 degrees per side and 10 down',()=>{
+ // A fit that collapsed (a measure that counted every slid crossing, say) would leave a character staring ahead. Two existing characters
  // whose heads their clothes still hold are named with what they reach, so that a change to either shows: the sheep (a
  // neckerchief tight on its wool) turns its head 40 degrees left and 10 right and does not nod; the pig director (his
  // jowls resting on his collar) turns his 5 left, none right, and does not nod, and looks about with his trunk.
- const held={sheep:{left:40,right:10,nod:0},'pig-director':{left:5,right:0,nod:0}};
+ // The bear's broad native head and rolled collar reach 25 / 40 / 15. The
+ // independent surface fit and five-degree over-limit checks pin this envelope.
+ const held={sheep:{left:40,right:10,nod:0},'pig-director':{left:5,right:0,nod:0},bear:{left:25,right:40,nod:15}};
  for(const profile of MAMMALS){const id=profile.id;let path=0,time=0,sway=Infinity,swing=-Infinity,ease=Infinity;
   for(const seed of [1,2,3,4])fixture(({worker,motion})=>{const {reach,yaw,nod}=motion.fitted,elbow=()=>{const a=wp(worker,'upperArm1'),e=wp(worker,'forearm1'),w=wp(worker,'hand1');return 180-a.sub(e).angleTo(w.sub(e))*DEG;};
    if(seed===1){if(held[id])assert.deepEqual({left:yaw[1],right:yaw[-1],nod},held[id],id+' is held as named');

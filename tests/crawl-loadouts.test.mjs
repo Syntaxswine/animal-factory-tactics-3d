@@ -36,7 +36,7 @@ test('All seven legal paired carries fit every armed species with both grips, na
    const head=createCasualtyHeadClearance(a.worker);try{assert.ok(head.clear(a.gun)&&head.clear(a.offhand),p.id+'/'+right+'/'+left+' head');}finally{head.dispose();}
    if(previous)for(const arm of state.arms){const old=previous.arms.find(a=>a.side===arm.side);if(arm.primary&&old.primary&&arm.planted&&old.planted)assert.ok(vector(arm.contact==='hand'?arm.wrist:arm.elbow).distanceTo(vector(old.contact==='hand'?old.wrist:old.elbow))<1e-6,p.id+' paired support slide');}previous=state;
   }count++;
- }finally{motion.dispose();a.dispose();}}assert.equal(count,77);
+ }finally{motion.dispose();a.dispose();}}assert.equal(count,84);
 });
 
 test('Paired reverse scrubbing preserves exact poses and never exchanges the primary and offhand assets',()=>{

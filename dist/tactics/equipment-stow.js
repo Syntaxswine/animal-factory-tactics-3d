@@ -11,7 +11,9 @@ export function createEquipmentStow(worker,profile,{riflePlacement}={}){
  if(riflePlacement&&(![riflePlacement.back,riflePlacement.side].every(Number.isFinite)||!Array.isArray(riflePlacement.axis)||riflePlacement.axis.length!==3||!riflePlacement.axis.every(Number.isFinite)||Math.hypot(...riflePlacement.axis)<1e-8))throw Error('Invalid rifle stow placement');
  const root=worker.root,spine=worker.bones.find(b=>b.name==='spine');if(!spine)throw Error('Stowed equipment needs a spine bone');
  const material=new T.MeshStandardMaterial({color:0x513a25,roughness:.95,side:T.DoubleSide}),geometry=new T.BufferGeometry(),sling=new T.Mesh(geometry,material);sling.name='Equipment shoulder sling';root.add(sling);sling.visible=false;
- const back=riflePlacement?.back??(profile.id.startsWith('pig')?-.40:profile.id==='skunk'?-.22:-.29),z=riflePlacement?.side??(profile.id==='skunk'?.53:-.15),front=profile.id.startsWith('pig')?.33:.19;
+ // The bear's heavy receiver clears his back at -.33; the compact assault
+ // receiver sits slightly forward so the pickup stays within arm reach.
+ const back=riflePlacement?.back??(profile.id.startsWith('pig')?-.40:profile.id==='bear'?(id==='assault'?-.28:-.33):profile.id==='skunk'?-.22:-.29),z=riflePlacement?.side??(profile.id==='skunk'?.53:-.15),front=profile.id.startsWith('pig')?.33:.19;
  const positions=new Float32Array(33*6),indices=[];
  for(let i=0;i<32;i++)indices.push(i*2,i*2+1,i*2+2,i*2+1,i*2+3,i*2+2);geometry.setAttribute('position',new T.BufferAttribute(positions,3));geometry.setIndex(indices);
  let holder=null;if(['holster','sheath','pouch','pack'].includes(mode)){holder=new T.Mesh(new T.BoxGeometry(mode==='pack'?.15:mode==='pouch'?.09:.075,mode==='pack'?.06:mode==='sheath'?.19:mode==='pouch'?.10:.14,mode==='pack'?.22:.065),material);holder.name='Equipment '+mode;root.add(holder);holder.visible=false;}

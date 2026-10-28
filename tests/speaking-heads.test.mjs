@@ -35,7 +35,7 @@ test('the speaking sculpts start from the approved heads, placed as the characte
 
 test('every speaking head was built from the current sources, for every character',()=>{
  const hash=speakingSourceHash(),names=new Set(fs.readdirSync(new URL('speaking-heads/',root)));
- assert.equal(HEADS.length,12);
+ assert.equal(HEADS.length,13);
  for(const head of HEADS)for(const level of LEVELS){
   assert.ok(names.has(`${head.id}-${level}.json`),`${head.id}-${level}.json is missing`);
   const data=built(head.id,level);
@@ -200,7 +200,7 @@ const SIDES_SLACK=.05,SIDES_SEEN={
  'donkey-author':0.89, 'donkey-10k':0.90, 'sheep-author':0.89, 'sheep-10k':0.80,
  'skunk-author':0.85, 'skunk-10k':0.85, 'pig-foreman-author':0.91, 'pig-foreman-10k':0.81,
  'pig-director-author':0.92, 'pig-director-10k':0.93, 'rabbit-author':0.76, 'rabbit-10k':0.79,
- 'dog-author':0.91, 'dog-10k':0.79};
+ 'dog-author':0.91, 'dog-10k':0.79, 'bear-author':0.91, 'bear-10k':0.93};
 const sidesOpen=(data,az,extra=null)=>{const d=extra?{...data,parts:[...data.parts,extra]}:data;return seeThrough(d,24,az).mm2/seeThrough(d,24,az,{outerOnly:true}).mm2;};
 test('open, the mouth is open at its sides: in exact profile from either side at 24 degrees, at least 70% of the opening between the lips shows the background',()=>{
  // (the lips' own faces, seen obliquely, cover 8 to 22% of it, the rabbit's the most, her mouth

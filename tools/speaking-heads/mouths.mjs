@@ -46,6 +46,13 @@ const tongue=(width,o={})=>({width,embed:.0015,rise:.002,below:.002,backInset:.0
 const ruminantPad=half=>({bottom:.005,height:.004,depth:.005,half,inset:.001});
 
 export const MOUTHS={
+ bear:mouth({
+  lip:{x:.195,y:1.408,line:[[.09,1.412],[.11,1.408],[.13,1.403],[.15,1.401],[.17,1.402],[.19,1.405],[.21,1.414]],smile:0,width:.055},
+  corner:{x:.105,z:.2,zOpen:.02},hinge:[-.04,1.47],
+  band:{z0:.04,z1:.08},cavity:{back:.035,width:.039},
+  teeth:[incisors('upper',6,.013,.0024,.0026),canines('upper',.0295,.0028,.0055),incisors('lower',6,.012,.0023,.0025),canines('lower',.019,.0028,.0055)],
+  tongue:tongue(.027)
+ }),
  horse:mouth({
   lip:{x:.245,y:1.317,line:[[.15,1.3484],[.165,1.3429],[.18,1.3372],[.195,1.3309],[.21,1.3247],[.225,1.3199],[.24,1.3173],[.255,1.3171],[.27,1.3177]],smile:0,width:.04},
   corner:{x:.168,z:.2,zOpen:.02},hinge:[-.035,1.43],

@@ -2,8 +2,8 @@ import {createModelPaint} from './horse-model-paint.js';
 import {BEAR_PAINT_FRAME} from './bear-worker.js';
 // Unseen cuff rims borrow a small, clean patch of the same painted shirt.
 // The outfit texture supplies the color; the regular and faction faces stay native.
-export function createBearPaint(renderer,worker,texture){
- return createModelPaint(renderer,worker,texture,{species:'bear',frame:BEAR_PAINT_FRAME,paintLayers:{uniforms:{},declarations:'',dispose(){},application:`
+export function bearPaintLayers(){
+ return {uniforms:{},declarations:'',dispose(){},application:`
   if(vPaintPart<1.5){
    vec3 cloth=texture2D(uModelPaint,vec2((2.5+clamp(p.x*.10,-.02,.02)/1.18)/4.,.5+(1.105+clamp(p.y-1.,-.02,.02)-.84)/2.36)).rgb;
    float missing=(1.-coverage)*(1.-filled);
@@ -26,5 +26,8 @@ export function createBearPaint(renderer,worker,texture){
    vec2 furUV=vec2((2.5+p.z*.8/1.18)/4.,.5+(.745+(p.y-.836)*.68-.84)/2.36);
    diffuseColor.rgb=texture2D(uModelPaint,furUV).rgb*(.78+.22*max(0.,-n.x));coverage=0.;filled=1.;
   }
- `}});
+ `};
+}
+export function createBearPaint(renderer,worker,texture,options={}){
+ return createModelPaint(renderer,worker,texture,{...options,species:'bear',frame:BEAR_PAINT_FRAME,paintLayers:bearPaintLayers()});
 }

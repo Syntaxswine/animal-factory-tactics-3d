@@ -3,7 +3,7 @@ import {createLightHorse} from './horse-light-model.js';
 export const BEAR_PAINT='../assets/characters/lowpoly-proof/bear-worker-model-paint-v1.png';
 export const BEAR_RED_HAT_PAINT='../assets/characters/lowpoly-proof/bear-red-hat-model-paint-v1.png';
 export const BEAR_PAINT_FRAME={width:1.18,height:2.36,centerY:.84,distance:4,near:.1,far:10};
-export const BEAR_PROFILE={id:'bear',label:'Bear worker',file:'bear-10k-data.json',create:createBearWorker,paint:BEAR_PAINT,frame:BEAR_PAINT_FRAME,redHatFit:{center:[-.015,1.625,0],scale:[.91,.67,.85]},eye:[.079,1.515,.107],kneelDrop:.3706,headPitch:-.82,headYaw:28,headPitchSlope:1.45,proneAim:{stock:[.025,.03,.065],torsoFollow:.9,tuckHem:true,pastern:true}};
+export const BEAR_PROFILE={id:'bear',label:'Bear worker',file:'bear-10k-data.json',create:createBearWorker,paint:BEAR_PAINT,outfitPaints:{normal:BEAR_PAINT,'red-hats':BEAR_RED_HAT_PAINT},frame:BEAR_PAINT_FRAME,redHatFit:{center:[-.015,1.625,0],scale:[.91,.67,.85]},eye:[.079,1.515,.107],kneelDrop:.3706,headPitch:-.895088,headYaw:21.581895,headPitchSlope:1.430087,proneAim:{stock:[.025,.03,.065],torsoFollow:.9,tuckHem:true,pastern:true}};
 export function createBearWorker(data,texture=null){
  const worker=createLightHorse(data,texture),colors=[0xddd0ac,0x626c38,0x6b3f25,0x5a3825,0x6b3f25,0x5a3825,0x74452a,0x5a3825],materials=worker.parts.map((p,i)=>new T.MeshStandardMaterial({color:colors[i],roughness:.92}));
  // The wider torso must not acquire sleeve weights merely by crossing the

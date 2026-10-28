@@ -14,10 +14,10 @@ function track(rows,t){
  return a.slice(1).map((x,j)=>(2*u**3-3*u*u+1)*x+(u**3-2*u*u+u)*dt*slope(i-1,j+1)+(-2*u**3+3*u*u)*b[j+1]+(u**3-u*u)*dt*slope(i,j+1));
 }
 
-export function createHorseChairMotion(worker,{contact=CHAIR_CONTACT,fit=HORSE_CHAIR_FIT}={}){
+export function createHorseChairMotion(worker,{contact=CHAIR_CONTACT,fit=HORSE_CHAIR_FIT,profile={id:'horse'}}={}){
  const root=worker.root;root.position.set(0,0,0);root.quaternion.identity();worker.pose('neutral');
  // Reuse the existing clothing and rigid-sole weighting, with exact restoration.
- const repair=createMammalMotion(worker,{id:'horse'}),skeleton=repair.skeleton;
+ const repair=createMammalMotion(worker,profile),skeleton=repair.skeleton;
  const bones=Object.fromEntries(worker.bones.map(b=>[b.name,b])),rest=new Map(worker.bones.map(b=>[b,b.getWorldPosition(V())]));
  const trousers=worker.parts.find(p=>p.name.includes('overalls')),feet={},patches={},state={};
  const cloth=trousers.geometry,clothPosition=cloth.attributes.position.array.slice(),clothNormal=cloth.attributes.normal.array.slice();
@@ -25,7 +25,7 @@ export function createHorseChairMotion(worker,{contact=CHAIR_CONTACT,fit=HORSE_C
  const at=name=>bones[name].getWorldPosition(V());
  function surface(mesh,i){return mesh.applyBoneTransform(i,V().fromBufferAttribute(mesh.geometry.attributes.position,i)).applyMatrix4(mesh.matrixWorld);}
  for(const side of [-1,1]){
-  const foot=worker.parts.find(p=>p.name==='exposed hoof '+side),a=foot.geometry.attributes.position,ids=[];for(let i=0;i<a.count;i++)if(a.getY(i)<.005)ids.push(i);
+  const foot=worker.parts.find(p=>/hoof|boot|foot/.test(p.name)&&p.name.endsWith(' '+side)),a=foot.geometry.attributes.position,ids=[];for(let i=0;i<a.count;i++)if(a.getY(i)<.005)ids.push(i);
   const box=new T.Box3();for(const i of ids)box.expandByPoint(V().fromBufferAttribute(a,i));const center=box.getCenter(V()),ankle=rest.get(bones['hoof'+side]);
   feet[side]={mesh:foot,ids,target:V(fit.footForward-center.x+ankle.x,-box.min.y+ankle.y,side*.23-center.z+ankle.z)};
   const p=trousers.geometry.attributes.position,index=trousers.geometry.index,goal=V(.12,.64,side*.21);let best=Infinity;

@@ -12,7 +12,7 @@ export const RATE_MIN=100,RATE_MAX=10000,SLATE=6,ROSTER_MAX=8,MERC_ID_BASE=1000,
 export const TERMS={day:{label:'Day',minutes:DAY_MINUTES,days:1},week:{label:'Week',minutes:7*DAY_MINUTES,days:5},month:{label:'Month',minutes:30*DAY_MINUTES,days:12}};
 // Days added to the week's five (and twice that to the month's twelve): types that want to belong or to keep order discount a long contract; free spirits charge for one.
 export const COMMITMENT={Ruler:-.5,Innocent:-.5,Everyman:-.5,Caregiver:-.5,Lover:-.5,Creator:0,Sage:0,Hero:0,Magician:.5,Jester:.5,Explorer:.5,Rebel:.5};
-export const RECRUIT_SPECIES=['horse','goat','donkey','sheep','cow','hen','skunk'];
+export const RECRUIT_SPECIES=['horse','goat','donkey','sheep','cow','hen','skunk','bear'];
 // None of the four comrades, none of the twelve guard names.
 export const RECRUIT_NAMES=['Arkady','Bogdan','Darya','Dmitri','Fyodor','Galina','Gleb','Ilya','Inna','Irina','Kirill','Klara','Larisa','Lyudmila','Maksim','Marina','Matvei','Natasha','Nadia','Nikita','Oksana','Olga','Polina','Raisa','Roman','Semyon','Sonya','Stepan','Svetlana','Tamara','Timur','Valentin','Varvara','Yelena','Zhenya','Zoya'];
 // What the candidate says across the table, in the archetype's register.

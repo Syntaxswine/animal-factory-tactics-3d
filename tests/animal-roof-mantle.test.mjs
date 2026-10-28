@@ -35,8 +35,8 @@ function assertEntry(w,s,final=false){
 }
 function withMotion(profile,run){const w=load(profile);let m;try{m=createRoofMantle(w,profile);run(w,m);}finally{m?.dispose();w.dispose();}}
 
-test('roof mantle mammal matrix covers all eleven completed species without treating hen as a mammal',()=>{
- assert.deepEqual(mammals.map(p=>p.id),['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog']);
+test('roof mantle mammal matrix covers all twelve completed species without treating hen as a mammal',()=>{
+ assert.deepEqual(mammals.map(p=>p.id),['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog','bear']);
 });
 
 test('donkey guide climbs unarmed without creating a rifle grasp or exposing a sling',()=>{

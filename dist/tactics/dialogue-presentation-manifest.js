@@ -29,5 +29,5 @@ export function resolveMercPresentation(merc){
 }
 // Collarbone-up framing in authored model units, with room for ears and hats.
 // Lower edges sit near 1.2 rather than the old armpit-height 1.0.
-export const PORTRAIT_FRAMES={horse:{center:[.06,1.46,0],height:.52},donkey:{center:[.02,1.51,0],height:.62},sheep:{center:[.03,1.46,0],height:.52},hen:{center:[.03,1.34,0],height:.52},goat:{center:[.03,1.46,0],height:.54},bull:{center:[.03,1.48,0],height:.60},cow:{center:[.03,1.45,0],height:.54},rabbit:{center:[.02,1.50,0],height:.62},dog:{center:[.02,1.48,0],height:.56},skunk:{center:[.03,1.46,0],height:.52},'pig-foreman':{center:[.04,1.40,0],height:.50},'pig-director':{center:[.04,1.47,0],height:.54}};
+export const PORTRAIT_FRAMES={bear:{center:[.035,1.47,0],height:.60},horse:{center:[.06,1.46,0],height:.52},donkey:{center:[.02,1.51,0],height:.62},sheep:{center:[.03,1.46,0],height:.52},hen:{center:[.03,1.34,0],height:.52},goat:{center:[.03,1.46,0],height:.54},bull:{center:[.03,1.48,0],height:.60},cow:{center:[.03,1.45,0],height:.54},rabbit:{center:[.02,1.50,0],height:.62},dog:{center:[.02,1.48,0],height:.56},skunk:{center:[.03,1.46,0],height:.52},'pig-foreman':{center:[.04,1.40,0],height:.50},'pig-director':{center:[.04,1.47,0],height:.54}};
 export function portraitSpecies(npc){return npc.species==='donkey-guide'?'donkey':npc.species;}

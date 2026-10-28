@@ -4,7 +4,8 @@ import {toWorld,DIMENSIONS} from './hybrid-world.js';
 import {passable,blockedEdge,terrainAt} from './core/maps.js';
 import {ledgeHeightFrame} from './ledge-height-frame.js';
 import {movementSurface} from './movement-ground.js';
-export function supportsRoofMantle(unit){return !!unit&&unit.hp>0&&!unit.away&&!unit.casualty&&(unit.species==='hen'?unit.weapon==='hands':['horse','goat','bull','cow','donkey','sheep','skunk','rabbit','dog','pig-foreman','pig-director'].includes(unit.species)&&['hands','rifle'].includes(unit.weapon));}
+import {supportsStow} from './equipment-stow.js';
+export function supportsRoofMantle(unit){return !!unit&&unit.hp>0&&!unit.away&&!unit.casualty&&(unit.species==='bear'?supportsStow(unit.weapon):unit.species==='hen'?unit.weapon==='hands':['horse','goat','bull','cow','donkey','sheep','skunk','rabbit','dog','pig-foreman','pig-director'].includes(unit.species)&&['hands','rifle'].includes(unit.weapon));}
 export function roofAnimationFrame(state,event,unit){
  if(event?.kind!=='roof'||event.direction!=='up'||!supportsRoofMantle(unit))return null;
  const a=event.from,b=event.to,dx=b.x-a.x,dy=b.y-a.y;

@@ -46,8 +46,8 @@ function touchesRoof(mesh,tolerance){
  return indices(mesh).some(i=>{const p=world(mesh,i);return p.x>=-.002&&p.x<=3&&Math.abs(p.z)<=2&&Math.abs(p.y-2)<tolerance;});
 }
 
-test('new mantle style covers exactly the nine non-pig mammals',()=>{
- assert.deepEqual(profiles.map(p=>p.id),['horse','goat','bull','cow','donkey','sheep','skunk','rabbit','dog']);
+test('new mantle style covers exactly the ten non-pig mammals',()=>{
+ assert.deepEqual(profiles.map(p=>p.id),['horse','goat','bull','cow','donkey','sheep','skunk','rabbit','dog','bear']);
 });
 for(const profile of profiles){
  test(profile.id+': chest crosses the lip and shifts left before the right leg comes over',()=>withAnimal(profile,(w,m)=>{

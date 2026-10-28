@@ -87,11 +87,12 @@ also uses `createRedHatCap(renderer, worker, BEAR_PROFILE, loader)`. Dispose
 motion controllers before releasing the cap, painting, character and owned
 weapon. The character restores fitted borrowed carry profiles on release.
 
-This delivers the **character study and reusable assets**. The canonical
-`ANIMAL_MOTION_CATALOG`, core species choices, campaign population and saved-game
-schema are not extended here. The architect/builder can add the supplied profile
-after review and fit further traversal, casualty and firing states. Existing
-models and outfits are not replaced.
+This original delivery established the **character study and reusable assets**.
+The subsequent [bear animation and game integration](BEAR-ANIMATION-INTEGRATION-2026-10-28.md)
+registers the bear in the shared catalog, editor, recruitment and existing game
+animation families, with both outfits and the complete weapon set. The validation
+below records the original model delivery; the integration has its own execution
+record and review board.
 
 ## Validation
 

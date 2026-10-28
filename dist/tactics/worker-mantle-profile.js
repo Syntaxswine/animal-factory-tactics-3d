@@ -13,7 +13,8 @@ export function createWorkerMantleProfile(worker,profile,rest,named){
   sheep:{height:1.37,lean:0,hmg:.055},
   skunk:{height:1.357,lean:.30,hmg:.055},
   rabbit:{height:1.36,lean:.20,hmg:.085},
-  dog:{height:1.37,lean:0,hmg:.055}
+  dog:{height:1.37,lean:0,hmg:.055},
+  bear:{height:1.37,lean:.20,hmg:.075}
  }[profile.id];
  if(!shape)return null;
  const flatHeight=shape.height,flatLean=shape.lean;
@@ -34,6 +35,10 @@ export function createWorkerMantleProfile(worker,profile,rest,named){
   configureContacts({keys,feet,hands,body}){
    feet[6][0].set(-.34,1.52,-.05);feet[6][1].set(-.32,1.58,.35);
    feet[7][0].set(-.27,1.52,.10);
+   if(profile.id==='bear'){
+    for(const j of [8,9]){hands[j][0].z+=.045;hands[j][1].x+=.04;}
+    hands[10][0].x-=.04;
+   }
    for(const j of [6,7]){
     body(keys[j]);const shoulder=named.upperArm1.getWorldPosition(V());
     hands[j][1].set(shoulder.x+.10,shoulder.y-.40,shoulder.z);
@@ -57,7 +62,7 @@ export function createWorkerMantleProfile(worker,profile,rest,named){
   handPath({index,u,side,i,target,hands}){
    if(index===5){const t=ease(u/.86);target.copy(hands[5][i]).lerp(hands[6][i],t);if(side===1)target.y+=.10*Math.sin(Math.PI*t);}
    if(index===7&&side===-1){const t=ease((u-.30)/.35);target.copy(hands[7][i]).lerp(hands[8][i],t);target.y+=.10*Math.sin(Math.PI*t);}
-   if(index===7&&side===1){const first=ease(u/.30),second=ease((u-.65)/.35);target.copy(hands[7][i]).lerp(V(.50,2,.15),first).lerp(hands[8][i],second);target.y+=.10*Math.sin(Math.PI*first)+.06*Math.sin(Math.PI*second);}
+   if(index===7&&side===1){const first=ease(u/.30),second=ease((u-.65)/.35);target.copy(hands[7][i]).lerp(V(profile.id==='bear'?.56:.50,2,.15),first).lerp(hands[8][i],second);target.y+=.10*Math.sin(Math.PI*first)+.06*Math.sin(Math.PI*second);}
   },
   plantedHand({index,u,side}){
    if(index===5)return side===-1||u===0;

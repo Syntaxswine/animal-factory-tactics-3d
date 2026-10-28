@@ -36,8 +36,8 @@ function restored(w,s,disposed=false){
 function load(c){const w=c.profile.create(JSON.parse(fs.readFileSync(new URL('../dist/tactics/'+c.profile.file,import.meta.url))));if(c.unarmed)w.equipWeapon(createWeaponModel('hands'));return w;}
 function withMotion(c,run){const w=load(c);let m;try{m=createLedgeDescent(w,c.profile);run(w,m);}finally{m?.dispose();w.dispose();}}
 
-test('descent matrix covers eleven authored mammals and the unarmed donkey guide',()=>{
- assert.deepEqual(mammals.map(p=>p.id),['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog']);assert.equal(cases.length,12);
+test('descent matrix covers twelve authored mammals and the unarmed donkey guide',()=>{
+ assert.deepEqual(mammals.map(p=>p.id),['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog','bear']);assert.equal(cases.length,13);
  assert(Object.isFrozen(LEDGE_DESCENT_PHASES));
 });
 

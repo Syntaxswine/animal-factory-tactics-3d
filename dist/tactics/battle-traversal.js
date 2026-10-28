@@ -10,6 +10,7 @@ export function ladderFrame(tower){const wooden=tower.kind==='wooden-spotlight-t
 export function canAnimateLadder(event,unit){
  if(event?.access!=='ladder'||!['iron-searchlight-ladder-tower','wooden-spotlight-tower'].includes(event.tower?.kind)||!unit||unit.hp<=0)return false;
  if(unit.species==='hen')return unit.weapon==='hands';
+ if(unit.species==='bear')return supportsStow(unit.weapon);
  if(!['horse','goat','bull','cow','donkey','sheep','skunk','rabbit','dog','pig-foreman','pig-director'].includes(unit.species))return false;
  return event.tower.kind==='wooden-spotlight-tower'||unit.species.startsWith('pig')?unit.weapon==='rifle':supportsStow(unit.weapon);
 }

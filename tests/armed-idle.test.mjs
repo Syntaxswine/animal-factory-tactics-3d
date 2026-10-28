@@ -9,8 +9,8 @@ import {weaponClearance,posedSurface} from './helpers/idle-clearance.mjs';
 import {solePoints,hull,outside} from './helpers/grenade-roster-support.mjs';
 const V=a=>new T.Vector3(...(a||[0,0,0]));
 const pose=m=>Object.values(m.bones).flatMap(b=>[...b.position.toArray(),...b.quaternion.toArray()]);
-test('650 explicit selections, including armed hens and both moods; no silent substitution',()=>{
- let count=0;for(const p of IDLE_ANIMALS)for(const o of idleOutfits(p.id))for(const w of Object.keys(WEAPON_MODELS))for(const mood of Object.keys(IDLE_MOODS)){const s=idleSelection(p.id,o,w,mood);assert.equal(s.weapon,w);assert.equal(s.outfit,o);count++;}assert.equal(count,650);
+test('702 explicit selections, including armed hens and both moods; no silent substitution',()=>{
+ let count=0;for(const p of IDLE_ANIMALS)for(const o of idleOutfits(p.id))for(const w of Object.keys(WEAPON_MODELS))for(const mood of Object.keys(IDLE_MOODS)){const s=idleSelection(p.id,o,w,mood);assert.equal(s.weapon,w);assert.equal(s.outfit,o);count++;}assert.equal(count,702);
  for(const args of [['camel'],['horse','blue-hawaiian'],['hen','normal','unknown'],['dog','normal','rifle','unknown']])assert.throws(()=>idleSelection(...args));
 });
 test('head initiates each glance, relaxed mood takes longer, load restrains movement and offsets loop',()=>{
@@ -46,7 +46,7 @@ for(const profile of IDLE_ANIMALS){
    const gunLocal=weapon.root.worldToLocal(new T.Box3().setFromObject(weapon.root).getCenter(V())),packLocal=weapon.mount?.worldToLocal(new T.Box3().setFromObject(weapon.mount).getCenter(V()));
    const mass={hands:0,knife:.3,pistol:1,grenade:.6,rifle:4,assault:5,smg:6,shotgun:4,sniper:6,launcher:6,hmg:14,rpg:8,flamethrower:4}[id],bodyMass=profile.id.startsWith('pig-')?90:profile.unarmed?45:65;
    function com(t,mood){motion.at(t,{mood});const c=V();let total=0;for(const [a,z,f]of segments){const p=b[a].getWorldPosition(V()).add(b[z].getWorldPosition(V())).multiplyScalar(.5);if(a==='head')p.add(V([.05,.17,0]).applyQuaternion(b.head.getWorldQuaternion(new T.Quaternion())));c.addScaledVector(p,f*bodyMass);total+=f*bodyMass;}c.addScaledVector(weapon.root.localToWorld(gunLocal.clone()),mass);total+=mass;if(packLocal){c.addScaledVector(weapon.mount.localToWorld(packLocal.clone()),22);total+=22;}return c.divideScalar(total);}
-   for(const mood of Object.keys(IDLE_MOODS))for(let i=0;i<16;i++){const t=IDLE_MOODS[mood].duration*i/16,h=.002,c=com(t,mood),acc=com(t-h,mood).add(com(t+h,mood)).addScaledVector(c,-2).divideScalar(h*h);motion.at(t,{mood});assert.ok(acc.y+9.81>9,'floor cannot pull downward');const pressure=[c.x-c.y*acc.x/(9.81+acc.y),c.z-c.y*acc.z/(9.81+acc.y)];assert.ok(outside(hull([...solePoints(motion,-1),...solePoints(motion,1)]),pressure)<-.025,id+' equipment-inclusive pressure stays inside soles');}
+   for(const mood of Object.keys(IDLE_MOODS))for(let i=0;i<16;i++){const t=IDLE_MOODS[mood].duration*i/16,h=.002,c=com(t,mood),acc=com(t-h,mood).add(com(t+h,mood)).addScaledVector(c,-2).divideScalar(h*h);motion.at(t,{mood});assert.ok(acc.y+9.81>9,'floor cannot pull downward');const pressure=[c.x-c.y*acc.x/(9.81+acc.y),c.z-c.y*acc.z/(9.81+acc.y)];assert.ok(outside(hull([...solePoints(motion,-1),...solePoints(motion,1)]),pressure)<-.025,id+' '+mood+' frame '+i+' pressure '+pressure+' COM '+c.toArray()+' margin '+outside(hull([...solePoints(motion,-1),...solePoints(motion,1)]),pressure));}
   });
  });
 }
