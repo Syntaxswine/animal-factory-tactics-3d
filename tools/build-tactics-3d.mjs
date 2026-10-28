@@ -89,3 +89,5 @@ checkModuleClosure(new URL('.pages-output/',root),['tactics/crawl-study.html']);
 
 for(const file of ['bear-animation-study.html','bear-roster-fixture.js','bear-worker.js','bear-paint.js','bear-worker-viewer.js','bear-worker.html','bear-author-data.json','bear-10k-data.json'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 checkModuleClosure(new URL('.pages-output/',root),['tactics/bear-worker.html','tactics/bear-animation-study.html']);
+for(const file of ['character-fitting-study.html','character-fitting-viewer.js','character-animation-study.html','character-roster-fixture.js','fitted-character-roster.js'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+checkModuleClosure(new URL('.pages-output/',root),['tactics/character-fitting-study.html','tactics/character-animation-study.html']);

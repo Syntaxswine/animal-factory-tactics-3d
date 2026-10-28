@@ -1,3 +1,4 @@
+import {hasFittedEquipment,usesShortEquipmentArc} from './fitted-character-roster.js';
 import * as T from './vendor/three.module.js';
 import {createEquipmentStow,supportsStow} from './equipment-stow.js';
 import {createLadderGrip} from './ladder-grip.js';
@@ -8,7 +9,7 @@ export const LEDGE_DESCENT_PHASES=Object.freeze([['Stow weapon',.65],['Crouch at
 // Mammal rifle/unarmed presentation study. Ledge occupies x>=0, top y=2; floor y=0.
 // A crouched one-hand hop, not the climbing clip played backwards.
 export function createLedgeDescent(worker,profile){
- if(!['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog','bear'].includes(profile.id)||!worker.weapon?.root||!(profile.id==='bear'?supportsStow(worker.weapon.id||'rifle'):['rifle','hands'].includes(worker.weapon.id||'rifle')))throw Error('Ledge descent supports reviewed mammals with fitted equipment');
+ if(!['horse','goat','bull','cow','donkey','sheep','skunk','pig-foreman','pig-director','rabbit','dog','bear'].includes(profile.id)||!worker.weapon?.root||!(hasFittedEquipment(profile.id)?supportsStow(worker.weapon.id||'rifle'):['rifle','hands'].includes(worker.weapon.id||'rifle')))throw Error('Ledge descent supports reviewed mammals with fitted equipment');
  const unarmed=worker.weapon.id==='hands',phases=unarmed?Object.freeze(LEDGE_DESCENT_PHASES.map((p,i)=>Object.freeze({...p,label:i===0?'Prepare unarmed':i===8?'Settle unarmed':p.label}))):LEDGE_DESCENT_PHASES;
  const root=worker.root,bones=worker.bones,named=Object.fromEntries(bones.map(b=>[b.name,b]));
  const entryObjects=[];root.traverse(o=>entryObjects.push({o,p:o.position.clone(),q:o.quaternion.clone(),s:o.scale.clone(),visible:o.visible}));
@@ -86,7 +87,7 @@ export function createLedgeDescent(worker,profile){
   const contacts=[],last=index===8,transition=index===0||last,handBlend=index===0?w:last?1-w:1;clothPaint.set(handBlend);
   if(transition){const weight=last?w:1-w;bones.forEach((bone,i)=>{bone.position.copy(neutral.bones[i].p).lerp(carry.bones[i].p,weight);bone.quaternion.copy(neutral.bones[i].q).slerp(carry.bones[i].q,weight);});}
   body(k);tail.set(index===1?w:index>=2&&index<=5?1:index===6?1-w:0);stow.apply();const gun=worker.weapon.root;
-  if(transition){const compact=profile.id==='bear'&&['knife','pistol','grenade'].includes(worker.weapon.id),amount=handBlend,parked={p:gun.position.clone(),q:gun.quaternion.clone()},turn=Q().setFromAxisAngle(V(0,1,0),Math.PI),carryP=carry.gun.p.clone().applyQuaternion(turn),carryQ=turn.clone().multiply(carry.gun.q);gun.position.copy(carryP).lerp(parked.p,amount);gun.position.y+=(compact?.10:.24)*Math.sin(Math.PI*amount);gun.position.z-=(compact?.12:.48)*Math.sin(Math.PI*amount);gun.quaternion.copy(carryQ).slerp(parked.q,amount);stow.blend(amount);root.updateMatrixWorld(true);
+  if(transition){const compact=usesShortEquipmentArc(profile.id,worker.weapon.id),amount=handBlend,parked={p:gun.position.clone(),q:gun.quaternion.clone()},turn=Q().setFromAxisAngle(V(0,1,0),Math.PI),carryP=carry.gun.p.clone().applyQuaternion(turn),carryQ=turn.clone().multiply(carry.gun.q);gun.position.copy(carryP).lerp(parked.p,amount);gun.position.y+=(compact?.10:.24)*Math.sin(Math.PI*amount);gun.position.z-=(compact?.12:.48)*Math.sin(Math.PI*amount);gun.quaternion.copy(carryQ).slerp(parked.q,amount);stow.blend(amount);root.updateMatrixWorld(true);
    for(const l of limbs.filter(l=>!unarmed&&l.id.startsWith('hand')&&(worker.weapon.carry?.hands||[1,-1]).includes(l.side))){const grasp=1-ease((amount-(l.side===1?.64:0))/(l.side===1?.25:.18));if(!grasp)continue;const boneQ=l.c.getWorldQuaternion(Q()),anchor=worker.weapon.anchors[l.side===1?'grip':'support'].getWorldPosition(V()),palm=V(...(worker.weapon.carry?.handPoses?.[l.side===1?'grip':'support']?.palm||[.052,-.010,0])),from=l.c.localToWorld(palm.clone());contacts.push({id:l.id,kind:'weapon',error:solve({...l,offset:palm},from.lerp(anchor,grasp),boneQ,l.b.getWorldPosition(V()).sub(l.a.getWorldPosition(V())))});}
   }
   for(const [i,l]of limbs.filter(l=>l.id.startsWith('foot')).entries()){

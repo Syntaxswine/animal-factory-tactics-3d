@@ -19,7 +19,7 @@ export function createHorseChairMotion(worker,{contact=CHAIR_CONTACT,fit=HORSE_C
  // Reuse the existing clothing and rigid-sole weighting, with exact restoration.
  const repair=createMammalMotion(worker,profile),skeleton=repair.skeleton;
  const bones=Object.fromEntries(worker.bones.map(b=>[b.name,b])),rest=new Map(worker.bones.map(b=>[b,b.getWorldPosition(V())]));
- const trousers=worker.parts.find(p=>p.name.includes('overalls')),feet={},patches={},state={};
+ const trousers=worker.parts.find(p=>/overalls|trousers/.test(p.name)),feet={},patches={},state={};
  const cloth=trousers.geometry,clothPosition=cloth.attributes.position.array.slice(),clothNormal=cloth.attributes.normal.array.slice();
  let clothReport={points:[],maxCorrection:0,maxCompression:0};
  const at=name=>bones[name].getWorldPosition(V());
@@ -28,7 +28,7 @@ export function createHorseChairMotion(worker,{contact=CHAIR_CONTACT,fit=HORSE_C
   const foot=worker.parts.find(p=>/hoof|boot|foot/.test(p.name)&&p.name.endsWith(' '+side)),a=foot.geometry.attributes.position,ids=[];for(let i=0;i<a.count;i++)if(a.getY(i)<.005)ids.push(i);
   const box=new T.Box3();for(const i of ids)box.expandByPoint(V().fromBufferAttribute(a,i));const center=box.getCenter(V()),ankle=rest.get(bones['hoof'+side]);
   feet[side]={mesh:foot,ids,target:V(fit.footForward-center.x+ankle.x,-box.min.y+ankle.y,side*.23-center.z+ankle.z)};
-  const p=trousers.geometry.attributes.position,index=trousers.geometry.index,goal=V(.12,.64,side*.21);let best=Infinity;
+  const p=trousers.geometry.attributes.position,index=trousers.geometry.index,goal=profile.id==='rabbit'?V(.10,.68,side*.18):V(.12,.64,side*.21);let best=Infinity;
   for(let k=0;k<index.count;k+=3){const ids=[index.getX(k),index.getX(k+1),index.getX(k+2)],points=ids.map(i=>V().fromBufferAttribute(p,i)),c=points[0].clone().add(points[1]).add(points[2]).divideScalar(3),n=points[1].clone().sub(points[0]).cross(points[2].clone().sub(points[0])).normalize();
    if(n.x<.35||side*c.z<.07)continue;const d=c.distanceToSquared(goal);if(d<best){best=d;patches[side]=ids;}
   }

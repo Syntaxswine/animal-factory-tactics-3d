@@ -42,3 +42,10 @@ Reference **9/10**, grey sculpt **9/10**, final painted static prototype **9/10*
 ## Limits
 
 This is a static presentation and rifle-carry study. Locomotion, firing, other equipment, facial motion, tail/ear animation and gameplay integration remain unproven. The scarf folds are simple; hands retain the shared baseline. The branch is for architectural review, with no canonical merge or published 3D deployment included.
+
+
+## Production follow-up — 28 October 2026
+
+Both outfits, native portraits, equipment fitting, animation coverage, placement
+and recruitment are covered by the [production completion delivery](BULL-RABBIT-DOG-INTEGRATION-2026-10-28.md).
+The original scope and measurements above describe the earlier model delivery.

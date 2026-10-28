@@ -79,3 +79,10 @@ resolutions, neutral/carry, eight headings and native/close scale.
 
 This is a presentation study. Walking, aiming, firing, transitions, other weapon
 poses and gameplay integration remain unproven for this character.
+
+
+## Production follow-up — 28 October 2026
+
+Both outfits, native portraits, equipment fitting, animation coverage, placement
+and recruitment are covered by the [production completion delivery](BULL-RABBIT-DOG-INTEGRATION-2026-10-28.md).
+The original scope and measurements above describe the earlier model delivery.

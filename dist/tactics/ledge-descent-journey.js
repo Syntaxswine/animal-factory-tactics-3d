@@ -1,3 +1,4 @@
+import {hasFittedEquipment} from './fitted-character-roster.js';
 import {createLedgeDescent} from './ledge-descent.js';
 import {createHenLedgeDescent} from './hen-ledge-descent.js';
 import {roofAnimationFrame} from './roof-journey.js';
@@ -6,7 +7,7 @@ import {cliffSupportAt} from './cliff-support.js';
 import {toWorld} from './hybrid-world.js';
 import {ledgeHeightFrame} from './ledge-height-frame.js';
 import {supportsStow} from './equipment-stow.js';
-export function supportsLedgeDescent(u){return !!u&&u.hp>0&&!u.away&&!u.casualty&&(u.species==='bear'?supportsStow(u.weapon):u.species==='hen'?u.weapon==='hands':['horse','goat','bull','cow','donkey','sheep','skunk','rabbit','dog','pig-foreman','pig-director'].includes(u.species)&&(u.weapon==='rifle'||u.species==='donkey'&&u.weapon==='hands'));}
+export function supportsLedgeDescent(u){return !!u&&u.hp>0&&!u.away&&!u.casualty&&(hasFittedEquipment(u.species)?supportsStow(u.weapon):u.species==='hen'?u.weapon==='hands':['horse','goat','bull','cow','donkey','sheep','skunk','rabbit','dog','pig-foreman','pig-director'].includes(u.species)&&(u.weapon==='rifle'||u.species==='donkey'&&u.weapon==='hands'));}
 export function descentAnimationFrame(state,event,unit){
  if(event?.direction!=='down'||!['roof','cliff'].includes(event.kind)||!supportsLedgeDescent(unit))return null;
  const reverse={...event,direction:'up',from:event.to,to:event.from};

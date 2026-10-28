@@ -1,3 +1,4 @@
+import {nativeCharacterPortrait} from './fitted-character-roster.js';
 import {WEAPONS,canControl,combatCosts,equipCost,stanceOf,movementModeOf} from './core/engine.js';
 import {reserve} from './core/inventory.js';
 import {unitArt} from './red-hats-art.js';
@@ -12,7 +13,7 @@ export function readyWeapons(u){
  return [held,alternate];
 }
 export function hudPortrait(u){
- if(u.species==='bear')return '../assets/characters/'+(u.outfit==='red-hats'?'red-hats/':'')+'bear-idle.png';
+ const native=nativeCharacterPortrait(u);if(native)return native;
  return unitArt({...u,weapon:'hands',stance:'standing'}).src;
 }
 export function weaponReadout(state,u,kind,{blocked=false}={}){

@@ -43,3 +43,10 @@ Final score: **9/10 for the bounded painted static prototype**, after separate 9
 This is a presentation and rifle-carry prototype. Locomotion, firing, other equipment, facial animation, ear/tail secondary motion and gameplay integration are unproven. Hands retain the accepted shared worker baseline. The author/reduced comparison proves reduction consistency, not a production-ready character pipeline.
 
 No canonical merge or published 3D deployment is part of this change.
+
+
+## Production follow-up — 28 October 2026
+
+Both outfits, native portraits, equipment fitting, animation coverage, placement
+and recruitment are covered by the [production completion delivery](BULL-RABBIT-DOG-INTEGRATION-2026-10-28.md).
+The original scope and measurements above describe the earlier model delivery.

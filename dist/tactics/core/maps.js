@@ -61,7 +61,7 @@ export function roofNeighbors(m,p){return [...(roofIndex(m).get(tileKey(p.x,p.y,
 export function roofEndpoint(m,p){return (m.climbs||[]).some(q=>[q,roofTop(q)].some(r=>r.x===p.x&&r.y===p.y&&r.z===levelOf(p)));}
 
 export function canStep(m,a,b){return neighbors(m,a).some(p=>p.x===b.x&&p.y===b.y&&p.z===levelOf(b));}
-export const SPECIES=['horse','goat','donkey','sheep','cow','hen','pig-foreman','pig-director','skunk','bear'];
+export const SPECIES=['horse','goat','donkey','sheep','cow','hen','pig-foreman','pig-director','skunk','bear','bull','rabbit','dog'];
 export const WEAPON_IDS=['hands','knife','pistol','rifle','assault','flamethrower','grenade','launcher','rpg','shotgun','sniper','smg','hmg'];
 export function blankMap(name='Untitled local map'){
  return {version:2,width:W,height:H,levels:3,name,terrain:Array.from({length:H},()=>Array(W).fill('yard')),upper:[{},{}],edges:{},stairs:[],climbs:[],props:[],starts:[{x:3,y:4,z:0},{x:3,y:6,z:0},{x:2,y:5,z:0},{x:2,y:7,z:0}],guards:[],exits:[{x:3,y:5,z:0}]};

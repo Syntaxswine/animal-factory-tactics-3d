@@ -1,3 +1,4 @@
+import {hasFittedEquipment} from './fitted-character-roster.js';
 import * as T from './vendor/three.module.js';
 import {ANIMAL_MOTION_CATALOG} from './animal-motion-catalog.js';
 import {createAnimalPaint} from './animal-motion-paint.js';
@@ -61,7 +62,7 @@ async function load(){
  guideOption.disabled=animal!=='donkey';
  if(guideOption.disabled&&$('outfit').value==='blue-hawaiian')$('outfit').value='normal';
  const outfit=$('outfit').value,unarmed=profile.unarmed||outfit==='blue-hawaiian';
- if(animal!=='bear')$('weapon').value=unarmed?'hands':'rifle';$('weapon').disabled=animal!=='bear';
+ if(!hasFittedEquipment(animal))$('weapon').value=unarmed?'hands':'rifle';$('weapon').disabled=!hasFittedEquipment(animal);
  const weapon=$('weapon').value;
  try{
   disposeActor();

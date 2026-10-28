@@ -1,3 +1,4 @@
+import {hasFittedEquipment} from './fitted-character-roster.js';
 import {createEquipmentStow,supportsStow} from './equipment-stow.js';
 import * as T from './vendor/three.module.js';
 import {createLadderPaintCorrection} from './ladder-paint.js';
@@ -30,7 +31,7 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
  const d={...definition,...(definition.hatch?{hatch:{...definition.hatch}}:{})},root=worker.root,bones=worker.bones,named=Object.fromEntries(bones.map(b=>[b.name,b]));
  if(profile.id.startsWith('pig')&&(d.exitWidth||d.width)<WIDE_LADDER_EXIT)throw new Error('Pig climbing requires the authored 0.94-wide flared exit; original narrow handholds do not fit');
  if(!supportsStow(worker.weapon?.id||'rifle'))throw new Error('Unsupported ladder equipment');
- if(d.hatch&&profile.id!=='bear'&&(worker.weapon?.id||'rifle')!=='rifle')throw new Error('Wooden hatch equipment clearance currently supports the rifle only');
+ if(d.hatch&&!hasFittedEquipment(profile.id)&&(worker.weapon?.id||'rifle')!=='rifle')throw new Error('Wooden hatch equipment clearance currently supports the rifle only');
  const openGrips=!!(d.hatch||d.exitWidth),entry={position:root.position.clone(),quaternion:root.quaternion.clone()};checkFrame();
  if(!['height','plane','width','firstRung','spacing','rungs','railTop'].every(k=>Number.isFinite(d[k]))||['exitWidth','rungThickness','rungDepth','railThickness','railDepth','landingHandHeight','landingHandSpan','stowSide'].some(k=>d[k]!==undefined&&(!Number.isFinite(d[k])||d[k]<=0))||!(d.height>0&&d.firstRung>=0&&d.spacing>0&&Number.isInteger(d.rungs)&&d.rungs>=6&&d.rungs<=128&&d.width>.4&&(!d.exitWidth||d.exitWidth>=d.width)&&d.railTop>=d.height+.65&&d.firstRung+(d.rungs-1)*d.spacing<d.height))throw new Error('Ladder requires finite rung geometry and upper handholds at least 0.65 above its landing');
  if(d.hatch&&(!['front','back','half'].every(k=>Number.isFinite(d.hatch[k]))||d.hatch.front<=d.plane||d.hatch.back>=d.plane||d.hatch.half<d.width/2))throw new Error('Invalid hatch clearance geometry');
@@ -128,7 +129,7 @@ export function createLadderMotion(worker,profile,definition=LADDER_PRESETS.floo
  function applyPose(progress,{direction='up',heading=0,origin=[0,0,0]}={}){
   if(disposed)throw new Error('Ladder motion is disposed');held();checkFrame();
   if(!supportsStow(worker.weapon?.id||'rifle'))throw new Error('Unsupported ladder equipment');
-  if(d.hatch&&profile.id!=='bear'&&(worker.weapon?.id||'rifle')!=='rifle')throw new Error('Wooden hatch equipment clearance currently supports the rifle only');
+  if(d.hatch&&!hasFittedEquipment(profile.id)&&(worker.weapon?.id||'rifle')!=='rifle')throw new Error('Wooden hatch equipment clearance currently supports the rifle only');
   if(!Number.isFinite(progress)||!Number.isFinite(heading)||!Array.isArray(origin)||origin.length!==3||!origin.every(Number.isFinite)||!['up','down'].includes(direction))throw new Error('Invalid ladder playback transform');
   const value=T.MathUtils.clamp(progress,0,1),t=(direction==='down'?1-value:value)*duration,phase=phases.find(p=>t<=p.end)||phases.at(-1),u=ease((t-phase.start)/phase.duration),sample={};
   worker.pose('neutral');for(const {p,si,sw}of activeSkin){p.geometry.setAttribute('skinIndex',si);p.geometry.setAttribute('skinWeight',sw);}paintCorrection.set(true);root.rotation.set(0,0,0);root.position.set(0,0,0);

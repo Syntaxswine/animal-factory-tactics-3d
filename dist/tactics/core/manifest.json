@@ -32,7 +32,7 @@
       "upstreamSha256": "b37580637b8b2319a88e9fd5f7f838e034ef2be30afecd9f401f78c38f19502f"
     },
     "maps.js": {
-      "reason": "Validate embedded data-only dialogue resources. Validate versioned hedge placements and deterministic seeds. Expose physical window, wall and ladder routes and validate ladder condition. Invalidate live geometry when terrain changes or a door opens; editable map clones keep content checks. Validate terrain with per-call sets instead of allocating an allowed-type array per tile. Validate optional local environment fields while preserving older maps. Validate spotlight aim points and game-clock waits. Use physical scenery movement clearance and derived stone-arch tops, validate full orientation and headroom, and preserve authored squad facing. Validate authored patrol waypoints. Validate ground-preserving foliage overlays on all three levels and honor independent walking restrictions. Validate authored broken walls and floor holes. Validate ground-only strategic sites and follow their baked continuous passage links. Validate automatic-land ownership on import. Trace trellis gaps and beams with the shared sculpted profile. Validate nonwalkable fringe roof decoration at its authored height. Derive roof climbs from marked roof footprints. Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks. Support authored layers 1–6 while retaining legacy map shapes. Accept the painted bear as a squad, guard and NPC appearance.",
+      "reason": "Validate embedded data-only dialogue resources. Validate versioned hedge placements and deterministic seeds. Expose physical window, wall and ladder routes and validate ladder condition. Invalidate live geometry when terrain changes or a door opens; editable map clones keep content checks. Validate terrain with per-call sets instead of allocating an allowed-type array per tile. Validate optional local environment fields while preserving older maps. Validate spotlight aim points and game-clock waits. Use physical scenery movement clearance and derived stone-arch tops, validate full orientation and headroom, and preserve authored squad facing. Validate authored patrol waypoints. Validate ground-preserving foliage overlays on all three levels and honor independent walking restrictions. Validate authored broken walls and floor holes. Validate ground-only strategic sites and follow their baked continuous passage links. Validate automatic-land ownership on import. Trace trellis gaps and beams with the shared sculpted profile. Validate nonwalkable fringe roof decoration at its authored height. Derive roof climbs from marked roof footprints. Validate landings and route ordinary movement over ramps. Validate donkey guide outfits, cliff tiles, tower lookouts, locks and fixture condition; enforce locked-door traversal. Validate explicit cliff links and price them at 8 AP. Validate character identities and data-only hooks. Support authored layers 1–6 while retaining legacy map shapes. Accept the painted bear as a squad, guard and NPC appearance. Accept the finished bull, rabbit and dog as squad, guard and NPC appearances.",
       "upstreamSha256": "6dc08266c40be293d305fde3d6621a25d4bd386f44b2ae0e3399ab79b9fedd73"
     },
     "progression.js": {
@@ -44,7 +44,7 @@
       "upstreamSha256": "f8b2afc98c686cd892189d17f4fe7cb7ae7c16b8d8f2f8609ca78cf8b3192674"
     },
     "recruits.js": {
-      "reason": "Include the bear in newly generated recruitment slates.",
+      "reason": "Include the bear in newly generated recruitment slates. Include the finished bull, rabbit and dog in recruitment slates.",
       "upstreamSha256": "5e4495962cdad3d0b57f0d1784bddbf54fa785e6e00a9ae932cfb7dbbbeeb81b"
     },
     "visibility.js": {
@@ -71,12 +71,12 @@
     "feature-plan.js": "26984e86565c50698b43be34811eeb024441ee37edad6395e67bc9483b29bfd3",
     "happiness.js": "9479886a82668096cd687fd555ac38ca6d5415d9b8edbd3000372e240c9e5cd8",
     "inventory.js": "56b68bfb035ff43d71656f92a9fd3b74cc2f8e647901bfe5c213742dfeb374b6",
-    "maps.js": "c6da34ce222acde83d5567d22bf0df213f54cb19b30440b29fc67ce54c6e57a9",
+    "maps.js": "ca0aa9d6f3d68dc68fa764d78959922f3e215658e90010ffc1d162bc3a16c7d4",
     "perception.js": "e8b488f1bd4a5561aef1cb70608b39982705e7f1994e85b2eda73c6ca7f2aeec",
     "personalities.js": "db3688cf623652643e9a24b19c04cde018313e97e8fc0db5b5bc96ea9978f2e0",
     "progression.js": "b0fec54b1105c6ba7fd56b87ac56623a8815e35d43f70c61f05e145c8f8dd1c0",
     "projectiles.js": "7aa7a3028221a46049882263db735792046b52fd319670967c70d956b4afcdae",
-    "recruits.js": "45ced19ebd01d25b57115277b5d50776f073f05de5d3d0847b52aa0d2b069bb9",
+    "recruits.js": "5737d7b053fa0b836b4b6cc117a2c21044da0ea9fbf3f2a3868e25eb42d41c5a",
     "sector-rules.js": "d20ee872471a503a60ac706655b19f9ba9857c41882dd6cc6a08d61e3572132a",
     "visibility.js": "de134d8c0c3d4c1fdac06da9ec8adbf651459472c3835c8df21561416f766a50",
     "woodland.js": "fc1e44c6f18c1bc9936eaabb8db2001e80d96677efc6cca77094aafdb8b7881c",

@@ -1,3 +1,4 @@
+import {usesShortEquipmentArc} from './fitted-character-roster.js';
 import {createHenLadderJourney} from './hen-ladder-journey.js';
 import {createTowerTailTuck} from './tower-tail-tuck.js';
 import * as T from './vendor/three.module.js';
@@ -108,7 +109,7 @@ export function createLadderJourney(worker,profile,event,frame,heading=0,options
   worker.bones.forEach((b,i)=>{b.position.lerpVectors(source.bones[i].position,target.bones[i].position,w);b.quaternion.copy(source.bones[i].quaternion).slerp(target.bones[i].quaternion,w);});
   root.position.lerpVectors(source.position,target.position,w);root.position.y-=(profile.id.startsWith('pig')&&!stowed?.12:.02)*Math.sin(Math.PI*w)**2;root.quaternion.copy(source.quaternion).slerp(target.quaternion,w);
   climb.stow();
-  const gun=worker.weapon.root;gun.position.lerpVectors(source.gun.position,target.gun.position,w);if(!stowed){const compact=profile.id==='bear'&&['knife','pistol','grenade'].includes(worker.weapon.id);gun.position.y+=(compact?.10:.20)*Math.sin(Math.PI*w);gun.position.z+=(compact?.12:profile.id==='skunk'?.18:.55)*Math.sin(Math.PI*w);}gun.quaternion.copy(source.gun.quaternion).slerp(target.gun.quaternion,w);if(stowed&&profile.id==='skunk'){const p=1-w,g=1-ease((p-.25)/.75);gun.position.lerpVectors(source.gun.position,target.gun.position,g);gun.position.y+=(wooden?.24:.36)*ease(p/.25)*(1-ease((p-.75)/.25));gun.quaternion.copy(source.gun.quaternion).slerp(target.gun.quaternion,g);}
+  const gun=worker.weapon.root;gun.position.lerpVectors(source.gun.position,target.gun.position,w);if(!stowed){const compact=usesShortEquipmentArc(profile.id,worker.weapon.id);gun.position.y+=(compact?.10:.20)*Math.sin(Math.PI*w);gun.position.z+=(compact?.12:profile.id==='skunk'?.18:.55)*Math.sin(Math.PI*w);}gun.quaternion.copy(source.gun.quaternion).slerp(target.gun.quaternion,w);if(stowed&&profile.id==='skunk'){const p=1-w,g=1-ease((p-.25)/.75);gun.position.lerpVectors(source.gun.position,target.gun.position,g);gun.position.y+=(wooden?.24:.36)*ease(p/.25)*(1-ease((p-.75)/.25));gun.quaternion.copy(source.gun.quaternion).slerp(target.gun.quaternion,g);}
   root.updateMatrixWorld(true);worker.skeleton.update();
   // Feet settle one at a time between the walking stance and ladder stance.
   // Solve fixed-length limbs after the torso blend instead of sliding the soles.
@@ -126,7 +127,7 @@ export function createLadderJourney(worker,profile,event,frame,heading=0,options
   // into the climb's free hands. The other hand releases before the arc begins.
   for(const side of (stowed?[]:(worker.weapon.carry?.hands??[-1,1]))){
    const strength=1-ease((w-(side===1?.70:0))/(side===1?.25:.18));if(!strength)continue;
-   const hand=named['hand'+side],q=hand.getWorldQuaternion(new T.Quaternion()),anchor=worker.weapon.anchors[side===1?'grip':'support'].getWorldPosition(new T.Vector3()),wrist=anchor.sub(new T.Vector3(.052,-.010,0).applyQuaternion(q));
+   const hand=named['hand'+side],q=hand.getWorldQuaternion(new T.Quaternion()),anchor=worker.weapon.anchors[side===1?'grip':'support'].getWorldPosition(new T.Vector3()),palm=new T.Vector3(...(worker.weapon.carry?.handPoses?.[side===1?'grip':'support']?.palm||[.052,-.010,0])),wrist=anchor.sub(palm.applyQuaternion(q));
    solve(named['upperArm'+side],named['forearm'+side],hand,wrist,q,null,strength);contacts.push({id:'hand'+side,kind:'weapon',planted:false,grasp:strength,worldPoint:wrist.toArray(),error:hand.getWorldPosition(new T.Vector3()).distanceTo(wrist)});
   }
   root.updateMatrixWorld(true);worker.skeleton.update();climb.transition(stowed?1:w);climb.syncStow();climb.stowBlend(stowed?1:w);worker.weapon.updateHose?.(root);

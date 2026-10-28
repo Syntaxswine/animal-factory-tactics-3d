@@ -6,6 +6,7 @@ const files=['weapon-icons.js','one-handed.js','offhand-equipment.js','quickplay
 files.push('autosave-schedule.js','static-model-batches.js','gunshot-impacts.js','shot-coordinates.js','gunshot-impact-debug.js','gunshot-impact-map.js');
 files.push('gunshot-spray-frame.js','painted-blood-spray.js','painted-blood-spray-motion.js','painted-blood-spray-data.js');
 files.push('bear-worker.js','bear-paint.js','bear-10k-data.json','bear-author-data.json','bear-roster-fixture.js');
+files.push('fitted-character-roster.js','character-roster-fixture.js');
 for(const file of files)fs.copyFileSync(path.join(root,'dist/tactics',file),path.join(out,'tactics',file));
 fs.cpSync(path.join(root,'dist/tactics/fixtures'),path.join(out,'tactics/fixtures'),{recursive:true});
 for(const directory of ['characters','environment','machines/industrial']){const dest=path.join(out,'assets',directory);fs.mkdirSync(dest,{recursive:true});const copyPNGs=(source,target)=>{fs.mkdirSync(target,{recursive:true});for(const entry of fs.readdirSync(source,{withFileTypes:true})){if(entry.isDirectory())copyPNGs(path.join(source,entry.name),path.join(target,entry.name));else if(entry.name.endsWith('.png'))fs.copyFileSync(path.join(source,entry.name),path.join(target,entry.name));}};copyPNGs(path.join(root,'dist/assets',directory),dest);}

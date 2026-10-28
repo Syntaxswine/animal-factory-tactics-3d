@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Character animation roster · Animal Factory</title><link rel="icon" href="data:,"><style>
+body{margin:0;background:#202d26;color:#f4e4b8;font:16px system-ui}main{max-width:1100px;margin:auto;padding:28px}h1{font:32px Georgia;margin:0 0 12px}p{color:#c6cdbb;line-height:1.6}nav{display:flex;gap:18px;flex-wrap:wrap;margin:24px 0}select{background:#3c4837;color:#ffebbd;padding:8px;border:1px solid #6b7656;font:inherit}#studies{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}a{color:#e4c287}#studies a{display:block;padding:20px;border:1px solid #65705a;border-radius:4px;background:#2c3b30;text-decoration:none}#studies b{display:block;margin-bottom:8px}#studies span{font-size:14px;color:#c6cdbb;line-height:1.5}#studies a:hover{background:#3c4837}small{color:#b6c0aa}</style>
+<main><h1>Character animation roster</h1><p>Bull, rabbit and dog, with the bear for comparison. Both outfits, native proportions, shared movement and fitted equipment.</p>
+<nav><label>Animal <select id="animal"><option value="bull">Bull</option><option value="rabbit">Rabbit</option><option value="dog">Dog</option><option value="bear">Bear reference</option></select></label><label>Outfit <select id="outfit"><option value="normal">Regular worker</option><option value="red-hats">Red Hat</option></select></label><label>Weapon <select id="weapon"></select></label></nav><section id="studies"></section>
+<p><a id="models" href="character-fitting-study.html">Model and scale comparison</a> · <a href="editor-3d.html">Map editor</a></p><small>Chair motion remains an unarmed study. Grenade throws and tank ruptures use their corresponding equipment. Other cards preserve your selected outfit and weapon.</small></main>
+<script type="module">
+import {WEAPON_MODELS} from './weapon-models.js';
+const $=id=>document.getElementById(id),q=new URLSearchParams(location.search);for(const [id,w]of Object.entries(WEAPON_MODELS))$('weapon').add(new Option(w.label,id));$('weapon').value='rifle';for(const id of ['animal','outfit','weapon'])if([...$(id).options].some(o=>o.value===q.get(id)))$(id).value=q.get(id);
+const rows=[
+ ['Battle range','battle-3d.html',{study:'character-roster'},'Four playable characters; weapon references, cover, a window and roof access.'],
+ ['Armed idle','armed-idle-study.html',{},'Guard and mercenary looks, breathing and weight shifts.'],
+ ['Walk, aim and fire','animal-motion.html',{},'Walk → kneel → sighted rifle fire → stand.'],
+ ['Stances and casualties','animal-casualty-review.html',{},'Standing, kneeling, prone, downed and recovery.'],
+ ['Crawl','crawl-study.html',{},'Forward and backward pulls, both outfits and every weapon.'],
+ ['Grenade throw','grenade-throw-study.html',{weapon:'grenade'},'Prepared balance, windup and native release.'],
+ ['Roof mantle','roof-mantle-study.html',{surface:'roof'},'Chest first, sideways knee, belly support and rise.'],
+ ['Cliff mantle','roof-mantle-study.html',{surface:'cliff'},'The same supported transfer on natural stone.'],
+ ['Roof descent','ledge-descent-study.html',{surface:'roof'},'Stow, crouch, planted left hand, hop and landing.'],
+ ['Cliff descent','ledge-descent-study.html',{surface:'cliff'},'Every weapon through the one-hand descent.'],
+ ['Iron ladder','ladder-journey-study.html',{ladder:'tower'},'Approach, stow, climb, landing and draw; up or down.'],
+ ['Wooden hatch','ladder-journey-study.html',{ladder:'wooden'},'Shared tower route with the complete weapon set.'],
+ ['Burn reaction','painted-fire-study.html',{focus:'target'},'Protective gestures, panic run, supported collapse and ash.'],
+ ['Fuel-tank rupture','tank-blast-study.html',{weapon:'flamethrower'},'Separate equipment release, blast and collapse.'],
+ ['Fatal reaction','fatal-head-study.html',{},'Species head mask, supported fall and falling equipment.'],
+ ['Sit and stand','horse-chair-study.html',{},'Shared contacts across all four chair shapes; unarmed.'],
+ ['Speaking portrait','speaking-heads.html',{},'Authored jaw, interior mouth and both painted outfits.']
+];
+function update(){const animal=$('animal').value,outfit=$('outfit').value,weapon=$('weapon').value;$('models').href='character-fitting-study.html?'+new URLSearchParams({animal,outfit,weapon});$('studies').replaceChildren(...rows.map(([title,file,extra,description])=>{const a=document.createElement('a'),b=document.createElement('b'),span=document.createElement('span'),url=new URL(file,location.href);Object.entries({animal,outfit,weapon,view:'three',scale:'close',...extra}).forEach(([k,v])=>url.searchParams.set(k,v));a.href=url;b.textContent=title;span.textContent=description;a.append(b,span);return a;}));history.replaceState(null,'','?'+new URLSearchParams({animal,outfit,weapon}));}for(const id of ['animal','outfit','weapon'])$(id).onchange=update;update();
+</script></html>
