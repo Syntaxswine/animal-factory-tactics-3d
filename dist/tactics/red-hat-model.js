@@ -34,7 +34,7 @@ export function fitRedHatGeometry(source,head,fit){
 }
 
 export async function createRedHatCap(renderer,worker,profile,loader,sceneLighting=false){
- const fit=RED_HAT_FITS[profile.id];if(!fit)return null;
+ const fit=profile.redHatFit||RED_HAT_FITS[profile.id];if(!fit)return null;
  const response=await fetch('./pig-foreman-10k-data.json');if(!response.ok)throw Error('Red Hat cap mesh failed to load');
  const donor=createPigForeman(await response.json());
  let paint,geometry;

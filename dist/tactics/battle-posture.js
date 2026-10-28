@@ -12,7 +12,7 @@ export function createBattlePosture(worker,profile){
  // The furry upper ankle belongs with the shin inside the trouser cuff;
  // only the paw/sole stays rigid with the foot. Reuse the dog motion proof.
  if(profile.proneAim?.pastern)for(const side of [-1,1]){
-  const foot=worker.parts.find(p=>p.name==='furry dog foot '+side),a=foot.geometry.attributes,shin=worker.bones.indexOf(named['shin'+side]),ankle=worker.bones.indexOf(named['hoof'+side]);
+  const foot=worker.parts.find(p=>/foot|hoof|boot/.test(p.name)&&p.name.endsWith(' '+side)),a=foot.geometry.attributes,shin=worker.bones.indexOf(named['shin'+side]),ankle=worker.bones.indexOf(named['hoof'+side]);
   for(let i=0;i<a.position.count;i++){const w=T.MathUtils.smoothstep(a.position.getY(i),.10,.20);a.skinIndex.setXYZW(i,ankle,shin,0,0);a.skinWeight.setXYZW(i,1-w,w,0,0);}a.skinIndex.needsUpdate=a.skinWeight.needsUpdate=true;
  }
  const tails=profile.proneAim&&(profile.longTail||profile.proneAim.tailUpright)?worker.parts.filter(p=>p.name.includes('tail')).map(part=>{

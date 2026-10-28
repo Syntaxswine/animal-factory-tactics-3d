@@ -86,3 +86,6 @@ checkModuleClosure(new URL('.pages-output/',root),['tactics/fatal-head-study.htm
 
 for(const file of ['crawl-state.js','crawl-equipment.js','crawl-motion.js','hen-crawl-motion.js','crawl-study.js','crawl-study.html'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
 checkModuleClosure(new URL('.pages-output/',root),['tactics/crawl-study.html']);
+
+for(const file of ['bear-worker.js','bear-paint.js','bear-worker-viewer.js','bear-worker.html','bear-author-data.json','bear-10k-data.json'])fs.copyFileSync(new URL('dist/tactics/'+file,root),new URL('.pages-output/tactics/'+file,root));
+checkModuleClosure(new URL('.pages-output/',root),['tactics/bear-worker.html']);

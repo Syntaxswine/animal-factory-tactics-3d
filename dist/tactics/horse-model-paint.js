@@ -91,6 +91,7 @@ export function createModelPaint(renderer,horse,texture,{species='horse',frame=P
    uniform sampler2D uModelPaint,uPaintDepth,uPaintParts,uPaintMask; uniform float uPaintDebug,uGripForearm;
    varying vec3 vPaintPosition,vPaintNormal; varying float vPaintPart;
    vec3 fallbackPaint(float part){
+    ${species==='bear'?`if(part<1.5)return vec3(.72,.65,.49);if(part<2.5)return vec3(.16,.20,.07);return vec3(.20,.095,.040);`:''}
     ${species==='dog'?`if(part<1.5||part>15.5)return vec3(.18,.20,.055);if(part<2.5)return vec3(.22,.12,.055);if(part<8.5)return vec3(.47,.24,.07);if(part<12.5)return vec3(.52,.025,.015);return vec3(.14,.065,.03);`:''}
     ${species==='rabbit'?`if(part<1.5)return vec3(.72,.65,.49);if(part<2.5)return vec3(.16,.20,.07);if(part<8.5)return vec3(.34,.24,.15);return vec3(.52,.025,.015);`:''}
     ${species==='donkey'?`if(part<1.5)return vec3(.16,.19,.075);
@@ -158,8 +159,12 @@ export function createModelPaint(renderer,horse,texture,{species='horse',frame=P
     float facing=view<.5?n.x:(view<1.5?n.z:(view<2.5?-n.x:-n.z));
     // The frontal painting owns the blaze; side paintings own cheeks/eyes.
     // This prevents two separately painted ridge edges from becoming two stripes.
-    float blazeOwner=${species==='dog'||species==='rabbit'||species==='donkey'||species==='sheep'||species==='hen'||species==='goat'||species==='pig-foreman'||species==='pig-director'?'0.0':bovine?'(1.0-smoothstep(.024,.065,abs(p.z)))*smoothstep(1.435,1.455,p.y)*smoothstep(.0,.04,p.x)*step(6.5,vPaintPart)*step(vPaintPart,7.5)':'(1.0-smoothstep(.024,.065,abs(p.z)))*smoothstep(1.375,1.415,p.y)*smoothstep(.0,.04,p.x)*step(6.5,vPaintPart)*step(vPaintPart,7.5)'};
+    float blazeOwner=${species==='bear'||species==='dog'||species==='rabbit'||species==='donkey'||species==='sheep'||species==='hen'||species==='goat'||species==='pig-foreman'||species==='pig-director'?'0.0':bovine?'(1.0-smoothstep(.024,.065,abs(p.z)))*smoothstep(1.435,1.455,p.y)*smoothstep(.0,.04,p.x)*step(6.5,vPaintPart)*step(vPaintPart,7.5)':'(1.0-smoothstep(.024,.065,abs(p.z)))*smoothstep(1.375,1.415,p.y)*smoothstep(.0,.04,p.x)*step(6.5,vPaintPart)*step(vPaintPart,7.5)'};
     facing=view<.5?mix(facing,1.0,blazeOwner):facing*(1.0-blazeOwner);
+    ${species==='bear'?`// One registered profile owns each iris through front and side turns.
+    float eyeOwner=(1.-smoothstep(.75,1.20,length((vec2(p.y,abs(p.z))-vec2(1.515,.107))/vec2(.032,.043))))*smoothstep(.025,.055,p.x)*step(6.5,vPaintPart)*step(vPaintPart,7.5);
+    float sideView=p.z>0.?1.:3.;
+    facing=abs(view-sideView)<.1?mix(facing,1.,eyeOwner):facing*(1.-eyeOwner);`:''}
     ${species==='donkey'?`// Each orbital surface has one profile owner, including the frontal turn.
     float eyeOwner=(1.-smoothstep(.75,1.2,length((p.xy-vec2(.027,1.397))/vec2(.065,.038))))*smoothstep(.036,.059,abs(p.z))*step(6.5,vPaintPart)*step(vPaintPart,7.5);
     float sideView=p.z>0.?1.:3.;
@@ -262,7 +267,7 @@ export function createModelPaint(renderer,horse,texture,{species='horse',frame=P
    // the profiles' throat fur 4 mm inside its crest, and above the collar.
    if(abs(vPaintPart-7.)<.1&&p.x>0.&&abs(p.z)<.05)fillPosition=vec3(p.x-.004,max(p.y,1.292),p.z);`:''}
    vec4 fill=paintView(fillPosition,n,0.0,false)+paintView(fillPosition,n,2.0,false);
-   ${species==='dog'||species==='rabbit'||species==='donkey'||species==='sheep'||species==='hen'||species==='goat'||bovine||species==='skunk'||species==='pig-foreman'||species==='pig-director'?`fill+=paintView(fillPosition,n,1.0,false)+paintView(fillPosition,n,3.0,false);`:''}
+   ${species==='bear'||species==='dog'||species==='rabbit'||species==='donkey'||species==='sheep'||species==='hen'||species==='goat'||bovine||species==='skunk'||species==='pig-foreman'||species==='pig-director'?`fill+=paintView(fillPosition,n,1.0,false)+paintView(fillPosition,n,3.0,false);`:''}
    float filled=smoothstep(.002,.025,fill.a);
    vec3 base=mix(fallbackPaint(vPaintPart),fill.rgb/max(.00001,fill.a),filled);
    diffuseColor.rgb=mix(base,paint.rgb/max(.00001,paint.a),coverage);

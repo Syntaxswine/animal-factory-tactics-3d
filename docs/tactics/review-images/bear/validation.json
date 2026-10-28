@@ -1,0 +1,115 @@
+{
+  "date": "2026-10-28",
+  "branch": "work/bear-character",
+  "canonicalBase": "d3b0ccc",
+  "authorTriangles": 27298,
+  "runtimeTriangles": 10050,
+  "redHatCapTriangles": 700,
+  "bones": 17,
+  "surfaces": 8,
+  "neutralBounds": {
+    "min": [
+      -0.2815303,
+      0,
+      -0.4857703
+    ],
+    "max": [
+      0.2328318,
+      1.6708453,
+      0.4859749
+    ]
+  },
+  "outfits": [
+    "normal",
+    "red-hats"
+  ],
+  "loadouts": 13,
+  "focusedTests": {
+    "passed": 51,
+    "failed": 0,
+    "suites": [
+      "bear-worker",
+      "horse-model-paint",
+      "dog-guard",
+      "battle-motion",
+      "tactics-pages-files",
+      "battle-posture",
+      "animal-prone"
+    ]
+  },
+  "browserCaptures": 68,
+  "errors": [],
+  "lifecycle": {
+    "before": {
+      "geometries": 45,
+      "textures": 14
+    },
+    "after": {
+      "geometries": 45,
+      "textures": 14
+    }
+  },
+  "packaged": [
+    {
+      "name": "pair",
+      "sha256": "8d8e38d40e55b8f93aab45627d5187fc98730320331dba7f9a9cf4a600213a5a"
+    },
+    {
+      "name": "crawl",
+      "sha256": "a16317979d35b8e2487e199721abf57ce52e71a8e8efb106eca044d4d413c6f7"
+    },
+    {
+      "name": "rpg",
+      "sha256": "91eeb200e890659d316851f7fb5ebb97abe0aa72e166a75c32893dfefd762707"
+    },
+    {
+      "name": "author",
+      "sha256": "d71bab0441f66add7e8c7522e87e98b613d7e8ea3acfeca65850834f588b375e"
+    }
+  ],
+  "review": "Artist self-review and automated checks complete; independent architect review pending.",
+  "files": [
+    {
+      "name": "docs/tactics/review-images/bear/painted-three.png",
+      "bytes": 395078,
+      "width": 1450,
+      "height": 620,
+      "sha256": "8d8e38d40e55b8f93aab45627d5187fc98730320331dba7f9a9cf4a600213a5a"
+    },
+    {
+      "name": "docs/tactics/review-images/bear/turnaround-review.png",
+      "bytes": 1033961,
+      "width": 2000,
+      "height": 940,
+      "sha256": "0fd8179fb6d1cb57799c5a85ffb2751262c9375bf686d35fc7258d292f589269"
+    },
+    {
+      "name": "docs/tactics/review-images/bear/neutral-paint-reference.png",
+      "bytes": 495870,
+      "width": 2048,
+      "height": 1024,
+      "sha256": "b1003436bb75c00626d25af8bcf3bac91d8c606f2c8168c98094f9337e68ca1f"
+    },
+    {
+      "name": "dist/assets/characters/model-references/bear-worker-turnaround-v1.png",
+      "bytes": 1917529,
+      "width": 1774,
+      "height": 887,
+      "sha256": "bdc733f4554b09d62a3e27ab396cc334ccb04cb00460b9737e6aaca7c780ff42"
+    },
+    {
+      "name": "dist/assets/characters/lowpoly-proof/bear-worker-model-paint-v1.png",
+      "bytes": 1590125,
+      "width": 1774,
+      "height": 887,
+      "sha256": "7b0fd63d06c840497c1a03967f06b9bdce30c0ce119040740e4651fc459fa5a0"
+    },
+    {
+      "name": "dist/assets/characters/lowpoly-proof/bear-red-hat-model-paint-v1.png",
+      "bytes": 1746454,
+      "width": 1774,
+      "height": 887,
+      "sha256": "4130695bfb3cca93889486308a171d20802a0924a28f854e501656b32b915bd9"
+    }
+  ]
+}
