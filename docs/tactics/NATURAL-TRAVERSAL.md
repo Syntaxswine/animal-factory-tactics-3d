@@ -1522,6 +1522,76 @@ the elbows too little room. The skunk's hands to the floor (31%: the left hand a
 straight plume had hidden). The rolls' peaks (the goat's 353%, the sheep's 205, the pig director's 202, each one sample).
 The steps' over keys (a swing leg lifting at 99.96% of its reach).
 
+### 2026-11-04 (physics balance, sixteenth part): the elbows as the body lies back onto its hands
+
+The user: "Fix the window's lying back onto the hands next: the balance pulls the hips toward them and folds the left
+elbow past 150 degrees (the skunk 151, the goat 155)."
+
+**What folds them.** Every mammal's left elbow peaks as it lies back onto its hands, 2.42 to 2.51 s, the shoulder
+coming down over the planted hand. As built, before the balance, the folds peak at 131 to 143 degrees; the balance,
+keeping the centre of mass over the hands until the back is down, adds up to 9, and to the goat's 24. Two causes:
+
+- The goat lets go before its back is down. Nine of the eleven land their back at 2.42 to 2.43 s, the hands still on
+  the floor (to 2.48 or 2.49). Lying back, the goat's lowest point is its horns, and its roll turns on them alone for
+  80 ms after the hands let go at the roll's start (2.46 s): from 2.49 to 2.52 s a horn tip 70 cm to the side was all
+  that held it, then nothing until its back landed at 2.55 (the rig's own contacts). Planning the pressure point onto
+  that tip, the balance pulled the hips 13 to 18 cm sideways from 2.18 s on, the shoulder came down over the hand and
+  the elbow folded to 155 (its roll read 353%). The horse's roll turns first on its mane crest, which rides the spine
+  near the body's middle (its elbow 140).
+- The skunk's back lands in time, but its body lies lower than the horse's (its back's surface nearer its bones), so
+  its shoulder comes nearer the hand: 143 degrees as built, and the balance takes the hips 2.7 cm toward the hands'
+  line: 151.
+
+**The fixes.**
+
+- The hands keep the floor until the roll turns on the trunk (`RELEASE`: the first roll row whose pivot does not ride
+  the head bone; the roll's start for the other ten). The goat's let go at 2.543 s.
+- Let go that late, the goat's left hand tucked with its chest already over its head, and its upper arm went 4.1 cm
+  into its lower trunk. On the way to the tuck the hand passes beside its shoulder, where the arm points out along the
+  tuck's own elbow direction: that pole leaves the bend side undefined, and `steadyPoles` carries it over from the
+  floor. It comes out 95 to 113 degrees off the pole on the skunk, cow and horse (let go at the roll's start) and 123 on
+  the goat; the skunk's bends down toward its hips, which a hand let go at the roll's start clears. A hand let go late
+  passes there with its elbow up, toward the head (`SIDE_ELBOW`).
+- The left hand's mark leaves its elbow room. Placed from the shoulder, it moves out along the floor, away from where
+  the shoulder comes nearest while the hand is down, until the elbow folds at most 138 degrees as built (`FOLD_ROOM`).
+  The skunk's mark moves 2.3 cm, the dog's 1.9, the cow's and rabbit's 1.6, the donkey's and bull's 1.1, the sheep's
+  0.2; the horse's, goat's and pigs' not at all.
+
+phantom-wrench `--gate`, b1d042b -> now (only windows change):
+
+| | over the limit | changed phases (peak % of body weight), other rules |
+|---|---|---|
+| goat | 0.24 -> 0.12 s | hands to the floor 30 -> 11, back to the floor 12 -> under 10, roll 353 -> 128; its joint range (155) and point speed (9.0 m/s) pass |
+| skunk | 0.20 -> 0.20 s | its joint range (151) passes; hands to the floor 31 -> 35 |
+| rabbit | 0.07 -> 0.09 s | hands to the floor 17 -> 19 |
+| sheep | 0.11 -> 0.12 s | |
+| cow | 0.09 -> 0.09 s | hands to the floor 46 -> 50 |
+
+The horse's, bull's, donkey's, dog's and both pigs' windows read the same, and the eleven windows 1.08 s over the limit
+together (1.11). Every mammal's left elbow now peaks at 147 degrees or less (the skunk's 147, the others 139 to 142).
+`bin/collisions.mjs`: the same on all 33 crossings.
+
+`tests/natural-traversal.test.mjs`: lying back onto its hands and rolling, both elbows stay inside the rig's 150
+degrees. Without the fixes it fails on the goat (155.4 at 2.50 s) and the skunk (150.9 at 2.43 s).
+
+**Tried and not kept.**
+
+- Leaving the head out of the balance's support (a horn tip cannot hold a body): the goat's elbow 142, but its window
+  0.35 s. The rig still sees the horns touch; planned as a fall there, its back to the floor read 21%.
+- The elbow up beside the shoulder on every body: the goat the same, but the skunk's sit-up 18 -> 31% and the cow's
+  right foot in 13 -> 33 (the arms swing differently).
+- `steadyPoles` carrying the side with the trunk where the trunk carries the limb's end: the goat 0.14 s and clear of
+  its trunk, but only by trimming the undefined side's 123 degrees to 101; the rabbit's climb's left foot round
+  17 -> 31%. Carried with the chest on every arm, whatever holds its end: the climbs' gripping elbows met the trunk
+  (seven of the eleven a capsule pair or two more), the horse's climb 0.07 -> 0.11 s.
+- The hands kept down, released at the old pace to the old tuck time: the goat's palm at 10 m/s.
+- `FOLD_ROOM` 142 or 140: the skunk's elbow 150 or 149 (138: 147; the dog's 145, 143, 141), moving steadily with it.
+
+**Left.** The goat's roll (128%). The skunk's hands to the floor (35%: its left hand alone holds it for 25 ms). The
+rabbit's and sheep's windows, a hundredth or two more with their marks moved. And every body's left elbow, bending
+off its pole for 0.2 s as it tucks.
+
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

@@ -266,7 +266,7 @@ export function createSurfaceProbe(worker,{stride=2,include=()=>true,keep=()=>tr
  function update(){let k0=0;sets.forEach((s,pi)=>{if(s.live){const pos=s.mesh.geometry.attributes.position;for(let k=0;k<s.n;k++){lv.fromBufferAttribute(pos,s.vi[k]).applyMatrix4(s.mesh.bindMatrix);s.base[k*3]=lv.x;s.base[k*3+1]=lv.y;s.base[k*3+2]=lv.z;}}const sk=s.mesh.skeleton,mats=sk.bones.map((b,i)=>new T.Matrix4().multiplyMatrices(b.matrixWorld,sk.boneInverses[i]).elements);post.multiplyMatrices(s.mesh.matrixWorld,s.mesh.bindMatrixInverse);const P=post.elements;
   for(let k=0;k<s.n;k++){const bx=s.base[k*3],by=s.base[k*3+1],bz=s.base[k*3+2];let vx=0,vy=0,vz=0;for(let j=0;j<4;j++){const w=s.bw[k*4+j];if(!w)continue;const e=mats[s.bi[k*4+j]];vx+=w*(e[0]*bx+e[4]*by+e[8]*bz+e[12]);vy+=w*(e[1]*bx+e[5]*by+e[9]*bz+e[13]);vz+=w*(e[2]*bx+e[6]*by+e[10]*bz+e[14]);}
    const i=k0+k;x[i]=P[0]*vx+P[4]*vy+P[8]*vz+P[12];y[i]=P[1]*vx+P[5]*vy+P[9]*vz+P[13];z[i]=P[2]*vx+P[6]*vy+P[10]*vz+P[14];part[i]=pi;}k0+=s.n;});return api;}
- // The lowest surface point among those accepted by keep(x,y,z,partName).
- function lowest(keep=()=>true){let best=null;for(let i=0;i<count;i++)if((!best||y[i]<best.y)&&keep(x[i],y[i],z[i],names[part[i]]))best={x:x[i],y:y[i],z:z[i],part:names[part[i]]};return best;}
+ // The lowest surface point among those accepted by keep(x,y,z,partName), with its part and the bone that carries it.
+ function lowest(keep=()=>true){let best=null;for(let i=0;i<count;i++)if((!best||y[i]<best.y)&&keep(x[i],y[i],z[i],names[part[i]]))best={x:x[i],y:y[i],z:z[i],part:names[part[i]],bone:boneNames[bone[i]]};return best;}
  const api={count,x,y,z,part,names,bone,vertex,boneNames,update,lowest};return api;
 }
