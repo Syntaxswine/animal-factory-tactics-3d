@@ -88,7 +88,24 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // rolled on alone (its left elbow folded to 155), and the skunk's 2.7 cm, its body lying lower than the horse's (151).
    const fold=(a,b,c)=>{const q=bones[b].getWorldPosition(v.clone());return 180-bones[a].getWorldPosition(v.clone()).sub(q).angleTo(bones[c].getWorldPosition(v.clone()).sub(q))*180/Math.PI;};
    let top={f:0};for(let t=ph('Hands to the floor').start;t<=ph('Roll').end;t+=.01){motion.apply(t/motion.duration);for(const s of [-1,1]){const f=fold('upperArm'+s,'forearm'+s,'hand'+s);if(f>top.f)top={f,t,s};}}
-   assert.ok(top.f<=150,`window: the ${top.s<0?'left':'right'} elbow folds to ${top.f.toFixed(1)} degrees at ${top.t?.toFixed(2)} s as the body lies back onto its hands`);}
+   assert.ok(top.f<=150,`window: the ${top.s<0?'left':'right'} elbow folds to ${top.f.toFixed(1)} degrees at ${top.t?.toFixed(2)} s as the body lies back onto its hands`);
+   // As the left hand tucks, its elbow keeps the side the tuck gives it, out from the trunk ([.3, 0, 1] in the chest's
+   // frame, z mirrored): from 0.12 s after the hands let go to the roll's end, within 30 degrees of it off the arm.
+   // Passed out beside the shoulder, the arm pointed along that side, and every left elbow came to the tuck bent down
+   // toward the hips, 101 to 117 degrees off it (the goat's, let go later with its elbow up, 179), and swung out over
+   // the next 0.25 s. Passed in front of the shoulder instead, the hand goes by under the head and keeps 2 cm from it,
+   // read at every other point every 5 ms (the pig director's ears 2.8 cm, the sheep's 3.1; read at every fourth point
+   // every 10 ms, a hand 0.9 cm from the pig director's ears read 2 cm).
+   const release=rows.find(r=>r.bone!=='head').t,out=new T.Vector3(.3,0,-1).normalize(),q=new T.Quaternion();let off={d:0};
+   for(let t=release+.12;t<=motion.roll.end;t+=.01){motion.apply(t/motion.duration);bones.spine.getWorldQuaternion(q).invert();const at=n=>bones[n].getWorldPosition(v.clone()).applyQuaternion(q);
+    const S=at('upperArm-1'),ax=at('hand-1').sub(S).normalize(),e=at('forearm-1').sub(S),side=e.addScaledVector(ax,-e.dot(ax)),want=out.clone().addScaledVector(ax,-out.dot(ax)),d=side.angleTo(want)*180/Math.PI;
+    if(d>off.d)off={d,t};}
+   assert.ok(off.d<=30,`window: the left elbow bends ${off.d.toFixed(0)} degrees off its tucked side at ${off.t?.toFixed(2)} s`);
+   const hand=m.worker.parts.find(x=>x.name==='forearm and hand -1'),head=[];
+   for(const part of m.worker.parts){const g=part.geometry.attributes,sk=part.skeleton;for(let i=0;i<g.position.count;i+=2){let w=0,k=0;for(let j=0;j<4;j++){const x=g.skinWeight.getComponent(i,j);if(x>w){w=x;k=g.skinIndex.getComponent(i,j);}}if(sk.bones[k].name==='head')head.push([part,i]);}}
+   const pt=([part,i])=>{v.fromBufferAttribute(part.geometry.attributes.position,i);part.applyBoneTransform(i,v);return v.applyMatrix4(part.matrixWorld).clone();};let near={d:Infinity};
+   for(let t=release;t<=release+.3;t+=.005){motion.apply(t/motion.duration);const H=head.map(pt);for(let i=0;i<hand.geometry.attributes.position.count;i+=2){const x=pt([hand,i]);for(const y of H){const d=x.distanceTo(y);if(d<near.d)near={d,t};}}}
+   assert.ok(near.d>=.02,`window: the left hand passes ${(100*near.d).toFixed(1)} cm from the head at ${near.t.toFixed(2)} s as it tucks`);}
   // Cut short where the tail is bent (as a casualty ends a crossing), the tail still comes back exactly.
   motion.apply(.6);motion.dispose();for(const [part,base]of tails)assert.deepEqual(part.geometry.attributes.position.array,base,`${kind}: the ${part.name} is not given back`);}
 });

@@ -1567,8 +1567,8 @@ phantom-wrench `--gate`, b1d042b -> now (only windows change):
 | sheep | 0.11 -> 0.12 s | |
 | cow | 0.09 -> 0.09 s | hands to the floor 46 -> 50 |
 
-The horse's, bull's, donkey's, dog's and both pigs' windows read the same, and the eleven windows 1.08 s over the limit
-together (1.11). Every mammal's left elbow now peaks at 147 degrees or less (the skunk's 147, the others 139 to 142).
+The horse's, bull's, donkey's, dog's and both pigs' windows read the same, and the eleven windows 1.02 s over the limit
+together (1.11; first written 1.08, a slip in adding). Every mammal's left elbow now peaks at 147 degrees or less (the skunk's 147, the others 139 to 142).
 `bin/collisions.mjs`: the same on all 33 crossings.
 
 `tests/natural-traversal.test.mjs`: lying back onto its hands and rolling, both elbows stay inside the rig's 150
@@ -1590,6 +1590,71 @@ degrees. Without the fixes it fails on the goat (155.4 at 2.50 s) and the skunk 
 **Left.** The goat's roll (128%). The skunk's hands to the floor (35%: its left hand alone holds it for 25 ms). The
 rabbit's and sheep's windows, a hundredth or two more with their marks moved. And every body's left elbow, bending
 off its pole for 0.2 s as it tucks.
+
+
+### 2026-11-04 (physics balance, seventeenth part): the left elbow as its hand tucks
+
+The user: "Fix the tuck elbows" (proposed as: give every body's left elbow a defined bend side as it tucks past its
+shoulder, without changing the swing the skunk's sit-up depends on).
+
+**What it did.** As the roll starts the left hand leaves the floor beside the head for a point out beside the shoulder
+(24 cm out), then tucks in front of the chest with its elbow out to the side (the tuck's `[.3, 0, 1]`). Out beside the
+shoulder the arm points along that side, so the side gives the bend no direction: at least 0.18 of it lies off the
+arm (`steadyPoles`' first pass, against the keys). The side was carried over from the floor, turning as little as it
+could with the arm, and that left it pointing down toward the hips. Every left elbow reached the tuck bent down, 101
+to 117 degrees off its side (the goat's, let go later with its elbow up, 179), and swung out over the next 0.25 s at
+the turn limit (2 degrees in 5 ms), through the roll's second half. In the photographs the fist comes to the chest
+with the elbow by the ribs, then the elbow flaps out.
+
+**The fix.** The hand passes in front of the shoulder instead (`TUCK_MID`: 27 cm from it, 30 degrees up from straight
+ahead, in the chest's frame), with its elbow out as it will be tucked. The arm swings from beside the head to the chest
+across the side it bends to, and the side stays square to the arm. The hand gets there 0.16 s after it lets go (0.12
+before) and is tucked at 0.28 (0.24). Every left elbow now keeps within 12 degrees of its side through the tuck, and the
+goat's elbow-up case (`SIDE_ELBOW`) goes. In the photographs the hand comes up past the jaw, elbow out, and reaches the
+chest in the pose the old one ended in.
+
+phantom-wrench `--gate`, ea4240b -> now (only windows change):
+
+| | over the limit | changed phases (peak % of body weight) |
+|---|---|---|
+| goat | 0.12 -> 0.14 s | hands to the floor 11 -> 19, back to the floor under 10 -> 10, roll 128 -> 158 |
+| skunk | 0.20 -> 0.18 s | hands to the floor 35 -> 32, roll 21 -> 26, sit up 18 -> 20 |
+| rabbit | 0.09 -> 0.10 s | |
+| cow | 0.09 -> 0.09 s | hands to the floor 50 -> 42, roll 563 -> 556 |
+
+The other seven read the same over the limit (the donkey's roll 42 -> 38, the sheep's 205 -> 202, the pig director's
+202 -> 198, the horse's 28 -> 30). The eleven windows read 1.03 s over the limit together (1.02). The left elbows peak at
+141 to 147 degrees (137 to 147 before), and no rule fails that did not before. `bin/collisions.mjs`: the same on all
+eleven windows. The windows' motion is bit for bit the one gated (every point every 5 ms, all eleven).
+
+`tests/natural-traversal.test.mjs`, two checks. From 0.12 s after the hands let go to the roll's end, the left elbow
+stays within 30 degrees of its tucked side; the old tuck fails it on all eleven (101 to 117, the goat 179). And the
+left hand keeps 2 cm from the head as it tucks (the pig director's ears 2.8 cm, the sheep's 3.1). With the hand 45
+degrees up it fails (the pig director's 0.9 cm). Read at every fourth point every 10 ms, it had read that 0.9 cm as
+2 cm.
+
+**Tried and not kept.**
+
+- Straight ahead of the shoulder at its height: the side within 16 degrees, but the hand passed close by the shoulder
+  and the elbow folded past the rig's 150 degrees on ten of the eleven (151 to 157), the goat's palm at 9.5 m/s.
+- Higher (45 and 60 degrees up): the side within 10 degrees, but the fist went by under the ears, which on the sheep
+  stand out from its head about as far as its shoulder (60 degrees: the hand 0.2 to 0.4 cm from the pig director's,
+  bull's, sheep's and cow's heads).
+- Turned out toward the side (15 to 35 degrees): the elbow fell behind its side again, up to 48 degrees off at 35, and
+  the sheep's ears, which stand out to the side, stayed within 0.2 to 3.4 cm.
+- Lower (20 degrees up) or farther (30 to 32 cm): the elbow folding to 150 again, the goat's wrist past 8 m/s.
+- The swing kept, the elbow given the side it takes (forward and down beside the shoulder, down and out once tucked):
+  the upper arm 1 to 2 cm into the lower trunk on eight bodies, still 31 to 53 degrees off, and later, as the arms
+  reach forward, elbows folded to 157 to 172.
+- Reached at 0.14 s and tucked at 0.24: the goat's palm at 8.4 m/s (the rig allows 8). Reached at 0.16 and tucked at
+  0.24: the skunk's sit-up 18 -> 22%, the eleven 1.05 s. Swung in the roll's own plane the arm pushes back on the roll;
+  slower, it pushes less.
+
+**Corrected.** The sixteenth part's eleven windows read 1.02 s over the limit together, not 1.08 (a slip in adding).
+
+**Left.** The right elbow lags its side too as its hand leaves the floor (the horse's, skunk's and goat's up to 62 to 73
+degrees, for about 0.11 s), though its side stays defined. The goat's roll (158%) and window (0.14 s). The skunk's hands
+to the floor (32%).
 
 
 ## Integration
