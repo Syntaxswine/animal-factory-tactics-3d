@@ -1657,6 +1657,63 @@ degrees, for about 0.11 s), though its side stays defined. The goat's roll (158%
 to the floor (32%).
 
 
+### 2026-11-04 (physics balance, eighteenth part): the right elbow as its hand tucks
+
+The user: "Fix the right elbow" (left by the seventeenth part: it lagged its side as its hand left the floor).
+
+**What it did.** The right hand lies back onto the floor under its shoulder, its elbow up (`UP`, in the world; turned
+out it would meet the wall, the shoulder 13 to 15 cm off it). At the roll's start the hand swung straight up to its
+tuck in front of the chest in 0.18 s. That swing turns the arm about the body's side-to-side axis, which is the very
+side the tucked elbow bends to, so it cannot turn the elbow toward it: it carries the elbow's side round with the arm,
+and up became up toward the head. The elbow came up beside the face, and the forearm went by the jaw: the horse's and
+cow's 0.2 cm from it, the bull's, sheep's, rabbit's and goat's within 0.7 to 1.8 (the test's reading). Only after the
+hand had stopped did the elbow turn out to its side, at the turn limit (2 degrees in 5 ms), from up to 75 degrees behind
+it (the pigs' 32 and 44).
+
+**The fix.** The right hand goes by way of a point low in front of its ribs (`TUCK_MID.arm1`: from the shoulder in the
+chest's frame, 15 cm forward, 18 cm down, 6 cm out), reached 0.10 s after it lets go, and its elbow is asked there for a
+side half way round to out, mostly forward (`TUCK_MID_ELBOW.arm1`, `[.7, .5, .5]`). The elbow starts to turn as the hand
+lifts, and the hand is tucked at 0.24 s (0.18). The elbow lags its side by up to 39 degrees just after the release (the
+swing still carries it). As the hand arrives it is 13 to 24 off its tucked side, and from 0.04 s later within 12 (the
+test's readings). The hand now keeps at least 3.6 cm from the head (the horse's), the elbow at least 7.8 cm off the wall
+(the skunk's; 8.0 before), and the forearm 2.9 cm off the lower trunk (the rig's capsules; 2.7 before). `TUCK_MID` and
+`TUCK_MID_ELBOW` are now keyed by limb; the left's are as they were.
+
+phantom-wrench `--gate`, 4de2cc7 -> now (only windows change; the motion is bit for bit the one gated, every point
+every 5 ms on all eleven):
+
+| | over the limit | changed phases (peak % of body weight) |
+|---|---|---|
+| skunk | 0.18 -> 0.17 s | hands to the floor 32 -> 33, roll 26 -> 19, sit up 20 -> 17 |
+| rabbit | 0.10 -> 0.08 s | roll 520 -> 524 |
+| goat | 0.14 -> 0.13 s | hands to the floor 19 -> 11, roll 158 -> 154 |
+| cow | 0.09 -> 0.08 s | hands to the floor 42 -> 53, roll 556 -> 562, right foot in 13 -> 14 |
+| pig director | 0.10 -> 0.09 s | roll 198 -> 195 |
+| sheep | 0.12 -> 0.13 s | roll 202 -> 206 |
+
+The horse's, bull's, dog's, donkey's and pig foreman's windows read the same over the limit (the donkey's roll 38 -> 18,
+the horse's 30 -> 27), and the eleven windows 0.98 s together (1.03). No rule fails that did not before; the left elbows
+peak at 142 to 148 degrees (141 to 147), the right at 127 to 145. `bin/collisions.mjs`: the same on all eleven windows.
+
+`tests/natural-traversal.test.mjs`. The left-hand head check now reads both hands: on 4de2cc7 the right fails it on six
+bodies (0.2 to 1.8 cm). And from 0.28 s, just after the right hand is tucked, its elbow keeps within 20 degrees of its
+tucked side (`[.8, 0, .4]`): tucked at 0.28 with no midway point, it fails on eight (20 to 30).
+
+**Tried and not kept.**
+
+- The same straight swing, slower (tucked at 0.24, 0.28, 0.32 s): the lag up to 65, 59, 52 degrees, and the forearm
+  still within 0.2 to 0.7 cm of the horse's and bull's jaws. A swing about the elbow's own side cannot turn the elbow
+  to it.
+- The midway point with its elbow asked for out at once: up to 96 degrees behind (the turn limit), and other half-way
+  sides (more out, or more up) up to 48 to 52; mostly forward is the one it can follow (36).
+- The midway point higher (15 or 16 cm down): the hand back within 0.8 to 1.0 cm of the horse's head. Nearer the ribs
+  (2 cm out): the skunk's forearm 0.6 cm into its lower trunk.
+- Tucked at 0.28 s (the left's time): the skunk's sit-up 20 -> 36%, its window 0.20 s; reached at 0.08 and tucked at
+  0.24: 37%. Reached at 0.10 or 0.11, tucked at 0.24 or 0.25, it reads 17 each way.
+
+**Left.** The goat's roll (154%). The skunk's hands to the floor (33%). The cow's hands to the floor, 42 -> 53%.
+
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

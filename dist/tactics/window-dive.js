@@ -290,7 +290,15 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // higher, the fist met the head (the sheep's ears stand out from it); turned toward the side, the elbow fell behind
  // its side again. Swung in the roll's own plane, the arm pushes back on the roll, so it goes more slowly than it did
  // out to the side: reached in 0.14 s, the goat's palm, let go later, ran at 8.4 m/s.
- const TUCK_MID=[.234,.135,0];
+ // The right hand starts under its shoulder, its elbow up, and passes low in front of its ribs (TUCK_MID.arm1) with its
+ // elbow half way round to out (TUCK_MID_ELBOW.arm1), so the elbow turns out on the way; it is tucked at 0.24 s.
+ // Swung straight up to the chest, the arm turned about the very side it was to bend to: its elbow, up, was carried up
+ // toward the head, the forearm went by the jaw (the horse's and cow's 0.2 cm from it), and the elbow turned out up to 75
+ // degrees behind its side after the hand had stopped. It cannot start out: lying back, the shoulder is 13 to 15 cm off
+ // the wall. Asked to turn out at once, it fell up to 96 degrees behind; passed higher, the hand came back within 0.8 cm
+ // of the horse's head; nearer the ribs, the skunk's forearm met its belly; tucked at 0.28 s, the skunk's sit-up read 36%
+ // of its weight (17).
+ const TUCK_MID={'arm-1':[.234,.135,0],arm1:[.15,-.18,.06]},TUCK_MID_ELBOW={'arm-1':TUCK_ELBOW['arm-1'],arm1:[.7,.5,.5]};
  // The right hand braces on the far face as the body tips over the sill: off the sill top and over its edge onto the
  // face, down the face under the body's weight, then, once the left hand is down, one step onto its floor mark. Pressed
  // on the face it pushes the body out from the wall below the edge, which slows the tip (a belly on the edge is an
@@ -314,8 +322,8 @@ export function createWindowDive(worker,profile={id:'horse'}){
   aim=(t,s,k)=>({...dangle(t,s,handAt[s].p.map((x,j)=>x-shoulderAt(t,s).getComponent(j)),k),soft:.03});LIMB={
   'leg-1':[[0,rest.leg(-1)],[.55,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,plant:true}],[.90,{f:'world',p:[-.035-back,fitB.ankle,-.40],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.06,-.56,-.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,-.12]}],[HANG,{f:'pelvis',p:[.20,-.56,-.12]}],[DOWN,{f:'pelvis',p:[.12,-.52,-.12]}],[LANDS[1],{f:'pelvis',p:[-.12,-.30,-.13]}],[ROLL.start,{f:'pelvis',p:TUCK['leg-1']}],[TUCKED,{f:'pelvis',p:TUCK['leg-1']}]],
   leg1:[[0,rest.leg(1)],[.55,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,plant:true}],[.90,{f:'world',p:[.20-back,fitB.ankle,-.06],hoof:0,lift:.25,plant:true}],[1.25,{f:'pelvis',p:[-.04,-.56,.13]}],[1.60,{f:'pelvis',p:[-.06,-.60,.12]}],[HANG,{f:'pelvis',p:[.20,-.56,.12]}],[DOWN,{f:'pelvis',p:[.12,-.52,.12]}],[LANDS[1],{f:'pelvis',p:[-.12,-.30,.13]}],[ROLL.start,{f:'pelvis',p:TUCK.leg1}],[TUCKED,{f:'pelvis',p:TUCK.leg1}]],
-  'arm-1':[[0,rest.arm(-1)],[.55,{f:'world',p:[.36,.92,-.42]}],[.90,{f:'world',p:[.44,.91,-.42],palm:0}],[1.25,{f:'world',p:[.47,.91,-.42],palm:0}],[1.60,dangle(1.60,-1,[.35,-1,-.05])],[HANG,aim(HANG,-1,.97)],[LANDS[-1],handAt[-1]],[RELEASE,handAt[-1]],[RELEASE+.16,{f:'chest',p:body.offsets.shoulder[-1].clone().add(V(...TUCK_MID)).toArray(),elbow:TUCK_ELBOW['arm-1']}],[RELEASE+.28,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}],[ROLL_END,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}]],
-  arm1:[[0,rest.arm(1)],[.55,{f:'world',p:[.36,.92,.02]}],[.90,{f:'world',p:[.44,.91,0],palm:0}],[1.25,{f:'world',p:[.47,.91,-.02],palm:0}],...BRACE.map(([t,k])=>[t,k]),[LANDS[1],handAt[1]],[RELEASE,{...handAt[1],elbowTo:UP}],[RELEASE+.18,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}],[ROLL_END,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}]],
+  'arm-1':[[0,rest.arm(-1)],[.55,{f:'world',p:[.36,.92,-.42]}],[.90,{f:'world',p:[.44,.91,-.42],palm:0}],[1.25,{f:'world',p:[.47,.91,-.42],palm:0}],[1.60,dangle(1.60,-1,[.35,-1,-.05])],[HANG,aim(HANG,-1,.97)],[LANDS[-1],handAt[-1]],[RELEASE,handAt[-1]],[RELEASE+.16,{f:'chest',p:body.offsets.shoulder[-1].clone().add(V(...TUCK_MID['arm-1'])).toArray(),elbow:TUCK_MID_ELBOW['arm-1']}],[RELEASE+.28,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}],[ROLL_END,{f:'chest',p:TUCK['arm-1'],elbow:TUCK_ELBOW['arm-1']}]],
+  arm1:[[0,rest.arm(1)],[.55,{f:'world',p:[.36,.92,.02]}],[.90,{f:'world',p:[.44,.91,0],palm:0}],[1.25,{f:'world',p:[.47,.91,-.02],palm:0}],...BRACE.map(([t,k])=>[t,k]),[LANDS[1],handAt[1]],[RELEASE,{...handAt[1],elbowTo:UP}],[RELEASE+.10,{f:'chest',p:body.offsets.shoulder[1].clone().add(V(...TUCK_MID.arm1)).toArray(),elbow:TUCK_MID_ELBOW.arm1}],[RELEASE+.24,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}],[ROLL_END,{f:'chest',p:TUCK.arm1,elbow:TUCK_ELBOW.arm1}]],
  };
  // After the roll both hooves stay where they landed (turning flat as they take the weight) until the stand,
  // which steps them into the stance on the tile centre.
