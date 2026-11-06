@@ -66,6 +66,13 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    if(!rows.some(r=>/hoof|boot|foot|toe/.test(r.part)))for(const r of rows.filter((r,i)=>/tail/.test(r.part)&&i%3===0)){motion.apply(r.t/motion.duration);let lo=Infinity;
     for(const part of m.worker.parts.filter(x=>/tail/.test(x.name))){const a=part.geometry.attributes.position;for(let i=0;i<a.count;i++){v.fromBufferAttribute(a,i);part.applyBoneTransform(i,v);v.applyMatrix4(part.matrixWorld);lo=Math.min(lo,v.y);}}
     assert.ok(Math.abs(lo)<=.01,`window: the roll turns about the ${r.part} at ${r.t.toFixed(2)} s, its lowest point ${(100*lo).toFixed(1)} cm off the floor`);}
+   // Every landing in the roll is soft: read every millisecond, the floor's push the body needs (its centre of mass's
+   // acceleration less gravity) stays within the rig's 5 body weights. Lying back, the cow's and rabbit's mid back met
+   // the floor 15 ms into the roll, where the roll's softening gave way to its raw path: 12.2 and 11.5 body weights read
+   // here (the rig, at its 5 ms samples, 5.6 and 5.2), and the sheep's 5.7, which fell between the rig's samples.
+   {const h=.001,c=[];for(let t=motion.roll.start-h;t<=motion.roll.end+h+1e-9;t+=h)c.push(motion.apply(t/motion.duration).com);let push={f:0};
+    for(let i=1;i<c.length-1;i++){const a=[0,1,2].map(j=>(c[i-1][j]-2*c[i][j]+c[i+1][j])/(h*h));a[1]+=9.81;const f=Math.hypot(...a)/9.81;if(f>push.f)push={f,t:motion.roll.start+(i-1)*h};}
+    assert.ok(push.f<=5,`window: the roll asks the floor for ${push.f.toFixed(1)} body weights at ${push.t.toFixed(3)} s`);}
    // The seat comes down after the roll no faster than the body can fall: as the feet are drawn in, the centre of mass
    // falls at most 1.2 g (the floor never asked to pull more than a fifth of the body's weight). Holding the skunk's
    // plume root on the floor as it sat up, the seat band pulled its hips 11 cm down in 0.2 s (1.5 g).

@@ -1714,6 +1714,57 @@ tucked side (`[.8, 0, .4]`): tucked at 0.28 with no midway point, it fails on ei
 **Left.** The goat's roll (154%). The skunk's hands to the floor (33%). The cow's hands to the floor, 42 -> 53%.
 
 
+### 2026-11-06 (physics balance, nineteenth part): the roll's first landing
+
+The user: "The cow's roll-in" (its roll 562% of its weight and 5.6 x BW at 2.475 s, left since the eleventh part; the
+rabbit's 524% and 5.2 are the same landing).
+
+**What it was.** Both are one landing, 15 ms into the roll. The cow and the rabbit lie back on the same shirt (their
+first contact is the same to the millimetre): the floor meets the back high up, and its middle, 12 cm along the roll, is
+still 3 to 4 mm off it. The roll turns about the upper point, and after 1.5 to 2 degrees the middle lands: an impact, a
+step of 0.25 m/s in the hips' velocity, nearly all of it in their fall (and 8 ms later a second, 3 cm on, 0.08 m/s). The
+roll spreads each impact's change of velocity over about 40 ms (a triangle average of its path), but the average gave
+way to the raw path within 30 ms of the roll's start, so that the roll started exactly where the descent hands over. An
+impact there was taken whole, within one 2.5 ms sample of the path. The code (since 669b9a8) said the first impact comes
+90 ms into the roll. The horse's landing on its shirt does (92 ms), but the bull's, sheep's, horse's (its mane), dog's
+and pig director's next contacts also meet the floor 8 to 23 ms in (steps of 0.03 to 0.09 m/s).
+
+**The fix.** Before the roll's start its raw path goes on backward, turning about the first contact at the starting spin
+and that spin's rate of change, so the softening's window is whole at the start too. The descent hands over at the
+softened start (`soft0`: its position, turn, velocity and spin). Toward the end the window gives way to the raw path as
+before; the last impact comes at least 0.19 s before the end (the cow's).
+
+phantom-wrench `--gate`, b827f62 -> now (only windows change):
+
+| | over the limit | roll (peak % of body weight; phantom torque) | required force in contact |
+|---|---|---|---|
+| cow | 0.08 -> 0.07 s | 562% (213 N·m) -> 6% (33) | 5.6 x BW at 2.475 s (fails) -> 3.3 at 2.635 |
+| rabbit | 0.08 -> 0.07 s | 524% (217 N·m) -> 17% (38) | 5.2 x BW at 2.475 s (fails) -> 4.1 at 0.720 |
+| dog | 0.07 s | 6% (35 N·m) -> 3% (16) | 3.3 x BW, as before |
+| sheep | 0.13 -> 0.12 s | 206 -> 207% (at 2.74 s, later in the roll) | 2.3 x BW, as before |
+
+The horse's, bull's, donkey's, goat's, skunk's and both pigs' windows read the same phase by phase, and the eleven
+windows 0.95 s over the limit together (0.98). The worst short event between the rig's samples falls from 4,257 N and
+441 N·m to 643 and 253 (the cow's), and from 4,262 and 439 to 571 and 208 (the rabbit's). No rule fails that did not
+before, and the required force now passes on all eleven windows; the cow's peak is its tail's root landing, and the
+rabbit's is now at 0.72 s, before the roll. `bin/collisions.mjs`: the same deepest points and spans on all eleven
+windows. The donkey and the pig foreman, whose rolls have no impact in their first 0.14 s, move by at most 0.12 mm
+(every point every 5 ms, at 2.47 s).
+
+`tests/natural-traversal.test.mjs`: every landing in the roll is soft. Read every millisecond, the floor's push the body
+needs (its centre of mass's acceleration less gravity) stays within the rig's 5 body weights. On b827f62 it fails on the
+cow (12.2 at 2.473 s), the rabbit (11.5) and the sheep (5.7 at 2.467 s). The rig, sampling every 5 ms, read the cow's
+and rabbit's as 5.6 and 5.2 and missed the sheep's: its required-force rule reads only its 5 ms samples.
+
+**Not tried.** Starting the roll on the contact it meets within 30 ms (the cow's on the middle of its back, 2 degrees
+on). That would bring the horse's landing from its mane to its shirt from 92 ms to 69 ms after the start, into the
+stretch the window only partly reached, and leave the cause in place.
+
+**Left.** The cow's tail's root landing, now its roll's peak (3.3 x BW). The rig's required-force rule reads only its
+5 ms samples. A step of 0.005 to 0.009 m/s in the centre of mass's velocity at the roll's start (the cow, rabbit,
+horse, sheep, bull and dog; not the goat), read every millisecond: there before, not looked at. The goat's roll (154%),
+the sheep's (207) and the pig director's (195), all later in the roll. The cow's hands to the floor (52%).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

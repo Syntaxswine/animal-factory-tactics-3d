@@ -139,7 +139,7 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // motion at its ends: joined by straight lines and slerps, they turned at every step (half a degree, 2 to 17 ms apart),
  // which the averaging hides but its ends do not (the hips' acceleration swung from +10 to -22 m/s^2 in the roll's last
  // 4 ms, and the turn met the get-up's 0.2 rad/s apart).
- const uni=[];{const t0=rollRows[0].t,t1=rollRows.at(-1).t,n=Math.ceil((t1-t0)/.0025),last=rollRows.length-1;
+ const uni=[],soft0={};{const t0=rollRows[0].t,t1=rollRows.at(-1).t,n=Math.ceil((t1-t0)/.0025),last=rollRows.length-1;
  // The raw path: smooth between the impacts, each a step of the hips' velocity and the spin at its step, from the turn
  // about the contact before to the turn about the one after (one curve through every step rang about each impact,
  // which the softening kept: the hips' fall swung by 34 m/s^2 within 5 ms at the hoof's landing).
@@ -151,20 +151,29 @@ export function createWindowDive(worker,profile={id:'horse'}){
   const piece=t=>pieces.find(q=>t<=q.t1+1e-12)||pieces.at(-1),rockFrom=rollRows.find(r=>r.rock)?.t??Infinity;
   const raw=Array.from({length:n+1},(_,k)=>{const t=t0+(t1-t0)*k/n,q=piece(t);return {t,p:V(...q.pos(t)),a:q.turn(t)[0]};});
   // Softened by a triangle (the hips' and spin's averages, weights falling off linearly over H samples either side):
-  // a box stepped the floor's push at its edges as they passed each impact. The window is whole wherever it fits and
-  // gives way to the raw path over the next H samples toward each end (a smoothstep), so the softened roll starts and
-  // ends exactly where the keyed descent hands over and the get-up takes over (a one-sided window shifted them by up
-  // to 2 cm: a pop of the whole body; narrowed sample by sample instead, its edge kinked the hips' path, 12 m/s^2).
-  // The roll's impacts are all well inside: the first comes 90 ms after its start, the rock takes 0.6 s.
-  const H=Math.round(.75*SOFT/.0025),W=(H+1)*(H+1),fits=k=>Math.min(k,n-k)>=H,whole=k=>smooth((Math.min(k,n-k)-H)/H),seated=[];
-  for(let k=0;k<=n;k++){let p=raw[k].p.clone(),a=raw[k].a;if(fits(k)){const avg=V();let ang=0;for(let j=k-H;j<=k+H;j++){const f=H+1-Math.abs(j-k);avg.addScaledVector(raw[j].p,f);ang+=f*raw[j].a;}
+  // a box stepped the floor's push at its edges as they passed each impact. Before its start the raw path goes on
+  // backward, turning about the first contact at the starting spin and its rate of change, so the window is whole
+  // there too, and the descent hands over at the softened start (soft0). Lying back, the cow's and rabbit's back
+  // touches the floor high up, its middle 12 cm along still 3 to 4 mm off it: the roll starts about the upper point
+  // and the middle lands 15 ms in. With the window giving way to the raw path within 30 ms of the start, that landing
+  // was a step of 0.25 m/s in the hips' fall within one sample (5.6 and 5.2 body weights at the rig's 5 ms samples,
+  // 12.2 and 11.5 read every millisecond), and the bull's, sheep's, horse's, dog's and pig director's next contacts
+  // meet the floor 8 to 23 ms in too (the sheep's 5.7). Toward the end the window still gives way to the raw path over
+  // the last 2H samples (a smoothstep), so the roll ends exactly where the get-up takes over (a one-sided window
+  // shifted it by up to 2 cm: a pop of the whole body; narrowed sample by sample instead, its edge kinked the hips'
+  // path, 12 m/s^2); the last impact comes at least 0.19 s before the end (the cow's).
+  const H=Math.round(.75*SOFT/.0025),W=(H+1)*(H+1),dt=(t1-t0)/n,c0=V(...rollRows[0].contact),w0=rollRows[0].w,al0=(rollRows[1].w-w0)/(rollRows[1].t-t0),
+   at=k=>{if(k>=0)return raw[k];const tau=k*dt,a=w0*tau+.5*al0*tau*tau;return {t:t0+tau,p:raw[0].p.clone().sub(c0).applyQuaternion(Q().setFromAxisAngle(axis,a)).add(c0),a};},
+   fits=k=>n-k>=H,whole=k=>smooth((n-k-H)/H),seated=[];
+  for(let k=-1;k<=n;k++){const r=at(k);let p=r.p.clone(),a=r.a;if(fits(k)){const avg=V();let ang=0;for(let j=k-H;j<=k+H;j++){const f=H+1-Math.abs(j-k),s=at(j);avg.addScaledVector(s.p,f);ang+=f*s.a;}
     const w=whole(k);p.lerp(avg.divideScalar(W),w);a+=(ang/W-a)*w;}
-   const q=Q().setFromAxisAngle(axis,a).multiply(q0),tr={hips:p,hipsQ:q,...s0,...chestOf(p,q,s0.spineQ)};body.pose(posed(tr,tuckLimbs),'roll soft');seated.push({t:raw[k].t,p,q,down:-(raw[k].t>=rockFrom?seatLow():lowest()).y});}
+   const q=Q().setFromAxisAngle(axis,a).multiply(q0);let dn=0;if(k>=0){const tr={hips:p,hipsQ:q,...s0,...chestOf(p,q,s0.spineQ)};body.pose(posed(tr,tuckLimbs),'roll soft');dn=-(r.t>=rockFrom?seatLow():lowest()).y;}seated.push({t:r.t,p,q,a,down:dn});}
   // The re-seat goes with the window: the raw path is on the floor already at every step (re-seated sample by sample
-  // there, the lowest vertex's own jumps came back as a 13 m/s^2 dip of the hips).
-  for(let k=0;k<=n;k++){let y=0;if(fits(k)){for(let j=k-H;j<=k+H;j++)y+=(H+1-Math.abs(j-k))*seated[j].down;y*=whole(k)/W;}uni.push({t:seated[k].t,p:seated[k].p.clone().add(V(0,y,0)),q:seated[k].q});}}
- const rollPos=track(uni.map(r=>[r.t,...r.p.toArray()]),{0:hipsSpin.toArray(),[uni.length-1]:endVel.toArray()},{accel:{[uni.length-1]:endAcc.toArray()}});
- const rollRot=spinTrack(uni.map((r,i)=>[r.t,r.q,i===0?axis.clone().multiplyScalar(ROLL.omega):i===uni.length-1?endSpin:undefined]));
+  // there, the lowest vertex's own jumps came back as a 13 m/s^2 dip of the hips); before the start, the start's.
+  const downAt=j=>seated[Math.max(j,0)+1].down,soft=seated.map((r,i)=>{const k=i-1;let y=0;if(fits(k)){for(let j=k-H;j<=k+H;j++)y+=(H+1-Math.abs(j-k))*downAt(j);y*=whole(k)/W;}return {t:r.t,p:r.p.clone().add(V(0,y,0)),q:r.q,a:r.a};});
+  uni.push(...soft.slice(1));Object.assign(soft0,{p:soft[1].p,q:soft[1].q,a:soft[1].a,v:soft[2].p.clone().sub(soft[0].p).divideScalar(2*dt),w:(soft[2].a-soft[0].a)/(2*dt)});}
+ const rollPos=track(uni.map(r=>[r.t,...r.p.toArray()]),{0:soft0.v.toArray(),[uni.length-1]:endVel.toArray()},{accel:{[uni.length-1]:endAcc.toArray()}});
+ const rollRot=spinTrack(uni.map((r,i)=>[r.t,r.q,i===0?axis.clone().multiplyScalar(soft0.w):i===uni.length-1?endSpin:undefined]));
  const rollAt=t=>{let i=0;while(i<rollRows.length-1&&rollRows[i+1].t<t)i++;return {hips:V(...rollPos(t)),hipsQ:rollRot(t),contact:rollRows[i].contact,part:rollRows[i].part};};
  // Spine and head over the whole motion: the pre-roll keys, the roll's fixed curl, then unfolding.
  const SHAPE=[...SHAPE_PRE,[ROLL_END,...SHAPE_PRE.at(-1).slice(1)],...SHAPE_POST.map(([dt,...v])=>[CATCH_END+dt,...v])];
@@ -245,16 +254,16 @@ export function createWindowDive(worker,profile={id:'horse'}){
   {...lean('rightDown',5),p:LH.clone().add(R1).multiplyScalar(.5).setY(fitB.stand(.78))},{...lean('weightR2',3),p:hipsOver(R1,.79,LH)},
   {...lean('leftDown',1),p:L1.clone().add(R1).multiplyScalar(.5).setY(fitB.stand(.80))}].map(k=>({...k,q:turned(k.h,k.pitch)}));
  const stand={t:END,p:body.at0('hips').add(V(1,0,0)),q:Q(),h:0,pitch:0};
- const trunkRows=[...preRows,{t:ROLL.start,p:p0,q:q0},catchKey,...getup,stand];
+ const trunkRows=[...preRows,{t:ROLL.start,p:soft0.p,q:soft0.q},catchKey,...getup,stand];
  const iStart=trunkRows.findIndex(r=>r.t===ROLL.start),iEnd=iStart+1;
- const posTrack=track(trunkRows.map(r=>[r.t,...r.p.toArray()]),{[iStart]:hipsSpin.toArray(),[iEnd]:endVel.toArray()},{accel:{[iEnd]:endAcc.toArray()}}),rollTurn=rEnd.turn/DEG;
+ const posTrack=track(trunkRows.map(r=>[r.t,...r.p.toArray()]),{[iStart]:soft0.v.toArray(),[iEnd]:endVel.toArray()},{accel:{[iEnd]:endAcc.toArray()}}),rollTurn=rEnd.turn/DEG;
  // After the roll its own frame carries on: heading ROLL.dir, the roll's turn added to its starting pitch, from the roll's
  // spin and its slowing (C2, as before the roll; the rotation spline stepped the turning's acceleration at every key).
  const postRot=angleTrack([[CATCH_END,ROLL.dir,270-ROLL.flex+rollTurn,0],...[...getup,stand].map(k=>[k.t,k.h,360+k.pitch,0])],{0:[0,rEnd.w/DEG,0]},{0:[0,alpha/DEG,0]});
  // Up to the roll the trunk turns by heading, pitch and roll, each on a quintic (C2), from rest into the roll's own
  // spin at its start; the rotation spline's cubic log map stepped the angular acceleration at every key (the hips' centre of mass
  // jolted by 12 m/s^2 at the reach). After the roll, from its arbitrary end, the rotation spline.
- const preRot=angleTrack([...pre.map(k=>[k.t,k.heading||0,k.pitch||0,k.roll||0]),[ROLL.start,ROLL.dir,270-ROLL.flex,0]],{0:[0,0,0],[pre.length]:[0,ROLL.omega/DEG,0]});
+ const preRot=angleTrack([...pre.map(k=>[k.t,k.heading||0,k.pitch||0,k.roll||0]),[ROLL.start,ROLL.dir,270-ROLL.flex+soft0.a/DEG,0]],{0:[0,0,0],[pre.length]:[0,soft0.w/DEG,0]});
  // The clearance corrections are zero until solved, and held at zero through the roll.
  function trunkAt(t){const s=t>ROLL.start&&t<ROLL_END?s0:shapeAt(t);let hips,hipsQ;if(t>ROLL.start&&t<CATCH_END){const r=rollAt(t);hips=r.hips;hipsQ=r.hipsQ;}else{hips=V(...posTrack(t));hipsQ=t<=ROLL.start?preRot(t):postRot(t);}
   if(onSill)hips=hips.clone().add(onSill(t));if(onSeat)hips=hips.clone().add(onSeat(t));if(balance)hips=hips.clone().add(balance.shift(t));
