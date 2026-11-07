@@ -59,6 +59,16 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    assert.ok(Math.abs(a[0]-b[0]-1)<.01&&Math.abs(a[1]-b[1])<.01&&Math.abs(a[2]-b[2])<.01,`${kind} ends at ${a.map(x=>x.toFixed(3))}, not its stance moved one tile (${b.map(x=>x.toFixed(3))})`);
   for(const part of ['trunk','head','tail']){const left=100*motion.fit[part].depth,limit=LEFT[`${kind}/${p.id}/${part}`]??1;
    assert.ok(left<=limit,`${kind}: the ${part} is left ${left.toFixed(1)} cm in at ${motion.fit[part].t.toFixed(2)} s (allowed ${limit})`);}
+  // Both ends hand over to and from the battle's own stance, at rest. The balance's samples are evenly spaced and cover
+  // the crossing, the last at its end or less than a step past it: clamped to the end, every window ended on a short
+  // last step, read as a whole one, or stopped short of its end. Its turn of the body starts and ends at rest, turning
+  // the body by at most 0.03 milliradian within 10 ms of either end: let in at full rate, the turn's track caught up
+  // within its first and last 5 ms (the windows' 1.4 to 3.7 milliradian 10 ms from an end; the phantom-wrench rig,
+  // reading every millisecond, found the body turning on the spot at every crossing's start).
+  {const B=motion.balance,D=motion.duration,dt=B.times[1]-B.times[0];
+   assert.ok(B.times[0]===0&&B.times.every((t,i)=>!i||Math.abs(t-B.times[i-1]-dt)<1e-9)&&B.times.at(-1)>=D&&B.times.at(-1)-D<dt,`${kind}: the balance's samples end at ${B.times.at(-1)} s, not evenly spaced over the crossing (${D} s)`);
+   let turn={a:0};for(const x of [.0025,.005,.0075,.01])for(const t of [x,D-x]){const s=B.spin(t),a=s?2*Math.acos(Math.min(1,Math.abs(s.q.w))):0;if(a>turn.a)turn={a,t};}
+   assert.ok(turn.a<=3e-5,`${kind}: the balance turns the body ${(1e3*turn.a).toFixed(3)} milliradian at ${turn.t?.toFixed(4)} s, within 10 ms of an end`);}
   if(kind==='window'){const lift=100*motion.getup.liftoff,least=LIFT[p.id]??2;
    assert.ok(lift>=least,`window: the centre of mass is ${lift.toFixed(1)} cm inside the feet as the seat lets go (at least ${least})`);
    // A roll that stalls before its hooves land (the skunk's and cow's) turns about its tail's root: as played, the tail

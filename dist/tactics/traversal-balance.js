@@ -174,7 +174,13 @@ function turning(frames,dt){const n=frames.length,mid=(P,a,b)=>P[a].clone().add(
 // The turn is the integral of w, its drift taken out along the motion so that it ends unturned. w carries over between
 // rounds (each adds what the last missed; delta, the largest, in rad/s, says when it has settled). Without contacts
 // the contacts' w is kept as it comes: a flight's refinement measures the flights alone again.
-const EASE=.25,TAU=.04,UNWIND=.3,TURN_TOL=.02,REFINE=2;
+// At both ends the battle's own stance hands over at rest, so the contacts' turn (its rate and its unwinding) fades in
+// from rest over REST, twice TAU, and out over the last REST, a smoothstep: it starts and ends with no rate and no
+// acceleration, as its track does. Let in at full rate from the first sample, where L* (averaged over TAU on one side
+// only) was not L, the turn's track, at rest at its ends, caught up within its first and last 5 ms, turning the body on
+// the spot (the phantom-wrench rig, reading every millisecond, found it at every crossing's start: the low-wall horse
+// 105 N of phantom force 4 ms in, the window sheep 317 N 2 ms in).
+const EASE=.25,TAU=.04,UNWIND=.3,TURN_TOL=.02,REFINE=2,REST=2*TAU;
 function bodyTurn(w,S,L,I,dt,contacts=true){
  const n=S.length,k=Math.round(TAU/dt),e=Math.round(EASE/dt),air=S.map(x=>x.kind==='air'),fl=new Float64Array(n),nw=w.map(x=>x.slice());let delta=0;
  const add=(i,target)=>{const d=solve3(I[i],[0,1,2].map(a=>target[a]-L[i][a]));delta=Math.max(delta,Math.hypot(...d));nw[i]=nw[i].map((y,a)=>y+d[a]);};
@@ -196,9 +202,9 @@ function bodyTurn(w,S,L,I,dt,contacts=true){
  // contacts: L averaged over TAU either side, faded out beside a flight; the turn unwinds there and its drift is taken
  // out along the motion
  const ref=L.map((_,i)=>{const s=[0,0,0];let m=0;for(let j=Math.max(0,i-k);j<=Math.min(n-1,i+k);j++){for(let a=0;a<3;a++)s[a]+=L[j][a];m++;}return s.map(x=>x/m);});
- const wC=Array.from({length:n},()=>[0,0,0]);
- for(let i=0;i<n;i++){if(air[i]||!contacts)continue;const d=solve3(I[i],[0,1,2].map(a=>ref[i][a]-L[i][a]));delta=Math.max(delta,Math.hypot(...d)*(1-fl[i]));wC[i]=d.map(x=>x*(1-fl[i]));nw[i]=nw[i].map((y,a)=>y+wC[i][a]);}
- const thC=[[0,0,0]];for(let i=1;i<n;i++){const p=thC[i-1],q=(1-fl[i])*dt/UNWIND,cw=i=>air[i]?[0,0,0]:nw[i].map((y,a)=>y*(1-fl[i]));const a0=cw(i-1),a1=cw(i);thC.push(p.map((x,a)=>x+dt*(a0[a]+a1[a])/2-q*x));}
+ const wC=Array.from({length:n},()=>[0,0,0]),rest=i=>smooth(Math.min(i,n-1-i)*dt/REST);
+ for(let i=0;i<n;i++){if(air[i]||!contacts)continue;const d=solve3(I[i],[0,1,2].map(a=>ref[i][a]-L[i][a])),r=(1-fl[i])*rest(i);delta=Math.max(delta,Math.hypot(...d)*r);wC[i]=d.map(x=>x*r);nw[i]=nw[i].map((y,a)=>y+wC[i][a]);}
+ const thC=[[0,0,0]];for(let i=1;i<n;i++){const p=thC[i-1],q=(1-fl[i])*rest(i)*dt/UNWIND,cw=i=>air[i]?[0,0,0]:nw[i].map((y,a)=>y*(1-fl[i]));const a0=cw(i-1),a1=cw(i);thC.push(p.map((x,a)=>x+dt*(a0[a]+a1[a])/2-q*x));}
  // the drift out along a smoothstep, at rest at both ends (taken out linearly, the turn began at a constant rate from
  // rest: 11% of the body's weight at the first sample)
  const end=thC[n-1],theta=thF.map((x,i)=>x.map((y,a)=>y+thC[i][a]-end[a]*smooth(i/(n-1))));
@@ -218,8 +224,17 @@ const ONSET=.02,LOST=.06;
 // marks times the plan keeps near the authored path ('hold': a support it must not move, such as a seat the hips' own
 // move would lift off the floor, losing the support the plan was leaning on; see planCentre), or its height alone where
 // it returns 'height'.
+// The samples are dt apart and cover the crossing: the last may fall up to dt past its end, where the body stands in
+// its stance. pose, hold and base are asked there and must answer as they do at the end, as the window's, the vault's
+// and the climb's do (their tracks, fits and bands all hold past the end). Everything here reads the samples as dt
+// apart. Clamped to the end, every window (their durations follow the roll's physics) ended on a short last step read
+// as a whole one (six: the sheep's 2.5 ms) or stopped up to 2 ms short of its end (five); in the sheep's last 2.5 ms,
+// where the turn's track also came back to rest, the rig read 266 and 239 N of phantom force. Stretched to fit the
+// duration instead, the steps slid the hips' shift's knots off the rig's 5 ms samples, which then read the ripple the
+// shift carries between its knots (the horse's window, gated with the turn's rate fade and a change to the hooves'
+// clearance: 0.375 s over the limit at the samples, 0.060 before, and 60 fewer readings flagged between them).
 export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base=null,hold=null,dt=.005,rounds=2,plan:options={}}){
- const n=Math.round(duration/dt)+1,times=Array.from({length:n},(_,i)=>Math.min(duration,i*dt));let c0=null,follow=null,samples=null,plan=null,last=null,settled=false,spin=null,w=times.map(()=>[0,0,0]);
+ const n=Math.max(2,Math.ceil((duration-1e-9)/dt)+1),times=Array.from({length:n},(_,i)=>Math.abs(i*dt-duration)<1e-9?duration:i*dt);let c0=null,follow=null,samples=null,plan=null,last=null,settled=false,spin=null,w=times.map(()=>[0,0,0]);
  const turnAt=(theta,pivot)=>{let lo=theta.findIndex(x=>x[0]||x[1]||x[2]),hi=theta.findLastIndex(x=>x[0]||x[1]||x[2]);if(lo<0)return null;lo=Math.max(0,lo-1);hi=Math.min(n-1,hi+1);
   const tr=track(theta.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false}),pv=track(pivot.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false});
   return t=>{if(t<=times[lo]||t>=times[hi])return null;const r=V(...tr(t)),a=r.length();return a<1e-12?null:{q:Q().setFromAxisAngle(r.divideScalar(a),a),pivot:V(...pv(t))};};};

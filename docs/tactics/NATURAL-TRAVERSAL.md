@@ -1846,6 +1846,88 @@ c2c5a9b).
 with the left alone holding. The tails bent again after the balance (the rabbit's roll, 18%). The rig's required-force
 rule reads only its 5 ms samples. The cow's tail-root landing (3.3 x BW).
 
+### 2026-11-07 (physics balance, twenty-first part): both ends at rest
+
+The user: "Edge wobble first". phantom-wrench 1.2.0 (dfea5d6), which reads every millisecond between and beside its 5 ms
+samples, found the body turning on the spot at every crossing's start, a wobble of about 4 ms that the 5 ms sweep had
+only aliased, and readings in the last milliseconds of every window and of the climb. The low wall's phantom rule failed
+on it (105 N, 4 ms in), where 1.1.0 had passed it.
+
+**What it was.** The battle's own stance hands over at rest at both ends of a crossing, and two parts of the balance did
+not:
+- Its turn of the body. On contacts the turn steers the body's angular momentum toward its average over 40 ms either
+  side, which at the clip's ends is one-sided and not the body's own, so the turn's samples already had a rate there.
+  Its track (traversal-pose.js `track`) gives the first and last key slope 0, so it went from rest to that rate inside
+  its first 5 ms segment, overshooting it, and back to rest inside its last.
+- Its grid. Clamped to the crossing's end, every window's grid (their durations follow the roll's physics) was off: six
+  ended on a short last step, read as a whole one (the sheep's 2.5 ms, the cow's 2.6, the horse's 3.5), and five stopped
+  up to 2 ms short of the end (the goat, bull, donkey, rabbit and dog). In the sheep's last 2.5 ms, where the turn's
+  track also came back to rest, the rig read 266 and 239 N.
+
+**The fix** (traversal-balance.js).
+- The contacts' turn, its rate and its unwinding, fades in from rest over 80 ms (`REST`, twice its averaging
+  half-window) and out over the last 80, a smoothstep: it starts and ends with no rate and no acceleration, as its track
+  does. Faded without its unwinding, the turn still read 0.056 to 0.117 mrad 10 ms before the windows' ends.
+- The samples stay 5 ms apart and cover the crossing: the last may fall up to 5 ms past its end, where the body stands
+  in its stance (the motion's pose, hold and base must answer there as at its end, as all three crossings' do). The low
+  wall's and the climb's grids (2.4 s, 6.1 s) are the same to the bit.
+
+phantom-wrench 1.2.0 `--gate` (a frozen copy), c1862be -> now; "readings" counts the samples over the limit and the
+instants between and beside them; "at the ends" is within 10 ms of either end:
+
+| | over the limit | readings | at the ends: readings, worst (% of its limit) |
+|---|---|---|---|
+| window horse | 0.060 s | 214 -> 211 | 5 -> 0, 547 -> 99% |
+| goat | 0.055 -> 0.050 s | 251 -> 246 | 5 -> 0, 503 -> 91% |
+| bull | 0.035 -> 0.030 s | 208 -> 205 | 4 -> 0, 495 -> 81% |
+| cow | 0.070 -> 0.065 s | 218 -> 214 | 5 -> 0, 494 -> 84% |
+| donkey | 0.065 -> 0.060 s | 244 -> 240 | 6 -> 0, 592 -> 96% |
+| sheep | 0.065 -> 0.060 s | 230 -> 226 | 5 -> 1, 431 -> 108% |
+| skunk | 0.170 -> 0.160 s | 354 -> 337 | 6 -> 1, 758 -> 146% |
+| pig foreman | 0.065 -> 0.060 s | 224 -> 221 | 5 -> 2, 843 -> 117% |
+| pig director | 0.075 s | 257 | 5 -> 1, 718 -> 109% |
+| rabbit | 0.090 -> 0.080 s | 285 -> 277 | 6 -> 2, 393 -> 136% |
+| dog | 0.065 -> 0.060 s | 222 -> 219 | 4 -> 1, 209 -> 103% |
+| low wall | 0 s | 1 | 1, 143 -> 105% |
+| climb | 0.075 s | 240 -> 235 | 5 -> 3, 142 -> 126% |
+
+Together 0.890 -> 0.835 s over the limit (the windows 0.815 -> 0.760; the twentieth part's 0.84 was phantom-wrench
+1.0.0's, summed from two-decimal readings), 2948 -> 2889 readings, 62 -> 12 at the ends. Every crossing reads the same
+or fewer. The twelve left at the ends are 76 to 107 N, 4 to 6 ms into a step-in or 2.5 to 6 ms before an end: the low
+wall's at 6 ms (77 N; on c1862be, 105 N at 4 ms), so its phantom rule still fails. `bin/collisions.mjs`: the same
+deepest points and spans on all thirteen crossings. The other rules pass and fail as before (the required force the same
+or a little lower). Read every millisecond, the vault's required force fails, before and after: 5.3 body weights at
+0.826 s, where its 5 ms samples read 3.7 (the figure the earlier parts give).
+
+`tests/natural-traversal.test.mjs`, on every mammal and crossing: the balance's samples evenly spaced and covering the
+crossing (the first at 0, the last at its end or less than a step past it); its turn at most 0.03 mrad within 10 ms of
+either end. On c1862be every window fails the first, and with it switched off the second (1.4 to 3.7 mrad); faded
+without its unwinding, the turn fails the second on every window (0.056 to 0.117 mrad).
+
+**Not kept.**
+- The step stretched to fit the duration (dt = D / (n - 1)). Correct, but it slid the hips' shift's knots off the rig's
+  5 ms samples, which then caught the ripple the shift carries between its knots, read before only between the samples.
+  Gated with the turn's rate fade (not its unwinding's) and the hoof change below, the horse's window read 0.060 ->
+  0.375 s over the limit at its samples while the readings between and beside them fell 202 -> 142 (214 -> 217 in all).
+- A standing hoof's lift and snap eased in as one. Inside the ends' 0.12 s ease the clearance fit lifts a planted hoof
+  out of the floor and snaps it 2 mm off it, each eased in with the clip, the snap measured on the half-eased lift: the
+  lift comes in as e, the snap as e squared, and the hoof rises and sinks back while the body stands (the fit's own
+  offsets on the low-wall horse: up 2.7 mm in its first 80 ms, back to 1.8). Read as if the lift were whole, the snap
+  took back the part the ease had not brought in, and the low wall's phantom rule passed. But the windows begin on the
+  battle stance's hooves, which the fit lifts 1.5 to 2 cm in the first 0.12 s (the horse's, donkey's and rabbit's; the
+  low wall's and the climb's fitted stance, 1.8 mm), under load and through nearly straight knees as the step-in slides
+  them: eased as one, that lift moved its readings later and added to them (the windows' step-in 162 -> 279 readings,
+  2889 -> 2983 in all; the rabbit's 15 -> 39, the donkey's 7 -> 25), and `bin/collisions.mjs` found a third span deeper
+  than 2 cm on the donkey's window. Eased over 0.24 s instead, the donkey's head was left 8.8 cm in at 0.72 s (the test
+  allows it 3).
+
+**Left.** The windows' start: the battle stance's hooves, which the fit lifts 1.5 to 2 cm under load in the step-in's
+first 0.12 s (on the three windows measured), where the low wall's and climb's fitted stance needs 1.8 mm (the hand-over
+itself wants a look: the two stances disagree by about 1.5 cm). A standing hoof's lift and snap at the ends (above). The
+low wall's step-in (the plan puts its pressure point on the hooves' back margin from its first free sample), and its
+required force read every millisecond (5.3 body weights). The ripple the hips' shift carries between its 5 ms knots.
+phantom-wrench's open contact-step stencil, which may move these numbers again.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
