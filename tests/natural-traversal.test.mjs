@@ -5,6 +5,9 @@ import {ANIMAL_MOTION_CATALOG} from '../dist/tactics/animal-motion-catalog.js';
 import {createBattlePosture} from '../dist/tactics/battle-posture.js';
 import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {naturalTraversal,createNaturalTraversal} from '../dist/tactics/natural-traversal.js';
+import {contactProbe} from '../dist/tactics/traversal-balance.js';
+import {rigKey} from '../dist/tactics/idle-motion.js';
+import {IDLE_FITS} from '../dist/tactics/idle-fits.js';
 // The natural crossings (docs/tactics/NATURAL-TRAVERSAL.md) on every mammal, built the way the battle builds a model.
 const MAMMALS=ANIMAL_MOTION_CATALOG.filter(p=>p.id!=='hen'),KINDS=['window','low-wall','wall'];
 const model=p=>{const worker=p.create(JSON.parse(readFileSync(new URL('../dist/tactics/'+p.file,import.meta.url),'utf8')));return {worker,profile:p,posture:createBattlePosture(worker,p),locomotion:createWorkerLocomotion(worker,p)};};
@@ -16,7 +19,6 @@ const crossing=kind=>({id:1,unitId:1,kind,from:{x:0,y:0,z:0},to:{x:1,y:0,z:0}});
 // and the pigs 25 to 40 cm in its floor; read here, it found the pigs' bellies 8 to 16 cm through the top in the straddle.
 const LEFT={'window/pig-foreman/trunk':2,'window/pig-director/trunk':3, // the belly on the sill as the body tips over
  'window/donkey/head':3,'window/rabbit/head':6, // long ears graze the lintel at the hop for ~20 ms
- 'window/goat/head':4, // the horns in the floor in the roll: no turn of the head within the neck clears them
  'window/skunk/trunk':2, // the plume's root, which rides the hips, on the floor in the roll
  'window/dog/trunk':2,'wall/dog/trunk':2, // the dog's utility pouch on the sill's far edge, and on the face in the hang
  'low-wall/pig-director/trunk':2, // the waistcoat on the wall's near edge at the spring
@@ -73,6 +75,19 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    {const h=.001,c=[];for(let t=motion.roll.start-h;t<=motion.roll.end+h+1e-9;t+=h)c.push(motion.apply(t/motion.duration).com);let push={f:0};
     for(let i=1;i<c.length-1;i++){const a=[0,1,2].map(j=>(c[i-1][j]-2*c[i][j]+c[i+1][j])/(h*h));a[1]+=9.81;const f=Math.hypot(...a)/9.81;if(f>push.f)push={f,t:motion.roll.start+(i-1)*h};}
     assert.ok(push.f<=5,`window: the roll asks the floor for ${push.f.toFixed(1)} body weights at ${push.t.toFixed(3)} s`);}
+   // The roll keeps the floor: read on every point of the body every 5 ms (the phantom-wrench rig's contacts), its
+   // lowest point stays within the rig's centimetre of the floor from the roll's start to its end. Planning the roll
+   // freely, the balance smoothed its landings (the centre of mass filtered at about 4 Hz) and lifted the goat's seat,
+   // the sheep's waistcoat and the pig director's tail's root 1.1 to 1.3 cm off the floor for two or three of the rig's
+   // 5 ms samples, with nothing holding them up (the rig read 154, 207 and 195% of their weight there).
+   {const pr=contactProbe(m.worker);let up={y:-1};for(let t=motion.roll.start;t<=motion.roll.end+1e-9;t+=.005){motion.apply(t/motion.duration);pr.update();let lo=Infinity;for(let i=0;i<pr.count;i++)lo=Math.min(lo,pr.y[i]);if(lo>up.y)up={y:lo,t};}
+    assert.ok(up.y<=.01,`window: the body leaves the floor in the roll, its lowest point ${(100*up.y).toFixed(1)} cm up at ${up.t.toFixed(3)} s`);}
+   // No roll turns about the head: a head that would be the lowest point lying back nods forward, the chin toward the
+   // chest, within the neck's measured range (idle-fits.js, read on the rig as made: the battle's posture changes its
+   // key). Rolling on its swept horns with its back 11 cm off the floor, the goat fell onto the back at 1.7 m/s.
+   {const r=rows.find(x=>x.bone==='head'),nod=IDLE_FITS[rigKey(p.create(JSON.parse(readFileSync(new URL('../dist/tactics/'+p.file,import.meta.url),'utf8'))))].nod;
+    assert.ok(!r,`window: the roll turns about the head (the ${r?.part}) at ${r?.t.toFixed(3)} s`);
+    assert.ok(motion.roll.chin<=nod,`window: the chin nods ${motion.roll.chin} degrees lying back, past the neck's ${nod}`);}
    // The seat comes down after the roll no faster than the body can fall: as the feet are drawn in, the centre of mass
    // falls at most 1.2 g (the floor never asked to pull more than a fifth of the body's weight). Holding the skunk's
    // plume root on the floor as it sat up, the seat band pulled its hips 11 cm down in 0.2 s (1.5 g).
@@ -83,8 +98,9 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // floor support lies within 5 cm of something the played body has on the floor. Read once as made, the skunk's
    // plume lay straight back along the floor where the played one rose clear of it, and through the last steps the
    // plan leant on it 31 to 58 cm behind the boots (its last step read 40% of its weight). Before the lean, where
-   // contacts come and go, the plan's last round reads them on the hips of the round before (the goat's roll leaves
-   // the floor 23 cm from where it was planned on, 2.6 s in).
+   // contacts come and go, the plan's last round reads them on the hips of the round before, and the tails as bent
+   // before it (bent again after, the rabbit's is off the floor at 2.59 to 2.61 s in its roll, where the plan leans on
+   // it 20 to 25 cm from anything the body has there).
    const B=motion.balance;
    for(let i=0;i<B.times.length;i+=20){const s=B.samples[i];if(B.times[i]<b||s.kind!=='feet'||s.floor!==0)continue;motion.apply(B.times[i]/motion.duration);const on=[];
     for(const part of m.worker.parts){const a=part.geometry.attributes.position;for(let j=0;j<a.count;j++){v.fromBufferAttribute(a,j);part.applyBoneTransform(j,v);v.applyMatrix4(part.matrixWorld);if(Math.abs(v.y)<=.01)on.push(v.x,v.z);}}

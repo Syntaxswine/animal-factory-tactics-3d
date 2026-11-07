@@ -40,9 +40,14 @@ export function boxedPath(c0,wT,wJ,rows,{rho=2e5,iters=1500,tol=1e-8,stride=1}={
   res=0;for(let j=0;j<m;j++){const ax=dot(j,c),zn=clamp(ax+u[j],lo[j],hi[j]);u[j]+=ax-zn;z[j]=zn;res=Math.max(res,Math.abs(ax-zn));}}
  return {c,res};}
 // samples: [{c: [x,y,z] authored centre of mass, kind: 'air' | 'grip' | 'feet' | 'hold', box: [xmin,xmax,zmin,zmax] and
-// hull: [[x,z], ...] counter-clockwise (feet), floor: y}] on a uniform grid dt. 'hold' keeps the authored path as near as its support allows (a support this plan must not move, such as a seat the hips' own move would lift): weighed in heavily, at its authored height, and across like the feet.
-export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,fmax=FMAX,margin=.01}={}){
- const n=samples.length,d2=dt*dt,c0=[0,1,2].map(ax=>Float64Array.from(samples,s=>s.c[ax])),wT=samples.map(s=>s.kind==='hold'?wH:1),acc=[1,-2,1];
+// hull: [[x,z], ...] counter-clockwise (feet), floor: y}] on a uniform grid dt. 'hold' keeps the authored path as near
+// as its support allows (a support this plan must not move, such as a seat the hips' own move would lift): weighed in
+// heavily, at its authored height, and across like the feet; with heightOnly, its height alone and lightly (wL: a body
+// lying on the floor slides on it and gives a little, but cannot rise off it), planned across exactly as the feet are.
+// At wL 50 the plan softens a window roll's landings within half a centimetre of the floor (the donkey's seat landing
+// 4.7 body weights, read every millisecond; at 400, 5.1; at 20, 4.5, its pig director 0.6 cm up).
+export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=FMAX,margin=.01}={}){
+ const n=samples.length,d2=dt*dt,c0=[0,1,2].map(ax=>Float64Array.from(samples,s=>s.c[ax])),wT=samples.map(s=>s.kind==='hold'?(s.heightOnly?wL:wH):1),wA=samples.map(s=>s.kind==='hold'&&!s.heightOnly?wH:1),acc=[1,-2,1];
  const ends=ax=>[0,1,n-2,n-1].map(i=>({at:i,c:[1],lo:c0[ax][i<2?0:n-1],hi:c0[ax][i<2?0:n-1]}));
  // Vertical: ballistic in flight; a floor pushes between .3 and fmax body weights, a grip either way up to fmax.
  const edge=i=>{for(let k=1;k<=RAMP;k++)if(samples[i-k]?.kind==='air'||samples[i+k]?.kind==='air')return ((k-1)/RAMP)**2;return 1;};
@@ -73,7 +78,7 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,fmax=FMAX,margin=
   for(let j=0;j<H.length;j++){const p=H[j],q=H[(j+1)%H.length],ex=q[0]-p[0],ez=q[1]-p[1],l=Math.hypot(ex,ez);if(l<1e-9)continue;const nx=ez/l,nz=-ex/l;
    rows.push({at,c:[nx*a,nz*a,nx*b,nz*b,nx*a,nz*a],lo:-Infinity,hi:Math.max(nx*p[0]+nz*p[1]-margin,nx*cx+nz*cz)-nx*dx-nz*dz});}
   both(-MU*fy*d2,MU*fy*d2);}
- const XZ=boxedPath(Float64Array.from({length:2*n},(_,j)=>c0[j&1?2:0][j>>1]),Float64Array.from({length:2*n},(_,j)=>wT[j>>1]),wJ,rows,{stride:2});
+ const XZ=boxedPath(Float64Array.from({length:2*n},(_,j)=>c0[j&1?2:0][j>>1]),Float64Array.from({length:2*n},(_,j)=>wA[j>>1]),wJ,rows,{stride:2});
  out[0]=Float64Array.from({length:n},(_,i)=>XZ.c[2*i]);out[2]=Float64Array.from({length:n},(_,i)=>XZ.c[2*i+1]);res[0]=res[2]=XZ.res;
  const plan=Array.from(out[0],(x,i)=>[x,out[1][i],out[2][i]]);plan.residual=res;return plan;}
 // The convex hull of points [x, z], counter-clockwise (Andrew's monotone chain), or the box [xmin, xmax, zmin, zmax]
@@ -211,7 +216,8 @@ const ONSET=.02,LOST=.06;
 // setMove({shift(t), spin(t)}) hands the motion its hips' move while it is found (spin(t) is null where the body does
 // not turn, or {q, pivot}: a turn about a point); the result's shift and spin are the final ones. hold(t), if given,
 // marks times the plan keeps near the authored path ('hold': a support it must not move, such as a seat the hips' own
-// move would lift off the floor, losing the support the plan was leaning on; see planCentre).
+// move would lift off the floor, losing the support the plan was leaning on; see planCentre), or its height alone where
+// it returns 'height'.
 export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base=null,hold=null,dt=.005,rounds=2,plan:options={}}){
  const n=Math.round(duration/dt)+1,times=Array.from({length:n},(_,i)=>Math.min(duration,i*dt));let c0=null,follow=null,samples=null,plan=null,last=null,settled=false,spin=null,w=times.map(()=>[0,0,0]);
  const turnAt=(theta,pivot)=>{let lo=theta.findIndex(x=>x[0]||x[1]||x[2]),hi=theta.findLastIndex(x=>x[0]||x[1]||x[2]);if(lo<0)return null;lo=Math.max(0,lo-1);hi=Math.min(n-1,hi+1);
@@ -220,7 +226,7 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  const setShift=s=>setMove(s||spin?{shift:()=>s||V(),spin}:null);
  // each round's schedule as runs ('feet 0.000-0.690, ...'), for the diagnostics
  const history=[],runs=S=>{const out=[];S.forEach((s,i)=>{const r=out.at(-1);if(r&&r.kind===s.kind)r.end=times[i];else out.push({kind:s.kind,start:times[i],end:times[i]});});return out.map(r=>`${r.kind} ${r.start.toFixed(3)}-${r.end.toFixed(3)}`).join(', ');};
- const measure=()=>{const frames=[];const S=times.map(t=>{setShift(follow?follow.shift(t):null);const P=pose(t);probe.update();frames.push(Object.fromEntries(KEEP.map(k=>[k,P[k].clone()])));const c=com(P).toArray(),s=supportAt(probe,obstacles,c);return hold?.(t)&&s.kind!=='air'?{...s,kind:'hold',c}:{...s,c};});
+ const measure=()=>{const frames=[];const S=times.map(t=>{setShift(follow?follow.shift(t):null);const P=pose(t);probe.update();frames.push(Object.fromEntries(KEEP.map(k=>[k,P[k].clone()])));const c=com(P).toArray(),s=supportAt(probe,obstacles,c),h=hold?.(t);return h&&s.kind!=='air'?{...s,kind:'hold',heightOnly:h==='height',c}:{...s,c};});
   const lag=Math.round(ONSET/dt);for(let i=n-1;i>=0;i--)if(S[i].kind==='grip'){let j=i;while(j>0&&S[j-1].kind==='grip')j--;const end=i-j+1<3*lag?i+1:Math.min(n,j+lag);for(let k=j;k<end;k++)S[k]=j>0?{...S[j-1],c:S[k].c}:S[k];i=j;}
   return {S,...turning(frames,dt)};};
  // Two rounds: the second measures the schedule and the turning again on the balanced motion (four gave the climb no
@@ -230,14 +236,14 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  // touch: measured again on them, a seat carried on raised thighs rose off the floor, and the plan, finding the feet
  // alone 17 cm ahead of the centre of mass, dragged the hips 11 cm toward them (the window's lean, 78% of the body's
  // weight); a pig's seat rose 5 mm off the climb's top for 40 ms, and the plan, finding it in flight, jerked the body
- // at 39 m/s.
+ // at 39 m/s. Held in height alone, a sample's support is measured each round, as the feet's is: the body moves across.
  let held=null,authored=null;
  for(let r=0;r<rounds&&!settled;r++){const {S,dL,L,I}=measure();
-  if(!authored)authored=S.map(x=>({...x}));else S.forEach((x,i)=>{if(authored[i].kind==='hold')Object.assign(x,{...authored[i],c:x.c});});
+  if(!authored)authored=S.map(x=>({...x}));else S.forEach((x,i)=>{if(authored[i].kind==='hold'&&!authored[i].heightOnly)Object.assign(x,{...authored[i],c:x.c});});
   // A flight shorter than LOST that a round finds where the authored motion lies on the floor is the plan's own: its
   // last move lifted the body off what held it, and that support stands. Planned as a flight, the sheep's roll (its back
   // lifted off the floor by the round before) crouched 1.8 cm into the floor to spring over 40 ms of it.
-  if(r)for(let i=0;i<n;i++){if(S[i].kind!=='air')continue;let j=i;while(j+1<n&&S[j+1].kind==='air')j++;if(j-i<LOST/dt&&i>0&&j<n-1&&authored.slice(i,j+1).every(x=>x.kind==='feet'))for(let k=i;k<=j;k++)Object.assign(S[k],{...authored[k],c:S[k].c});i=j;}
+  if(r)for(let i=0;i<n;i++){if(S[i].kind!=='air')continue;let j=i;while(j+1<n&&S[j+1].kind==='air')j++;if(j-i<LOST/dt&&i>0&&j<n-1&&authored.slice(i,j+1).every(x=>x.kind==='feet'||x.heightOnly))for(let k=i;k<=j;k++)Object.assign(S[k],{...authored[k],c:S[k].c});i=j;}
   if(held)S.forEach((x,i)=>{if(x.kind!==held[i].kind)Object.assign(x,{...held[i],c:x.c});});else if(r===1)held=S.map(x=>({...x}));const key=S.map(x=>x.kind).join();history.push(runs(S));
   if(!c0)c0=S.map(x=>x.c);const turn=bodyTurn(w,S,L,I,dt);settled=key===last&&turn.delta<TURN_TOL;last=key;if(settled)break;
   samples=S.map((x,i)=>({...x,c:c0[i],dL:dL[i]}));plan=planCentre(samples,dt,options);w=turn.w;spin=turnAt(turn.theta,plan);

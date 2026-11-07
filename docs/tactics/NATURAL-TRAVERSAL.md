@@ -1765,6 +1765,87 @@ stretch the window only partly reached, and leave the cause in place.
 horse, sheep, bull and dog; not the goat), read every millisecond: there before, not looked at. The goat's roll (154%),
 the sheep's (207) and the pig director's (195), all later in the roll. The cow's hands to the floor (52%).
 
+### 2026-11-06 (physics balance, twentieth part): the roll keeps its floor, and the goat tucks its chin
+
+The user: "The goat's roll" (its roll 154% of its weight at 2.65 s). The sheep's 207% and the pig director's 195%, which
+the list of what was left called one-sample peaks, turned out to be the same thing.
+
+**What it was.** Not peaks: flights. For two or three of the rig's 5 ms samples nothing of the body was within its
+centimetre of the floor (the goat at 2.655 to 2.665 s, the sheep at 2.700 to 2.705, the pig director at 2.680 to 2.685),
+while the roll asked the floor for 1.2 to 2.1 body weights. The roll's physics keeps the body on the floor (it turns
+about its lowest point); the balance took it off. Its plan weighs keeping near the authored path at 1 against jerk at
+2e5, a filter of about 4 Hz on the centre of mass, and the roll's landings (its softened impacts: 2.8 to 4.6 body
+weights at the balance's 5 ms samples) are quicker than that. The plan rode 0.9 to 1.1 cm above them and the hips
+followed. A body lying on the floor cannot rise without leaving it: the goat's seat, the sheep's waistcoat and the pig
+director's tail's root rose 1.06 to 1.27 cm.
+
+The goat's had a second cause underneath. Lying back, its swept horns were its lowest point, its back 10.7 cm off the
+floor at the roll's start. Its roll turned on them for 83 ms, then fell onto the back at up to 1.67 m/s: 6.1 body
+weights at the balance's 5 ms samples. The free plan had braked that fall with the hands (0.7 cm under the roll's path,
+then 1 cm over it).
+
+**The fix.**
+- A roll that lands its hooves is held near its authored height from 80 ms in until they land (window-dive.js: `hold(t)`
+  returns `'height'`), as the stalled rolls (the skunk's, the cow's) already were in full. The plan weighs that height
+  in at 50 (traversal-balance.js `level`; a held path's weight is 400), with no force bounds, and plans across on the
+  support each round measures, as on the feet: a body lying on the floor slides on it and gives a little, but does not
+  rise off it.
+- Lying back, a head that would be the roll's lowest point nods forward, the chin toward the chest, by the least whole
+  degree that lifts it 5 mm clear of the rest of the body, within the neck's measured range (idle-fits.js: the goat's
+  35). The goat nods 23 degrees and lies back onto its shirt as the others do. Its roll now takes 1.44 s and ends at
+  3.90 s, and its window 6.60 s (6.09). Every other body nods 0: built with and without the rule, each of their points
+  is the same to the bit every 5 ms.
+
+phantom-wrench `--gate`, c2c5a9b -> now (only windows change):
+
+| | over the limit | roll (peak % of body weight) | required force in contact |
+|---|---|---|---|
+| goat | 0.13 -> 0.06 s | 154 -> 5% | 3.5 -> 2.5 x BW |
+| sheep | 0.12 -> 0.07 s | 207 -> 12% | 2.3 -> 2.4 x BW |
+| pig director | 0.09 -> 0.07 s | 195 -> 12% | 3.1 x BW, as before |
+| donkey | 0.07 s | 18 -> 11% | 2.5 -> 3.4 x BW |
+| rabbit | 0.07 -> 0.09 s | 17 -> 18% (now at 2.60 s, 108 N·m) | 4.1 x BW, as before |
+| pig foreman | 0.06 -> 0.07 s | 7 -> 8% (42 N·m, two samples) | 2.7 x BW, as before |
+
+The horse, bull, cow, dog and skunk read the same phase by phase (the bull's roll 17 -> 16%). The eleven windows read
+0.84 s over the limit together (0.95), summed by script. `bin/collisions.mjs`: the same deepest points and spans on all
+eleven windows. Through every roll the body's lowest point stays between 0.53 cm above the floor and 0.95 cm in it (on
+c2c5a9b up to 1.27 cm above; the donkey's 0.98 in).
+
+What it costs:
+- The donkey's seat landing (2.70 s), which the free plan softened by lifting the body 0.88 cm, now comes through: 4.66
+  body weights read every millisecond (3.97). Weighed in at 400 it read 5.1, past the rig's 5; at 100, 4.81; at 20, 4.49
+  with the pig director 0.62 cm up. 50 sits between.
+- The rabbit's roll at 2.595 to 2.605 s (18%, 108 N·m). The plan leans there on its tail, and the tails are bent again
+  after the balance: the rabbit's comes clear of the floor, 20 to 25 cm from where the plan leans. On c2c5a9b the lower
+  free plan had kept the bent tail down.
+- The goat's hands to the floor, 11 -> 21% (at 2.08 s, as the right hand comes off the wall with the left alone on the
+  floor). On c2c5a9b its horns (three or four corners) and its seat on the sill's edge touched there, at 2.080 to 2.090
+  s: the descent ended in a roll 11 cm higher. It is the moment of the cow's (52%) and the skunk's (33%). Its get-up,
+  0.51 s later now, reads its left foot round 14 -> 16% and its stand 11 -> 7%.
+
+`tests/natural-traversal.test.mjs`: the roll keeps the floor (the body's lowest point, every vertex every 5 ms, within
+the rig's centimetre); no roll turns about the head; the chin stays within the neck's measured range. On c2c5a9b the
+goat (1.3 cm up at 2.660 s), the sheep (1.1 at 2.700) and the pig director (1.2 at 2.685) fail the first, and the goat
+fails the second (its horns at 2.460 s). With every chin forced to 30 degrees, the horse fails the third (its neck
+allows 15). The goat's allowance for its horns left in the floor (4 cm) is gone: its head is left 0.0 cm in (0.5 on
+c2c5a9b).
+
+**Not kept.**
+- The roll's whole path held (height and across, at 400): the plan steered back onto its horizontal path from 0.4 s
+  before, through the hands' landing. The donkey's hands to the floor went 14 -> 52%, the rabbit's 18 -> 29, the horse's
+  roll 27 -> 46; 0.94 s over the limit together.
+- The height held inside a band of 5 mm either way, free within it: where the plan meets the band's edge it rides the
+  edge, with the landing's whole curvature. The donkey's landing read 5.8 body weights, the horse's roll 33%, the
+  rabbit's 32; 0.89 s together.
+- The chin at 30 degrees (the least multiple of 5 that cleared 2 cm): the goat's muzzle came within 0.7 cm of its right
+  elbow, which lies back pointing up (the test asks the hands to keep 2 cm from the head). At 20 degrees the horns still
+  carry the roll's first 8 ms; at 25 the hand comes within 1.5 cm.
+
+**Left.** The hands to the floor (the goat's 21%, the cow's 52%, the skunk's 33%): the right hand comes off the wall
+with the left alone holding. The tails bent again after the balance (the rabbit's roll, 18%). The rig's required-force
+rule reads only its 5 ms samples. The cow's tail-root landing (3.3 x BW).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

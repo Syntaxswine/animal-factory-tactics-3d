@@ -6,7 +6,8 @@ import {balanceTraversal,contactProbe,boxedPath,supportAt} from './traversal-bal
 // origin facing +X, the window on the edge at X = .5 (faces .42 and .58, sill top .85, opening top 1.55),
 // finish standing on the next tile's centre (1, 0, 0) facing on.
 // These characters cannot tuck the chin (measured nod limit 0-35 degrees), so the roll starts with the chest flat on
-// its back, spine curled, and the neck lying back along the floor. That points the head back toward the window,
+// its back, spine curled, and the neck lying back along the floor (a head that would be the lowest point there nods
+// as far as it must within that: the goat's, 23 degrees). That points the head back toward the window,
 // so the roll runs across the tile, along the wall (ROLL.dir from +X, chosen so the roll ends on the tile centre with nothing in the wall): the head clears the wall face, the roll's
 // travel fits the tile, and the character comes up out of the window's line.
 export const WINDOW={edge:.5,half:.08,sill:.85,top:1.55};
@@ -62,7 +63,6 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // its root, which cannot, is ever the pivot.
  const body=createTraversalBody(worker),tails=createTailBend(worker),probe=createSurfaceProbe(worker,{stride:2,keep:(m,i)=>!/tail/.test(m.name)||tails.isRoot(m.name,i)}),fitB=bodyFit(body,probe),back=fitB.back;
  const pre=PRE.map(k=>({...k,hips:[k.hips[0]-(k.near?back:0)+(k.far?back:0),(k.stand?fitB.stand(k.hips[1]):k.hips[1])+(k.over?back:0),k.hips[2]]}));
- const shapePre=track(SHAPE_PRE);
  const chestOf=(hips,hipsQ,spineQ)=>({chestQ:hipsQ.clone().multiply(spineQ),chest:hips.clone().add(body.offsets.spine.clone().applyQuaternion(hipsQ))});
  const restWrist=s=>body.at0('hand'+s).sub(body.at0('spine')).toArray();
  const d=V(Math.cos(ROLL.dir*DEG),0,Math.sin(ROLL.dir*DEG)),axis=V(0,1,0).cross(d).normalize();
@@ -82,7 +82,16 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // while it rolls. Where the contact jumps from one part of the body to another (neck to back, back to seat), the
  // landing part takes an impact: angular momentum about the new contact is kept, and energy is lost. Once the hooves
  // land it rocks on over the seat to rest (ROCK).
- const s0=shapeOf(shapePre(ROLL.start)),q0=yawQ(ROLL.dir).multiply(bodyQ((270-ROLL.flex)*DEG));
+ // Lying back, a head that would be the roll's lowest point nods forward (the chin toward the chest) by the least
+ // whole degree that lifts it CHIN clear of the rest of the body, within NOD_MAX (the largest measured nod limit;
+ // tests/natural-traversal.test.mjs holds each body to its own). The goat's swept horns were that point: its roll
+ // turned on them for 80 ms with its back 11 cm off the floor, then fell onto it at 1.7 m/s (6.1 body weights at the
+ // balance's 5 ms samples). Nodded 23 degrees, it lies back onto its shirt as the others do; no further: at 30 its
+ // muzzle came within 0.7 cm of its right elbow, which lies back pointing up. The others nod 0.
+ const q0=yawQ(ROLL.dir).multiply(bodyQ((270-ROLL.flex)*DEG)),CHIN=.005,NOD_MAX=35,shapeRows=n=>SHAPE_PRE.map(r=>r[0]===ROLL.start?[r[0],r[1],r[2],r[3],r[4]+n,r[5],r[6]]:r);
+ const chin=(()=>{for(let n=0;n<=NOD_MAX;n++){const s=shapeOf(track(shapeRows(n))(ROLL.start)),h=V(0,.5,0);body.pose(posed({hips:h,hipsQ:q0,...s,...chestOf(h,q0,s.spineQ)},tuckLimbs),'chin');probe.update();
+   let head=Infinity,rest=Infinity;for(let i=0;i<probe.count;i++){const y=probe.y[i];if(probe.boneNames[probe.bone[i]]==='head')head=Math.min(head,y);else rest=Math.min(rest,y);}if(n===0&&head>rest||head-rest>=CHIN)return n;}return NOD_MAX;})();
+ const SHAPE_ROWS=shapeRows(chin),shapePre=track(SHAPE_ROWS),s0=shapeOf(shapePre(ROLL.start));
  // The hips lie where the descent brings them, and the body's lowest point sets only their height: placed by its lowest
  // point instead (the horse's mane crest, most others' shirt on the back, the goat's horns), each body lay up to 19 cm
  // along the wall from the horse's (the goat's 30 cm the other way), the left hand's mark under its shoulder with it, out
@@ -118,10 +127,10 @@ export function createWindowDive(worker,profile={id:'horse'}){
   caughtAt=caught;}
  const last=rollRows.at(-1),pivot=V(...last.contact),ROLL_T=last.t,ROLL_END=ROLL.start+ROLL_T,CATCH_END=ROLL_END,END=CATCH_END+SHAPE_POST.at(-1)[0];
  for(const r of rollRows)r.t+=ROLL.start;
- // The hands keep the floor until the roll turns on the trunk: lying back, the goat's lowest point is its horns, and
- // let go at the roll's start it turned on them alone for 80 ms. The plan, finding a horn tip 70 cm to the side its only
- // support, pulled the hips 13 to 18 cm toward it from 0.3 s before, and the left elbow folded to 155 degrees (the rig
- // allows 150); its roll read 353% of its weight.
+ // The hands keep the floor until the roll turns on the trunk, should a head its neck cannot nod clear carry the roll
+ // first. The goat's horns did, before its chin was tucked: let go at the roll's start, it turned on them alone for
+ // 80 ms; the plan, finding a horn tip 70 cm to the side its only support, pulled the hips 13 to 18 cm toward it from
+ // 0.3 s before, and the left elbow folded to 155 degrees (the rig allows 150); its roll read 353% of its weight.
  const RELEASE=rollRows.find(r=>r.bone!=='head')?.t??ROLL.start;
  // The roll leaves and rejoins the keyed trunk at its own speed: the hips moving as the body turns about the first
  // contact, and as it turns about the seat at the end (all but at rest).
@@ -176,7 +185,7 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const rollRot=spinTrack(uni.map((r,i)=>[r.t,r.q,i===0?axis.clone().multiplyScalar(soft0.w):i===uni.length-1?endSpin:undefined]));
  const rollAt=t=>{let i=0;while(i<rollRows.length-1&&rollRows[i+1].t<t)i++;return {hips:V(...rollPos(t)),hipsQ:rollRot(t),contact:rollRows[i].contact,part:rollRows[i].part};};
  // Spine and head over the whole motion: the pre-roll keys, the roll's fixed curl, then unfolding.
- const SHAPE=[...SHAPE_PRE,[ROLL_END,...SHAPE_PRE.at(-1).slice(1)],...SHAPE_POST.map(([dt,...v])=>[CATCH_END+dt,...v])];
+ const SHAPE=[...SHAPE_ROWS,[ROLL_END,...SHAPE_ROWS.at(-1).slice(1)],...SHAPE_POST.map(([dt,...v])=>[CATCH_END+dt,...v])];
  let shape=track(SHAPE);const shapeAt=t=>shapeOf(shape(clamp(t,0,D)));
  // ---- keyed trunk: before the roll, then from the roll's end up to standing on the tile centre ----
  // The descent hands over at the roll's own spin (the hips moving as the body turns about the contact).
@@ -439,8 +448,14 @@ export function createWindowDive(worker,profile={id:'horse'}){
   // finding the feet alone under a centre of mass 30 cm behind them, dragged it forward until the knees locked and the
   // hips ran away (80 to 210 m/s); and through a roll that ends before its hooves land, which turns about its tail's
   // root: moved by the plan, the skunk's root lifted off the floor and the rig found the body on its shirt and seat,
-  // nothing under the roll's pivot (its roll read 147% of its weight, 108 held)
-  hold:t=>t>=FOOT_DOWN-.05&&t<=T('lean')+.05||caughtAt===null&&t>=ROLL.start+.08&&t<FOOT_DOWN});
+  // nothing under the roll's pivot (its roll read 147% of its weight, 108 held). Through every other roll it keeps near
+  // the authored height until the hooves land (lightly: traversal-balance.js), planned across as the feet are: a body
+  // lying on the floor can slide on it and give a little, but not rise off it. Free, the plan (a filter of about 4 Hz
+  // on the centre of mass) smoothed the roll's landings (2.8 to 4.6 body weights at its 5 ms samples) by riding 0.9 to
+  // 1.1 cm above them, and the goat's seat, the sheep's waistcoat and the pig director's tail's root rose 1.06 to
+  // 1.27 cm off the floor, nothing under them (154, 207 and 195% of their weight); held whole, the plan steered back
+  // onto the roll's path across from 0.4 s before, through the hands' landing (the donkey's 14 to 52%).
+  hold:t=>t>=FOOT_DOWN-.05&&t<=T('lean')+.05||t>=ROLL.start+.08&&t<FOOT_DOWN&&(caughtAt===null||'height')});
  // On the balanced motion the tails are bent clear of the trunk as it now is (they carry no mass in the balance), and
  // the fit's report is then the played motion's. The arms are not fitted again here: moved after the balance, they
  // move the centre of mass it planned (the step in read 44% of the body's weight). Nor is the head (fit.solveHead, as
@@ -452,7 +467,7 @@ export function createWindowDive(worker,profile={id:'horse'}){
  let liftoff=Infinity;bal.times.forEach((t,i)=>{const s=bal.samples[i];if(t>=T('lean')&&t<=T('rise')&&s.hull)liftoff=Math.min(liftoff,inside(s.hull,bal.plan[i][0],bal.plan[i][2]));});
  const KEYS=[...PRE.map(k=>({t:k.t,label:k.label})),{t:ROLL.start,label:'Back to the floor'},{t:(ROLL.start+ROLL_END)/2,label:'Roll'},{t:ROLL_END,label:'Sit up'},{t:T('inR'),label:'Right foot in'},{t:T('inL'),label:'Left foot in'},{t:T('lean'),label:'Lean over the feet'},{t:T('rise'),label:'Rise over the feet'},{t:T('weightR'),label:'Weight on the right foot'},{t:T('leftBack'),label:'Left foot back'},{t:T('weightL'),label:'Weight on the left foot'},{t:T('rightDown'),label:'Right foot back'},{t:T('weightR2'),label:'Weight on the right again'},{t:T('leftDown'),label:'Left foot round'},{t:END,label:'Stand on the tile'}];
  let state=null;
- const api={duration:D,keys:KEYS,body,probe,getup:{pitch:leanFit.pitch,fold:leanFit.fold,feet:[IN[-1].toArray(),IN[1].toArray()],liftoff},roll:{rows:rollRows,dir:ROLL.dir,start:ROLL.start,end:ROLL_END},
+ const api={duration:D,keys:KEYS,body,probe,getup:{pitch:leanFit.pitch,fold:leanFit.fold,feet:[IN[-1].toArray(),IN[1].toArray()],liftoff},roll:{rows:rollRows,dir:ROLL.dir,start:ROLL.start,end:ROLL_END,chin},
   phases:KEYS.slice(0,-1).map((k,i)=>({label:KEYS[i+1].label,start:k.t,end:KEYS[i+1].t})),
   at(t){const time=clamp(t,0,D),P=body.pose(spec(time),time.toFixed(3));body.root.updateMatrixWorld(true);worker.skeleton?.update?.();playTail(time);
    const phase=api.phases.find(p=>time<=p.end)?.label||KEYS.at(-1).label;state={time,phase,com:body.com(P).toArray(),points:Object.fromEntries(Object.entries(P).map(([k,v])=>[k,v.toArray()]))};return state;},
