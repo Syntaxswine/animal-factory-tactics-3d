@@ -14,14 +14,33 @@ export const bodyQ=(pitch=0,roll=0,yaw=0)=>turn('y',yaw).multiply(turn('x',roll)
 // extremum steps the velocity inside one segment (the balance shift turning at a 5 ms key: 2 cm/s, read as 8 m/s^2).
 // accel fixes a key's acceleration ({index: [accelerations]}): a fall from rest keyed v = 0 and a = -g at both ends
 // is exactly the free-fall parabola between them.
-export function track(rows,pins={},{limit=true,accel={}}={}){
+// spline (with limit:false) gives each inner key the slope and acceleration of the C2 cubic spline through the keys
+// (its end slopes the pins', or 0; the end keys keep acceleration 0), so between inner keys the track is that cubic,
+// its acceleration running straight from key to key: it holds nothing between its keys that a reading at them misses.
+// Central slopes are off by a sixth of the jerk times the step squared, and the quintic bends between its keys to meet
+// them: the balance's hips, their jerk about 600 m/s^3 as the horse's weight goes onto its right foot after the window,
+// rippled 2.5 to 3 m/s^2 between their 5 ms keys, and the phantom-wrench rig read 77 to 243 N of phantom force a
+// millisecond past a key whose own reading was at most 14% of its limit. A spline takes no inner pin or acceleration
+// (each would bend it off that cubic) and no limiter.
+export function track(rows,pins={},{limit=true,accel={},spline=false}={}){
  const keys=rows.map(([t,...p])=>({t,p})),n=keys.length;if(n<2)throw Error('A track needs two keys');
- keys.forEach((k,i)=>{const a=keys[i-1],b=keys[i+1];k.v=pins[i]||k.p.map((x,j)=>{if(!a||!b)return 0;const m=(b.p[j]-a.p[j])/(b.t-a.t);if(!limit)return m;const l=(x-a.p[j])/(k.t-a.t),r=(b.p[j]-x)/(b.t-k.t);if(l*r<=0)return 0;return Math.sign(m)*Math.min(Math.abs(m),3*Math.abs(l),3*Math.abs(r));});});
- keys.forEach((k,i)=>{k.a=accel[i]||k.p.map((x,j)=>i&&i<n-1?(keys[i+1].v[j]-keys[i-1].v[j])/(keys[i+1].t-keys[i-1].t):0);});
+ if(spline&&(limit||Object.keys({...pins,...accel}).some(i=>+i>0&&+i<n-1)))throw Error('A spline track takes limit:false and no inner pins or accelerations');
+ const sp=spline?splineKeys(keys,pins[0],pins[n-1]):null;
+ keys.forEach((k,i)=>{const a=keys[i-1],b=keys[i+1];k.v=pins[i]||sp?.v[i]||k.p.map((x,j)=>{if(!a||!b)return 0;const m=(b.p[j]-a.p[j])/(b.t-a.t);if(!limit)return m;const l=(x-a.p[j])/(k.t-a.t),r=(b.p[j]-x)/(b.t-k.t);if(l*r<=0)return 0;return Math.sign(m)*Math.min(Math.abs(m),3*Math.abs(l),3*Math.abs(r));});});
+ keys.forEach((k,i)=>{k.a=accel[i]||(sp&&i&&i<n-1?sp.a[i]:null)||k.p.map((x,j)=>i&&i<n-1?(keys[i+1].v[j]-keys[i-1].v[j])/(keys[i+1].t-keys[i-1].t):0);});
  return t=>{let i=1;while(i<n-1&&t>keys[i].t)i++;const a=keys[i-1],b=keys[i],dt=b.t-a.t,u=clamp((t-a.t)/dt),u2=u*u,u3=u2*u,u4=u3*u,u5=u4*u;
   const h0=1-10*u3+15*u4-6*u5,h1=u-6*u3+8*u4-3*u5,h2=.5*u2-1.5*u3+1.5*u4-.5*u5,h3=.5*u3-u4+.5*u5,h4=-4*u3+7*u4-3*u5,h5=10*u3-15*u4+6*u5;
   return a.p.map((x,j)=>h0*x+h5*b.p[j]+dt*(h1*a.v[j]+h4*b.v[j])+dt*dt*(h2*a.a[j]+h3*b.a[j]));};
 }
+// The C2 cubic spline through the keys with end slopes v0 and vN (0 where not given): each key's slopes and
+// accelerations (the tridiagonal for the inner slopes, solved by elimination; each acceleration from its segment).
+function splineKeys(keys,v0,vN){const n=keys.length,d=keys[0].p.length,h=i=>keys[i+1].t-keys[i].t,v=keys.map(()=>[]),a=keys.map(()=>[]);
+ for(let j=0;j<d;j++){const y=i=>keys[i].p[j],m=Array(n).fill(0),cp=[],dp=[];m[0]=v0?.[j]||0;m[n-1]=vN?.[j]||0;
+  for(let k=0;k<n-2;k++){const i=k+1,h0=h(i-1),h1=h(i);let D=3*(h1*(y(i)-y(i-1))/h0+h0*(y(i+1)-y(i))/h1);if(k===0)D-=h1*m[0];if(k===n-3)D-=h0*m[n-1];
+   const den=2*(h0+h1)-(k?h1*cp[k-1]:0);cp.push(h0/den);dp.push((D-(k?h1*dp[k-1]:0))/den);}
+  for(let k=n-3;k>=0;k--)m[k+1]=dp[k]-(k<n-3?cp[k]*m[k+2]:0);
+  for(let i=0;i<n;i++){v[i][j]=m[i];a[i][j]=i<n-1?6*(y(i+1)-y(i))/h(i)**2-(4*m[i]+2*m[i+1])/h(i):-6*(y(i)-y(i-1))/h(i-1)**2+(2*m[i-1]+4*m[i])/h(i-1);}}
+ return {v,a};}
 export const smooth=x=>{x=clamp(x);return x*x*x*(10+x*(-15+6*x));};
 export const basisQ=(x,y)=>{const Y=V(...y).normalize(),X=V(...x).addScaledVector(Y,-V(...x).dot(Y)).normalize();return Q().setFromRotationMatrix(new T.Matrix4().makeBasis(X,Y,X.clone().cross(Y)));};
 // Palm on a surface: palm normal (+X of the hand) into the surface, wrist (+Y) back along the forearm, fingers
@@ -119,12 +138,15 @@ export function steadyPoles(duration,sample,{step=.005}={}){
    const pn=perp.lengthSq()>1e-12?perp.normalize():cur,ang=smooth((c-.1)/.2)*Math.atan2(cur.clone().cross(pn).dot(axis),clamp(cur.dot(pn),-1,1)),lim=(2+13*smooth((len/l.reach-.9)/.09))*DEG*(dt/.005);
    side=cur.applyAxisAngle(axis,lim*Math.tanh(ang/lim)).normalize();}
   list.push({t,side});}}
- // Softened by a triangle over H samples either side (the ends held), then sampled densely, so plain central slopes: a
- // side starting to turn went at once to its full rate, and a folded knee, a thigh's length off its hip-ankle line, swung
+ // Softened by a triangle over H samples either side (the ends held), then sampled densely, so not limited: a side
+ // starting to turn went at once to its full rate, and a folded knee, a thigh's length off its hip-ankle line, swung
  // from rest to 1 m/s in 10 ms (100 to 170 m/s^2 as a body rose off its seat). Wider (3 or 4 samples), a side that must
- // turn fast turned early: the pig director's knee at the vault's spring (35% of its weight of phantom force).
+ // turn fast turned early: the pig director's knee at the vault's spring (35% of its weight of phantom force). A cubic
+ // spline through the samples (track's spline): with central slopes the sides rippled between their samples, and once
+ // the balance's hips stopped rippling against them, the legs' wiggle read alone (the skunk's window, 308 N at 2.904 s
+ // beside samples at 77 and 68% of the rig's limit).
  const H=2,soft=list=>list.map((r,k)=>{const m=V();for(let j=-H;j<=H;j++)m.addScaledVector(list[clamp(k+j,0,list.length-1)].side,H+1-Math.abs(j));return {t:r.t,side:m.normalize()};});
- const tracks=Object.fromEntries(Object.entries(rows).map(([id,list])=>[id,track(soft(list).map(r=>[r.t,...r.side.toArray()]),{},{limit:false})]));
+ const tracks=Object.fromEntries(Object.entries(rows).map(([id,list])=>[id,track(soft(list).map(r=>[r.t,...r.side.toArray()]),{},{limit:false,spline:true})]));
  return (id,t)=>{const tr=tracks[id];return tr?V(...tr(clamp(t,0,duration))).normalize():null;};
 }
 // Ways round for partial hand and hoof turns. Sampled every step seconds (turnsAt(t) poses the motion and returns the

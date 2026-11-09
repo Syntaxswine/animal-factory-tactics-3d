@@ -6,6 +6,7 @@ import {createBattlePosture} from '../dist/tactics/battle-posture.js';
 import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {naturalTraversal,createNaturalTraversal} from '../dist/tactics/natural-traversal.js';
 import {contactProbe} from '../dist/tactics/traversal-balance.js';
+import {steadyPoles} from '../dist/tactics/traversal-pose.js';
 import {rigKey} from '../dist/tactics/idle-motion.js';
 import {IDLE_FITS} from '../dist/tactics/idle-fits.js';
 // The natural crossings (docs/tactics/NATURAL-TRAVERSAL.md) on every mammal, built the way the battle builds a model.
@@ -48,6 +49,19 @@ test('the hen hops up and down every obstacle, ends on the next tile and is give
   worker.parts.forEach((p,i)=>assert.deepEqual(p.geometry.attributes.position.array,before[i],`${kind}: the ${p.name} is not given back`));
   assert.deepEqual(worker.bones.map(b=>b.position.toArray().concat(b.quaternion.toArray())),bonesBefore,`${kind}: the hen's bones are not given back`);}
 });
+// The limbs' bend sides (traversal-pose.js steadyPoles) are the cubic spline through their samples: a bent leg whose
+// pole turns about its axis at 4 rad/s gives a side that follows it (0.16 degrees behind) and whose acceleration runs
+// straight between its samples (2.7e-4 /s^2 off at most), away from the first and last 50 ms, where the track is held at
+// rest while this pole keeps turning. With central slopes it rippled at the sample period (5.2e-2), the wiggle the
+// balance's hips no longer cancel (splined without it, the skunk's window read 308 N at 2.904 s beside samples at 77
+// and 68% of the phantom-wrench rig's limit).
+test("the limbs' bend sides run straight between their samples",()=>{
+ const W=4,STEP=.005,pole=steadyPoles(1,t=>({leg1:{start:[0,1,0],target:[0,.2,0],pole:[Math.cos(W*t),0,Math.sin(W*t)],reach:.9}}),{step:STEP}),n=Math.round(1/STEP),h=1e-4;
+ const f=t=>pole('leg1',t).toArray(),acc=t=>{const a=f(t-h),b=f(t),c=f(t+h);return a.map((x,i)=>(x-2*b[i]+c[i])/(h*h));};
+ let worst=0;for(let k=10;k<n-10;k++){const a=[.2,.4,.6,.8].map(u=>acc((k+u)*STEP));for(let ax=0;ax<3;ax++)worst=Math.max(worst,Math.abs(a[1][ax]-(2*a[0][ax]+a[3][ax])/3),Math.abs(a[2][ax]-(a[0][ax]+2*a[3][ax])/3));}
+ assert.ok(worst<=3e-3,`the bend side bends ${worst.toExponential(2)} /s^2 off a straight acceleration between its samples`);
+ const s=f(.5),lag=Math.acos(Math.min(1,s[0]*Math.cos(W*.5)+s[2]*Math.sin(W*.5)))/Math.PI*180;assert.ok(lag<1,`the side is ${lag.toFixed(2)} degrees off its pole`);
+});
 for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, ends on the next tile's centre, clears the obstacle and gives the tail back`,()=>{
  const m=model(p),tails=m.worker.parts.filter(x=>/tail/.test(x.name)).map(x=>[x,Float32Array.from(x.geometry.attributes.position.array)]);
  for(const kind of KINDS){
@@ -69,6 +83,21 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    assert.ok(B.times[0]===0&&B.times.every((t,i)=>!i||Math.abs(t-B.times[i-1]-dt)<1e-9)&&B.times.at(-1)>=D&&B.times.at(-1)-D<dt,`${kind}: the balance's samples end at ${B.times.at(-1)} s, not evenly spaced over the crossing (${D} s)`);
    let turn={a:0};for(const x of [.0025,.005,.0075,.01])for(const t of [x,D-x]){const s=B.spin(t),a=s?2*Math.acos(Math.min(1,Math.abs(s.q.w))):0;if(a>turn.a)turn={a,t};}
    assert.ok(turn.a<=3e-5,`${kind}: the balance turns the body ${(1e3*turn.a).toFixed(3)} milliradian at ${turn.t?.toFixed(4)} s, within 10 ms of an end`);}
+  // Between its 5 ms samples the balance's tracks, the hips' whole move (its shift with the offsets the motion adds
+  // under it: the clearance fit's, and the window's sill and seat or the climb's top) and its turn of the body (angle
+  // and pivot), are the cubic spline through them: their acceleration runs straight from sample to sample (away from
+  // the tracks' own ends, which ease from rest), so they hold nothing between samples that the samples miss. With
+  // central slopes the quintic bent between its samples to meet them: as the horse's weight went onto its right foot
+  // after the window, its hips rippled 2.5 to 3 m/s^2 between samples, read as 77 to 243 N of phantom force a
+  // millisecond past a sample whose own reading was at most 14% of the limit.
+  {const B=motion.balance,n=B.times.length,h=1e-4,acc=(f,t)=>{const a=f(t-h),b=f(t),c=f(t+h);return a.map((x,i)=>(x-2*b[i]+c[i])/(h*h));};
+   const turn=t=>{const s=B.spin(t);if(!s)return [0,0,0];const v=[s.q.x,s.q.y,s.q.z],l=Math.hypot(...v);return l<1e-15?[0,0,0]:v.map(x=>x*2*Math.atan2(l,s.q.w)/l);};
+   const turning=k=>B.spin(B.times[k])&&B.spin(B.times[k+1]),unit={hips:'m/s^2',turn:'rad/s^2',pivot:'m/s^2'},seen={hips:0,turn:0,pivot:0};
+   let bend={d:0};for(const [name,f,inner] of [['hips',t=>B.hips(t).toArray(),k=>k>0&&k<n-2],['turn',turn,turning],['pivot',t=>B.spin(t)?.pivot.toArray()??[0,0,0],turning]])
+    for(let k=0;k<n-1;k++){if(!inner(k))continue;seen[name]++;const t0=B.times[k],T=B.times[k+1]-t0,a=[.2,.4,.6,.8].map(u=>acc(f,t0+u*T));
+     for(let ax=0;ax<3;ax++){const d=Math.max(Math.abs(a[1][ax]-(2*a[0][ax]+a[3][ax])/3),Math.abs(a[2][ax]-(a[0][ax]+2*a[3][ax])/3));if(d>bend.d)bend={d,name,t:t0};}}
+   assert.ok(seen.hips>0&&seen.turn>0&&seen.pivot>0,`${kind}: the balance's tracks were not read between samples (${JSON.stringify(seen)})`);
+   assert.ok(bend.d<=.01,`${kind}: the balance's ${bend.name} bends ${bend.d.toFixed(3)} ${unit[bend.name]} off a straight acceleration between its samples at ${bend.t?.toFixed(3)} s`);}
   if(kind==='window'){const lift=100*motion.getup.liftoff,least=LIFT[p.id]??2;
    assert.ok(lift>=least,`window: the centre of mass is ${lift.toFixed(1)} cm inside the feet as the seat lets go (at least ${least})`);
    // A roll that stalls before its hooves land (the skunk's and cow's) turns about its tail's root: as played, the tail

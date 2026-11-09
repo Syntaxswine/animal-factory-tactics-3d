@@ -101,15 +101,16 @@ function clipConvex(P,Q){let out=P;
 // base(t) is a hips offset the motion adds on top ([x,y,z], the clearance fit's): the shift is interpolated together
 // with it and handed back without it, so between samples the hips follow their smooth sum. The shift cancels what
 // the plan smooths out of that offset; apart, each kept its own knots (the fit's 20 ms, the shift's 5 ms), and the
-// onset of a clearance push back from the wall read as 480 N of phantom push between samples.
+// onset of a clearance push back from the wall read as 480 N of phantom push between samples. Their sum is the C2 cubic
+// spline through the samples (track's spline: see there), handed out too as hips (the hips' whole move).
 // A pass moves a sample's hips at most STEP on each axis: a sample whose centre of mass stopped answering the hips (a
 // catch whose hands missed the top) ran 1.3 m away in five passes.
 const GAIN=1.29,STEP=.2;
 export function followCentre(times,plan,comAt,{passes=5,base=null,from=null}={}){
  const shift=from?from.map(x=>x.slice()):times.map(()=>[0,0,0]);let worst=0;
  for(let p=0;p<passes;p++){worst=0;times.forEach((t,i)=>{const c=comAt(t,shift[i]);for(let ax=0;ax<3;ax++){const miss=plan[i][ax]-c[ax];shift[i][ax]+=clamp(GAIN*miss,-STEP,STEP);worst=Math.max(worst,Math.abs(miss));}});}
- const tr=track(times.map((t,i)=>{const b=base?base(t):[0,0,0];return [t,...shift[i].map((x,ax)=>x+b[ax])];}),{},{limit:false});
- return {shift:t=>{const tc=clamp(t,times[0],times.at(-1)),s=V(...tr(tc));return base?s.sub(V(...base(tc))):s;},worst,samples:shift};}
+ const tr=track(times.map((t,i)=>{const b=base?base(t):[0,0,0];return [t,...shift[i].map((x,ax)=>x+b[ax])];}),{},{limit:false,spline:true});
+ return {shift:t=>{const tc=clamp(t,times[0],times.at(-1)),s=V(...tr(tc));return base?s.sub(V(...base(tc))):s;},hips:t=>V(...tr(clamp(t,times[0],times.at(-1)))),worst,samples:shift};}
 // What holds the body at a moment, from its real surface (the phantom-wrench rig's contacts: within 1 cm):
 // - a hand on an obstacle grips (the rig's rule; a hand against a face is no grip, but the climb's landing leans on one);
 // - anything on the floor stands on it (hooves, hands, a back in a roll), and so does a part on an obstacle's top or
@@ -236,7 +237,7 @@ const ONSET=.02,LOST=.06;
 export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base=null,hold=null,dt=.005,rounds=2,plan:options={}}){
  const n=Math.max(2,Math.ceil((duration-1e-9)/dt)+1),times=Array.from({length:n},(_,i)=>Math.abs(i*dt-duration)<1e-9?duration:i*dt);let c0=null,follow=null,samples=null,plan=null,last=null,settled=false,spin=null,w=times.map(()=>[0,0,0]);
  const turnAt=(theta,pivot)=>{let lo=theta.findIndex(x=>x[0]||x[1]||x[2]),hi=theta.findLastIndex(x=>x[0]||x[1]||x[2]);if(lo<0)return null;lo=Math.max(0,lo-1);hi=Math.min(n-1,hi+1);
-  const tr=track(theta.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false}),pv=track(pivot.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false});
+  const tr=track(theta.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false,spline:true}),pv=track(pivot.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false,spline:true});
   return t=>{if(t<=times[lo]||t>=times[hi])return null;const r=V(...tr(t)),a=r.length();return a<1e-12?null:{q:Q().setFromAxisAngle(r.divideScalar(a),a),pivot:V(...pv(t))};};};
  const setShift=s=>setMove(s||spin?{shift:()=>s||V(),spin}:null);
  // each round's schedule as runs ('feet 0.000-0.690, ...'), for the diagnostics

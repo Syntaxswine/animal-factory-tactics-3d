@@ -1928,6 +1928,90 @@ low wall's step-in (the plan puts its pressure point on the hooves' back margin 
 required force read every millisecond (5.3 body weights). The ripple the hips' shift carries between its 5 ms knots.
 phantom-wrench's open contact-step stencil, which may move these numbers again.
 
+### 2026-11-09 (physics balance, twenty-second part): the hips between their samples
+
+The user, of the list each part ends with: "keep iterating until you are done with the fixes". This part takes the
+largest item first.
+
+**What it was.** Read every millisecond, about half of the instants phantom-wrench 1.2.0 flagged between and beside its
+5 ms samples on 30a39408 (1408 of 2722) lay between two samples that both read under half the limit: something the
+samples could not see. Around 4.61 s in the horse's window, as its weight goes onto its right foot, the centre of mass's
+acceleration rippled with a 5 ms period, from 0.8 m/s^2 at each of the balance's samples to 3 a millisecond past it and
+to -1.5 four past; through that phase the rig read 77 to 243 N of phantom force a millisecond past samples whose own
+readings were at most 14% of its limit. The hips carried it. The balance hands them their whole move (its shift with the
+offsets under it: the clearance fit's, and the window's sill and seat or the climb's top) as a track through its 5 ms
+samples, and that track (traversal-pose.js `track`, `{limit:false}`) took each key's slope from its neighbours, a
+central difference that is off by a sixth of the jerk times the step squared, and its acceleration from theirs. Between
+keys the quintic bends to meet those slopes, by about 0.96 times the jerk times the step in acceleration; there the
+hips' jerk is about 600 m/s^3 (their acceleration falls from 14.6 to 2.3 m/s^2 in 20 ms), so 2.5 to 3 m/s^2, the ripple
+measured. The balance's turn of the body (its angle and pivot) was tracked the same way, and so were the bend sides of
+the legs and arms (`steadyPoles`, on a grid of about 5 ms).
+
+**The fix.** `track` takes `{spline:true}` (with `limit:false`): each inner key's slope and acceleration are the C2
+cubic spline's through the keys (its end slopes the pins', or 0), so between inner keys the track is that cubic and its
+acceleration runs straight from key to key; the end keys keep acceleration 0, so the ends stay at rest. It refuses a
+limiter and an inner pin or acceleration, each of which would bend it off that cubic. The balance's hips
+(`followCentre`, which also hands out `hips(t)`, their whole move), its turn and pivot (`turnAt`), and the limbs' bend
+sides use it. Splined without the bend sides (review round 1), the hips stopped cancelling the legs' own wiggle, and the
+skunk's window read 308 N at 2.904 s beside samples at 77 and 68%; with them, 129% at worst in that phase. A cubic comes
+back to 1e-15 and a 7 rad/s sine's acceleration to 0.004 m/s^2 (1.6 with central slopes). On the low wall and the climb,
+whose durations are whole 5 ms steps (so the bend sides' grid is the balance's), the balance's samples (its plan,
+contacts and turning) are the same to the bit, and so are the positions at them; on the windows the bend sides' grid is
+not the balance's, and their spline moves what the balance measures a little (on the horse's window the plan by up to
+0.028 mm, the positions at the samples by up to 0.03 mm and the rate of the angular momentum by up to 0.13 N·m; the
+contacts are the same). The acceleration the rig reads around a sample (over plus or minus 1 ms) is now the spline's. At
+4.61 s the horse's centre of mass accelerates (0.8, -5.4, -1.0) m/s^2 through the whole 5 ms, as at the samples.
+
+phantom-wrench 1.2.0 `--gate` (a frozen copy), 30a39408 -> now; "readings" counts the samples over the limit and the
+instants between and beside them; "at the ends" is within 10 ms of either end:
+
+| | over the limit at the samples | readings | at the ends: readings, worst (% of its limit) |
+|---|---|---|---|
+| window horse | 0.060 s | 211 -> 44 | 0, 99 -> 86% |
+| goat | 0.050 -> 0.070 s | 246 -> 62 | 0, 91 -> 79% |
+| bull | 0.030 -> 0.040 s | 205 -> 41 | 0, 81 -> 77% |
+| cow | 0.065 -> 0.090 s | 214 -> 73 | 0, 84 -> 77% |
+| donkey | 0.060 -> 0.105 s | 240 -> 76 | 0, 96 -> 97% |
+| sheep | 0.060 -> 0.080 s | 226 -> 57 | 1 -> 0, 108 -> 84% |
+| skunk | 0.160 -> 0.195 s | 337 -> 179 | 1, 146 -> 113% |
+| pig foreman | 0.060 -> 0.075 s | 221 -> 53 | 2 -> 0, 117 -> 87% |
+| pig director | 0.075 -> 0.095 s | 257 -> 87 | 1 -> 0, 109 -> 57% |
+| rabbit | 0.080 -> 0.140 s | 277 -> 108 | 2 -> 1, 136 -> 105% |
+| dog | 0.060 -> 0.070 s | 219 -> 56 | 1 -> 0, 103 -> 95% |
+| low wall | 0 s | 1 -> 0: **passes** | 1 -> 0, 105 -> 77% |
+| climb | 0.075 -> 0.095 s | 235 -> 81 | 3 -> 1, 126 -> 115% |
+
+Together 2889 -> 917 readings, 12 -> 3 at the ends, and between two samples that both read under half the limit 1408 ->
+19 instants. Every crossing reads fewer, and each one's worst reading falls (the horse's window 852 -> 289% of the
+limit, the donkey's 1192 -> 259%, the climb's 6295 -> 5193%). **The low wall passes** its phantom rule (worst 56.5 N,
+77% of the limit, at its first sample; between samples 42.5 N, 6 ms in) and, read every millisecond, its required force
+(5.3 -> 3.7 body weights: the 5.3 between samples was this ripple); it still fails the rig's capsule overlap (the left
+upper arm and thigh, 3.8 cm, legs up and out) and point speed (the right ankle at 9.6 m/s in the spring). The time over
+the limit **at the samples** rises, 0.835 -> 1.115 s (167 -> 223 samples: 66 newly over, 10 no longer), on eleven of the
+thirteen crossings: each new one sits within 5 ms of a larger reading the old track had between its samples, which the
+samples now read. They sit where the hips' own samples are rough at the 5 ms scale (on the horse's window 0.6 to 0.9
+m/s^2 of acceleration RMS against their average over two samples either side, 12 at the worst, where the plan and the
+played centre of mass agree to 0.09 mm and carry 0.15 to 0.19 m/s^2): the hips cancel the stepping legs. The left foot
+round (19 of the 66; the horse's left thigh 260 N of short-scale force at 5.82 s), the step in (10), the roll (13) and
+the hands' arrival on the floor (7). `bin/collisions.mjs`: the same deepest points and spans on all thirteen crossings.
+
+`tests/natural-traversal.test.mjs`, on every mammal and crossing: the balance's hips, turn angle and pivot accelerate in
+a straight line between their samples (read at four points in each 5 ms; the tracks' own end segments, which ease from
+rest, aside; at least one segment of each read). With the hips' spline switched off it fails on all eleven mammals (5.2
+to 6.6 m/s^2 off straight), with the turn's off on all eleven (19 to 27 rad/s^2), with the pivot's off on the horse
+(1.06 m/s^2). And `steadyPoles` on its own: a bent leg whose pole turns about its axis at 4 rad/s gives a side that
+follows it and whose acceleration runs straight between its samples (2.7e-4 /s^2 off at most, away from the first and
+last 50 ms, where the track is held at rest while the pole turns on; with central slopes 5.2e-2).
+
+**Left**, from what the samples now read. The steps: each stepping hoof arrives 2.5 cm over its mark and sets down in 40
+ms (90 m/s^2 at the peak; 87 measured), and the window's last step lifts and lands with the leg at 0.99 of its length
+(the hips at 0.79 and 0.80 of the horse's standing height), in the IK's soft zone, as does the climb's last (1.00, its
+hoof landing 100 ms late). The hands to the floor: the right hand's brace on the far face ends at 2.06 s, before the
+left hand lands at 2.08, so it leaves the face as the left arrives (the cow's 464 N at 2.089 s), and the left hand then
+holds the body alone until 2.18. The windows' start: the window's first key gives the hooves no orientation, so they
+start 3.5 to 4 mm into the floor, where the battle stance and the low wall's and climb's first keys have them on it.
+Then the rest of the list as it stood.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
