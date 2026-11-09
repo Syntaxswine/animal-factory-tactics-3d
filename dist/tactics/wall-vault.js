@@ -71,7 +71,7 @@ export function createWallVault(worker,profile={id:'horse'}){
  // runs on the hands' final turns (a palm's angle decides when it first touches), which are then found again.
  // the tails as played (the fit's bend, the base squashed onto the floor), for the balance's contacts too
  const playTail=t=>{const [a,b]=fit.tail(t);tails.set(a*DEG,b*DEG);tails.squash(body.root);};
- const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(LOW_WALL.edge,LOW_WALL.half,[[0,LOW_WALL.top]]),pose:t=>{const P=body.pose(spec(t),'balance');playTail(t);return P;},com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).toArray()});
+ const bal=balanceTraversal({duration:D,probe:contactProbe(worker,tails),obstacles:edgeBoxes(LOW_WALL.edge,LOW_WALL.half,[[0,LOW_WALL.top]]),pose:t=>{const P=body.pose(spec(t),'balance');playTail(t);return P;},com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).toArray()});
  // The tail is fitted again to the balanced motion, and the report taken on it (traversal-fit.js, fit.solveTail).
  balance=bal;fit.solveTail();turns();
  const KEYS=TRUNK.map(k=>({t:k.t,label:k.label}));let state=null;

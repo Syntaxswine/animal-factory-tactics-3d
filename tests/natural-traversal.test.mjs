@@ -5,7 +5,7 @@ import {ANIMAL_MOTION_CATALOG} from '../dist/tactics/animal-motion-catalog.js';
 import {createBattlePosture} from '../dist/tactics/battle-posture.js';
 import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {naturalTraversal,createNaturalTraversal} from '../dist/tactics/natural-traversal.js';
-import {contactProbe} from '../dist/tactics/traversal-balance.js';
+import {contactProbe,supportAt} from '../dist/tactics/traversal-balance.js';
 import {steadyPoles} from '../dist/tactics/traversal-pose.js';
 import {rigKey} from '../dist/tactics/idle-motion.js';
 import {IDLE_FITS} from '../dist/tactics/idle-fits.js';
@@ -55,6 +55,21 @@ test('the hen hops up and down every obstacle, ends on the next tile and is give
 // rest while this pole keeps turning. With central slopes it rippled at the sample period (5.2e-2), the wiggle the
 // balance's hips no longer cancel (splined without it, the skunk's window read 308 N at 2.904 s beside samples at 77
 // and 68% of the phantom-wrench rig's limit).
+// The balance counts no tail beyond its root as support on an obstacle (traversal-balance.js supportAt): the tails are
+// fitted out of the obstacles again after the balance, so the plan must not lean on that support (the skunk's plume on
+// the window's sill at its last step: 102 readings over the limit). A tail's root on an obstacle, and any tail on the
+// floor, still count.
+test('a tail beyond its root holds the body on the floor, not on an obstacle',()=>{
+ const sill={min:[.42,0,-.5],max:[.58,.85,.5]},boot=[[.9,.2],[1.15,.2],[1.15,.33],[.9,.33]].map(([x,z],v)=>({part:0,v,x,y:.001,z}));
+ const probe=pts=>({count:pts.length,names:['work boot 1','skunk tail plume'],part:Uint8Array.from(pts,p=>p.part),vertex:Uint32Array.from(pts,p=>p.v),
+  x:Float32Array.from(pts,p=>p.x),y:Float32Array.from(pts,p=>p.y),z:Float32Array.from(pts,p=>p.z),boneNames:[],bone:new Uint16Array(pts.length),tails:{isRoot:(name,i)=>i<10}});
+ const back=pts=>supportAt(probe([...boot,...pts]),[sill],[.97,.75,.1]).box[0];
+ const near=(a,b)=>Math.abs(a-b)<1e-6;
+ assert.ok(near(back([]),.9),'the boot alone');
+ assert.ok(near(back([{part:1,v:50,x:.57,y:.849,z:.2}]),.9),'a bent tail on the sill holds the body');
+ assert.ok(near(back([{part:1,v:5,x:.57,y:.849,z:.2}]),.57),"a tail's root on the sill does not hold the body");
+ assert.ok(near(back([{part:1,v:50,x:.7,y:.002,z:.2}]),.7),'a tail on the floor does not hold the body');
+});
 test("the limbs' bend sides run straight between their samples",()=>{
  const W=4,STEP=.005,pole=steadyPoles(1,t=>({leg1:{start:[0,1,0],target:[0,.2,0],pole:[Math.cos(W*t),0,Math.sin(W*t)],reach:.9}}),{step:STEP}),n=Math.round(1/STEP),h=1e-4;
  const f=t=>pole('leg1',t).toArray(),acc=t=>{const a=f(t-h),b=f(t),c=f(t+h);return a.map((x,i)=>(x-2*b[i]+c[i])/(h*h));};
@@ -98,6 +113,17 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
      for(let ax=0;ax<3;ax++){const d=Math.max(Math.abs(a[1][ax]-(2*a[0][ax]+a[3][ax])/3),Math.abs(a[2][ax]-(a[0][ax]+2*a[3][ax])/3));if(d>bend.d)bend={d,name,t:t0};}}
    assert.ok(seen.hips>0&&seen.turn>0&&seen.pivot>0,`${kind}: the balance's tracks were not read between samples (${JSON.stringify(seen)})`);
    assert.ok(bend.d<=.01,`${kind}: the balance's ${bend.name} bends ${bend.d.toFixed(3)} ${unit[bend.name]} off a straight acceleration between its samples at ${bend.t?.toFixed(3)} s`);}
+  // A stepping leg keeps its knee bent: through the window's get-up steps and the climb's last two, the stepping leg's
+  // hip-to-ankle distance stays short of the IK's soft reach (traversal-pose.js limb(): within SOFT, 1.5 cm, of straight
+  // it eases the hoof short of its mark; mid-step the reach widens by the step's soft zone, so the bound is exact at the
+  // lift and the landing and lenient between), so the hoof meets its mark. With the hips near standing height the
+  // window's last step lifted and landed at 0.99 of the leg's length (10.7 to 15.0 mm inside that reach at the worst,
+  // over the eleven mammals) and the climb's at 1.00, its hoof landing about 100 ms late.
+  {const STEPS={window:{'Left foot back':-1,'Right foot back':1,'Left foot round':-1},wall:{'Left foot round':-1,'Right foot round':1}}[kind];
+   if(STEPS){const P=n=>bones[n].getWorldPosition(new T.Vector3());let worst={m:Infinity};
+    for(const [label,s] of Object.entries(STEPS)){const ph=motion.phases.find(x=>x.label===label);assert.ok(ph,`${kind}: no "${label}" phase`);
+     for(let t=ph.start;t<=ph.end+1e-9;t+=.005){motion.apply(t/motion.duration);const a=P('thigh'+s),b=P('shin'+s),c=P('hoof'+s),margin=a.distanceTo(b)+b.distanceTo(c)-.015-a.distanceTo(c);if(margin<worst.m)worst={m:margin,t,label};}}
+    assert.ok(worst.m>=0,`${kind}: the stepping leg is ${(-1e3*worst.m).toFixed(1)} mm inside the IK's soft reach in "${worst.label}" at ${worst.t?.toFixed(3)} s`);}}
   if(kind==='window'){const lift=100*motion.getup.liftoff,least=LIFT[p.id]??2;
    assert.ok(lift>=least,`window: the centre of mass is ${lift.toFixed(1)} cm inside the feet as the seat lets go (at least ${least})`);
    // A roll that stalls before its hooves land (the skunk's and cow's) turns about its tail's root: as played, the tail

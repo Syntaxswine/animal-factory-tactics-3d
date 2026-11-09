@@ -258,10 +258,18 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const IN=leanFit.IN,midIn=IN[-1].clone().add(IN[1]).multiplyScalar(.5);
  // LH: the left foot's halfway mark, back toward the tile centre and in from where it stepped in.
  const LH=V(IN[-1].x+(L1.x-IN[-1].x)*.45,ANKLE,IN[-1].z+(L1.z-IN[-1].z)*.55);
+ // Through the steps the hips stay low, the knees bent: from the second step on 0.73 to 0.78 m on the horse (2 to 7 cm
+ // below its standing 0.80, scaled to each body's legs by fitB.stand; the first step at 0.67 to 0.72), rising to standing
+ // at the stand. Kept at 0.75 to 0.80 m, the last step
+ // lifted and landed with the leg at 0.99 of its length, inside the IK's soft reach, and the knee whipped as the hoof left
+ // the floor (the horse's left thigh 260 N of short-scale force at 5.82 s, which the balance's hips cancelled); the pig
+ // foreman's step back reached 0.99 and its last step 1.00. The stepping leg now stays short of that reach, the last step
+ // by 1.3 mm (the dog) to 11.4 mm as it lands (with that key at 0.77 m the horse's by 16, but the stand's rise from there
+ // turned the goat's and bull's bodies 0.031 and 0.033 milliradian within 10 ms of the end, where the test allows 0.03).
  const leanKey=lean('lean',leanFit.pitch),getup=[{...leanKey,p:leanFit.p},{...lean('rise',28),p:V(midIn.x,fitB.stand(.58),midIn.z-.06)},{...lean('weightR',18),p:hipsOver(IN[1],.67,IN[-1])},
-  {...lean('leftBack',12),p:IN[1].clone().add(LH).multiplyScalar(.5).setY(fitB.stand(.72))},{...lean('weightL',8),p:hipsOver(LH,.75,IN[1])},
-  {...lean('rightDown',5),p:LH.clone().add(R1).multiplyScalar(.5).setY(fitB.stand(.78))},{...lean('weightR2',3),p:hipsOver(R1,.79,LH)},
-  {...lean('leftDown',1),p:L1.clone().add(R1).multiplyScalar(.5).setY(fitB.stand(.80))}].map(k=>({...k,q:turned(k.h,k.pitch)}));
+  {...lean('leftBack',12),p:IN[1].clone().add(LH).multiplyScalar(.5).setY(fitB.stand(.72))},{...lean('weightL',8),p:hipsOver(LH,.73,IN[1])},
+  {...lean('rightDown',5),p:LH.clone().add(R1).multiplyScalar(.5).setY(fitB.stand(.75))},{...lean('weightR2',3),p:hipsOver(R1,.73,LH)},
+  {...lean('leftDown',1),p:L1.clone().add(R1).multiplyScalar(.5).setY(fitB.stand(.78))}].map(k=>({...k,q:turned(k.h,k.pitch)}));
  const stand={t:END,p:body.at0('hips').add(V(1,0,0)),q:Q(),h:0,pitch:0};
  const trunkRows=[...preRows,{t:ROLL.start,p:soft0.p,q:soft0.q},catchKey,...getup,stand];
  const iStart=trunkRows.findIndex(r=>r.t===ROLL.start),iEnd=iStart+1;
@@ -443,7 +451,7 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // runs on the hands' final turns (a palm's angle decides when it first touches), which are then found again.
  // the tails as played (the fit's bend, the base squashed onto the floor), for the balance's contacts too
  const playTail=t=>{const [a,b]=fit.tail(t);tails.set(a*DEG,b*DEG);tails.squash(body.root);};
- const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(WINDOW.edge,WINDOW.half,[[0,WINDOW.sill],[WINDOW.top,2]]),pose:t=>{const P=body.pose(spec(t),'balance');playTail(t);return P;},com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onSill(t)).add(onSeat(t)).toArray(),
+ const bal=balanceTraversal({duration:D,probe:contactProbe(worker,tails),obstacles:edgeBoxes(WINDOW.edge,WINDOW.half,[[0,WINDOW.sill],[WINDOW.top,2]]),pose:t=>{const P=body.pose(spec(t),'balance');playTail(t);return P;},com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onSill(t)).add(onSeat(t)).toArray(),
   // sitting, the plan keeps the authored path: its own hips' move lifted the seat off the floor, and the next round,
   // finding the feet alone under a centre of mass 30 cm behind them, dragged it forward until the knees locked and the
   // hips ran away (80 to 210 m/s); and through a roll that ends before its hooves land, which turns about its tail's

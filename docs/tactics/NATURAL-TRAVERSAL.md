@@ -2005,12 +2005,85 @@ last 50 ms, where the track is held at rest while the pole turns on; with centra
 
 **Left**, from what the samples now read. The steps: each stepping hoof arrives 2.5 cm over its mark and sets down in 40
 ms (90 m/s^2 at the peak; 87 measured), and the window's last step lifts and lands with the leg at 0.99 of its length
-(the hips at 0.79 and 0.80 of the horse's standing height), in the IK's soft zone, as does the climb's last (1.00, its
-hoof landing 100 ms late). The hands to the floor: the right hand's brace on the far face ends at 2.06 s, before the
-left hand lands at 2.08, so it leaves the face as the left arrives (the cow's 464 N at 2.089 s), and the left hand then
-holds the body alone until 2.18. The windows' start: the window's first key gives the hooves no orientation, so they
-start 3.5 to 4 mm into the floor, where the battle stance and the low wall's and climb's first keys have them on it.
-Then the rest of the list as it stood.
+(the hips at 0.79 and 0.80 m on the horse, about standing height), in the IK's soft zone, as does the climb's last
+(1.00, its hoof landing 100 ms late). The hands to the floor: the right hand's brace on the far face ends at 2.06 s,
+before the left hand lands at 2.08, so it leaves the face as the left arrives (the cow's 464 N at 2.089 s), and the left
+hand then holds the body alone until 2.18. The windows' start: the window's first key gives the hooves no orientation,
+so they start 3.5 to 4 mm into the floor, where the battle stance and the low wall's and climb's first keys have them on
+it. Then the rest of the list as it stood.
+
+### 2026-11-09 (physics balance, twenty-third part): the steps keep their knees bent
+
+Once the hips stopped rippling between their samples (the twenty-second part), the samples read what the hips had been
+cancelling: the stepping legs. The window's last step (Left foot round) carried 267 of the 917 readings over the limit.
+It lifted (5.594 s on the horse) and landed (5.834 s) with the leg at 0.992 of its length, inside the IK's soft reach
+(traversal-pose.js `limb`: within `SOFT`, 1.5 cm, of straight it eases the end short of its target; with legs of 0.67 m
+that is from 0.978 of the length), the hips at 0.79 and 0.80 m on the horse, about its standing 0.80; its knee whipped
+as the hoof left the floor (97 m/s^2 at 5.635 s). The climb's last step (Right foot round) reached the leg's full
+length, its hoof landing about 100 ms after its key.
+
+**The fix.**
+- The steps keep their knees bent. From the window's second get-up step on the hips stay at 0.73 to 0.78 m on the horse
+  (2 to 7 cm below its standing 0.80, scaled to each body's legs; the first step at 0.67 to 0.72; weight on the left
+  0.75 -> 0.73, right foot down 0.78 -> 0.75, weight on the right again 0.79 -> 0.73, left foot down 0.80 -> 0.78),
+  rising to standing at the stand; through the climb's last two steps at 0.75 to 0.77 m, and over toward the right foot
+  as it lands. Every stepping leg now stays short of the soft reach: the window's last step by 1.3 mm (the dog) to 11.4
+  mm (the pig foreman) as it lands, the climb's by 20 mm or more. With the last key at 0.77 m the window's last step
+  kept 16 mm on the horse, but the stand's rise from there turned the goat's and bull's bodies 0.031 and 0.033
+  milliradian within 10 ms of the end, where the twenty-first part's test allows 0.03 (at 0.78 m, 0.026 and 0.027).
+- No tail holds the body on an obstacle (`supportAt`, a tail point beyond its root on an obstacle is not support). The
+  tails are fitted out of the obstacles again once the balance has moved the body (`fit.solveTail`), so the plan must
+  not count on that support (a support it does not use costs nothing). With the lower hips alone, the skunk's plume lay
+  on the window's sill behind it as it stepped back (0 to 5 mm off the sill before the final tail fit, 34 to 37 mm
+  after): the balance's support reached back to it, and the plan leant on it while the rig found the boot alone, its
+  last step 19 -> 102 readings. Tails on the floor still count: the skunk's stalled roll turns on its plume (leaving
+  every tail point beyond the root out of the support took that roll's sit up 17 -> 43 readings, 464%).
+
+phantom-wrench 1.2.0 `--gate` (a frozen copy), 0bd41f54 -> now; "readings" counts the samples over the limit and the
+instants between and beside them; "at the ends" is within 10 ms of either end:
+
+| | over the limit at the samples | readings | at the ends: readings, worst (% of its limit) |
+|---|---|---|---|
+| window horse | 0.060 -> 0.050 s | 44 -> 35 | 0, 86% |
+| goat | 0.070 -> 0.050 s | 62 -> 45 | 0, 79% |
+| bull | 0.040 -> 0.035 s | 41 -> 29 | 0, 77% |
+| cow | 0.090 -> 0.055 s | 73 -> 53 | 0, 77% |
+| donkey | 0.105 -> 0.090 s | 76 -> 64 | 0, 97% |
+| sheep | 0.080 -> 0.055 s | 57 -> 38 | 0, 84% |
+| skunk | 0.195 -> 0.170 s | 179 -> 160 | 1, 113% |
+| pig foreman | 0.075 -> 0.030 s | 53 -> 16 | 0, 87% |
+| pig director | 0.095 -> 0.040 s | 87 -> 40 | 0, 57 -> 64% |
+| rabbit | 0.140 -> 0.105 s | 108 -> 82 | 1, 105% |
+| dog | 0.070 -> 0.025 s | 56 -> 15 | 0, 95 -> 94% |
+| low wall | 0 s | 0: passes | 0, 77% |
+| climb | 0.095 -> 0.070 s | 81 -> 70 | 1 -> 0, 115 -> 81% |
+
+Together 1.115 -> 0.775 s over the limit at the samples (223 -> 155 samples) and 917 -> 647 readings; every crossing
+that read any reads fewer. By phase: the window's last step 267 -> 24, its right step back 14 -> 0, the weight onto the
+right foot again 12 -> 1, and the climb's last two steps 10 -> 0 (and its turn onto the tile 1 -> 0); the window's stand
+rises 37 -> 46, every one of them in its first 6 ms, as the last step lands (the dog's 157 -> 260%). Each crossing's
+worst reading falls or holds (within a point: the donkey's 259 -> 260%, the sheep's 732 -> 733%). `bin/collisions.mjs`:
+the same deepest points and spans on all thirteen crossings.
+
+`tests/natural-traversal.test.mjs`, on every mammal: through the window's three get-up steps and the climb's last two,
+the stepping leg stays short of the IK's soft reach (the window's last step by 1.3 mm on the dog to 11.4 on the pig
+foreman, the climb's steps by 20 mm or more); and `supportAt` on its own: a tail point beyond its root on the sill adds
+nothing to the support, while a tail's root on the sill and a tail on the floor do. On 0bd41f54 every mammal fails the
+first (the window's last step 10.7 to 15.0 mm inside the reach) and the second fails.
+
+**Not kept.**
+- An 80 ms set-down (each step's over key 0.08 s before its landing rather than 0.04): it shortens the swing. Gated with
+  the hips at 0.75, 0.75 and 0.77, lower hips alone read 39 (the horse's window) and 16 (the pig foreman's), with the 80
+  ms set-down 47 and 47, and the climb 84 -> 88.
+- The window's first key keyed flat (hoof 0, heading 0, as the walls' are). Its hooves start 3.5 to 4 mm into the floor,
+  where the battle stance and the walls' first keys have them on it (0.0 to 0.1 mm), and keyed flat the step in's
+  readings went 50 -> 6. But the clearance fit then left the donkey's head 8.8 cm in the lintel at 0.72 s (the test
+  allows 3; the twenty-first part hit the same 8.8 cm there from another change): the start waits for the long ears.
+
+**Left.** The window's start and the long ears at the lintel (above). The hands to the floor: the right hand's brace on
+the far face ends at 2.06 s, before the left hand lands at 2.08, and the plan leans on the brace until it lets go. The
+roll's landings; the climb's push-off and flight; the vault's capsule overlap and the spring's foot speed; then the rest
+of the list as it stood.
 
 ## Integration
 

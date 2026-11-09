@@ -120,6 +120,12 @@ export function followCentre(times,plan,comAt,{passes=5,base=null,from=null}={})
 //   its plane;
 // - a part against a face, or on a top the body hangs below, is not counted: it can only push, and a plan leaning on
 //   it would ask what it cannot give (the forearms on a wall's edge as the hands come over at a catch);
+// - nor is a tail beyond its root on an obstacle: the tails are fitted out of the obstacles again once the balance has
+//   moved the body (fit.solveTail), so the plan must not count on that support (the skunk's plume lay on the window's
+//   sill behind it as its hips came down for its last step; the plan leant on it, the plume was then fitted 3.4 cm
+//   clear, and the rig found the boot alone under the body: 102 readings over the limit). A support the plan does not
+//   use costs nothing. On the floor a tail counts (the stalled roll turns on the skunk's plume: left out there too,
+//   that roll's sit up read 43 readings, 17 with it);
 // - nothing counted is flight.
 // DRAPE: a body draped over a top with its centre of mass a little below it (over the window's sill as it reaches for
 // the floor, 2 cm below) still lies on it; one hanging well below (the forearms on a wall's edge at a catch, 70 cm) does
@@ -132,16 +138,17 @@ const TOL=.01,DRAPE=.15,ENDS=new WeakMap();
 // played. Read once, as made, the skunk's plume lay straight back along the floor 31 to 58 cm behind its boots
 // through its last steps, where the played one rises clear, and the plan leant on it (its last step read 40% of its
 // weight).
-export const contactProbe=worker=>createSurfaceProbe(worker,{stride:1,live:m=>/tail/.test(m.name)});
-// Per probe point: 1 a hand, 2 a foot, 0 the rest, by its mesh as the rig names them (a sleeve cuff riding the hand
-// bone is not a grip). Read once the probe has been skinned (its part indices are set by update).
-const endsOf=probe=>{let e=ENDS.get(probe);if(!e){const kind=probe.names.map(p=>/hand/.test(p)?1:/hoof|boot|foot|toe/i.test(p)?2:0);e=Uint8Array.from(probe.part,pi=>kind[pi]);ENDS.set(probe,e);}return e;};
+// tails (the motion's createTailBend) tells a tail's root from the rest (see supportAt).
+export const contactProbe=(worker,tails=null)=>Object.assign(createSurfaceProbe(worker,{stride:1,live:m=>/tail/.test(m.name)}),{tails});
+// Per probe point: 1 a hand, 2 a foot, 3 a tail beyond its root, 0 the rest, by its mesh as the rig names them (a
+// sleeve cuff riding the hand bone is not a grip). Read once the probe has been skinned (its part indices are set by update).
+const endsOf=probe=>{let e=ENDS.get(probe);if(!e){const kind=probe.names.map(p=>/hand/.test(p)?1:/hoof|boot|foot|toe/i.test(p)?2:0);e=Uint8Array.from(probe.part,(pi,i)=>probe.tails&&/tail/.test(probe.names[pi])&&!probe.tails.isRoot(probe.names[pi],probe.vertex[i])?3:kind[pi]);ENDS.set(probe,e);}return e;};
 export function supportAt(probe,obstacles,com){
  const over=(x,z)=>obstacles.some(b=>x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]),ends=endsOf(probe),grow=(b,x,z)=>{b[0]=Math.min(b[0],x);b[1]=Math.max(b[1],x);b[2]=Math.min(b[2],z);b[3]=Math.max(b[3],z);};
  let grip=false,top=null;const box=[Infinity,-Infinity,Infinity,-Infinity],onTop=[Infinity,-Infinity,Infinity,-Infinity],pts=[],topPts=[];
  for(let i=0;i<probe.count;i++){const x=probe.x[i],y=probe.y[i],z=probe.z[i],e=ends[i];
   if(y<TOL&&y>-TOL&&!over(x,z)){grow(box,x,z);pts.push([x,z]);continue;}
-  for(const o of obstacles){const dx=Math.max(o.min[0]-x,0,x-o.max[0]),dy=Math.max(o.min[1]-y,0,y-o.max[1]),dz=Math.max(o.min[2]-z,0,z-o.max[2]);if(dx>=TOL||dy>=TOL||dz>=TOL)continue;const inside=!dx&&!dy&&!dz;
+  if(e===3)continue;for(const o of obstacles){const dx=Math.max(o.min[0]-x,0,x-o.max[0]),dy=Math.max(o.min[1]-y,0,y-o.max[1]),dz=Math.max(o.min[2]-z,0,z-o.max[2]);if(dx>=TOL||dy>=TOL||dz>=TOL)continue;const inside=!dx&&!dy&&!dz;
    const d=inside?Math.min(x-o.min[0],o.max[0]-x,y-o.min[1],o.max[1]-y,z-o.min[2],o.max[2]-z):Math.hypot(dx,dy,dz);if(d>=TOL)continue;
    if(e===1)grip=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);topPts.push([x,z]);top=Math.max(top??-Infinity,o.max[1]);}}}
  if(grip)return {kind:'grip'};

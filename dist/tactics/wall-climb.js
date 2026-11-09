@@ -33,9 +33,12 @@ const TRUNK=[
  {t:4.505,label:'Drop',hips:[.84,.86,0],pitch:4,heading:-180,flex:3,nod:-10,turn:-40,stand:true,fall:true},
  {t:4.685,label:'Absorb',hips:[.93,.64,0],pitch:8,heading:-180,flex:6,nod:-5,turn:-40,stand:true},
  {t:4.95,label:'Weight on the right foot',hips:[.91,.74,-.10],pitch:4,heading:-200,flex:3,turn:-30,stand:true},
- {t:5.27,label:'Left foot round',hips:[.95,.79,-.12],heading:-270,turn:-10,stand:true},
- {t:5.52,label:'Weight on the left foot',hips:[1.0,.80,-.18],heading:-300,stand:true},
- {t:5.84,label:'Right foot round',hips:[1.0,.80,-.15],heading:-345,stand:true},
+ // The last two steps keep the knees bent (the hips at 0.75 to 0.77 m, and over toward the right foot as it lands): at
+ // full standing height, the hips over the left foot, the right leg reached its full length and its hoof landed about
+ // 100 ms late, the IK easing it short of its mark; the stepping legs now stay 20 mm or more short of the IK's soft reach.
+ {t:5.27,label:'Left foot round',hips:[.95,.75,-.12],heading:-270,turn:-10,stand:true},
+ {t:5.52,label:'Weight on the left foot',hips:[1.0,.77,-.18],heading:-300,stand:true},
+ {t:5.84,label:'Right foot round',hips:[1.0,.75,-.05],heading:-345,stand:true},
  {t:6.1,label:'Turn onto the tile',hips:[1,.80,0],heading:-360,stand:true},
 ];
 export function createWallClimb(worker,profile={id:'horse'}){
@@ -168,7 +171,7 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // on the top, the plan keeps the authored path (hold): its own hips' move lifted the seat off it.
  // the tails as played (the fit's bend, the base squashed onto the floor), for the balance's contacts too
  const playTail=t=>{const [a,b]=fit.tail(t);tails.set(a*DEG,b*DEG);tails.squash(body.root);};
- const bal=balanceTraversal({duration:D,probe:contactProbe(worker),obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),pose:t=>{const P=body.pose(spec(t),'balance');playTail(t);return P;},com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onTop?onTop(t):V()).toArray(),
+ const bal=balanceTraversal({duration:D,probe:contactProbe(worker,tails),obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),pose:t=>{const P=body.pose(spec(t),'balance');playTail(t);return P;},com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onTop?onTop(t):V()).toArray(),
   hold:deep?t=>t>=TOP_BAND[0]&&t<=TOP_BAND[1]:null});
  // The head and tail are fitted again to the balanced motion, the head held through the flights (traversal-fit.js,
  // fit.solveHead and fit.solveTail), and the report taken on it.
