@@ -288,7 +288,11 @@ export function createWindowDive(worker,profile={id:'horse'}){
   const sp=balance?.spin?.(t);if(sp){hipsQ=sp.q.clone().multiply(hipsQ);hips=hips.clone().sub(sp.pivot).applyQuaternion(sp.q).add(sp.pivot);}
   return {hips,hipsQ,...s,headQ,...chestOf(hips,hipsQ,s.spineQ)};}
  // ---- limbs: world targets where planted, the tuck through the roll ----
- const rest={leg:s=>({f:'world',p:body.at0('hoof'+s).toArray(),plant:true}),arm:s=>({f:'chest',p:restWrist(s)})};
+ // The start is the battle's own stance: each hoof where the battle posture has it, flat and facing along the crossing
+ // (hoof 0, heading 0), as the low wall's and the climb's first keys have theirs, which stand them on the floor. Given
+ // no orientation, the window's started in it (the left hoof 2.5 mm on the dog to 9.5 on the pig foreman, 4.0 on the
+ // horse), and the clearance fit lifted them out under load as the step in began.
+ const rest={leg:s=>({f:'world',p:body.at0('hoof'+s).toArray(),hoof:0,heading:0,plant:true}),arm:s=>({f:'chest',p:restWrist(s)})};
  // Hands are placed from where the shoulders really are at that key, so the short arms are never asked past
  // their reach: dangling toward a direction, or flat on the floor near below the shoulder.
  const REACH=s=>body.L[s].upper+body.L[s].fore,shoulderAt=(t,s)=>{const tr=trunkAt(t);return tr.chest.clone().add(body.offsets.shoulder[s].clone().applyQuaternion(tr.chestQ));};
@@ -467,8 +471,11 @@ export function createWindowDive(worker,profile={id:'horse'}){
  // On the balanced motion the tails are bent clear of the trunk as it now is (they carry no mass in the balance), and
  // the fit's report is then the played motion's. The arms are not fitted again here: moved after the balance, they
  // move the centre of mass it planned (the step in read 44% of the body's weight). Nor is the head (fit.solveHead, as
- // the climb's is): held through the hop, a turn chosen for the donkey's ears at one moment of it took them 8.3 cm
- // into the lintel at another (2.8 as fitted before the balance), and no turn clears the goat's horns in the roll.
+ // the climb's is): it chooses every turn again on the balanced motion, which the balance planned with the turns as
+ // they were. It cleared the donkey's and rabbit's ears off the floor as the body reached down for it (2.1 and 1.3 cm
+ // in at 1.92 s), but took the horse's, goat's, bull's and cow's windows from 159 readings over phantom-wrench's limit
+ // to 252 on the copy before the plan's end rows were met (the goat's back to the floor 70 where it had none, 662% of
+ // the limit at the worst).
  balance=bal;fit.solveTail();turns();
  // The get-up's premise, read on the balance as planned: the centre of mass's least depth inside what holds it (m,
  // negative outside) from the lean until the body is up, the seat letting go between (the traversal test reads it).

@@ -2085,6 +2085,199 @@ the far face ends at 2.06 s, before the left hand lands at 2.08, and the plan le
 roll's landings; the climb's push-off and flight; the vault's capsule overlap and the spring's foot speed; then the rest
 of the list as it stood.
 
+### 2026-11-10 (physics balance, twenty-fourth part): the head clears the lintel, and the window starts on the floor
+
+The twenty-third part left the window's start: its first key gave the hooves no orientation, so they started in the
+floor, and keyed flat the donkey's head went 8.8 cm into the lintel at 0.72 s. The clearance fit itself left it there.
+Its report taken before the balance read the donkey's ears 8.7 cm in at 0.72 s with either start. The 2.8 cm the window
+read as played was the balance's doing: on the tilted start the hooves' support was smaller, and the balance moved the
+hips 9 to 11 cm back through 0.5 to 0.72 s, which held the head out of the opening. Keyed flat, the hips stayed put.
+
+The head search chose one turn per stretch of contact, judged on the stretch alone. Its eases (`hold()`, 0.1 s either
+side) were checked afterwards: a moment an ease carried into contact joined the stretch, which was solved again, up to
+three passes. On the donkey's window the passes chased the contact. First chin up 30 degrees for 0.84 to 0.96 s, whose
+ease carried the head into contact at 0.98 to 1.02 s. Then a 30 degree nod down from 0.84 to 1.02, whose ease carried
+it in at 0.78 to 0.82. Then a 40 degree nod from 0.78, whose ease tipped the ears forward into the lintel's face at 0.72
+to 0.74, and the passes ran out. (The fit reads a point under a lintel by how far it must duck, so the ears read 8.7 cm
+in while their tips were 2 to 3 cm past the face.)
+
+**The fix.**
+- Each turn and bow is judged on every sample it sets, posed as the motion will play it: the stretch, a flight it is
+  held through, and its eases, as `hold()` eases and softens them, and scaled as the motion frees the head and trunk.
+  Where it meets the stretch before, the samples between are judged with that stretch's chosen turn; where it meets
+  the next, the next stretch's part is taken as its own until that one chooses, and the next stretch's samples are
+  left to it. The donkey's first pass now finds a turn that clears all of it: the head tilted 60 degrees to the side,
+  its ears under the lintel, from 0.84 to 0.96 s, eased in and out over 0.1 s (a nod down sweeps the ears into the
+  face as it comes in). Every window's fit settles in one pass, with nothing left in contact at its stretches.
+- The window starts on the floor: its first key holds the hooves flat and facing along the crossing, as the walls'
+  first keys do. Given no orientation they started in it (the left hoof 2.5 mm on the dog to 9.5 on the pig foreman,
+  4.0 on the horse) and turned off the battle stance (9.9 degrees on every mammal but the pig foreman, 23.4 on it), and
+  the clearance fit lifted them out under load as the step in began.
+- The balance's plan is at rest at either end, as the battle's stance is: the first sample on the authored path, with
+  no velocity and no acceleration there, the first interval a cubic from rest (c1 = (7 c0 + c2) / 8); at the end the
+  same into the last sample before the crossing's end, the last sample (at the end or up to 5 ms past it) held there
+  too. It pinned its first two samples equal (and its last two), so it stood still for 5 ms and then took its first
+  acceleration all at once, and the hips' track through it overshot that step by about 40%. Standing flat, on the
+  goat's window that plan accelerated the centre of mass 2.7 m/s^2 sideways and 1.2 forward from the start, its
+  pressure point asked to keep a centimetre inside the feet's outline at the heels (it lay 0.6 cm inside there; with
+  the hooves tilted it asked 2.6 sideways and 2.1 forward, and lay 1.0 cm outside); played, the overshoot carried it
+  past the heels. With the hooves tilted the centre of mass went 3.7 sideways at 5 ms (58 N of phantom force, 79%
+  of the limit); standing flat, 3.9 (76 N, 104%), and four of the eight windows gated so read over the limit there
+  (the goat's, bull's, cow's and sheep's, 103 to 107%).
+- Those end rows are met exactly: `boxedPath` takes a row's `stiff`, a multiple of its step size (OSQP gives equality
+  rows 1000 times the rest), and the plan's end rows take 1000 (its flights' rows keep the step they had). The
+  programme's iterations stop at 1500, and on the cross plan (x and z, coupled over the whole crossing) they stopped
+  with its rows met to about 1e-5, the end rows among them. Kept at the step the other rows have, the end rows miss by
+  up to 74 micrometres on the windows (the rabbit's) and 277 on the climbs (the rabbit's), so the plan does not start
+  from rest: as the test reads the start, the rabbit's window's centre of mass starts at 0.51 m/s^2 (1.65 a millisecond
+  in; the dog's 0.44 and 1.47), its climb's at 1.80. Stiff, every crossing's end rows are met within 0.30 micrometres
+  (the rabbit's climb; its window and the dog's within 0.08), the test holding them to one. The centre of mass starts
+  under 0.1 m/s^2 and, as the test reads it over its last millisecond, ends under 0.3 mm/s (the rabbit's window:
+  0.19 mm/s over its last 0.2 ms; with the stiffness off, 0.91 as the test reads it). Resting at the last sample
+  instead, up to 5 ms past the end (the copy before the end rows were met), the rabbit's moved 5.8 mm/s at the end over
+  0.2 ms (3.4 with the pins). The first interval's ramp still overshoots the plan's first acceleration, by up to a third
+  (the goat's 3.4 sideways at 5 ms against its 2.7; the horse's low wall 32%).
+- So the plan asks the feet's outline in by 4 cm (not 1) on the rows of samples 1 to 4 and n-5 to n-2 (20 ms at either
+  end): there the overshoot carried the pressure point past the heels, and the dog's start read two readings over the
+  limit, the worst 130% (96 N at 5 ms; 61 N on 26d37e89). Asked in 4 cm (the one setting gated, on all thirteen
+  crossings, and on the other twenty after review: below), the dog's start reads 70 N (95%), and no crossing's worst
+  reading within 10 ms of either end rises but the dog's window's (its start 61 -> 70 N, 83 -> 95% of the limit; its end
+  94 -> 25%): the horse's window 86 -> 25%, the climb's 81 -> 25%. Against the plan's own centimetre, on the fifteen
+  crossings gated both ways, the 4 cm takes 2 readings off the thirteen (the dog's window start, 130 -> 95%), adds 34 to
+  the bull's and cow's climbs (their crouch over the limit, and three each at the top; at 1 cm they read as on 26d37e89:
+  below), and lowers every crossing's worst reading within 10 ms of either end by 26 to 36 points (the horse's window
+  55 -> 25%, the bull's climb 57 -> 21%). The plan does not meet those rows: it stops with its rows met to about 1e-5,
+  which on a pressure point's row is centimetres (its own pressure point at the dog's sample 1 lies 3.3 cm outside the
+  outline, 6.0 without the margin). The margin works by nudging that solve, so only the gate sees it: the test suite
+  passes without it, and the dog's window and the bull's and cow's climbs are to be gated again after any change to the
+  plan, its iterations or the hips' track (phantom-wrench 1.2.0, from its own folder: `TR_ROOT=<this checkout>
+  TR_KIND=window TR_SPECIES=dog node bin/phantom-wrench.mjs rigs/traversal.mjs --gate`, and `TR_KIND=wall` with
+  `TR_SPECIES=bull` and `cow`; the rig's default root is another checkout. The gate fails those crossings either way, on
+  their readings elsewhere: read the dog's window's ends, which should hold no reading over the limit within 10 ms of
+  either end, the start's worst 95%, 70 N, and the climbs' crouch, 12 and 16 readings at 129%). Those rows made stiff
+  too, the plan might meet them and a test check them: not tried.
+
+phantom-wrench 1.2.0 `--gate` (a frozen copy), 26d37e89 -> now; "readings" counts the samples over the limit and the
+instants between and beside them; "at the ends" is within 10 ms of either end:
+
+| | over the limit at the samples | readings | at the ends: readings, worst (% of its limit) |
+|---|---|---|---|
+| window horse | 0.050 -> 0.040 s | 35 -> 34 | 0, 86 -> 25% |
+| goat | 0.050 -> 0.045 s | 45 -> 44 | 0, 79 -> 43% |
+| bull | 0.035 s | 29 | 0, 77 -> 42% |
+| cow | 0.055 s | 53 | 0, 77 -> 42% |
+| donkey | 0.090 -> 0.080 s | 64 -> 60 | 0, 97 -> 21% |
+| sheep | 0.055 -> 0.050 s | 38 -> 37 | 0, 84 -> 45% |
+| skunk | 0.170 -> 0.125 s | 160 -> 126 | 1 -> 0, 113 -> 22% |
+| pig foreman | 0.030 -> 0.020 s | 16 -> 11 | 0, 87 -> 10% |
+| pig director | 0.040 s | 40 | 0, 64 -> 8% |
+| rabbit | 0.105 -> 0.090 s | 82 -> 79 | 1 -> 0, 105 -> 54% |
+| dog | 0.025 s | 15 -> 16 | 0, 94 -> 95% |
+| low wall | 0 s | 0: passes | 0, 77 -> 23% |
+| climb | 0.070 s | 70 | 0, 81 -> 25% |
+
+Together 0.775 -> 0.675 s over the limit at the samples (155 -> 135 samples) and 647 -> 599 readings; at the ends
+2 -> 0. The readings' change is all the window's step in, 50 readings -> none, but for one more on the horse's hands
+to the floor (6, at the same worst, 136%) and one more as the dog's weight goes onto its right foot again (2, 113 ->
+117%); the goat's hands to the floor read their worst higher (236 -> 248%). Of the 20 fewer samples over the limit,
+19 are the step in and one the horse's reach for the floor (2 -> 1, its 9 readings as before).
+`bin/collisions.mjs`: the same deepest points and spans on eleven crossings; the donkey's deepest 2.9 -> 2.8 cm (its
+left forearm and hand on the sill at 1.29 s), and on the skunk one more span deeper than 2 cm: its plume 2.5 cm in
+the lintel for one 10 ms frame at 0.93 s (the tail is planned after the balance on the fit's 20 ms samples, and the
+balance's path moved). Frame by frame (every 10 ms) the rabbit's ears no longer reach the lintel (3.1 cm in at
+0.82 s on 26d37e89), and its right foot lies up to 0.7 cm deeper in the sill from 0.46 to 0.76 s (1.7 to 1.9 cm at
+0.69 to 0.72 s, where 26d37e89 had 1.0 to 1.2; at its deepest 2.6 cm, as before).
+
+Gated after review on the other ten mammals' low walls and climbs as well (the same instrument, copies and reading), the
+low walls read 5 -> 2 readings: the dog's start read 3 on 26d37e89 (106% of the limit at the worst) and reads none now
+(63%), the pig director's two instants are as before, and none reads more than 31% within 10 ms of either end (up to
+103% before). The climbs read 2.48 -> 2.53 s over the limit at the samples and 2434 -> 2476 readings, their push-off and
+top up to 64 times the limit as before. Of the 42 more, 28 are the bull's and cow's crouch (0 -> 12 and 0 -> 16, 129% of
+the limit at 0.625 s); the other 14 come a few at a time in the push-off, the top and the catch (the dog's catch at its
+worst 825 -> 1222%) and the rabbit's left foot round (3 -> 6, 171 -> 236%), less one each in the sheep's push-off and
+the dog's step in. At their ends the rabbit's climb still reads at its start, 3 readings within 10 ms (2 before; its
+worst 248 -> 136%), and the dog's 1 -> 0 (128 -> 75%); within 25 ms of an end, 10 readings against 12. At the plan's
+1500 iterations the crouch is the end margin's doing. With the margin at the plan's own centimetre (in memory, on the
+final copy) the bull's crouch reads 5.0% of body weight at the worst, at the samples and every instant between (6.2 on
+26d37e89) and its climb as on 26d37e89 (0.135 s over the limit at the samples in 5 spans, and 106 instants between); the
+cow's likewise (5.9% at the worst, 7.4 on 26d37e89, its climb as on 26d37e89); with the stiffness off, the bull's reads
+as with it. Asked in only over the first and last 20 ms, the margin moves the bull's climb's plan by up to 3.9 mm
+through its first 0.65 s (the most at 0.37 s, in the step in), its rows no better met for it (its residual 1.2e-5 either
+way), and its acceleration by up to 1.2 m/s^2 (1.1 at 0.63 s; at 0.625 s the crouch reads 12.9% of body weight, 4.6 at
+1 cm and 6.1 on 26d37e89). Solved further (the bull's climb at 100000 iterations, its rows met to 5.0e-6 and its
+push-off's pressure point 5.5 cm outside the outline where it was 38), the margin moves the plan as far (3.8 mm at
+0.36 s) and no phase reads differently for it, but the crouch reads over the limit with either margin (24 readings, 143
+to 144%), and the climb reads 326 readings either way against 148 and 133 at 1500 iterations (the top 47 -> 178, the
+catch 0 -> 35); the margin still lowers its ends' worst (60.5 -> 33.1% within 10 ms). The cow's climb, solved as far,
+reads its crouch over the limit with either margin too (32 readings, 141 to 142%), and 284 and 285 readings in all
+against 108 and 89 (its push-off 43 with the margin, 44 without). The crouch sits at the limit's edge: 1500 iterations
+stop on its near side with the margin at a centimetre, and solving the plan further is no way out of it.
+`bin/collisions.mjs` reads the same on seventeen of the twenty; the bull's low wall 4.0 -> 3.9 cm at its deepest, the
+rabbit's climb one span fewer deeper than 2 cm, and the sheep's climb's deepest point 10 ms earlier.
+
+`tests/natural-traversal.test.mjs`, on every mammal and crossing: both ends stand on the floor as the battle stance does
+(each hoof's lowest surface point within a millimetre of it, each hoof turned within half a degree of the stance; on
+26d37e89 every mammal's window fails); the balance's plan meets its end rows within a micrometre; the centre of mass is
+at rest at both ends (under 0.3 m/s^2 and 1 mm/s; on 26d37e89 up to 3.76 m/s^2 at the end, the bull's window), and
+within 10 ms of either end its acceleration overshoots the plan's next to that end by at most 35%, give or take
+0.1 m/s^2 (by up to 32%, the horse's low wall; with the first two samples pinned equal, 26 of the 33 crossings on
+26d37e89 fail it, and every window with the hooves flat); and the donkey's and rabbit's heads, allowed 3 and 6 cm for
+their ears at the lintel, are now held to 2.5 and 2 for their brush with the floor as the body reaches down for it (2.1
+and 1.3 cm at 1.92 s; at the lintel on 26d37e89, 2.8 and 5.2). With the stiffness off, the end rows miss by more than a
+micrometre on 16 of the 33 crossings, failing the test on six of the eleven mammals: the windows' start rows by up to 74
+micrometres (the rabbit's; the dog's 63, the sheep's 15, the goat's 13, the bull's and cow's 8), the climbs' by up to
+277 (the rabbit's; the dog's 167) and the low walls' by up to 24 (the dog's). None of it guards the outline asked in at
+the ends: the suite passes without it, where the dog's window starts at 130%.
+
+**Not kept.**
+- Judging each turn on its eases by `hold()`'s weights alone, without the softening where two stretches meet: it
+  cleared the lintel, but the goat's head fitted again after the balance (below) took two turns that met at 2.10 s,
+  and their softened join left its horns 1.8 cm in the wall's far face.
+- Judging each turn on the next stretch's first samples too, that stretch's turn taken as none: those samples stayed in
+  contact whatever the turn, so the worst never cleared and the choice was left to a hair's difference. The bull's
+  window took the far corner of the search for 1.88 to 2.10 s (nod 40, tilt -60, turn 48 degrees, bowed -5, and a trunk
+  push), although the next stretch's own turn cleared everything: its hands to the floor went from 10 readings to 42
+  (977% of the limit), the cow's from 36 to 57 (1721%), and the cow's head went 3.2 cm into its left upper arm at
+  2.05 s.
+- The window's head fitted again after the balance (`fit.solveHead`, as the climb's is). It clears the donkey's and
+  rabbit's ears off the floor as the body reaches down for it, but it chooses every turn again on the balanced motion,
+  which the balance planned with the turns as they were: on the copy before the plan's end rows were met exactly, the
+  horse's, goat's, bull's and cow's windows went from 159 readings to 252 (the goat's back to the floor 70 where it had
+  none, 662% of the limit at the worst, and its hands to the floor's worst 248 -> 795%; the horse's hands to the floor
+  5 -> 26; the cow's back to the floor 0 -> 5, 128%; the bull's unchanged).
+- The hips' track ending on the spline's own acceleration (a `splineEnds` option for `track`), on the reading that the
+  shift had to cancel the authored motion's acceleration at the ends: it has next to none there (0.02 m/s^2 at the
+  start, 0.05 at the end). What it did was make up for the unmet end rows (the rabbit's start 132 -> 87% of the limit,
+  the dog's 121 -> 103%); with the rows met, the track's end keys ease from rest as before.
+- For the first interval's overshoot, with the end rows met: the jerk weighed 10, 100 and 1000 times over within
+  0.05 s of either end (the dog's start 3.2 to 3.3 m/s^2 sideways at 5 ms: a constant acceleration from the first
+  sample after the rest has no third difference in any jerk row, so the ramp out of rest is never weighed); and that
+  ramp weighed, as the jerk out of the stance's rest (the acceleration at sample 1, and at the last before the end's
+  rest): at the jerk's own weight it moved the dog's 3.23 to 3.17, and weighed 30 to 3000 times it moved the overshoot
+  to the next knots, where it rang (the dog's sideways acceleration +0.5 to +0.8 m/s^2 at 5 ms, then 3.3 at 11 ms; at
+  30 times, its forward 1.7 -> 2.0 at 5 ms; gated, the dog's start 131% at 10 times and 136% at 30).
+- These, measured while the cross plan's end rows were still met only as far as its iterations reached (so they may
+  read differently now): a parabola from rest at the plan's ends (no velocity, the acceleration free), whose track's
+  first segment wobbled after it (3.0, 3.6, 3.0, 2.3 m/s^2 at 1 to 4 ms on the goat); three samples pinned at rest,
+  which moved the step and its overshoot to 10 ms.
+
+**Left.** The first interval's overshoot itself, which the outline asked in at the ends only steers around (the plan's
+own jerk lets it take its first acceleration within 5 ms), and the ends' margin where it is missed most, on the rabbit's
+and dog's climbs: their plans' pressure point at sample 4 lies 7.2 and 10.4 cm outside the outline (9.7 and 13.2 without
+the margin), and the gate reads their starts over the limit (5 readings each within 25 ms, 136 and 148%); the bull's and
+cow's crouch on the climb, at the limit's edge (over it with the margin at 4 cm, and with either margin when the plan is
+solved further, which reads both climbs worse); margins of 2 and 3 cm, untried; the ears' floor brush, for which a local
+fit of the head after the balance (only where the played head touches, keeping the planned turns elsewhere) is the
+untried way; the rabbit's right foot up to 0.7 cm deeper in the sill at 0.46 to 0.76 s; the skunk's plume frame in the
+lintel (the tail is planned with its steps' midpoints checked at the average of their bends, which the played track does
+not follow). And every plan's other rows, met only as far as the iterations reach (about 1e-5 in their unit-norm
+measure, which on the pressure point's rows is centimetres): before the end margin, the rabbit's plan left its pressure
+point 9.6 cm outside the outline at 2.155 s, with 245 rows more than 0.96 cm out, where its hands to the floor read 105
+to 165% of the limit; and raising the iterations to 20000 moved the rabbit's plan elsewhere (its centre of mass's worst
+miss of the plan 1.65 -> 9.73 mm, on the copy before the end rows were met). Then the hands to the floor; the roll's
+landings; the climb's push-off; the vault's capsule overlap and the spring's foot speed; and the rest of the list as it
+stood.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

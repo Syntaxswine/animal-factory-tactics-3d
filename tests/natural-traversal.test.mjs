@@ -6,7 +6,7 @@ import {createBattlePosture} from '../dist/tactics/battle-posture.js';
 import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {naturalTraversal,createNaturalTraversal} from '../dist/tactics/natural-traversal.js';
 import {contactProbe,supportAt} from '../dist/tactics/traversal-balance.js';
-import {steadyPoles} from '../dist/tactics/traversal-pose.js';
+import {steadyPoles,createSurfaceProbe} from '../dist/tactics/traversal-pose.js';
 import {rigKey} from '../dist/tactics/idle-motion.js';
 import {IDLE_FITS} from '../dist/tactics/idle-fits.js';
 // The natural crossings (docs/tactics/NATURAL-TRAVERSAL.md) on every mammal, built the way the battle builds a model.
@@ -19,7 +19,9 @@ const crossing=kind=>({id:1,unitId:1,kind,from:{x:0,y:0,z:0},to:{x:1,y:0,z:0}});
 // Read before the balance (to d3fec1f), the report missed the window's tails, the climb's heads 5 to 8 cm in its wall
 // and the pigs 25 to 40 cm in its floor; read here, it found the pigs' bellies 8 to 16 cm through the top in the straddle.
 const LEFT={'window/pig-foreman/trunk':2,'window/pig-director/trunk':3, // the belly on the sill as the body tips over
- 'window/donkey/head':3,'window/rabbit/head':6, // long ears graze the lintel at the hop for ~20 ms
+ // long ears touch the floor as the body reaches down for it (2.1 and 1.3 cm at 1.92 s); allowed 3 and 6 at the lintel
+ // (2.8 and 5.2 cm in) until the head's turns were judged on everything they move
+ 'window/donkey/head':2.5,'window/rabbit/head':2,
  'window/skunk/trunk':2, // the plume's root, which rides the hips, on the floor in the roll
  'window/dog/trunk':2,'wall/dog/trunk':2, // the dog's utility pouch on the sill's far edge, and on the face in the hang
  'low-wall/pig-director/trunk':2, // the waistcoat on the wall's near edge at the spring
@@ -80,12 +82,22 @@ test("the limbs' bend sides run straight between their samples",()=>{
 for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, ends on the next tile's centre, clears the obstacle and gives the tail back`,()=>{
  const m=model(p),tails=m.worker.parts.filter(x=>/tail/.test(x.name)).map(x=>[x,Float32Array.from(x.geometry.attributes.position.array)]);
  for(const kind of KINDS){
+  const hoofQ=()=>{m.worker.root?.updateMatrixWorld?.(true);return [-1,1].map(s=>m.worker.bones.find(b=>b.name==='hoof'+s).getWorldQuaternion(new T.Quaternion()));},stanceQ=hoofQ();
   const motion=createNaturalTraversal(m,crossing(kind),{species:p.id}),bones=Object.fromEntries(m.worker.bones.map(b=>[b.name,b]));
   const at=progress=>{motion.apply(progress);return n=>bones[n].getWorldPosition(bones[n].position.clone()).toArray();};
   const pose0=at(0),hips=pose0('hips');assert.ok(Math.abs(hips[0])<.01&&Math.abs(hips[2])<.01,`${kind} starts at x ${hips[0]}, z ${hips[2]}`);
   const rest={hips:pose0('hips'),feet:[-1,1].map(s=>pose0('hoof'+s))},pose1=at(1);
   for(const [a,b]of [[pose1('hips'),rest.hips],...[-1,1].map((s,i)=>[pose1('hoof'+s),rest.feet[i]])])
    assert.ok(Math.abs(a[0]-b[0]-1)<.01&&Math.abs(a[1]-b[1])<.01&&Math.abs(a[2]-b[2])<.01,`${kind} ends at ${a.map(x=>x.toFixed(3))}, not its stance moved one tile (${b.map(x=>x.toFixed(3))})`);
+  // Both ends stand on the floor as the battle stance does: each hoof's lowest surface point within a millimetre of it,
+  // and each hoof turned as the stance has it, within half a degree. Keyed with no orientation, the window's first
+  // frame held the hooves in the floor (the left 2.5 mm on the dog to 9.5 on the pig foreman) and turned them off the
+  // stance (9.9 degrees on every mammal but the pig foreman, 23.4 on it), and the clearance fit lifted them out under
+  // load as the step in began.
+  {const pr=createSurfaceProbe(m.worker,{stride:1});for(const progress of [0,1]){motion.apply(progress);pr.update();const low={[-1]:Infinity,1:Infinity};
+    for(let i=0;i<pr.count;i++)if(/hoof|boot|foot|toe/i.test(pr.names[pr.part[i]])){const s=pr.boneNames[pr.bone[i]].endsWith('-1')?-1:1;low[s]=Math.min(low[s],pr.y[i]);}
+    for(const s of [-1,1])assert.ok(Math.abs(low[s])<=.001,`${kind}: the ${s<0?'left':'right'} hoof's lowest point is ${(1e3*low[s]).toFixed(1)} mm off the floor at progress ${progress}`);
+    hoofQ().forEach((q,i)=>{const a=2*Math.acos(Math.min(1,Math.abs(q.dot(stanceQ[i]))))*180/Math.PI;assert.ok(a<=.5,`${kind}: the ${i?'right':'left'} hoof is turned ${a.toFixed(2)} degrees off the stance at progress ${progress}`);});}}
   for(const part of ['trunk','head','tail']){const left=100*motion.fit[part].depth,limit=LEFT[`${kind}/${p.id}/${part}`]??1;
    assert.ok(left<=limit,`${kind}: the ${part} is left ${left.toFixed(1)} cm in at ${motion.fit[part].t.toFixed(2)} s (allowed ${limit})`);}
   // Both ends hand over to and from the battle's own stance, at rest. The balance's samples are evenly spaced and cover
@@ -98,6 +110,41 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    assert.ok(B.times[0]===0&&B.times.every((t,i)=>!i||Math.abs(t-B.times[i-1]-dt)<1e-9)&&B.times.at(-1)>=D&&B.times.at(-1)-D<dt,`${kind}: the balance's samples end at ${B.times.at(-1)} s, not evenly spaced over the crossing (${D} s)`);
    let turn={a:0};for(const x of [.0025,.005,.0075,.01])for(const t of [x,D-x]){const s=B.spin(t),a=s?2*Math.acos(Math.min(1,Math.abs(s.q.w))):0;if(a>turn.a)turn={a,t};}
    assert.ok(turn.a<=3e-5,`${kind}: the balance turns the body ${(1e3*turn.a).toFixed(3)} milliradian at ${turn.t?.toFixed(4)} s, within 10 ms of an end`);}
+  // Its plan of the centre of mass is at rest at both ends, its rows met within a micrometre (0.30 at the worst, the
+  // rabbit's climb): the first sample on the authored path and the first interval a cubic from rest
+  // (7 c0 - 8 c1 + c2 = 0), and the same into the last sample before the end, the last held there. As played, the
+  // centre of mass is at rest at both ends (under 0.3 m/s^2 and 1 mm/s there: at the start 0.04 at the most, at the end
+  // 0.19, the donkey's window; on 26d37e89 0.10 to 3.76 at the end, the skunk's low wall to the bull's window); and
+  // within 10 ms of either end its acceleration overshoots the plan's next to that end (at samples 1 to 6, and n-7 to
+  // n-2) by at most 35%, give or take 0.1 m/s^2: the hips' track, easing from rest into the plan's first acceleration,
+  // overshoots it by up to 32% (the horse's low wall); with the first two samples pinned equal, 26 of the 33 crossings
+  // on 26d37e89 fail it, and every window with the hooves flat (on both, the rows fail too: this backs them up). Met
+  // only as far as the programme's iterations reach (the rows' stiffness off), the end rows miss by more than a
+  // micrometre on 16 of the 33 crossings, failing this on six of the eleven mammals: the windows' start rows by up to
+  // 74 um (the rabbit's; the dog's 63, the sheep's 15, the goat's 13, the bull's and cow's 8), the climbs' by up to 277
+  // (the rabbit's; the dog's 167) and the low walls' by up to 24 (the dog's). As this test reads the start, the
+  // rabbit's window's centre of mass then starts at 0.51 m/s^2 and its climb's at 1.80, which fails the overshoot check
+  // too; at the end the rabbit's window moves 0.91 mm/s. Resting at the last sample instead, up to 5 ms past the end
+  // (the copy before the end rows were met), the rabbit's moved 5.8 mm/s at the end, read over 0.2 ms. None of this
+  // guards the outline the plan asks in at the ends (traversal-balance.js END_MARGIN): the suite passes without it,
+  // where the dog's window starts at 130% of phantom-wrench's limit (and the bull's and cow's climbs, which the margin
+  // puts over the limit in the crouch, read as on 26d37e89), so that window and those climbs are gated again after any
+  // change to the plan, its iterations or the hips' track.
+  {const B=motion.balance,P=B.plan,n=P.length,D=motion.duration,dt=B.times[1]-B.times[0];let miss={d:0};
+   const rows={'start row':a=>7*P[0][a]-8*P[1][a]+P[2][a],'end row':a=>P[n-4][a]-8*P[n-3][a]+7*P[n-2][a],'last two samples':a=>P[n-2][a]-P[n-1][a],
+    'first sample':a=>P[0][a]-B.samples[0].c[a],'last sample':a=>P[n-1][a]-B.samples[n-1].c[a]};
+   for(const [name,f] of Object.entries(rows))for(let a=0;a<3;a++)if(Math.abs(f(a))>miss.d)miss={d:Math.abs(f(a)),name};
+   assert.ok(miss.d<=1e-6,`${kind}: the balance's plan misses its ${miss.name} by ${(1e6*miss.d).toFixed(2)} um`);
+   const com=t=>[...motion.apply(Math.min(1,Math.max(0,t/D))).com],h=5e-4,e=2e-4,acc=(a,b,c,s=h)=>{const x=com(a),y=com(b),z=com(c);return x.map((v,i)=>(v-2*y[i]+z[i])/(s*s));};
+   const speed=(a,b)=>{const x=com(a),y=com(b);return Math.hypot(...x.map((v,i)=>v-y[i]))/(b-a);},flat=v=>Math.hypot(v[0],v[2]);
+   for(const [end,a,v] of [['start',acc(0,e,2*e,e),speed(0,1e-3)],['end',acc(D-2*e,D-e,D,e),speed(D-1e-3,D)]]){
+    assert.ok(Math.hypot(...a)<=.3,`${kind}: the centre of mass accelerates ${Math.hypot(...a).toFixed(2)} m/s^2 at its ${end}`);
+    assert.ok(v<=1e-3,`${kind}: the centre of mass moves ${(1e3*v).toFixed(2)} mm/s at its ${end}`);}
+   const planAcc=i=>Math.hypot((P[i-1][0]-2*P[i][0]+P[i+1][0])/(dt*dt),(P[i-1][2]-2*P[i][2]+P[i+1][2])/(dt*dt));
+   for(const [end,t0,ks] of [['start',h,[1,2,3,4,5,6]],['end',D-.01,[n-7,n-6,n-5,n-4,n-3,n-2]]]){let played=0;
+    for(let t=t0;t<=t0+.01-h+1e-12;t+=h)played=Math.max(played,flat(acc(t-h,t,t+h)));
+    const plan=Math.max(...ks.map(planAcc));
+    assert.ok(played<=1.35*plan+.1,`${kind}: the centre of mass accelerates ${played.toFixed(2)} m/s^2 within 10 ms of its ${end}, past 1.35 times the plan's ${plan.toFixed(2)}`);}}
   // Between its 5 ms samples the balance's tracks, the hips' whole move (its shift with the offsets the motion adds
   // under it: the clearance fit's, and the window's sill and seat or the climb's top) and its turn of the body (angle
   // and pivot), are the cubic spline through them: their acceleration runs straight from sample to sample (away from

@@ -7,7 +7,17 @@ import {V,Q,clamp,smooth,track,MASS_SEGMENTS,BODY_MASS,createSurfaceProbe} from 
 // - on the feet alone: the pressure point of a linear inverted pendulum, p = c - h a / (g + a_y), inside the soles'
 //   outline (their convex hull), the push within friction, and the floor pushing (never pulling);
 // - hands gripping (with or without feet): any direction, each axis within FMAX body weights;
-// - the first and last samples at rest, where the battle's own stance hands over.
+// - at rest at either end, as the battle's own stance hands over: the first sample on the authored path, with no
+//   velocity and no acceleration there, the first interval a cubic from rest; at the end the same into the last sample
+//   before the crossing's end, the last sample (at the end or up to 5 ms past it) held there too; these rows met
+//   exactly (stiff: see boxedPath). With the first two samples pinned equal instead, the plan stood still for 5 ms and
+//   then accelerated all at once, and the hips' track through it overshot that step by about 40%: on the goat's window
+//   the centre of mass went 3.9 m/s^2 sideways at 5 ms where the plan asked 2.7, its pressure point, planned at the
+//   heel-side margin, carried past the heels (76 N of phantom force, 104% of the limit, once the hooves stood flat).
+//   Resting at the last sample, past the end, with the rows met only as far as the iterations reached, the rabbit's
+//   still moved 5.8 mm/s at the end (3.4 with the pins). Now it starts under 0.1 m/s^2 and ends under 0.3 mm/s; the
+//   first interval's ramp still overshoots the plan's first acceleration, by up to a third (the goat's 3.4 sideways at
+//   5 ms against its 2.7): see END_MARGIN.
 // A convex quadratic programme per axis (the vertical first: the pendulum's stiffness h / (g + a_y) comes from it),
 // solved by ADMM on one banded factorisation. Clamping the pressure point sample by sample instead (re-weighted least
 // squares) turned the feet into an unstable pendulum: the plan drifted 90 cm sideways and snapped back.
@@ -24,19 +34,24 @@ function cholSolve(n,k,L,b,y=new Float64Array(n),x=new Float64Array(n)){const w=
  return x;}
 // One channel, or several interleaved (stride 2: x0, z0, x1, z1, ..., each with its own jerk): minimise
 // sum wT (c - c0)^2 + wJ |third difference|^2 subject to lo <= row . c <= hi for every row ({at, c: coefficients, lo,
-// hi}; an equality has lo = hi; a half-plane has lo = -Infinity). Rows are scaled to unit norm.
+// hi}; an equality has lo = hi; a half-plane has lo = -Infinity). Rows are scaled to unit norm. A row's stiff
+// multiplies its step size rho (OSQP gives equality rows 1000 times the rest; here the plan's end rows alone take it,
+// its flights' rows keep rho): the iterations stop at iters, and on the plans' cross programme (x and z, coupled over
+// the whole crossing) they stopped with the rows met to about 1e-5, the end rows among them. Kept at rho, the end rows
+// miss by up to 74 um on the windows (the rabbit's) and 277 on the climbs (the rabbit's), so the plan's first interval
+// is no longer from rest: the rabbit's window's centre of mass starts at 0.51 m/s^2 (1.65 a millisecond in).
 export function boxedPath(c0,wT,wJ,rows,{rho=2e5,iters=1500,tol=1e-8,stride=1}={}){
- const n=c0.length,R=rows.map(r=>{const s=Math.hypot(...r.c)||1;return {at:r.at,c:r.c.map(x=>x/s),lo:r.lo/s,hi:r.hi/s};}),W=R.reduce((m,r)=>Math.max(m,r.c.length),3),k=Math.max(3*stride,W-1),w=k+1,M=new Float64Array(n*w);
+ const n=c0.length,R=rows.map(r=>{const s=Math.hypot(...r.c)||1;return {at:r.at,c:r.c.map(x=>x/s),lo:r.lo/s,hi:r.hi/s,rho:rho*(r.stiff||1)};}),W=R.reduce((m,r)=>Math.max(m,r.c.length),3),k=Math.max(3*stride,W-1),w=k+1,M=new Float64Array(n*w);
  const jerk=[-1,3,-3,1].flatMap((x,i)=>i?[...new Array(stride-1).fill(0),x]:[x]);
  const outer=(at,cs,f)=>{for(let a=0;a<cs.length;a++){const i=at+a;if(i<0||i>=n)continue;for(let b=0;b<=a;b++){const j=at+b;if(j<0)continue;M[i*w+j-i+k]+=f*cs[a]*cs[b];}}};
- for(let i=0;i<n;i++)M[i*w+k]+=wT[i];for(let i=0;i+3*stride<n;i++)outer(i,jerk,wJ);for(const r of R)outer(r.at,r.c,rho);
+ for(let i=0;i<n;i++)M[i*w+k]+=wT[i];for(let i=0;i+3*stride<n;i++)outer(i,jerk,wJ);for(const r of R)outer(r.at,r.c,r.rho);
  // the iterations run on flat arrays (rows of up to W coefficients): the same sums in the same order
- const L=cholesky(n,k,M),m=R.length,at=Int32Array.from(R,r=>r.at),len=Uint8Array.from(R,r=>r.c.length),C=new Float64Array(m*W),lo=Float64Array.from(R,r=>r.lo),hi=Float64Array.from(R,r=>r.hi);
+ const L=cholesky(n,k,M),m=R.length,at=Int32Array.from(R,r=>r.at),len=Uint8Array.from(R,r=>r.c.length),C=new Float64Array(m*W),lo=Float64Array.from(R,r=>r.lo),hi=Float64Array.from(R,r=>r.hi),rh=Float64Array.from(R,r=>r.rho);
  R.forEach((r,j)=>r.c.forEach((x,a)=>{C[j*W+a]=x;}));
  const dot=(j,c)=>{let s=0;for(let a=0;a<len[j];a++)s+=C[j*W+a]*c[at[j]+a];return s;};
  let c=Float64Array.from(c0);const z=new Float64Array(m),u=new Float64Array(m),b0=Float64Array.from(c0,(x,i)=>wT[i]*x),b=new Float64Array(n),y=new Float64Array(n);for(let j=0;j<m;j++)z[j]=clamp(dot(j,c),lo[j],hi[j]);let res=Infinity;
  for(let it=0;it<iters&&res>tol;it++){b.set(b0);
-  for(let j=0;j<m;j++){const v=rho*(z[j]-u[j]);for(let a=0;a<len[j];a++)b[at[j]+a]+=C[j*W+a]*v;}c=cholSolve(n,k,L,b,y,c===c0?new Float64Array(n):c);
+  for(let j=0;j<m;j++){const v=rh[j]*(z[j]-u[j]);for(let a=0;a<len[j];a++)b[at[j]+a]+=C[j*W+a]*v;}c=cholSolve(n,k,L,b,y,c===c0?new Float64Array(n):c);
   res=0;for(let j=0;j<m;j++){const ax=dot(j,c),zn=clamp(ax+u[j],lo[j],hi[j]);u[j]+=ax-zn;z[j]=zn;res=Math.max(res,Math.abs(ax-zn));}}
  return {c,res};}
 // samples: [{c: [x,y,z] authored centre of mass, kind: 'air' | 'grip' | 'feet' | 'hold', box: [xmin,xmax,zmin,zmax] and
@@ -48,7 +63,10 @@ export function boxedPath(c0,wT,wJ,rows,{rho=2e5,iters=1500,tol=1e-8,stride=1}={
 // 4.7 body weights, read every millisecond; at 400, 5.1; at 20, 4.5, its pig director 0.6 cm up).
 export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=FMAX,margin=.01}={}){
  const n=samples.length,d2=dt*dt,c0=[0,1,2].map(ax=>Float64Array.from(samples,s=>s.c[ax])),wT=samples.map(s=>s.kind==='hold'?(s.heightOnly?wL:wH):1),wA=samples.map(s=>s.kind==='hold'&&!s.heightOnly?wH:1),acc=[1,-2,1];
- const ends=ax=>[0,1,n-2,n-1].map(i=>({at:i,c:[1],lo:c0[ax][i<2?0:n-1],hi:c0[ax][i<2?0:n-1]}));
+ // the ends at rest, met exactly (stiff): the first sample on the authored path and the next on the cubic from rest
+ // (c1 = (7 c0 + c2) / 8); at the end the same into the last sample before the crossing's end, the last one held there
+ const EQ=1e3,ends=ax=>[{at:0,c:[1],lo:c0[ax][0],hi:c0[ax][0],stiff:EQ},{at:0,c:[7,-8,1],lo:0,hi:0,stiff:EQ},{at:n-4,c:[1,-8,7],lo:0,hi:0,stiff:EQ},
+  {at:n-2,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ},{at:n-1,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ}];
  // Vertical: ballistic in flight; a floor pushes between .3 and fmax body weights, a grip either way up to fmax.
  const edge=i=>{for(let k=1;k<=RAMP;k++)if(samples[i-k]?.kind==='air'||samples[i+k]?.kind==='air')return ((k-1)/RAMP)**2;return 1;};
  const ry=ends(1);for(let i=1;i<n-1;i++){const s=samples[i];if(s.kind==='air')ry.push({at:i-1,c:acc,lo:-G*d2,hi:-G*d2});
@@ -67,7 +85,22 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=
  // as the feet are, near its authored path: held by its weight alone, the plan left it at 2 g in its last samples to
  // meet the feet's outline after it, where the floor could push it no more than friction allows (as a body rose off
  // its seat with its centre of mass 7 cm behind its heels: 121% of the body's weight of phantom force).
- const acc2=[1,0,-2,0,1],rows=[];for(const i of [0,1,n-2,n-1])for(const ax of [0,2])rows.push({at:2*i+ax/2,c:[1],lo:c0[ax][i<2?0:n-1],hi:c0[ax][i<2?0:n-1]});
+ // On the rows of the first and last END samples (samples 1 to 4 and n-5 to n-2, 20 ms at either end) the edges are
+ // asked in by END_MARGIN: there the hips' track, easing from rest into the plan's first acceleration, overshoots it by
+ // up to a third, and the plan ran its pressure point to the margin (the goat's to the heel side, from its first sample
+ // to its seventh), so the track carried it behind the heels: the dog's window read 130% of the limit at 5 ms. Asked
+ // in 4 cm there (the one setting gated), 95%. Against the plan's own centimetre, on the fifteen crossings gated both
+ // ways, it lowers every crossing's worst reading within 10 ms of either end by 26 to 36 points, but adds 15 and 19
+ // readings to the bull's and cow's climbs (their crouch over the limit at 0.625 s, 129%, and three more each at the
+ // top). The plan does not meet these rows: it stops with its rows met to about 1e-5, which on a pressure point's row
+ // is centimetres (its pressure point at the dog's sample 1 lies 3.3 cm outside the outline, 6.0 without the margin).
+ // The margin works by nudging that solve: on the bull's climb it moves the plan up to 3.9 mm through its first 0.65 s.
+ // Solved further (100000 iterations), the bull's plan moves as far (3.8 mm) and no phase of its climb reads
+ // differently for the margin, but its crouch and the cow's read over the limit with either margin. Only the gate sees
+ // the margin (the test suite passes without it), so the dog's window and the bull's and cow's climbs are gated again
+ // after any change to the plan, its iterations or the hips' track.
+ const END=4,END_MARGIN=.04,acc2=[1,0,-2,0,1],rows=[];for(const ax of [0,2])rows.push({at:ax/2,c:[1],lo:c0[ax][0],hi:c0[ax][0],stiff:EQ},{at:ax/2,c:[7,0,-8,0,1],lo:0,hi:0,stiff:EQ},{at:2*(n-4)+ax/2,c:[1,0,-8,0,7],lo:0,hi:0,stiff:EQ},
+  {at:2*(n-2)+ax/2,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ},{at:2*(n-1)+ax/2,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ});
  for(let i=1;i<n-1;i++){const s=samples[i],at=2*(i-1),both=(lo,hi)=>rows.push({at,c:acc2,lo,hi},{at:at+1,c:acc2,lo,hi});
   if(s.kind==='air'){both(0,0);continue;}
   if(s.kind==='grip'){both(-fmax*G*d2,fmax*G*d2);continue;}
@@ -76,7 +109,7 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=
   // The pressure point also carries the body's turning: p_x = c_x - k a_x + dL_z / (M fy), p_z = c_z - k a_z - dL_x / (M fy).
   const dx=s.dL?s.dL[2]/(BODY_MASS*fy):0,dz=s.dL?-s.dL[0]/(BODY_MASS*fy):0,H=outlineAt(i),cx=H.reduce((m,p)=>m+p[0],0)/H.length,cz=H.reduce((m,p)=>m+p[1],0)/H.length;
   for(let j=0;j<H.length;j++){const p=H[j],q=H[(j+1)%H.length],ex=q[0]-p[0],ez=q[1]-p[1],l=Math.hypot(ex,ez);if(l<1e-9)continue;const nx=ez/l,nz=-ex/l;
-   rows.push({at,c:[nx*a,nz*a,nx*b,nz*b,nx*a,nz*a],lo:-Infinity,hi:Math.max(nx*p[0]+nz*p[1]-margin,nx*cx+nz*cz)-nx*dx-nz*dz});}
+   rows.push({at,c:[nx*a,nz*a,nx*b,nz*b,nx*a,nz*a],lo:-Infinity,hi:Math.max(nx*p[0]+nz*p[1]-(i<=END||i>=n-1-END?END_MARGIN:margin),nx*cx+nz*cz)-nx*dx-nz*dz});}
   both(-MU*fy*d2,MU*fy*d2);}
  const XZ=boxedPath(Float64Array.from({length:2*n},(_,j)=>c0[j&1?2:0][j>>1]),Float64Array.from({length:2*n},(_,j)=>wA[j>>1]),wJ,rows,{stride:2});
  out[0]=Float64Array.from({length:n},(_,i)=>XZ.c[2*i]);out[2]=Float64Array.from({length:n},(_,i)=>XZ.c[2*i+1]);res[0]=res[2]=XZ.res;

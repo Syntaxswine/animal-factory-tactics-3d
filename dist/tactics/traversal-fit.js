@@ -151,23 +151,52 @@ export function createClearanceFit(duration,{step=.02}={}){
   // The deepest head point of a bare sample under a whole head turn c and bow b; visit sees every point.
   const headAt=(s,c,b,visit)=>{st=s.st;const Rh=s.W.clone().multiply(relQ(...c)),Rb=Q().setFromAxisAngle(s.axis,-b*DEG);let m=-Infinity;
    for(let k=0;k<s.l.length;k+=3){p.set(s.l[k],s.l[k+1],s.l[k+2]).applyQuaternion(Rh).add(s.J).sub(s.H).applyQuaternion(Rb).add(s.H);const d=into(p,way)+margin;if(visit)visit(p,d);if(d>m)m=d;}return m;};
-  // One head turn and bow per stretch of contact; returns the trunk moves for what neither clears. The eases in and
-  // out must clear too: a moment a neighbouring turn carries into contact joins its stretch, and the stretch is solved
-  // again (up to three passes).
+  // One head turn and bow per stretch of contact; returns the trunk moves for what neither clears. Each is judged on
+  // every sample whose turn or bow it moves, posed as the motion will play it: the stretch, a flight it is held
+  // through, and its eases in and out, as hold() eases and softens them (with the stretches before it at their chosen
+  // turns where the two meet) and as the motion frees the head and trunk (free, ends). Judged on the stretch alone, a
+  // pass chose a turn whose ease carried the head into contact beside the stretch, the next pass joined that moment to
+  // the stretch and chose again, and the passes ran out first: on the donkey's window, chin up for its ears in the
+  // opening (0.84 to 0.96 s), then down (30 degrees, from 0.84), then further down (40, from 0.78), whose ease tipped
+  // the ears forward into the lintel's face at 0.72 s, 8.7 cm up into it. Judged on its eases but not where two
+  // stretches meet, the goat's head turned again after the balance took two turns that met at 2.10 s, and their
+  // softened join left its horns 1.8 cm in the wall's far face. A moment still in contact once every stretch has
+  // chosen joins its stretch, and the stretch is solved again (up to three passes). A stretch that clears nothing
+  // pushes the trunk for every sample it judges that is in contact, its eases' too; a later stretch that clears such a
+  // sample does not take that push back, and one that also pushes it replaces the push, deeper or not (no push arose on
+  // any crossing traced).
   // keepBow: the head alone, against the bow as it is (fit.solveHead, after the balance). air(t), if given: where
   // nothing holds the body; a turn is held through a flight next to its stretch, never turned there (eased out into
   // the jump at the climb's push-off, it put 10 N on the flight's peak and 0.01 s more over the limit).
   const solveHead=(keepBow=false,air=null)=>{const S=bareHeads(),B=keepBow?ch.bow.map(x=>x[0]):null,r=B?R2:R,inAir=k=>!!air?.(times[k]);
    let flags=S.map((s,k)=>head.length>0&&headAt(s,[0,0,0],B?B[k]:0)>0),pushes;
    for(let pass=0;pass<3;pass++){pushes=times.map(()=>[0,0,0]);const list=[];
-    for(const [a,b]of runs(flags)){const run=S.slice(a,b+1);
-     const worst=(c,bw,stop)=>{let m=-Infinity;for(const [j,s] of run.entries()){m=Math.max(m,headAt(s,c,B?B[a+j]:bw));if(m>=stop)break;}return m;};
+    // the stretches, each with a flight within its ease (and no other stretch before it) joined to it
+    const spans=runs(flags).map(([a,b])=>{let a2=a,b2=b;for(let k=b+1;k<=Math.min(n-1,b+r)&&!flags[k];k++)if(inAir(k)){b2=k;while(b2+1<n&&inAir(b2+1))b2++;break;}
+     for(let k=a-1;k>=Math.max(0,a-r)&&!flags[k];k--)if(inAir(k)){a2=k;while(a2>0&&inAir(a2-1))a2--;break;}return [a2,b2];});
+    // which stretch sets each sample's turn (out to r) and bow (out to R), as hold() does: nearest, ties to the earlier
+    const owner=rad=>{const o=new Int32Array(n).fill(-1),w=new Float64Array(n),dd=new Float64Array(n).fill(Infinity);
+     spans.forEach(([a,b],i)=>{for(let k=Math.max(0,a-rad);k<=Math.min(n-1,b+rad);k++){const d=k<a?a-k:k>b?k-b:0;if(d<dd[k]){dd[k]=d;o[k]=i;w[k]=d?smooth(1-d/(rad+1)):1;}}});return {o,w};};
+    const OH=owner(r),OB=owner(R),fh=times.map(t=>(free.head?.(t)??1)*ends(t)),fb=times.map(t=>(free.trunk?.(t)??1)*ends(t)),E=Math.max(r,R)+1;
+    for(const [i,[a2,b2]] of spans.entries()){
+     // the samples this stretch sets and those of the stretch before it beside them (hold() softens over three
+     // samples): [sample, its share of the turn, the turn the stretches before it set there, its share of the bow, the
+     // bow set before]; the stretch first. A later stretch's part is taken as this one's until it chooses, and its own
+     // samples are left to it: posed with no turn there, the next stretch's first samples stayed in contact whatever
+     // this one chose, and the bull's window, its worst never clearing, took the far corner of the search (nod 40, tilt
+     // -60, turn 48 degrees, bowed -5) for 1.88 to 2.10 s, where the next stretch's own turn cleared everything.
+     const mine=j=>OH.o[j]===i||!B&&OB.o[j]===i,set=[];for(let k=Math.max(0,a2-E);k<=Math.min(n-1,b2+E);k++){
+      if(!(mine(k)||(k>0&&mine(k-1)||k<n-1&&mine(k+1))&&OH.o[k]<i&&(B||OB.o[k]<i)))continue;
+      let wh=0,wb=0,b0=0;const h0=[0,0,0];
+      for(const j of [Math.max(0,k-1),k,Math.min(n-1,k+1)]){const oh=OH.o[j],ob=OB.o[j];
+       if(oh>=i)wh+=OH.w[j]/3;else if(oh>=0)for(let x=0;x<3;x++)h0[x]+=list[oh].c[x]*OH.w[j]/3;
+       if(ob>=i)wb+=OB.w[j]/3;else if(ob>=0)b0+=list[ob].bw*OB.w[j]/3;}
+      if(wh>0||!B&&wb>0)set.push([k,wh*fh[k],h0.map(x=>x*fh[k]),wb*fb[k],b0*fb[k]]);}
+     const far=k=>k<a2?a2-k:k>b2?k-b2:0;set.sort((x,y)=>far(x[0])-far(y[0]));
+     const worst=(c,bw,stop,visit)=>{let m=-Infinity;for(const [k,wh,h0,wb,b0] of set){m=Math.max(m,headAt(S[k],[h0[0]+c[0]*wh,h0[1]+c[1]*wh,h0[2]+c[2]*wh],B?B[k]:b0+bw*wb,visit&&((q,d)=>visit(k,d))));if(m>=stop)break;}return m;};
      let c=[0,0,0],low=Infinity;for(const h of [[0,0,0],...HEAD_TRY]){const m=worst(h,0,low);if(m<=0){c=h;low=m;break;}if(m<low){low=m;c=h;}}
      let bw=0;if(low>0&&!B){let lowB=Infinity;for(const x of BOW_TRY){const m=worst(c,x,lowB);if(m<=0){bw=x;lowB=m;break;}if(m<lowB){lowB=m;bw=x;}}
-      if(lowB>0)run.forEach((s,j)=>{let deep=0;headAt(s,c,bw,(q,d)=>{if(d>deep){deep=d;pushes[a+j]=way.clone().multiplyScalar(d).toArray();}});});}
-     // a flight within the ease, with no other stretch before it, joins the stretch
-     let a2=a,b2=b;for(let k=b+1;k<=Math.min(n-1,b+r)&&!flags[k];k++)if(inAir(k)){b2=k;while(b2+1<n&&inAir(b2+1))b2++;break;}
-     for(let k=a-1;k>=Math.max(0,a-r)&&!flags[k];k--)if(inAir(k)){a2=k;while(a2>0&&inAir(a2-1))a2--;break;}
+      if(lowB>0){const deep=new Float64Array(n);worst(c,bw,Infinity,(k,d)=>{if(d>deep[k]){deep[k]=d;pushes[k]=way.clone().multiplyScalar(d).toArray();}});}}
      list.push({a:a2,b:b2,c,bw});}
     const hv=hold(list.map(q=>({a:q.a,b:q.b,v:q.c})),3,r),bv=hold(list.map(q=>({a:q.a,b:q.b,v:[q.bw]})),1);
     for(let k=0;k<n;k++){const e=ends(times[k]);ch.head[k]=hv[k].map(v=>v*(free.head?.(times[k])??1)*e);if(!B)ch.bow[k]=[bv[k][0]*(free.trunk?.(times[k])??1)*e];}
