@@ -5,7 +5,8 @@ import {createWallClimb} from './wall-climb.js';
 import {createHenCrossing} from './hen-crossing.js';
 // Battle presentation for crossings that the physics audit accepts (docs/tactics/NATURAL-TRAVERSAL.md).
 // Same contract as createSimpleTraversal(model, event, unit): {duration, climb: {skeleton, equipmentState},
-// apply(progress) -> {worldRoot}, dispose()}, so the battle can choose it per event kind. It never changes
+// apply(progress) -> {worldRoot}, dispose()}, so the battle can choose it per event kind (apply also hands back the
+// phase, the centre of mass and the rig's segment points as posed, for the traversal tests). It never changes
 // simulation state, AP or the clock. Every mammal shares the traversal skeleton and is fitted to its own body; the hen,
 // with wings and no hands, has her own crossings (hen-crossing.js): she hops up on her wings and down the other side.
 // low-wall is the proposed waist-high wall (not a game edge yet).
@@ -20,6 +21,6 @@ export function createNaturalTraversal(model,event,unit){
  const motion=hen?createHenCrossing(worker,profile,event.kind):MOTIONS[event.kind](worker,profile);
  let disposed=false;
  return {duration:motion.duration,phases:motion.phases,fit:motion.fit,getup:motion.getup,roll:motion.roll,balance:motion.balance,climb:{skeleton:motion.climb?.skeleton||worker.skeleton,get equipmentState(){return 'carried';}},
-  apply(progress){if(disposed)throw Error('Traversal already disposed');const r=motion.apply(progress,{origin,heading});return {worldRoot:r.worldRoot,phase:r.phase,com:r.com};},
+  apply(progress){if(disposed)throw Error('Traversal already disposed');const r=motion.apply(progress,{origin,heading});return {worldRoot:r.worldRoot,phase:r.phase,com:r.com,points:r.points};},
   dispose(){if(disposed)return;motion.dispose();disposed=true;}};
 }

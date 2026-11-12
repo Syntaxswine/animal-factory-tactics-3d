@@ -6,7 +6,7 @@ import {createBattlePosture} from '../dist/tactics/battle-posture.js';
 import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {naturalTraversal,createNaturalTraversal} from '../dist/tactics/natural-traversal.js';
 import {contactProbe,supportAt} from '../dist/tactics/traversal-balance.js';
-import {steadyPoles,createSurfaceProbe} from '../dist/tactics/traversal-pose.js';
+import {steadyPoles,createSurfaceProbe,MASS_SEGMENTS} from '../dist/tactics/traversal-pose.js';
 import {rigKey} from '../dist/tactics/idle-motion.js';
 import {IDLE_FITS} from '../dist/tactics/idle-fits.js';
 // The natural crossings (docs/tactics/NATURAL-TRAVERSAL.md) on every mammal, built the way the battle builds a model.
@@ -127,9 +127,8 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
   // too; at the end the rabbit's window moves 0.91 mm/s. Resting at the last sample instead, up to 5 ms past the end
   // (the copy before the end rows were met), the rabbit's moved 5.8 mm/s at the end, read over 0.2 ms. None of this
   // guards the outline the plan asks in at the ends (traversal-balance.js END_MARGIN): the suite passes without it,
-  // where the dog's window starts at 130% of phantom-wrench's limit (and the bull's and cow's climbs, which the margin
-  // puts over the limit in the crouch, read as on 26d37e89), so that window and those climbs are gated again after any
-  // change to the plan, its iterations or the hips' track.
+  // where the dog's window starts at 130% of phantom-wrench's limit, so that window and the climbs are gated again
+  // after any change to the plan, its iterations or the hips' track.
   {const B=motion.balance,P=B.plan,n=P.length,D=motion.duration,dt=B.times[1]-B.times[0];let miss={d:0};
    const rows={'start row':a=>7*P[0][a]-8*P[1][a]+P[2][a],'end row':a=>P[n-4][a]-8*P[n-3][a]+7*P[n-2][a],'last two samples':a=>P[n-2][a]-P[n-1][a],
     'first sample':a=>P[0][a]-B.samples[0].c[a],'last sample':a=>P[n-1][a]-B.samples[n-1].c[a]};
@@ -160,6 +159,34 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
      for(let ax=0;ax<3;ax++){const d=Math.max(Math.abs(a[1][ax]-(2*a[0][ax]+a[3][ax])/3),Math.abs(a[2][ax]-(a[0][ax]+2*a[3][ax])/3));if(d>bend.d)bend={d,name,t:t0};}}
    assert.ok(seen.hips>0&&seen.turn>0&&seen.pivot>0,`${kind}: the balance's tracks were not read between samples (${JSON.stringify(seen)})`);
    assert.ok(bend.d<=.01,`${kind}: the balance's ${bend.name} bends ${bend.d.toFixed(3)} ${unit[bend.name]} off a straight acceleration between its samples at ${bend.t?.toFixed(3)} s`);}
+  // The climb's take-off keeps its authored time and leaves on the hooves it planned with. Its hooves leave the floor
+  // on a soft key whose height rides the hips the balance moves (wall-climb.js, the push's ceiling): raising them, each
+  // round's plan took the hooves off earlier, and the plan pushed on with nothing under it. On 148c6fb7 every climb's
+  // take-off moved 5 to 15 ms between the balance's rounds, the lower hoof was 14 to 30 mm up at the last foot sample,
+  // and in the flight's first 50 ms the body's angular momentum about its centre of mass lay 0.88 to 7.8 N·m·s from the
+  // flight's median (its turn refined on the round before's hips, before the take-off moved). Every round now plans the
+  // take-off at its authored time, a hoof is within the rig's centimetre of the floor at the last foot sample (4.9 to
+  // 9.2 mm, the rabbit's the highest), and the flight's first 50 ms hold their angular momentum within 0.5 N·m·s, what
+  // the rig's airborne limit of 10 N·m moves in 50 ms (0.02 to 0.12). That last check guards the runaway and the turn
+  // together and barely sees either alone: with the take-off held and the turn not refined on the final hips
+  // (traversal-balance.js) it reads 0.15 to 0.51, the rabbit's alone over, and with that refinement alone on 148c6fb7's
+  // motion 0.09 to 0.66; the gate shows the refinement's own worth.
+  if(kind==='wall'){const B=motion.balance,S=B.samples,n=S.length,D=motion.duration,dt=B.times[1]-B.times[0],k0=S.findIndex((x,k)=>B.times[k]>.7&&x.kind==='air');
+   assert.ok(k0>0,'wall: no flight after the push');
+   const offs=(B.history||[]).map(h=>(h.match(/feet 0\.000-([0-9.]+), air/)||[])[1]);
+   assert.ok(offs.length>1&&offs.every(x=>x&&x===offs[0]),`wall: the take-off moves between the balance's rounds (last foot sample ${offs.join(', ')} s)`);
+   const pr=createSurfaceProbe(m.worker,{stride:1});motion.apply(B.times[k0-1]/D);pr.update();let low=Infinity;
+   for(let i=0;i<pr.count;i++)if(/hoof|boot|foot|toe/i.test(pr.names[pr.part[i]]))low=Math.min(low,pr.y[i]);
+   assert.ok(low<=.01,`wall: at the last foot sample (${B.times[k0-1].toFixed(3)} s) the lower hoof is ${(1e3*low).toFixed(1)} mm off the floor`);
+   const at=t=>{const r=motion.apply(t/D);return [r.points,[...r.com]];},sub=(a,b)=>a.map((x,i)=>x-b[i]),mid=(P,a,b)=>P[a].map((x,i)=>(x+P[b][i])/2);
+   const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=(P,a,b)=>{const d=sub(P[b],P[a]),l=Math.hypot(...d);return [d.map(x=>x/l),l];};
+   const L=t=>{const [A,ca]=at(t-dt),[P,c]=at(t),[Bp,cb]=at(t+dt),vc=sub(cb,ca).map(x=>x/(2*dt)),out=[0,0,0];
+    for(const [a,b,mass] of MASS_SEGMENTS){const r=sub(mid(P,a,b),c),v=sub(sub(mid(Bp,a,b),mid(A,a,b)).map(x=>x/(2*dt)),vc),[u,l]=unit(P,a,b),du=sub(unit(Bp,a,b)[0],unit(A,a,b)[0]).map(x=>x/(2*dt));
+     const o=cross(r,v),s=cross(u,du);for(let q=0;q<3;q++)out[q]+=mass*o[q]+mass*l*l/12*s[q];}return out;};
+   let k1=k0;while(k1+1<n&&S[k1+1].kind==='air')k1++;const Ls=[];for(let k=k0;k<=k1;k++)Ls.push(L(B.times[k]));
+   const med=[0,1,2].map(q=>Ls.map(x=>x[q]).sort((x,y)=>x-y)[Ls.length>>1]);let worst={d:0};
+   for(let k=k0;k<=k1&&B.times[k]<=B.times[k0]+.05+1e-9;k++){const d=Math.hypot(...sub(Ls[k-k0],med));if(d>worst.d)worst={d,t:B.times[k]};}
+   assert.ok(worst.d<=.5,`wall: the flight's angular momentum lies ${worst.d.toFixed(2)} N·m·s from its median at ${worst.t?.toFixed(3)} s`);}
   // A stepping leg keeps its knee bent: through the window's get-up steps and the climb's last two, the stepping leg's
   // hip-to-ankle distance stays short of the IK's soft reach (traversal-pose.js limb(): within SOFT, 1.5 cm, of straight
   // it eases the hoof short of its mark; mid-step the reach widens by the step's soft zone, so the bound is exact at the

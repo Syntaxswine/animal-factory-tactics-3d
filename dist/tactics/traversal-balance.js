@@ -68,9 +68,11 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=
  const EQ=1e3,ends=ax=>[{at:0,c:[1],lo:c0[ax][0],hi:c0[ax][0],stiff:EQ},{at:0,c:[7,-8,1],lo:0,hi:0,stiff:EQ},{at:n-4,c:[1,-8,7],lo:0,hi:0,stiff:EQ},
   {at:n-2,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ},{at:n-1,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ}];
  // Vertical: ballistic in flight; a floor pushes between .3 and fmax body weights, a grip either way up to fmax.
+ // A feet sample's ceil, where given, is the highest its centre of mass may go (see balanceTraversal's ceiling).
  const edge=i=>{for(let k=1;k<=RAMP;k++)if(samples[i-k]?.kind==='air'||samples[i+k]?.kind==='air')return ((k-1)/RAMP)**2;return 1;};
  const ry=ends(1);for(let i=1;i<n-1;i++){const s=samples[i];if(s.kind==='air')ry.push({at:i-1,c:acc,lo:-G*d2,hi:-G*d2});
-  else if(s.kind==='feet'){const r=edge(i);ry.push({at:i-1,c:acc,lo:(.3*r-1)*G*d2,hi:(.1+(fmax-.1)*r-1)*G*d2});}else if(s.kind==='grip')ry.push({at:i-1,c:acc,lo:(-fmax-1)*G*d2,hi:(fmax-1)*G*d2});}
+  else if(s.kind==='feet'){const r=edge(i);ry.push({at:i-1,c:acc,lo:(.3*r-1)*G*d2,hi:(.1+(fmax-.1)*r-1)*G*d2});}else if(s.kind==='grip')ry.push({at:i-1,c:acc,lo:(-fmax-1)*G*d2,hi:(fmax-1)*G*d2});
+  if(Number.isFinite(s.ceil))ry.push({at:i,c:[1],lo:-Infinity,hi:s.ceil});}
  const Y=boxedPath(c0[1],wT,wJ,ry),ay=i=>i>0&&i<n-1?(Y.c[i+1]-2*Y.c[i]+Y.c[i-1])/d2:0;
  const out=[null,Y.c,null],res=[0,Y.res,0];
  // A feet (or held) sample's outline is the intersection of its neighbours' within two samples: a foot lifting a sample
@@ -89,15 +91,16 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=
  // asked in by END_MARGIN: there the hips' track, easing from rest into the plan's first acceleration, overshoots it by
  // up to a third, and the plan ran its pressure point to the margin (the goat's to the heel side, from its first sample
  // to its seventh), so the track carried it behind the heels: the dog's window read 130% of the limit at 5 ms. Asked
- // in 4 cm there (the one setting gated), 95%. Against the plan's own centimetre, on the fifteen crossings gated both
- // ways, it lowers every crossing's worst reading within 10 ms of either end by 26 to 36 points, but adds 15 and 19
- // readings to the bull's and cow's climbs (their crouch over the limit at 0.625 s, 129%, and three more each at the
- // top). The plan does not meet these rows: it stops with its rows met to about 1e-5, which on a pressure point's row
- // is centimetres (its pressure point at the dog's sample 1 lies 3.3 cm outside the outline, 6.0 without the margin).
- // The margin works by nudging that solve: on the bull's climb it moves the plan up to 3.9 mm through its first 0.65 s.
- // Solved further (100000 iterations), the bull's plan moves as far (3.8 mm) and no phase of its climb reads
- // differently for the margin, but its crouch and the cow's read over the limit with either margin. Only the gate sees
- // the margin (the test suite passes without it), so the dog's window and the bull's and cow's climbs are gated again
+ // in 4 cm there (the one setting gated), 95%. Against the plan's own centimetre it lowered every crossing's worst
+ // reading within 10 ms of either end by 26 to 36 points at 148c6fb7 (the thirteen gated there, and the bull's and
+ // cow's climbs; with the push's ceiling, the climbs' by 6 to 38). There, before the ceiling (planCentre's ceil), it
+ // also put the bull's and cow's crouch over the limit (12 and 16 readings, and three more each at the top), moving
+ // the plan up to 3.9 mm through the bull's first 0.65 s; solved to 100000 iterations, their crouch read over with
+ // either margin. With the ceiling their crouch reads nothing with either, and over the eleven climbs the margin takes
+ // the readings within 10 ms of an end from 5 to 3 and those in all from 1871 to 1878. The plan does not meet these
+ // rows: it stops with its rows met to about 1e-5, which on a pressure point's row is centimetres (its pressure point
+ // at the dog's sample 1 lies 3.3 cm outside the outline, 6.0 without the margin). The margin works by nudging that
+ // solve, so only the gate sees it (the test suite passes without it): the dog's window and the climbs are gated again
  // after any change to the plan, its iterations or the hips' track.
  const END=4,END_MARGIN=.04,acc2=[1,0,-2,0,1],rows=[];for(const ax of [0,2])rows.push({at:ax/2,c:[1],lo:c0[ax][0],hi:c0[ax][0],stiff:EQ},{at:ax/2,c:[7,0,-8,0,1],lo:0,hi:0,stiff:EQ},{at:2*(n-4)+ax/2,c:[1,0,-8,0,7],lo:0,hi:0,stiff:EQ},
   {at:2*(n-2)+ax/2,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ},{at:2*(n-1)+ax/2,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ});
@@ -265,6 +268,9 @@ const ONSET=.02,LOST=.06;
 // marks times the plan keeps near the authored path ('hold': a support it must not move, such as a seat the hips' own
 // move would lift off the floor, losing the support the plan was leaning on; see planCentre), or its height alone where
 // it returns 'height'.
+// ceiling(t), if given, is how far up off the authored path the plan may move the centre of mass at t, or null (the
+// climb's push: its hooves leave the floor on a soft key, at a height carried by the hips the plan moves, so a plan
+// that raised them lifted the hooves early and pushed on feet already off; see the climb).
 // The samples are dt apart and cover the crossing: the last may fall up to dt past its end, where the body stands in
 // its stance. pose, hold and base are asked there and must answer as they do at the end, as the window's, the vault's
 // and the climb's do (their tracks, fits and bands all hold past the end). Everything here reads the samples as dt
@@ -274,7 +280,7 @@ const ONSET=.02,LOST=.06;
 // duration instead, the steps slid the hips' shift's knots off the rig's 5 ms samples, which then read the ripple the
 // shift carries between its knots (the horse's window, gated with the turn's rate fade and a change to the hooves'
 // clearance: 0.375 s over the limit at the samples, 0.060 before, and 60 fewer readings flagged between them).
-export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base=null,hold=null,dt=.005,rounds=2,plan:options={}}){
+export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base=null,hold=null,ceiling=null,dt=.005,rounds=2,plan:options={}}){
  const n=Math.max(2,Math.ceil((duration-1e-9)/dt)+1),times=Array.from({length:n},(_,i)=>Math.abs(i*dt-duration)<1e-9?duration:i*dt);let c0=null,follow=null,samples=null,plan=null,last=null,settled=false,spin=null,w=times.map(()=>[0,0,0]);
  const turnAt=(theta,pivot)=>{let lo=theta.findIndex(x=>x[0]||x[1]||x[2]),hi=theta.findLastIndex(x=>x[0]||x[1]||x[2]);if(lo<0)return null;lo=Math.max(0,lo-1);hi=Math.min(n-1,hi+1);
   const tr=track(theta.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false,spline:true}),pv=track(pivot.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false,spline:true});
@@ -287,14 +293,25 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
   return {S,...turning(frames,dt)};};
  // Two rounds: the second measures the schedule and the turning again on the balanced motion (four gave the climb no
  // more: 0.23 s against 0.21 s over). With more, the schedule is held from the second on: moved by each round's hips, a
- // toe-off came 5 ms earlier every round (the plan, pushing to reach it, raised the hips that lifted the hoof).
+ // toe-off came 5 ms earlier every round (the plan, pushing to reach it, raised the hips that lifted the hoof; on the
+ // climb the push's ceiling now holds it at its authored time on both rounds).
  // A held sample keeps the support the authored motion had (its premise is the authored path), whatever the moved hips
  // touch: measured again on them, a seat carried on raised thighs rose off the floor, and the plan, finding the feet
  // alone 17 cm ahead of the centre of mass, dragged the hips 11 cm toward them (the window's lean, 78% of the body's
  // weight); a pig's seat rose 5 mm off the climb's top for 40 ms, and the plan, finding it in flight, jerked the body
  // at 39 m/s. Held in height alone, a sample's support is measured each round, as the feet's is: the body moves across.
- let held=null,authored=null;
- for(let r=0;r<rounds&&!settled;r++){const {S,dL,L,I}=measure();
+ // The turn refined REFINE times on the flight samples alone, posed with the turn so far: by rounds alone, a flight's
+ // first samples never settled where the toe-off moved a sample each round (955 N·m at the push-off). The contacts
+ // keep the round's turn: their angular momentum is not measured again, and the same correction, added to it at each
+ // refinement, turned them about twice as far (two 5 ms flights in the goat's roll turned its whole window so: its
+ // step in read 30% of its weight, 15 turned once).
+ let held=null,authored=null,last1=null;const ceil=times.map(t=>ceiling?.(t)??null);
+ const refine=(S,L,I)=>{for(let k=0;k<REFINE&&S.some(x=>x.kind==='air');k++){const L2=L.map(x=>x.slice()),I2=I.slice();
+   for(let a=0;a<n;a++){if(S[a].kind!=='air')continue;let b=a;while(b+1<n&&S[b+1].kind==='air')b++;const lo=Math.max(0,a-1),hi=Math.min(n-1,b+1),frames=[];
+    for(let i=lo;i<=hi;i++){setShift(follow?follow.shift(times[i]):null);const P=pose(times[i]);frames.push(Object.fromEntries(KEEP.map(q=>[q,P[q].clone()])));}
+    const tu=turning(frames,dt);for(let i=a;i<=b;i++){L2[i]=tu.L[i-lo];I2[i]=tu.I[i-lo];}a=b;}
+   const t2=bodyTurn(w,S,L2,I2,dt,false);w=t2.w;spin=turnAt(t2.theta,plan);}};
+ for(let r=0;r<rounds&&!settled;r++){const {S,dL,L,I}=measure();last1={S,L,I};
   if(!authored)authored=S.map(x=>({...x}));else S.forEach((x,i)=>{if(authored[i].kind==='hold'&&!authored[i].heightOnly)Object.assign(x,{...authored[i],c:x.c});});
   // A flight shorter than LOST that a round finds where the authored motion lies on the floor is the plan's own: its
   // last move lifted the body off what held it, and that support stands. Planned as a flight, the sheep's roll (its back
@@ -302,17 +319,18 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
   if(r)for(let i=0;i<n;i++){if(S[i].kind!=='air')continue;let j=i;while(j+1<n&&S[j+1].kind==='air')j++;if(j-i<LOST/dt&&i>0&&j<n-1&&authored.slice(i,j+1).every(x=>x.kind==='feet'||x.heightOnly))for(let k=i;k<=j;k++)Object.assign(S[k],{...authored[k],c:S[k].c});i=j;}
   if(held)S.forEach((x,i)=>{if(x.kind!==held[i].kind)Object.assign(x,{...held[i],c:x.c});});else if(r===1)held=S.map(x=>({...x}));const key=S.map(x=>x.kind).join();history.push(runs(S));
   if(!c0)c0=S.map(x=>x.c);const turn=bodyTurn(w,S,L,I,dt);settled=key===last&&turn.delta<TURN_TOL;last=key;if(settled)break;
-  samples=S.map((x,i)=>({...x,c:c0[i],dL:dL[i]}));plan=planCentre(samples,dt,options);w=turn.w;spin=turnAt(turn.theta,plan);
-  // The turn refined REFINE times on the flight samples alone, posed with the turn so far: by rounds alone, a flight's
-  // first samples never settled where the toe-off moved a sample each round (955 N·m at the push-off). The contacts
-  // keep the round's turn: their angular momentum is not measured again, and the same correction, added to it at each
-  // refinement, turned them about twice as far (two 5 ms flights in the goat's roll turned its whole window so: its
-  // step in read 30% of its weight, 15 turned once).
-  for(let k=0;k<REFINE&&S.some(x=>x.kind==='air');k++){const L2=L.map(x=>x.slice()),I2=I.slice();
-   for(let a=0;a<n;a++){if(S[a].kind!=='air')continue;let b=a;while(b+1<n&&S[b+1].kind==='air')b++;const lo=Math.max(0,a-1),hi=Math.min(n-1,b+1),frames=[];
-    for(let i=lo;i<=hi;i++){setShift(follow?follow.shift(times[i]):null);const P=pose(times[i]);frames.push(Object.fromEntries(KEEP.map(q=>[q,P[q].clone()])));}
-    const tu=turning(frames,dt);for(let i=a;i<=b;i++){L2[i]=tu.L[i-lo];I2[i]=tu.I[i-lo];}a=b;}
-   const t2=bodyTurn(w,S,L2,I2,dt,false);w=t2.w;spin=turnAt(t2.theta,plan);}
+  samples=S.map((x,i)=>({...x,c:c0[i],dL:dL[i],ceil:x.kind==='feet'&&ceil[i]!==null?c0[i][1]+ceil[i]:null}));plan=planCentre(samples,dt,options);w=turn.w;spin=turnAt(turn.theta,plan);
+  refine(S,L,I);
   // the first round's hips only set up the second's measure: three passes; the second starts from them
   follow=followCentre(times,plan,(t,s)=>{setShift(V(...s));return com(pose(t)).toArray();},{base,passes:3,from:follow?.samples});}
+ // The flights' turn once more on the final hips: the loop refines it on frames posed with the round before's hips and
+ // then finds the hips again, so the played flights begin with a move the turn never saw (the climb's legs swing as the
+ // hooves leave, and when they leave rides on the hips). On the horse's climb its angular momentum about the centre of
+ // mass fell from 3.3 N·m·s to -0.1 in the flight's first 30 ms (the flight's median -0.18), which the rig read as up
+ // to 379 N·m of airborne phantom torque. In flight a turn about the centre of mass leaves the plan as it was; on the
+ // contacts beside a flight, where the turn eases in and out after the hips were found, it moves the played centre of
+ // mass off the plan by up to 0.37 mm (the horse's push). Left out, the eleven climbs read 2053 readings over the limit
+ // against 1878, every climb's worst higher; the test suite's flight check sees it only on the rabbit's climb
+ // (0.51 N·m·s against its 0.5), so the climbs are gated again after any change to it.
+ if(follow&&last1&&plan)refine(last1.S,last1.L,last1.I);
  setMove(null);return {...follow,spin:spin||(()=>null),plan,samples,times,settled,history};}

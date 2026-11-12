@@ -70,9 +70,10 @@ export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][
  // elbowTo: a bend direction in the world instead (an arm braced on a wall while the chest turns past it).
  const et=k=>k.elbowTo,elbowTo=et(a)||et(b)?(et(a)||et(b)).map((v,j)=>lerp(v,(et(b)||et(a))[j],u)):undefined;
  // soft (metres): on a key carried by the trunk next to a floor key, the end's height between them is the smooth
- // maximum of the two (softplus over soft), and it moves along the floor only while it is off it (g: how far down, held
- // to zero at the trunk key; the blends are smooth ors, u + (1 - u) g, as a min or max kinked where its sides crossed and
- // stepped the centre of mass's velocity by 0.1 m/s at a toe-off). Leaving a mark, a hoof stays down until the leg's own reach lifts it; coming down, it
+ // maximum of the two (softplus over soft), and it moves along the floor only while it is off it (gh below: how far
+ // down, over three soft, held to zero at the trunk key; g, the same over one soft, weights the plant; the blends are
+ // smooth ors, u + (1 - u) gh, as a min or max kinked where its sides crossed and stepped the centre of mass's velocity
+ // by 0.1 m/s at a toe-off). Leaving a mark, a hoof stays down until the leg's own reach lifts it; coming down, it
  // slows onto the mark. Driven at an unreachable mark instead, a leg locks straight and its knee whips as it frees or
  // catches (14 m/s at a toe-off). The softplus never quite reaches either key, so its gap is taken out at both ends with
  // (1 - u)^3 and u^3 (a 2 mm step there read as 2,000 m/s^2). Mid-segment the leg's soft reach (zone) widens to 2 soft,
@@ -80,10 +81,18 @@ export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][
  // its reach stays bent, and a falling hoof slows onto the floor over about 3 zones of the hips' travel instead of
  // stopping in the last centimetre. The zone is what it adds to the IK's exact soft reach (.015): taken as the larger
  // of the two, it kinked where it passed it and the hoof jumped at 110 m/s^2.
+ // Along the floor an end leaving its mark, or coming down onto it, follows the trunk key over three soft (gh), not one
+ // (the climb's hooves leave on a soft key at the take-off and come down on one at the drop; each window's left hand
+ // comes down on one). Released with their lift, the climb's hooves swung toward the tucked key as fast as they rose, a
+ // swing of the legs along the floor that the balance's 5 ms tracks could not follow (on 148c6fb7 the rig read 523 N of
+ // phantom force at 0.860 s, 511 of it along the crossing, as they came off). Spread so, the eleven climbs read 1878
+ // readings over the limit against 1992 over one soft, fewer on every climb (the horse's worst 2198% against 3467); the
+ // windows' readings moved by at most 6.4 N and 2.8 N·m.
  const sk=a.soft&&b.f==='world'&&b.plant===true?a:b.soft&&a.f==='world'&&a.plant===true?b:null;let p=pa.clone().lerp(pb,u),g=0,zone=0;
  if(sk){const W=sk===a?pb:pa,F=sk===a?pa:pb,s=sk.soft,d=(F.y-W.y)/s,top=W.y+s*(d>30?d:Math.log1p(Math.exp(d))),v=1-u,
    down=1/(1+Math.exp(Math.min(30,d)));g=down*(sk===a?1-v*v*v:1-u*u*u);
-  p=pa.clone().lerp(pb,sk===a?u+v*g:u*(1-g));p.y=top+(pa.y-top)*v*v*v+(pb.y-top)*u*u*u;zone=Math.max(0,2*s-.015)*smooth(Math.min(u,v)/.25);}
+  const gh=1/(1+Math.exp(Math.min(30,d/3)))*(sk===a?1-v*v*v:1-u*u*u);
+  p=pa.clone().lerp(pb,sk===a?u+v*gh:u*(1-gh));p.y=top+(pa.y-top)*v*v*v+(pb.y-top)*u*u*u;zone=Math.max(0,2*s-.015)*smooth(Math.min(u,v)/.25);}
  // arc (metres): on a key, the end rises that much mid-way from the key before, 64 u^3 (1 - u)^3 (C2 at both keys): a
  // step in one swing, where a mid-step key stopped the hoof in the air and the swing leg's turning read as 640 N·m.
  // arcTo: the way it lifts, if not up (a hand stepping down a wall comes off it, along the wall's outward normal).

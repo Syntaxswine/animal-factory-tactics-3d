@@ -14,10 +14,15 @@ export const WALL=Object.freeze({edge:.5,half:.08,top:2.0});
 // leaving a face keeps its ankle off it, toe up, so a long foot (rabbit, dog, skunk) never swings into the wall. The
 // straddle faces along the wall, one leg down each side, so the thighs hang outside the 16 cm top; the left leg
 // comes over behind it, knee to the top, so the body turns left to face the wall from the far side.
+// The crouch goes down to .50 (it was .56): held under the hooves' release (the push's ceiling, below), the jump finds
+// its take-off speed in the push's length. From .56 the horse's centre of mass peaked at 2.93 m/s in the push and met
+// the catch 7.9 cm under its authored path; from .50 it peaks at 3.13 m/s and meets it 0.6 cm under. With the ceiling
+// and the turn refined on the final hips, the eleven climbs read 2218 readings over the limit from .56 and 1878 from
+// .50 (2546 on 148c6fb7).
 const TRUNK=[
  {t:0,label:'Ready',hips:[0,.80,0],stand:true},
  {t:.4,label:'Step in',hips:[.10,.79,0],pitch:4,nod:-10,stand:true,near:true},
- {t:.7,label:'Crouch',hips:[.08,.56,0],push:18,pitch:14,flex:4,nod:-30,turn:40,stand:true,near:true},
+ {t:.7,label:'Crouch',hips:[.08,.50,0],push:18,pitch:14,flex:4,nod:-30,turn:40,stand:true,near:true},
  {t:.86,label:'Push off',hips:[.15,.85,0],pitch:2,nod:-16,turn:40,stand:true,near:true,launch:true},
  {t:1.185,label:'Over the top',hips:[.24,1.20,0],pitch:-3,flex:-2,nod:-12,turn:40,apex:.04,near:true},
  {t:1.265,label:'Jump and catch',grip:true,catch:true,hips:[.25,1.20,0],pitch:-4,flex:-2,nod:-10,turn:40,hang:true,near:true},
@@ -95,10 +100,10 @@ export function createWallClimb(worker,profile={id:'horse'}){
  const posTrack=track(keys.map(k=>[k.t,...k.hips]),pins,{accel}),rotTrack=angleTrack(keys.map(k=>[k.t,k.heading||0,k.pitch||0,k.roll||0]));
  const shape=track(keys.map(k=>[k.t,k.flex||0,k.side||0,k.twist||0,k.nod||0,k.tilt||0,k.turn||0]));
  let fit=null,steady=null,turnRef=null,balance=null,onTop=null;
- function trunkAt(t){const [flex,side,twist,nod,tilt,turn]=shape(clamp(t,0,D));let hips=V(...posTrack(t)),hipsQ=rotTrack(t),headQ=relQ(nod,tilt,turn);const spineQ=relQ(flex,side,twist);
-  if(onTop)hips.add(onTop(t));if(balance)hips.add(balance.shift(t));
+ function trunkAt(t,bal=balance){const [flex,side,twist,nod,tilt,turn]=shape(clamp(t,0,D));let hips=V(...posTrack(t)),hipsQ=rotTrack(t),headQ=relQ(nod,tilt,turn);const spineQ=relQ(flex,side,twist);
+  if(onTop)hips.add(onTop(t));if(bal)hips.add(bal.shift(t));
   if(fit){hips.add(fit.trunk(t));const bow=fit.bow(t);if(bow)hipsQ=hipsQ.clone().multiply(bodyQ(bow*DEG));const h=fit.head(t);if(h[0]||h[1]||h[2])headQ=headQ.multiply(relQ(...h));}
-  const sp=balance?.spin?.(t);if(sp){hipsQ=sp.q.clone().multiply(hipsQ);hips.sub(sp.pivot).applyQuaternion(sp.q).add(sp.pivot);}
+  const sp=bal?.spin?.(t);if(sp){hipsQ=sp.q.clone().multiply(hipsQ);hips.sub(sp.pivot).applyQuaternion(sp.q).add(sp.pivot);}
   return {hips,hipsQ,spineQ,headQ,chestQ:hipsQ.clone().multiply(spineQ),chest:hips.clone().add(body.offsets.spine.clone().applyQuaternion(hipsQ))};}
  const restWrist=s=>body.at0('hand'+s).sub(body.at0('spine')).toArray(),ANKLE=fitB.ankle;
  // The crouched hooves push off for the jump (lift).
@@ -171,8 +176,33 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // on the top, the plan keeps the authored path (hold): its own hips' move lifted the seat off it.
  // the tails as played (the fit's bend, the base squashed onto the floor), for the balance's contacts too
  const playTail=t=>{const [a,b]=fit.tail(t);tails.set(a*DEG,b*DEG);tails.squash(body.root);};
+ // The push's ceiling: how far up off its authored path the balance may move the trunk at t before a hoof leaving the
+ // floor on its soft key rises more than EPS off its mark (bisection on the leg's own key; never below the authored
+ // path, where the authored hoof leaves at its own time; null where no hoof is leaving). The hooves' release rides the
+ // hips the plan moves, so a plan that raised them took the hooves off early: each round's take-off came about 10 ms
+ // earlier (the horse's last foot sample 0.870 s authored, 0.860 in the schedule held from the second round, the hooves
+ // within the rig's centimetre of the floor only until 0.848 and 0.854 as played), and the plan pushed on with nothing
+ // under it (the horse's climb read up to 520 N·m of airborne phantom torque there, at 0.855 s). Held under the
+ // release, the take-off keeps its authored time on every round, and the plan finds its speed by crouching and pushing
+ // within the floor's 3 body weights. On these climbs the plan meets the ceiling only at its floor, over the last one
+ // to four foot samples, where the authored hoof is already EPS up: it lies on its authored path at the last foot
+ // sample (within 0.3 mm) and up to 5.4 mm under it before, and it stays at least 5.9 mm under the bisection's own
+ // heights above the authored path (each plan's least gap 5.9 to 19.9 mm; every plan's ceiling rows logged, both
+ // rounds, the eleven climbs). So the floor holds the take-off, and the bisection finds where it starts; that the
+ // heights are found as a move of the trunk, while the balance bounds its centre of mass (a different move while the
+ // legs stand), does not reach the plan. As the hooves leave (0.865 to 0.873 s) the horse's played ones are within
+ // 0.5 mm of the authored ones.
+ // Without the floor (EPS at 5 mm) the take-off drifts later between the rounds on seven climbs (the pig foreman's
+ // 0.855 -> 0.870 s), the horse's centre of mass lies 28 mm under its authored path at its last foot sample and meets
+ // the catch 7.3 cm under it, the pigs' walk up the face reads 240 and 108 readings against 52 and 0, and the eleven
+ // climbs 2253 against 1878; but seven climbs read their worst lower without it (the horse's 299% against 2198%, at
+ // the take-off), the floor's cost.
+ const EPS=.005,pushCeiling=t=>{let best=null;for(const id of ['leg-1','leg1']){const keys=LIMB[id];let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;
+   const a=keys[i][1],b=keys[Math.min(keys.length-1,i+1)][1];if(!(b.soft&&a.f==='world'&&a.plant===true)||t<=keys[i][0]||t>=keys[i+1][0])continue;
+   const base=trunkAt(t,null),up=d=>{const tr={...base,hips:base.hips.clone().add(V(0,d,0)),chest:base.chest.clone().add(V(0,d,0))};return keyedLimb(keys,t,tr).p[1]-a.p[1];};
+   let lo=-.3,hi=.3;if(up(lo)>EPS)continue;if(up(hi)<=EPS)continue;for(let k=0;k<30;k++){const m=(lo+hi)/2;if(up(m)>EPS)hi=m;else lo=m;}best=best===null?lo:Math.min(best,lo);}return best===null?null:Math.max(0,best);};
  const bal=balanceTraversal({duration:D,probe:contactProbe(worker,tails),obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),pose:t=>{const P=body.pose(spec(t),'balance');playTail(t);return P;},com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onTop?onTop(t):V()).toArray(),
-  hold:deep?t=>t>=TOP_BAND[0]&&t<=TOP_BAND[1]:null});
+  hold:deep?t=>t>=TOP_BAND[0]&&t<=TOP_BAND[1]:null,ceiling:pushCeiling});
  // The head and tail are fitted again to the balanced motion, the head held through the flights (traversal-fit.js,
  // fit.solveHead and fit.solveTail), and the report taken on it.
  balance=bal;fit.solveHead({air:t=>bal.samples[Math.round(t/(bal.times[1]-bal.times[0]))]?.kind==='air'});fit.solveTail();turns();

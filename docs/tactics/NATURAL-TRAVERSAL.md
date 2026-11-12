@@ -2278,6 +2278,150 @@ miss of the plan 1.65 -> 9.73 mm, on the copy before the end rows were met). The
 landings; the climb's push-off; the vault's capsule overlap and the spring's foot speed; and the rest of the list as it
 stood.
 
+### 2026-11-12 (physics balance, twenty-fifth part): the climb's push-off
+
+Every climb but the pigs' read its worst at the push-off and the flight's start (the pigs' at the catch): on 148c6fb7
+the horse's climb read 520 N·m of airborne phantom torque at 0.855 s, the goat's 645 N·m at 0.875. Most of it lay around
+the take-off: 63 of the horse's 70 readings from 0.83 to 0.904 s, 6 more in its push at 0.78 s (up to 95 N against the
+limit's 73.5; the goat's push read 38 from 0.725 s, up to 137 N), and one at 1.218 s in the flight, whose samples from
+0.91 s read 0.5 to 8.4 N·m against its 10.
+
+Three faults, each feeding the next:
+- The hooves leave the floor on a soft key (from the floor key at 0.70 s to the tucked key at 0.995, soft 3 cm): their
+  height is a softplus of the tucked key's, which rides the pelvis, which rides the hips the balance moves. Raising the
+  hips, each round's plan took the hooves off earlier. The horse's last foot sample is 0.870 s as authored and 0.860 in
+  the schedule held from the second round, and as played its hooves are within the rig's centimetre of the floor only
+  until 0.848 and 0.854 (the goat's 0.865, 0.850, then 0.832 and 0.840). The plan pushed on with nothing under it: the
+  runaway the balance's rounds already name (a toe-off came 5 ms earlier every round), seen from the leg's side.
+- As the hooves leave, the legs swing up toward the tuck: on the horse the legs alone changed the body's angular
+  momentum about its centre of mass at up to 539 N·m, with nothing under them to give it.
+- The flights' turn is refined on frames posed with the round before's hips, and the hips are found again after (the
+  take-off moved with them), so the played flight began with a move the turn never saw: the horse's angular momentum
+  about its centre of mass fell from 3.3 N·m·s to -0.1 in the flight's first 30 ms (the flight's median -0.18), a 20 ms
+  ring of up to 379 N·m.
+
+**The fix.**
+- The push's ceiling: balanceTraversal takes ceiling(t), how far up off its authored path the plan may move the centre
+  of mass at t, and planCentre bounds a feet sample's height by it. The climb's is how far up the trunk may move before
+  a hoof leaving on its soft key rises more than 5 mm off its mark (bisection on the leg's own key), never below the
+  authored path (there the authored hoof leaves at its own time; what that floor costs is under Not kept). On these
+  climbs the plan meets the ceiling only at that floor, over the last one to four foot samples, where the authored hoof
+  is already 5 mm up: its centre of mass lies on its authored path at the last foot sample (within 0.3 mm) and up to
+  5.4 mm under it before, and it stays at least 5.9 mm under the bisection's own heights above the authored path (each
+  plan's least gap 5.9 to 19.9 mm, at 0.835 to 0.860 s; every plan's ceiling rows logged, both rounds, the eleven
+  climbs). So the floor holds the take-off, and the bisection finds where it starts; that its heights are found as a
+  move of the trunk, while the plan bounds the centre of mass (a different move while the legs stand), does not reach
+  the plan. As they leave, from 0.865 to 0.873 s, the horse's played hooves are within 0.5 mm of the authored ones
+  (earlier in the push the right one sits up to 1.1 mm deeper). Every round now plans the take-off at its authored time.
+- The flights' turn is refined once more on the final hips (in flight a turn about the centre of mass leaves the plan as
+  it was; on the contacts beside the flight, where the turn eases in and out, the horse's played centre of mass moves
+  off the plan by up to 0.37 mm): the horse's flight now holds its angular momentum within 0.12 N·m·s of its median
+  through its first 50 ms, 0.38 without it. Without it the eleven climbs read 2053 readings against 1878 and every
+  climb's worst is higher, the pigs' most (12776 and 11907% against 7807 and 5535).
+- An end leaving its floor mark on a soft key, or coming down onto one, follows the trunk key along the floor over three
+  soft, not one (keyedLimb; the climb's hooves leave on one at the take-off and come down on one at the drop, each
+  window's left hand comes down on one): released with their lift, the hooves swung along the floor as fast as they rose
+  (on 148c6fb7 the rig read 523 N of phantom force at 0.860 s, 511 of it along the crossing, as they came off). On the
+  code as kept, one soft instead of three reads 1992 readings against 1878, more on every climb, and the nine mammals'
+  worst higher (the horse's 3467% against 2198); the pigs' within 1%.
+- The crouch goes down to 0.50 m (it was 0.56): held under the release, the jump finds its speed in the push's length.
+  From 0.56 the horse's centre of mass peaked at 2.93 m/s in the push and met the catch 7.9 cm under its authored path;
+  from 0.50 it peaks at 3.13 m/s and meets it 0.6 cm under. With the rest in place, the eleven climbs read 2218 readings
+  from 0.56 and 1878 from 0.50.
+
+phantom-wrench 1.2.0 `--gate` (frozen copies), 148c6fb7 -> now; "readings" counts the samples over the limit and the
+instants between and beside them:
+
+| climb | over the limit at the samples | readings | worst (% of its limit) |
+|---|---|---|---|
+| horse | 0.070 -> 0.030 s | 70 -> 40 | 5196 -> 2198% |
+| goat | 0.120 -> 0.055 s | 111 -> 49 | 6447 -> 1899% |
+| bull | 0.150 -> 0.100 s | 148 -> 83 | 5668 -> 722% |
+| cow | 0.100 -> 0.050 s | 108 -> 38 | 5627 -> 725% |
+| donkey | 0.085 -> 0.040 s | 80 -> 41 | 5262 -> 2230% |
+| sheep | 0.095 -> 0.050 s | 92 -> 40 | 6327 -> 1886% |
+| skunk | 0.080 -> 0.040 s | 75 -> 36 | 4908 -> 885% |
+| rabbit | 0.105 -> 0.065 s | 97 -> 53 | 4042 -> 1186% |
+| dog | 0.125 -> 0.055 s | 119 -> 53 | 4966 -> 1151% |
+| pig foreman | 1.035 -> 0.940 s | 1009 -> 911 | 11193 -> 7807% |
+| pig director | 0.635 -> 0.550 s | 637 -> 534 | 13076 -> 5535% |
+
+Together 2.600 -> 1.975 s over the limit at the samples and 2546 -> 1878 readings, every climb fewer; the eleven windows
+and eleven low walls read as before (the low walls' reports byte for byte; the windows' counts and flags the same, and
+every reading within 6.4 N and 2.8 N·m, the pig foreman's at 2.24 to 2.26 s, the rest within 1.0 N and 0.61 N·m: their
+left hands come down onto the floor on a soft key, now followed along it over three soft). Their balance schedules have
+no flights for the last refinement to find. `bin/collisions.mjs`: the same on eight climbs; the horse's deepest
+3.6 -> 3.5 cm (one more span deeper than 2 cm), the sheep's at the same depth 30 ms earlier, the pig foreman's boot
+6.6 -> 7.2 cm into the wall at 1.49 s; the windows and low walls as before. With the ceiling, the 4 cm end margin (the
+twenty-fourth part) no longer puts the bull's and cow's crouch over the limit: gated with the margin at the plan's own
+centimetre (in memory), their crouch reads nothing either way, and over the eleven climbs the margin takes the readings
+within 10 ms of an end from 5 to 3 and those in all from 1871 to 1878.
+
+The hooves still lean into the floor late in the push, as authored: posed without its balance, the climb puts the right
+hoof's lowest point up to 6.3 mm into the floor (at 0.847 s) and the left 3.2 (at 0.845; 148c6fb7's pose 6.6 and 3.4).
+148c6fb7's balance hid it by lifting the hooves early; as played the right now goes 7.4 mm in (at 0.848 s). On the copy
+before the ceiling's floor (the dropped rule below still in it; 10.1 mm there), measuring the plant snaps
+(traversal-fit.js) again after the balance took it to 7.5 mm, as they act only where a hoof counts as fully planted (the
+soft key's plant weight falls with time), and holding the hoof at its planted pitch until it lifts took it to 11.4:
+neither kept.
+
+`tests/natural-traversal.test.mjs`, on every mammal's climb: every round of the balance plans the take-off at its
+authored time (on 148c6fb7 every climb's moved 5 to 15 ms between the rounds); at the last foot sample before the flight
+a hoof is within the rig's centimetre of the floor (4.9 to 9.2 mm, the rabbit's the highest; on 148c6fb7 13.8 to
+30.2 mm); and through the flight's first 50 ms the body's angular momentum about its centre of mass stays within
+0.5 N·m·s of the flight's median, what the rig's airborne limit of 10 N·m moves in 50 ms (0.02 to 0.12; on 148c6fb7 0.88
+to 7.8). Each fails on all eleven mammals on 148c6fb7's motion with the other two switched off. The third guards the
+runaway and the stale turn together and barely sees either alone: with the take-off held and the last refinement left
+out it reads 0.15 to 0.51 (only the rabbit's over), and with the last refinement alone on 148c6fb7's motion 0.09 to 0.66
+(the goat's and sheep's over), so the gate shows that refinement's worth (above). The battle's traversal hands the rig's
+segment points back from apply for the last.
+
+**Not kept.**
+- The hooves' release decoupled from the balance (keyedLimb deciding it on the authored trunk): with half the plan's
+  move leaking in as the hoof let go, it still left early, and the horse's climb read 95 readings against 70.
+- The ceiling alone, before its floor: the early runaway is gone, but the take-off then drifted later between the rounds
+  on seven climbs (with the floor and the rest, none does), and the legs' swing fell wholly in the flight, where the
+  turn answered it late (110 readings on the horse's climb).
+- The last refinement alone: the flight's turn eases back into the push's contacts, and the horse's push read 55
+  readings against 28 (89 in all).
+- A ceiling at the leg's reach instead of the release: the authored pose is past the reach from 0.86 s (part of the
+  authored toe-off is the leg's IK tugging a hoof it cannot reach), and the plan drove the hips 29 cm under the authored
+  path.
+- A later round's feet kept in the air where the ceiling applies and the authored motion is airborne. Before the ceiling
+  had its floor or the three-soft follow (the crouch already at 0.50 m), the ceiling's lower hips kept a hoof down
+  longer, the next round planned on it and the ceiling then held the hips under those samples too: the pig foreman's
+  last foot sample went from 0.855 to 0.870 s, its take-off there 83 mm under its authored path and its catch 175 ms
+  late (1.425 s against 1.250). The rule held that take-off at 0.855 s (43 mm under its path there; the catch still at
+  1.425 s) and took the horse's climb from 62 readings to 51, the dog's from 76 to 65 and the pig foreman's from 1147 to
+  1138. With the floor it never fires, on any climb or round, and without the rule the eleven climbs' gate reports read
+  byte for byte the same: the floor stops the drift (without the floor it is back, the next item).
+- No floor at the authored path, the ceiling at 5 mm (all else as kept): the take-off drifts later between the rounds on
+  seven climbs (the horse's, donkey's, skunk's and dog's by 5 ms, the rabbit's and pig director's by 10, the pig
+  foreman's from 0.855 to 0.870 s), and at the last foot sample a hoof's lowest point is into the floor on those seven,
+  by 0.3 to 17.7 mm (the pig foreman's the deepest). The horse's centre of mass peaked at 2.99 m/s (3.13 with the
+  floor), lay 28 mm under its authored path at its last foot sample (0 with it) and met the catch 7.3 cm under it (0.6);
+  the pigs' walk up the face read 240 and 108 readings (52 and 0 with the floor), their climbs' worst, in the hang,
+  29270 and 27795%, and the eleven climbs 2253 (2.375 s over the limit at the samples). Its worst readings were lower on
+  seven climbs, which is the floor's cost: the horse's 299% against 2198, the donkey's 327 against 2230, the goat's 1282
+  against 1899, the sheep's 1270 against 1886, the bull's 394 against 722, the cow's 377 against 725 and the skunk's 837
+  against 885 (with the floor all seven fall at 0.867 to 0.873 s, as the hooves leave). At 9 mm, inside the rig's
+  centimetre, the take-off moves on seven climbs too (the goat's and sheep's 5 ms earlier), the climbs read 2165, and
+  the worst is lower only on the horse's, donkey's and skunk's (the goat's, bull's, cow's and sheep's 2990, 2103, 2110
+  and 2903%).
+- The end's follow along the floor over six soft instead of three: the horse's, goat's and dog's climbs read 39, 44 and
+  51 against 40, 49 and 53, their worst 1926, 1617 and 1017% against 2198, 1899 and 1151, a change that would reach
+  every crossing again (the windows' left hands land on a soft key too) for 12 to 15% off those three worst.
+
+**Left.** The take-off: the rig reads 28 readings on the horse's climb from 0.863 to 0.893 s, 8 of them on the floor as
+the plan's push fades (to 0.1 of the body's weight by the last foot sample, 0.870 s) and the legs begin to fold, and 20
+in the air from 0.871 s, the hooves past its centimetre (the worst, 2198%: 268 N and 220 N·m at 0.871 s, the hooves 10.6
+and 16.4 mm up; 299% without the floor at the authored path, which cost the jump and the take-off's time: Not kept); the
+dog's 28 from 0.863 to 0.900 s, 10 on the floor and 18 in the air from 0.873 s. The pigs' flight and catch: the
+foreman's catch is late, and from 1.164 to 1.557 s it reads 391 readings, 271 in the air until the rig finds its catch
+at 1.438 s and 120 in the hang and the walk up the face after. The push's own contacts at 0.71 to 0.75 s (12 readings on
+the horse). The hooves' authored lean into the floor. Then the hands to the floor; the roll's landings; the vault's
+capsule overlap and the spring's foot speed; and the rest of the list as it stood.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
