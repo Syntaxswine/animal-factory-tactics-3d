@@ -96,12 +96,12 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=
  // cow's climbs; with the push's ceiling, the climbs' by 6 to 38). There, before the ceiling (planCentre's ceil), it
  // also put the bull's and cow's crouch over the limit (12 and 16 readings, and three more each at the top), moving
  // the plan up to 3.9 mm through the bull's first 0.65 s; solved to 100000 iterations, their crouch read over with
- // either margin. With the ceiling their crouch reads nothing with either, and over the eleven climbs the margin takes
- // the readings within 10 ms of an end from 5 to 3 and those in all from 1871 to 1878. The plan does not meet these
- // rows: it stops with its rows met to about 1e-5, which on a pressure point's row is centimetres (its pressure point
- // at the dog's sample 1 lies 3.3 cm outside the outline, 6.0 without the margin). The margin works by nudging that
- // solve, so only the gate sees it (the test suite passes without it): the dog's window and the climbs are gated again
- // after any change to the plan, its iterations or the hips' track.
+ // either margin. With the ceiling their crouch reads nothing with either, and over the eleven climbs on e909dcf4 the
+ // margin took the readings within 10 ms of an end from 5 to 3 and those in all from 1871 to 1878. The plan does not
+ // meet these rows: it stops with its rows met to about 1e-5, which on a pressure point's row is centimetres (its
+ // pressure point at the dog's sample 1 lies 3.3 cm outside the outline, 6.0 without the margin). The margin works by
+ // nudging that solve, so only the gate sees it (the test suite passes without it): the dog's window and the climbs
+ // are gated again after any change to the plan, its iterations or the hips' track.
  const END=4,END_MARGIN=.04,acc2=[1,0,-2,0,1],rows=[];for(const ax of [0,2])rows.push({at:ax/2,c:[1],lo:c0[ax][0],hi:c0[ax][0],stiff:EQ},{at:ax/2,c:[7,0,-8,0,1],lo:0,hi:0,stiff:EQ},{at:2*(n-4)+ax/2,c:[1,0,-8,0,7],lo:0,hi:0,stiff:EQ},
   {at:2*(n-2)+ax/2,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ},{at:2*(n-1)+ax/2,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ});
  for(let i=1;i<n-1;i++){const s=samples[i],at=2*(i-1),both=(lo,hi)=>rows.push({at,c:acc2,lo,hi},{at:at+1,c:acc2,lo,hi});
@@ -329,8 +329,8 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  // mass fell from 3.3 N·m·s to -0.1 in the flight's first 30 ms (the flight's median -0.18), which the rig read as up
  // to 379 N·m of airborne phantom torque. In flight a turn about the centre of mass leaves the plan as it was; on the
  // contacts beside a flight, where the turn eases in and out after the hips were found, it moves the played centre of
- // mass off the plan by up to 0.37 mm (the horse's push). Left out, the eleven climbs read 2053 readings over the limit
- // against 1878, every climb's worst higher; the test suite's flight check sees it only on the rabbit's climb
- // (0.51 N·m·s against its 0.5), so the climbs are gated again after any change to it.
+ // mass off the plan by up to 0.37 mm (the horse's push). Left out on e909dcf4, the eleven climbs read 2053 readings
+ // over the limit against 1878, every climb's worst higher; the test suite's flight check sees it only on the rabbit's
+ // climb (0.51 N·m·s against its 0.5), so the climbs are gated again after any change to it.
  if(follow&&last1&&plan)refine(last1.S,last1.L,last1.I);
  setMove(null);return {...follow,spin:spin||(()=>null),plan,samples,times,settled,history};}

@@ -16,9 +16,9 @@ export const WALL=Object.freeze({edge:.5,half:.08,top:2.0});
 // comes over behind it, knee to the top, so the body turns left to face the wall from the far side.
 // The crouch goes down to .50 (it was .56): held under the hooves' release (the push's ceiling, below), the jump finds
 // its take-off speed in the push's length. From .56 the horse's centre of mass peaked at 2.93 m/s in the push and met
-// the catch 7.9 cm under its authored path; from .50 it peaks at 3.13 m/s and meets it 0.6 cm under. With the ceiling
-// and the turn refined on the final hips, the eleven climbs read 2218 readings over the limit from .56 and 1878 from
-// .50 (2546 on 148c6fb7).
+// the catch 7.9 cm under its authored path; from .50 it peaks at 3.13 m/s and meets it 0.6 cm under. On e909dcf4,
+// with the ceiling and the turn refined on the final hips, the eleven climbs read 2218 readings over the limit from .56
+// and 1878 from .50 (2546 on 148c6fb7).
 const TRUNK=[
  {t:0,label:'Ready',hips:[0,.80,0],stand:true},
  {t:.4,label:'Step in',hips:[.10,.79,0],pitch:4,nod:-10,stand:true,near:true},
@@ -48,13 +48,21 @@ const TRUNK=[
 ];
 export function createWallClimb(worker,profile={id:'horse'}){
  const body=createTraversalBody(worker),tails=createTailBend(worker),probe=createSurfaceProbe(worker,{stride:2,keep:(m,i)=>!/tail/.test(m.name)||tails.isRoot(m.name,i)}),fitB=bodyFit(body,probe),back=fitB.back,D=TRUNK.at(-1).t;
- // Hanging, a body deeper in front stands back too (near) and leans over its belly toward the wall (lean, degrees of
- // pitch) until its shoulders are where the horse's were. Unadapted, the fit pushed a pig's belly 17 to 26 cm back off
- // the face, out of its arms' reach of the top; stood back alone, the pig director's shoulders were 52 cm from it, past
- // its arms' 50. Its hands never gripped, and the balance, finding nothing holding the body until the straddle,
- // planned a second-long flight and drove the hips 25 to 40 cm into the floor to launch it.
- const lean=Math.asin(Math.min(1,back/(body.offsets.spine.y+body.offsets.shoulder[1].y)))/DEG;
- const keys=TRUNK.map(k=>({...k,pitch:(k.pitch||0)+(k.near&&k.hang?lean:0),hips:[k.hips[0]-(k.near?back:0),k.stand?fitB.stand(k.hips[1]):k.hang?fitB.hang(k.hips[1]):k.hips[1],k.hips[2]]}));
+ // Facing the wall, a body deeper in front stands back too (near) and leans over its belly toward the wall (lean,
+ // degrees of pitch) until its shoulders are where the horse's were. Unadapted, the fit pushed a pig's belly 17 to
+ // 26 cm back off the face, out of its arms' reach of the top; stood back alone, the pig director's shoulders were
+ // 52 cm from it, past its arms' 50. Its hands never gripped, and the balance, finding nothing holding the body until
+ // the straddle, planned a second-long flight and drove the hips 25 to 40 cm into the floor to launch it.
+ // It leans from the push on (leanFrom, the launch key), not from the catch: a body in the air cannot turn itself.
+ // Leant in the flight's last 80 ms, the lean was taken back by the balance's turn about the centre of mass, the hands
+ // missed the top, and the second round put the catch 115 and 90 ms after the first round's (the authored motion's), at
+ // 1.365 and 1.345 s (there the turn was 25 degrees on the pig foreman and 29 on the director, the nearest hand 65.5
+ // and 47.3 mm off the wall), the hang played with nothing holding the body. The pelvis-carried leg keys under the lean
+ // are turned back by it (after LIMB), so the legs keep their tuck's place: turned with the pelvis, they lifted the
+ // hooves 25 and 30 ms early into a longer jump than the pigs could make (the pig foreman's first round's plan 12 to
+ // 14 cm under its authored path through the catch).
+ const lean=Math.asin(Math.min(1,back/(body.offsets.spine.y+body.offsets.shoulder[1].y)))/DEG,leanFrom=TRUNK.find(k=>k.launch).t,leanTo=TRUNK.findLast(k=>k.near&&k.t>=leanFrom).t;
+ const keys=TRUNK.map(k=>({...k,pitch:(k.pitch||0)+(k.near&&k.t>=leanFrom?lean:0),hips:[k.hips[0]-(k.near?back:0),k.stand?fitB.stand(k.hips[1]):k.hang?fitB.hang(k.hips[1]):k.hips[1],k.hips[2]]}));
  // Gripping keys rise until both hands reach the top at .97 of the arm (the horse's keys left them 13 cm short); the
  // hooves on the face rise with them (rise).
  const top=WALL.top+.07,rise={};
@@ -143,10 +151,23 @@ export function createWallClimb(worker,profile={id:'horse'}){
   'arm-1':[[0,{f:'chest',p:restWrist(-1)}],[.4,{f:'chest',p:[.20,.15,-.30]}],[.7,{f:'chest',p:[.10,-.05,-.32]}],[.86,{f:'chest',p:[.06,.40,-.26],elbow:HANG}],[1.115,{f:'chest',p:[.04,.56,-.22],elbow:HANG}],[1.265,{f:'world',p:[.45,top,-.18],palm:0,elbow:HANG}],[3.485,{f:'world',p:[.46,top,-.18],palm:0,elbow:HANG}],[3.545,{f:'world',p:[.50,top+.06,.04]}],[3.605,{f:'world',p:[.54,top,.20],palm:-180}],[4.175,{f:'world',p:[.54,top,.20],palm:-180,lift:.3}],...SLIDE(1),[4.95,{f:'chest',p:[.18,-.18,-.16]}],[5.27,{f:'chest',p:[.16,-.26,-.20]}],[6.1,{f:'chest',p:restWrist(-1)}]],
   arm1:[[0,{f:'chest',p:restWrist(1)}],[.4,{f:'chest',p:[.20,.15,.30]}],[.7,{f:'chest',p:[.10,-.05,.32]}],[.86,{f:'chest',p:[.06,.40,.26],elbow:HANG}],[1.115,{f:'chest',p:[.04,.56,.22],elbow:HANG}],[1.265,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.345,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.465,{f:'world',p:[.52,top+.06,0]}],[2.585,{f:'world',p:[.54,top,-.10],palm:-40}],[3,{f:'world',p:[.54,top,-.10],palm:-40}],[3.06,{f:'world',p:[.56,top+.06,-.15]}],[3.12,{f:'world',p:[.54,top,-.20],palm:-180}],[3.665,{f:'world',p:[.54,top,-.20],palm:-180}],[4.175,{f:'world',p:[.54,top,-.20],palm:-180,lift:.3}],...SLIDE(-1),[4.95,{f:'chest',p:[.18,-.18,.16]}],[5.27,{f:'chest',p:[.16,-.26,.20]}],[6.1,{f:'chest',p:restWrist(1)}]],
  };
+ // Under the lean (leanFrom to leanTo) the pelvis-carried leg keys are turned back by it: the legs keep the tuck the
+ // horse's keys give them, and the hooves leave the floor when they did. That takes in the hang's first key too
+ // (1.375 s), which rode the lean from the catch on e909dcf4: its target moves 25 cm on the pig foreman and 32 on the
+ // director.
+ if(lean>0)for(const id of ['leg-1','leg1'])for(const [t,k] of LIMB[id])if(k.f==='pelvis'&&t>leanFrom&&t<=leanTo)k.p=V(...k.p).applyQuaternion(bodyQ(-lean*DEG,0)).toArray();
  const spec=t=>{const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posedFrom(tr,limbs,{poles:steady?id=>steady(id,t):null,offsets:fit?.limb?id=>fit.limb(id,t):null,snaps:fit?.plant?id=>fit.plant(id,t):null,turns:turnRef?b=>turnRef(b,t):null});};
  // Fit this character's surface: trunk, head and tail out of the floor and the wall. The face is the way out until the
  // chest is nearly over (2.265): a hanging front (the sheep's waistcoat hem) meets the top edge before the chest does.
- fit=createClearanceFit(D);fit.solve({body,probe,tails,obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),poseAt:t=>body.pose(spec(t),'fit'),stage:t=>t<2.265?'near':t<3.685?'over':'far'});
+ // The head's turn is held through the jump (launch to catch) here too, as the fit after the balance holds it through
+ // every flight, but for the catch's own turn, softened over three of the fit's samples, reaching back into the jump's
+ // end (on the pig director 5.0 degrees at its last sample here, 1.26 s, and 5.2 in the played flight's last 15 ms,
+ // where the rig already reads its hands on the top). The balance plans the flight's turn with the head as this fit
+ // leaves it, and the pig foreman's head, easing out of a 15 degree tilt from 1.04 s in the air here and held by the
+ // fit after the balance, left the turn answering a tilt no longer there (up to 65 N·m of airborne phantom torque from
+ // 1.03 to 1.18 s).
+ fit=createClearanceFit(D);const jump=[TRUNK.find(k=>k.launch).t,TRUNK.find(k=>k.catch).t];
+ fit.solve({body,probe,tails,obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),poseAt:t=>body.pose(spec(t),'fit'),air:t=>t>jump[0]&&t<jump[1],stage:t=>t<2.265?'near':t<3.685?'over':'far'});
  steady=steadyPoles(D,t=>limbSample(body,spec(t)));
  // The limbs are fitted with their steady bend directions, which are then found again for the moved targets.
  // How planted each limb's end is (a palm on a surface, a hoof set on the floor or a face), for the limb fit.
@@ -185,26 +206,26 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // under it (the horse's climb read up to 520 N·m of airborne phantom torque there, at 0.855 s). Held under the
  // release, the take-off keeps its authored time on every round, and the plan finds its speed by crouching and pushing
  // within the floor's 3 body weights. On these climbs the plan meets the ceiling only at its floor, over the last one
- // to four foot samples, where the authored hoof is already EPS up: it lies on its authored path at the last foot
- // sample (within 0.3 mm) and up to 5.4 mm under it before, and it stays at least 5.9 mm under the bisection's own
- // heights above the authored path (each plan's least gap 5.9 to 19.9 mm; every plan's ceiling rows logged, both
+ // to three foot samples, where the authored hoof is already EPS up: it lies on its authored path at the last foot
+ // sample and up to 1.7 mm under it before, and it stays at least 4.99 mm under the bisection's own heights above the
+ // authored path (each plan's least gap 4.99 to 13.98 mm, the pigs' the least; every plan's ceiling rows logged, both
  // rounds, the eleven climbs). So the floor holds the take-off, and the bisection finds where it starts; that the
  // heights are found as a move of the trunk, while the balance bounds its centre of mass (a different move while the
  // legs stand), does not reach the plan. As the hooves leave (0.865 to 0.873 s) the horse's played ones are within
  // 0.5 mm of the authored ones.
- // Without the floor (EPS at 5 mm) the take-off drifts later between the rounds on seven climbs (the pig foreman's
- // 0.855 -> 0.870 s), the horse's centre of mass lies 28 mm under its authored path at its last foot sample and meets
- // the catch 7.3 cm under it, the pigs' walk up the face reads 240 and 108 readings against 52 and 0, and the eleven
- // climbs 2253 against 1878; but seven climbs read their worst lower without it (the horse's 299% against 2198%, at
- // the take-off), the floor's cost.
+ // On e909dcf4, without the floor (EPS at 5 mm), the take-off drifted later between the rounds on seven climbs (the
+ // pig foreman's 0.855 -> 0.870 s), the horse's centre of mass lay 28 mm under its authored path at its last foot
+ // sample and met the catch 7.3 cm under it, the pigs' walk up the face read 240 and 108 readings against 52 and 0, and
+ // the eleven climbs 2253 against 1878; but seven climbs read their worst lower without it (the horse's 299% against
+ // 2198%, at the take-off), the floor's cost.
  const EPS=.005,pushCeiling=t=>{let best=null;for(const id of ['leg-1','leg1']){const keys=LIMB[id];let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;
    const a=keys[i][1],b=keys[Math.min(keys.length-1,i+1)][1];if(!(b.soft&&a.f==='world'&&a.plant===true)||t<=keys[i][0]||t>=keys[i+1][0])continue;
    const base=trunkAt(t,null),up=d=>{const tr={...base,hips:base.hips.clone().add(V(0,d,0)),chest:base.chest.clone().add(V(0,d,0))};return keyedLimb(keys,t,tr).p[1]-a.p[1];};
    let lo=-.3,hi=.3;if(up(lo)>EPS)continue;if(up(hi)<=EPS)continue;for(let k=0;k<30;k++){const m=(lo+hi)/2;if(up(m)>EPS)hi=m;else lo=m;}best=best===null?lo:Math.min(best,lo);}return best===null?null:Math.max(0,best);};
  const bal=balanceTraversal({duration:D,probe:contactProbe(worker,tails),obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),pose:t=>{const P=body.pose(spec(t),'balance');playTail(t);return P;},com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onTop?onTop(t):V()).toArray(),
   hold:deep?t=>t>=TOP_BAND[0]&&t<=TOP_BAND[1]:null,ceiling:pushCeiling});
- // The head and tail are fitted again to the balanced motion, the head held through the flights (traversal-fit.js,
- // fit.solveHead and fit.solveTail), and the report taken on it.
+ // The head and tail are fitted again to the balanced motion, the head held through the flights but for the catch's
+ // ease (traversal-fit.js, fit.solveHead and fit.solveTail), and the report taken on it.
  balance=bal;fit.solveHead({air:t=>bal.samples[Math.round(t/(bal.times[1]-bal.times[0]))]?.kind==='air'});fit.solveTail();turns();
  const KEYS=TRUNK.map(k=>({t:k.t,label:k.label}));let state=null;
  const api={duration:D,keys:KEYS,body,probe,obstacle:WALL,fit:fit.report,clearance:fit,balance:bal,phases:KEYS.slice(0,-1).map((k,i)=>({label:KEYS[i+1].label,start:k.t,end:KEYS[i+1].t})),

@@ -2422,6 +2422,96 @@ at 1.438 s and 120 in the hang and the walk up the face after. The push's own co
 the horse). The hooves' authored lean into the floor. Then the hands to the floor; the roll's landings; the vault's
 capsule overlap and the spring's foot speed; and the rest of the list as it stood.
 
+### 2026-11-12 (physics balance, twenty-sixth part): the pigs' catch
+
+The pigs' climbs read the most of any crossing (on e909dcf4 the pig foreman's 911 readings over the limit, the pig
+director's 534, of the eleven climbs' 1878), much of it from the jump to the catch on: the foreman 80 readings in the
+jump and catch, 240 in the hang and 52 walking up the face (372 of its 911), the director 80 and 235 (315 of its 534).
+Their hands missed the top.
+
+Why:
+- A body deeper in front (the pigs) stands back while it faces the wall and leans over its belly toward it until its
+  shoulders are where the horse's were (wall-climb.js, lean: 23 degrees on the pig foreman, 29 on the director). The
+  lean was keyed from the catch on: the catch key (1.265 s) had it and the key before it (1.185) did not, so the trunk
+  leant into the wall in the flight's last 80 ms. Posed without the balance, the foreman's spine went from 5 degrees
+  back to 17 forward between 1.18 and 1.26 s.
+- A body in the air cannot turn itself. The balance's turn about the centre of mass took the lean back: the foreman's
+  spine 9 degrees back as it reached for the top, and the pigs' shoulders 11 to 16 cm past their arms' reach of it at
+  the authored catch. The second round, measuring the schedule on the first round's motion, found no grip until 1.365
+  and 1.345 s (115 and 90 ms after the first round's catches, which are the authored motion's; there the turn was 25 and
+  29 degrees and the nearest hand 65.5 and 47.3 mm off the wall), and the hang played on with nothing holding the body.
+
+**The fix.**
+- The lean is set up in the push and held through the flight: a body deeper in front leans from the launch key on
+  (leanFrom), while its hooves can still turn it. At the catch the balance's turn is now 2.1 degrees on the foreman and
+  1.4 on the director, and the hands are on the top (12.5 and 9.5 mm into the wall's box at the catch). Leaning in the
+  push costs a little there: the foreman's worst in its push off 1356 -> 1626% (at 0.856 s), and the pigs' flights hold
+  their angular momentum within 0.12 and 0.15 N·m·s of their median through the first 50 ms (0.02 and 0.03 on e909dcf4).
+- The pelvis-carried leg keys under the lean are turned back by it, so the legs keep the tuck the horse's keys give
+  them. Turned with the pelvis, they lifted the hooves 25 and 30 ms early (0.830 and 0.835 s) into a longer jump than
+  the pigs could make: the foreman's first round's plan lay 12 to 14 cm under its authored path through the catch, and
+  the second round put the catches 160 ms after the first round's. That takes in the hang's first leg key too (1.375 s),
+  which rode the lean from the catch on e909dcf4: its target moves 25 cm on the foreman and 32 on the director.
+- The head holds its turn through the flight, before and after the balance (traversal-fit.js), but for the catch's own
+  turn, softened over three of the fit's 20 ms samples, reaching back into the jump's end: on the pig director 5.0
+  degrees at the jump's last sample before the balance (1.26 s) and 5.2 degrees in the played flight's last 15 ms (1.220
+  to 1.235 s), where the rig already reads its hands on the top; on the foreman 0.18 and 0.01 degree. Leant from the
+  take-off, the pigs' snouts pass close to the wall on the way up, and the head fit turns them away:
+  - two stretches in a row that meet inside one flight (every 20 ms sample from the end of the one to the start of the
+    next in the air) are one: the foreman's head came within the fit's margin of the wall from 0.78 to 1.04 s, a run cut
+    into stretches of 0.24 s (CHUNK) at 1.00 s, inside its jump, and it turned 12 degrees and nodded 10 there in 60 ms
+    (up to 421 N·m of airborne phantom torque, and 624 N, at 1.035 s);
+  - the fit before the balance holds the head through the jump too (solve takes air; the climb passes its
+    launch-to-catch keys). The balance plans the flight's turn with the head as that fit leaves it, and the foreman's
+    head, easing out of a 15 degree tilt from 1.04 s in the air there and held by the fit after the balance, left the
+    turn answering a tilt no longer there: up to 65 N·m of airborne phantom torque from 1.03 to 1.18 s, where the fit
+    before the balance turned the head in the air.
+
+phantom-wrench 1.2.0 `--gate` (frozen copies), e909dcf4 -> now:
+
+| climb | over the limit at the samples | readings | worst (% of its limit) |
+|---|---|---|---|
+| pig foreman | 0.940 -> 0.570 s | 911 -> 541 | 7807 -> 4871% |
+| pig director | 0.550 -> 0.215 s | 534 -> 206 | 5535 -> 3216% |
+| donkey | 0.040 s | 41 | 2230 -> 2221% |
+| the other eight | as before, byte for byte | | |
+
+Together 1.975 -> 1.270 s over the limit at the samples and 1878 -> 1180 readings. The pig foreman's catch, hang and
+walk up the face read 80, 240 and 52 readings before and 6, 0 and 0 now; the director's catch and hang 80 and 235
+before, 23 and 0 now, and its flight 61 before, 28 now. The donkey stands back 1 mm, its lean 0.2 degrees.
+
+The eleven windows and eleven low walls are the same motion frame for frame (the battle's wrapper read on e909dcf4's
+tree and on this one: the centre of mass and every rig point every 5 ms, the largest difference 0): the head fit's air
+rules act only where a fit is given flights, and only the climb gives them. `bin/collisions.mjs`: the same on eight
+climbs; the pig foreman's deepest 7.2 -> 6.5 cm (its left forearm in the top at 2.38 s; its left boot, 7.2 cm into the
+wall at 1.49 s before, now 1.9 cm at 1.455 s), one span deeper than 2 cm fewer on each pig and one more on the donkey's.
+
+`tests/natural-traversal.test.mjs`, on every mammal's climb: every round of the balance plans the catch (the first grip
+after the flight) within 15 ms (three samples) of the first round's, measured on the authored motion (10 ms early on
+both pigs, within 5 on the rest), and at the catch a hand point lies within the rig's centimetre of the wall's surface,
+inside it or out (the rig counts a point deeper than that a sink; 0.0 to 0.7 mm). On e909dcf4 each fails on both pigs
+and on no other mammal, the second with the first switched off (the nearest hand 65.5 and 47.3 mm off the wall at the
+catch). They read the lean and the leg keys; the head fit's rules only the gate sees (the suite passes without them), so
+the climbs are gated again after any change to the head fit.
+
+**Not kept.**
+- The lean dropped from the catch key, coming in after the catch while the hands hold: stood back without it, the
+  shoulders were further from the top, the grip rise lifted the catch, and the jump grew past the pigs' push (the
+  foreman's take-off 45 to 50 ms early, its plan 6 cm under its path at the catch).
+- Stretches joined wherever their meeting touched the air, or wherever both its ends were in the air: stretches in two
+  flights were joined across the ground between them, the horse's head held nodded 20 degrees from 0.80 to 4.0 s (its
+  climb 80 readings against 40, the new ones in its crouch and push) and the bull's nodded 20 and turned 12 from 0.7 to
+  4.6 s, its jump's stretch (from 0.66 s) joined to its drop's.
+- The lean as a bend of the chest instead of the pelvis: the pigs' shoulders sit 11 cm above the chest's joint, so no
+  bend brings them the 16 and 19 cm forward the stand-back takes.
+
+**Left.** The pigs now read in the straddle, the way down and the turn on the far tile: the pig foreman 93 readings
+bringing its right knee up, 87 bringing its left leg over, 79 lowering down the far face, 63 letting go and 86 as its
+left foot comes round (5.19 to 5.27 s), its worst 4871% at 3.37 s (3579 N); the director 112 lowering down the far face,
+its worst 3216% at 4.20 s as it lets go. Then the take-off's last readings, the hooves' authored lean into the floor,
+the hands to the floor, the roll's landings, the vault's capsule overlap and spring speed, and the rest of the list as
+it stood.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

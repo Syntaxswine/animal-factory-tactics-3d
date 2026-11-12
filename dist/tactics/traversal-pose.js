@@ -85,9 +85,9 @@ export function keyedLimb(keys,t,tr){let i=0;while(i<keys.length-2&&t>keys[i+1][
  // (the climb's hooves leave on a soft key at the take-off and come down on one at the drop; each window's left hand
  // comes down on one). Released with their lift, the climb's hooves swung toward the tucked key as fast as they rose, a
  // swing of the legs along the floor that the balance's 5 ms tracks could not follow (on 148c6fb7 the rig read 523 N of
- // phantom force at 0.860 s, 511 of it along the crossing, as they came off). Spread so, the eleven climbs read 1878
- // readings over the limit against 1992 over one soft, fewer on every climb (the horse's worst 2198% against 3467); the
- // windows' readings moved by at most 6.4 N and 2.8 N·m.
+ // phantom force at 0.860 s, 511 of it along the crossing, as they came off). Spread so, on e909dcf4, the eleven
+ // climbs read 1878 readings over the limit against 1992 over one soft, fewer on every climb (the horse's worst 2198%
+ // against 3467); the windows' readings moved by at most 6.4 N and 2.8 N·m.
  const sk=a.soft&&b.f==='world'&&b.plant===true?a:b.soft&&a.f==='world'&&a.plant===true?b:null;let p=pa.clone().lerp(pb,u),g=0,zone=0;
  if(sk){const W=sk===a?pb:pa,F=sk===a?pa:pb,s=sk.soft,d=(F.y-W.y)/s,top=W.y+s*(d>30?d:Math.log1p(Math.exp(d))),v=1-u,
    down=1/(1+Math.exp(Math.min(30,d)));g=down*(sk===a?1-v*v*v:1-u*u*u);

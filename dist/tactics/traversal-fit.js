@@ -126,7 +126,7 @@ export function createClearanceFit(duration,{step=.02}={}){
   return out.map((r,k)=>r.map((x,j)=>(out[Math.max(0,k-1)][j]+x+out[Math.min(n-1,k+1)][j])/3));}
  // Corrections are zero at the start and the end, where the battle's own pose hands over.
  const ends=t=>smooth(Math.min(t,duration-t)/EASE);
- function solve({body,probe,tails,obstacles,poseAt,stage=()=>'over',free={},rounds=3,margin=.004}){
+ function solve({body,probe,tails,obstacles,poseAt,stage=()=>'over',free={},rounds=3,margin=.004,air=null}){
   const torso=[],head=[],hb=body.bones.head,hips=body.bones.hips;
   for(let i=0;i<probe.count;i++){const name=probe.names[probe.part[i]];if(/tail/.test(name)&&!tails?.isRoot(name,probe.vertex[i]))continue;const b=probe.boneNames[probe.bone[i]];if(b==='hips'||b==='spine')torso.push(i);else if(b==='head')head.push(i);}
   const inFoot=(x,z)=>obstacles.some(b=>x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]);
@@ -167,13 +167,26 @@ export function createClearanceFit(duration,{step=.02}={}){
   // any crossing traced).
   // keepBow: the head alone, against the bow as it is (fit.solveHead, after the balance). air(t), if given: where
   // nothing holds the body; a turn is held through a flight next to its stretch, never turned there (eased out into
-  // the jump at the climb's push-off, it put 10 N on the flight's peak and 0.01 s more over the limit).
+  // the jump at the climb's push-off, it put 10 N on the flight's peak and 0.01 s more over the limit), and two
+  // stretches in a row that meet inside one flight (every 20 ms sample from the end of the one to the start of the next
+  // in the air) are one. Owned by two, a flight changed its turn in the air: the pig foreman's head came within the
+  // fit's margin of the wall from 0.78 to 1.04 s, a run cut into stretches of CHUNK at 1.00 s, inside its jump, and
+  // turned 12 degrees and nodded 10 there in 60 ms (up to 421 N·m of airborne phantom torque, and 624 N, at 1.035 s).
+  // Joined wherever their meeting touched the air, or wherever both its ends were in the air, stretches in two flights
+  // were joined across the ground between them: the horse's head held nodded 20 degrees from 0.80 to 4.0 s (its climb
+  // 80 readings against 40), the bull's nodded 20 and turned 12 from 0.7 to 4.6 s, its jump's stretch (from 0.66 s)
+  // joined to its drop's. solve takes air too, so the turn the balance is planned with is held there before it as well
+  // (the climb passes its jump). A stretch that starts just after a flight still eases its turn in over the flight's
+  // last samples (hold() softens over three, and the fit's track carries it between its samples): the pig director's
+  // catch, 5.0 degrees at the jump's last sample before the balance and 5.2 in its played flight's last 15 ms. Only the
+  // gate sees these rules (the test suite passes without them): the climbs are gated again after any change to them.
   const solveHead=(keepBow=false,air=null)=>{const S=bareHeads(),B=keepBow?ch.bow.map(x=>x[0]):null,r=B?R2:R,inAir=k=>!!air?.(times[k]);
    let flags=S.map((s,k)=>head.length>0&&headAt(s,[0,0,0],B?B[k]:0)>0),pushes;
    for(let pass=0;pass<3;pass++){pushes=times.map(()=>[0,0,0]);const list=[];
     // the stretches, each with a flight within its ease (and no other stretch before it) joined to it
     const spans=runs(flags).map(([a,b])=>{let a2=a,b2=b;for(let k=b+1;k<=Math.min(n-1,b+r)&&!flags[k];k++)if(inAir(k)){b2=k;while(b2+1<n&&inAir(b2+1))b2++;break;}
      for(let k=a-1;k>=Math.max(0,a-r)&&!flags[k];k--)if(inAir(k)){a2=k;while(a2>0&&inAir(a2-1))a2--;break;}return [a2,b2];});
+    for(let i=1;i<spans.length;){const p=spans[i-1],q=spans[i];let aloft=true;for(let k=Math.min(p[1],q[0]);k<=Math.max(p[1],q[0]);k++)if(!inAir(k)){aloft=false;break;}if(aloft){p[1]=Math.max(p[1],q[1]);spans.splice(i,1);}else i++;}
     // which stretch sets each sample's turn (out to r) and bow (out to R), as hold() does: nearest, ties to the earlier
     const owner=rad=>{const o=new Int32Array(n).fill(-1),w=new Float64Array(n),dd=new Float64Array(n).fill(Infinity);
      spans.forEach(([a,b],i)=>{for(let k=Math.max(0,a-rad);k<=Math.min(n-1,b+rad);k++){const d=k<a?a-k:k>b?k-b:0;if(d<dd[k]){dd[k]=d;o[k]=i;w[k]=d?smooth(1-d/(rad+1)):1;}}});return {o,w};};
@@ -284,8 +297,8 @@ export function createClearanceFit(duration,{step=.02}={}){
    return pushes;};
   // Each round the torso moves the trunk, then the head, against the moved trunk, turns, bows and moves it for what is
   // left, then the tail bends and lifts it for what is left; a last pass fits the head and tail to the finished trunk.
-  for(let r=0;r<rounds;r++){add('trunk',torsoNeed(),free.trunk);add('trunk',solveHead(),free.trunk);if(tails?.count)add('trunk',solveTail(),free.trunk);}
-  solveHead();if(tails?.count)solveTail();
+  for(let r=0;r<rounds;r++){add('trunk',torsoNeed(),free.trunk);add('trunk',solveHead(false,air),free.trunk);if(tails?.count)add('trunk',solveTail(),free.trunk);}
+  solveHead(false,air);if(tails?.count)solveTail();
   // The tail again on the finished motion, for moves made since (a seat set on the floor, the balance): bent for the
   // trunk as it now is, with no trunk move for what no bend clears. Fitted only before them, the tails went 2 to 13 cm
   // into the floor as the body rocked and sat.

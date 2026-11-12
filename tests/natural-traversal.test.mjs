@@ -7,6 +7,8 @@ import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {naturalTraversal,createNaturalTraversal} from '../dist/tactics/natural-traversal.js';
 import {contactProbe,supportAt} from '../dist/tactics/traversal-balance.js';
 import {steadyPoles,createSurfaceProbe,MASS_SEGMENTS} from '../dist/tactics/traversal-pose.js';
+import {WALL} from '../dist/tactics/wall-climb.js';
+import {edgeBoxes} from '../dist/tactics/traversal-fit.js';
 import {rigKey} from '../dist/tactics/idle-motion.js';
 import {IDLE_FITS} from '../dist/tactics/idle-fits.js';
 // The natural crossings (docs/tactics/NATURAL-TRAVERSAL.md) on every mammal, built the way the battle builds a model.
@@ -167,10 +169,10 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
   // flight's median (its turn refined on the round before's hips, before the take-off moved). Every round now plans the
   // take-off at its authored time, a hoof is within the rig's centimetre of the floor at the last foot sample (4.9 to
   // 9.2 mm, the rabbit's the highest), and the flight's first 50 ms hold their angular momentum within 0.5 N·m·s, what
-  // the rig's airborne limit of 10 N·m moves in 50 ms (0.02 to 0.12). That last check guards the runaway and the turn
-  // together and barely sees either alone: with the take-off held and the turn not refined on the final hips
-  // (traversal-balance.js) it reads 0.15 to 0.51, the rabbit's alone over, and with that refinement alone on 148c6fb7's
-  // motion 0.09 to 0.66; the gate shows the refinement's own worth.
+  // the rig's airborne limit of 10 N·m moves in 50 ms (0.02 to 0.15; to 0.12 on e909dcf4). That last check guards the
+  // runaway and the turn together and barely sees either alone: on e909dcf4, with the take-off held and the turn not
+  // refined on the final hips (traversal-balance.js), it read 0.15 to 0.51, the rabbit's alone over, and with that
+  // refinement alone on 148c6fb7's motion 0.09 to 0.66; the gate shows the refinement's own worth.
   if(kind==='wall'){const B=motion.balance,S=B.samples,n=S.length,D=motion.duration,dt=B.times[1]-B.times[0],k0=S.findIndex((x,k)=>B.times[k]>.7&&x.kind==='air');
    assert.ok(k0>0,'wall: no flight after the push');
    const offs=(B.history||[]).map(h=>(h.match(/feet 0\.000-([0-9.]+), air/)||[])[1]);
@@ -186,7 +188,24 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    let k1=k0;while(k1+1<n&&S[k1+1].kind==='air')k1++;const Ls=[];for(let k=k0;k<=k1;k++)Ls.push(L(B.times[k]));
    const med=[0,1,2].map(q=>Ls.map(x=>x[q]).sort((x,y)=>x-y)[Ls.length>>1]);let worst={d:0};
    for(let k=k0;k<=k1&&B.times[k]<=B.times[k0]+.05+1e-9;k++){const d=Math.hypot(...sub(Ls[k-k0],med));if(d>worst.d)worst={d,t:B.times[k]};}
-   assert.ok(worst.d<=.5,`wall: the flight's angular momentum lies ${worst.d.toFixed(2)} N·m·s from its median at ${worst.t?.toFixed(3)} s`);}
+   assert.ok(worst.d<=.5,`wall: the flight's angular momentum lies ${worst.d.toFixed(2)} N·m·s from its median at ${worst.t?.toFixed(3)} s`);
+   // The catch keeps the authored motion's time, and a hand is at the wall for it. A body deeper in front (the pigs)
+   // leans over its belly toward the wall so its shoulders come within reach of the top (wall-climb.js, lean). Leant
+   // from the catch key, in the flight's last 80 ms, the lean was taken back by the balance's turn about the centre of
+   // mass (a body in the air cannot turn itself), the hands missed the top, and the second round put the catch 115 ms
+   // late on the pig foreman and 90 on the pig director. Every round now plans the catch within 15 ms (three samples)
+   // of the first round's, measured on the authored motion (10 ms early on both pigs, within 5 on the rest), and at the
+   // catch a hand point lies within the rig's centimetre of the wall's surface, inside it or out (the rig counts a
+   // point deeper than that a sink, not a contact; the hand is its mesh, forearm and hand, as the rig's grip reads it;
+   // 0.0 to 0.7 mm). On e909dcf4 each fails on both pigs and on no other mammal, the second with the first switched
+   // off (the nearest hand 65.5 and 47.3 mm off the wall at the catch).
+   const catchOf=h=>{const sp=[...h.matchAll(/(\w+) ([0-9.]+)-[0-9.]+/g)].map(x=>({kind:x[1],a:+x[2]})),i=sp.findIndex(x=>x.kind==='air'&&x.a>.7),g=i<0?null:sp.slice(i+1).find(x=>x.kind==='grip');return g?g.a:NaN;};
+   const cs=(B.history||[]).map(catchOf);
+   assert.ok(cs.length>1&&cs.every(x=>Math.abs(x-cs[0])<=.015+1e-9),`wall: the catch moves between the balance's rounds (${cs.map(x=>x.toFixed(3)).join(', ')} s)`);
+   const box=edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]])[0],off=(x,y,z)=>{const d=[Math.max(box.min[0]-x,0,x-box.max[0]),Math.max(box.min[1]-y,0,y-box.max[1]),Math.max(box.min[2]-z,0,z-box.max[2])];return d.some(v=>v>0)?Math.hypot(...d):Math.min(x-box.min[0],box.max[0]-x,y-box.min[1],box.max[1]-y,z-box.min[2],box.max[2]-z);};
+   motion.apply(cs.at(-1)/D);pr.update();let hand=Infinity;
+   for(let i=0;i<pr.count;i++)if(/hand/.test(pr.names[pr.part[i]]))hand=Math.min(hand,off(pr.x[i],pr.y[i],pr.z[i]));
+   assert.ok(hand<=.01,`wall: at the catch (${cs.at(-1).toFixed(3)} s) the hand point nearest the wall's surface is ${(1e3*hand).toFixed(1)} mm from it`);}
   // A stepping leg keeps its knee bent: through the window's get-up steps and the climb's last two, the stepping leg's
   // hip-to-ankle distance stays short of the IK's soft reach (traversal-pose.js limb(): within SOFT, 1.5 cm, of straight
   // it eases the hoof short of its mark; mid-step the reach widens by the step's soft zone, so the bound is exact at the
