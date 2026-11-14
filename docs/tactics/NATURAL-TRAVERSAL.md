@@ -2512,6 +2512,152 @@ its worst 3216% at 4.20 s as it lets go. Then the take-off's last readings, the 
 the hands to the floor, the roll's landings, the vault's capsule overlap and spring speed, and the rest of the list as
 it stood.
 
+### 2026-11-13 (physics balance, twenty-seventh part): the pigs' straddle and way down
+
+On 4e9853f6 the pigs' climbs still read the most of any crossing: the pig foreman 541 readings over the limit and the
+pig director 206, of the eleven climbs' 1180. All but their push, flight and catch lay from the right knee coming up to
+the turn on the far tile: the foreman 93 bringing its right knee up, 34 and 87 bringing its left knee up behind and its
+left leg over, 79 lowering down the far face, 63 letting go, 46 dropping and 86 + 8 as its feet came round; the director
+11 bringing its left knee up behind, 112 lowering, 8 letting go and 24 dropping. Theirs were the only climbs whose
+required force passed the limit (16.5 and 17.0 body weights, at 2.437 and 2.402 s; every other climb 3.0 to 3.3).
+
+Why:
+- The far face. A body deeper in front stands back and leans in over its belly while it faces the near face (the
+  twenty-sixth part). Facing the far face it did neither, and the clearance fit pushed the pigs' trunks 21 to 22.5 and
+  24.7 to 25.0 cm off it as they lowered (from 3.85 to 4.2 s; the horse's 4.7 at most). Their shoulders hung out past
+  their arms' reach of the top: from 3.85 to 4.15 s the nearest hand point lay up to 25.5 and 40.6 mm from the wall's
+  surface (every other body's within 2 mm, read as the test below reads it), and the lowering and the let-go were played
+  holding on with no hand in the rig's reach.
+- The knees. The search over the top (the eighth part) sets each key's lean and height for the pigs' bellies: the pig
+  foreman's chest over the top 24 cm higher than the horse's, the director's 26. Their feet on the near face stayed
+  where the horse's were, and each right leg hung straight, out of reach of its foot's target (the foreman's 1.31 leg
+  lengths at 2.40 s), until its knee whipped as the target came back within reach: the foreman's from straight (0.3
+  degrees at 2.424 s) to 46 degrees at 2.444 s, 12.6 m/s at 2.438 s by the climb test's measure (the shin bone's knee
+  over 2 ms chords; the rig's knee point 13.4), the director's 14.1 m/s at 2.402 s (14.5). Those whips are the required
+  force's peaks.
+
+**The fix.**
+- Facing the far face a body deeper in front stands back again and leans in again (wall-climb.js: far, the share of its
+  stand-back a key takes, the whole of it from the lowering through the drop and half of it as the landing is absorbed;
+  farLean, the two keys it hangs on, leant 1.5 times as far as on the near side (FAR_LEAN): 34.7 degrees on the pig
+  foreman, 43.9 on the director). The larger lean is for the hands, not the trunk. The clearance fit pushes the
+  director's trunk 15 to 19 cm past its stand-back at 1.5 and 13 to 18 at 1.0, but at 1.0 its hands rose up to 6.0 cm
+  above their grip as it lowered (the hand check below 48.1 mm from the wall, its climb 341 readings against 78; the
+  foreman's 354 against 374, its drop cheaper at 1.0 and its let-go dearer), and at 1.5 they stay within the rig's
+  centimetre of the top. The lean comes off in the drop as the palms push on the face. The pelvis-carried leg keys under
+  it are turned back by it, as on the near side, by a share of it that falls linearly from the let-go to the drop (the
+  trunk's pitch eases off on a curve, the two parting by up to 5 degrees between the keys). Only the left landing foot
+  stands back.
+- A deep body's far grips lie near the top's far edge (x 0.565, the horse's 0.54): hanging low, an arm reaching from
+  shoulders out past the belly to the top's middle crossed its far corner, and the clearance fit lifted the hand's
+  target off the top to clear it (up to 7.2 cm on the director leant as far as on the near side). With the grips at the
+  middle, the far lean as it is now, the foreman's hand came 10.6 mm off the wall as it lowered and the climbs read 359
+  and 107 readings against 374 and 78 (the foreman's left knee up behind and left leg over 33 and 79, its lowering and
+  drop 22 and 67; its required force 8.0 body weights against 5.9). The forearms clear the corner while the body hangs
+  (read every 5 ms, at most 0.3 cm in from 3.76 to 4.10 s and 0.8 to the let-go; 1.1 and 1.0 with the grips at the
+  middle), not as it first comes over it (up to 5.3 cm in from 3.60 to 3.72 s; 5.7 at the middle).
+- Its hands slide down the face 10 cm further out on each side, 20 cm further apart: leant in over its belly, its head
+  lay between its arms as they came off the top (the foreman's right hand 8.3 cm into it at 4.214 s, 3.7 now; the
+  director's forearm 3.1 cm). The wider slide doubles the director's turn in the air as it lets go (373 N·m at 4.206 s
+  against 191, its worst reading 3733% against 1906%) and costs the foreman 4 readings (the director's 1 fewer).
+- The hooves on the near face rise with the search's change of height at their key, as with the grip's rise. That ends
+  the right knees' whip (now 4.1 and 5.3 m/s by the test's measure), though the foreman's right arm then goes 5.4 cm
+  into its trunk as its knee comes up (1.6 cm without the rise, as on 4e9853f6). Without the rise the director's climb
+  reads the same 78 readings, but its required force is back at 17.0 body weights at 2.402 s and its right knee point at
+  14.5 m/s: for the director the rise buys the force and the knee, not readings. With the far grips the search sets the
+  foreman's left leg over 8.7 cm above the horse's (0.8 on 4e9853f6), and its left leg, going down the far side to its
+  3.685 s key, locked straight out of reach (the rig's knee point 14.3 m/s at 3.617 s, the test's measure 13.6; 13.7
+  body weights of required force). So the legs' keys at 3.685 s, hanging below the top's level, ride the search's height
+  too (deepDy, between the trunk keys either side): the lock is back near what it was on 4e9853f6 (the rig's knee point
+  10.4 m/s at 3.631 s; 10.9 then), at the cost of one reading and the foreman's hand check (7.7 mm from the wall against
+  3.6 without it). Riding every leg key below the top while the body is over it instead cost the right knee up 9
+  readings (its foot's 2.525 s key raised 17 cm), turned the airborne body at the band's jump harder (870 N·m at 3.405 s
+  against 273) and put the director's required force over the limit (5.1 body weights against 4.9).
+
+On the far face the pigs' hips now hang further out than before (1.02 to 1.07 m from 4.0 to 4.2 s, against 0.93 to
+1.01), and their hands hold only in the rig's sense: they ride the top's far edge (x 0.56 to 0.61, the face at 0.58,
+past their mark at 0.565), from 2.6 cm above to 3.8 cm below their grip's height (read every 5 ms from 3.85 s until
+their palms begin to let go at 4.18 s).
+
+phantom-wrench 1.2.0 `--gate` (frozen copies), 4e9853f6 -> now:
+
+| climb | over the limit at the samples | readings | worst (% of its limit) |
+|---|---|---|---|
+| pig foreman | 0.570 -> 0.390 s | 541 -> 374 | 4871 -> 4296% |
+| pig director | 0.215 -> 0.090 s | 206 -> 78 | 3216 -> 3733% |
+| donkey | 0.040 -> 0.035 s | 41 -> 40 | 2221% |
+| the other eight | as before, byte for byte | | |
+
+Together 1.270 -> 0.960 s over the limit at the samples and 1180 -> 884 readings. The foreman's right knee up, lowering,
+let-go, drop and feet coming round read 93, 79, 63, 46 and 86 + 8 readings before and 20, 0, 5, 46 and 84 + 7 now; the
+director's left knee up behind, lowering, let-go and drop 11, 112, 8 and 24 before and 0, 0, 1 and 26 now. The foreman's
+left knee up behind and left leg over read more, 34 and 87 before and 70 and 97 now: the far grips move its right hand's
+grip from 3.12 s on, and the search then sets its left leg over 8.7 cm higher (33 and 79 with the grips at the middle).
+The foreman's worst is the band's seat as before (3156 N at 3.379 s; 3579 N at 3.370 s on 4e9853f6), just before the
+band drops the body 8.3 cm in 15 ms as a trouser point slides off the top's near edge. The director's is an instant at
+4.206 s just after it lets go, its hands off the top and not yet on the face, while its lean starts to come off in the
+air (373 N·m; 2363 N at 4.204 s before).
+
+The required force reads 5.9 body weights on the foreman (at 3.420 s), over the limit of 5, and 4.9 on the director,
+under it. The points over 8 m/s go 9 -> 6 and 8 -> 6: the right knees are gone from them, the foreman's left knee is
+still there (10.4 m/s at 3.631 s, the rig's knee point; 10.9 at 3.633 before), and the fastest are the left elbows (14.8
+and 17.1 m/s at 3.52 s; 15.2 and 16.1 before). The capsules: the foreman's right arm passes 5.4 cm into its trunk as its
+right knee comes up (2.596 s; 1.6 cm at 2.429 before, and without the rise) and its right hand 3.7 cm into its head at
+4.206 s; the director's deepest overlap goes 6.2 -> 3.1 cm.
+
+The donkey stands back 1.3 mm, so its far keys move 1.3 mm and lean 0.29 degrees. The windows and low walls are the same
+motion: only the climb reads wall-climb.js. `bin/collisions.mjs`: the same on nine climbs; the foreman's deepest
+6.5 -> 5.3 cm (its right forearm in the top at 3.70 s; its left forearm at 2.38 s before), the director's 7.9 -> 8.0 cm
+(its trousers in the top, at 3.56 s; 3.60 before), one span deeper than 2 cm fewer on each.
+
+`tests/natural-traversal.test.mjs`, on every mammal's climb: over the top (every 2 ms from 2.3 to 3.1 s) no knee (read
+as the shin bone's world position over 2 ms chords, not the rig's knee point) moves faster than the rig's 8 m/s, and
+lowering down the far face (every 10 ms from 3.85 to 4.15 s) a hand point (of the hand's mesh, forearm and hand, as the
+rig's grip reads it) lies within the rig's centimetre of the wall's surface, inside it or out. On 4e9853f6 each fails on
+both pigs and on no other mammal, the second with the first switched off (12.6 and 14.1 m/s and 25.5 and 40.6 mm; every
+other mammal's knees 7.6 m/s at most, the dog's, and its hands 1.9 mm at most, the skunk's). Now the pigs read 4.1 and
+5.3 m/s and 7.7 and 4.3 mm; without the hooves' rise the knee check reads 12.6 and 14.1 m/s, 4e9853f6's whip again, and
+without the far stand-back and lean the hand check 66.3 and 29.0 mm. The rig's 8 m/s holds the knees only to 3.1 s:
+after it the foreman's left leg locks going down the far side and the director's left knee reads 8.0 m/s at 3.188 s, as
+on 4e9853f6. From 3.1 to 3.7 s the knees are held at 11 m/s, a bound 4e9853f6 also meets (the foreman's 10.4 then and
+10.3 now; 13.6 without deepDy): that bound guards deepDy.
+
+**Not kept.**
+- The far lean as far as the near side's (1.0, the rest of the change the same): the director's hands rose up to 6.0 cm
+  above their grip as it lowered, and its climb read 341 readings against 78 (its lowering, let-go and drop 123, 80 and
+  87; 8.4 body weights of required force); the foreman's 354 against 374.
+- Both landing feet stood back, and the hips with them through the left foot's step (an earlier version, whose other
+  differences do not reach the step): the left foot stepping round passed in front of the planted right, the shins
+  10.0 cm through each other (at 5.149 and 5.159 s).
+- The far grips wider apart instead of the wider slide (0.23 or 0.26 from the middle, the horse's 0.20, the slide moving
+  out only as far as the grips, 3 or 6 cm, not 10; read by the hand check, not gated): the foreman's hands came 15.4 and
+  15.1 mm off the wall as it lowered.
+- A drop that moves out from the wall 4 cm, not the horse's 11 (an earlier version, both landing feet back): the
+  foreman's lowering and let-go read 59 and 40 readings (6334% at worst) against 0 and 4 with the 11 cm drop.
+- The lean held through the drop, coming off in the absorb with the feet down (on the previous version, with the next
+  item's change in too): the foreman's let-go read 53 readings (11582% at worst), against 25 with that change alone.
+- The grip rise read at the far grips for the far keys (x 0.565; on the previous version): the far hang keys came about
+  1 cm lower, and the foreman's lowering read 35 readings (6149% at worst) against 0.
+- The legs riding the search's height at every key below the top while the body is over it (the previous version):
+  above.
+- The hooves on the face raised twice over, by rise and again with deepDy (the first version): its right knee up read 0
+  readings and its arm went 3.5 cm into its trunk, but its feet then rose twice as far as its trunk, which nothing asks
+  for.
+- The band over the top reworked: its move as a body can move (no faster down than gravity, no harder up than 3 body
+  weights) and the top's edges rounded, so a point sliding off one lets the body down along it. Smooth (gated, on an
+  earlier version), the band let the seat off the top for about 0.2 s as the body slid off toward the far side, and the
+  body turned with nothing under it (up to 164428% of the limit, 16443 N·m in the air); the rounding alone, probed, left
+  the jump (a rounded edge falls straight down at the face).
+
+**Left.** The pig foreman's left knee up behind and left leg over (70 and 97 readings): the band holds its seat on the
+16 cm top while its turn slides the body off it (its worst, 4296%, on that seat), then drops the body 8.3 cm in 15 ms as
+a trouser point slides off the near edge. Its left leg locking going down the far side (the rig's knee point 10.4 m/s at
+3.631 s), its right knee up (20 readings, its right arm 5.4 cm into its trunk), its belly brushing the wall as its left
+foot comes round (84). The pigs' drops (46 and 26) and the lean coming off in the air as they let go; the left elbows'
+whip at 3.52 s; the left leg's swing over the top on every climb (its ankle 8.0 to 8.7 m/s). Then the rest of the list
+as it stood: the take-off's last readings, the hooves' authored lean into the floor, the hands to the floor, the roll's
+landings, the vault's capsule overlap and spring speed.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

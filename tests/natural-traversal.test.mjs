@@ -205,7 +205,33 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    const box=edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]])[0],off=(x,y,z)=>{const d=[Math.max(box.min[0]-x,0,x-box.max[0]),Math.max(box.min[1]-y,0,y-box.max[1]),Math.max(box.min[2]-z,0,z-box.max[2])];return d.some(v=>v>0)?Math.hypot(...d):Math.min(x-box.min[0],box.max[0]-x,y-box.min[1],box.max[1]-y,z-box.min[2],box.max[2]-z);};
    motion.apply(cs.at(-1)/D);pr.update();let hand=Infinity;
    for(let i=0;i<pr.count;i++)if(/hand/.test(pr.names[pr.part[i]]))hand=Math.min(hand,off(pr.x[i],pr.y[i],pr.z[i]));
-   assert.ok(hand<=.01,`wall: at the catch (${cs.at(-1).toFixed(3)} s) the hand point nearest the wall's surface is ${(1e3*hand).toFixed(1)} mm from it`);}
+   assert.ok(hand<=.01,`wall: at the catch (${cs.at(-1).toFixed(3)} s) the hand point nearest the wall's surface is ${(1e3*hand).toFixed(1)} mm from it`);
+   // Over the top no knee whips, and lowering down the far face a hand stays at the wall: any point of a forearm or
+   // hand within the rig's centimetre of any face of it (the pigs' hands, read every 5 ms from 3.85 to 4.15 s, the
+   // window this check reads every 10 ms, now ride the top's far edge, from 2.6 cm above to 3.8 cm below their grip's
+   // height, so this says the rig reads a grip there, not that a palm lies on the top). Knee speeds here are this
+   // check's own measure, the shin bone's world position over 2 ms chords, not the rig's knee point. A deep body's
+   // hooves on the near face ride the height its keys over the top are set at (wall-climb.js, rise), and it stands back
+   // from the far face and leans in over its belly while it hangs there, its grips near the top's far edge (far,
+   // farLean, farX). On 4e9853f6 the pigs' right legs locked straight out of reach until their knees whipped (12.6 and
+   // 14.1 m/s, read every 2 ms from 2.3 to 3.1 s; every other mammal's knees 7.6 at most, the dog's; now the pigs' 4.1
+   // and 5.3), and their hands came off the top as they lowered (the nearest hand point, of the hand's mesh, forearm
+   // and hand, as the rig's grip reads it, up to 25.5 and 40.6 mm from the wall's surface, every 10 ms from 3.85 to
+   // 4.15 s; every other mammal's 1.9 at most, the skunk's; now 7.7 and 4.3). Each check fails there on both pigs and
+   // on no other mammal, the second with the first switched off. The rig's 8 m/s holds the knees only to 3.1 s: going
+   // down the far side the pig foreman's left leg still locks straight out of reach of its 3.685 s key, as it did on
+   // 4e9853f6 (10.3 m/s at 3.632 s; 10.4 then), and the director's left knee reads 8.0 at 3.188 s (8.05 then). From 3.1
+   // to 3.7 s they are held at 11 m/s, a bound 4e9853f6 also meets (the foreman's 10.4). The far grips set the
+   // foreman's left leg over higher, and without its legs' 3.685 s keys riding that height (wall-climb.js, deepDy) the
+   // lock read 13.6 m/s at 3.618 s: this bound guards deepDy, and passes on 4e9853f6.
+   const knee=s=>bones['shin'+s].getWorldPosition(bones['shin'+s].position.clone()),fastest=(a,b)=>{let w={v:0},was=null;
+    for(let t=a;t<=b+1e-9;t+=.002){motion.apply(t/D);const k=[knee(-1),knee(1)];if(was)for(const j of [0,1]){const v=k[j].distanceTo(was[j])/.002;if(v>w.v)w={v,t,side:j?'right':'left'};}was=k;}return w;};
+   const whip=fastest(2.3,3.1),lock=fastest(3.1,3.7);
+   assert.ok(whip.v<=8,`wall: over the top the ${whip.side} knee moves at ${whip.v.toFixed(1)} m/s at ${whip.t?.toFixed(3)} s (the rig's limit is 8)`);
+   assert.ok(lock.v<=11,`wall: going down the far side the ${lock.side} knee moves at ${lock.v.toFixed(1)} m/s at ${lock.t?.toFixed(3)} s (11 at most; the pig foreman read 10.4 on 4e9853f6)`);
+   let loose={d:0};
+   for(let t=3.85;t<=4.15+1e-9;t+=.01){motion.apply(t/D);pr.update();let h=Infinity;for(let i=0;i<pr.count;i++)if(/hand/.test(pr.names[pr.part[i]]))h=Math.min(h,off(pr.x[i],pr.y[i],pr.z[i]));if(h>loose.d)loose={d:h,t};}
+   assert.ok(loose.d<=.01,`wall: lowering down the far face the hand point nearest the wall's surface is ${(1e3*loose.d).toFixed(1)} mm from it at ${loose.t?.toFixed(2)} s`);}
   // A stepping leg keeps its knee bent: through the window's get-up steps and the climb's last two, the stepping leg's
   // hip-to-ankle distance stays short of the IK's soft reach (traversal-pose.js limb(): within SOFT, 1.5 cm, of straight
   // it eases the hoof short of its mark; mid-step the reach widens by the step's soft zone, so the bound is exact at the
