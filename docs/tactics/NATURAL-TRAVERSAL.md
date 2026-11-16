@@ -2658,6 +2658,116 @@ whip at 3.52 s; the left leg's swing over the top on every climb (its ankle 8.0 
 as it stood: the take-off's last readings, the hooves' authored lean into the floor, the hands to the floor, the roll's
 landings, the vault's capsule overlap and spring speed.
 
+### 2026-11-16 (physics balance, twenty-eighth part): the pig foreman's left leg over the top
+
+On d1118c40 the pig foreman's left knee up behind and left leg over read 70 and 97 of its 374 readings over the limit,
+among them its worst (4296% of the limit, at 3.379 s), and its required force passed the limit there (5.9 body weights
+at 3.420 s, 22 ms over it).
+
+Why: the band over the top (the eighth part) holds a deep body's lowest point over the 16 cm top 6 to 9 mm above it,
+and it counted as that body every skin point whose heaviest bone is the hips, spine or head. A fold of trousers the bent
+left leg drags under the hip is carried 60% by the hips and 40% by the left thigh, so it counted, and it hung up to
+4.6 cm below the torso's own lowest point (at 3.39 s; the torso's points as they lie at rest, riding the hips or spine).
+The band held the body up on it. As the leg swung over, the fold slid off the top's near edge (3.40 s) and the band
+dropped the body 8.3 cm in 15 ms. The balance held the climb's top as a hold with no vertical bounds, so its plan
+smoothed the drop by pulling the body down ahead of it, at 51.4 m/s^2 (5.2 g) at 3.380 s, with only the fold on the
+top: 3046 N of phantom force at 3.375 s, and 3156 N at 3.379 s between the samples. The pig director rode its own fold
+the same way earlier in its turn (its hips' vertical acceleration -89.7 m/s^2 at 3.195 s and +42.0 at 3.149, its plan
+pulling at 53.6 at 3.195), though its gate read nothing over the limit there.
+
+**The fix.**
+- The band rests the torso: a skin point a thigh carries 30% or more of moves with the leg, and is left out
+  (wall-climb.js, LEG). At 40% both pigs' gate records are the same byte for byte, so anywhere from 30% to 40% leaves
+  the same lowest point at every sample; the fold's own thigh weight is 40.2%, just above. At 15% the director's record
+  is the same and the foreman reads the same 207 readings (4.3 body weights of required force against 3.6, its drop's
+  worst 616% against 625%).
+- The balance's hold over the top is a seat (traversal-balance.js, planCentre: a hold with seat). Like a floor it pushes,
+  between none and the balance's 3 body weights (its FMAX; the rig allows 5), and it never pulls, so the plan's centre
+  of mass falls onto it no faster than gravity. With the torso band alone the plan pulled the foreman down at 51.1
+  m/s^2 at 3.655 s, as the body comes off the top, and its required force read 6.0 body weights for 1 ms at 3.632 s.
+  Seated, both pigs' plans fall at 9.81 m/s^2 at most over the top and push up at 17.2 and 19.5 at most (the bound is
+  19.6). A seat keeps a hold's sideways bounds even where it bears nothing: where the seated plans ride -g (26 and 9 of
+  their samples) they push the body sideways at up to 3.75 m/s^2, which a hand supplies. The balance reads a hand
+  gripping the wall at every seated sample, and a seat's bounds, up, down and sideways, lie inside a grip's.
+
+phantom-wrench 1.2.0 `--gate` (frozen copies), d1118c40 -> now:
+
+| climb | over the limit at the samples | readings | worst (% of its limit) |
+|---|---|---|---|
+| pig foreman | 0.390 -> 0.220 s | 374 -> 207 | 4296 -> 1626% |
+| pig director | 0.090 s | 78 | 3733 -> 3728% |
+| the other nine | as before, byte for byte | | |
+
+Together 0.960 -> 0.790 s over the limit at the samples and 884 -> 717 readings. While the pigs sit on the top (2.55 to
+3.68 s) the gate reads nothing over its limits on either (the foreman 167 readings there before). The foreman's left
+knee up behind and left leg over read 70 and 97 readings before and none now; its let-go and drop read the same 5 and 46
+(at worst 471% and 625%, against 475 and 584). Its worst is now the push-off's, which reads as before (1626% at
+0.856 s). Its required force reads 3.6 body weights (at 3.522 s), under the limit of 5, and the director's 4.8 (4.9
+before). The
+director's left knee comes up behind faster: 8.9 m/s at 3.179 s, the rig's knee point (8.0 at 3.188 before; the climb
+test's measure 8.9 at 3.180 and 8.0 at 3.188). Going down the far side the foreman's left leg still locks straight (2.3
+degrees at 3.662 s; 1.7 before), at 9.3 m/s, the rig's knee point (10.4 before). The points over 8 m/s, the capsule
+pairs over 2 cm and the joints out of the rig's table are the same ones as before. Small changes: the foreman's left
+elbow 14.8 -> 15.1 m/s at 3.522 s, its head and right hand 3.7 -> 3.8 cm into each other at 4.206 s, the director's
+left knee bending to 135 degrees at most (133 before, within the table's 155). The windows and low walls, which
+share the balance but hold no seat, play the same motion frame for frame (every rig point and the centre of mass every
+5 ms, the largest difference 0).
+
+The cost is clearance. The fold, and the left thigh under it, now go into the top as the leg swings over: the climb
+test's trunk measure (the clearance fit's report, taken after the balance) reads the foreman's trunk 3.3 cm in at 3.34 s
+(1.8 at 3.72 before) and the director's 1.3 at 3.16 (1.0 at 3.14). That measure reads every 20 ms and every other skin
+point; the rig reads deeper. `bin/collisions.mjs` (every 10 ms, every point): the same on ten climbs; on the foreman
+five spans deeper than 2 cm as before, but the fold's now runs from 3.23 to 3.40 s and reaches 6.6 cm at 3.38 s, its
+deepest point (3.38 to 3.40 s and 3.0 cm before; its deepest was its right forearm, 5.3 cm at 3.70 s, and the forearms'
+span now reaches 4.9 cm, the left at 3.59 s). The test's allowance for the foreman grew from 2 cm to 3.5: the user chose
+**"Allow the 3.5 cm clip"** over the seat rule alone, which keeps the 2 cm (below, Not kept). The gaps the test names
+are otherwise only allowed to shrink.
+
+`tests/natural-traversal.test.mjs`:
+- A seat (planCentre, on its own): planned against a seat whose height drops 6 cm at once, the plan falls no faster
+  than gravity and pushes up at no more than 2 g (3 body weights, which it meets); a plain hold, with no bounds, pulls
+  the body down at 44.9 m/s^2 to follow it. Without the seat's rows it fails (44.87), and with their upper bound lifted
+  (99 g, as at fmax 100) it fails too (27.15).
+- Every mammal's climb, from 2.6 to 3.5 s: the hips' vertical acceleration (the hips bone's world height, 5 ms chords
+  read every millisecond) stays within -25 and +30 m/s^2. On d1118c40 it fails on both pigs (-63.4 m/s^2 at 3.378 s and
+  -89.7 at 3.195) and on no other mammal (-19.8 to +11.5, unchanged); with the seat alone, the band still resting the
+  fold, on the director (-38.2 at 3.198). Now the pigs read -14.4 to +24.5. Past 3.5 s, as the foreman comes off the top
+  into the hang, its hips still read -63.2 m/s^2 at 3.635 s (-84.7 before).
+- Every mammal's climb: only the deep bodies (the pigs) hold over the top, the plan pulls the held body down no faster
+  than gravity, and every held sample is a seat. On d1118c40, with the hips check switched off, it fails on both pigs
+  (51.43 m/s^2 at 3.380 s and 53.58 at 3.195); with the torso band and no seat, on both pigs again (51.05 at 3.655 and
+  13.93 at 2.990).
+- The figures the climb's comments give for the pigs after the top are read again: the foreman's lowering hand 7.2 mm
+  from the wall at most (7.7 before), the pigs' hands from 2.5 cm above (2.6) to 3.8 cm below their grip's height, the
+  foreman's left knee going down 9.1 m/s at 3.632 s (10.3), the director's left knee 8.9 at 3.180 (8.0).
+
+**Not kept.**
+- The seat alone, the band still resting the fold: the foreman read 363 readings (its left knee up behind and left leg
+  over 62 and 95, at worst 1063% and 578%; 4.9 body weights of required force at 3.459 s), the director 78, and the hips
+  check failed on the director (-38.2 m/s^2 at 3.198 s). It kept the trunk measure within 2 cm (1.8).
+- The seat with a floor under its plan (the plan's centre of mass no more than 1 or 3 cm below the authored path at a
+  seat, on the seat alone): the foreman 417 or 374 readings, the director 159 or 123.
+- The torso resting, with the fold kept no more than 1.5 or 0.8 cm into the top (the band holding the body that much
+  higher where the fold would sink deeper): the foreman 252 or 311 readings, its trunk 2.6 or 2.2 cm in by the test's
+  measure, both over the old allowance of 2; at 1.5 cm the director's let-go read 4233% at worst.
+- The left leg's two keys over the top (3.305 and 3.485 s) raised 8 or 16 cm to lift the fold and the thigh clear (not
+  gated): the trunk measure 3.0 or 3.5 cm against 3.3 without, neither within the old allowance of 2.
+- The body turning about its seat, the trunk sliding along the top toward the far side so the fold stays on it: the
+  foreman 429 readings, the director 328 (its required force 8.1 body weights at 3.175 s).
+- The right hand holding the top at the horse's far grip (x 0.54) through the straddle and the left leg over: the
+  foreman 380 readings, the director 89.
+- An unloaded seat's turn held as in a flight (where the seated plan falls at g, the body's angular momentum kept): the
+  foreman's required force 76.6 body weights at 3.792 s.
+
+**Left.** The fold and the left thigh in the top as the leg swings over (3.3 cm by the test's measure, 6.6 by the
+rig's). The foreman's hips as it comes off the top into the hang (-63.2 m/s^2 at 3.635 s, past the hips check), its left
+leg locking straight going down the far side (9.3 m/s at 3.631 s), its right knee up (20 readings, its right arm 5.4 cm
+into its trunk), its belly brushing the wall as its left foot comes round (84 + 7) and its push-off (10, its worst at
+1626%). The director's left knee up behind (8.9 m/s). The pigs' drops (46 and 26) and the lean coming off in the air as
+they let go; the left elbows' whip at 3.52 s; the left leg's swing over the top on every climb. Then the rest of the list
+as it stood: the take-off's last readings, the hooves' authored lean into the floor, the hands to the floor, the roll's
+landings, the vault's capsule overlap and spring speed.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

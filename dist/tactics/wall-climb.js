@@ -67,10 +67,10 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // lowered (from 3.85 to 4.2 s; the horse's 4.7 at most), their hands came off the top (the nearest hand point up to
  // 25.5 and 40.6 mm from the wall from 3.85 to 4.15 s, every other body's within 2 mm) and the lowering and the let-go
  // read 79 + 63 and 112 + 8 readings over the gate's limits. Leant only as far as on the near side, the pig director's
- // hands still rose up to 6.0 cm above their grip as it lowered (its climb 341 readings against 78; the pig foreman's
- // 354 against 374, its drop cheaper and its let-go dearer at 1.0); leant half as far again, they stay within the rig's
- // centimetre of the top, though the fit pushes its trunk further out (15 to 19 cm past its stand-back, 13 to 18 at
- // 1.0) and its hands hold at the far edge, past its grip's mark.
+ // hands still rose up to 6.0 cm above their grip as it lowered (on d1118c40's code its climb 341 readings against 78;
+ // the pig foreman's 354 against 374, its drop cheaper and its let-go dearer at 1.0); leant half as far again, they
+ // stay within the rig's centimetre of the top, though the fit pushes its trunk further out (15 to 19 cm past its
+ // stand-back, 13 to 18 at 1.0) and its hands hold at the far edge, past its grip's mark.
  // The lean comes off in the drop as the palms push on the face. Only the left landing foot stands back: with both, the
  // left foot stepping round passed in front of the planted right, the shins 10 cm through each other.
  const FAR_LEAN=1.5,lean=Math.asin(Math.min(1,back/(body.offsets.spine.y+body.offsets.shoulder[1].y)))/DEG,leanFrom=TRUNK.find(k=>k.launch).t,leanTo=TRUNK.findLast(k=>k.near&&k.t>=leanFrom).t;
@@ -96,11 +96,12 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // shoulders out past the belly to the top's middle crossed its far corner, and the clearance fit lifted the hand's
  // target off the top to clear it (up to 7.2 cm on the pig director leant only as far as on the near side). With the
  // grips at the middle, as the far lean is now, the foreman's hand came 10.6 mm off the wall as it lowered and the
- // climbs read 359 and 107 readings against 374 and 78; the forearms clear the corner while the body hangs, not as it
- // first comes over it (up to 5.3 cm in, 3.60 to 3.72 s). Its hands slide down the face 10 cm further out on each side
- // (slideDZ): leant in over its belly, its head lay between its arms as the hands came off the top (the pig foreman's
- // right hand 8.3 cm into it at 4.214 s; 3.7 with the wider slide, which doubles the pig director's turn in the air as
- // it lets go, 373 N·m at 4.206 s against 191).
+ // climbs read 359 and 107 readings against 374 and 78 (on d1118c40's code); the forearms clear the corner while the
+ // body hangs, not as it first comes over it (read every 5 ms: up to 5.4 and 5.9 cm in as they come over, from 3.40 to
+ // 3.735 s, and 0.2 and 0.3 while they hang, from 3.76 to 4.10). Its hands slide down the face 10 cm further out on
+ // each side (slideDZ): leant in over its belly, its head lay between its arms as the hands came off the top (the pig
+ // foreman's right hand 8.3 cm into it at 4.214 s; 3.8 with the wider slide, 3.7 on d1118c40), which doubles the pig
+ // director's turn in the air as it lets go (373 N·m at 4.206 s against 191).
  // The hooves on the near face rise with the search's change of height at their key (rise, as with the grip's rise). On
  // 4e9853f6 the search set the pig foreman's chest over the top 24 cm higher than the horse's with its feet left on the
  // face where the horse's were: its right leg hung straight, out of reach of its foot's target (1.31 leg lengths at
@@ -111,12 +112,13 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // right arm then goes 5.4 cm into its trunk as its knee comes up (1.6 cm without the rise). With the far grips the
  // search sets the foreman's left leg over 8.7 cm above the horse's (0.8 on 4e9853f6), and its left leg, going down the
  // far side to its 3.685 s key, locked straight out of reach (the rig's knee point 14.3 m/s at 3.617 s, the test's
- // measure 13.6; 13.7 body weights). So the legs' keys at 3.685 s ride the search's height too (deepDy): the lock is
- // back near what it was on 4e9853f6 (the rig's knee point 10.4 m/s at 3.631 s; 10.9 then), at the cost of one reading
- // and the foreman's hand check in that test (7.7 mm from the wall against 3.6 without it). Riding every leg key below
- // the top over it instead cost the right knee up 9 readings (its foot's 2.525 s key raised 17 cm) and turned the
- // airborne body at the band's jump harder (870 N·m at 3.405 s, the foreman's worst; 273 now), and put the director's
- // required force over the limit (5.1 body weights; 4.9 now).
+ // measure 13.6; 13.7 body weights). So the legs' keys at 3.685 s ride the search's height too (deepDy): the lock came
+ // back near what it was on 4e9853f6 (the rig's knee point 10.4 m/s at 3.631 s on d1118c40, 10.9 then; 9.3 since the
+ // band rests the torso), at the cost of one reading and the foreman's hand check in that test (7.7 mm from the wall
+ // against 3.6 without it, on d1118c40; 7.2 now). Riding every leg key below the top over it instead cost the right
+ // knee up 9 readings (its foot's 2.525 s key raised 17 cm), turned the airborne body at the band's jump harder
+ // (870 N·m at 3.405 s against 273 on d1118c40; the band no longer jumps there) and put the director's required force
+ // over the limit (5.1 body weights against 4.9 on d1118c40; 4.8 now).
  const deepDy={},deep=back>.05,farX=.54+(deep?.025:0),slideDZ=deep?.10:0;
  if(deep){probe.update();const h0=body.at0('hips'),s0=body.at0('spine'),hipsPts=[],spinePts=[];
   for(let i=0;i<probe.count;i++){const b=probe.boneNames[probe.bone[i]],q=V(probe.x[i],probe.y[i],probe.z[i]);if(b==='hips')hipsPts.push(q.sub(h0));else if(b==='spine')spinePts.push(q.sub(s0));}
@@ -229,17 +231,26 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // Past the band the move runs on free until the body hangs on the far face (LOWERED, the lowering's key), easing off
  // as smoothly as it holds: let go in 80 ms at the band's end, the pig foreman, held 13 cm down onto the top's edge as
  // it slid off it, rose 12 cm, lifted its hands off the top and fell at 6 g (724% of its weight).
- const TOP_BAND=[2.55,3.66],LOWERED=4.105;
+ // The torso is the skin the trunk carries: a point a thigh carries LEG (30%) or more of moves with the leg. Counted by
+ // its heaviest bone alone, the trouser fold a bent leg drags under the hip (the hips 60%, the left thigh 40%) carried
+ // the pig foreman through its left knee up behind and left leg over, up to 4.6 cm below the torso's own lowest point
+ // (at 3.39 s, its points at rest riding the hips or spine); as the leg swung over, the fold slid off the top's near
+ // edge (3.40 s) and the band dropped the body 8.3 cm in 15 ms, which the balance smoothed by pulling the body down at
+ // 5.2 g with only the fold on the top (3046 N of phantom force at 3.375 s). Left out, the torso rests on its seat.
+ const TOP_BAND=[2.55,3.66],LOWERED=4.105,LEG=.3;
  if(deep){const TOUCH=.006,REACH=.009,[a,b]=TOP_BAND,all=createSurfaceProbe(worker,{stride:1,keep:(m,i)=>!/tail/.test(m.name)||tails.isRoot(m.name,i)}),want=[],lo=[],hi=[],ts=[],inTop=(x,z)=>x>WALL.edge-WALL.half&&x<WALL.edge+WALL.half&&Math.abs(z)<.5;
-  for(let t=a;t<=LOWERED+1e-9;t+=.005){body.pose(spec(t),'top');all.update();let low=Infinity;
-   for(let i=0;i<all.count;i++){if(/hoof|boot|foot|toe|hand/i.test(all.names[all.part[i]]))continue;const bone=all.boneNames[all.bone[i]];if(bone!=='hips'&&bone!=='spine'&&bone!=='head')continue;if(inTop(all.x[i],all.z[i]))low=Math.min(low,all.y[i]-WALL.top);}
+  let thigh=null;const thighOf=()=>{thigh=new Float32Array(all.count);for(let i=0;i<all.count;i++){const mesh=worker.parts.find(p=>p.name===all.names[all.part[i]]),g=mesh.geometry,v=all.vertex[i],bones=mesh.skeleton.bones;
+   for(let j=0;j<4;j++)if(/^thigh/.test(bones[g.attributes.skinIndex.getComponent(v,j)].name))thigh[i]+=g.attributes.skinWeight.getComponent(v,j);}};
+  for(let t=a;t<=LOWERED+1e-9;t+=.005){body.pose(spec(t),'top');all.update();if(!thigh)thighOf();let low=Infinity;
+   for(let i=0;i<all.count;i++){if(/hoof|boot|foot|toe|hand/i.test(all.names[all.part[i]]))continue;const bone=all.boneNames[all.bone[i]];if(bone!=='hips'&&bone!=='spine'&&bone!=='head'||thigh[i]>=LEG)continue;if(inTop(all.x[i],all.z[i]))low=Math.min(low,all.y[i]-WALL.top);}
    ts.push(t);if(low===Infinity||t>b){want.push(0);lo.push(-1);hi.push(1);}else{want.push(TOUCH-low);lo.push(-low);hi.push(REACH-low);}}
   const P=boxedPath(want,want.map(()=>1),2e7,want.map((_,i)=>({at:i,c:[1],lo:lo[i],hi:hi[i]})));
   const tr=track(ts.map((t,i)=>[t,0,P.c[i]*smooth(Math.min(t-a,LOWERED-t)/.08),0]),{},{limit:false});onTop=t=>t>a&&t<LOWERED?V(...tr(t)):V();
   steady=steadyPoles(D,t=>limbSample(body,spec(t)));turns();}
  // Balance: the centre of mass planned against what holds the body at each moment, the hips moved to follow it. It
  // runs on the hands' final turns (a palm's angle decides when it first touches), which are then found again. Resting
- // on the top, the plan keeps the authored path (hold): its own hips' move lifted the seat off it.
+ // on the top, the plan keeps the authored path (hold): its own hips' move lifted the seat off it. That hold is a seat
+ // ('seat'), which pushes and never pulls (traversal-balance.js, planCentre).
  // the tails as played (the fit's bend, the base squashed onto the floor), for the balance's contacts too
  const playTail=t=>{const [a,b]=fit.tail(t);tails.set(a*DEG,b*DEG);tails.squash(body.root);};
  // The push's ceiling: how far up off its authored path the balance may move the trunk at t before a hoof leaving the
@@ -268,7 +279,7 @@ export function createWallClimb(worker,profile={id:'horse'}){
    const base=trunkAt(t,null),up=d=>{const tr={...base,hips:base.hips.clone().add(V(0,d,0)),chest:base.chest.clone().add(V(0,d,0))};return keyedLimb(keys,t,tr).p[1]-a.p[1];};
    let lo=-.3,hi=.3;if(up(lo)>EPS)continue;if(up(hi)<=EPS)continue;for(let k=0;k<30;k++){const m=(lo+hi)/2;if(up(m)>EPS)hi=m;else lo=m;}best=best===null?lo:Math.min(best,lo);}return best===null?null:Math.max(0,best);};
  const bal=balanceTraversal({duration:D,probe:contactProbe(worker,tails),obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),pose:t=>{const P=body.pose(spec(t),'balance');playTail(t);return P;},com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onTop?onTop(t):V()).toArray(),
-  hold:deep?t=>t>=TOP_BAND[0]&&t<=TOP_BAND[1]:null,ceiling:pushCeiling});
+  hold:deep?t=>t>=TOP_BAND[0]&&t<=TOP_BAND[1]&&'seat':null,ceiling:pushCeiling});
  // The head and tail are fitted again to the balanced motion, the head held through the flights but for the catch's
  // ease (traversal-fit.js, fit.solveHead and fit.solveTail), and the report taken on it.
  balance=bal;fit.solveHead({air:t=>bal.samples[Math.round(t/(bal.times[1]-bal.times[0]))]?.kind==='air'});fit.solveTail();turns();

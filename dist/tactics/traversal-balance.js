@@ -7,6 +7,8 @@ import {V,Q,clamp,smooth,track,MASS_SEGMENTS,BODY_MASS,createSurfaceProbe} from 
 // - on the feet alone: the pressure point of a linear inverted pendulum, p = c - h a / (g + a_y), inside the soles'
 //   outline (their convex hull), the push within friction, and the floor pushing (never pulling);
 // - hands gripping (with or without feet): any direction, each axis within FMAX body weights;
+// - held as a seat (the climb's top for a deep body): pushing up between none and FMAX body weights, never pulling,
+//   the push sideways within friction;
 // - at rest at either end, as the battle's own stance hands over: the first sample on the authored path, with no
 //   velocity and no acceleration there, the first interval a cubic from rest; at the end the same into the last sample
 //   before the crossing's end, the last sample (at the end or up to 5 ms past it) held there too; these rows met
@@ -60,18 +62,24 @@ export function boxedPath(c0,wT,wJ,rows,{rho=2e5,iters=1500,tol=1e-8,stride=1}={
 // heavily, at its authored height, and across like the feet; with heightOnly, its height alone and lightly (wL: a body
 // lying on the floor slides on it and gives a little, but cannot rise off it), planned across exactly as the feet are.
 // At wL 50 the plan softens a window roll's landings within half a centimetre of the floor (the donkey's seat landing
-// 4.7 body weights, read every millisecond; at 400, 5.1; at 20, 4.5, its pig director 0.6 cm up).
+// 4.7 body weights, read every millisecond; at 400, 5.1; at 20, 4.5, its pig director 0.6 cm up). With seat, a held
+// seat: it pushes between none and fmax body weights, as a floor does, and never pulls (the climb's top; see below).
 export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=FMAX,margin=.01}={}){
  const n=samples.length,d2=dt*dt,c0=[0,1,2].map(ax=>Float64Array.from(samples,s=>s.c[ax])),wT=samples.map(s=>s.kind==='hold'?(s.heightOnly?wL:wH):1),wA=samples.map(s=>s.kind==='hold'&&!s.heightOnly?wH:1),acc=[1,-2,1];
  // the ends at rest, met exactly (stiff): the first sample on the authored path and the next on the cubic from rest
  // (c1 = (7 c0 + c2) / 8); at the end the same into the last sample before the crossing's end, the last one held there
  const EQ=1e3,ends=ax=>[{at:0,c:[1],lo:c0[ax][0],hi:c0[ax][0],stiff:EQ},{at:0,c:[7,-8,1],lo:0,hi:0,stiff:EQ},{at:n-4,c:[1,-8,7],lo:0,hi:0,stiff:EQ},
   {at:n-2,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ},{at:n-1,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ}];
- // Vertical: ballistic in flight; a floor pushes between .3 and fmax body weights, a grip either way up to fmax.
+ // Vertical: ballistic in flight; a floor pushes between .3 and fmax body weights, a grip either way up to fmax, a
+ // held seat between none and fmax. Held with no bounds, the climb's seat over the top let the plan pull the pig
+ // foreman down at 5.2 g (51.4 m/s^2 at 3.380 s) where its band dropped it 8.3 cm in 15 ms, with only a trouser fold
+ // on the top (3046 N of phantom force); with the band resting its torso and no bounds, the plan pulled it down at
+ // 5.2 g at 3.655 s and its required force read 6.0 body weights for 1 ms at 3.632 s.
  // A feet sample's ceil, where given, is the highest its centre of mass may go (see balanceTraversal's ceiling).
  const edge=i=>{for(let k=1;k<=RAMP;k++)if(samples[i-k]?.kind==='air'||samples[i+k]?.kind==='air')return ((k-1)/RAMP)**2;return 1;};
  const ry=ends(1);for(let i=1;i<n-1;i++){const s=samples[i];if(s.kind==='air')ry.push({at:i-1,c:acc,lo:-G*d2,hi:-G*d2});
   else if(s.kind==='feet'){const r=edge(i);ry.push({at:i-1,c:acc,lo:(.3*r-1)*G*d2,hi:(.1+(fmax-.1)*r-1)*G*d2});}else if(s.kind==='grip')ry.push({at:i-1,c:acc,lo:(-fmax-1)*G*d2,hi:(fmax-1)*G*d2});
+  else if(s.kind==='hold'&&s.seat)ry.push({at:i-1,c:acc,lo:-G*d2,hi:(fmax-1)*G*d2});
   if(Number.isFinite(s.ceil))ry.push({at:i,c:[1],lo:-Infinity,hi:s.ceil});}
  const Y=boxedPath(c0[1],wT,wJ,ry),ay=i=>i>0&&i<n-1?(Y.c[i+1]-2*Y.c[i]+Y.c[i-1])/d2:0;
  const out=[null,Y.c,null],res=[0,Y.res,0];
@@ -107,6 +115,11 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=
  for(let i=1;i<n-1;i++){const s=samples[i],at=2*(i-1),both=(lo,hi)=>rows.push({at,c:acc2,lo,hi},{at:at+1,c:acc2,lo,hi});
   if(s.kind==='air'){both(0,0);continue;}
   if(s.kind==='grip'){both(-fmax*G*d2,fmax*G*d2);continue;}
+  // A held seat keeps a hold's sideways bounds, as if it bore .3 g at least, even where its plan rides -g and it bears
+  // nothing; the push then comes from elsewhere. On the climb's top a hand grips the wall at every seated sample
+  // (supportAt reads a grip, no outline, at all 227 of each pig's), and a seat's bounds, up, down and sideways, lie
+  // inside a grip's: the pigs' plans ride -g at 26 and 9 of those samples and push the body sideways there at up to
+  // 3.75 m/s^2, and the gate reads nothing over its limits on either pig from 2.55 to 3.68 s.
   if(s.kind==='hold'&&!s.hull){const fy=Math.max(.3*G,ay(i)+G);both(-MU*fy*d2,MU*fy*d2);continue;}
   if(s.kind!=='feet'&&s.kind!=='hold')continue;const fy=Math.max(.3*G,ay(i)+G),h=Math.max(.2,Y.c[i]-(s.floor||0)),k=h/fy,a=-k/d2,b=1+2*k/d2;
   // The pressure point also carries the body's turning: p_x = c_x - k a_x + dL_z / (M fy), p_z = c_z - k a_z - dL_x / (M fy).
@@ -267,7 +280,7 @@ const ONSET=.02,LOST=.06;
 // not turn, or {q, pivot}: a turn about a point); the result's shift and spin are the final ones. hold(t), if given,
 // marks times the plan keeps near the authored path ('hold': a support it must not move, such as a seat the hips' own
 // move would lift off the floor, losing the support the plan was leaning on; see planCentre), or its height alone where
-// it returns 'height'.
+// it returns 'height', or as a seat, which pushes and never pulls, where it returns 'seat'.
 // ceiling(t), if given, is how far up off the authored path the plan may move the centre of mass at t, or null (the
 // climb's push: its hooves leave the floor on a soft key, at a height carried by the hips the plan moves, so a plan
 // that raised them lifted the hooves early and pushed on feet already off; see the climb).
@@ -288,7 +301,7 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  const setShift=s=>setMove(s||spin?{shift:()=>s||V(),spin}:null);
  // each round's schedule as runs ('feet 0.000-0.690, ...'), for the diagnostics
  const history=[],runs=S=>{const out=[];S.forEach((s,i)=>{const r=out.at(-1);if(r&&r.kind===s.kind)r.end=times[i];else out.push({kind:s.kind,start:times[i],end:times[i]});});return out.map(r=>`${r.kind} ${r.start.toFixed(3)}-${r.end.toFixed(3)}`).join(', ');};
- const measure=()=>{const frames=[];const S=times.map(t=>{setShift(follow?follow.shift(t):null);const P=pose(t);probe.update();frames.push(Object.fromEntries(KEEP.map(k=>[k,P[k].clone()])));const c=com(P).toArray(),s=supportAt(probe,obstacles,c),h=hold?.(t);return h&&s.kind!=='air'?{...s,kind:'hold',heightOnly:h==='height',c}:{...s,c};});
+ const measure=()=>{const frames=[];const S=times.map(t=>{setShift(follow?follow.shift(t):null);const P=pose(t);probe.update();frames.push(Object.fromEntries(KEEP.map(k=>[k,P[k].clone()])));const c=com(P).toArray(),s=supportAt(probe,obstacles,c),h=hold?.(t);return h&&s.kind!=='air'?{...s,kind:'hold',heightOnly:h==='height',seat:h==='seat',c}:{...s,c};});
   const lag=Math.round(ONSET/dt);for(let i=n-1;i>=0;i--)if(S[i].kind==='grip'){let j=i;while(j>0&&S[j-1].kind==='grip')j--;const end=i-j+1<3*lag?i+1:Math.min(n,j+lag);for(let k=j;k<end;k++)S[k]=j>0?{...S[j-1],c:S[k].c}:S[k];i=j;}
   return {S,...turning(frames,dt)};};
  // Two rounds: the second measures the schedule and the turning again on the balanced motion (four gave the climb no

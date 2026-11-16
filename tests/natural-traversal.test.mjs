@@ -5,7 +5,7 @@ import {ANIMAL_MOTION_CATALOG} from '../dist/tactics/animal-motion-catalog.js';
 import {createBattlePosture} from '../dist/tactics/battle-posture.js';
 import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {naturalTraversal,createNaturalTraversal} from '../dist/tactics/natural-traversal.js';
-import {contactProbe,supportAt} from '../dist/tactics/traversal-balance.js';
+import {contactProbe,supportAt,planCentre} from '../dist/tactics/traversal-balance.js';
 import {steadyPoles,createSurfaceProbe,MASS_SEGMENTS} from '../dist/tactics/traversal-pose.js';
 import {WALL} from '../dist/tactics/wall-climb.js';
 import {edgeBoxes} from '../dist/tactics/traversal-fit.js';
@@ -17,7 +17,8 @@ const model=p=>{const worker=p.create(JSON.parse(readFileSync(new URL('../dist/t
 const crossing=kind=>({id:1,unitId:1,kind,from:{x:0,y:0,z:0},to:{x:1,y:0,z:0}});
 // The deepest trunk, head and tail point each crossing leaves in the floor or the obstacle as it is played (the
 // clearance fit's report, taken again after the balance; a tail's root counts as trunk), in cm: about a centimetre,
-// except the named gaps, which may only shrink. 8 cm is right through the 16 cm wall; past that the way out is up.
+// except the named gaps, which may only shrink (one has grown, by the user's choice: the pig foreman's on the wall,
+// below). 8 cm is right through the 16 cm wall; past that the way out is up.
 // Read before the balance (to d3fec1f), the report missed the window's tails, the climb's heads 5 to 8 cm in its wall
 // and the pigs 25 to 40 cm in its floor; read here, it found the pigs' bellies 8 to 16 cm through the top in the straddle.
 const LEFT={'window/pig-foreman/trunk':2,'window/pig-director/trunk':3, // the belly on the sill as the body tips over
@@ -27,7 +28,15 @@ const LEFT={'window/pig-foreman/trunk':2,'window/pig-director/trunk':3, // the b
  'window/skunk/trunk':2, // the plume's root, which rides the hips, on the floor in the roll
  'window/dog/trunk':2,'wall/dog/trunk':2, // the dog's utility pouch on the sill's far edge, and on the face in the hang
  'low-wall/pig-director/trunk':2, // the waistcoat on the wall's near edge at the spring
- 'wall/pig-foreman/trunk':2,'wall/pig-director/trunk':3}; // the seat resting on the 16 cm top in the straddle (15.6 and 7.9 through it before)
+ // the seat resting on the 16 cm top in the straddle (15.6 and 7.9 through it before); the pig foreman's now its
+ // trouser fold as its left leg swings over (below)
+ 'wall/pig-foreman/trunk':3.5,'wall/pig-director/trunk':3};
+// The pig foreman's was 2 (1.8 cm in at 3.72 s) while its band over the top rested the trouser fold its bent left leg
+// drags under the hip (the hips 60%, the left thigh 40%). Resting its torso instead (wall-climb.js, LEG) takes the
+// gate's phantom force out of its left leg over (3046 N at 3.375 s) and its readings over the gate's limits from 374 to
+// 207, and leaves the fold 3.3 cm in at 3.34 s as the leg swings over (6.6 cm by the rig's collisions, which read every
+// point every 10 ms; this report reads every other point every 20 ms). Grown from 2 to 3.5: the user chose "Allow the
+// 3.5 cm clip" over the seat rule alone (2026-11-16; docs/tactics/NATURAL-TRAVERSAL.md, the twenty-eighth part).
 // As the window's seat lets go the centre of mass is over the feet (cm inside their support, the least from the lean to
 // the rise, as the balance plans it): sat after the roll, every mammal's was 9 to 22 cm behind its feet, and the plan
 // threw the body at them as the seat lifted. The rabbit's and dog's furry feet hold from the ankle forward, their heels
@@ -73,6 +82,19 @@ test('a tail beyond its root holds the body on the floor, not on an obstacle',()
  assert.ok(near(back([{part:1,v:50,x:.57,y:.849,z:.2}]),.9),'a bent tail on the sill holds the body');
  assert.ok(near(back([{part:1,v:5,x:.57,y:.849,z:.2}]),.57),"a tail's root on the sill does not hold the body");
  assert.ok(near(back([{part:1,v:50,x:.7,y:.002,z:.2}]),.7),'a tail on the floor does not hold the body');
+});
+// A seat the balance holds (traversal-balance.js, planCentre: a 'hold' with seat, the climb's top for a deep body)
+// pushes and never pulls: planned against a seat whose height drops 6 cm at once, the plan falls no faster than
+// gravity (-9.81 m/s^2 at its least) and comes down onto it at the balance's 3 body weights at most (FMAX: 2 g net,
+// which it meets; 27.2 m/s^2 with that bound lifted, fmax 100), where a plain hold, with no bounds, pulls the body
+// down at 44.9 m/s^2 to follow it (as the seat did before it had bounds).
+test('a held seat pushes the body up and never pulls it down',()=>{
+ const dt=.005,n=121,G=9.81,at=seat=>Array.from({length:n},(_,i)=>({c:[0,i<60?1:.94,0],kind:'hold',seat}));
+ const range=plan=>{let lo=Infinity,hi=-Infinity;for(let i=1;i<n-1;i++){const a=(plan[i+1][1]-2*plan[i][1]+plan[i-1][1])/dt/dt;lo=Math.min(lo,a);hi=Math.max(hi,a);}return [lo,hi];};
+ const [lo,hi]=range(planCentre(at(true),dt)),[heldLo]=range(planCentre(at(false),dt));
+ assert.ok(lo>=-G-.5,`a seat's plan falls at ${(-lo).toFixed(2)} m/s^2 (no faster than gravity)`);
+ assert.ok(hi<=2*G+.1,`a seat's plan pushes the body up at ${hi.toFixed(2)} m/s^2 (the balance's 3 body weights at most: 2 g net)`);
+ assert.ok(heldLo<-2*G,`a plain hold's plan falls at ${(-heldLo).toFixed(2)} m/s^2 (a seat's bound can be broken)`);
 });
 test("the limbs' bend sides run straight between their samples",()=>{
  const W=4,STEP=.005,pole=steadyPoles(1,t=>({leg1:{start:[0,1,0],target:[0,.2,0],pole:[Math.cos(W*t),0,Math.sin(W*t)],reach:.9}}),{step:STEP}),n=Math.round(1/STEP),h=1e-4;
@@ -208,7 +230,7 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    assert.ok(hand<=.01,`wall: at the catch (${cs.at(-1).toFixed(3)} s) the hand point nearest the wall's surface is ${(1e3*hand).toFixed(1)} mm from it`);
    // Over the top no knee whips, and lowering down the far face a hand stays at the wall: any point of a forearm or
    // hand within the rig's centimetre of any face of it (the pigs' hands, read every 5 ms from 3.85 to 4.15 s, the
-   // window this check reads every 10 ms, now ride the top's far edge, from 2.6 cm above to 3.8 cm below their grip's
+   // window this check reads every 10 ms, now ride the top's far edge, from 2.5 cm above to 3.8 cm below their grip's
    // height, so this says the rig reads a grip there, not that a palm lies on the top). Knee speeds here are this
    // check's own measure, the shin bone's world position over 2 ms chords, not the rig's knee point. A deep body's
    // hooves on the near face ride the height its keys over the top are set at (wall-climb.js, rise), and it stands back
@@ -217,10 +239,10 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // 14.1 m/s, read every 2 ms from 2.3 to 3.1 s; every other mammal's knees 7.6 at most, the dog's; now the pigs' 4.1
    // and 5.3), and their hands came off the top as they lowered (the nearest hand point, of the hand's mesh, forearm
    // and hand, as the rig's grip reads it, up to 25.5 and 40.6 mm from the wall's surface, every 10 ms from 3.85 to
-   // 4.15 s; every other mammal's 1.9 at most, the skunk's; now 7.7 and 4.3). Each check fails there on both pigs and
+   // 4.15 s; every other mammal's 1.9 at most, the skunk's; now 7.2 and 4.3). Each check fails there on both pigs and
    // on no other mammal, the second with the first switched off. The rig's 8 m/s holds the knees only to 3.1 s: going
    // down the far side the pig foreman's left leg still locks straight out of reach of its 3.685 s key, as it did on
-   // 4e9853f6 (10.3 m/s at 3.632 s; 10.4 then), and the director's left knee reads 8.0 at 3.188 s (8.05 then). From 3.1
+   // 4e9853f6 (9.1 m/s at 3.632 s; 10.4 then), and the director's left knee reads 8.9 at 3.180 s (8.05 then). From 3.1
    // to 3.7 s they are held at 11 m/s, a bound 4e9853f6 also meets (the foreman's 10.4). The far grips set the
    // foreman's left leg over higher, and without its legs' 3.685 s keys riding that height (wall-climb.js, deepDy) the
    // lock read 13.6 m/s at 3.618 s: this bound guards deepDy, and passes on 4e9853f6.
@@ -231,7 +253,28 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    assert.ok(lock.v<=11,`wall: going down the far side the ${lock.side} knee moves at ${lock.v.toFixed(1)} m/s at ${lock.t?.toFixed(3)} s (11 at most; the pig foreman read 10.4 on 4e9853f6)`);
    let loose={d:0};
    for(let t=3.85;t<=4.15+1e-9;t+=.01){motion.apply(t/D);pr.update();let h=Infinity;for(let i=0;i<pr.count;i++)if(/hand/.test(pr.names[pr.part[i]]))h=Math.min(h,off(pr.x[i],pr.y[i],pr.z[i]));if(h>loose.d)loose={d:h,t};}
-   assert.ok(loose.d<=.01,`wall: lowering down the far face the hand point nearest the wall's surface is ${(1e3*loose.d).toFixed(1)} mm from it at ${loose.t?.toFixed(2)} s`);}
+   assert.ok(loose.d<=.01,`wall: lowering down the far face the hand point nearest the wall's surface is ${(1e3*loose.d).toFixed(1)} mm from it at ${loose.t?.toFixed(2)} s`);
+   // Over the top the hips do not jolt: from 2.6 to 3.5 s their vertical acceleration (the hips bone's world height,
+   // 5 ms chords read every millisecond) stays within -25 and +30 m/s^2. A deep body's band over the top rests its
+   // torso, not the skin a thigh carries (wall-climb.js, LEG). On d1118c40, resting the pig foreman on a trouser fold
+   // its left thigh dragged under the hip, the band dropped it 8.3 cm in 15 ms as the fold slid off the top, and the
+   // hips read -63.4 m/s^2 at 3.378 s (the pig director, on its own fold, -89.7 at 3.195 and +42.0 at 3.149; the
+   // foreman +34.4 at 3.416); with the seat below but the band still resting the fold, only the director fails it
+   // (-38.2 at 3.198). Every other mammal reads -19.8 to +11.5 there, unchanged, and the pigs now -14.4 to +24.5.
+   const hipsY=t=>{motion.apply(t/D);return bones.hips.getWorldPosition(bones.hips.position.clone()).y;},ys=new Map();
+   const yAt=t=>{const k=Math.round(t*1e3);if(!ys.has(k))ys.set(k,hipsY(k/1e3));return ys.get(k);};let jolt={a:0};
+   for(let t=2.6;t<=3.5+1e-9;t+=.001){const a=(yAt(t+.005)-2*yAt(t)+yAt(t-.005))/.005**2;if(a<-25||a>30){if(Math.abs(a)>Math.abs(jolt.a))jolt={a,t};}}
+   assert.ok(!jolt.t,`wall: over the top the hips' vertical acceleration reads ${jolt.a.toFixed(1)} m/s^2 at ${jolt.t?.toFixed(3)} s (-25 to +30)`);
+   // Over the top a deep body sits (wall-climb.js, the balance's hold): its held samples are a seat, onto which the
+   // plan's centre of mass falls no faster than gravity (traversal-balance.js, planCentre). Held with no bounds, the
+   // plan pulled the pig foreman down at 51.4 m/s^2 at 3.380 s and the pig director at 53.6 at 3.195, and, with the
+   // band resting the foreman's torso, the foreman at 51.1 at 3.655; seated, both pigs' plans fall at 9.81 at most.
+   // Where no sample is a seat the fall check fails first; the seat check guards a held sample left unmarked.
+   {const P=B.plan,T=B.times,held=[];for(let k=1;k<n-1;k++)if(S[k].kind==='hold')held.push(k);
+    assert.ok(held.length>0===/^pig-/.test(p.id),`wall: ${held.length} held samples over the top`);
+    let fall={a:0};for(const k of held){const a=(P[k-1][1]-2*P[k][1]+P[k+1][1])/dt**2;if(a<fall.a)fall={a,t:T[k]};}
+    assert.ok(fall.a>=-9.82,`wall: over the top the plan pulls the held body down at ${(-fall.a).toFixed(2)} m/s^2 at ${fall.t?.toFixed(3)} s (gravity's 9.81 at most)`);
+    assert.ok(held.every(k=>S[k].seat),`wall: ${held.filter(k=>!S[k].seat).length} of the ${held.length} held samples over the top are not a seat`);}}
   // A stepping leg keeps its knee bent: through the window's get-up steps and the climb's last two, the stepping leg's
   // hip-to-ankle distance stays short of the IK's soft reach (traversal-pose.js limb(): within SOFT, 1.5 cm, of straight
   // it eases the hoof short of its mark; mid-step the reach widens by the step's soft zone, so the bound is exact at the
