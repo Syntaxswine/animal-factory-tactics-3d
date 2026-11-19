@@ -2900,6 +2900,123 @@ the push-off; the drops (the foreman 46, the bull 42, the director 26); the fore
 every climb (2.9 cm at 5.165 s on the horse, 1.9 at 5.181 on the foreman); the fold and the left thigh in the top; the
 left elbows' whip at 3.52 s.
 
+### 2026-11-19 (physics balance, thirtieth part): the take-off holds its turn as the legs fold
+
+On 6d7ac5d4 the climbs read most of their readings over the limit at the take-off: their push-off and flight up ("Push
+off" and "Over the top") read 381 of the eleven climbs' 620 (144 of them on the feet), and the worst reading of ten
+climbs fell there (the horse's 2198% of the limit at 0.871 s, the donkey's 2221%, the goat's 1899%; the pig director's
+is elsewhere).
+
+Why: the legs begin to fold before the hooves leave the floor. On the horse's climb the legs' own angular momentum
+(their segments about the body's centre of mass, in the balance's model) turned at 0.851 s and swung 4.3 N·m·s by its
+last foot sample (0.870 s), at up to 356 N·m/s, while the push faded: 2087 N on its hooves at 0.845 s, 147 at 0.865
+(motion\probe-takeoffL.mjs, reproduced by review round 3: legs-f8c.txt; the gate's rows). The balance turns the whole
+body to hold a flight's angular momentum (traversal-balance.js, bodyTurn: in flight L* is the flight's median), but only
+from the flight's first sample, so for those last 20 ms the floor was asked to turn the body as the legs swung, on
+almost no load: the body's angular momentum changed at up to 398 N·m/s at 0.865 s, and the rig read 252 N and 115 N·m of
+phantom wrench there. From 15 ms before the last foot sample to 10 ms after it, the eleven climbs' bodies changed their
+angular momentum at 229 to 408 N·m/s (motion\probe-takeoffpeak2.mjs, read every 1 ms, the rate over 2 ms chords;
+tpeak2-f8c-*.txt).
+
+**The fix** (traversal-balance.js), in two parts that need each other:
+- LEAD and turnAir: for the turn, a take-off's flight starts 25 ms before the hooves leave (the last five samples of a
+  run on the feet longer than that, just before a flight), in bodyTurn and in the flights' refinement. The turn holds
+  the flight's angular momentum there, the trunk turning against the legs as they fold, and its ease into the flight
+  moves into the loaded push. A shorter run, a touch between two flights, is left as it is (none of the 33 crossings
+  has one, and no test reaches that branch).
+- On that lead the plan's pressure point reads no turning: the turn holds the angular momentum there. With the lead
+  alone the plan read the rate measured before the round's turn and still counted on the spin the turn takes out (the
+  horse's 147 N·m/s at 0.860 s, against -32 as played, its rate over 1 ms chords): it pushed the body toward the wall
+  at 2.9 m/s^2 on 0.82 g of load, and the feet read more at the release on five climbs (below, Not kept). Now the
+  horse's plan asks 1.1 m/s^2 there and 0.4 at 0.865 s, its pressure point within the hooves' outline
+  (motion\probe-takeoffcop.mjs; review round 3's lead-f9z.txt). The support schedule is the same on ten climbs; the
+  donkey's catch comes one sample later, at 1.250 s (runs-f8c-all.txt against runs-f9z-all.txt). From 15 ms before the
+  last foot sample to 10 ms after it, the eleven climbs now read 12 to 64 N·m/s (the test's own measure:
+  testspin-f9z-*.txt).
+- Two things are left of the plan's part (review round 3: lead-f9z.txt, jnew-base-f9z.txt). turning()'s five-sample
+  mean carries the lead's zero back over the two samples before it, where on five climbs the plan reads 88 to 115
+  N·m/s less turning than is played over 1 ms chords (the rabbit's -135 against -250 at 0.845 s). And on the lead the
+  played rate rings about the plan's zero from sample to sample (the dog's -18, +56, -33, +22 and -13 N·m/s), the
+  turn's track following the kink at the lead's start: the horse's -30 at 0.860 s, on 0.82 g, puts its pressure point
+  1.8 cm behind its heels. There fall the fix's five new readings on the feet, phantom force of 74 to 83 N: the
+  horse's at 0.861 and 0.862 s (108 and 101% of the limit) and the sheep's at 0.856 and 0.857 (108 and 113%), mid-lead,
+  and the rabbit's at 0.845 s (106%), before its lead.
+
+phantom-wrench 1.2.0 `--gate` (frozen copies; 6d7ac5d4's motion = var-f8b's climbs and var-f7fin's pig director ->
+var-f9z, this commit's code but for comments and a local's name; var-f9zfin, the tree, plays all 33 crossings the same
+frame for frame: same-f9z-f9zfin-all.txt; f9z-summary.txt):
+
+| climb | readings (on the feet) | worst (% of its limit) |
+|---|---|---|
+| horse | 40 (20) -> 20 (11) | 2198 -> 227% |
+| goat | 49 (24) -> 10 (1) | 1899 -> 256% |
+| bull | 83 (19) -> 50 (0) | 722 -> 253% |
+| cow | 38 (17) -> 8 (0) | 725 -> 249% |
+| donkey | 40 (10) -> 17 (0) | 2221 -> 217% |
+| sheep | 40 (15) -> 12 (3) | 1886 -> 256% |
+| skunk | 36 (8) -> 16 (0) | 885 -> 246% |
+| pig foreman | 116 (28) -> 88 (22) | 1626 -> 625% |
+| pig director | 78 (9) -> 57 (1) | 3728% |
+| rabbit | 47 (19) -> 28 (13) | 1186 -> 999% |
+| dog | 53 (19) -> 27 (9) | 1151 -> 217% |
+
+Together 0.695 -> 0.370 s over the limit at the samples and 620 -> 333 readings, 188 -> 60 of them on the feet; the
+push-off and flight up 381 -> 105 (144 -> 14 on the feet). By phase (f9z-phases.txt): every climb's flight up reads
+fewer (the horse's 28 -> 11, the skunk's 22 -> 2); the push-off fewer on six (to none on the goat, bull, cow and pig
+foreman) and one more on the rabbit; the catch fewer on the pigs and the dog (the director's 23 -> 18) and one more on
+the goat, sheep and rabbit. The horse's worst is now an old one in its push (227% at 0.745 s, 252 before).
+
+Of the 287 fewer readings, 29 go only because the rig now credits cloth on the wall's near face, not physics (review
+round 2's jcredit2.mjs, here probe-credit.mjs: credit-f9z.txt): the skunk's overalls from 0.870 to 0.887 s (15, among
+them its old worst, 885% at 0.873, so its new worst lies elsewhere), the goat's overalls in its push from 0.783 to 0.789
+s (7), the dog's trousers at its catch from 1.222 to 1.226 s (5), the pig director's waistcoat at 1.174 and 1.175 s (2);
+and one appears where the director's skull leaves that face (0.872 s, 111%). Besides the cloth, 20 go where the rig
+newly finds a hoof or boot within its centimetre of the floor at the take-off, which the fix leaves lower there (the
+pig director's lowest boot point 3.4 mm into the floor 5 ms before its last foot sample, 0.1 mm above it before; it
+leaves the rig's centimetre 7 ms after that sample, 2 ms into the planned flight, where it left 3 ms after it): at the
+last foot sample on six climbs (197 to 279% of the limit there before, 11 to 72% now), and just after it, where the
+rig's flag turns from the air to a contact, the pig foreman's and the rabbit's old worst readings (1626% at 0.856 s,
+1186% at 0.876 s; review round 3's jany.mjs: jany-base-f9z.txt). A hoof within the centimetre is a support by the
+suite's own rule, but those falls are the rig's crediting, not the take-off's physics. The pigs' right palms in the
+push run faster (the foreman's 7.89 -> 8.13 m/s, its seventh point over the rig's 8 m/s; the director's 7.46 -> 7.67),
+and the other climbs' palms 0.006 to 0.165 m/s faster (the goat's, bull's, cow's and sheep's 0.064 at most), theirs
+already over the rig's 8 m/s on 6d7ac5d4 (8.21 to 8.42 m/s, now 8.24 to 8.49; review round 3's speeds-base-f9z.txt).
+The windows and low walls play the same motion frame for frame (all 22,
+var-f8c against var-f9z: same-f9z-wl.txt). `bin/collisions.mjs`: the same on eight climbs; the horse's deepest point,
+its left hoof in the wall at 1.45 s, 3.5 -> 3.6 cm (spans deeper than 2 cm 6 -> 5), the donkey's spans 9 -> 8, and the
+sheep's deepest point the same 3.6 cm 20 ms later.
+
+The lead: at 20, 25 and 30 ms the eleven climbs read 378, 333 and 313 readings (99, 60 and 63 on the feet). At 30 ms the
+horse's push reads 541% at 0.744 s and the rabbit's catch 1133% at 1.224 s (999 at 25), so 25. The legs begin to fold 14
+to 20 ms before the last foot sample on ten climbs and 25 on the rabbit (review round 1).
+
+`tests/natural-traversal.test.mjs`, every mammal's climb: from 15 ms before the balance's last foot sample before the
+flight to 10 ms after it, the body's angular momentum (the test's model, read every 1 ms, the rate over 2 ms chords)
+changes at most 100 N·m/s, a bound set between the two copies: on 6d7ac5d4 it fails on all eleven climbs (229 to 408;
+var-tchk9a: t9-tchk9a.txt), now 12 to 64. It passes with the lead alone as well (13 to 64): the plan's part is guarded
+by the gate alone.
+
+**Not kept.**
+- The lead alone: 475 readings, but the feet read more at the release on five climbs (from 0.80 to 0.95 s the horse 8 ->
+  14, the skunk 8 -> 15, the dog 10 -> 14, the rabbit 7 -> 10, the donkey 10 -> 12; the horse 102 to 275% of the limit
+  at 0.857 to 0.862 s, where 6d7ac5d4 read up to 40%), its feet's total 188 as before (var-f9t25; at 20, 30 and 35 ms
+  506, 472 and 488 readings).
+- On the lead, the turning rate taken from the turn's own angular momentum (L + I (w_new - w)) rather than none: 355
+  readings, 96 on the feet. The rate's chords and five-sample mean smeared the step into the hold over the lead's first
+  three samples (the horse's +56, +96 and +57 N·m/s, where the played body read -79, -38 and -8 by the same rate), and
+  nine climbs read 24 new readings on the feet there (var-f9u; review round 2), against the kept version's five.
+- The plan reading the body's turning as the round's turn leaves it on every sample, not only the lead: the horse 39 ->
+  36, the goat 25 -> 29, the pig foreman 93 -> 87 against the lead alone; the walk-outs moved too (the goat's right foot
+  round 0 -> 7; var-f10a, three climbs gated).
+- The feet's push sideways held within friction of the floor's push as planned, not of 0.3 g at least: alone, the horse
+  read 40 readings (worst 2252%); with the lead, 38 (275%) against 39 (var-f9f, var-f9tf25).
+- Four refinements of the flights instead of two, with the lead: the horse 39 -> 36, the goat 25 -> 27 (var-f9r4).
+
+**Left.** The flights' small torques just after the release (the horse's 9 readings from 0.871 to 0.893 s, 11 to 21 N·m
+against the airborne 10), the plan's turning just before and on the lead (above), the horse's push (227% at 0.745 s),
+the drops (the foreman 46, the bull 42, the director 26), the pigs' palms in the push, and the rest of the list as it
+stood.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

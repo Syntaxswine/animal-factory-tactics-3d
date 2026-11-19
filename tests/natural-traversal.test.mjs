@@ -295,12 +295,24 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
     assert.ok(held.every(k=>S[k].seat),`wall: ${held.filter(k=>!S[k].seat).length} of the ${held.length} held samples over the top are not a seat`);}
    // Walking away from the wall the body stands on its feet: from the landing (its first sample on the feet after the
    // Absorb key) to the end, the balance plans on its feet alone (traversal-balance.js, supportAt: of the mesh the rig
-   // names a hand, the forearm and the elbow grip only hooked over a top). On b383d186 ten climbs read a grip from their
-   // right elbows on the wall's far face as they walked away (from 5.150 to 5.295 s, 20 ms after the touch), and the
-   // plan pulled the body back toward the wall on one boot (the pig foreman: 84 + 7 readings over the rig's limit); only
-   // the pig director walked away on its feet.
+   // names a hand, the forearm and the elbow grip only hooked over a top). On b383d186 ten climbs read a grip from
+   // their right elbows on the wall's far face as they walked away (from 5.150 to 5.295 s, 20 ms after the touch), and
+   // the plan pulled the body back toward the wall on one boot (the pig foreman: 84 + 7 readings over the rig's limit);
+   // only the pig director walked away on its feet.
    {const T=B.times,a=motion.phases.find(x=>x.label==='Absorb').end,k1=S.findIndex((x,k)=>T[k]>a&&x.kind==='feet'),k2=k1<0?-1:S.findIndex((x,k)=>k>k1&&x.kind!=='feet');
-    assert.ok(k1>0&&k2<0,k1<0?'wall: no sample on the feet after the landing':`wall: walking away the balance plans on a ${S[k2]?.kind} at ${T[k2]?.toFixed(3)} s`);}}
+    assert.ok(k1>0&&k2<0,k1<0?'wall: no sample on the feet after the landing':`wall: walking away the balance plans on a ${S[k2]?.kind} at ${T[k2]?.toFixed(3)} s`);}
+   // As the hooves leave, the body's turning comes off the floor: from 15 ms before the balance's last foot sample
+   // before the flight to 10 ms after it, the body's angular momentum about its centre of mass (the model above, read
+   // every millisecond, its rate over 2 ms chords) changes at most 100 N·m/s (traversal-balance.js, LEAD). The legs
+   // fold before the hooves leave, and with the turn held only from the first sample in the air the floor was asked to
+   // turn the body as they swung, on a fading push: on 6d7ac5d4 every mammal's climb read 229 to 408 N·m/s there (the
+   // horse's 398 at 0.865 s, 147 N on its hooves), now 12 to 64.
+   {const tf=B.times[k0-1],h=5e-4,Lh=t=>{const [A,ca]=at(t-h),[P,c]=at(t),[Q,cb]=at(t+h),vc=sub(cb,ca).map(x=>x/(2*h)),out=[0,0,0];
+     for(const [a,b,mass] of MASS_SEGMENTS){const r=sub(mid(P,a,b),c),v=sub(sub(mid(Q,a,b),mid(A,a,b)).map(x=>x/(2*h)),vc),[u,l]=unit(P,a,b),du=sub(unit(Q,a,b)[0],unit(A,a,b)[0]).map(x=>x/(2*h));
+      const o=cross(r,v),s=cross(u,du);for(let q=0;q<3;q++)out[q]+=mass*o[q]+mass*l*l/12*s[q];}return out;};
+    const Ls=[];for(let t=tf-.016;t<=tf+.011+1e-9;t+=.001)Ls.push([t,Lh(t)]);let spin={v:0};
+    for(let i=1;i<Ls.length-1;i++){const v=Math.hypot(...[0,1,2].map(q=>(Ls[i+1][1][q]-Ls[i-1][1][q])/.002));if(v>spin.v)spin={v,t:Ls[i][0]};}
+    assert.ok(spin.v<=100,`wall: as the hooves leave the body's angular momentum changes at ${spin.v.toFixed(0)} N·m/s at ${spin.t?.toFixed(3)} s (100 at most)`);}}
   // A stepping leg keeps its knee bent: through the window's get-up steps and the climb's last two, the stepping leg's
   // hip-to-ankle distance stays short of the IK's soft reach (traversal-pose.js limb(): within SOFT, 1.5 cm, of straight
   // it eases the hoof short of its mark; mid-step the reach widens by the step's soft zone, so the bound is exact at the

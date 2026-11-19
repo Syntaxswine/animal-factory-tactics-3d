@@ -207,9 +207,9 @@ const TOL=.01,DRAPE=.15,ENDS=new WeakMap();
 // weight).
 // tails (the motion's createTailBend) tells a tail's root from the rest (see supportAt).
 export const contactProbe=(worker,tails=null)=>Object.assign(createSurfaceProbe(worker,{stride:1,live:m=>/tail/.test(m.name)}),{tails});
-// Per probe point: 1 a hand (skin the hand or fingers carry most of, on a mesh the rig names a hand: a sleeve cuff riding
-// the hand bone is not a grip), 4 the rest of a hand's mesh (the forearm, the elbow), 2 a foot, 3 a tail beyond its
-// root, 0 the rest. Read once the probe has been skinned (its part indices are set by update).
+// Per probe point: 1 a hand (skin the hand or fingers carry most of, on a mesh the rig names a hand: a sleeve cuff
+// riding the hand bone is not a grip), 4 the rest of a hand's mesh (the forearm, the elbow), 2 a foot, 3 a tail beyond
+// its root, 0 the rest. Read once the probe has been skinned (its part indices are set by update).
 const endsOf=probe=>{let e=ENDS.get(probe);if(!e){const kind=probe.names.map(p=>/hand/.test(p)?1:/hoof|boot|foot|toe/i.test(p)?2:0),handBone=probe.boneNames.map(b=>/^(hand|fingers)/.test(b));e=Uint8Array.from(probe.part,(pi,i)=>probe.tails&&/tail/.test(probe.names[pi])&&!probe.tails.isRoot(probe.names[pi],probe.vertex[i])?3:kind[pi]===1&&!handBone[probe.bone[i]]?4:kind[pi]);ENDS.set(probe,e);}return e;};
 export function supportAt(probe,obstacles,com,held=false){
  const over=(x,z)=>obstacles.some(b=>x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]),ends=endsOf(probe),grow=(b,x,z)=>{b[0]=Math.min(b[0],x);b[1]=Math.max(b[1],x);b[2]=Math.min(b[2],z);b[3]=Math.max(b[3],z);};
@@ -246,7 +246,21 @@ function turning(frames,dt){const n=frames.length,mid=(P,a,b)=>P[a].clone().add(
 // - in flight L* is the flight's median (taken at the catch, which carries the arms' reach onto the top, the whole
 //   flight turned and wound 59 degrees into the push);
 // - on contacts L* is L averaged over TAU either side, blended into a flight's median over EASE before and after it,
-//   and a turn left from a flight unwinds there over UNWIND.
+//   and a turn left from a flight unwinds there over UNWIND;
+// - a take-off's flight is held from LEAD before the hooves leave (turnAir: the last five samples of a run on the feet
+//   longer than that, just before a flight), as the legs begin to fold: there the push fades to a tenth of the body's
+//   weight (RAMP), and the floor cannot turn the body as the legs' swing asks. On the horse's climb the legs' own
+//   angular momentum turned at 0.851 s and swung 4.3 N·m·s by its last foot sample (0.870), at up to 356 N·m/s, its
+//   hooves bearing 2087 N at 0.845 s and 147 at 0.865. Held from the first sample in the air, the turn left that swing
+//   to the floor: the body's angular momentum changed at up to 398 N·m/s at 0.865 s, and the rig read 252 N and
+//   115 N·m of phantom wrench there. Across the release (15 ms before the last foot sample to 10 ms after) the eleven
+//   climbs read 229 to 408 N·m/s that way, and 12 to 64 held from LEAD before, the plan reading no turning on the lead
+//   (below, at the rounds); their push-off and flight up read 105 readings over the limit against 381 (14 on the feet
+//   against 144), all their readings 333 against 620 (at a 20 or 30 ms lead 378 or 313; at 30 the horse's push reads
+//   541% at 0.744 s, 227 at 25, and the rabbit's catch 1133% at 1.224 s, 999 at 25). A run on the feet no longer than
+//   the lead (a touch between two flights) is left as it is: held whole, it would join the flights under one median
+//   (none of the 33 crossings has one, and no test reaches that branch).
+//   The support schedule is as it was on ten climbs; the donkey's catch comes one sample later (1.250 s).
 // The turn is the integral of w, its drift taken out along the motion so that it ends unturned. w carries over between
 // rounds (each adds what the last missed; delta, the largest, in rad/s, says when it has settled). Without contacts
 // the contacts' w is kept as it comes: a flight's refinement measures the flights alone again.
@@ -256,9 +270,12 @@ function turning(frames,dt){const n=frames.length,mid=(P,a,b)=>P[a].clone().add(
 // only) was not L, the turn's track, at rest at its ends, caught up within its first and last 5 ms, turning the body on
 // the spot (the phantom-wrench rig, reading every millisecond, found it at every crossing's start: the low-wall horse
 // 105 N of phantom force 4 ms in, the window sheep 317 N 2 ms in).
-const EASE=.25,TAU=.04,UNWIND=.3,TURN_TOL=.02,REFINE=2,REST=2*TAU;
+const EASE=.25,TAU=.04,UNWIND=.3,TURN_TOL=.02,REFINE=2,REST=2*TAU,LEAD=.025;
+const turnAir=(S,dt)=>{const a=S.map(x=>x.kind==='air'),out=a.slice(),lead=Math.round(LEAD/dt);
+ for(let i=1;i<S.length;i++){if(!a[i]||a[i-1]||S[i-1].kind!=='feet')continue;let run=0;while(i-1-run>=0&&S[i-1-run].kind==='feet')run++;
+  if(run>lead)for(let j=i-lead;j<i;j++)out[j]=true;}return out;};
 function bodyTurn(w,S,L,I,dt,contacts=true){
- const n=S.length,k=Math.round(TAU/dt),e=Math.round(EASE/dt),air=S.map(x=>x.kind==='air'),fl=new Float64Array(n),nw=w.map(x=>x.slice());let delta=0;
+ const n=S.length,k=Math.round(TAU/dt),e=Math.round(EASE/dt),air=turnAir(S,dt),fl=new Float64Array(n),nw=w.map(x=>x.slice());let delta=0;
  const add=(i,target)=>{const d=solve3(I[i],[0,1,2].map(a=>target[a]-L[i][a]));delta=Math.max(delta,Math.hypot(...d));nw[i]=nw[i].map((y,a)=>y+d[a]);};
  // a quintic from (p, v, a) at u = 0 to rest at zero at u = 1, over T
  const ease=(p,v,a,T,u)=>{const u2=u*u,u3=u2*u,u4=u3*u,u5=u4*u,h0=1-10*u3+15*u4-6*u5,h1=u-6*u3+8*u4-3*u5,h2=.5*u2-1.5*u3+1.5*u4-.5*u5;return p.map((x,j)=>h0*x+T*h1*v[j]+T*T*h2*a[j]);};
@@ -337,9 +354,26 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  // keep the round's turn: their angular momentum is not measured again, and the same correction, added to it at each
  // refinement, turned them about twice as far (two 5 ms flights in the goat's roll turned its whole window so: its
  // step in read 30% of its weight, 15 turned once).
+ // On a take-off's lead (the samples on the feet the turn holds as flight: turnAir) the plan's pressure point reads no
+ // turning (dL zero): the turn holds the flight's angular momentum there. Reading the rate measured before the round's
+ // turn, with the lead alone, the plan still counted on the legs' swing the turn takes out (the horse's 147 N·m/s at
+ // 0.860 s, against -32 as played, its rate over 1 ms chords), pushed the body toward the wall at 2.9 m/s^2 on 0.82 g
+ // of load, and the rig read up to 275% of its limit on the horse's feet there (five climbs read more on their feet at
+ // the release than without the lead). Taken from the turn's own angular momentum (L + I (w_new - w)), the rate's chords
+ // and five-sample mean smeared the step into the hold over the lead's first three samples (the horse's +56, +96 and
+ // +57 N·m/s, where the played body read -79, -38 and -8 by the same rate), and nine climbs read new readings on the
+ // feet there (review round 2 of this part).
+ // Elsewhere the measured rate stands: read as the turn leaves it on every contact, the walk-outs moved too (the
+ // goat's right foot round 7 readings, none before). Two things are left of it. Its five-sample mean carries the lead's
+ // zero back over the two samples before the lead: on five climbs the plan reads 88 to 115 N·m/s less turning there
+ // than is played over 1 ms chords (the rabbit's -135 against -250 at 0.845 s, where it reads a new 106%). And on the
+ // lead the played rate rings about the plan's zero from sample to sample (the dog's -18, +56, -33, +22 and -13), the
+ // turn's track following the kink at the lead's start: the horse's -30 at 0.860 s, on 0.82 g, puts its pressure point
+ // 1.8 cm behind its heels, beside its two new readings (108 and 101% at 0.861 and 0.862 s; the sheep's two at 0.856
+ // and 0.857, 108 and 113%). Review round 3 of this part.
  let held=null,authored=null,last1=null;const ceil=times.map(t=>ceiling?.(t)??null);
- const refine=(S,L,I)=>{for(let k=0;k<REFINE&&S.some(x=>x.kind==='air');k++){const L2=L.map(x=>x.slice()),I2=I.slice();
-   for(let a=0;a<n;a++){if(S[a].kind!=='air')continue;let b=a;while(b+1<n&&S[b+1].kind==='air')b++;const lo=Math.max(0,a-1),hi=Math.min(n-1,b+1),frames=[];
+ const refine=(S,L,I)=>{for(let k=0;k<REFINE&&S.some(x=>x.kind==='air');k++){const L2=L.map(x=>x.slice()),I2=I.slice(),A=turnAir(S,dt);
+   for(let a=0;a<n;a++){if(!A[a])continue;let b=a;while(b+1<n&&A[b+1])b++;const lo=Math.max(0,a-1),hi=Math.min(n-1,b+1),frames=[];
     for(let i=lo;i<=hi;i++){setShift(follow?follow.shift(times[i]):null);const P=pose(times[i]);frames.push(Object.fromEntries(KEEP.map(q=>[q,P[q].clone()])));}
     const tu=turning(frames,dt);for(let i=a;i<=b;i++){L2[i]=tu.L[i-lo];I2[i]=tu.I[i-lo];}a=b;}
    const t2=bodyTurn(w,S,L2,I2,dt,false);w=t2.w;spin=turnAt(t2.theta,plan);}};
@@ -350,8 +384,8 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
   // lifted off the floor by the round before) crouched 1.8 cm into the floor to spring over 40 ms of it.
   if(r)for(let i=0;i<n;i++){if(S[i].kind!=='air')continue;let j=i;while(j+1<n&&S[j+1].kind==='air')j++;if(j-i<LOST/dt&&i>0&&j<n-1&&authored.slice(i,j+1).every(x=>x.kind==='feet'||x.heightOnly))for(let k=i;k<=j;k++)Object.assign(S[k],{...authored[k],c:S[k].c});i=j;}
   if(held)S.forEach((x,i)=>{if(x.kind!==held[i].kind)Object.assign(x,{...held[i],c:x.c});});else if(r===1)held=S.map(x=>({...x}));const key=S.map(x=>x.kind).join();history.push(runs(S));
-  if(!c0)c0=S.map(x=>x.c);const turn=bodyTurn(w,S,L,I,dt);settled=key===last&&turn.delta<TURN_TOL;last=key;if(settled)break;
-  samples=S.map((x,i)=>({...x,c:c0[i],dL:dL[i],ceil:x.kind==='feet'&&ceil[i]!==null?c0[i][1]+ceil[i]:null}));plan=planCentre(samples,dt,options);w=turn.w;spin=turnAt(turn.theta,plan);
+  if(!c0)c0=S.map(x=>x.c);const turn=bodyTurn(w,S,L,I,dt),lead=turnAir(S,dt).map((a,i)=>a&&S[i].kind==='feet');settled=key===last&&turn.delta<TURN_TOL;last=key;if(settled)break;
+  samples=S.map((x,i)=>({...x,c:c0[i],dL:lead[i]?[0,0,0]:dL[i],ceil:x.kind==='feet'&&ceil[i]!==null?c0[i][1]+ceil[i]:null}));plan=planCentre(samples,dt,options);w=turn.w;spin=turnAt(turn.theta,plan);
   refine(S,L,I);
   // the first round's hips only set up the second's measure: three passes; the second starts from them
   follow=followCentre(times,plan,(t,s)=>{setShift(V(...s));return com(pose(t)).toArray();},{base,passes:3,from:follow?.samples});}
