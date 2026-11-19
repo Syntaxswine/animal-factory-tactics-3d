@@ -2768,6 +2768,138 @@ they let go; the left elbows' whip at 3.52 s; the left leg's swing over the top 
 as it stood: the take-off's last readings, the hooves' authored lean into the floor, the hands to the floor, the roll's
 landings, the vault's capsule overlap and spring speed.
 
+### 2026-11-18 (physics balance, twenty-ninth part): an elbow is not a hand
+
+On b383d186 the pig foreman's left foot round and its weight on the left foot read 84 and 7 of its 207 readings over the
+limit (from 5.187 to 5.277 s): a steady phantom force of up to 158 N (22% of its weight; 38 N on average over the step)
+as it stepped round on its right boot.
+
+Why: the balance counts a hand within 1 cm of an obstacle as a grip, which may push or pull any way
+(traversal-balance.js, supportAt), and it told a hand by its mesh, as the rig does: every point of the mesh named
+"forearm and hand". Most of that mesh is arm. Of the foreman's right one, the arm that brushes, 160 of its 477 points
+are skin the hand or fingers carry most of, 215 the forearm's and 102 the upper arm's (the horse's 145 of 632, the
+rabbit's 157 of 502). The foreman walks away from the wall with its hands on its hips, elbows out, and as it turns round
+its right elbow brushes the wall's far face. In the balance's second round, measured on the first round's motion, points
+of that mesh around the elbow lay within 1 cm of the face from 5.155 to 5.295 s, a grip from 5.175 (after the grip's 20
+ms onset). Free to pull, the plan drew the body back toward the wall at up to 2.50 m/s^2 (at 5.250 s) on the one boot.
+As played (the second round's motion) only the shirt's sleeve touched the face, 0.3 to 0.9 cm off it, which can only
+push, and the rig read the pull as phantom force. (The twenty-seventh and twenty-eighth parts' Left called it the
+foreman's belly brushing the wall; as played only the sleeve over its upper arm touched.)
+
+Nine more climbs did the same; only the pig director walked away on its feet. Their balances read a grip from 5.150 s to
+5.235 at the widest (45 to 85 ms on each, 20 ms after the touch), and their plans pulled the body toward the wall by
+1.15 to 5.56 m/s^2 at most (the rabbit's the hardest). Their gates read nothing there but the rabbit's: as played their
+right elbows, on the mesh the rig calls a hand, touched the face too (within 1 cm of it at 5.17, 5.19 and 5.21 s on
+every one; the horse's 0.06 cm inside it at 5.19), and the rig, whose grip is the mesh's name as well, let the elbow
+pull. The rabbit read 6 readings in its left foot round, from 5.164 to 5.169 s, between its grip's start (5.165) and its
+elbow coming within the rig's centimetre (5.170, 0.99 cm off; review round 8's rabbit-base-rows-r8.txt).
+
+**The fix** (traversal-balance.js, supportAt and the balance's measure). A hand is skin the hand or fingers carry most
+of, on a mesh the rig names a hand, and it grips on an obstacle's top or against a face, as before (the climb's landing
+leans on its palms on the far face). The rest of that mesh, the forearm and the elbow, grips only hooked over a top,
+within 1 cm of its height (the pigs lowering down the far face, their forearms over the edge); elsewhere against a face
+it is a part that can only push, and the plan does not count on it. On every rig "most of" and "half or more" pick the
+same points, and the hand and fingers are the only hand bones. The rig still lets the whole mesh grip anywhere, so the
+plan counts on less than the rig allows (a support the plan leaves unused reads nothing in the rig).
+
+Where the body is held (the motion's hold: the window's roll on the floor, the pigs' seat) the old rule stands, the
+whole mesh gripping, so this change leaves the held stretches as they were. That is this fix's limit, not physics. Held,
+a grip only lifts the support outline (planCentre keeps the hold by friction alone), and the cow's and skunk's rolls on
+the floor past the window's sill read one from their right elbows on its far face (from 3.195 to 3.325 s and from 2.940
+to 3.045). Their plans there are not physical either: the skunk's pushes it along the sill at up to 13.3 m/s^2, riding
+the friction bound, its pressure point 27 to 42 cm outside the floor's outline (the cow's up to 37 cm; review round 1's
+r1-planp.mjs on the balance's own plan), which the rig misses because it, too, lets the elbow grip there: it reads
+nothing over the limit through the skunk's stretch and 9 readings at the start of the cow's (3.195 to 3.203 s). Held
+within that outline instead (below, Not kept), the skunk's window read 301 readings over the limit against 126 and the
+cow's 59 against 53. The held wiring is guarded by the gate alone: with it switched off (measure() passing false), the
+unit test and the cow's and skunk's crossing tests still pass.
+
+phantom-wrench 1.2.0 `--gate` (frozen copies), b383d186 -> now:
+
+| climb | over the limit at the samples | readings | worst (% of its limit) |
+|---|---|---|---|
+| pig foreman | 0.220 -> 0.130 s | 207 -> 116 | 1626% |
+| rabbit | 0.065 -> 0.060 s | 53 -> 47 | 1186% |
+| the other eight that changed | as before, phase by phase | | |
+| pig director | the same motion frame for frame | | |
+
+Together 0.790 -> 0.695 s over the limit at the samples and 717 -> 620 readings. The foreman's left foot round and its
+weight on the left foot read 84 and 7 readings before and none now, and the rabbit's left foot round 6 and none, but the
+rig is now blind where those were (below).
+
+The rig cannot show by itself that the new walk-out is physical. As played, the right elbow now lies on the far face on
+most climbs (skin of the mesh the rig calls a hand, most of it the upper arm's: review round 6's armskin-*.txt, round
+7's armskin-seven-f8c.txt): the rig's rows list it there at 27 of the foreman's 35 samples from 5.14 to 5.31 s (none on
+b383d186) and at all 35 of the rabbit's (19), and the rig, gripping by the mesh's name, reads nothing there. A measure
+that can see it: the pressure point the played walk-out asks of the feet alone (planCentre's formula, p = c - k a and
+the turning term, against the outline the new rule finds; review round 1's r1-zmp.mjs, every 2.5 ms from 5.10 to 5.32
+s). On b383d186 it lay 12.6 to 49.1 cm outside the support on the ten climbs that changed (the foreman's 20.4, the
+rabbit's 49.1, the dog's 36.9; as a force at the centre of mass's height, 129 to 493 N), so the nine others, which read
+little or nothing there, were not physical either; now 0.06 to 3.17 cm (the foreman's 0.43, the rabbit's 2.99, the dog's
+3.17). Its forces are rough: where the rig reads too, the rig's force is 0.2 to 2.8 times the measure's (review round
+3's r3-zmp-vs-rig.mjs joined samples, round 4's ratio.txt over them with the rig at 1 N or more; on b383d186's large
+offsets the measure reads more than the rig, at the 1 cm ones of the right foot round about half). The two largest now,
+the dog's 3.17 cm and the rabbit's 2.99 at 5.270 s, fall where the rig is blind (their elbows on the face), so they are
+unconfirmed: at that instant on b383d186, with only the feet touching, the rig read 61.7 and 66.1 N (84% and 90% of its
+limit of 73.5) for 3.68 and 3.47 cm.
+
+In the walk-out (from its first sample on the feet after the Absorb key, as the test reads it; the limit is 73.5 N): of
+what read over the limit, the foreman's 84 + 7 readings and the rabbit's 6 now read nothing at every instant, where the
+rig is now blind, the right elbow on the face (review round 6's walkout-r6.txt, round 5's blind-r5.txt, round 7's
+overnow-walkout.txt); the rabbit's and dog's 4 each from 5.839 to 5.842 s (2 as the right foot comes round, 2 as it
+turns onto the tile) stay over it where the rig sees, as before. At the gate's 5 ms samples (b383d186 -> now; review
+rounds 4 and 5's touchdown-rows.txt, rises-8N.txt and blind-r5.txt): the rabbit's and dog's 66.1 and 61.7 N at 5.270 s
+and 22.3 and 18.8 at 5.275, under the limit, now read nothing where the rig is blind, and the goat's, bull's and cow's 5
+to 11 N there nothing where it sees. Samples rise by 8 N or more only in three places, all where the rig sees and none
+over 43.0 N, 59% of the limit: as the left foot lifts (4.985 to 5.045 s; the foreman 0 -> 33.4 N, the rabbit 19.7 ->
+42.6, the dog 15.9 -> 43.0, at 4.985), as it touches down (5.260 and 5.265 s; the horse, goat, bull, cow and donkey up
+to 21.2 N, from 0 to 10.9) and as the right foot comes round (5.680 to 5.700 s; the rabbit and dog up to 12.7 N, from 0
+to 2.2). Before the walk-out, at the landing grip's last samples: the rabbit's grip ends one sample sooner (its last at
+4.740 s, 4.745 before), the only change to any climb's schedule outside its walk-out, and at the dog's (4.745 s) its
+left palm, 1.000 cm off the far face before, now lies 1.005 cm off, just past the rig's centimetre, while the plan still
+grips there: 15.8 N where the rig read nothing (review round 5's palm-4745-*.txt). The ten climbs' motion changed by 2.4
+to 18.3 mm at most (every rig point and the centre of mass, every 5 ms). The windows and low walls play the same motion
+frame for frame (all 22, the largest difference 0), and so does the pig director's climb.
+
+The cost is clearance at the walk-out. Planned on its feet, the body turns closer to the wall: at their farthest from
+their authored paths (from 5.10 to 5.32 s) the plans now carry the foreman 0.83 cm, the rabbit 1.02 and the dog 0.71
+toward the wall from them, where on b383d186 they lay 0.12, 0.74 and 0.58 cm away from it, and on average eight of the
+ten plans lie farther from their authored paths than before (the foreman's 0.46 -> 1.09 cm), only the rabbit's and the
+dog's nearer (review round 2's r2-authored.mjs). The arms were fitted 4 mm clear of the face on the authored path, and
+the right elbow goes into it. The deepest point every 20 ms from 5.13 to 5.29 s, b383d186 -> now (review round 1's
+face-depth.mjs; negative is inside): the foreman's sleeve +0.35 -> -1.21 cm, the rabbit's elbow +0.61 -> -1.13, the
+dog's +0.60 -> -0.81, the sheep's -0.02 -> -0.34, the donkey's -0.19 -> -0.31, the horse's -0.06 -> -0.18, the bull's
++0.10 -> -0.14, the goat's +0.17 -> -0.12, the cow's +0.12 -> -0.12, the skunk's +0.08 -> -0.08 (read every 2.5 ms, the
+foreman's -1.21, the rabbit's -1.14, the dog's -0.84). The deepest point is the shirt's sleeve on the foreman, bull,
+donkey, goat, sheep and skunk and the arm's own skin on the others; the donkey's and sheep's arm skin stays outside the
+face (+0.22 and +0.11 cm). `bin/collisions.mjs` reads only spans deeper than 2 cm, so on the ten climbs it reads the
+same deepest points and spans as before.
+
+`tests/natural-traversal.test.mjs`:
+- The grip on its own (supportAt): a boot on the floor beside the wall, and one more point. A palm or fingertips against
+  the far face grip; an elbow there does not, unless the body is held; a forearm hooked over the top grips; a sleeve
+  cuff riding the hand bone does not. On b383d186 it fails (the elbow grips).
+- Every mammal's climb: from the landing (its first sample on the feet after the Absorb key) to the end, the balance
+  plans on its feet alone. On b383d186 it fails on the ten climbs (a grip from 5.150 to 5.175 s) and passes on the pig
+  director.
+
+**Not kept.**
+- The hand's own skin alone, the forearm gripping nowhere: as the pigs lower down the far face it changes their flights
+  between grips. The pig director's palms come more than 1 cm off the top for 70 ms (4.055 to 4.125 s) while its
+  forearms still lie over the edge, and its plan would have dropped it in a 70 ms flight there; the foreman's 95 ms
+  flight there (4.045 to 4.140 s), which b383d186 and this change keep, would go (schedules only, not gated).
+- No exception for a held body: the skunk's window 301 readings against 126, the cow's 59 against 53 (above).
+
+**Left.** The elbows in the far face at the walk-out (up to 1.2 cm). The arms are fitted clear of the obstacles before
+the balance (fit.solveLimbs, 4 mm) and the balance moves the body after; fitting them again after it, as the head and
+tail are, would likely keep them off (untried). With the elbows off the face the rig would see the walk-out. The cow's
+and skunk's held rolls, planned past the floor's outline where the elbow on the sill grips. The rig's grip is still the
+mesh's name. Then the list as it stood: the take-off's last readings (every climb's over the top, 22 to 32 readings) and
+the push-off; the drops (the foreman 46, the bull 42, the director 26); the foreman's right knee up (20, its right arm
+5.4 cm into its trunk); the director's jump and catch (23); the left hoof stepping round through the right shank on
+every climb (2.9 cm at 5.165 s on the horse, 1.9 at 5.181 on the foreman); the fold and the left thigh in the top; the
+left elbows' whip at 3.52 s.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

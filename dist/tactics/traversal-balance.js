@@ -161,14 +161,32 @@ export function followCentre(times,plan,comAt,{passes=5,base=null,from=null}={})
  const tr=track(times.map((t,i)=>{const b=base?base(t):[0,0,0];return [t,...shift[i].map((x,ax)=>x+b[ax])];}),{},{limit:false,spline:true});
  return {shift:t=>{const tc=clamp(t,times[0],times.at(-1)),s=V(...tr(tc));return base?s.sub(V(...base(tc))):s;},hips:t=>V(...tr(clamp(t,times[0],times.at(-1)))),worst,samples:shift};}
 // What holds the body at a moment, from its real surface (the phantom-wrench rig's contacts: within 1 cm):
-// - a hand on an obstacle grips (the rig's rule; a hand against a face is no grip, but the climb's landing leans on one);
+// - a hand on an obstacle grips, on its top or against a face (the rig's rule; a palm against a face holds nothing,
+//   but the climb's landing leans on one). A hand is skin the hand or fingers carry most of, on a mesh the rig names a
+//   hand; the rest of that mesh, the forearm and the elbow, grips only hooked over a top (within TOL of its height),
+//   and elsewhere against a face it is a part that can only push (below). Where the body is held (held: the motion's
+//   hold) the old rule stands, the whole mesh gripping, so this rule leaves the held stretches as they were. The rig
+//   lets the whole mesh grip anywhere, so the plan counts on less than the rig allows (a support the plan leaves
+//   unused reads nothing in the rig).
+//   By the mesh alone an elbow brushing a face gripped: walking away from the wall, ten climbs read a grip from their
+//   right elbows on its far face (from 5.150 to 5.295 s, 45 to 120 ms each, 20 ms after the touch), and the plan pulled
+//   the body back toward the wall on one boot (by 1.2 to 5.6 m/s^2 at most; the pig foreman's 2.5, where the rig,
+//   finding only its sleeve on the face as played, read up to 158 N of phantom force: 84 + 7 readings over the limit).
+//   Held, a grip only lifts the outline (planCentre keeps the hold by friction alone). The cow's and skunk's rolls on
+//   the floor past the window's sill read one from their right elbows on its far face (from 3.195 to 3.325 s and from
+//   2.940 to 3.045), and their plans there are not physical either: the skunk's pushes it along the sill at up to
+//   13.3 m/s^2, its pressure point 27 to 42 cm outside the floor's outline (the cow's up to 37), which the rig misses
+//   because it, too, lets the elbow grip (it reads nothing over the limit through the skunk's stretch, and 9 readings
+//   at the start of the cow's). Held within that outline instead, the skunk's window read 301 readings over the limit
+//   against 126, the cow's 59 against 53. A held body leaning on a face is left open;
 // - anything on the floor stands on it (hooves, hands, a back in a roll), and so does a part on an obstacle's top or
 //   its edge (within TOL of the top's height: the rig reads a point just past the edge as touching the edge, pushing up
 //   and out) while the centre of mass is above that top or less than DRAPE below it (a belly on a sill): their extent
 //   is the pressure point's outline (their convex hull), the floor's height (or the top's, with nothing on the floor)
 //   its plane;
 // - a part against a face, or on a top the body hangs below, is not counted: it can only push, and a plan leaning on
-//   it would ask what it cannot give (the forearms on a wall's edge as the hands come over at a catch);
+//   it would ask what it cannot give (the boots on the near face as the body walks up it, an elbow brushing the far
+//   face as it walks away);
 // - nor is a tail beyond its root on an obstacle: the tails are fitted out of the obstacles again once the balance has
 //   moved the body (fit.solveTail), so the plan must not count on that support (the skunk's plume lay on the window's
 //   sill behind it as its hips came down for its last step; the plan leant on it, the plume was then fitted 3.4 cm
@@ -177,8 +195,8 @@ export function followCentre(times,plan,comAt,{passes=5,base=null,from=null}={})
 //   that roll's sit up read 43 readings, 17 with it);
 // - nothing counted is flight.
 // DRAPE: a body draped over a top with its centre of mass a little below it (over the window's sill as it reaches for
-// the floor, 2 cm below) still lies on it; one hanging well below (the forearms on a wall's edge at a catch, 70 cm) does
-// not.
+// the floor, 2 cm below) still lies on it; one hanging well below (from the wall's top at a catch, 70 cm) does not:
+// there only what grips holds it.
 const TOL=.01,DRAPE=.15,ENDS=new WeakMap();
 // The contacts' probe: the rig's own surface, every vertex (a fit's probe, every other vertex, found the hooves down 5 to
 // 10 ms before the rig at a landing; every third of the body's missed a belly sliding over the window's sill, touching
@@ -189,17 +207,18 @@ const TOL=.01,DRAPE=.15,ENDS=new WeakMap();
 // weight).
 // tails (the motion's createTailBend) tells a tail's root from the rest (see supportAt).
 export const contactProbe=(worker,tails=null)=>Object.assign(createSurfaceProbe(worker,{stride:1,live:m=>/tail/.test(m.name)}),{tails});
-// Per probe point: 1 a hand, 2 a foot, 3 a tail beyond its root, 0 the rest, by its mesh as the rig names them (a
-// sleeve cuff riding the hand bone is not a grip). Read once the probe has been skinned (its part indices are set by update).
-const endsOf=probe=>{let e=ENDS.get(probe);if(!e){const kind=probe.names.map(p=>/hand/.test(p)?1:/hoof|boot|foot|toe/i.test(p)?2:0);e=Uint8Array.from(probe.part,(pi,i)=>probe.tails&&/tail/.test(probe.names[pi])&&!probe.tails.isRoot(probe.names[pi],probe.vertex[i])?3:kind[pi]);ENDS.set(probe,e);}return e;};
-export function supportAt(probe,obstacles,com){
+// Per probe point: 1 a hand (skin the hand or fingers carry most of, on a mesh the rig names a hand: a sleeve cuff riding
+// the hand bone is not a grip), 4 the rest of a hand's mesh (the forearm, the elbow), 2 a foot, 3 a tail beyond its
+// root, 0 the rest. Read once the probe has been skinned (its part indices are set by update).
+const endsOf=probe=>{let e=ENDS.get(probe);if(!e){const kind=probe.names.map(p=>/hand/.test(p)?1:/hoof|boot|foot|toe/i.test(p)?2:0),handBone=probe.boneNames.map(b=>/^(hand|fingers)/.test(b));e=Uint8Array.from(probe.part,(pi,i)=>probe.tails&&/tail/.test(probe.names[pi])&&!probe.tails.isRoot(probe.names[pi],probe.vertex[i])?3:kind[pi]===1&&!handBone[probe.bone[i]]?4:kind[pi]);ENDS.set(probe,e);}return e;};
+export function supportAt(probe,obstacles,com,held=false){
  const over=(x,z)=>obstacles.some(b=>x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]),ends=endsOf(probe),grow=(b,x,z)=>{b[0]=Math.min(b[0],x);b[1]=Math.max(b[1],x);b[2]=Math.min(b[2],z);b[3]=Math.max(b[3],z);};
  let grip=false,top=null;const box=[Infinity,-Infinity,Infinity,-Infinity],onTop=[Infinity,-Infinity,Infinity,-Infinity],pts=[],topPts=[];
  for(let i=0;i<probe.count;i++){const x=probe.x[i],y=probe.y[i],z=probe.z[i],e=ends[i];
   if(y<TOL&&y>-TOL&&!over(x,z)){grow(box,x,z);pts.push([x,z]);continue;}
   if(e===3)continue;for(const o of obstacles){const dx=Math.max(o.min[0]-x,0,x-o.max[0]),dy=Math.max(o.min[1]-y,0,y-o.max[1]),dz=Math.max(o.min[2]-z,0,z-o.max[2]);if(dx>=TOL||dy>=TOL||dz>=TOL)continue;const inside=!dx&&!dy&&!dz;
    const d=inside?Math.min(x-o.min[0],o.max[0]-x,y-o.min[1],o.max[1]-y,z-o.min[2],o.max[2]-z):Math.hypot(dx,dy,dz);if(d>=TOL)continue;
-   if(e===1)grip=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);topPts.push([x,z]);top=Math.max(top??-Infinity,o.max[1]);}}}
+   if(e===1||e===4&&(held||y>o.max[1]-TOL))grip=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);topPts.push([x,z]);top=Math.max(top??-Infinity,o.max[1]);}}}
  if(grip)return {kind:'grip'};
  if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'feet',box,hull:hullOf(pts.concat(topPts),box),floor:0};}
  return onTop[0]<=onTop[1]?{kind:'feet',box:onTop,hull:hullOf(topPts,onTop),floor:top}:{kind:'air'};}
@@ -301,7 +320,7 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  const setShift=s=>setMove(s||spin?{shift:()=>s||V(),spin}:null);
  // each round's schedule as runs ('feet 0.000-0.690, ...'), for the diagnostics
  const history=[],runs=S=>{const out=[];S.forEach((s,i)=>{const r=out.at(-1);if(r&&r.kind===s.kind)r.end=times[i];else out.push({kind:s.kind,start:times[i],end:times[i]});});return out.map(r=>`${r.kind} ${r.start.toFixed(3)}-${r.end.toFixed(3)}`).join(', ');};
- const measure=()=>{const frames=[];const S=times.map(t=>{setShift(follow?follow.shift(t):null);const P=pose(t);probe.update();frames.push(Object.fromEntries(KEEP.map(k=>[k,P[k].clone()])));const c=com(P).toArray(),s=supportAt(probe,obstacles,c),h=hold?.(t);return h&&s.kind!=='air'?{...s,kind:'hold',heightOnly:h==='height',seat:h==='seat',c}:{...s,c};});
+ const measure=()=>{const frames=[];const S=times.map(t=>{setShift(follow?follow.shift(t):null);const P=pose(t);probe.update();frames.push(Object.fromEntries(KEEP.map(k=>[k,P[k].clone()])));const c=com(P).toArray(),h=hold?.(t),s=supportAt(probe,obstacles,c,!!h);return h&&s.kind!=='air'?{...s,kind:'hold',heightOnly:h==='height',seat:h==='seat',c}:{...s,c};});
   const lag=Math.round(ONSET/dt);for(let i=n-1;i>=0;i--)if(S[i].kind==='grip'){let j=i;while(j>0&&S[j-1].kind==='grip')j--;const end=i-j+1<3*lag?i+1:Math.min(n,j+lag);for(let k=j;k<end;k++)S[k]=j>0?{...S[j-1],c:S[k].c}:S[k];i=j;}
   return {S,...turning(frames,dt)};};
  // Two rounds: the second measures the schedule and the turning again on the balanced motion (four gave the climb no

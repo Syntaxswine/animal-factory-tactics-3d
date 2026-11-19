@@ -83,6 +83,24 @@ test('a tail beyond its root holds the body on the floor, not on an obstacle',()
  assert.ok(near(back([{part:1,v:5,x:.57,y:.849,z:.2}]),.57),"a tail's root on the sill does not hold the body");
  assert.ok(near(back([{part:1,v:50,x:.7,y:.002,z:.2}]),.7),'a tail on the floor does not hold the body');
 });
+// A hand grips (traversal-balance.js supportAt): skin the hand or fingers carry most of, on a mesh the rig names a
+// hand, grips on an obstacle's top or against its face (as the climb's drop lands, its palms on the far face); the rest
+// of that mesh, the forearm and the elbow, grips only hooked over a top, and elsewhere against a face it only pushes.
+// Where the body is held the old rule stands (the whole mesh grips), so the held stretches are as they were. The mesh's
+// name alone made a grip of an elbow brushing the wall's far face as the climbs walk away from it.
+test('a hand grips the wall, and an elbow against its face only pushes',()=>{
+ const wall={min:[.42,0,-.5],max:[.58,2,.5]},boot=[[.9,.2],[1.15,.2],[1.15,.33],[.9,.33]].map(([x,z],v)=>({part:0,bone:0,v,x,y:.001,z}));
+ const probe=pts=>({count:pts.length,names:['work boot 1','forearm and hand 1','connected shirt and sleeves'],part:Uint8Array.from(pts,p=>p.part),vertex:Uint32Array.from(pts,p=>p.v),
+  x:Float32Array.from(pts,p=>p.x),y:Float32Array.from(pts,p=>p.y),z:Float32Array.from(pts,p=>p.z),boneNames:['hoof1','forearm1','hand1','fingers1'],bone:Uint16Array.from(pts,p=>p.bone),tails:null});
+ const kind=(pts,com=[.97,.75,.1],held=false)=>supportAt(probe([...boot,...pts]),[wall],com,held).kind,face={v:9,x:.585,y:.86,z:.2};
+ assert.equal(kind([]),'feet','the boot alone');
+ assert.equal(kind([{...face,part:1,bone:1}]),'feet','an elbow against the far face grips');
+ assert.equal(kind([{...face,part:1,bone:1}],undefined,true),'grip','a held body leaning an elbow on the far face keeps its outline');
+ assert.equal(kind([{...face,part:1,bone:2}]),'grip','a palm against the far face does not grip');
+ assert.equal(kind([{...face,part:1,bone:3}]),'grip','fingertips against the far face do not grip');
+ assert.equal(kind([{part:1,bone:1,v:9,x:.5,y:2.005,z:0}],[.8,1.2,0]),'grip','a forearm hooked over the top does not grip');
+ assert.equal(kind([{...face,part:2,bone:2}]),'feet','a sleeve cuff riding the hand bone grips');
+});
 // A seat the balance holds (traversal-balance.js, planCentre: a 'hold' with seat, the climb's top for a deep body)
 // pushes and never pulls: planned against a seat whose height drops 6 cm at once, the plan falls no faster than
 // gravity (-9.81 m/s^2 at its least) and comes down onto it at the balance's 3 body weights at most (FMAX: 2 g net,
@@ -274,7 +292,15 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
     assert.ok(held.length>0===/^pig-/.test(p.id),`wall: ${held.length} held samples over the top`);
     let fall={a:0};for(const k of held){const a=(P[k-1][1]-2*P[k][1]+P[k+1][1])/dt**2;if(a<fall.a)fall={a,t:T[k]};}
     assert.ok(fall.a>=-9.82,`wall: over the top the plan pulls the held body down at ${(-fall.a).toFixed(2)} m/s^2 at ${fall.t?.toFixed(3)} s (gravity's 9.81 at most)`);
-    assert.ok(held.every(k=>S[k].seat),`wall: ${held.filter(k=>!S[k].seat).length} of the ${held.length} held samples over the top are not a seat`);}}
+    assert.ok(held.every(k=>S[k].seat),`wall: ${held.filter(k=>!S[k].seat).length} of the ${held.length} held samples over the top are not a seat`);}
+   // Walking away from the wall the body stands on its feet: from the landing (its first sample on the feet after the
+   // Absorb key) to the end, the balance plans on its feet alone (traversal-balance.js, supportAt: of the mesh the rig
+   // names a hand, the forearm and the elbow grip only hooked over a top). On b383d186 ten climbs read a grip from their
+   // right elbows on the wall's far face as they walked away (from 5.150 to 5.295 s, 20 ms after the touch), and the
+   // plan pulled the body back toward the wall on one boot (the pig foreman: 84 + 7 readings over the rig's limit); only
+   // the pig director walked away on its feet.
+   {const T=B.times,a=motion.phases.find(x=>x.label==='Absorb').end,k1=S.findIndex((x,k)=>T[k]>a&&x.kind==='feet'),k2=k1<0?-1:S.findIndex((x,k)=>k>k1&&x.kind!=='feet');
+    assert.ok(k1>0&&k2<0,k1<0?'wall: no sample on the feet after the landing':`wall: walking away the balance plans on a ${S[k2]?.kind} at ${T[k2]?.toFixed(3)} s`);}}
   // A stepping leg keeps its knee bent: through the window's get-up steps and the climb's last two, the stepping leg's
   // hip-to-ankle distance stays short of the IK's soft reach (traversal-pose.js limb(): within SOFT, 1.5 cm, of straight
   // it eases the hoof short of its mark; mid-step the reach widens by the step's soft zone, so the bound is exact at the
