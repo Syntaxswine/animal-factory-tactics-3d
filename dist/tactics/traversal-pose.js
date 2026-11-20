@@ -161,17 +161,29 @@ export function steadyPoles(duration,sample,{step=.005}={}){
 // Ways round for partial hand and hoof turns. Sampled every step seconds (turnsAt(t) poses the motion and returns the
 // body's turns), each turn's axis is kept continuous: where the short way's axis reverses (the turn passing 180
 // degrees), the long way is kept, except where switching back to the short way is cheap: a partial turn of weight w
-// jumps 360 x min(w, 1-w) degrees when its way changes, so a turn within SWITCH degrees of done or undone takes the short way again
-// (kept, a hand released at 180 degrees went on the long way to 280 and spun; at 4 degrees the switch itself popped a
-// palm 4 mm). A palm's yaw blend (delta, degrees) is
-// unwrapped by whole turns. Returns ref(bone, t): the axis (or delta) that names the way round at the nearest sample.
+// jumps 360 x min(w, 1-w) degrees when its way changes, so a turn within SWITCH degrees of done or undone takes the
+// short way again (kept, a hand released at 180 degrees went on the long way to 280 and spun; at 4 degrees the switch
+// itself popped a palm 4 mm). A palm's yaw blend (delta, degrees) is unwrapped by whole turns. Returns ref(bone, t):
+// the axis (or delta) that names the way round at the nearest sample, except between two neighbouring samples whose
+// long-way flags differ (one kept the long way, the other the short way or no partial turn at all: done, undone or
+// none): there the switch falls on whichever of the two it costs the less (min(w, 1-w), nothing where no partial turn
+// is recorded), not halfway between them. Halfway, the climb's palms, arcing onto the far face (wall-climb.js, SLIDE),
+// switched back to the short way 2.5 ms before their turn was done at the face key (a sample, where a full turn
+// records nothing) and popped 0.09 degrees (0.10 m/s on the rig's palm points at 4.3275 s, both hands, on the nine
+// climbs that arc). On the low walls the switch now jumps 0.03 degrees, below the rig's notice, where halfway it
+// jumped 0.09 and 0.10: their palms' snaps as the hands come onto the wall (0.6425 s, 0.03 m/s, on ten of the eleven)
+// and as the legs go up and out (1.0925 s, 0.04 m/s, on six) are gone, their readings as they were. The windows'
+// played hands never switch.
 const SWITCH=.1;
 export function steadyTurns(duration,turnsAt,{step=.005}={}){
- const n=Math.max(2,Math.round(duration/step)+1),dt=duration/(n-1),axes={};
+ const n=Math.max(2,Math.round(duration/step)+1),dt=duration/(n-1),axes={},long={},cost={};
  for(let k=0;k<n;k++)for(const x of turnsAt(k*dt)){const list=axes[x.bone]||(axes[x.bone]=new Array(n).fill(null)),prev=list[k-1];
   if(x.delta!==undefined){list[k]=typeof prev==='number'?x.delta+360*Math.round((prev-x.delta)/360):x.delta;continue;}
-  const a=V(...x.axis);if(prev&&a.dot(prev)<0&&360*Math.min(x.w,1-x.w)>=SWITCH)a.negate();list[k]=a;}
- return (bone,t)=>axes[bone]?.[clamp(Math.round(t/dt),0,n-1)]??null;
+  const a=V(...x.axis),kept=!!(prev&&a.dot(prev)<0&&360*Math.min(x.w,1-x.w)>=SWITCH);if(kept)a.negate();list[k]=a;
+  (long[x.bone]||(long[x.bone]=new Array(n).fill(false)))[k]=kept;(cost[x.bone]||(cost[x.bone]=new Array(n).fill(0)))[k]=Math.min(x.w,1-x.w);}
+ return (bone,t)=>{const list=axes[bone];if(!list)return null;const k=clamp(Math.floor(t/dt),0,n-1),j=Math.min(n-1,k+1),L=long[bone];
+  if(L&&j>k&&L[k]!==L[j])return cost[bone][j]<cost[bone][k]?(t>=j*dt-1e-12?list[j]:list[k]):(t>k*dt+1e-12?list[j]:list[k]);
+  return list[clamp(Math.round(t/dt),0,n-1)]??null;};
 }
 // A posed spec's limbs, for steadyPoles: where each starts once the trunk is posed, its end target, pole and reach.
 export function limbSample(body,spec){body.pose(spec,'poles');const out={};

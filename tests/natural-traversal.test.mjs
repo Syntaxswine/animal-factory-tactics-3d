@@ -6,7 +6,7 @@ import {createBattlePosture} from '../dist/tactics/battle-posture.js';
 import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {naturalTraversal,createNaturalTraversal} from '../dist/tactics/natural-traversal.js';
 import {contactProbe,supportAt,planCentre} from '../dist/tactics/traversal-balance.js';
-import {steadyPoles,createSurfaceProbe,MASS_SEGMENTS} from '../dist/tactics/traversal-pose.js';
+import {steadyPoles,steadyTurns,createSurfaceProbe,MASS_SEGMENTS} from '../dist/tactics/traversal-pose.js';
 import {WALL} from '../dist/tactics/wall-climb.js';
 import {edgeBoxes} from '../dist/tactics/traversal-fit.js';
 import {rigKey} from '../dist/tactics/idle-motion.js';
@@ -120,6 +120,23 @@ test("the limbs' bend sides run straight between their samples",()=>{
  let worst=0;for(let k=10;k<n-10;k++){const a=[.2,.4,.6,.8].map(u=>acc((k+u)*STEP));for(let ax=0;ax<3;ax++)worst=Math.max(worst,Math.abs(a[1][ax]-(2*a[0][ax]+a[3][ax])/3),Math.abs(a[2][ax]-(a[0][ax]+2*a[3][ax])/3));}
  assert.ok(worst<=3e-3,`the bend side bends ${worst.toExponential(2)} /s^2 off a straight acceleration between its samples`);
  const s=f(.5),lag=Math.acos(Math.min(1,s[0]*Math.cos(W*.5)+s[2]*Math.sin(W*.5)))/Math.PI*180;assert.ok(lag<1,`the side is ${lag.toFixed(2)} degrees off its pole`);
+});
+test("a turn's way round switches on a sample, where the switch costs the least",()=>{
+ // A palm turning onto a face, its weight rising to 1 at 0.015 s: its short way reverses at 0.01 (the turn past 180
+ // degrees) with the turn 0.03% short of done (a switch there jumps 0.11 degrees, over SWITCH), so the long way is
+ // kept; at 0.015 the turn is done and records nothing. The switch back to the short way falls on that sample, where it
+ // jumps nothing, not halfway (0.0125 s: the climb's palms, still short of done there, popped 0.09 degrees so).
+ const recs=new Map([[0,[[0,0,1],.5]],[.005,[[0,0,1],.9]],[.01,[[0,0,-1],.9997]]]);
+ const ref=steadyTurns(.02,t=>{const r=recs.get(+t.toFixed(3));return r?[{bone:'hand1',axis:r[0],w:r[1]}]:[];});
+ assert.equal(ref('hand1',.004)?.z,1,'before the reversal the short way');
+ assert.equal(ref('hand1',.0149)?.z,1,'the long way is held until the turn is done, not switched halfway');
+ assert.equal(ref('hand1',.015),null,'the turn is done on its sample');
+ // Nearly done but still partial on the later sample (the low walls' palms coming onto the wall: 0.0279 degrees there
+ // against 0.2168 on the sample before, 0.0929 halfway), the switch falls on the later sample too.
+ const recs2=new Map([[0,[[0,0,1],.5]],[.005,[[0,0,1],.99]],[.01,[[0,0,-1],.999398]],[.015,[[0,0,-1],.999922]]]);
+ const ref2=steadyTurns(.02,t=>{const r=recs2.get(+t.toFixed(3));return r?[{bone:'hand1',axis:r[0],w:r[1]}]:[];});
+ assert.equal(ref2('hand1',.0149)?.z,1,'the long way is held up to the cheaper sample');
+ assert.equal(ref2('hand1',.015)?.z,-1,'the short way from the cheaper sample');
 });
 for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, ends on the next tile's centre, clears the obstacle and gives the tail back`,()=>{
  const m=model(p),tails=m.worker.parts.filter(x=>/tail/.test(x.name)).map(x=>[x,Float32Array.from(x.geometry.attributes.position.array)]);
@@ -307,12 +324,23 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // fold before the hooves leave, and with the turn held only from the first sample in the air the floor was asked to
    // turn the body as they swung, on a fading push: on 6d7ac5d4 every mammal's climb read 229 to 408 N·m/s there (the
    // horse's 398 at 0.865 s, 147 N on its hooves), now 12 to 64.
-   {const tf=B.times[k0-1],h=5e-4,Lh=t=>{const [A,ca]=at(t-h),[P,c]=at(t),[Q,cb]=at(t+h),vc=sub(cb,ca).map(x=>x/(2*h)),out=[0,0,0];
+   {const h=5e-4,Lh=t=>{const [A,ca]=at(t-h),[P,c]=at(t),[Q,cb]=at(t+h),vc=sub(cb,ca).map(x=>x/(2*h)),out=[0,0,0];
      for(const [a,b,mass] of MASS_SEGMENTS){const r=sub(mid(P,a,b),c),v=sub(sub(mid(Q,a,b),mid(A,a,b)).map(x=>x/(2*h)),vc),[u,l]=unit(P,a,b),du=sub(unit(Q,a,b)[0],unit(A,a,b)[0]).map(x=>x/(2*h));
       const o=cross(r,v),s=cross(u,du);for(let q=0;q<3;q++)out[q]+=mass*o[q]+mass*l*l/12*s[q];}return out;};
-    const Ls=[];for(let t=tf-.016;t<=tf+.011+1e-9;t+=.001)Ls.push([t,Lh(t)]);let spin={v:0};
-    for(let i=1;i<Ls.length-1;i++){const v=Math.hypot(...[0,1,2].map(q=>(Ls[i+1][1][q]-Ls[i-1][1][q])/.002));if(v>spin.v)spin={v,t:Ls[i][0]};}
-    assert.ok(spin.v<=100,`wall: as the hooves leave the body's angular momentum changes at ${spin.v.toFixed(0)} N·m/s at ${spin.t?.toFixed(3)} s (100 at most)`);}}
+    const spinOver=(t0,t1)=>{const Ls=[];for(let t=t0-.001;t<=t1+.001+1e-9;t+=.001)Ls.push([t,Lh(t)]);let spin={v:0};
+     for(let i=1;i<Ls.length-1;i++){const v=Math.hypot(...[0,1,2].map(q=>(Ls[i+1][1][q]-Ls[i-1][1][q])/.002));if(v>spin.v)spin={v,t:Ls[i][0]};}return spin;};
+    {const tf=B.times[k0-1],spin=spinOver(tf-.015,tf+.010);
+     assert.ok(spin.v<=100,`wall: as the hooves leave the body's angular momentum changes at ${spin.v.toFixed(0)} N·m/s at ${spin.t?.toFixed(3)} s (100 at most)`);}
+    // Nor does the drop's flight turn the body: through the balance's first flight after the let-go (the palms off the
+    // top's far edge until they are on the far face), the same angular momentum changes at most 10 N·m/s, the rig's
+    // airborne limit (wall-climb.js: the palms arc out over the top's far corner without stopping, and the head is held
+    // through the drop before the balance as after it). On d54c607d the nine climbs read 20 to 32 N·m/s there (the
+    // hands braking to rest at a key past the edge, the bull's head turning in the turn's plan alone), now 3.5 to 5.9.
+    // The pigs' palms are off the top before they let go (the far grips past their arms' reach), so they are left out:
+    // their drop flights turn at 58 N·m/s (the foreman, at 4.259 s) and 148 (the director, at 4.213).
+    if(!/^pig-/.test(p.id)){const lg=motion.phases.find(x=>x.label==='Let go').end,a=S.findIndex((x,k)=>B.times[k]>=lg&&x.kind==='air');let b=a;while(b>=0&&b+1<n&&S[b+1].kind==='air')b++;
+     assert.ok(a>0,'wall: no flight after the let-go');const spin=spinOver(B.times[a],B.times[b]);
+     assert.ok(spin.v<=10,`wall: in the drop's flight (${B.times[a].toFixed(3)} to ${B.times[b].toFixed(3)} s) the body's angular momentum changes at ${spin.v.toFixed(1)} N·m/s at ${spin.t?.toFixed(3)} s (10 at most)`);}}}
   // A stepping leg keeps its knee bent: through the window's get-up steps and the climb's last two, the stepping leg's
   // hip-to-ankle distance stays short of the IK's soft reach (traversal-pose.js limb(): within SOFT, 1.5 cm, of straight
   // it eases the hoof short of its mark; mid-step the reach widens by the step's soft zone, so the bound is exact at the

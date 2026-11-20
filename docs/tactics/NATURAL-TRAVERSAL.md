@@ -3017,6 +3017,119 @@ against the airborne 10), the plan's turning just before and on the lead (above)
 the drops (the foreman 46, the bull 42, the director 26), the pigs' palms in the push, and the rest of the list as it
 stood.
 
+### 2026-11-20 (physics balance, thirty-first part): the drop holds its turn, and the palms slide off the top
+
+On d54c607d the let-go and the drop off the far face ("Let go" and "Drop") held 154 of the eleven climbs' 333 readings
+over the limit, among them the worst of five climbs (the donkey's and the dog's 217% at 4.235 s, the skunk's 246%, the
+pig foreman's 625% at 4.259, the pig director's 3728% at 4.206). On the nine climbs but the pigs' they fell in the
+flight between the palms leaving the top and landing on the far face (from 4.210 or 4.215 to 4.295 or 4.300 s), where
+the body's angular momentum changed at 20 to 32 N·m/s (the new drop check's own measure on d54c607d's code: the release
+test's model, read every 1 ms, the rate over 2 ms chords; review round 3's t-old.txt), against the rig's airborne 10.
+
+Why, two causes:
+- The bull's head. The clearance fit before the balance held the head's turn through the jump alone; the fit after it
+  holds it through every flight. On the bull the first eased the head into a stretch that clears the wall from 4.23 s,
+  through the drop's flight (turned 6.0 degrees at 4.30 s, 12 at 4.38), and the balance planned the flight's turn
+  against that head; the second turned the head before the let-go (11.9 degrees at 4.20) and held it there. The played
+  body never made the turn the balance answered: 10 to 20 N·m of airborne phantom torque from 4.228 to 4.280 s, the
+  bull's drop 42 readings (motion\probe-headdrop.mjs on var-ph, d54c607d's code, where PREHEAD=1 skips the second fit:
+  review round 1's headdrop-ph-bull.txt and headdrop-ph-prehead-bull.txt).
+- The hands braking in the air. Every limb key is a stop (keyedLimb's smoothstep), and the palms' path from the top to
+  the far face went through a key just past the far edge (4.235 s): the hands braked to rest there in mid-air, the
+  arms' angular momentum changing at 330 N·m/s at 4.222 s and 15 at 4.236 on the dog (motion\probe-Lparts.mjs), and the
+  turn, sampled every 5 ms, could not follow. The rig read 217 to 249% of its airborne limit at the key (the dog and
+  the donkey 217, the skunk 246, the bull, its head held, 249).
+
+**The fix**, in three parts:
+- wall-climb.js: the fit before the balance holds the head through the drop too, from the let-go to the palms on the
+  far face (ONFACE, 4.33 s), as it holds it through the jump. Alone: the bull 50 -> 18 readings (its drop 42 -> 10),
+  the other ten climbs' readings as they were (var-a1).
+- wall-climb.js, SLIDE: the palms arc out over the top's far corner to the face (ARC: 6 cm along the face's outward
+  normal at the most, mid-way), with no key between, so the hands never stop in the air. They slide off the top's far
+  edge as the body starts down. In the balance's schedule the grip on the top now ends at 4.240 s, 30 or 35 ms later,
+  and the drop's flight runs from 4.245 to 4.325 s on the nine climbs; nothing else in the schedule moves
+  (runs-a1xsd-all.txt against runs-f9z-all.txt). That flight now turns at 3.5 to 5.9 N·m/s at the most (the check's
+  measure: t10-f10fin-r2.txt). A deep body keeps the key (Not kept).
+- traversal-pose.js, steadyTurns: arced, the palm's turn onto the face kept the long way round until 2.5 ms short of
+  done and switched halfway between two samples, popping 0.09 degrees (0.08 mm, 0.10 m/s on the rig's palm points at
+  4.3275 s, both hands, on the nine climbs). Between two neighbouring samples whose long-way flags differ, the switch
+  now falls on whichever of the two it costs the less (min(w, 1 - w), nothing where no partial turn is recorded): here
+  the face key, where the turn is done. The low walls switch too (review round 1's rv-stlog.txt, which found it: the
+  5 ms frame comparison, same-a1xs-wl.txt, reads only the samples, where both rules agree): their palms' turn as the
+  hands come onto the wall (from 0.640 to 0.645 s, on ten of the eleven) and as the legs go up and out (from 1.090 to
+  1.095, on six) now jump 0.03 degrees on the later sample, where halfway they jumped 0.09 and 0.10. Gated
+  (lowwall-f10.txt, var-f9zfin against var-f10fin), their readings and worst readings are as they were, and their
+  palms' snaps (0.6425 s, 0.03 m/s, on ten; 1.0925 s, 0.04 m/s, on six) are gone, with the velocity jumps the scan
+  found (1 or 2 on each of the ten, none now). The windows' played hands never switch; they play as they did. The
+  pigs' climbs gate as with the head's hold alone (var-a1 against var-a1xsd).
+
+How the palms leave, on the horse (every hand vertex against the wall's box every 1 ms: review round 2's
+tail2-f10fin-horse.txt against tail2-f9zfin-horse.txt, round 3's tail-letgo-f10fin-horse.txt; the slide's speed, the
+need and the centre of mass: round 1's q1-analysis.txt): they slide out over the top (outward at 1.2 to 2.5 m/s, and
+down), the left hand in the wall's box until 4.234 s (2.5 cm in at the let-go, as through the hang, 3 cm; 5.3 mm or less
+from 4.225), while the motion's upward need, 458 N at the let-go (501 at 4.206), falls to 145 (through the key 223 N at
+the let-go and none by 4.215). Then both hands hover clear of the box until 4.242, the nearer within the rig's
+centimetre (0.2 to 8.9 mm), as the need falls from 132 N to 41: a hover as long as through the key (from 4.205 to 4.213
+s, 223 to 29 N) and lighter. The centre of mass starts down earlier and falls less fast after (at most 5.5 mm off its
+path through the key, at 4.218 s; within 1 mm by 4.33), and the landing is the same from 4.6 s.
+
+The change also reaches back into the lowering: the motion moves from about 3.8 s (the skunk's head tip 4 mm off at 4.00
+s, 40 at 4.10 and 26 at 4.15; the horse's shoulders 1.0 to 1.4 cm nearer the wall at 4.10 s, its centre of mass at most
+1.7 mm), its readings there as they were (review round 1: offgrid-wall-skunk-early.txt; round 2: com-horse.txt).
+
+phantom-wrench 1.2.0 `--gate` (frozen copies; d54c607d = var-f9zfin, its gates var-f9z's, the same motion; this
+commit's tree = var-f10fin, which plays all 33 crossings as var-a1xsd frame for frame (same-f10fin.txt), whose nine
+climbs but the pigs' play as var-a1xs's (same-a1xsd-wall.txt), the gates here theirs: g12-droptable.mjs):
+
+| climb | readings (let-go and drop) | worst (% of its limit) |
+|---|---|---|
+| horse | 20 (0) -> 20 (0) | 227% (0.745 s) |
+| goat | 10 (0) -> 10 (0) | 256% (0.889 s) |
+| bull | 50 (42) -> 8 (0) | 253% (0.889 s) |
+| cow | 8 (0) -> 8 (0) | 249% (0.889 s) |
+| donkey | 17 (9) -> 8 (0) | 217 (4.235 s) -> 176% (0.889 s) |
+| sheep | 12 (0) -> 12 (0) | 256% (0.889 s) |
+| skunk | 16 (14) -> 2 (0) | 246 (4.235 s) -> 130% (0.973 s) |
+| pig foreman | 88 (51) -> 88 (51) | 625 (4.259 s) -> 603% (1.177 s) |
+| pig director | 57 (27) -> 57 (27) | 3728% (4.206 s) |
+| rabbit | 28 (0) -> 28 (0) | 999% (1.224 s) |
+| dog | 27 (11) -> 16 (0) | 217 (4.235 s) -> 168% (0.889 s) |
+
+Together 333 -> 257 readings (154 -> 78 in the let-go and drop, all of them the pigs' now), 0.370 -> 0.275 s over the
+limit at the samples. The pig foreman's worst moves to its old 603% at 1.177 s: the head's hold moves its fit a little
+everywhere, and its drop's worst is 584% now (its readings 88 as before). `bin/collisions.mjs`: the same on seven
+climbs; fewer spans deeper than 2 cm on the bull (7 -> 5), the donkey (8 -> 7), the skunk (8 -> 7, its deepest point
+4.3 -> 4.1 cm, now at 1.45 s) and the dog (6 -> 5, 4.1 -> 3.8 cm, now at 1.45 s). No new internal velocity snaps (the
+horse's palm at 2.2325 s and the pig foreman's at 2.2175 as before).
+
+`tests/natural-traversal.test.mjs`:
+- every mammal's climb but the pigs': through the balance's first flight from the let-go key on, the body's angular
+  momentum (the release test's model) changes at most 10 N·m/s, the rig's airborne limit. On d54c607d it fails on all
+  nine (20 to 32 N·m/s: review round 3's t-old.txt), now 3.5 to 5.9 (t10-f10fin-r2.txt).
+- steadyTurns: a turn kept the long way round until it is done switches back on the sample where it is done, not
+  halfway, and a nearly done turn that is still partial switches on the sample where it costs the less (the low walls'
+  case). On d54c607d's code both fail: the ref names no way in the first and the short way in the second.
+
+**Not kept.**
+- Four refinements of the flights' turn instead of two: the bull's drop 42 -> 42 readings, the horse 20 -> 22, the pigs
+  88 -> 77 and 57 -> 50 (var-r4, four climbs gated).
+- The flights' angular momentum measured over 1 ms chords in their refinement, not the grid's 10 ms: the bull's drop
+  42 -> 41 (its readings 50 -> 55), the horse 20 -> 25, the pigs 88 -> 81 and 57 -> 49 (var-fc, four climbs).
+- A pass-through key at 4.235 s (via: the end keeps the chord's speed through the key, no acceleration there): 297
+  readings. It bent the palms' path up 1.6 cm at the let-go, they left the top early, and the let-go read new phantom
+  force there (the donkey 718% at 4.207 s, the dog 486% at 4.208; var-a1v). At half the chord's speed, 275, but the
+  nine climbs hardly moved (the bull 14, the dog 26; var-a1h).
+- The arc on the pigs too: the foreman 159 readings (7545% of the limit) against 88, the director 67 (6399%) against 57
+  (var-a1x).
+
+**Left.** The pigs' let-go and drop (78 readings, the director's 3728% at 4.206 s): from about 4.0 s their far grips lie
+past their arms' reach (by the let-go the foreman's 6.3 to 7.9 cm past .97 of the arm from 4.18 to 4.22 s, the
+director's 4.8 to 5.8, the horse's 2.0 at the most, at 4.10 to 4.12 s: motion\probe-gripgap.mjs on the tree, review
+round 1's gripgap-f10fin.txt and gripgap-f10fin-horse-wide.txt), their shoulders hanging 3 to 4 cm lower than the
+horse's and 3 to 6 cm further out (at 4.20 s 1.614 to 1.624 m up against 1.656), so their palms come off the top before
+they let go. The drop read honestly (palms on the face holding nothing), the flights' small torques after the release,
+and the rest of the list as it stood.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

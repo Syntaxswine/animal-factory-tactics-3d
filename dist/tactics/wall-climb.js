@@ -172,9 +172,30 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // drops, pushing it off the wall until the landing is absorbed (z: the hand's side, 1 for the hand on +Z). Raised
  // overhead instead, the hands swept down past the face at 8 m/s as the feet landed: the balance counted them gripping
  // it, carried the drop's turn into the landing and tipped every head and forearm 5 to 8 cm into the wall. Straight
- // from the top to the face, the fingers cut through its corner (4 cm); arced over it, the hand's turn onto the face
- // switched its way round 2 ms short of done and popped the palm.
- const FAR=[1,0,0],SLIDE=z=>[[4.235,{f:'world',p:[.63,2.04,(.21+slideDZ)*z]}],[4.33,{f:'world',p:[.62,1.80,(.22+slideDZ)*z],face:FAR}],[4.685,{f:'world',p:[.62,1.10,(.26+slideDZ)*z],face:FAR}]];
+ // from the top to the face, the fingers cut through its corner (4 cm), so they arc out over it (ARC, along the face's
+ // outward normal, the most of it mid-way). Through a key just past the far edge instead (4.235 s, on d54c607d), every
+ // limb key a stop, the hands braked to rest there in the air: the turn, sampled every 5 ms, could not follow (the
+ // dog's arms' angular momentum changed at 330 N·m/s at 4.222 s and 15 at 4.236), and the rig read 217 to 249% of its
+ // airborne limit at the key (the dog and the donkey 217, the skunk 246, the bull with its head held through the drop
+ // 249). Arced, the palms slide off the top's far edge as the body starts down, the balance counting them a grip until
+ // 4.240 s (through the key until 4.205 or 4.210). The horse's palms slide out over the top (outward at 1.2 to 2.5 m/s,
+ // and down), its left hand in the wall's box to 4.234 (2.5 cm in at the let-go, as through the hang; 5.3 mm or less
+ // from 4.225), as the motion's upward need, 458 N at the let-go (501 at 4.206), falls to 145 (through the key 223
+ // there, none by 4.215); then both hands hover clear of it to 4.242, the nearer within the rig's centimetre (0.2 to
+ // 8.9 mm), as the need falls from 132 N to 41: a hover as long as through the key (4.205 to 4.213 s, 223 to 29 N) and
+ // lighter.
+ // The centre of mass starts down earlier and falls less fast after it (at most 5.5 mm off its path through the key,
+ // at 4.218 s, within 1 mm by 4.33; the landing the same from 4.6 s). The drop's flight, from 4.245 to 4.325 s (through
+ // the key from 4.210 or 4.215 to 4.295 or 4.300), turns at 3.5 to 5.9 N·m/s at the most (the test's measure; 20 to 32
+ // through the key), under the rig's 10, and the nine climbs that arc read 112 readings over its limits against 188 on
+ // d54c607d (156 with the head held alone: the bull 50, then 18, now 8; the donkey 17, now 8; the skunk 16, now 2; the
+ // dog 27, now 16; the other five as they were). Arced, the palm's turn onto the face switched its way round 2.5 ms
+ // short of done and popped 0.09 degrees (steadyTurns now switches on the sample). A deep body keeps the key: its palms
+ // are off the top before it lets go (above: the clearance fit pushes its trunk out past its arms' reach of the far
+ // grips), and arced, the pig foreman read 159 readings (7545% of the limit at its worst) against 88 and the director
+ // 67 (6399%) against 57.
+ const FAR=[1,0,0],ONFACE=4.33,ARC=.06,SLIDE=z=>[...(deep?[[4.235,{f:'world',p:[.63,2.04,(.21+slideDZ)*z]}]]:[]),
+  [ONFACE,{f:'world',p:[.62,1.80,(.22+slideDZ)*z],face:FAR,...(deep?{}:{arc:ARC,arcTo:FAR})}],[4.685,{f:'world',p:[.62,1.10,(.26+slideDZ)*z],face:FAR}]];
  const LIMB={
   'leg-1':[[0,stance(-1)],[.4,foot(-.035-back,-.20)],[.7,foot(-.035-back,-.20,15)],[.995,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-1.03*fitB.leg,-.20],hoof:55,soft:.03}],[1.195,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-.95*fitB.leg,-.20],hoof:50}],[1.375,{f:'pelvis',p:[.02,-.62,-.13],hoof:20,knee:OUT}],[1.505,{...onFace(true,.46,-.16,1.505),knee:OUT}],[1.905,{...onFace(true,.80,-.16,1.905),knee:OUT}],[2.305,{...onFace(true,1.26,-.16,2.305),knee:OUT}],[2.705,{...onFace(true,1.56,-.16,2.705),knee:OUT}],
    [3.065,{f:'world',p:[.19,1.70,0],hoof:20,heading:-90}],[3.305,{f:'world',p:[.44,2.24,.62],hoof:10,heading:-108}],[3.485,{f:'world',p:[.68,2.12,.66],hoof:40,heading:-140,knee:SIDE}],[DOWN_FAR,{f:'world',p:[.80,1.36,.20],hoof:20,heading:-170,knee:SIDE}],
@@ -212,9 +233,16 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // where the rig already reads its hands on the top). The balance plans the flight's turn with the head as this fit
  // leaves it, and the pig foreman's head, easing out of a 15 degree tilt from 1.04 s in the air here and held by the
  // fit after the balance, left the turn answering a tilt no longer there (up to 65 N·m of airborne phantom torque from
- // 1.03 to 1.18 s).
- fit=createClearanceFit(D);const jump=[TRUNK.find(k=>k.launch).t,TRUNK.find(k=>k.catch).t];
- fit.solve({body,probe,tails,obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),poseAt:t=>body.pose(spec(t),'fit'),air:t=>t>jump[0]&&t<jump[1],stage:t=>t<2.265?'near':t<3.685?'over':'far'});
+ // 1.03 to 1.18 s). So it is held through the drop too (from the let-go to the palms on the far face, ONFACE): on
+ // d54c607d the bull's head, as the balance planned the drop's turn, eased into a stretch that clears the wall from
+ // 4.23 s (turned 6.0 degrees at 4.30, 12 at 4.38), where the fit after the balance turned it before the let-go (11.9
+ // degrees at 4.20) and held it through the flight: the turn answered a head turning that the played body never made,
+ // 10 to 20 N·m of airborne phantom torque from 4.228 to 4.280 s (the bull's drop 42 readings over the limit, 10 held;
+ // the other ten climbs' readings as they were). The window is the keys', not the flight's: it holds the balance's
+ // drop flight inside it (from 4.245 to 4.325 s on the nine climbs that arc, the pigs' from 4.205 or 4.210 to 4.290)
+ // only while the let-go and the palms' face key bracket it.
+ fit=createClearanceFit(D);const jump=[TRUNK.find(k=>k.launch).t,TRUNK.find(k=>k.catch).t],drop=[TRUNK.find(k=>k.still).t,ONFACE];
+ fit.solve({body,probe,tails,obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),poseAt:t=>body.pose(spec(t),'fit'),air:t=>t>jump[0]&&t<jump[1]||t>drop[0]&&t<drop[1],stage:t=>t<2.265?'near':t<3.685?'over':'far'});
  steady=steadyPoles(D,t=>limbSample(body,spec(t)));
  // The limbs are fitted with their steady bend directions, which are then found again for the moved targets.
  // How planted each limb's end is (a palm on a surface, a hoof set on the floor or a face), for the limb fit.
