@@ -69,8 +69,10 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // read 79 + 63 and 112 + 8 readings over the gate's limits. Leant only as far as on the near side, the pig director's
  // hands still rose up to 6.0 cm above their grip as it lowered (on d1118c40's code its climb 341 readings against 78;
  // the pig foreman's 354 against 374, its drop cheaper and its let-go dearer at 1.0); leant half as far again, they
- // stay within the rig's centimetre of the top, though the fit pushes its trunk further out (15 to 19 cm past its
- // stand-back, 13 to 18 at 1.0) and its hands hold at the far edge, past its grip's mark.
+ // stayed within the rig's centimetre of the top, though the fit pushed its trunk further out (15 to 19 cm past its
+ // stand-back, 13 to 18 at 1.0) and its hands held at the far edge, past its grip's mark, until the far hang (below)
+ // pushed and raised its keys: the fit's push is now 15.3 cm at 3.80 s and 2.5 at 4.10 (19.3 and 15.8 on f293da69),
+ // and the hands hold at it.
  // The lean comes off in the drop as the palms push on the face. Only the left landing foot stands back: with both, the
  // left foot stepping round passed in front of the planted right, the shins 10 cm through each other.
  const FAR_LEAN=1.5,lean=Math.asin(Math.min(1,back/(body.offsets.spine.y+body.offsets.shoulder[1].y)))/DEG,leanFrom=TRUNK.find(k=>k.launch).t,leanTo=TRUNK.findLast(k=>k.near&&k.t>=leanFrom).t;
@@ -100,8 +102,9 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // body hangs, not as it first comes over it (read every 5 ms: up to 5.4 and 5.9 cm in as they come over, from 3.40 to
  // 3.735 s, and 0.2 and 0.3 while they hang, from 3.76 to 4.10). Its hands slide down the face 10 cm further out on
  // each side (slideDZ): leant in over its belly, its head lay between its arms as the hands came off the top (the pig
- // foreman's right hand 8.3 cm into it at 4.214 s; 3.8 with the wider slide, 3.7 on d1118c40), which doubles the pig
- // director's turn in the air as it lets go (373 N·m at 4.206 s against 191).
+ // foreman's right hand 8.3 cm into it at 4.214 s; 3.8 with the wider slide on f293da69, 3.7 on d1118c40; under 1 cm
+ // since its palms arc off the top, below), and the wider slide doubled the pig director's turn in the air as it let go
+ // (373 N·m at 4.206 s against 191; 8.1 at the most since its far hang and the arc, at 4.236 s).
  // The hooves on the near face rise with the search's change of height at their key (rise, as with the grip's rise). On
  // 4e9853f6 the search set the pig foreman's chest over the top 24 cm higher than the horse's with its feet left on the
  // face where the horse's were: its right leg hung straight, out of reach of its foot's target (1.31 leg lengths at
@@ -113,12 +116,13 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // search sets the foreman's left leg over 8.7 cm above the horse's (0.8 on 4e9853f6), and its left leg, going down the
  // far side to its 3.685 s key, locked straight out of reach (the rig's knee point 14.3 m/s at 3.617 s, the test's
  // measure 13.6; 13.7 body weights). So the legs' keys at 3.685 s ride the search's height too (deepDy): the lock came
- // back near what it was on 4e9853f6 (the rig's knee point 10.4 m/s at 3.631 s on d1118c40, 10.9 then; 9.3 since the
- // band rests the torso), at the cost of one reading and the foreman's hand check in that test (7.7 mm from the wall
- // against 3.6 without it, on d1118c40; 7.2 now). Riding every leg key below the top over it instead cost the right
- // knee up 9 readings (its foot's 2.525 s key raised 17 cm), turned the airborne body at the band's jump harder
- // (870 N·m at 3.405 s against 273 on d1118c40; the band no longer jumps there) and put the director's required force
- // over the limit (5.1 body weights against 4.9 on d1118c40; 4.8 now).
+ // back near what it was on 4e9853f6 (the rig's knee point 10.4 m/s at 3.631 s on d1118c40, 10.9 then; 9.3 once the
+ // band rested the torso, 10.5 since the far hang below took away the band's drop that hid it), at the cost of one
+ // reading and the foreman's hand check in that test (7.7 mm from the wall against 3.6 without it, on d1118c40; 6.5
+ // now, 7.2 on f293da69). Riding every leg key below the top over it instead cost the right knee up 9 readings (its
+ // foot's 2.525 s key raised 17 cm), turned the airborne body at the band's jump harder (870 N·m at 3.405 s against 273
+ // on d1118c40; the band no longer jumps there) and put the director's required force over the limit (5.1 body weights
+ // against 4.9 on d1118c40; 4.8 on f293da69, and 6.5 since the far hang below, at its old left elbow whip).
  const deepDy={},deep=back>.05,farX=.54+(deep?.025:0),slideDZ=deep?.10:0;
  if(deep){probe.update();const h0=body.at0('hips'),s0=body.at0('spine'),hipsPts=[],spinePts=[];
   for(let i=0;i<probe.count;i++){const b=probe.boneNames[probe.bone[i]],q=V(probe.x[i],probe.y[i],probe.z[i]);if(b==='hips')hipsPts.push(q.sub(h0));else if(b==='spine')spinePts.push(q.sub(s0));}
@@ -130,7 +134,40 @@ export function createWallClimb(worker,profile={id:'horse'}){
     if(low===Infinity)continue;const dy=resting?(REST[0]+REST[1])/2-low:Math.max(0,REST[0]-low);
     let over=0;for(const s of ['1','-1']){const m=MARKS[s].find(([a,b])=>k.t>=a&&k.t<=b);if(!m)continue;const sh=C.clone().add(V(0,dy,0)).add(body.offsets.shoulder[+s].clone().applyQuaternion(chestQ));over=Math.max(over,sh.distanceTo(V(...m[2]))-reach);}
     const cost=Math.abs(dp)/10+Math.abs(dy)/.05+30*Math.max(0,over);if(!best||cost<best.cost)best={cost,dp,dy};}
-   if(best){k.pitch=(k.pitch||0)+best.dp;k.hips=[k.hips[0],k.hips[1]+best.dy,k.hips[2]];rise[k.t]=(rise[k.t]||0)+best.dy;deepDy[k.t]=best.dy;}}}
+   if(best){k.pitch=(k.pitch||0)+best.dp;k.hips=[k.hips[0],k.hips[1]+best.dy,k.hips[2]];rise[k.t]=(rise[k.t]||0)+best.dy;deepDy[k.t]=best.dy;}}
+  // On the far face a deep body's keys left its trunk in the wall, and the clearance fit pushed it out after them (the
+  // pigs' 14 to 17 cm from 4.10 to 4.22 s on f293da69), past where the grip rise above set the keys: from about 4.0 s
+  // their arms fell short of the far grips (6.3 to 7.9 cm past .97 of the arm on the pig foreman from 4.18 to 4.22 s,
+  // 4.8 to 5.8 on the director, its most 7.5 at 4.095; the horse's 2.0 at the most), their palms came off the top onto
+  // the face before they let go, and the balance found the foreman in flight inside its authored grip (4.045 to 4.140
+  // s). So each far key is pushed out until the torso (its points at rest riding the hips or spine, as the search above
+  // reads them) clears the far face by FAR_CLEAR below the top (the foreman's hanging keys 14.8 and 14.6 cm, the
+  // director's 14.5 and 14.1; the drop's and the absorb's nothing; 6 mm lies inside the rig's centimetre, so the rig
+  // still reads the director's shirt on the face from 4.150 to 4.220 s), and each hanging key (farLean) is raised
+  // until both arms reach the far grips at .97 of the arm (the foreman's 7.6 and 7.2 cm, the director's 6.6 and 6.2):
+  // the fit's push from 4.10 s is 3.7 cm at the most (the foreman's; 14.0 cm out and 3.4 up at 3.90), and the arms come
+  // within 1 cm of the grips' reach from 4.165 s (the director's from 4.140), 3.5 cm past it at the most (the
+  // foreman's, at 4.075 and 4.080). The let-go keeps its time, so its drop falls from the raised hang (the drop's arc
+  // from the still key), and the hands' release and slide keys keep theirs with it. Let go earlier by the longer fall
+  // instead, so that the drop touched down where and when it did, the falling body stretched the still-holding arms and
+  // the palms snapped onto the far face (the foreman 10160% of the limit at 4.265 s); with the hands' keys moved with
+  // the let-go, it snapped in the let-go (5398% at 4.125; both on d54c607d's code with the far hang, var-fh2 and
+  // var-fh3). The pigs now touch down 25 and 30 ms later (the left boot at 4.555 and 4.545 s; the absorb's need the
+  // same, about 2.2 kN), their hips coming 5.1 and 4.2 cm back toward the wall through the drop (3.6 and 3.3 before;
+  // the foreman's let-go key lies 3.5 cm further out than its drop key, which nothing pushed); the foreman's head
+  // passes within 5.0 mm of the far face as it lets go (4.230 s), the director's 10.4 (16.0 and 12.6 before), and the
+  // director's left arm goes 2.9 cm into its left thigh as its left leg comes over (3.543 s, 1.4 before). Over the top
+  // the fit now pushes the trunk out less (the foreman's hips 3.7 to 5.4 cm further back from 3.60 to 3.70 s), and the
+  // foreman's band (below) no longer drops it as its left leg locks straight going down the far side (3.633 s): that
+  // old lock, which the fall hid on f293da69, now asks 7.6 times its weight for 3 ms on the rig's 1 ms grid (its 5-ms
+  // samples 3.9), over the rig's 5; the director's old left elbow whip as its left leg comes over now asks 6.5 for 1 ms
+  // (3.517 s; 4.8 before).
+  const FACE=WALL.edge+WALL.half,FAR_CLEAR=.006;
+  for(const k of keys){if(!k.far)continue;const hipsQ=yawQ(k.heading||0).multiply(bodyQ((k.pitch||0)*DEG,(k.roll||0)*DEG)),chestQ=hipsQ.clone().multiply(relQ(k.flex||0,k.side||0,k.twist||0)),H=V(...k.hips),C=H.clone().add(body.offsets.spine.clone().applyQuaternion(hipsQ));
+   let push=0;const see=w=>{if(w.y<WALL.top&&Math.abs(w.z)<.5)push=Math.max(push,FACE+FAR_CLEAR-w.x);};for(const q of hipsPts)see(q.clone().applyQuaternion(hipsQ).add(H));for(const q of spinePts)see(q.clone().applyQuaternion(chestQ).add(C));
+   k.hips=[k.hips[0]+push,k.hips[1],k.hips[2]];if(!k.farLean)continue;let y=k.hips[1];
+   for(const s of [-1,1]){const g=V(farX,top,-s*.20),A=V(k.hips[0],0,k.hips[2]).add(body.offsets.spine.clone().applyQuaternion(hipsQ)).add(body.offsets.shoulder[s].clone().applyQuaternion(chestQ)),h=Math.hypot(g.x-A.x,g.z-A.z),r=.97*(body.L[s].upper+body.L[s].fore);if(h<r)y=Math.max(y,g.y-A.y-Math.sqrt(r*r-h*h));}
+   rise[k.t]=(rise[k.t]||0)+y-k.hips[1];k.hips=[k.hips[0],y,k.hips[2]];}}
  // Flights are keyed as exact parabolas: the apex rises above the catch it comes down onto, and the launch and the catch
  // lie on the arc through it; a drop falls from a still hang to its touchdown. Each flight key is placed on its arc
  // with the arc's speed and an acceleration of -g (the quintics between them are then the parabola). Keyed by speed
@@ -175,7 +212,7 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // from the top to the face, the fingers cut through its corner (4 cm), so they arc out over it (ARC, along the face's
  // outward normal, the most of it mid-way). Through a key just past the far edge instead (4.235 s, on d54c607d), every
  // limb key a stop, the hands braked to rest there in the air: the turn, sampled every 5 ms, could not follow (the
- // dog's arms' angular momentum changed at 330 N·m/s at 4.222 s and 15 at 4.236), and the rig read 217 to 249% of its
+ // dog's arms' angular momentum changed at 330 N·m at 4.222 s and 15 at 4.236), and the rig read 217 to 249% of its
  // airborne limit at the key (the dog and the donkey 217, the skunk 246, the bull with its head held through the drop
  // 249). Arced, the palms slide off the top's far edge as the body starts down, the balance counting them a grip until
  // 4.240 s (through the key until 4.205 or 4.210). The horse's palms slide out over the top (outward at 1.2 to 2.5 m/s,
@@ -183,19 +220,22 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // from 4.225), as the motion's upward need, 458 N at the let-go (501 at 4.206), falls to 145 (through the key 223
  // there, none by 4.215); then both hands hover clear of it to 4.242, the nearer within the rig's centimetre (0.2 to
  // 8.9 mm), as the need falls from 132 N to 41: a hover as long as through the key (4.205 to 4.213 s, 223 to 29 N) and
- // lighter.
- // The centre of mass starts down earlier and falls less fast after it (at most 5.5 mm off its path through the key,
- // at 4.218 s, within 1 mm by 4.33; the landing the same from 4.6 s). The drop's flight, from 4.245 to 4.325 s (through
- // the key from 4.210 or 4.215 to 4.295 or 4.300), turns at 3.5 to 5.9 N·m/s at the most (the test's measure; 20 to 32
- // through the key), under the rig's 10, and the nine climbs that arc read 112 readings over its limits against 188 on
- // d54c607d (156 with the head held alone: the bull 50, then 18, now 8; the donkey 17, now 8; the skunk 16, now 2; the
- // dog 27, now 16; the other five as they were). Arced, the palm's turn onto the face switched its way round 2.5 ms
- // short of done and popped 0.09 degrees (steadyTurns now switches on the sample). A deep body keeps the key: its palms
- // are off the top before it lets go (above: the clearance fit pushes its trunk out past its arms' reach of the far
- // grips), and arced, the pig foreman read 159 readings (7545% of the limit at its worst) against 88 and the director
- // 67 (6399%) against 57.
- const FAR=[1,0,0],ONFACE=4.33,ARC=.06,SLIDE=z=>[...(deep?[[4.235,{f:'world',p:[.63,2.04,(.21+slideDZ)*z]}]]:[]),
-  [ONFACE,{f:'world',p:[.62,1.80,(.22+slideDZ)*z],face:FAR,...(deep?{}:{arc:ARC,arcTo:FAR})}],[4.685,{f:'world',p:[.62,1.10,(.26+slideDZ)*z],face:FAR}]];
+ // lighter. The centre of mass starts down earlier and falls less fast after it (at most 5.5 mm off its path through
+ // the key, at 4.218 s, within 1 mm by 4.33; the landing the same from 4.6 s). The drop's flight, from 4.245 to 4.325 s
+ // (through the key from 4.210 or 4.215 to 4.295 or 4.300), turns at 3.5 to 5.9 N·m at the most (the test's measure;
+ // 20 to 32 through the key), under the rig's 10, and the nine climbs but the pigs' read 112 readings over its limits
+ // against 188 on d54c607d (156 with the head held alone: the bull 50, then 18, now 8; the donkey 17, now 8; the skunk
+ // 16, now 2; the dog 27, now 16; the other five as they were). Arced, the palm's turn onto the face switched its way
+ // round 2.5 ms short of done and popped 0.09 degrees (steadyTurns now switches on the sample). A deep body arcs as
+ // well now that its palms hold the top until it lets go (its far hang, above). With them off the top before the
+ // let-go, arced, the pig foreman read 159 readings (7545% of the limit at its worst) against 88 through the key, the
+ // director 67 (6399%) against 57; with the far hang, arced, 42 and 34 against 78 and 53 through the key (their let-go
+ // and drop 5 and 4 against 41 and 23, the foreman's worst there 227% of the limit against 10810% at 4.265 s; their
+ // worst readings now in the jump's flight, 603 and 455%, as they were there). Of the nine left in the let-go and
+ // drop, eight are new: the foreman's five in the air from 4.306 to 4.310 s, up to 227%, in the last 5 ms before its
+ // palms reach the far face (where f293da69's read up to 9.9 N·m, under the limit, before its palms reached it at
+ // 4.276 s), and the director's three on contact from 4.231 to 4.233 s, up to 111%, as its hands leave the top.
+ const FAR=[1,0,0],ONFACE=4.33,ARC=.06,SLIDE=z=>[[ONFACE,{f:'world',p:[.62,1.80,(.22+slideDZ)*z],face:FAR,arc:ARC,arcTo:FAR}],[4.685,{f:'world',p:[.62,1.10,(.26+slideDZ)*z],face:FAR}]];
  const LIMB={
   'leg-1':[[0,stance(-1)],[.4,foot(-.035-back,-.20)],[.7,foot(-.035-back,-.20,15)],[.995,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-1.03*fitB.leg,-.20],hoof:55,soft:.03}],[1.195,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-.95*fitB.leg,-.20],hoof:50}],[1.375,{f:'pelvis',p:[.02,-.62,-.13],hoof:20,knee:OUT}],[1.505,{...onFace(true,.46,-.16,1.505),knee:OUT}],[1.905,{...onFace(true,.80,-.16,1.905),knee:OUT}],[2.305,{...onFace(true,1.26,-.16,2.305),knee:OUT}],[2.705,{...onFace(true,1.56,-.16,2.705),knee:OUT}],
    [3.065,{f:'world',p:[.19,1.70,0],hoof:20,heading:-90}],[3.305,{f:'world',p:[.44,2.24,.62],hoof:10,heading:-108}],[3.485,{f:'world',p:[.68,2.12,.66],hoof:40,heading:-140,knee:SIDE}],[DOWN_FAR,{f:'world',p:[.80,1.36,.20],hoof:20,heading:-170,knee:SIDE}],
@@ -239,8 +279,8 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // degrees at 4.20) and held it through the flight: the turn answered a head turning that the played body never made,
  // 10 to 20 N·m of airborne phantom torque from 4.228 to 4.280 s (the bull's drop 42 readings over the limit, 10 held;
  // the other ten climbs' readings as they were). The window is the keys', not the flight's: it holds the balance's
- // drop flight inside it (from 4.245 to 4.325 s on the nine climbs that arc, the pigs' from 4.205 or 4.210 to 4.290)
- // only while the let-go and the palms' face key bracket it.
+ // drop flight inside it (from 4.245 to 4.325 s on the nine climbs but the pigs', theirs from 4.240 to 4.325 or
+ // 4.330) only while the let-go and the palms' face key bracket it.
  fit=createClearanceFit(D);const jump=[TRUNK.find(k=>k.launch).t,TRUNK.find(k=>k.catch).t],drop=[TRUNK.find(k=>k.still).t,ONFACE];
  fit.solve({body,probe,tails,obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),poseAt:t=>body.pose(spec(t),'fit'),air:t=>t>jump[0]&&t<jump[1]||t>drop[0]&&t<drop[1],stage:t=>t<2.265?'near':t<3.685?'over':'far'});
  steady=steadyPoles(D,t=>limbSample(body,spec(t)));

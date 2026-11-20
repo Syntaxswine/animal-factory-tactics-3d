@@ -3130,6 +3130,165 @@ horse's and 3 to 6 cm further out (at 4.20 s 1.614 to 1.624 m up against 1.656),
 they let go. The drop read honestly (palms on the face holding nothing), the flights' small torques after the release,
 and the rest of the list as it stood.
 
+### 2026-11-20 (physics balance, thirty-second part): the pigs hang within reach, and arc off the top
+
+On f293da69 the pigs' let-go and drop held 78 of the eleven climbs' 257 readings over the limit (the pig foreman's 51,
+the director's 27), and the director's 3728% at 4.206 s, the worst of any climb. From about 4.0 s their far grips lay
+past their arms' reach (the foreman's 6.3 to 7.9 cm past .97 of the arm from 4.18 to 4.22 s, the director's 4.8 to
+5.8, its most 7.5 at 4.095; the horse's 2.0 at the most), so their palms came off the top onto the far face before they
+let go, and the balance found the foreman in flight inside its authored grip (4.045 to 4.140 s).
+
+Why: the far hang's keys. The stand-back and the far lean left a deep body's keys with its trunk in the far face, and
+the clearance fit pushed it out after them (14 to 17 cm from 4.10 to 4.22 s on f293da69: fitpush-f10-f11b.txt, round
+1's probe-fitpush-battle.mjs), past where the grip rise had set the keys' height. With its palms off the top before it
+let go, a deep body also kept the drop's stopping key past the far edge (the thirty-first part: arced, the foreman read
+159 readings and the director 67).
+
+**The fix**, in two parts, both in wall-climb.js:
+- A deep body's far hang: each far key is pushed out until the torso clears the far face by FAR_CLEAR (6 mm) below the
+  top (the foreman's hanging keys 14.8 and 14.6 cm, the director's 14.5 and 14.1; the drop's and the absorb's nothing),
+  and each hanging key is raised until both arms reach the far grips at .97 of the arm (the foreman's 7.6 and 7.2 cm,
+  the director's 6.6 and 6.2). The let-go keeps its time: the drop falls from the raised hang, and the hands' release
+  keys keep theirs. The fit's push from 4.10 s is now 3.7 cm at the most (the foreman's; the director's 2.5), and the
+  arms come within 1 cm of the grips' reach from 4.165 s (the director's from 4.140), 3.5 cm past it at the most (the
+  foreman's, at 4.075 and 4.080 s: reach-f11b.txt, round 2's probe-reach.mjs).
+- SLIDE: the pigs arc off the top as the other climbs do, now that their palms hold it until they let go. With the far
+  hang, arced, they read 42 and 34 readings against 78 and 53 through the key past the far edge (var-f11b against
+  var-fh4), their let-go and drop 5 and 4 against 41 and 23 (the foreman's drop 10810% of its limit at 4.265 s through
+  the key, 227% at the most arced). Arced, the foreman's right hand no longer meets its head as it lets go (the rig's
+  capsules head x hand 3.8 cm deep at 4.206 s on f293da69, 3.5 at 4.212 through the key, now under 1 cm), so its
+  overlapping pairs over 2 cm read 3 against 4. Of the 9 readings left in the let-go and drop, 8 are new, none of
+  f293da69's 78 (below, What else moves).
+
+phantom-wrench 1.2.0 `--gate` (frozen copies; f293da69 = var-f10fin, its gates var-a1xsd's, the same motion; this
+commit's tree = var-f11b: droptable-f11b.txt):
+
+| climb | readings (let-go and drop) | worst (% of its limit) |
+|---|---|---|
+| horse | 20 (0) -> 20 (0) | 227% (0.745 s) |
+| goat | 10 (0) -> 10 (0) | 256% (0.889 s) |
+| bull | 8 (0) -> 8 (0) | 253% (0.889 s) |
+| cow | 8 (0) -> 8 (0) | 249% (0.889 s) |
+| donkey | 8 (0) -> 8 (0) | 176% (0.889 s) |
+| sheep | 12 (0) -> 12 (0) | 256% (0.889 s) |
+| skunk | 2 (0) -> 2 (0) | 130% (0.973 s) |
+| pig foreman | 88 (51) -> 42 (5) | 603% (1.177 s) |
+| pig director | 57 (27) -> 34 (4) | 3728 (4.206 s) -> 455% (1.181 s) |
+| rabbit | 28 (0) -> 28 (0) | 999% (1.224 s) |
+| dog | 16 (0) -> 16 (0) | 168% (0.889 s) |
+
+Together 257 -> 188 readings (78 -> 9 in the let-go and drop), 0.275 -> 0.190 s over the limit at the samples. The
+director's worst is now its old 455% in the jump's flight.
+
+What else moves:
+- Only the pigs' climbs. The windows, the low walls and the nine other climbs play as on f293da69, frame for frame (31
+  of 33 crossings: same-f11b-f10fin.txt).
+- The far hang moves the pigs elsewhere. They touch down 25 and 30 ms later (the left boot at 4.555 and 4.545 s against
+  4.530 and 4.515; the absorb's need the same, 2.2 kN against 2.3, and no readings there on either copy:
+  landing-f11b.txt). Their hips come 5.1 and 4.2 cm back toward the wall through the drop (to 4.550 s; 3.6 and 3.3 on
+  f293da69, to 4.600: pelvis-f10-f11b.txt), the foreman's let-go key lying 3.5 cm further out than its drop key, which
+  nothing pushed. The foreman's head passes within 5.0 mm of the far face as it lets go (4.230 s; within the rig's
+  centimetre from 4.190 to 4.255, 14 samples), the director's within 10.4 (16.0 and 12.6 on f293da69:
+  headwall-f11b-*.txt); the rig reads the foreman's head as contact to 4.255 s, so its drop's first four samples are
+  judged against the contact limit (they read 1.8 N·m at the most, and from the release to 4.255 s 3.9, at 4.238: all
+  under the airborne 10). The director's left arm goes 2.9 cm into its left thigh as its left leg comes over (3.543 s;
+  1.4 before; its forearm 2.4 cm there, where its deepest before was 1.6, at 3.120 s), its overlapping pairs over 2 cm
+  4 -> 6 (6 already through the key, var-fh4). The pigs' right toes at 4.12 s run a little faster (11.1 and 11.1 m/s
+  against 10.9 and 10.6, already over the rig's 8). The foreman's hips coming off the top into the hang read
+  -43.6 m/s^2 at 3.635 s against -63.2 (hipsacc-f11b.txt; the climb test reads 2.6 to 3.5 s only). The wall's
+  collisions find no new span (the rig's own sampling, every 10 ms: coll-f11b-pigs.txt; span by span, review round 6's
+  collspans-*.txt), but part by part (review round 7's collparts-*.txt and collseries-*.txt) four parts go deeper: the
+  foreman's left forearm and hand as its left leg comes over, 4.9 -> 5.3 cm at 3.59 s; its right forearm and hand,
+  4.3 -> 4.4 at 3.51 s and up to 9 mm deeper from 3.55 to 3.63 s; its trousers, 2.3 cm into the far face at 3.59 s,
+  where they reached 1.2 at the most from 3.55 to 3.65 s on f293da69; and the director's trousers in the straddle,
+  7.6 -> 7.9 at 3.17 and 3.18 s, now its deepest. The rest get shallower or stay: the foreman's trousers as its left
+  leg swings over 6.6 -> 6.3, the director's 8.0 -> 7.8, the director's forearms 3.6 -> under 2 and 5.9 -> 5.7, and the
+  boots on the far face (the foreman's right 4.8 -> 2.7, the director's left 3.4 -> under 2, its right 2.8 -> 2.6).
+  FAR_CLEAR's 6 mm lies inside the rig's centimetre: the rig reads the director's shirt on the far face from 4.150 to
+  4.220 s (4.140 to 4.185 on f293da69), with no readings there (review round 5's contact-parts-pigs-3.6-4.4.txt).
+- New readings in the let-go and drop: of the 9 left, 8 are new (review round 5's cmp-readings-a1xsd-f11b.txt). The
+  foreman's 5 come in the air from 4.306 to 4.310 s, up to 227% of the limit (22.7 N·m), in the last 5 ms before its
+  palms reach the far face (the rig reads them on it from about 4.311 s), where f293da69's palms reached it at 4.276 s
+  with the airborne torque 9.9 N·m at the most from 4.265 s, under the limit. The director's 3 come on contact from
+  4.231 to 4.233 s, up to 111%, as its hands leave the top; its fourth, in the air at 4.236 s (110%), was among
+  f293da69's.
+- A regression, from old whips: the gate's required force while in contact now fails on both pigs, briefly. The foreman
+  needs 7.6 times its weight for 3 ms at 3.633 s, as its left leg locks straight going down the far face (its reach
+  96.6% at 3.630 s on both copies, the knee point 10.5 m/s against 9.3); the director 6.5 for 1 ms at 3.517, at its old
+  left elbow whip as its left leg comes over (16.8 m/s against 17.0). On f293da69 they read 3.6 (at 3.522 s, elsewhere)
+  and 4.8; the 5 ms samples alone read 3.9 and 3.1 now, under the rig's 5. The foreman's lock read so little on
+  f293da69 because its body was falling as the knee locked: its top band's last held sample jumped (the target 1.44 cm
+  lower at 3.660 s than at 3.655, as a torso point left the top's footprint) and the band's free run then dropped the
+  body a further 7.7 cm by 3.715 s, its pelvis falling from 2.103 to 2.015 m from 3.60 to 3.70 s (0.3 to 0.8 times its
+  weight). With the far keys pushed out, the fit pushes the trunk out less over the top (the hips 3.7 to 5.4 cm further
+  back from 3.60 to 3.70 s: review round 4's pelvis-over-f10-f11b.txt, probe-pelvis-path.mjs), the band runs smoothly
+  to its end and its free run rises; the hands hold the body level (2.099 to 2.106 m from 3.60 to 3.70 s), the
+  motion needs 1.2 to 2.6 kN up from 3.595 to 3.655 s (within 0.5 kN from 3.615 on
+  f293da69: contacts-foreman-a1xsd-fh5.txt), and the lock rides on that need. f293da69's code with only the band's end
+  moved to 3.655 s reads 7.93 times its weight at 3.633 instead of 2.98 (exp-old-foreman-xbb3.655.txt against
+  exp-old-foreman-xbb3.66.txt). The director's band was already smooth: its whip now peaks within one 1 ms instant
+  (6.48 at 3.517 s, where it read 4.49 and 4.84 at 3.517 and 3.518), its pelvis 2.2 cm further back at 3.52 s. (These
+  were measured on var-fh5, which plays all 33 crossings as var-f11fin does (same-f11fin-fh5.txt), whose pigs play as
+  var-f11b's from 3.37 to 3.97 s: diffspans-f11fin-f11b-pigs.txt. var-f11b's own gate reads the same 7.6 and 6.5.)
+  Raising the foreman's legs' 3.685 s keys by the far rise lets its force pass at 4.0 (gate-vx-foreman-xr076.txt), but
+  that is a new design of its own; the director's needs its elbow whip mended. The next fix.
+
+`tests/natural-traversal.test.mjs`:
+- A pig hangs from the far grips within its arms' reach: over the last 50 ms before it lets go, each arm's shoulder
+  lies within .97 of the arm's length, plus 1.5 cm (on these rigs the arm's whole length, 50.5 cm), of its grip. On
+  f293da69 it fails on both pigs (7.4 and 5.7 cm past: t11-reach-f10fin.txt), now 1.15 and 0.52 (t11b-instr.txt). It
+  guards the last 50 ms only (over 60 and 75 ms the foreman reads 1.47 and 2.05: reach-f11b.txt), and the pigs only
+  (the dog's arms hang at their full length there, 2.2 to 2.6 cm past: gripgap-nonpigs-f11b.txt).
+- turnAir's rule on its own, a unit test (traversal-balance.js now exports turnAir): a take-off, and a touch longer
+  than the lead between two flights, are held from the lead; a let-go's run on a grip, a run on the feet no longer
+  than the lead (counting the feet alone, not a grip or a held seat before them; a touch that short between two
+  flights among them, up to exactly the lead's five samples), a run on a held seat and a landing are left. It kills
+  every mutant of turnAir that reviews 5 to 7 wrote but one, flooring LEAD/dt for rounding it, the same five samples
+  (turnair-mutants-r7.txt, turnair-mutants-r7b.txt, turnair-mutants-r8.txt). It reaches the short run's branch, which
+  none of the 33 crossings does (the only runs on the feet before a flight are the eleven take-offs, 172 to 176
+  samples: shortrun-f11b.txt).
+- The drop check's comment gives the pigs' drop flights, 51 N·m (the foreman) and 11 (the director), at 4.327 and 4.325
+  s as their palms land on the far face, against 58 and 148 on f293da69, at 4.259 and 4.213 s, earlier in their drops;
+  the nine other climbs' figures there are 3.5 to 5.9, as on f293da69 (t11b-instr.txt).
+- Two margins narrow, with the far hang: the pig foreman's trouser fold lies 3.4 cm in at 3.34 s (3.3 on f293da69),
+  1 mm under the 3.5 cm the user allowed, and its left knee locks at 10.2 m/s in the climb test (9.1 on f293da69, where
+  the band's drop hid it), 0.8 under that test's 11 (testmeasures-f11b.txt). The figures the fix moved in unchanged
+  comments are brought up to date, each with its figure on f293da69 (testmeasures-f10fin.txt): the pigs' wrists over
+  the top now 0.1 to 1.4 cm above their grip's height (2.5 above to 3.8 below), their hands within 6.5 and 3.0 mm of
+  the wall as they lower (7.2 and 4.3), the director's left knee 8.8 m/s (8.9), their hips' accelerations over the top
+  -15.5 to +24.5 m/s^2 (-14.4 to +24.5), the fit's push and the reach; and in the code, the wider slide's cost
+  (wall-climb.js: the foreman's hand in its head, and the director's turn as it lets go, 8.1 N·m at the most now, at
+  4.236 s, where it was 373 at 4.206 s on f293da69) and the seat's figures (traversal-balance.js: the pigs' plans ride
+  -g at 16 and 9 of their held samples, 26 and 9 on f293da69: review round 4's seat-g-*.txt; the gate reads no phantom
+  wrench there, its required force over its limit at the two old whips).
+- Units: the rate of change of the body's angular momentum is a torque, in N·m (the rig's airborne limit is 10 N·m);
+  the tests' messages and comments and the code's comments now say so where they wrote N·m/s. The earlier parts of
+  this doc are left as written: read their N·m/s as N·m.
+
+**Not kept.**
+- The let-go lead: turnAir holding a let-go's flight from LEAD before the hands leave, as a take-off's before the hooves
+  leave (var-f11fin, review round 3's control var-f11nolead). Before the arc it took the raised hang's let-go and drop
+  from 41 and 23 readings to 15 and 10 (var-fh4 against var-fh4d). With the arc it reads the foreman's let-go and drop
+  the same (5 readings) and the director's 5 against 4, its worst 385% in the air at 4.239 s against 111% on contact at
+  4.231 (the turn easing in as the rig sees no hand). On the nine other climbs it changes no reading, while it turns
+  their bodies up to 1.8 cm off their paths before the let-go, puts five right toes past the rig's 8 m/s at 4.12 s
+  (8.03 to 8.12 m/s: the horse, goat, cow, donkey and dog) and holds the horse's head within the rig's centimetre of the
+  far face from 4.240 to 4.460 s, so that none of its drop reads as airborne. Its one gain is the pig foreman's flight
+  over the top, after a run on a grip (from 2.335 s): 13 readings against 20, but its worst 603% at 2.490 s against 323%
+  at 2.364 (and the foreman's palm snap at 2.2175 s, 0.06 m/s, goes). Together 182 readings against 188, 0.190 s over
+  the limit at the samples either way. Review round 3 found it (scratchpad\review-fix11-r3\).
+- The hang raised and the let-go moved earlier by the longer fall, so that the drop touched down where and when it did:
+  the falling body stretched the still-holding arms and the palms snapped onto the far face (the foreman 10160% at
+  4.265 s; var-fh2). With the hands' release and slide keys moved with the let-go, the snap came in the let-go (5398%
+  at 4.125 s; var-fh3). Both ran on d54c607d's code with the far hang.
+
+**Left.** The pigs' required force at their old whips (above); their drop's landing on the far face (the foreman's 51
+N·m there, and its 5 new readings just before its palms reach the face); the director's left arm in its left thigh as
+its left leg comes over (2.9 cm, its forearm 2.4, at 3.543 s); the fit's push over the far face before the far keys
+(the far hang moves the keys from 4.105 s only, and from 3.70 to 3.90 s the fit still pushes both pigs' trunks out
+12.9 to 15.4 cm, 17.9 to 21.3 on f293da69: fitpush-f10-f11b.txt); the drop read honestly (palms on the face holding
+nothing); the flights' small torques after the release; and the rest of the list as it stood.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

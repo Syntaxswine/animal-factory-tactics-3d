@@ -118,8 +118,9 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=
   // A held seat keeps a hold's sideways bounds, as if it bore .3 g at least, even where its plan rides -g and it bears
   // nothing; the push then comes from elsewhere. On the climb's top a hand grips the wall at every seated sample
   // (supportAt reads a grip, no outline, at all 227 of each pig's), and a seat's bounds, up, down and sideways, lie
-  // inside a grip's: the pigs' plans ride -g at 26 and 9 of those samples and push the body sideways there at up to
-  // 3.75 m/s^2, and the gate reads nothing over its limits on either pig from 2.55 to 3.68 s.
+  // inside a grip's: the pigs' plans ride -g at 16 and 9 of those samples (26 and 9 before their far hang, wall-climb.js)
+  // and push the body sideways there at up to 3.75 m/s^2, and the gate reads no phantom wrench over its limits on either
+  // pig from 2.55 to 3.68 s (its required force there passes its 5 body weights at two old whips since the far hang).
   if(s.kind==='hold'&&!s.hull){const fy=Math.max(.3*G,ay(i)+G);both(-MU*fy*d2,MU*fy*d2);continue;}
   if(s.kind!=='feet'&&s.kind!=='hold')continue;const fy=Math.max(.3*G,ay(i)+G),h=Math.max(.2,Y.c[i]-(s.floor||0)),k=h/fy,a=-k/d2,b=1+2*k/d2;
   // The pressure point also carries the body's turning: p_x = c_x - k a_x + dL_z / (M fy), p_z = c_z - k a_z - dL_x / (M fy).
@@ -250,17 +251,28 @@ function turning(frames,dt){const n=frames.length,mid=(P,a,b)=>P[a].clone().add(
 // - a take-off's flight is held from LEAD before the hooves leave (turnAir: the last five samples of a run on the feet
 //   longer than that, just before a flight), as the legs begin to fold: there the push fades to a tenth of the body's
 //   weight (RAMP), and the floor cannot turn the body as the legs' swing asks. On the horse's climb the legs' own
-//   angular momentum turned at 0.851 s and swung 4.3 N·m·s by its last foot sample (0.870), at up to 356 N·m/s, its
+//   angular momentum turned at 0.851 s and swung 4.3 N·m·s by its last foot sample (0.870), at up to 356 N·m, its
 //   hooves bearing 2087 N at 0.845 s and 147 at 0.865. Held from the first sample in the air, the turn left that swing
-//   to the floor: the body's angular momentum changed at up to 398 N·m/s at 0.865 s, and the rig read 252 N and
+//   to the floor: the body's angular momentum changed at up to 398 N·m at 0.865 s, and the rig read 252 N and
 //   115 N·m of phantom wrench there. Across the release (15 ms before the last foot sample to 10 ms after) the eleven
-//   climbs read 229 to 408 N·m/s that way, and 12 to 64 held from LEAD before, the plan reading no turning on the lead
+//   climbs read 229 to 408 N·m that way, and 12 to 64 held from LEAD before, the plan reading no turning on the lead
 //   (below, at the rounds); their push-off and flight up read 105 readings over the limit against 381 (14 on the feet
 //   against 144), all their readings 333 against 620 (at a 20 or 30 ms lead 378 or 313; at 30 the horse's push reads
 //   541% at 0.744 s, 227 at 25, and the rabbit's catch 1133% at 1.224 s, 999 at 25). A run on the feet no longer than
 //   the lead (a touch between two flights) is left as it is: held whole, it would join the flights under one median
-//   (none of the 33 crossings has one, and no test reaches that branch).
+//   (none of the 33 crossings has one; the unit test of turnAir reaches that branch).
 //   The support schedule is as it was on ten climbs; the donkey's catch comes one sample later (1.250 s).
+// - a let-go's is not (a run on a grip before a flight). Held from LEAD before the hands leave as well, the turn helped
+//   only while a deep body's palms stopped at a key past the far edge: the pigs' far hang raised to their arms' reach
+//   (wall-climb.js) read 41 and 23 readings over the limit in their let-go and drop held from the flight's first
+//   sample (the foreman's drop 10810% at 4.265 s), 15 and 10 held from the lead. With their palms arcing off the top
+//   (wall-climb.js, SLIDE) the lead reads the foreman's let-go and drop the same (5 readings) and the director's 5
+//   against 4 (its worst 385% in the air at 4.239 s against 111%, on contact at 4.231). On the nine other climbs no
+//   reading changes, while the lead turns their bodies up to 1.8 cm off their paths before the let-go, puts five right
+//   toes past the rig's 8 m/s (8.03 to 8.12 m/s at 4.12 s) and holds the horse's head within the rig's centimetre of
+//   the far face through its drop, none of which the rig then reads as airborne. Its one gain is the pig foreman's
+//   flight over the top (from 2.335 s, after a run on a grip): 13 readings against 20, its worst 603% at 2.490 s
+//   against 323% at 2.364. Together 182 readings against 188, 0.190 s over the limit at the samples either way.
 // The turn is the integral of w, its drift taken out along the motion so that it ends unturned. w carries over between
 // rounds (each adds what the last missed; delta, the largest, in rad/s, says when it has settled). Without contacts
 // the contacts' w is kept as it comes: a flight's refinement measures the flights alone again.
@@ -271,7 +283,7 @@ function turning(frames,dt){const n=frames.length,mid=(P,a,b)=>P[a].clone().add(
 // the spot (the phantom-wrench rig, reading every millisecond, found it at every crossing's start: the low-wall horse
 // 105 N of phantom force 4 ms in, the window sheep 317 N 2 ms in).
 const EASE=.25,TAU=.04,UNWIND=.3,TURN_TOL=.02,REFINE=2,REST=2*TAU,LEAD=.025;
-const turnAir=(S,dt)=>{const a=S.map(x=>x.kind==='air'),out=a.slice(),lead=Math.round(LEAD/dt);
+export const turnAir=(S,dt)=>{const a=S.map(x=>x.kind==='air'),out=a.slice(),lead=Math.round(LEAD/dt);
  for(let i=1;i<S.length;i++){if(!a[i]||a[i-1]||S[i-1].kind!=='feet')continue;let run=0;while(i-1-run>=0&&S[i-1-run].kind==='feet')run++;
   if(run>lead)for(let j=i-lead;j<i;j++)out[j]=true;}return out;};
 function bodyTurn(w,S,L,I,dt,contacts=true){
@@ -356,16 +368,16 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  // step in read 30% of its weight, 15 turned once).
  // On a take-off's lead (the samples on the feet the turn holds as flight: turnAir) the plan's pressure point reads no
  // turning (dL zero): the turn holds the flight's angular momentum there. Reading the rate measured before the round's
- // turn, with the lead alone, the plan still counted on the legs' swing the turn takes out (the horse's 147 N·m/s at
+ // turn, with the lead alone, the plan still counted on the legs' swing the turn takes out (the horse's 147 N·m at
  // 0.860 s, against -32 as played, its rate over 1 ms chords), pushed the body toward the wall at 2.9 m/s^2 on 0.82 g
  // of load, and the rig read up to 275% of its limit on the horse's feet there (five climbs read more on their feet at
  // the release than without the lead). Taken from the turn's own angular momentum (L + I (w_new - w)), the rate's chords
  // and five-sample mean smeared the step into the hold over the lead's first three samples (the horse's +56, +96 and
- // +57 N·m/s, where the played body read -79, -38 and -8 by the same rate), and nine climbs read new readings on the
+ // +57 N·m, where the played body read -79, -38 and -8 by the same rate), and nine climbs read new readings on the
  // feet there (review round 2 of this part).
  // Elsewhere the measured rate stands: read as the turn leaves it on every contact, the walk-outs moved too (the
  // goat's right foot round 7 readings, none before). Two things are left of it. Its five-sample mean carries the lead's
- // zero back over the two samples before the lead: on five climbs the plan reads 88 to 115 N·m/s less turning there
+ // zero back over the two samples before the lead: on five climbs the plan reads 88 to 115 N·m less turning there
  // than is played over 1 ms chords (the rabbit's -135 against -250 at 0.845 s, where it reads a new 106%). And on the
  // lead the played rate rings about the plan's zero from sample to sample (the dog's -18, +56, -33, +22 and -13), the
  // turn's track following the kink at the lead's start: the horse's -30 at 0.860 s, on 0.82 g, puts its pressure point
