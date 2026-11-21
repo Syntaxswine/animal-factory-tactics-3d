@@ -3940,6 +3940,154 @@ tests).
   full stretch); its right arm straight at its far grip, 99.5% of its length or more from 3.070 s (3.075 before) to
   3.740 (rightarm-f21h-far-5ms.txt and rightarm-f17h-far-5ms.txt, every 5 ms).
 
+### 2026-11-21 (physics balance, thirty-seventh part): the climbs' flights hold their turn every millisecond
+
+After the thirty-sixth part the eleven climbs read 168 readings over the gate's limits, 93 of them in the phase over the
+top (g12-phasetable.mjs on var-f11b, the nine climbs but the pigs' as they have played since the twenty-eighth part, and
+var-f21h, the pigs on 6fe975ef; g12-flightspans.mjs): on nine climbs as the hooves leave and through the flight's first
+30 ms, from 0.861 to 0.900 s (the horse 11 readings, two of them phantom force on the lead before its hooves leave; the
+goat and sheep 9; the bull, cow and donkey 8; the dog 5; the pigs 2 and 2), up to 26 N·m of airborne phantom torque
+against the rig's 10 (the goat's and sheep's; the horse's 21); the skunk's and rabbit's later in the flight (2 and 4
+readings from 0.972 to 0.983 s, up to 22 N·m); the pig foreman's 2 at 0.962 s; and the pigs' late flight before the
+catch (13 and 10 readings, up to 603 and 455%).
+
+The horse's take-off read every millisecond (phantom-wrench 1.2.0 with `--step 0.001` on var-f21h:
+takeoff-1ms-horse.json): as the hooves leave its airborne torque reads 21 and 15 N·m at 0.871 and 0.872 s, 7 to 11 from
+0.873 to 0.887, then 14 and 16 at 0.888 and 0.889 and 16 and 15 at 0.892 and 0.893. Split by axis
+(probe-takeoff-segs.mjs, the rig's own mass model, the body's angular momentum about its centre of mass read over 0.5 ms
+chords: takeoff-segs-horse.txt), it is a steady roll (about x, toward the wall) of 6 to 12 N·m from 0.866 to 0.889 s and
+a pitch (about z) rippling by up to 20 either way. Two causes:
+- The roll is the head the climb fits again after the balance (wall-climb.js, fit.solveHead). The balance planned the
+  take-off with the head as the fit before it set it, turning from 16 degrees at 0.70 s to 1.8 at 0.85 and to none by
+  0.90, and its turn through the flight took that swing out; the head fitted after the balance holds 12 degrees from
+  0.80 s through the flight (probe-headfit.mjs). With that fit after the balance skipped (var-f22a, a probe only: the
+  head then clears less), the roll is gone (x -4 to 3 N·m from 0.866 s: takeoff-segs-horse-nohead.txt); the limbs' turns
+  found again after it (turns()) change nothing (takeoff-segs-horse-noturns.txt).
+- The pitch is the turn's own track. The balance holds the body's angular momentum at its 5 ms samples and its turn is a
+  spline between them, but the legs fold faster than that as the hooves leave. Measured over 2 ms chords at the samples
+  instead of 10 (var-f22c), the ripple only moved (the horse's flight, by the probe's whole N·m every 1 ms from 0.871 to
+  0.900 s, 11 instants over 10 against 6fe975ef's 9, and 2 at 10 against its 4: takeoff-segs-horse-f22c.txt and
+  takeoff-segs-horse.txt).
+
+**The fix**, traversal-balance.js (balanceTraversal's `fine`, which the climb alone passes): after the last refine of
+the flights' turn, each run of samples in the air, by the samples' own contacts before ONSET (a touch counts here from
+its first sample), is posed every half millisecond with the turn so far, its angular momentum about the centre of mass
+read every millisecond over 1 ms chords (half a millisecond either side), and the rate I^-1 (L* - L) that holds the
+run's median L* is added to the turn through a spline of keys 1 ms apart, twice. The rate is weighted by a window, full
+from the last foot sample before a take-off (the lead, which the turn already holds as flight) or from 5 ms into a
+flight off a grip, to 5 ms before the run's last sample, ramping over 5 ms either side (a smoothstep), and the angle it
+adds is brought back to nothing over the run. Outside the window the turn is the 5 ms one; the window starts 10 ms
+before a take-off's first sample in the air, on the lead's feet, and a run is the samples the balance finds no support
+at, so it takes in what supportAt counts as none: a garment against a wall's face, and the pig foreman's head on the far
+face. On the gate's 5 ms rows ten climbs have a garment on the wall inside a corrected stretch (review round 3's
+spancontacts-f22i.txt): seven's trousers or overalls on the near face in the take-off stretch's last 40 ms, from 1.180 s
+at the earliest; the skunk's overalls from 0.865 to 0.920 s (from 0.875 its only contact); the pig director's shirt from
+1.085 to 1.175, its only contact; and the horse's, goat's, cow's and rabbit's overalls on the far face at the drop's
+start (4.245 to 4.250 s). The pig foreman's head is on the far face from 4.240 to 4.255 s in its drop. Read every
+millisecond, the goat's overalls are on the wall from 1.186 s to its catch, and from 4.245 to 4.251 s inside its drop's
+stretch, where from 4.241 they are its only contact (review round 2's goat-contacts-f23b.txt). The window came from the
+gate:
+- Held up to and past the contact (the run's samples after ONSET, var-f22d; or before it, var-f22f, the same readings),
+  the correction moved the rig's leftover at the catch from torque to force: the goat's 93 N and 49 N·m at 1.222 s
+  became 131 N and 7.5 N·m (130 and 7.2 on var-f22f), the bull, cow and sheep read new readings at their catches and the
+  donkey and sheep in their drops, and the goat and sheep at the lead's start (0.858 s): 72 readings in all, 10 of them
+  new (g12-newreadings.mjs on var-f22d).
+- Ending inside the air but ramping in over 10 ms before a take-off (var-f22h), it reached back to the lead's start,
+  where the plan's pressure point takes the flight's turn: 71 readings, one fewer than the 72 kept, but three of them
+  new, the goat's 109% and the sheep's 121% at 0.858 s (the goat's turn there moved by 0.0003 degrees) and the pig
+  foreman's at 4.300 s (g12-newreadings.mjs on var-f22h).
+
+So (var-f22i, the tree's motion to 0.00 mm every 1 ms on all eleven climbs: diffspans-f22i-f23a.txt), phantom-wrench
+1.2.0 `--gate` on frozen copies:
+
+| 6fe975ef -> this | readings over the limits | of them, the phase over the top | the catch |
+|---|---|---|---|
+| horse | 20 -> 13 | 11 -> 4 | 0 -> 0 |
+| goat | 10 -> 2 | 9 -> 1 | 1 -> 1 |
+| bull | 8 -> 0 | 8 -> 0 | 0 -> 0 |
+| cow | 8 -> 0 | 8 -> 0 | 0 -> 0 |
+| donkey | 8 -> 1 | 8 -> 1 | 0 -> 0 |
+| sheep | 12 -> 4 | 9 -> 1 | 1 -> 1 |
+| skunk | 2 -> 0 | 2 -> 0 | 0 -> 0 |
+| pig foreman | 22 -> 8 | 17 -> 2 | 0 -> 0 |
+| pig director | 34 -> 14 | 12 -> 1 | 18 -> 9 |
+| rabbit | 28 -> 21 | 4 -> 0 | 11 -> 8 |
+| dog | 16 -> 9 | 5 -> 0 | 2 -> 0 |
+| together | 168 -> 72 | 93 -> 10 | 33 -> 19 |
+
+- 97 readings go and one is new (g12-newreadings.mjs f11b f21h f22i): the pig foreman's 107% at 4.300 s in its drop, the
+  first of its cluster there (now six from 4.300 to 4.310 s, up to 225%, where five from 4.306 read up to 227%).
+- The worst reading of all is the rabbit's catch, 824% at 1.225 s, where it read 999% at 1.224. The push off (12), the
+  step in (13), the director's drop and the walk-outs (8) read as they did.
+- Eleven readings that stay over the limits rose: eight in the last 5 ms of a corrected run, where the correction ramps
+  out (the pig director's four from 1.210 to 1.215 s before its catch, 103 -> 127%, 143 -> 154%, 204 -> 207% and 179 ->
+  183%; the rabbit's at 1.221 s, 113 -> 133%; the pig foreman's three from 4.306 to 4.308 s in its drop, 103 -> 107%,
+  133 -> 136% and 162 -> 164%), and three as the hooves leave, their phantom force 1.2 to 2.1 N more (the goat's at
+  0.867 s, 108 -> 111%; the sheep's there, 104 -> 106%, read on its torque before, its force then 103%; the donkey's at
+  0.871, 110 -> 112%: var-f11b's and var-f22i's gate rows). Where the torque fell, the phantom force rose: the rabbit's
+  catch by 8 to 20 N at the five instants from 1.219 to 1.224 s where its torque fell (129 -> 150 N at 1.223), the pigs'
+  late flight 123 -> 128, 79 -> 83 and 68 -> 83 N (at 1.177, 1.178 and 1.182 s: review round 1's cmp-readings-f22i.txt),
+  and the goat's flight 58 -> 67 N at 0.889 s on the 1 ms gate, under its 73.5 N (takeoff-1ms-goat-var-f21h.json and
+  takeoff-1ms-goat-var-f23a.json). Under the limits, force and torque rose as well: on the 1 ms gates, the hooves still
+  on the ground, the horse's 15.7 -> 31.7 N and 4.3 -> 8.3 N·m at 0.867 s and the goat's 25.3 -> 42.7 N and 7.2 -> 11.9
+  N·m at 0.862, against limits of 73.5 N and 40 N·m (review round 3's takeoff-1ms-4.txt); on the gate's 5 ms rows, seven
+  rows rose by more than 10 points of their limit, all in the air, the pig director's the most, 2.6 -> 6.2 N·m at 0.875
+  s (26 -> 62% of its 10 N·m), the other six to 44% or less (review round 3's rowrises-f22i.txt).
+- The horse keeps two readings in the air as its hooves leave, 11.8 and 10.2 N·m at 0.871 and 0.872 s (118 and 102%):
+  the head the climb fits after the balance, which the turn does not see (below). Its two on the lead, at 0.861 and
+  0.862 s (108 and 101%, phantom force), are as they were.
+
+Not kept:
+- The flights' turn refined again after the head is fitted (var-f22b): 158 readings, the push off 12 -> 20 (four climbs
+  new at the lead's start, 0.856 to 0.858 s): its ease into the flight is on the contacts before it, where the plan's
+  centre of mass had the old turn.
+- The 1 ms pass run again after the head is fitted (var-f22j): the horse's flight clear as its hooves leave, but its
+  lead 128% (0.861 to 0.867 s), the pig director's catch up to 350% (1.213 to 1.215 s, against 207), the pig foreman's
+  catch three new readings in the air (274% at 1.217 to 1.219 s) and its drop's worst 374% at 4.309 s against 225, and
+  the donkey a new 111% in its drop at 4.247 s (72 readings).
+
+Measured on the tree's code (var-f23a and var-f23b, the tree's motion; against 6fe975ef's, var-f21j):
+- The windows and the low walls play as before, frame for frame (same-f21j-f23a-winvault.txt, all 22 every 5 ms): they
+  do not pass `fine`.
+- The climb test's flight measures (probe-testmeasures16.mjs, its code copied: testmeasures16-f21j.txt and -f23a.txt):
+  the flight's first 50 ms hold their angular momentum within 0.001 to 0.127 N·m·s of the flight's median (0.026 to
+  0.137 before); as the hooves leave, 12.4 to 63.8 N·m as before but the pig director's 34.9 against 40.3; the drop's
+  flight 3.4 to 5.9 N·m on the nine (3.5 to 5.9 before) and the pigs' 51.3 and 11.3 as before.
+- What moves: every rig point and the centre of mass by about a tenth of a millimetre at the most in any coordinate, the
+  largest in the take-off's flight (the dog's just over 0.10 mm from 0.926 to 0.955 s, at 0.941; the sheep's 0.10 at
+  0.893; read every 1 ms on all eleven climbs: diffspans-f21j-f23a.txt and diffspans-f21j-f23a-b.txt).
+- The eleven climbs build in 65.0 s against 63.8, 1.7% longer (the least of two builds each, the old code and the new in
+  turn: buildtime-f21j-f23b.txt): ten slower by 19 to 341 ms, the skunk 637 ms faster (without it, 3% longer); the pass
+  posing each flight every half millisecond, twice.
+
+`tests/natural-traversal.test.mjs`: the climb test holds the take-off's flight to the rig's airborne limit: from 5 ms
+after the balance's first sample in the air (where the rig can still read a hoof on the floor: the pig director's boot
+at 0.870 s, on the floor in var-f22i's gate row, where the test's measure reads 10.2 N·m: takeoff-check50-f23a-off0.txt)
+to 50 ms after it, the body's angular momentum (the test's model, read every millisecond, its rate over 2 ms chords)
+changes at most 10 N·m. On 6fe975ef's code eight climbs fail it, 14.6 to 24.8 N·m (the goat's 24.8 at 0.889 s:
+test-f23t-all.log), the skunk, rabbit and pig director reading 8.9, 9.4 and 9.9 (takeoff-check50-f21j-off.005.txt); the
+tree reads 0.6 to 8.8 (takeoff-check50-f23a-off.005.txt). The check on the balance's tracks between their samples now
+reads the climb's turn in its flights between its 1 ms keys (the balance returns them, fineSpans), but for each
+corrected stretch's first and last millisecond (fineSpans: a take-off's starts 10 ms before the run's first sample in
+the air), where the correction's track eases from rest as a track's own ends do (its spline's end keys hold no
+acceleration): read there too, it bends up to 0.88 rad/s^2 off straight (0.06 to 0.88 on the eleven, the rabbit's at
+1.224 s: test-f23b-all.log, before the skip), as far as a track through central-slope quintics bends; built through
+central-slope quintics instead of a spline (var-f23m), that turn fails it (0.77 and 1.09 rad/s^2 on the horse and the
+goat: test-f23m-mutant.log). The climb test passes on the tree's copy (18 of 18: test-f23b-r1-all.log), and the full
+suite passes (2575 tests: npm-check-fix16.txt, run before a local variable in the pass was renamed and the check's
+message mended).
+
+**Left.**
+- The head the climb fits after the balance, which the flights' turn does not see: the horse's 11.8 N·m as its hooves
+  leave.
+- As the hooves leave, phantom force: the horse's two on its lead (0.861 and 0.862 s, 108 and 101%), the goat's, sheep's
+  and donkey's (0.867 and 0.871 s, 111, 106 and 112%).
+- The catch: the rabbit's 824% (eight readings), the pig director's nine up to 337% in the air before its hands land,
+  the goat's and sheep's one each; the pigs' late flight, two and one readings of phantom force (128 and 83 N at 1.177
+  and 1.182 s).
+- The push off (the horse's 227% at 0.745 s), the step in (the rabbit's and dog's 13), the pigs' drops (the foreman's
+  six, the director's four, three on contact and one in the air at 4.236 s), the walk-outs (the rabbit's and dog's 8).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

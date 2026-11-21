@@ -264,19 +264,24 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // 8.9 mm), as the need falls from 132 N to 41: a hover as long as through the key (4.205 to 4.213 s, 223 to 29 N) and
  // lighter. The centre of mass starts down earlier and falls less fast after it (at most 5.5 mm off its path through
  // the key, at 4.218 s, within 1 mm by 4.33; the landing the same from 4.6 s). The drop's flight, from 4.245 to 4.325 s
- // (through the key from 4.210 or 4.215 to 4.295 or 4.300), turns at 3.5 to 5.9 N·m at the most (the test's measure;
- // 20 to 32 through the key), under the rig's 10, and the nine climbs but the pigs' read 112 readings over its limits
- // against 188 on d54c607d (156 with the head held alone: the bull 50, then 18, now 8; the donkey 17, now 8; the skunk
- // 16, now 2; the dog 27, now 16; the other five as they were). Arced, the palm's turn onto the face switched its way
- // round 2.5 ms short of done and popped 0.09 degrees (steadyTurns now switches on the sample). A deep body arcs as
+ // (through the key from 4.210 or 4.215 to 4.295 or 4.300), turns at 3.4 to 5.9 N·m at the most (3.5 to 5.9 on
+ // 6fe975ef; the test's measure; 20 to 32 through the key), under the rig's 10, and the nine climbs but the pigs' read
+ // 112 readings over its limits against 188 on d54c607d (156 with the head held alone: the bull 50, then 18, then 8;
+ // the donkey 17, then 8; the skunk 16, then 2; the dog 27, then 16; the other five as they were), and since the
+ // flights' turn every millisecond (traversal-balance.js) 50: the horse 13, the goat 2, the bull and cow none, the
+ // donkey 1, the sheep 4, the skunk none, the rabbit 21, the dog 9. Arced, the palm's turn onto the face switched its
+ // way round 2.5 ms short of done and popped 0.09 degrees (steadyTurns now switches on the sample). A deep body arcs as
  // well now that its palms hold the top until it lets go (its far hang, above). With them off the top before the
  // let-go, arced, the pig foreman read 159 readings (7545% of the limit at its worst) against 88 through the key, the
  // director 67 (6399%) against 57; with the far hang, arced, 42 and 34 against 78 and 53 through the key (their let-go
  // and drop 5 and 4 against 41 and 23, the foreman's worst there 227% of the limit against 10810% at 4.265 s; their
- // worst readings now in the jump's flight, 603 and 455%, as they were there). Of the nine left in the let-go and
- // drop, eight are new: the foreman's five in the air from 4.306 to 4.310 s, up to 227%, in the last 5 ms before its
- // palms reach the far face (where f293da69's read up to 9.9 N·m, under the limit, before its palms reached it at
- // 4.276 s), and the director's three on contact from 4.231 to 4.233 s, up to 111%, as its hands leave the top.
+ // worst readings then in the jump's flight, 603 and 455%, as they were there; since the climb's flights' turn every
+ // millisecond, traversal-balance.js, the foreman's worst is its drop's 225% and the director's its catch's 337%). Of
+ // the nine left in the let-go and drop, eight are new: the foreman's five in the air from 4.306 to 4.310 s, up to 227%
+ // (six from 4.300, up to 225%, since that turn), in the last 5 ms before its palms reach the far face (where
+ // f293da69's read up to 9.9 N·m, under the limit, before its palms reached it at 4.276 s), and the director's three on
+ // contact from 4.231 to 4.233 s, up to 111%, as its hands leave the top (four, to 4.236 s, on 6fe975ef and since:
+ // three on contact, one in the air).
  const FAR=[1,0,0],ONFACE=4.33,ARC=.06,SLIDE=z=>[[ONFACE,{f:'world',p:[.62,1.80,(.22+slideDZ)*z],face:FAR,arc:ARC,arcTo:FAR}],[4.685,{f:'world',p:[.62,1.10,(.26+slideDZ)*z],face:FAR}]];
  const LIMB={
   'leg-1':[[0,stance(-1)],[.4,foot(-.035-back,-.20)],[.7,foot(-.035-back,-.20,15)],[.995,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-1.03*fitB.leg,-.20],hoof:55,soft:.03}],[1.195,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-.95*fitB.leg,-.20],hoof:50}],[1.375,{f:'pelvis',p:[.02,-.62,-.13],hoof:20,knee:OUT}],[1.505,{...onFace(true,.46,-.16,1.505),knee:OUT}],[1.905,{...onFace(true,.80,-.16,1.905),knee:OUT}],[2.305,{...onFace(true,1.26,-.16,2.305),knee:OUT}],[2.705,{...onFace(true,1.56,-.16,2.705),knee:OUT}],
@@ -514,9 +519,11 @@ export function createWallClimb(worker,profile={id:'horse'}){
    const base=trunkAt(t,null),up=d=>{const tr={...base,hips:base.hips.clone().add(V(0,d,0)),chest:base.chest.clone().add(V(0,d,0))};return keyedLimb(keys,t,tr).p[1]-a.p[1];};
    let lo=-.3,hi=.3;if(up(lo)>EPS)continue;if(up(hi)<=EPS)continue;for(let k=0;k<30;k++){const m=(lo+hi)/2;if(up(m)>EPS)hi=m;else lo=m;}best=best===null?lo:Math.min(best,lo);}return best===null?null:Math.max(0,best);};
  const bal=balanceTraversal({duration:D,probe:contactProbe(worker,tails),obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),pose:t=>{const P=body.pose(spec(t),'balance');playTail(t);return P;},com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onTop?onTop(t):V()).toArray(),
-  hold:deep?t=>t>=TOP_BAND[0]&&t<=TOP_BAND[1]&&'seat':null,ceiling:pushCeiling});
+  hold:deep?t=>t>=TOP_BAND[0]&&t<=TOP_BAND[1]&&'seat':null,ceiling:pushCeiling,fine:true});
  // The head and tail are fitted again to the balanced motion, the head held through the flights but for the catch's
- // ease (traversal-fit.js, fit.solveHead and fit.solveTail), and the report taken on it.
+ // ease (traversal-fit.js, fit.solveHead and fit.solveTail), and the report taken on it. The balance's turn does not
+ // see this head (traversal-balance.js, fine): the horse's take-off reads 11.8 N·m of airborne phantom torque at 0.871
+ // s.
  balance=bal;fit.solveHead({air:t=>bal.samples[Math.round(t/(bal.times[1]-bal.times[0]))]?.kind==='air'});fit.solveTail();turns();
  const KEYS=TRUNK.map(k=>({t:k.t,label:k.label}));let state=null;
  const api={duration:D,keys:KEYS,body,probe,obstacle:WALL,fit:fit.report,clearance:fit,balance:bal,phases:KEYS.slice(0,-1).map((k,i)=>({label:KEYS[i+1].label,start:k.t,end:KEYS[i+1].t})),
