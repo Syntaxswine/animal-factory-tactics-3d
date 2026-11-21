@@ -3771,6 +3771,175 @@ numbers as globals; gated on frozen copies where named):
   grip from 3.075 to 3.740 s, 99.5% of its length or more (from 3.100 on 8da9a826: rightarm-f17h-far-5ms.txt and
   rightarm-f13fin-far-5ms.txt).
 
+### 2026-11-21 (physics balance, thirty-sixth part): the pig foreman keeps its left hand on the top as its right knee comes up
+
+The thirty-fifth part left the pig foreman 27 of its 49 readings over the gate's limits in one stretch, from 2.353 to
+2.501 s, as its right knee came up: its two clusters there peaked at 195% and 273% of the limit (200 N at 2.498 s), and
+the gate's contacts read its boots alone holding it from 2.355 to 2.500, both on the near face at first and the left
+alone later (var-f17h's gate, 374c624c's motion).
+
+Why its boots alone held it. Its right hand lets go at 2.345 s, and its left, keyed to hold its grip on the top until
+2.895, came off it: the left shoulder rose out of the arm's reach of that grip, 110.2% of the arm (shoulder to wrist,
+50.5 cm) from it at 2.44 s (107.1 by the keyed path, the balance lifting it 1.4 cm more), and pulled the hand up to 43.2
+mm off the top from 2.34 to 2.51 s (reachlayers20-f20h.txt every 20 ms; review round 1's keyedreach-f18d.txt;
+handgap-f18d-foreman-2.2-2.6.txt every 5 ms). The search over the top lifts each key before 2.5 s only as far as its
+torso needs to clear the top, the chest over the top (2.305 s) 26.3 cm on the foreman (25.9 on the director), and sets
+each later key's torso resting on the top, which raised the right knee up (2.705) 9.2 cm (1.7) and lowered the foreman's
+straddle (3.065) 6 mm; it weighs the hands' reach to their marks at those keys alone, where the foreman's left arm
+reaches 89.3 and 87.1% of itself (review round 1's knee-f18d.txt, the search logged), and the trunk's path between the
+chest over the top and the right knee up rose higher than either needed.
+
+The balance counts no part against a face (supportAt: a part there can only push; it names the boots on the near face),
+so with no hand within its centimetre of the top from 2.340 s it planned a flight, the left boot within 7 mm of the near
+face throughout and the right within 9 mm until 2.39 s (review round 4's measure-r4f18d.txt, the balance's measuring
+rounds). The left hand was back within its centimetre of the top from 2.505 s, but a grip that short before the seat's
+hold at 2.550 is not counted (ONSET: a touch under 60 ms), so the flight ran to 2.545 (2.335 to 2.495 already in its
+first round, before any of its own moves: review round 3's sched-var-f18d.txt), the body falling free in the plan; as
+played it needs 0.31 of its weight at the most from 2.340 to 2.545 s, and 0.05 from 2.379 to 2.490 (review round 6's
+forcediff-f17h-f21h-foreman.txt, every 1 ms). Through a flight the balance keeps the flight's median angular momentum,
+blended in and out over the 0.25 s of contacts either side (traversal-balance.js, bodyTurn, EASE), and that turn swung
+the foreman (the turn's angle every 10 ms: unspin-unfit-f18d.txt and review round 4's unspin-late-f18d.txt): a degree or
+more from 2.12 s, up to 15.4 degrees at 2.25, mostly a roll (its axis 0.91, 0.24, 0.33, x toward the wall: review round
+3's unfit2-f18d.txt), the left shoulder 12.5 cm above the right at the 20 ms samples 2.24 and 2.26 (review round 2's
+spin-f18d.txt); 0.2 degrees at 2.34 as it turned the other way, then up to 17.0 at 2.61, a roll and a yaw (its axis
+-0.82, -0.57, 0.01 at 2.60), the shoulders 25.8 cm apart in height at 2.60 (14.0 on the tree, where the balance turns it
+0.5 degrees: review round 2's spin2-f18d.txt and spin2-f21j.txt); back under a degree at 2.76. Its span is the flight's
+and the 0.25 s either side. While the right hand still held, the turn and the clearance fit's push (19.7 to 21.6 cm back
+from the wall from 2.16 to 2.30 s: review round 2's spin-f18d.txt) lifted the left hand 16.3 mm off the top (2.26 s, the
+climb test's measure below). Neither alone took the arm past its length: at 2.26 s it reached 104.1% of itself as
+played, 91.5 with the turn undone, and 84.3 or 88.4 with the fit's push taken away, as the turn's pivot moves with the
+push or holds (unspin-unfit-f18d.txt, after review round 2's unspin-f18d.txt and round 3's unfit2-f18d.txt; 79.5 by the
+keyed path: review round 1's keyedreach-f18d.txt). The director had no flight there and hardly turned (0.8 degrees at
+the most from 1.90 to 2.40 s, 1.6 to 2.95: review round 2's spin-f18d.txt and spin2-f18d.txt); its left shoulder reached
+103.2% (2.30 s), its hand within 8.2 mm of the top (handgap-all-f18d-2.2-2.6.txt), inside the rig's centimetre.
+
+**The fix**, wall-climb.js: a deep body's trunk takes one more key, at 2.45 s (KNEE_MID), mid-way through its right knee
+coming up, its fields blended by time from the keys either side (chest over the top, right knee up) as they stand before
+the search, which then sets it as it sets them. It starts from the unsearched heights (the foreman's hips at 1.966 m)
+and the search lifts it the 16.3 cm its own torso needs, pitched back 16 degrees (the director's 14.4 cm, 22 degrees);
+the hands' reach does not bind at it (the left shoulder 85.2% of the arm from its grip, the director's 83.9: review
+round 1's knee-f21h.txt).
+
+So through the knee-up the trunk rides lower, from 2.33 s on the foreman (2.31 on the director), and from 2.36 s more
+upright (2.31): at 2.45 s the foreman's pelvis is 12.0 cm lower (2.254 -> 2.134 m) and its trunk 25.7 degrees from
+vertical against 29.8, the director's pelvis 6.5 cm lower and its trunk 18.7 against 23.6 (review round 1's
+lean-f18d.txt and lean-f21h.txt); the foreman's trunk is up to 11.5 degrees more upright (2.60 s), the director's 6.5
+(2.50: review round 2's lean10-f18d.txt and lean10-f21j.txt, every 10 ms). Before that, from 1.95 to 2.31 s, the pelvis
+rides higher than on 374c624c, the foreman's by up to 5.2 cm (2.23 s) and the director's by 4.9 (2.17 to 2.19 s), the
+foreman's trunk leaning up to 4.7 degrees further (2.25 s; the director's 1.1: lean10early-f18d.txt and
+lean10early-f21j.txt, every 10 ms from 1.50 s, with review round 2's lean10 files). There the keyed path into the chest
+over the top (2.305 s) rises sooner with the new key after it, the foreman's up to 4.1 cm higher at 2.15 s (the
+director's 4.3), meeting the old path at that key, and the balance no longer shifts the body down as it did through the
+turn (3.0 cm at 2.25 s on 374c624c, 0.2 now: early-nomid.txt and early-mid245.txt, every 50 ms). Riding higher keeps the
+left legs at full stretch a little longer, the director's to 2.14 s against 2.07, the foreman's to 2.13 against 2.10,
+and lifts the left ankle up to 2.5 cm above where it was at 2.11 s on the director (2.0 at 2.12 on the foreman: review
+round 3's legs-var-f18d.txt and legs-var-f21j.txt, ankle-var-f18d.txt and ankle-var-f21j.txt, every 10 ms). The
+foreman's trousers touch the wall's near face from 2.240 to 2.260 s and again from 2.380, and lie on the top from 2.395
+through 2.70 s, the end of the window read; on 374c624c they touched the top from 2.235 to 2.295 s, then lifted off
+until 2.525, and again from 2.545 to 2.580 (review round 2's contacts-var-f17h-foreman.txt and
+contacts-var-f21h-foreman.txt, the gate's rows every 5 ms). And with its left hand on the top the balance plans no
+flight there (a grip from the catch to 2.545 s, then the seat's hold: review round 3's sched-var-f21j.txt) and no longer
+turns the foreman: 1.2 degrees at the most from 1.90 to 2.96 s (every 10 ms), against 15.4 and 17.0; the director's 1.6
+at the most, as before (review round 4's unspin-all-f21j.txt and unspin-director-f18d.txt); the fit still pushes its
+trunk back 18.9 cm at 2.26 s (21.3 before), where its left arm now reaches 98.9% of itself (unspin-unfit-f21j.txt).
+
+Its left arm reaches 99.7% of itself at the most (2.29 s, where the clearance fit pushes the trunk back from the wall;
+87.7 by the keyed path: review round 1's keyedreach-f21h.txt), the director's 101.8 at 2.27
+(reachlayers20-f20x-mid245.txt, every 10 ms on var-f20x with the key), and from 2.20 to 2.60 s every mammal's left hand
+keeps within 4.3 mm of the wall's surface, the pig director's at 2.28 s (8.2 before), the foreman's 2.1 at 2.21 (43.2
+before), the others' as they were, 2.5 at most (handgap-all-f21h-2.2-2.6.txt, every 5 ms). The foreman's left leg,
+locked straight from 2.340 to 2.570 s on 374c624c with its boot dragged about 9 cm up the face, now runs at 93.7 to
+99.2% of its length there; it still straightens from 2.660 s, as it did from 2.675 (review round 1's knee-f18d.txt and
+knee-f21h.txt, every 5 ms). Its right hand holds the top until its let-go, where it was pulled off from 2.32 s (review
+round 1's knee-up traces). Rendered, the foreman stays down on the top with its left glove on it where it rose and
+lifted the hand (video/f15/st-fore-2.30, st-fore-2.45).
+
+phantom-wrench 1.2.0 `--gate` on frozen copies (374c624c = var-f18d, its gates var-f17h's, the motion the same; this
+tree's motion = var-f21h's, gated, and it plays as var-f20a, the experiment's key at 2.45, to 0.00 mm every 1 ms
+(diffspans-f20a-f21h.txt), the gates' JSON the same; var-f21j, the tree byte for byte with `deep` hoisted above the key,
+plays as var-f21h to 0.00 mm: diffspans-f21h-f21j.txt; every crossing but the pigs' climbs plays as on 374c624c, frame
+for frame: same-f21h-f18d.txt, all 33):
+- The foreman: readings over the limits 49 -> 22, both clusters in the knee-up gone (2.353 to 2.366 s, 14 readings at up
+  to 195%; 2.485 to 2.501, 13 at up to 273%), the rest as they were (0.888 to 1.183 s and 4.306 to 4.310); the seat's
+  moment alone as its left hand lifts off the top (19.8 N and 29.1 N·m at 2.966 to 2.968 s, 73% of the limit) gone, as
+  on 8da9a826; its internal velocity snap (its right palm, 0.03 m/s at 2.2175 s) gone; required force 3.7 times its
+  weight at 3.646 (3.71 against 3.69); its capsule rule passes as before. With its right hand's contacts dropped from
+  2.346 to 2.60 s, where it now peels off the top slowly, the gate still reads 22 (review round 1's pw-r1drop).
+- The director: the same 34 readings over the limits, frame for frame, and its required force 3.3 at 3.037 s.
+- The gate's peak speeds by phase move a little, all far under its 8 m/s: in the right knee up the director's right
+  ankle 4.0 -> 4.5 m/s (2.413 s) and the foreman's 4.2 (2.415 s; under the phase's second-fastest, 4.0, before); in the
+  chest over the top the director's hips now its fastest, 3.5 (2.111 s), where its left knee read 3.6 (var-f17h's and
+  var-f21h's gate texts).
+
+Measured on the tree's code (var-f21h; against 374c624c's, var-f18d or var-f17h):
+- The required force (forceprofile-f17h-f21h-foreman.txt and -director.txt, the whole body's need, M(a+g)): the
+  foreman's through its old flight, 2.340 to 2.545 s, at most 0.31 of its weight on 374c624c (its plan a free fall
+  there, its hand off the top) and 0.70 to 1.36 now, rising most at 2.42 s (0.02 -> 1.36: review round 6's
+  forcediff-f17h-f21h-foreman.txt, every 1 ms); the director's 0.96 -> 1.34 at 2.403 s, 0.55 -> 0.89 at 2.547 and 0.72
+  -> 1.31 at 2.700, the foreman's 1.03 -> 1.54 at 2.730, and lower at others (the director's 1.11 -> 0.41 at 2.655, the
+  foreman's 1.93 -> 0.63 at 2.299 and 2.61 -> 1.17 at 2.596); in the straddle the foreman's moves by up to 0.35 either
+  way (2.844 to 2.970 s). Before the knee-up it rises in places: the foreman's 2.60 -> 2.78 at 1.979 s, the director's
+  2.66 -> 2.86 at 1.965 and 0.66 -> 1.11 at 2.195.
+- The climb test's measures (testmeasures-r3-f17h.txt and -f21h.txt, elbowtest-f17h.txt and -f21h.txt): the pigs' right
+  knees over the top 4.0 -> 4.4 and 5.2 -> 5.5 m/s (the foreman's, the director's; 2.612 s); the foreman's hips over the
+  top -15.2 to +24.3 -> -15.3 to +24.4 m/s^2, its trouser fold 3.424 -> 3.439 cm into the wall at 3.34 s (under the 3.5
+  the user allowed, 0.015 cm nearer it); the director's hips -12.2 to +18.6 -> -10.3 to +18.6, its left knee coming up
+  behind 8.76 -> 8.75 m/s; the right elbows from 2.3 to 2.8 s, the foreman's 5.8 -> 3.1 m/s (2.318 -> 2.528 s), the
+  director's 2.4 -> 2.9.
+- The rig's capsules: the pigs' right arms keep 8.0 and 10.4 cm clear of the trunk from 2.4 to 3.0 s (7.3 and 9.8
+  before; the upper arm by the upper trunk at 2.754 and 3.000 s: armtrunk-f21h.txt); no arm capsule over 0.5 cm into
+  another from 2.3 to 3.7 s (hold15-tree-f21h.txt); the speeds there as before but for the foreman's right elbow
+  (above).
+- The seat (seathull-f21h.txt): supportAt reads its outline at 16 and 14 held samples (17 and 14), from 2.970 to 3.045 s
+  on the foreman; the plans ride -g at 14 and 9 (13 and 9) and push the body sideways there at up to 4.89 and 3.86 m/s^2
+  (4.92 and 3.85).
+- The wall (every 10 ms): the hands' brushes with it as the right lets go and the knee comes up are gone (on 374c624c
+  the foreman's right hand 15.5 mm into it at 2.320 s and 4.9 at 2.330, its left 3.6 at 2.520:
+  handwall-f17h-2.33-2.75.txt and review round 2's handwall-f18d-1.90-2.33.txt; on the tree no hand deeper than 8.4 mm
+  from 1.90 to 2.75 s, the hands' rest within the rig's centimetre at 1.90: handwall-f21h-2.33-2.75.txt and review round
+  2's handwall-f21j-1.90-2.33.txt); as the left lets go it peels off within the rig's centimetre as before, the
+  director's up to 5.1 mm into the top at 2.945 s (4.6 before: handgap-f21h-2.88-3.00.txt, every 5 ms); the foreman's
+  left hand still passes through the wall's near face to its far grip (7.7 cm at 3.560 s: lefttrack16-f21h.txt).
+- The clothes: through the holds as before (forearm17-f21h-holds-exact-2ms.txt: the director's right sleeve 5.0 cm into
+  its waistcoat, its left one vertex 1.2; the foreman's hands and forearms 0.3 cm at the most). Through the knee-up, by
+  the chest ray (round 2's measure, every 10 ms from 2.33 to 2.75 s: handwall-f21h-2.33-2.75.txt and
+  handwall-f17h-2.33-2.75.txt), the director's left wrist now lies inside its shirt at 6 samples, up to 1.4 cm at 2.410
+  s, where 374c624c read none, and its left forearm at 37 samples against 29, 6.3 cm at the most against 7.4; its right
+  forearm at 4 against 2, 2.2 cm against 6.1; the foreman's none, as before. Before it, from 1.90 to 2.33 s by the same
+  measure (review round 2's handwall-f18d-1.90-2.33.txt and handwall-f21j-1.90-2.33.txt), the director's left forearm
+  lies inside its shirt at 7 samples, up to 5.8 cm, against 4 and 5.3, its right at 5, up to 5.3 cm, against 5 and 6.1;
+  the foreman's left forearm, inside at 10 samples up to 7.8 cm on 374c624c (2.27 s), now at none.
+
+What moves (by over 0.1 mm in any coordinate): the pigs alone, the director from 1.538 to 3.350 s (9.0 cm at the most in
+one coordinate, at 2.466 s) and the foreman from 1.552 to 3.862 (14.0 at 2.498: diffspans-f18d-f21h.txt); by point, the
+director's by up to 11.2 cm (its left elbow at 2.444 s; its head 10.1 at 2.488) and its centre of mass by 5.1 (2.476 s),
+the foreman's by up to 17.0 (its left elbow at 2.470; its head 15.8 at 2.250, where the balance turned it 15.4 degrees
+on 374c624c; its pelvis 12.4 at 2.458) and its centre of mass by 10.0 (2.452: diffpoints-f18d-f21h.txt). The trunk's
+keyed path itself already differs at 1.60 s, by 0.4 mm, under 2 mm before 1.9 s, then the foreman's up to 41 mm higher
+at 2.15 s (the director's 43) and back to 2.6 mm at 2.30, by the chest over the top's key (early-nomid.txt and
+early-mid245.txt, the keyed hips every 50 ms on var-f20x without and with the key).
+
+`tests/natural-traversal.test.mjs`: the climb test holds the left hand to its grip as the right knee comes up: from 2.20
+to 2.60 s, read every 10 ms, the nearest point of its mesh (forearm and hand) within 1 cm of the wall's surface.
+374c624c fails it on the pig foreman (43.1 mm at 2.44 s: test-f21t-pigs.log; it would fail there at 2.26 s too, 16.3
+mm); the tree passes (test-f21h-tree2.log, the pigs, the horse and the donkey; every mammal within 4.3 mm, the pig
+director's at 2.28 s, the others' 2.5 at most). Its comments carry the measures above. The full suite passes (2575
+tests).
+
+**Not kept**: the key at 2.40 s (var-f20b): the same readings, the director's required force 3.3 at 3.038 s instead of
+3.037, its hand within 3.1 mm (4.3 at 2.45); 2.45 sits where the left shoulder rose furthest (2.44 s).
+
+**Left.**
+- The far grips under the pigs' belly and seat (the hands in the clothes near each grip; the foreman's left hand through
+  the wall at its far grip), and the director's sleeves (the thirty-fifth part); its left wrist by its shirt through the
+  knee-up (above).
+- The foreman's trouser fold, 3.439 cm into the wall at 3.34 s, 0.061 under the 3.5 the user allowed.
+- The director's left arm past full stretch as the right knee comes up, 101.8% of its length at 2.27 and 2.28 s (103.2
+  before), its hand 4.3 mm off the wall's surface (reachlayers20-f20x-mid245.txt, handgap-all-f21h-2.2-2.6.txt).
+- The foreman's left arm at 99.7% of its reach at 2.29 s, where the clearance fit pushes the trunk back (1.5 mm short of
+  full stretch); its right arm straight at its far grip, 99.5% of its length or more from 3.070 s (3.075 before) to
+  3.740 (rightarm-f21h-far-5ms.txt and rightarm-f17h-far-5ms.txt, every 5 ms).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

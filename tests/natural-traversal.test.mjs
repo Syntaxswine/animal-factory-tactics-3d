@@ -291,7 +291,7 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // its keys over the top are set at (wall-climb.js, rise), and it stands back from the far face and leans in over its
    // belly while it hangs there, its grips near the top's far edge (far, farLean, farX). On 4e9853f6 the pigs' right
    // legs locked straight out of reach until their knees whipped (12.6 and 14.1 m/s, read every 2 ms from 2.3 to 3.1 s;
-   // every other mammal's knees 7.6 at most, the dog's; now the pigs' 4.0 and 5.2), and their hands came off the top as
+   // every other mammal's knees 7.6 at most, the dog's; now the pigs' 4.4 and 5.5), and their hands came off the top as
    // they lowered (the nearest hand point, of the hand's mesh, forearm and hand, as the rig's grip reads it, up to 25.5
    // and 40.6 mm from the wall's surface, every 10 ms from 3.85 to 4.15 s; every other mammal's 1.9 at most, the
    // skunk's; now 6.5 and 2.8, 7.2 and 4.3 on f293da69). Each check fails there on both pigs and on no other mammal,
@@ -321,8 +321,8 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // .04, the hand .045; the rig leaves a hand or forearm against the lower trunk out). Every other mammal's right hand
    // re-grips the top there (the shared keys), and its upper arm goes 3.0 to 3.9 cm into its lower trunk (at 2.656 to
    // 2.688 s), so they are held at 4.5 cm, a sentinel. A deep body's right hand holds in front of its chest instead
-   // (wall-climb.js), and the pigs' arms keep 7.3 and 9.8 cm clear of the trunk (the foreman's and the director's
-   // nearest, the upper arm as the hand leaves its grip, at 2.400 s), by these one-size capsules, which a pig's belly
+   // (wall-climb.js), and the pigs' arms keep 8.0 and 10.4 cm clear of the trunk (the foreman's and the director's
+   // nearest, the upper arm by the upper trunk, at 2.754 and 3.000 s), by these one-size capsules, which a pig's belly
    // overruns (the clothes check below reads the pig's own); on 8da9a826 the arm hung straight toward a re-grip it
    // could not reach, the pig foreman's upper arm 5.4 cm into its lower trunk at 2.596 s, the director's 3.1 at 2.604.
    const gap=(p1,q1,p2,q2)=>{const d1=q1.clone().sub(p1),d2=q2.clone().sub(p2),r=p1.clone().sub(p2),a=d1.dot(d1),e=d2.dot(d2),f=d2.dot(r),c=d1.dot(r),b=d1.dot(d2),den=a*e-b*b,cl=x=>Math.max(0,Math.min(1,x));
@@ -380,14 +380,26 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    let loose={d:0};
    for(let t=3.85;t<=4.15+1e-9;t+=.01){motion.apply(t/D);pr.update();let h=Infinity;for(let i=0;i<pr.count;i++)if(/hand/.test(pr.names[pr.part[i]]))h=Math.min(h,off(pr.x[i],pr.y[i],pr.z[i]));if(h>loose.d)loose={d:h,t};}
    assert.ok(loose.d<=.01,`wall: lowering down the far face the hand point nearest the wall's surface is ${(1e3*loose.d).toFixed(1)} mm from it at ${loose.t?.toFixed(2)} s`);
+   // As the right knee comes up (2.20 to 2.60 s) the left hand keeps to its grip, the only hand a deep body keeps keyed
+   // to the wall from the right's let-go at 2.345 s (the pig foreman's right hand peels off the top by 2.425, by the
+   // gate's contacts; every other mammal's right hand re-grips the top at 2.585): the nearest point of its mesh
+   // (forearm and hand) within 1 cm of the wall's surface, read every 10 ms. On 374c624c the pig foreman's left
+   // shoulder rose out of its arm's reach of that grip and pulled the hand up to 43.1 mm off the top (2.44 s; its boots
+   // alone held it from 2.355 to 2.500, and 27 readings over the gate's limits fell from 2.353 to 2.501); since a deep
+   // body's trunk takes a key mid-way through the knee coming up (wall-climb.js, KNEE_MID) every mammal's keeps within
+   // 4.3 mm (the pig director's at 2.28 s; 8.2 on 374c624c, the others' 2.5 at most).
+   let lifted={d:0};
+   for(let t=2.20;t<=2.60+1e-9;t+=.01){motion.apply(t/D);pr.update();let h=Infinity;for(let i=0;i<pr.count;i++)if(pr.names[pr.part[i]]==='forearm and hand -1')h=Math.min(h,off(pr.x[i],pr.y[i],pr.z[i]));if(h>lifted.d)lifted={d:h,t};}
+   assert.ok(lifted.d<=.01,`wall: as the right knee comes up the left hand's nearest point is ${(1e3*lifted.d).toFixed(1)} mm from the wall's surface at ${lifted.t?.toFixed(2)} s (10 mm at most)`);
    // Over the top the hips do not jolt: from 2.6 to 3.5 s their vertical acceleration (the hips bone's world height,
    // 5 ms chords read every millisecond) stays within -25 and +30 m/s^2. A deep body's band over the top rests its
    // torso, not the skin a thigh carries (wall-climb.js, LEG). On d1118c40, resting the pig foreman on a trouser fold
    // its left thigh dragged under the hip, the band dropped it 8.3 cm in 15 ms as the fold slid off the top, and the
    // hips read -63.4 m/s^2 at 3.378 s (the pig director, on its own fold, -89.7 at 3.195 and +42.0 at 3.149; the
    // foreman +34.4 at 3.416); with the seat below but the band still resting the fold, only the director fails it
-   // (-38.2 at 3.198). Every other mammal reads -19.8 to +11.5 there, unchanged, and the pigs now -15.2 to +24.3 (-15.4
-   // to +23.7 on 8da9a826, -15.6 to +24.5 on c44413ef, -15.5 on ba891c83, -14.4 to +24.5 on f293da69).
+   // (-38.2 at 3.198). Every other mammal reads -19.8 to +11.5 there, unchanged, and the pigs now -15.3 to +24.4 (-15.2
+   // to +24.3 on 374c624c, -15.4 to +23.7 on 8da9a826, -15.6 to +24.5 on c44413ef, -15.5 on ba891c83, -14.4 to +24.5 on
+   // f293da69).
    const hipsY=t=>{motion.apply(t/D);return bones.hips.getWorldPosition(bones.hips.position.clone()).y;},ys=new Map();
    const yAt=t=>{const k=Math.round(t*1e3);if(!ys.has(k))ys.set(k,hipsY(k/1e3));return ys.get(k);};let jolt={a:0};
    for(let t=2.6;t<=3.5+1e-9;t+=.001){const a=(yAt(t+.005)-2*yAt(t)+yAt(t-.005))/.005**2;if(a<-25||a>30){if(Math.abs(a)>Math.abs(jolt.a))jolt={a,t};}}

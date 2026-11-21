@@ -117,15 +117,16 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=
   if(s.kind==='grip'){both(-fmax*G*d2,fmax*G*d2);continue;}
   // A held seat keeps a hold's sideways bounds, as if it bore .3 g at least, even where its plan rides -g and it bears
   // nothing; the push then comes from elsewhere. On the climb's top a hand grips the wall at most seated samples
-  // (supportAt reads a grip, no outline, at 210 and 213 of each pig's 227; at the other 17 and 14, from 2.965 to 3.045
+  // (supportAt reads a grip, no outline, at 211 and 213 of each pig's 227; at the other 16 and 14, from 2.970 to 3.045
   // s on the foreman and 2.985 to 3.050 on the director, with the left hand off the top and the right on its way from
   // its hold, which it leaves at 2.90 s, to the far grip, it reads the seat's outline, which takes the feet's bounds
-  // below), and a seat's bounds, up, down and sideways, lie inside a grip's: the pigs' plans ride -g at 13 and 9 of the
-  // 227 (13 and 10 on 8da9a826, 13 and 9 on c44413ef, 26 and 9 on f293da69, 16 and 9 on ba891c83) and push the body
-  // sideways there at up to 4.92 and 3.85 m/s^2, at 2.985 and 2.995 s, inside the outline's samples (3.75 on 8da9a826,
-  // at 3.680 and 3.265 s, outside them), and the gate reads no phantom wrench over its limits on either pig from 2.55
-  // to 3.68 s (its required force there stays under its 5 body weights: at the most 3.7 on the pig foreman at 3.646 s
-  // and 3.3 on the director at 3.037, against the 6.5 the director's old left elbow whip read at 3.517 on c44413ef).
+  // below), and a seat's bounds, up, down and sideways, lie inside a grip's: the pigs' plans ride -g at 14 and 9 of the
+  // 227 (13 and 9 on 374c624c, 13 and 10 on 8da9a826, 13 and 9 on c44413ef, 26 and 9 on f293da69, 16 and 9 on ba891c83)
+  // and push the body sideways there at up to 4.89 and 3.86 m/s^2, at 2.985 and 2.995 s, inside the outline's samples
+  // (3.75 on 8da9a826, at 3.680 and 3.265 s, outside them), and the gate reads no phantom wrench over its limits on
+  // either pig from 2.55 to 3.68 s (its required force there stays under its 5 body weights: at the most 3.7 on the pig
+  // foreman at 3.646 s and 3.3 on the director at 3.037, against the 6.5 the director's old left elbow whip read at
+  // 3.517 on c44413ef).
   if(s.kind==='hold'&&!s.hull){const fy=Math.max(.3*G,ay(i)+G);both(-MU*fy*d2,MU*fy*d2);continue;}
   if(s.kind!=='feet'&&s.kind!=='hold')continue;const fy=Math.max(.3*G,ay(i)+G),h=Math.max(.2,Y.c[i]-(s.floor||0)),k=h/fy,a=-k/d2,b=1+2*k/d2;
   // The pressure point also carries the body's turning: p_x = c_x - k a_x + dL_z / (M fy), p_z = c_z - k a_z - dL_x / (M fy).
@@ -277,7 +278,9 @@ function turning(frames,dt){const n=frames.length,mid=(P,a,b)=>P[a].clone().add(
 //   toes past the rig's 8 m/s (8.03 to 8.12 m/s at 4.12 s) and holds the horse's head within the rig's centimetre of
 //   the far face through its drop, none of which the rig then reads as airborne. Its one gain is the pig foreman's
 //   flight over the top (from 2.335 s, after a run on a grip): 13 readings against 20, its worst 603% at 2.490 s
-//   against 323% at 2.364. Together 182 readings against 188, 0.190 s over the limit at the samples either way.
+//   against 323% at 2.364. Together 182 readings against 188, 0.190 s over the limit at the samples either way. That
+//   flight is gone since wall-climb.js's KNEE_MID: the foreman's left hand keeps to the top, and the balance plans a
+//   grip there.
 // The turn is the integral of w, its drift taken out along the motion so that it ends unturned. w carries over between
 // rounds (each adds what the last missed; delta, the largest, in rad/s, says when it has settled). Without contacts
 // the contacts' w is kept as it comes: a flight's refinement measures the flights alone again.
