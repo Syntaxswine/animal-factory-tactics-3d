@@ -3383,6 +3383,148 @@ would likely take out what is left of the lock and let the legs bend as they han
 whip (6.5 times its weight for 1 ms at 3.517 s; its left hand crosses to the far grip through a stopping key at
 3.545 s): the next fix. The rest as the thirty-second part leaves it.
 
+### 2026-11-20 (physics balance, thirty-fourth part): the pigs' left hand lets go before its arm runs out
+
+Since ba891c83 the gate's required force while in contact has failed on the pig director at its left elbow's whip: 6.5
+times its weight for 1 ms at 3.517 s (the thirty-second and thirty-third parts), as its left hand let go of the near
+edge to cross to the far grip. The rig's elbow point read 16.9 m/s at 3.516 s, and the pig foreman's 15.0 at 3.522 (its
+force there 3.9 times its weight, under the limit).
+
+Why: the thirty-third part put it down to the crossing's stopping key (3.545 s); it is not that. The left hand held its
+near grip, 18 cm along the edge from the wall's middle, until 3.485 s, and the arm could not reach it. Seated over the
+top the pigs' shoulders are wider than the wall: as they straddle it and bring the left knee up behind, the left
+shoulder hangs out past the near face (22.3 cm on the director at 3.27 s, 44.6 cm above the grips' height; 25.1 and 46.6
+cm on the foreman at 3.34: topreach-f12b.txt). As played the grip lies past the arm's whole length from 2.92 s to the
+let-go on the director, but for 3.005 to 3.070, where it comes just within it, and from 3.065 on the foreman (109 and
+110% of the arm at 3.48: grip-f13d.txt; the horse's arm reaches it throughout, 99.5% at the most at 3.055 s:
+grip-f13d-horse.txt). The director's nearest point of the edge stays within its arm (98.8% at the most), but no point of
+the top lies within the foreman's from 3.14 to 3.43 s (104.8% at the most: topreach-f12b.txt). The deep search over the
+top weighs the hands' reach to their marks, but with the seat resting it does not bring the shoulder in: at 3.305 s it
+could take the director's no nearer the grip than 2.3 cm past .97 of the arm (the foreman's 0.4), its pitch turned 30
+degrees, and it keeps their pitch within 2 degrees of the authored one, 8.4 and 5.9 cm past (search-f13d.txt).
+
+So the arm went straight from about 2.95 s (3.0 on the foreman: elbow-f12b-pigs-lock.txt), and the hand was dragged off
+its grip, 7.5 cm (7.0) by 3.48 s (grip-f13d.txt), now into the top, now over it (below). As the hand let go its target
+swept in toward the crossing's waypoint: unlocking, the director's elbow bent 1 degree at 3.507 s and 45 at 3.520, the
+arm's stretch falling from 100% to 75% by 3.540 (elbow-f12b-director.txt). Near full reach the soft IK moves the elbow
+up to twice as fast as the target comes in toward the shoulder (traversal-pose.js, limb), and here the wrist came in at
+up to 7.4 m/s (2.5 ms chords, the same file).
+
+**The fix**, wall-climb.js: a deep body's left hand lets go at LET_GO, 2.895 s, its arm then at 98.5% of its length from
+the grip on the director and 95.0% on the foreman (grip-f13d-5ms.txt). The palm lifts off over 120 ms (an arc of 3 cm)
+into a pose the chest carries, .6 of the arm out from the shoulder toward the crossing's waypoint where the keyed trunk
+at 3.545 s leaves it, holds there to 3.485, and crosses from there as before (the waypoint at 3.545, the far grip at
+3.605). The left arm stays bent through the let-go and the hold (98.3% of its length at the most, the director's at
+2.902 s; the foreman's 94.0 at 2.900), its elbow at 3.8 and 3.2 m/s at the most there (2.926 and 2.928 s) and 5.0 and
+4.6 in the crossing (3.572 and 3.586: the rig's elbow point over 2 ms chords, stretch-f13fin-2ms.txt). As the hand comes
+to the far grip the foreman's stretches without a break from 3.556 s (85.6%) and goes straight there as on c44413ef
+(99.0% at 3.588, 99.5% or more from 3.590 to 3.674: stretch-f13fin-2ms.txt; review round 1's farstretch-x-tree.txt and
+-x-head.txt).
+
+phantom-wrench 1.2.0 `--gate` on frozen copies (c44413ef = var-f12b; this commit's tree = var-f13fin, its pigs as
+var-f13e's line for line; every other crossing plays as on c44413ef, frame for frame: same-f13fin-f12b.txt, all 33):
+- The director's required force passes: its peak is now 3.6 times its weight at 3.040 s, where it read 3.0, against the
+  6.5 at 3.517 (0.7 there now: forceprofile-f12b-f13fin-director.txt). The foreman's peak 3.9 at 3.523 (its elbow) ->
+  3.7 at 3.646 (its lock going down the far face).
+- No left elbow goes over the rig's 8 m/s: both now peak at the push-off (6.59 and 6.64 m/s at 0.78 s; 16.92 and 14.96
+  at 3.516 and 3.522 before). The director's points over 8 m/s 6 -> 4 (its left palm, 8.05 -> 7.66, goes under too), the
+  foreman's 5 -> 4 (its left palm still reads 8.0 m/s in the crossing, at 3.574 s, against 8.1 before; its peak, 8.10,
+  is at the push-off and keeps it among the four).
+- Readings over the gate's limits: the director's 34 as before, the foreman's 42 -> 43. The foreman's new one: a span
+  that begins, during its right knee up, as its left hand's contact with the top ends, starts a millisecond earlier (at
+  2.355 s that hand touches the top at one point where it touched at two, reading 30.6 N where it read 0; 2.356 reads
+  137.9 N where it read 31.6; 2.357 139.0 before, 139.1 after: the gates' rows), and from 2.360 to 2.495 s neither of
+  the foreman's hands is on the wall, before and after (review round 1's handruns-f12b-xtree.txt): the grip's 1 cm drift
+  across the top (.45 to .46 m) now runs to the let-go, not 3.485 s, and moves the pigs from 1.66 s, by 5.3 mm at the
+  most before the let-go (the left elbow: diffwindow-f12b-f13fin-before-letgo.txt). Over the top (2.55 to 3.68 s)
+  neither pig reads anything over the limits.
+- The director's capsule pairs overlapping over 1 cm 9 -> 8: its left forearm 1.5 cm into its left thigh at 3.120 s
+  goes; the rest move by 0.6 mm or less. The foreman's are as they were. Read at every vertex, the left forearm comes
+  within a few millimetres of the left thigh before and after, at different moments: on this tree in the hold, the
+  director's 1.4 mm at 3.320 s and the foreman's 2.4 at 3.490, where c44413ef's were 11.4 and 12.7 cm off; on c44413ef
+  in the grip, the foreman's 1.2 mm at 2.950 s and the director's 2.0 at 2.965. The vertex readings are review round 3's
+  nearpair-x3tree.txt and -x3head.txt and handhead-x3tree-s1-full.txt and -x3head-s1-full.txt. By the rig's capsule
+  check (which leaves a hand or forearm against the lower trunk out), on this tree no capsule of the left arm overlaps
+  another from 2.85 to 3.65 s (review round 2's caps-x2tree-director.txt and -foreman.txt), where on c44413ef the
+  director's left forearm went 1.5 cm into its left thigh at 3.120 s, in the grip (above). By this fix's own trunk
+  capsule (pelvis to chest, .14 m, which the rig does not count against a hand), the left hand as it crosses comes 3.0
+  cm into it on the foreman (2.5 before) and 2.8 on the director (2.7), near 3.53 s (free13-candidates.txt f895,
+  free13-f12b.txt). From 2.88 s to the old let-go (3.485), the dragged hand's mesh on c44413ef went more than 1 cm into
+  the top at times, the director's at 2.990 to 3.125 and 3.420 to 3.480 s (2.3 cm at 3.040), the foreman's at 2.960 to
+  3.080 (1.7 at 3.030), and from 3.150 to 3.485 the foreman's rode up to 1.2 cm over the top; on this tree the left hand
+  is 1.5 mm into the top at the most from 2.88 s to the crossing (review round 2's handgap-x2head-2.88-3.62.txt and
+  -x2tree-). At the catch and through the hang it still sinks about 1 cm into the top, as before (review round 4's
+  handgap-x4tree-1.26-2.90.txt and -x4head-). The foreman's forearm across the far corner as it reaches the far grip,
+  5.3 cm at 3.585, is as before.
+- The seat: supportAt read a grip at all 227 held samples of each pig; it now reads the seat's outline at 15 and 20 of
+  them (the foreman's at 2.915 to 2.925, 2.960 and 2.965 s and from 3.040 to 3.085, the director's from 2.920 to 2.965
+  and from 3.040 to 3.085: the left hand let go and the right, in the balance's own pose, still off the top or crossing
+  to the far grip; as played the foreman's right hand is on the top at 2.925, 2.960 and 2.965 s, by the gate's rows),
+  which take the feet's bounds (seathull-f12b.txt, seathull-f13fin.txt). The plans ride -g at 13 and 10 held samples (13
+  and 9 before) and push the body sideways there at up to 3.75 m/s^2 as before (seatr4b-f13fin.txt).
+- The required force rises elsewhere, under the limit: the director's largest rise 3.00 -> 3.56 at 3.040 s (the right
+  hand letting go with the left already off), the foreman's 1.53 -> 2.01 at 3.101 (forceprofile-f12b-f13fin-director.txt
+  and -foreman.txt).
+
+What moves (by over 0.1 mm): the pigs alone, the director from 1.656 to 3.806 s and the foreman from 1.682 to 3.960
+(diffspans-f12b-f13fin.txt); by over 5 mm only the left arm (the elbow up to 26.6 and 27.8 cm, at 3.494 and 3.490 s,
+where it is bent now and was straight), the centre of mass by 7.9 and 8.3 mm, and on the director its pelvis and hips by
+up to 5.6 mm at 3.060 s, its left knee 5.1 there and its left shoulder 5.6 at 3.508 (diffpoints-f12b-f13fin.txt). By the
+climb test's own measures (testmeasures-r3-f12b.txt and -f13fin.txt): the foreman's hips over the top -15.6 to +24.5 ->
+-15.4 to +23.7 m/s^2, its trouser fold 3.409 -> 3.412 cm in at 3.34 s (under the 3.5 the user allowed), its knee going
+down the far side 7.13 -> 7.12 m/s; the director's left knee as it comes up behind 8.81 -> 8.78, its hips' most +17.2 ->
++16.8.
+
+`tests/natural-traversal.test.mjs`: the climb test now holds the elbows to the rig's 8 m/s from 2.8 to 3.7 s, as the
+left hand lets go and crosses to the far grip, by its own measure (the forearm bone over 2 ms chords, as the knees are
+read). c44413ef fails it on both pigs (15.7 and 14.1 m/s at 3.518 and 3.524 s, the director's and the foreman's:
+elbowtest-f12b.txt; the test itself on var-f12t: test-f12t-pigs.log); now the pigs' fastest there are their right elbows
+(5.8 and 5.6 at 3.034) and every other mammal's its left, 7.55 to 7.67 at 3.514, as before, 4 to 6% under the limit
+(elbowtest-f13fin.txt).
+
+The thirty-third part's 4.6 cm for the director is its largest coordinate: as distances its left knee moves 6.4 cm
+(3.588 s) and its ankle 5.8 (3.591), not the 7.5 mm its keys drop. The clearance fit, pushing that leg out of the top as
+it comes over (up to 17.4 cm on ba891c83, 19.5 on c44413ef), pushes it further over and less high (at 3.575 s from 13.0
+cm over and 11.1 up to 17.6 and 8.0: fitleg-f11b-f12b-director.txt, diffpoints-f11b-f12b-director.txt).
+
+**Not kept.**
+- Held at .85 of the arm, let go at 2.865 s (var-f13a): the director's left hand went 4.4 cm into its left thigh, the
+  forearm 5.0, at 3.13 s as that knee came up, and the foreman sat on one point of its trousers for about 15 ms as the
+  hand left (207 N and 142 N·m at 2.895 s: var-f13a's gates).
+- Held out forward or to the side: the crossing from there whipped the elbow again, 8.5 to 15.3 m/s
+  (free13-candidates.txt). Toward the waypoint mixed with forward or up (mixfwd, mixup, mixfu there): the crossing's
+  elbow at 5.1 to 6.3 m/s, against the plain direction's 5.0 and 4.5 by that probe, and mixfwd's hand 2.4 cm into the
+  director's left thigh. These were all tried at .85 of the arm (mixfu at .80), let go at 2.885 s, where the plain
+  direction's own hand went 4.4 cm into that thigh (wp885 there). At the kept .6 and 2.895 (review round 5's
+  free13-mix60.txt) the mix with up crosses at 5.1 and 5.3 m/s with the hand 2.2 and 2.6 cm into the trunk capsule and
+  the mix with forward and up at 5.6 and 6.1 with 1.8 and 2.5, neither in a thigh, against the plain direction's 5.0 and
+  4.5 with 2.8 and 3.0: about half a centimetre less hand in the trunk for a faster crossing, far under 8 m/s either
+  way. The plain direction is kept; the mixes are not gated.
+- Let go at 2.885 s (var-f13b): the foreman's hand, leaving the top between two samples, read 42.5 N·m for 1 ms at 2.907
+  s; at 2.875 (var-f13g) up to 154.6 N·m, at the 2.895 s sample (the instants from 2.893 to 2.902 over the limit too).
+  What sets the time is the foreman's seat: on this tree it touches the top at one point until 2.900 s, at three at
+  2.905 and at five at 2.910, one of them on the near face. Let go at 2.875 or 2.865 the palm is off by 2.895 or 2.890,
+  the seat on its one point; at 2.885 it leaves between 2.905 and 2.910, the seat on three, and still reads 42.5 N·m for
+  1 ms at 2.907; let go at 2.895 it holds through 2.910, the seat then on five points, and is off by 2.915: a margin of
+  5 ms at the most (the gates' contact rows on var-f13a, b, g and var-f13fin). Nothing in the suite guards that margin;
+  the gate does.
+- The search's near mark ended at the let-go (var-f13h): the director plays the same, but the foreman's straddle keys
+  pitch otherwise and its body moves up to 20.6 cm at 3.26 s (diffspans-f13fin-f13h-marks.txt), and it fails the gate's
+  required force again (6.0 times its weight for 1 ms at 3.243 s, its left knee at 9.0 m/s), its capsule pairs over 1 cm
+  5 -> 8 (its left upper arm and forearm 3.9 and 3.4 cm into its left thigh at 3.566: review round 2's
+  gate-x2-f13h-wall-pig-foreman.txt). The mark is kept to 3.485 s, its old let-go.
+- Not tried (review round 1's suggestion): the grip slid to the nearest point of the edge and held until the right hand
+  takes its far grip (3.12 s). The director's nearest edge point stays within its arm throughout and the foreman's until
+  about 3.13 s (98.5% at 3.10: topreach-f12b.txt), and a hand would stay on the wall from 3.040 to 3.085, where the
+  director's required force now peaks, at the cost of a palm sliding along the edge.
+
+**Left.** The pigs' right arms hang straight from 2.40 s at the latest to the right hand's let-go at 3.0 (through its
+step and its straddle grip: rightarm-f12b-pigs.txt), the hand never on its grip from its plant key (2.585 s) until 2.925
+s on the foreman and 2.970 on the director, up to 10.3 cm over the wall (the foreman's at 2.585 s; the director's 8.8 at
+2.770: handgap-f12b-2585.txt): the same grip out of reach, though its let-go does not whip (5.8 m/s). The next fix,
+after which the let-go's margin on the foreman's seat wants the gate again (both pigs). The reach read from the played
+trunk for the legs (the thirty-third part), and the rest as it leaves it.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

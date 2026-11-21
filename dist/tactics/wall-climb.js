@@ -92,7 +92,8 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // touching it. So each key over the top takes the change of lean (pitch, searched) and the height that keep the torso
  // clear of the top, and from the right knee up to the left leg over that set its lowest point resting on it (REST: the
  // seat carries the body where the hands cannot), the hands' reach to their marks a cost (MARKS: where the arm keys
- // below plant them on the top, by time). The torso is its points at rest riding the hips or spine; the height for a
+ // below plant them on the top, by time; a deep body's left hand lets go of its near mark at 2.895 s, but the search
+ // weighs it to 3.485: the let-go below). The torso is its points at rest riding the hips or spine; the height for a
  // lean is exact (a move up or down shifts every point alike).
  // A deep body's far grips lie near the top's far edge (farX): hanging low on the far face, an arm reaching from
  // shoulders out past the belly to the top's middle crossed its far corner, and the clearance fit lifted the hand's
@@ -124,7 +125,7 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // cost the right knee up 9 readings (its foot's 2.525 s key raised 17 cm), turned the airborne body at the band's jump
  // harder (870 N·m at 3.405 s against 273 on d1118c40; the band no longer jumps there) and put the director's required
  // force over the limit (5.1 body weights against 4.9 on d1118c40; 4.8 on f293da69, and 6.5 since the far hang below,
- // at its old left elbow whip).
+ // at its old left elbow whip, until its left hand let go before its arm ran out: below).
  const deep=back>.05,farX=.54+(deep?.025:0),slideDZ=deep?.10:0;
  if(deep){probe.update();const h0=body.at0('hips'),s0=body.at0('spine'),hipsPts=[],spinePts=[];
   for(let i=0;i<probe.count;i++){const b=probe.boneNames[probe.bone[i]],q=V(probe.x[i],probe.y[i],probe.z[i]);if(b==='hips')hipsPts.push(q.sub(h0));else if(b==='spine')spinePts.push(q.sub(s0));}
@@ -163,8 +164,9 @@ export function createWallClimb(worker,profile={id:'horse'}){
   // less (the foreman's hips 3.7 to 5.4 cm further back from 3.60 to 3.70 s), and the foreman's band (below) no longer
   // drops it as its left leg locks straight going down the far side (3.633 s): that old lock, which the fall hid on
   // f293da69, asked 7.6 times its weight for 3 ms on the rig's 1 ms grid (its 5-ms samples 3.9), over the rig's 5,
-  // until the legs' keys there rose to their reach (below: 3.9 now, at the elbow's whip); the director's old left elbow
-  // whip as its left leg comes over now asks 6.5 for 1 ms (3.517 s; 4.8 before).
+  // until the legs' keys there rose to their reach (below: 3.7 now, at the later lock); the director's old left elbow
+  // whip as its left leg came over asked 6.5 for 1 ms (3.517 s; 4.8 before), until its left hand let go before its
+  // arm ran out (below: its peak now 3.6, at 3.040 s).
   const FACE=WALL.edge+WALL.half,FAR_CLEAR=.006;
   for(const k of keys){if(!k.far)continue;const hipsQ=yawQ(k.heading||0).multiply(bodyQ((k.pitch||0)*DEG,(k.roll||0)*DEG)),chestQ=hipsQ.clone().multiply(relQ(k.flex||0,k.side||0,k.twist||0)),H=V(...k.hips),C=H.clone().add(body.offsets.spine.clone().applyQuaternion(hipsQ));
    let push=0;const see=w=>{if(w.y<WALL.top&&Math.abs(w.z)<.5)push=Math.max(push,FACE+FAR_CLEAR-w.x);};for(const q of hipsPts)see(q.clone().applyQuaternion(hipsQ).add(H));for(const q of spinePts)see(q.clone().applyQuaternion(chestQ).add(C));
@@ -246,10 +248,10 @@ export function createWallClimb(worker,profile={id:'horse'}){
   leg1:[[0,stance(1)],[.4,foot(.14-back,.14)],[.7,foot(.14-back,.14,15)],[.995,{f:'pelvis',p:[body.offsets.thigh[1].x+.01,body.offsets.thigh[1].y-1.03*fitB.leg,.14],hoof:55,soft:.03}],[1.195,{f:'pelvis',p:[body.offsets.thigh[1].x+.01,body.offsets.thigh[1].y-.95*fitB.leg,.14],hoof:50}],[1.375,{f:'pelvis',p:[.02,-.62,.13],hoof:20,knee:OUT}],[1.505,{...onFace(true,.58,.16,1.505),knee:OUT}],[1.905,{...onFace(true,.96,.16,1.905),knee:OUT}],[2.305,{...onFace(true,1.30,.16,2.305),knee:OUT}],[2.525,{f:'world',p:[.20,1.96,.36],hoof:-60,knee:OUT}],[2.705,{f:'world',p:[.52,2.16,.42],hoof:0,heading:-30}],[2.905,{f:'world',p:[.72,2.04,.30],hoof:30,heading:-60}],
    [3.065,{f:'world',p:[.81,1.70,0],hoof:20,heading:-90}],[3.485,{f:'world',p:[.80,1.58,-.10],hoof:20,heading:-140,knee:SIDE}],[DOWN_FAR,{f:'world',p:[.80,1.36,-.16],hoof:20,heading:-170,knee:SIDE}],
    [4.04,{...onFace(false,.70,-.16,4.105),knee:OUT,lift:.3}],[4.205,{f:'pelvis',p:[-.06,body.offsets.thigh[1].y-.95*fitB.leg,.16],hoof:25,knee:OUT}],[4.375,{f:'pelvis',p:[-.06,body.offsets.thigh[1].y-1.0*fitB.leg,.16],hoof:25,soft:.03,knee:OUT}],[4.625,foot(.90,-.16,0,-180)],[5.27,foot(.90,-.16,0,-270)],[5.52,foot(.90,-.16,0,-300)],[5.8,{...over(1,-355),arc:.07}],[5.84,land(1,-360)],[6.1,land(1,-360)]],
-  // The left hand holds from the catch until the left knee is up, then re-grips on the far side's left while the seat is
- // still on the top; the right re-plants turned to the far side in the straddle (a palm turning 140 degrees where it lay
- // touched the top at two points, and held the body alone on them while the left crossed: 37% of its weight of phantom
- // push). The right lets go
+  // The left hand holds from the catch until the left knee is up (a deep body's left hand lets go in the straddle,
+ // before its arm runs out: below), then re-grips on the far side's left while the seat is still on the top; the right
+ // re-plants turned to the far side in the straddle (a palm turning 140 degrees where it lay touched the top at two
+ // points, and held the body alone on them while the left crossed: 37% of its weight of phantom push). The right lets go
   // once the chest is over and plants ahead before the right knee comes up beside it. Gripping, the elbows bend back
   // and out from the wall (bent down, the forearms lay across its near edge). The arms swing up ahead of the jump, in
   // front of the face, and come down onto the top (reaching straight for it, the forearms went 7 cm into the face).
@@ -273,8 +275,9 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // drop hid the lock, but with the far hang holding the body there the gate's required force read 7.6 times its
  // weight for 3 ms at 3.633 (11.9 at 3.617 as authored, the knee point 14.4 m/s). Risen to 1.478 and 1.479 m, 4.2
  // and 4.3 cm above that ride, the foreman's leg locks later and slower (the knee 7.1 m/s at 3.644; 3.8 times its
- // weight at 3.646, where it read 2.6) and its required force passes, its peak now the left elbow's whip (3.9 at
- // 3.523, where it read 3.1); its readings over the gate's limits and its hand check as they were (42; 6.5 mm). As
+ // weight at 3.646, where it read 2.6, and 3.7 since its left hand lets go early, below) and its required force
+ // passes, its peak then the left elbow's whip (3.9 at 3.523, where it read 3.1; the lock's since that let-go); its
+ // readings over the gate's limits and its hand check as they were (42, and 43 since that let-go; 6.5 mm). As
  // played the keys still lie past the leg's reach (105.3 and 105.9% of it, against 112.4 and 113.3 on ba891c83): the
  // clearance fit pushes the trunk 11.9 cm further out than keyed and, with the band (which lowers it 6.6 cm there),
  // 4.0 cm higher, and both legs hang straight down the far face as before (their knees bent under 5 degrees from
@@ -289,6 +292,37 @@ export function createWallClimb(worker,profile={id:'horse'}){
   for(const [id,s] of [['leg-1',-1],['leg1',1]]){const k=LIMB[id].find(([t])=>t===DOWN_FAR)?.[1];if(!k||k.f!=='world')continue;
    const hip=tr.hips.clone().add(body.offsets.thigh[s].clone().applyQuaternion(tr.hipsQ)),r=.97*(body.L[s].thigh+body.L[s].shin),h=Math.hypot(k.p[0]-hip.x,k.p[2]-hip.z);
    if(h<r)k.p=[k.p[0],Math.max(k.p[1],hip.y-Math.sqrt(r*r-h*h)),k.p[2]];}}
+ // A deep body's left hand lets go of the near edge before its arm runs out (LET_GO) and holds in to its body until it
+ // crosses to the far grip. Seated over the top the pigs' shoulders are wider than the wall: as they straddle it and
+ // bring the left knee up behind, the left shoulder hangs out past the near face (22.3 cm on the pig director at 3.27
+ // s, 44.6 cm above the grips' height; 25.1 and 46.6 cm on the foreman at 3.34), and the grip, 18 cm along the edge
+ // from the wall's middle, lies past the arm's whole length from 2.92 s to the old let-go (3.485) but for 3.005 to
+ // 3.070, where it comes just within it (on the foreman from 3.065 throughout). The director's nearest point of the
+ // edge stays within it (98.8% at the most), but no point of the top lies within the foreman's from 3.14 to 3.43 s
+ // (104.8% at the most). The search over the top does not bring the shoulder in with the seat resting: at 3.305 s it
+ // could take the director's no nearer the grip than 2.3 cm past .97 of the arm (the foreman's 0.4), its pitch turned
+ // 30 degrees, and it keeps their pitch within 2 degrees of the authored one, 8.4 and 5.9 cm past. Held to the grip
+ // until 3.485 s, the arm went straight from about 2.95 s (3.0 on the foreman), the hand was dragged off its grip, 7.5
+ // cm (7.0) by 3.48 s, now into the top, now over it, and as the hand let go its target swept in from 109% of the arm
+ // (110 on the foreman): unlocking, the elbow bent 45 degrees in 13 ms (the rig's elbow point 16.9 and 15.0 m/s at
+ // 3.516 and 3.522 s; the director's required force 6.5 times its weight for 1 ms at 3.517). So the hand lets go at
+ // LET_GO, its arm at 98.5% of its length from the grip on the director and 95.0 on the foreman, the palm lifting off
+ // over 120 ms (an arc of 3 cm) into a pose the chest carries, .6 of the arm out from the shoulder toward the
+ // crossing's waypoint where the keyed trunk at 3.545 s leaves it; it holds there to 3.485 and crosses from there as
+ // before. Held at .85 of the arm, the director's hand lay 4.4 cm in its left thigh (the forearm 5.0) as that knee came
+ // up (3.13 s); held out forward or to the side, the crossing whipped the elbow again (8.5 to 15.3 m/s, the rig's elbow
+ // point over 2 ms chords). LET_GO is the gate's pick, and the foreman's seat sets it: that seat touches the top at one
+ // point until 2.900 s and spreads from 2.905, and a palm leaving before then leaves the body on that point (let go at
+ // 2.875 s, the palm left by 2.895 and the gate read 154.6 N·m there; at 2.865, with the .85 hold, 207 N and 142 N·m at
+ // 2.895). Let go at 2.885 the palm left between 2.905 and 2.910 (42.5 N·m for 1 ms at 2.907); at LET_GO it stays on
+ // the top through 2.910, the seat then on five points, one of them on the near face, and is off by 2.915: a margin of
+ // 5 ms at the most, which only the gate guards (gate both pigs again after any change over the top). The search above
+ // still weighs the grip's mark to 3.485 s: ended at LET_GO, it pitched the foreman's straddle keys otherwise and moved
+ // its body up to 20.6 cm at 3.26 s.
+ if(deep){const LET_GO=2.895,A=LIMB['arm-1'],i=A.findIndex(([t])=>t===3.485),tr=trunkAt(3.545,null),sh=body.offsets.shoulder[-1],
+   way=V(...A.find(([t])=>t===3.545)[1].p).sub(tr.chest).applyQuaternion(tr.chestQ.clone().invert()).sub(sh).normalize(),
+   held=sh.clone().addScaledVector(way,.6*(body.L[-1].upper+body.L[-1].fore)).toArray();
+  A.splice(i,1,[LET_GO,{...A[i][1]}],[LET_GO+.12,{f:'chest',p:held,arc:.03}],[3.485,{f:'chest',p:[...held]}]);}
  const spec=t=>{const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posedFrom(tr,limbs,{poles:steady?id=>steady(id,t):null,offsets:fit?.limb?id=>fit.limb(id,t):null,snaps:fit?.plant?id=>fit.plant(id,t):null,turns:turnRef?b=>turnRef(b,t):null});};
  // Fit this character's surface: trunk, head and tail out of the floor and the wall. The face is the way out until the
  // chest is nearly over (2.265): a hanging front (the sheep's waistcoat hem) meets the top edge before the chest does.
