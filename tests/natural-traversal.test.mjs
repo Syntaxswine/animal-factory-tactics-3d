@@ -291,10 +291,10 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // its keys over the top are set at (wall-climb.js, rise), and it stands back from the far face and leans in over its
    // belly while it hangs there, its grips near the top's far edge (far, farLean, farX). On 4e9853f6 the pigs' right
    // legs locked straight out of reach until their knees whipped (12.6 and 14.1 m/s, read every 2 ms from 2.3 to 3.1 s;
-   // every other mammal's knees 7.6 at most, the dog's; now the pigs' 4.1 and 5.3), and their hands came off the top as
+   // every other mammal's knees 7.6 at most, the dog's; now the pigs' 4.0 and 5.2), and their hands came off the top as
    // they lowered (the nearest hand point, of the hand's mesh, forearm and hand, as the rig's grip reads it, up to 25.5
    // and 40.6 mm from the wall's surface, every 10 ms from 3.85 to 4.15 s; every other mammal's 1.9 at most, the
-   // skunk's; now 6.5 and 2.9, 7.2 and 4.3 on f293da69). Each check fails there on both pigs and on no other mammal,
+   // skunk's; now 6.5 and 2.8, 7.2 and 4.3 on f293da69). Each check fails there on both pigs and on no other mammal,
    // the second with the first switched off. From 3.1 to 3.5 s, as the left knee comes up behind, the knees are held at
    // 11 m/s, a sentinel no copy measured fails: the pig director's left knee reads 8.8 at 3.180 s (8.9 on f293da69,
    // 8.05 on 4e9853f6), every other mammal's 6.1 to 7.5 near 3.19 s. Going down the far side, from 3.5 to 3.7 s, they
@@ -306,8 +306,9 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // held at the rig's 8 too, by the same measure on the forearm bone: held to that grip out of its arm's reach until
    // 3.485 s, a pig's left arm went straight and its elbow whipped as the hand let go (15.7 and 14.1 m/s at 3.518 and
    // 3.524 s on c44413ef, the director's and the foreman's), until a deep body's left hand let go before its arm ran
-   // out (wall-climb.js): the pigs' fastest there are now their right elbows, 5.8 and 5.6 at 3.034 s, and every other
-   // mammal's its left, 7.55 to 7.67 at 3.514.
+   // out (wall-climb.js): the pigs' fastest there are now their left elbows as the hands cross, 5.3 and 6.3 at 3.528
+   // and 3.524 s (on 8da9a826 their right elbows, 5.8 and 5.6 at 3.034, before their hands held in front of their
+   // chests, below), and every other mammal's its left, 7.55 to 7.67 at 3.514.
    const knee=s=>bones['shin'+s].getWorldPosition(bones['shin'+s].position.clone()),fastest=(a,b,at=knee)=>{let w={v:0},was=null;
     for(let t=a;t<=b+1e-9;t+=.002){motion.apply(t/D);const k=[at(-1),at(1)];if(was)for(const j of [0,1]){const v=k[j].distanceTo(was[j])/.002;if(v>w.v)w={v,t,side:j?'right':'left'};}was=k;}return w;};
    const whip=fastest(2.3,3.1),behind=fastest(3.1,3.5),lock=fastest(3.5,3.7),fold=fastest(2.8,3.7,s=>bones['forearm'+s].getWorldPosition(bones['forearm'+s].position.clone()));
@@ -315,6 +316,67 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    assert.ok(behind.v<=11,`wall: as the left knee comes up behind the ${behind.side} knee moves at ${behind.v.toFixed(1)} m/s at ${behind.t?.toFixed(3)} s (11 at most; the pig director reads 8.8)`);
    assert.ok(lock.v<=8,`wall: going down the far side the ${lock.side} knee moves at ${lock.v.toFixed(1)} m/s at ${lock.t?.toFixed(3)} s (the rig's limit is 8; the pig foreman read 10.2 on ba891c83)`);
    assert.ok(fold.v<=8,`wall: as the left hand lets go and crosses to the far grip the ${fold.side} elbow moves at ${fold.v.toFixed(1)} m/s at ${fold.t?.toFixed(3)} s (the rig's limit is 8; the pig director read 15.7 on c44413ef)`);
+   // Over the top (2.4 to 3.0 s, read every 2 ms) the right arm keeps out of the trunk, by the phantom-wrench rig's
+   // capsules (the lower trunk pelvis to chest and the upper trunk chest to neck, .14; the upper arm .045, the forearm
+   // .04, the hand .045; the rig leaves a hand or forearm against the lower trunk out). Every other mammal's right hand
+   // re-grips the top there (the shared keys), and its upper arm goes 3.0 to 3.9 cm into its lower trunk (at 2.656 to
+   // 2.688 s), so they are held at 4.5 cm, a sentinel. A deep body's right hand holds in front of its chest instead
+   // (wall-climb.js), and the pigs' arms keep 7.3 and 9.8 cm clear of the trunk (the foreman's and the director's
+   // nearest, the upper arm as the hand leaves its grip, at 2.400 s), by these one-size capsules, which a pig's belly
+   // overruns (the clothes check below reads the pig's own); on 8da9a826 the arm hung straight toward a re-grip it
+   // could not reach, the pig foreman's upper arm 5.4 cm into its lower trunk at 2.596 s, the director's 3.1 at 2.604.
+   const gap=(p1,q1,p2,q2)=>{const d1=q1.clone().sub(p1),d2=q2.clone().sub(p2),r=p1.clone().sub(p2),a=d1.dot(d1),e=d2.dot(d2),f=d2.dot(r),c=d1.dot(r),b=d1.dot(d2),den=a*e-b*b,cl=x=>Math.max(0,Math.min(1,x));
+    let s=den>1e-12?cl((b*f-c*e)/den):0,t=(b*s+f)/e;if(t<0){t=0;s=cl(-c/a);}else if(t>1){t=1;s=cl((b-c)/a);}return p1.clone().addScaledVector(d1,s).distanceTo(p2.clone().addScaledVector(d2,t));};
+   let into={o:-Infinity};
+   for(let t=2.4;t<=3.0+1e-9;t+=.002){const P=motion.apply(t/D).points,v=k=>bones.hips.position.clone().fromArray(P[k]);
+    for(const [a,b,ra,an] of [['shoulder1','elbow1',.045,'upper arm'],['elbow1','wrist1',.04,'forearm'],['wrist1','palm1',.045,'hand']])for(const [c,d,bn] of [['pelvis','chest','lower trunk'],['chest','neck','upper trunk']]){
+     if(bn==='lower trunk'&&an!=='upper arm')continue;const o=ra+.14-gap(v(a),v(b),v(c),v(d));if(o>into.o)into={o,t,pair:bn+' and its '+an};}}
+   const deepBody=/^pig-/.test(p.id);
+   assert.ok(into.o<=(deepBody?0:.045),`wall: over the top the right arm's capsules meet the trunk's by ${(100*into.o).toFixed(1)} cm, the ${into.pair}, at ${into.t?.toFixed(3)} s (${deepBody?'a deep body keeps out':'4.5 cm at most'})`);
+   // A deep body's held hands and forearms stay out of its clothes: over each hold (the right from 2.695 to 2.90 s, the
+   // left from 3.195 to 3.42; wall-climb.js), read every 10 ms, no vertex of the hand or forearm (the "forearm and
+   // hand" mesh's points carried by the hand, fingers or forearm) lies more than 1 cm inside the shirt (its sleeves
+   // dropped, which opens the armholes) or the trousers: inside where its generalized winding number against that
+   // garment passes .5, by its distance to that garment's nearest triangle. The rig's capsules give every body one .14
+   // m trunk, which a pig's belly overruns, and passed arms held inside it. This fails on 8da9a826 (with the capsule
+   // check above switched off, which fails there first), the pigs' right forearms 21.0 and 20.9 cm into their shirts
+   // (the director's at 2.695 s, the foreman's at 2.715), whole hands and forearms lying in; on this fix's first round,
+   // the hands held in toward the crossing's waypoints, the right hands 19.1 and 18.7 at 2.895; and on its second, the
+   // hands held as now but each arm bent its own way, the foreman's left forearm 3.1 into its shirt at 3.415, its elbow
+   // against the belly's side. Now the deepest are 0.3 cm, two vertices of the foreman's left elbow and two of its
+   // wrist through its left hold (read every 2 ms). Read to the garment's nearest vertex instead (this check's first
+   // version, 4 cm at most), a forearm 0.04 cm in read 4.5 and one 3.1 cm in read 3.7 (review round 3). The sleeves,
+   // cloth over the forearm, are not read: the director's right stays in its clothes from its let-go to its far grip,
+   // 5.0 cm into its waistcoat by the elbow through its hold, and its left until 3.17 s, where 8da9a826 had it out from
+   // 2.98 s, and 1.1 to 1.2 cm from 3.20 to 3.31. Nor are the moves from each grip to its hold and on to the far grip:
+   // the grips lie under the belly and the seat, and there the hands sit inside the clothes for 0.09 to 0.15 s after
+   // each let-go and before each far grip (the foreman's left from its hold to its far grip but for about 4 ms at 3.50
+   // s) and the forearms for up to 0.27 s (the foreman's left from 3.17 s to its far grip, 0.3 cm through its hold), up
+   // to 18.0 cm in; on 8da9a826 they lay in from each let-go to its far grip. The deep bodies are taken by their ids,
+   // the catalog's two pigs, the bodies the climb's rule picks by their depth in front (wall-climb.js, back over .05).
+   if(deepBody){const first={};for(let i=0;i<pr.count;i++)if(first[pr.part[i]]===undefined)first[pr.part[i]]=i;
+    const bone=i=>pr.boneNames[pr.bone[i]],part=re=>m.worker.parts.find(q=>re.test(q.name)),X=pr.x,Y=pr.y,Z=pr.z;
+    const garment=(q,open)=>{const g=q.geometry,ix=g.index,k=first[pr.names.indexOf(q.name)],n=ix?ix.count/3:g.attributes.position.count/3,tris=[];
+     for(let j=0;j<n;j++){const t=[0,1,2].map(c=>k+(ix?ix.getX(3*j+c):3*j+c));if(open&&t.some(i=>/^(upperArm|forearm|hand|fingers)/.test(bone(i))))continue;tris.push(t);}return {tris};};
+    const shirt=part(/shirt/),trousers=part(/trousers/);assert.ok(shirt&&trousers,`wall: a deep body's shirt and trousers (${m.worker.parts.map(q=>q.name).join(', ')})`);
+    const G={shirt:garment(shirt,true),trousers:garment(trousers,false)},wind=(i,tris)=>{const px=X[i],py=Y[i],pz=Z[i];let s=0;
+     for(const [a,b,c] of tris){const ax=X[a]-px,ay=Y[a]-py,az=Z[a]-pz,bx=X[b]-px,by=Y[b]-py,bz=Z[b]-pz,cx=X[c]-px,cy=Y[c]-py,cz=Z[c]-pz,la=Math.hypot(ax,ay,az),lb=Math.hypot(bx,by,bz),lc=Math.hypot(cx,cy,cz);
+      s+=2*Math.atan2(ax*(by*cz-bz*cy)+ay*(bz*cx-bx*cz)+az*(bx*cy-by*cx),la*lb*lc+(ax*bx+ay*by+az*bz)*lc+(ax*cx+ay*cy+az*cz)*lb+(bx*cx+by*cy+bz*cz)*la);}return s/(4*Math.PI);};
+    const tri=(i,a,b,c)=>{const px=X[i],py=Y[i],pz=Z[i],ax=X[a],ay=Y[a],az=Z[a],abx=X[b]-ax,aby=Y[b]-ay,abz=Z[b]-az,acx=X[c]-ax,acy=Y[c]-ay,acz=Z[c]-az,apx=px-ax,apy=py-ay,apz=pz-az,
+     d1=abx*apx+aby*apy+abz*apz,d2=acx*apx+acy*apy+acz*apz;if(d1<=0&&d2<=0)return Math.hypot(apx,apy,apz);
+     const bpx=px-X[b],bpy=py-Y[b],bpz=pz-Z[b],d3=abx*bpx+aby*bpy+abz*bpz,d4=acx*bpx+acy*bpy+acz*bpz;if(d3>=0&&d4<=d3)return Math.hypot(bpx,bpy,bpz);
+     const vc=d1*d4-d3*d2;if(vc<=0&&d1>=0&&d3<=0){const v=d1/(d1-d3);return Math.hypot(apx-v*abx,apy-v*aby,apz-v*abz);}
+     const cpx=px-X[c],cpy=py-Y[c],cpz=pz-Z[c],d5=abx*cpx+aby*cpy+abz*cpz,d6=acx*cpx+acy*cpy+acz*cpz;if(d6>=0&&d5<=d6)return Math.hypot(cpx,cpy,cpz);
+     const vb=d5*d2-d1*d6;if(vb<=0&&d2>=0&&d6<=0){const w=d2/(d2-d6);return Math.hypot(apx-w*acx,apy-w*acy,apz-w*acz);}
+     const va=d3*d6-d5*d4;if(va<=0&&d4-d3>=0&&d5-d6>=0){const w=(d4-d3)/((d4-d3)+(d5-d6));return Math.hypot(bpx-w*(X[c]-X[b]),bpy-w*(Y[c]-Y[b]),bpz-w*(Z[c]-Z[b]));}
+     const k=1/(va+vb+vc),v=vb*k,w=vc*k;return Math.hypot(apx-abx*v-acx*w,apy-aby*v-acy*w,apz-abz*v-acz*w);};
+    let inside={d:0};
+    for(const [s,t0,t1,name] of [[1,2.695,2.90,'right'],[-1,3.195,3.42,'left']]){const hand=part(new RegExp('^forearm and hand '+s+'$')),hk=first[pr.names.indexOf(hand.name)],hv=[];
+     for(let v=0;v<hand.geometry.attributes.position.count;v++)if(/^(hand|fingers|forearm)/.test(bone(hk+v)))hv.push(hk+v);
+     for(let k=0;t0+k*.01<=t1+1e-9;k++){const t=t0+k*.01;motion.apply(t/D);pr.update();
+      for(const [gn,g] of Object.entries(G))for(const i of hv){if(Math.abs(wind(i,g.tris))<=.5)continue;let d=Infinity;for(const [a,b,c] of g.tris)d=Math.min(d,tri(i,a,b,c));
+       if(d>inside.d)inside={d,t,gn,what:name+' '+(/^forearm/.test(bone(i))?'forearm':'hand')};}}}
+    assert.ok(inside.d<=.01,`wall: the held ${inside.what} lies ${(100*inside.d).toFixed(1)} cm inside the ${inside.gn} at ${inside.t?.toFixed(3)} s (1 cm at most)`);}
    let loose={d:0};
    for(let t=3.85;t<=4.15+1e-9;t+=.01){motion.apply(t/D);pr.update();let h=Infinity;for(let i=0;i<pr.count;i++)if(/hand/.test(pr.names[pr.part[i]]))h=Math.min(h,off(pr.x[i],pr.y[i],pr.z[i]));if(h>loose.d)loose={d:h,t};}
    assert.ok(loose.d<=.01,`wall: lowering down the far face the hand point nearest the wall's surface is ${(1e3*loose.d).toFixed(1)} mm from it at ${loose.t?.toFixed(2)} s`);
@@ -324,8 +386,8 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // its left thigh dragged under the hip, the band dropped it 8.3 cm in 15 ms as the fold slid off the top, and the
    // hips read -63.4 m/s^2 at 3.378 s (the pig director, on its own fold, -89.7 at 3.195 and +42.0 at 3.149; the
    // foreman +34.4 at 3.416); with the seat below but the band still resting the fold, only the director fails it
-   // (-38.2 at 3.198). Every other mammal reads -19.8 to +11.5 there, unchanged, and the pigs now -15.4 to +23.7
-   // (-15.6 to +24.5 on c44413ef, -15.5 on ba891c83, -14.4 to +24.5 on f293da69).
+   // (-38.2 at 3.198). Every other mammal reads -19.8 to +11.5 there, unchanged, and the pigs now -15.2 to +24.3 (-15.4
+   // to +23.7 on 8da9a826, -15.6 to +24.5 on c44413ef, -15.5 on ba891c83, -14.4 to +24.5 on f293da69).
    const hipsY=t=>{motion.apply(t/D);return bones.hips.getWorldPosition(bones.hips.position.clone()).y;},ys=new Map();
    const yAt=t=>{const k=Math.round(t*1e3);if(!ys.has(k))ys.set(k,hipsY(k/1e3));return ys.get(k);};let jolt={a:0};
    for(let t=2.6;t<=3.5+1e-9;t+=.001){const a=(yAt(t+.005)-2*yAt(t)+yAt(t-.005))/.005**2;if(a<-25||a>30){if(Math.abs(a)>Math.abs(jolt.a))jolt={a,t};}}

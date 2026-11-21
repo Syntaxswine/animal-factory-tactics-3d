@@ -117,15 +117,15 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=
   if(s.kind==='grip'){both(-fmax*G*d2,fmax*G*d2);continue;}
   // A held seat keeps a hold's sideways bounds, as if it bore .3 g at least, even where its plan rides -g and it bears
   // nothing; the push then comes from elsewhere. On the climb's top a hand grips the wall at most seated samples
-  // (supportAt reads a grip, no outline, at 212 and 207 of each pig's 227; at the other 15 and 20, with the left hand
-  // let go and the right, in the balance's own pose, still off the top or crossing to the far grip, it reads the seat's
-  // outline, which takes the feet's bounds below: the foreman's at 2.915 to 2.925, 2.960 and 2.965 s and from 3.040 to
-  // 3.085, the director's from 2.920 to 2.965 and from 3.040 to 3.085), and a seat's bounds, up, down and sideways, lie
-  // inside a grip's: the pigs' plans ride -g at 13 and 10 of those samples (13 and 9 on c44413ef, 26 and 9 on f293da69,
-  // 16 and 9 on ba891c83) and push the body sideways there at up to 3.75 m/s^2, and the gate reads no phantom wrench
-  // over its limits on either pig from 2.55 to 3.68 s (its required force there stays under its 5 body weights: at the
-  // most 3.6 on the pig director at 3.040 s and 3.7 on the foreman at 3.646, against the 6.5 the director's old left
-  // elbow whip read at 3.517 on c44413ef).
+  // (supportAt reads a grip, no outline, at 210 and 213 of each pig's 227; at the other 17 and 14, from 2.965 to 3.045
+  // s on the foreman and 2.985 to 3.050 on the director, with the left hand off the top and the right on its way from
+  // its hold, which it leaves at 2.90 s, to the far grip, it reads the seat's outline, which takes the feet's bounds
+  // below), and a seat's bounds, up, down and sideways, lie inside a grip's: the pigs' plans ride -g at 13 and 9 of the
+  // 227 (13 and 10 on 8da9a826, 13 and 9 on c44413ef, 26 and 9 on f293da69, 16 and 9 on ba891c83) and push the body
+  // sideways there at up to 4.92 and 3.85 m/s^2, at 2.985 and 2.995 s, inside the outline's samples (3.75 on 8da9a826,
+  // at 3.680 and 3.265 s, outside them), and the gate reads no phantom wrench over its limits on either pig from 2.55
+  // to 3.68 s (its required force there stays under its 5 body weights: at the most 3.7 on the pig foreman at 3.646 s
+  // and 3.3 on the director at 3.037, against the 6.5 the director's old left elbow whip read at 3.517 on c44413ef).
   if(s.kind==='hold'&&!s.hull){const fy=Math.max(.3*G,ay(i)+G);both(-MU*fy*d2,MU*fy*d2);continue;}
   if(s.kind!=='feet'&&s.kind!=='hold')continue;const fy=Math.max(.3*G,ay(i)+G),h=Math.max(.2,Y.c[i]-(s.floor||0)),k=h/fy,a=-k/d2,b=1+2*k/d2;
   // The pressure point also carries the body's turning: p_x = c_x - k a_x + dL_z / (M fy), p_z = c_z - k a_z - dL_x / (M fy).

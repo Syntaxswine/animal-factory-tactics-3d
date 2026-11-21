@@ -3525,6 +3525,252 @@ s on the foreman and 2.970 on the director, up to 10.3 cm over the wall (the for
 after which the let-go's margin on the foreman's seat wants the gate again (both pigs). The reach read from the played
 trunk for the legs (the thirty-third part), and the rest as it leaves it.
 
+### 2026-11-21 (physics balance, thirty-fifth part): the pigs' hands hold in front of their chests and go round their bellies
+
+The thirty-fourth part left the pigs' right arms straight over the top, and its own left-hand hold lay inside the pigs'
+clothes, which no check saw: this part's first review found it.
+
+Why the right arm went straight. From the right hand's let-go of its first grip (2.345 s) its keys moved it through a
+waypoint (2.465 s) and re-planted it on the top from 2.585 to 3.0 s, 4 cm in from the far edge and 10 cm along it from
+the wall's middle, before it crossed to the far grip (a waypoint at 3.06, the grip at 3.12). Seated over the top the
+pigs' right shoulders ride 45.7 to 57.4 cm above the grips' height on the director and 46.2 to 57.1 on the foreman
+(every 5 ms from 2.585 to 3.0 s: rightarm-f13fin-2585-5ms.txt), more than the arm's 50.5 cm until 2.910 s on the
+director and 2.885 on the foreman, so no point of the top lay within reach; as played the re-plant lay 103.9 to 121.8%
+of the arm (shoulder to wrist) from the shoulder on the director and 103.0 to 125.2% on the foreman, where the horse's
+arm reaches it at 91.7 to 99.7% (every 10 ms: grip-right-f14d-10ms.txt, var-f14d being 8da9a826 with read-only hooks).
+The hand hung short of it, 8.7 and 10.3 cm off the wall at 2.585 s (handgap-f13fin-2585.txt), and the straight arm swung
+into the body: by the rig's capsules (var-f13fin's gates) the foreman's right upper arm 5.4 cm into its lower trunk at
+2.596 s, failing its capsule rule, and the director's 3.1 at 2.605, its right forearm 2.9 cm into its right thigh at
+2.995.
+
+Why holding in did not do. This part's first round held the right hand in to the body over 350 ms, .45 of the arm from
+the shoulder toward the crossing's waypoint, as the thirty-fourth part held the left at .6. The rig's capsules read both
+arms clear, but the rig gives every body one trunk, a .14 m capsule from pelvis to chest, and a pig's belly overruns it.
+Read against the pigs' own clothes, the held hands lay inside them: by the generalized winding number of each vertex of
+the hand and forearm against the shirt (its sleeves dropped) and the trousers and its distance to that garment's nearest
+triangle, every 10 ms over the holds (the climb test's check, below), on 8da9a826 the pigs' right forearms lay 21.0 and
+20.9 cm into their shirts (the director's at 2.695 s, the foreman's at 2.715), whole hands and forearms in from each
+let-go to its far grip (up to 21.6 cm: forearm18-f13fin-exact-trace.txt), and on the first round the right hands 19.1
+and 18.7 cm at 2.895 (test-f17t-pigs.log and test-f17u-pigs.log). Rendered, the held hands vanish into the chest
+(video/f14/st-fore-280, the after panels; st-fore-330-v2 and st-dir-330-v2, the before panels). By the climb's own torso
+points (below) both old holds lay 19.5 to 22.7 cm inside the torso (holdgeo15-f14d.txt), and so does the line from the
+shoulder toward each waypoint, from 30 to 40% of the arm to 85 to 95% (holdline15-f14d.txt); the left waypoint itself, 6
+cm above the top, lay in the director's belly.
+
+**The fix**, wall-climb.js, one rule for a deep body's free hands, from each let-go to the far grip:
+- Each hand holds in front of its chest, 30 degrees to its own side of straight ahead at the chest's height, 3 cm
+  (MARGIN) out from the torso there. The torso is the climb's own surface probe, the points riding the hips or the spine
+  (as the search over the top reads them), carried into the chest's frame by the keyed trunk; its radius along that line
+  is its farthest point within 10 degrees of it (20 where 10 hold fewer than two), the largest every 50 ms over the
+  hold.
+- Through each hold the elbow bends out to its side and a little up (ELBOW, [0, .25, 1] in the chest frame, z to its own
+  side). Bent the arm's own way (back, down and out), the elbows lay against the bellies' sides while the hands held:
+  the forearms up to 3.1 cm into the clothes (the foreman's left, into its shirt) and the sleeves up to 10.5 (the
+  director's right, into its waistcoat), by the winding number and the depth to the nearest triangle every 10 ms
+  (forearm18-exact-c1.txt, its tree rows: probe-forearm17.mjs with EXACT on var-f17x, an experiment copy at its
+  defaults, round 2's motion).
+- The waypoints go. Each move from a grip to the hold, and from the hold to the far grip, arcs out by as much as its
+  chord's middle lies within 7 cm (CLEAR) of the torso, along the line from the chest's origin through that middle, but
+  never down. Every chord's middle lies below the chest, so each arc is pushed level, out to the side and back, 10.9 to
+  17.4 cm (review round 2's arcs-r2.txt): each arc's size is how far the chord's middle falls short of CLEAR out from
+  the torso, and it pushes level rather than out along that line, so CLEAR is not a clearance reached.
+- The left hand lets go at 2.895 s (LET_GO, as before) and reaches its hold over 300 ms (LEFT_HOLD), holding it to 3.42
+  (LEFT_END); the right lets go as before (2.345 s), reaches its hold over 350 ms (RIGHT_HOLD) and holds it to 2.90
+  (RIGHT_END); then each goes straight on to its far grip (3.605 and 3.12 s). A missing key leaves the rule out rather
+  than splicing elsewhere (guarded after round 2, the motion the same: diffspans-f15h-f16g.txt), and a hand whose hold
+  finds no torso point keeps the keys it had before this rule, without arcs (the left would let go at 3.485 s again, out
+  of reach, as before fix 13; until round 3 it fell back to the rest wrist, inside a deep body's belly, and until round
+  4 its arcs still ran); neither happens for the pigs (the motion the same: diffspans-f17h-f18d-final.txt).
+- The search over the top, which runs before this rule and does not see it, still weighs the right hand's old re-plant
+  mark from 2.585 to 3.0 s (MARKS): without it, on the first round, the gate read 207 readings over its limits on the
+  director against 34, its worst 692 N and 450 N·m at 2.543 s, its left knee at 12.2 m/s (review round 1's var-r1nom;
+  the foreman's as they were). The comment now says so.
+
+phantom-wrench 1.2.0 `--gate` on frozen copies (8da9a826 = var-f13fin, checked byte for byte; this commit's motion =
+var-f17h's, gated; the tree since differs from it in comments, the test and a fallback that never fires for the pigs,
+and var-f18d, the tree byte for byte, plays as var-f17h to 0.00 mm every 1 ms: diffspans-f17h-f18d-final.txt; every
+crossing but the pigs' climbs plays as on 8da9a826, frame for frame: same-f17h-f13fin.txt, all 33):
+- The director: required force 3.6 -> 3.3 times its weight (3.040 -> 3.037 s); capsule pairs over 1 cm 8 -> 3 and over 2
+  cm 4 -> 1 (the three left as before: its left hand and forearm by its head at 1.167 and 1.337 s, its hooves at 5.185);
+  readings over the limits 34, as before; its points over 8 m/s as before (its left knee coming up behind 8.8 m/s at
+  3.179 s).
+- The foreman: its capsule rule passes (pairs over 2 cm 3 -> 0, over 1 cm 5 -> 2, the two left as before); required
+  force 3.7 at 3.646, as before; readings 43 -> 49, the six more where its boots alone hold it as its right knee comes
+  up (from 2.36 to 2.50 s on both trees, 21 -> 27, in two clusters: from 2.356 to 2.368 s 13 readings peaking at 324% of
+  the limit -> from 2.353 to 2.366 14 peaking at 195%, 143 N at 2.358; from 2.489 to 2.497 8 peaking at 239% -> from
+  2.485 to 2.501 13 peaking at 273%, 200 N at 2.498, where 8da9a826 read 0 at 2.498 to 2.501). Its internal velocity
+  snap at 2.2175 s (its right palm) reads 0.03 m/s, 0.06 before.
+- Over the top (2.55 to 3.68 s) neither pig reads anything over the limits. The seat, alone from the left hand's
+  lift-off until the right takes the far grip, reads nothing on the director from 2.90 to 3.10 s, and on the foreman
+  19.8 N and 29.1 N·m at the most, at 2.966 to 2.968 s, between the 5 ms samples, which read nothing: 73% of the torque
+  limit, where 8da9a826 read nothing there (the gates' rows and instants).
+- The held elbows alone change little: against round 2's tree (var-f15h's gates) the same instants read over the limits
+  on both pigs; over every instant the director's forces differ by 0.02 N at the most and the foreman's by 10.1 N and
+  9.9 N·m (at 2.350 s, just after its right hand lets go, where round 2 read nothing; under the limits), its seat's
+  moment 28.4 -> 29.1 N·m.
+
+Measured on the tree's code (var-f17h):
+- The clothes, by the winding number and the depth to the nearest triangle (probe-forearm17.mjs with EXACT: the vertices
+  of the hand, the forearm and the forearm's sleeve, each against the shirt with its sleeves dropped and against the
+  trousers, inside where the winding number passes .5, at the distance to that garment's nearest triangle). Through the
+  holds, every 2 ms (forearm17-f17h-holds-exact-2ms.txt): no vertex of a hand or forearm goes over 0.3 cm in, two of the
+  foreman's left elbow and two of its wrist through its left hold, and none of the director's goes in at all; the
+  director's right sleeve lies 5.0 cm into its waistcoat by the elbow through its hold (up to 19 vertices), its left one
+  vertex 1.1 to 1.2 cm from 3.20 to 3.31 s (forearm18-f17h-exact-trace.txt), and the foreman's right one vertex 0.1 cm
+  into its trousers as the hand comes to the hold (2.70 s). Rendered, the director's right sleeve dips into the
+  waistcoat's side at the elbow, a jagged seam, the arm reading as resting on the belly (video/f14/st-dir-280-elb, its
+  zoom3.jpg). On round 2's motion the forearms lay up to 3.1 cm in and the sleeves up to 10.5 (above); on 8da9a826 the
+  hands and forearms lay in from each let-go to its far grip, up to 21.6 cm (forearm18-f13fin-exact-trace.txt). Read to
+  the garment's nearest vertex instead (forearm17-f17h-holds-vert-2ms.txt and this part's earlier figures), the depth
+  misreads both ways: a vertex 0.04 cm in read 4.5, one 3.1 cm in read 3.7, and the director's right sleeve on round 2's
+  motion 5.4 where it lay 10.5 (review round 3).
+- Near the grips, at any depth by the nearest triangle every 10 ms (winspans18-f17h.txt, from
+  forearm18-f17h-exact-trace.txt), the hands still sit inside the clothes for 0.09 to 0.15 s after each let-go and
+  before each far grip (the foreman's left from its hold to its far grip, out only for about 4 ms at 3.50 s: 0.3 cm
+  through the hold, 1.4 as it leaves it at 3.47 s, 6.6 at its grip) and the forearms for up to 0.27 s (the foreman's
+  left from 3.17 s to its far grip, 0.3 cm through its hold), up to 18.0 cm in (the foreman's right at 3.11 s), and the
+  sleeves up to 14.1 cm (the director's left, 2.90 to 3.17 s); the director's right sleeve stays in from its let-go to
+  its far grip, up to 19.2 cm (3.09 s): the grips lie under the belly and the seat, which rest on the top, and the
+  forearms are inside already as the hands let go. On 8da9a826 the hands and forearms lay in throughout
+  (winspans18-f13fin.txt), though at some instants near the grips the tree's lie deeper (the hands and forearms by up to
+  4.3 cm, the foreman's right forearm 12.5 -> 16.8 cm at 3.07 s, the left forearms 2.4 and 2.8 cm deeper at 2.93 to 2.96
+  s; the sleeves by up to 4.8, the director's right 13.8 -> 18.6 at 3.07, the foreman's up to 3.2, its left 5.1 -> 8.3
+  at 3.00; the peaks at the right grips 18.0 and 17.6 cm against 18.0 and 17.9: review round 5's
+  deeper-f13fin-f17h.txt), and before its left let-go the foreman's left forearm and sleeve, still on the near grip, sit
+  up to 1.1 and 1.2 cm deeper (the forearm 11.1 -> 12.2 cm at 2.53 s, the sleeve 2.3 -> 3.5 at 2.58; the director's arms
+  move 0.3 cm at most outside the spans: review round 6's deeper-outside-f13fin-f18d.txt). The director's left sleeve,
+  deeper from 2.92 s already (3.4 -> 12.4 cm at 2.97) and out of its clothes on 8da9a826 from 2.98 to 3.34 s, now stays
+  in until 3.17 (up to 14.1 cm at 2.92 and 12.2 at 2.98; 3.1 at 3.16) and lies 1.1 to 1.2 cm in from 3.20 to 3.31 s: a
+  regression (trace18-f13fin-pig-director.txt and trace18-f17h-pig-director.txt). By the chest ray (round 2's measure:
+  the first crossing of the clothes from the chest point toward the palm) the palms read clear there but for 1.6 and 2.8
+  cm grazes at 2.985 and 3.058 s (palmw-f17h-1ms.txt), where the hands lie up to 8.9 cm in by the triangle depth: that
+  ray stops at an inner layer, so it cannot see the trousers' seat, and the climb test no longer uses it.
+- The rig's capsules, every 2 ms from 2.3 to 3.7 s: no arm capsule goes over 0.5 cm into another, the pairs the rig
+  leaves out (a hand or forearm against the lower trunk) included (hold15-tree-f17h.txt); from 2.4 to 3.0 s the pigs'
+  right arms keep 7.3 and 9.8 cm clear of the trunk by these one-size capsules (armtrunk-f17h.txt). By the shirt itself
+  the elbow joints now keep out of it through the holds, the foreman's 1.6 cm or more from any of its triangles (0.3 cm
+  from its body on round 2's motion: review round 2's ptcheck-r2h-elbowR-hold.txt), the director's 5.0
+  (ptcheck-f17h-elbows-hold.txt, round 2's probe at 2.75 to 2.85 and 3.25 to 3.35 s).
+- Speeds over 2 ms chords from 2.3 to 3.7 s: the elbows, wrists and palms at 7.1 m/s at the most, the foreman's left
+  palm at 3.510 s as it comes to the far grip (the director's 6.95); the left elbows swing back faster as the left hand
+  crosses, on 8da9a826 -> this the foreman's 4.5 -> 6.3 m/s (3.586 -> 3.524 s) and the director's 5.0 -> 5.3
+  (hold15-tree-f13fin.txt and -f17h.txt; 5.2 and 5.1 on round 2's motion, before the held elbows).
+- The wall: after its let-go the left hand peels off the top, within the rig's centimetre of it until 2.965 s on the
+  foreman and 2.980 on the director, the director's up to 4.6 mm into it at 2.945 (handgap-f17h-2.88-3.00.txt); the
+  right leaves its grip clean (handwall-f17h-2.33-2.75.txt). The thirty-fourth part's let-go margin goes with it: the
+  palm now stays on the top until the seat has spread (from 2.905 s). The foreman's left hand goes through the wall on
+  its way to the far grip: held out over the near side (its chest faces back that way at 3.42 s), it crosses low, and
+  its mesh enters the near face at 3.530 s and passes through the top to the grip, 4.9 cm deep at 3.540 and 7.7 at 3.560
+  (lefttrack16-f17h.txt; as review round 2 found on its motion, lefttrack-r2h-foreman.txt, and saw in its render,
+  stills/fore-a-g1-far.jpg). On 8da9a826 it came down onto the grip from above, through the waypoint (5.1 cm into the
+  wall's box at the grip, 3.590: lefttrack16-f13fin.txt). The pigs' other hands reach their far grips over the far face
+  or skimming the top, and sit 1.6 to 5.7 cm into the box at their grips, before and after (handwall-f17h-3.05-3.70.txt
+  and handwall-f13fin-3.05-3.70.txt).
+- The seat: supportAt reads its outline at 17 and 14 of each pig's 227 held samples (15 and 20 before), from 2.965 to
+  3.045 s on the foreman and 2.985 to 3.050 on the director; the plans ride -g at 13 and 9 of the 227 (13 and 10) and
+  push the body sideways there at up to 4.92 and 3.85 m/s^2, at 2.985 and 2.995 s, inside the outline's samples (3.75
+  before, at 3.680 and 3.265, outside them: seathull-f17h.txt and -f13fin.txt).
+- The required force (forceprofile-f13fin-f17h-director.txt and -foreman.txt): the director's largest rises 2.89 -> 3.30
+  at 3.036 s and up to 0.38 more from 2.956 to 2.963 (0.68 -> 1.06 at 2.960); the foreman's 0.33 -> 0.82 at 2.333 and up
+  to 0.45 more from 2.934 to 2.940 (2.49 -> 2.95 at 2.937).
+
+What moves: the pigs alone, the director from 2.230 to 4.462 s and the foreman from 2.026 to 4.110 and from 4.218 to
+4.368 by over 0.1 mm in any coordinate (diffspans-f13fin-f17h.txt), by over 0.5 mm only to 3.786 and 3.660 s
+(diffspans-f13fin-f17h-tol.txt); the arms' points by up to 48.9 and 45.3 cm (the right palms); the director's other
+points by 7.1 mm at the most and its centre of mass by 1.99 cm; the foreman's by up to 3.19 cm (its head at 2.560 s; its
+shoulders, hips and knees 1.0 to 1.8 cm from 2.25 to 2.61 s, around its right knee up) and its centre of mass by 1.91
+(diffpoints-f13fin-f17h.txt). The held elbows alone move the elbows by up to 7.2 cm and the palms by 2.5, the foreman's
+head by 5.8 mm and its right wrist by 5.6, and nothing else over 4.3 mm (diffpoints-f15h-f17h.txt; until 3.814 and 3.678
+s: diffspans-f15h-f17h.txt). By the climb test's own measures (testmeasures-r3-f13fin.txt and -f17h.txt,
+elbowtest-f13fin.txt and -f17h.txt): the foreman's hips over the top -15.4 to +23.7 -> -15.2 to +24.3 m/s^2, its trouser
+fold 3.412 -> 3.424 cm into the wall at 3.34 s (under the 3.5 the user allowed), its right knee over the top 4.1 -> 4.0
+m/s, the director's hips -12.2 to +16.8 -> -12.2 to +18.6, its left knee coming up behind 8.78 -> 8.76 m/s, its right
+knee over the top 5.253 -> 5.243 (the test comment's 5.3 now 5.2); the pigs' fastest elbows as the left hand crosses are
+now their left, 5.3 and 6.3 m/s at 3.528 and 3.524 s (their right, 5.8 and 5.6 at 3.034, on 8da9a826).
+
+`tests/natural-traversal.test.mjs`: the climb test holds a deep body's held hands and forearms out of its clothes: over
+each hold, read every 10 ms, no vertex of the hand or forearm (the "forearm and hand" mesh's points carried by the hand,
+fingers or forearm) more than 1 cm into the shirt (its sleeves dropped) or the trousers, inside by the winding number
+against that garment, at the distance to its nearest triangle. Now the deepest are 0.3 cm (the foreman's left elbow and
+wrist). It fails on 8da9a826, with the capsule check (below) switched off, since that fails there first: the pigs' right
+forearms 21.0 and 20.9 cm into their shirts (the director's at 2.695 s, the foreman's at 2.715: test-f17t-pigs.log); on
+the first round, the right hands 19.1 and 18.7 at 2.895 (test-f17u-pigs.log); on round 2's motion, the hands held as now
+but each arm bent its own way, the foreman's left forearm 3.1 into its shirt at 3.415 (test-f17g-pigs.log); the tree
+passes (test-f17h-tree.log, the pigs, the horse and the donkey). Its first version read the depth to the garment's
+nearest vertex, 4 cm at most, which review round 3 found misread (above). The sleeves are cloth over the forearm, not
+read (the director's right, above); nor are the moves to and from the grips (above). A version before it checked the
+palm by the chest ray from each let-go to the far grip, 4 cm at most; written with 1 cm it failed round 2's tree on the
+director's left graze (test-f15h-tree.log), and review round 2 found the ray blind to the trousers' seat, so the winding
+number replaced it. It also holds the right arm out of the trunk over the top by the rig's capsules (2.4 to 3.0 s, every
+2 ms): a deep body clear of it, every other mammal 4.5 cm into it at most (a sentinel: they read 3.0 to 3.9 cm, the
+right upper arm in the lower trunk at 2.656 to 2.688 s as the hand re-grips the top: armtrunk-f17h.txt); 8da9a826 fails
+it on both pigs, 5.4 cm at 2.596 s on the foreman and 3.1 at 2.604 on the director (test-f13t-pigs.log). The full suite
+passes (2575 tests).
+
+**Not kept** (each read by probe-hold15.mjs or probe-forearm17.mjs, var-f15x, var-f16x and var-f17x taking the rule's
+numbers as globals; gated on frozen copies where named):
+- Held .45 of the arm toward the waypoint (the first round, var-f14fin) and .6 for the left (8da9a826): inside the
+  clothes (above).
+- Pushed out from those holds to the torso's surface, or put on the belly's nearest point to the waypoint within 85% of
+  the arm: the hands lay in the thighs as the knees came up, up to 7.7 and 12.0 cm by the rig's capsules
+  (hold15-push-shell.txt).
+- In front of the chest with straight moves and the waypoints kept: the palms cut up to 14.2 cm into the belly on the
+  way down to the waypoint, by the chest ray (hold15-trace-union.txt).
+- Arcs that could point down: near the top they drove the left hand into the wall after its let-go, 2.0 and 3.6 cm on
+  the director and the foreman (handgap-f15fin-2.88-3.00.txt; var-f15fin's gates).
+- The left hold reached in 120 ms: the director's left palm at 8.7 m/s (hold15-arcup.txt, up0); in 200 ms the foreman's
+  seat, alone as the hand lifted clear, read 41.5 N·m at 2.965 s, 104% of the limit (var-f15fin2's gate; var-f15f, the
+  right hand held to 2.95 instead, the same).
+- The left held to 3.45 (with the 120 ms let-go and arcs that could point down): the foreman's left palm at 8.4 m/s at
+  3.514 s (var-f15a's gate); to 3.40, the director's left forearm 2.1 cm into its left thigh by the rig's capsules at
+  3.556 (hold15-nw4h.txt).
+- CLEAR at 5, 6 and 9 cm, with the held elbows, by the triangle depth at any depth every 10 ms (forearm19-clear-a.txt
+  and -b.txt, split by split-trace19.mjs and summed by winspans18.mjs; 7 is the tree): at 5 and 6 the right hands dipped
+  up to 1.1 and 0.7 cm into the trousers on their way to the hold, from 2.46 s (0.3 at 7, none at 9; every 2 ms, review
+  round 5's righthand-c5679-2ms.txt); at 9 the hands also came out of the clothes about 10 ms sooner at some grips and
+  the foreman's left rose 0.9 cm into its shirt as it left its hold (1.4 at 7), but the fastest palm moved at 7.14 m/s
+  (7.07 at 7), and, gated (var-f19c9), 9 reads over the limits at the same instants as 7, the foreman's seat at 29.8 N·m
+  against 29.1 and its worst wrench 201 N against 200. The foreman's left hand is out of its clothes between its hold
+  and its far grip for about 4 ms at 7, none at 5 and 6, and about 30 ms at 9 (from 3.482 to 3.510 s: review round 5's
+  lefthand-foreman-c5679-2ms.txt). So 9 reads better on every clothes figure here, by 0.5 cm and tens of milliseconds at
+  most, and gates about even; 7 stays. On round 2's design the chest ray had read the director's left palm 1.3 and 0.7
+  cm in at 2.990 s at 5 and 6 and none at 7, every 10 ms; at 2 ms it reads 1.6 at 7, as on the tree (hold15-f15e.txt,
+  hold15-f15gh.txt, palmskin-f15h-2ms.txt).
+- Waypoints right above the far grips: the hands through the belly (up to 17.9 cm by the chest ray) and the thighs, at
+  up to 12.8 m/s (hold15-pregrip.txt).
+- The right hand's hold reached in 450 ms instead of 350 (var-f15c's gate, against var-f15b's, the tree it was tried
+  on): the foreman's knee-up readings 28 against 29 (this tree's 27).
+- Other elbows and holds through the holds, every 10 ms by the triangle depth (forearm18-exact-c1.txt and -c2.txt; by
+  the vertex depth, forearm17-c1.txt to -c4.txt): bent straight out, the foreman's forearms stayed 1.1 and 1.2 cm in;
+  out and further up (half as much up as out, or as much, or back as well), the director's left sleeve went 2.8 to 3.3
+  cm in and the foreman's left elbow crossed at 6.9 to 7.8 m/s; held 6 cm out (MARGIN), the forearms stayed up to 2.4 cm
+  in and the director's right sleeve 10.1; holds tilted 10 or 15 degrees up put the hands back into the clothes (up to
+  2.3 cm), and 35 or 40 degrees to the side the foreman's right (1.5 to 2.3 cm), though they cleared the director's
+  right sleeve.
+- For the foreman's left crossing through the wall (lefttrack16-*.txt): arcs to the far grips tilted up by 30 and 45
+  degrees still went in (from 3.540 and 3.550 s); straight up cleared the near face, the hand coming down onto its grip
+  through the top (from 3.550 s, 5.0 cm at the most, as deep as a hand sits at a far grip: lefttrack16-upx1.txt), but
+  the other hands rose into their bellies, the director's right palm 16.0 cm and left 13.3, the foreman's right 7.7, by
+  the chest ray (hold15-f16-upx1.txt); holds tilted up 15 and 25 degrees still crossed low; a lift planned from the
+  keyed trunk never fired, the keyed trunk carrying that hand 10 cm higher than it plays (2.106 m against 2.004 at 3.55
+  s); world waypoints over the near half or at the near edge stalled both hands short of them (the director's backing
+  off 4 cm) and then dropped them through the top; arcs never pointing away from the wall let the foreman's hand in
+  earlier, from 3.520.
+
+**Left.**
+- The far grips (and the near ones) lie under the pigs' belly and seat, which rest on the top: the hands sit inside the
+  clothes for 0.09 to 0.15 s at each and the forearms up to 0.27, and the foreman's left hand reaches its far grip
+  through the wall (3.530 to 3.560 s). Grips set out from under the belly would end both; they reshape the far hang,
+  which the thirty-second and thirty-third parts tuned.
+- The director's sleeves: its right in its clothes from its let-go to its far grip, 5.0 cm into its waistcoat by the
+  elbow through its hold (2.695 to 2.90 s), visible as a seam; its left deeper from 2.92 s, in until 3.17 and 1.1 to 1.2
+  cm from 3.20 to 3.31, where 8da9a826 had it out from 2.98 to 3.34 s.
+- The foreman's boots-only moment as its right knee comes up (from 2.36 to 2.50 s, both hands off the top): 27 of its 49
+  readings, its worst 273% of the limit at 2.498 s.
+- The foreman's seat moment at 2.966 to 2.968 s (29.1 N·m, under the limit, above); its right arm straight at its far
+  grip from 3.075 to 3.740 s, 99.5% of its length or more (from 3.100 on 8da9a826: rightarm-f17h-far-5ms.txt and
+  rightarm-f13fin-far-5ms.txt).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

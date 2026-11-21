@@ -93,8 +93,11 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // clear of the top, and from the right knee up to the left leg over that set its lowest point resting on it (REST: the
  // seat carries the body where the hands cannot), the hands' reach to their marks a cost (MARKS: where the arm keys
  // below plant them on the top, by time; a deep body's left hand lets go of its near mark at 2.895 s, but the search
- // weighs it to 3.485: the let-go below). The torso is its points at rest riding the hips or spine; the height for a
- // lean is exact (a move up or down shifts every point alike).
+ // weighs it to 3.485: the let-go below; and its right hand holds in front of its chest instead of re-planting on the
+ // top from 2.585 to 3.0 s, while the search, which runs before the hands' rule and does not see it, still weighs that
+ // mark: without it, on this fix's first round, the gate read 207 readings over its limits on the director against 34,
+ // the foreman's as they were: review round 1's var-r1nom). The torso is its points at rest riding the hips or spine;
+ // the height for a lean is exact (a move up or down shifts every point alike).
  // A deep body's far grips lie near the top's far edge (farX): hanging low on the far face, an arm reaching from
  // shoulders out past the belly to the top's middle crossed its far corner, and the clearance fit lifted the hand's
  // target off the top to clear it (up to 7.2 cm on the pig director leant only as far as on the near side). With the
@@ -112,22 +115,23 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // 2.40 s), until the knee whipped from straight (0.3 degrees at 2.424 s) to 46 at 2.444 (by the climb test's measure
  // in tests/natural-traversal.test.mjs, the shin bone's knee over 2 ms chords, 12.6 m/s at 2.438 and the pig director's
  // 14.1 at 2.402; the rig's knee point reads 13.4 and 14.5), and the climb's required force read 16.5 and 17.0 body
- // weights there. Rising, the hooves end that whip (4.1 and 5.3 m/s now, that test's measure), though the foreman's
- // right arm then goes 5.4 cm into its trunk as its knee comes up (1.6 cm without the rise). With the far grips the
- // search sets the foreman's left leg over 8.7 cm above the horse's (0.8 on 4e9853f6), and its left leg, going down the
- // far side to its 3.685 s key, locked straight out of reach (the rig's knee point 14.3 m/s at 3.617 s, the test's
- // measure 13.6; 13.7 body weights). So the legs' keys at 3.685 s rode the search's height too (until they rose to
- // the legs' reach instead, below): the lock came back near what it was on 4e9853f6 (the rig's knee point 10.4 m/s at
- // 3.631 s on d1118c40, 10.9 then; 9.3 once the band rested the torso, 10.5 once the far hang below took away the
- // band's drop that hid it, 7.3 since the legs' keys there rise to their reach, below), at the cost of one reading and
- // the foreman's hand check in that test (7.7 mm from the wall against 3.6 without it, on d1118c40; 6.5 now, 7.2 on
- // f293da69; the reach that replaced the ride costs neither, below). Riding every leg key below the top over it instead
- // cost the right knee up 9 readings (its foot's 2.525 s key raised 17 cm), turned the airborne body at the band's jump
- // harder (870 N·m at 3.405 s against 273 on d1118c40; the band no longer jumps there) and put the director's required
- // force over the limit (5.1 body weights against 4.9 on d1118c40; 4.8 on f293da69, and 6.5 since the far hang below,
- // at its old left elbow whip, until its left hand let go before its arm ran out: below).
+ // weights there. Rising, the hooves end that whip (4.0 and 5.2 m/s now, that test's measure), though the foreman's
+ // right arm then went 5.4 cm into its trunk as its knee came up (1.6 cm without the rise), until a deep body's right
+ // hand held in front of its chest over the top (below). With the far grips the search sets the foreman's left leg over
+ // 8.7 cm above the horse's (0.8 on 4e9853f6), and its left leg, going down the far side to its 3.685 s key, locked
+ // straight out of reach (the rig's knee point 14.3 m/s at 3.617 s, the test's measure 13.6; 13.7 body weights). So the
+ // legs' keys at 3.685 s rode the search's height too (until they rose to the legs' reach instead, below): the lock
+ // came back near what it was on 4e9853f6 (the rig's knee point 10.4 m/s at 3.631 s on d1118c40, 10.9 then; 9.3 once
+ // the band rested the torso, 10.5 once the far hang below took away the band's drop that hid it, 7.3 since the legs'
+ // keys there rise to their reach, below), at the cost of one reading and the foreman's hand check in that test (7.7 mm
+ // from the wall against 3.6 without it, on d1118c40; 6.5 now, 7.2 on f293da69; the reach that replaced the ride costs
+ // neither, below). Riding every leg key below the top over it instead cost the right knee up 9 readings (its foot's
+ // 2.525 s key raised 17 cm), turned the airborne body at the band's jump harder (870 N·m at 3.405 s against 273 on
+ // d1118c40; the band no longer jumps there) and put the director's required force over the limit (5.1 body weights
+ // against 4.9 on d1118c40; 4.8 on f293da69, and 6.5 since the far hang below, at its old left elbow whip, until its
+ // left hand let go before its arm ran out: below).
  const deep=back>.05,farX=.54+(deep?.025:0),slideDZ=deep?.10:0;
- if(deep){probe.update();const h0=body.at0('hips'),s0=body.at0('spine'),hipsPts=[],spinePts=[];
+ let deepPts=null;if(deep){probe.update();const h0=body.at0('hips'),s0=body.at0('spine'),hipsPts=[],spinePts=[];deepPts={hips:hipsPts,spine:spinePts};
   for(let i=0;i<probe.count;i++){const b=probe.boneNames[probe.bone[i]],q=V(probe.x[i],probe.y[i],probe.z[i]);if(b==='hips')hipsPts.push(q.sub(h0));else if(b==='spine')spinePts.push(q.sub(s0));}
   const MARKS={1:[[1.265,2.345,[.45,top,.18]],[2.585,3.0,[.54,top,-.10]],[3.12,4.175,[farX,top,-.20]]],'-1':[[1.265,3.485,[.45,top,-.18]],[3.605,4.175,[farX,top,.20]]]};
   const reach=.97*(body.L[1].upper+body.L[1].fore),REST=[.006,.009],inTop=q=>q.x>WALL.edge-WALL.half&&q.x<WALL.edge+WALL.half&&Math.abs(q.z)<.5;
@@ -146,9 +150,9 @@ export function createWallClimb(worker,profile={id:'horse'}){
   // s). So each far key is pushed out until the torso (its points at rest riding the hips or spine, as the search above
   // reads them) clears the far face by FAR_CLEAR below the top (the foreman's hanging keys 14.8 and 14.6 cm, the
   // director's 14.5 and 14.1; the drop's and the absorb's nothing; 6 mm lies inside the rig's centimetre, so the rig
-  // still reads the director's shirt on the face from 4.150 to 4.220 s), and each hanging key (farLean) is raised
-  // until both arms reach the far grips at .97 of the arm (the foreman's 7.6 and 7.2 cm, the director's 6.6 and 6.2):
-  // the fit's push from 4.10 s is 3.7 cm at the most (the foreman's; 14.0 cm out and 3.4 up at 3.90), and the arms come
+  // still reads the director's shirt on the face from 4.150 to 4.220 s), and each hanging key (farLean) is raised until
+  // both arms reach the far grips at .97 of the arm (the foreman's 7.6 and 7.2 cm, the director's 6.6 and 6.2): the
+  // fit's push from 4.10 s is 3.7 cm at the most (the foreman's; 14.0 cm out and 3.4 up at 3.90), and the arms come
   // within 1 cm of the grips' reach from 4.165 s (the director's from 4.140), 3.5 cm past it at the most (the
   // foreman's, at 4.075 and 4.080). The let-go keeps its time, so its drop falls from the raised hang (the drop's arc
   // from the still key), and the hands' release and slide keys keep theirs with it. Let go earlier by the longer fall
@@ -165,8 +169,8 @@ export function createWallClimb(worker,profile={id:'horse'}){
   // drops it as its left leg locks straight going down the far side (3.633 s): that old lock, which the fall hid on
   // f293da69, asked 7.6 times its weight for 3 ms on the rig's 1 ms grid (its 5-ms samples 3.9), over the rig's 5,
   // until the legs' keys there rose to their reach (below: 3.7 now, at the later lock); the director's old left elbow
-  // whip as its left leg came over asked 6.5 for 1 ms (3.517 s; 4.8 before), until its left hand let go before its
-  // arm ran out (below: its peak now 3.6, at 3.040 s).
+  // whip as its left leg came over asked 6.5 for 1 ms (3.517 s; 4.8 before), until its left hand let go before its arm
+  // ran out (below: its peak now 3.3, at 3.037 s, since its hands hold in front of its chest; 3.6 at 3.040 before).
   const FACE=WALL.edge+WALL.half,FAR_CLEAR=.006;
   for(const k of keys){if(!k.far)continue;const hipsQ=yawQ(k.heading||0).multiply(bodyQ((k.pitch||0)*DEG,(k.roll||0)*DEG)),chestQ=hipsQ.clone().multiply(relQ(k.flex||0,k.side||0,k.twist||0)),H=V(...k.hips),C=H.clone().add(body.offsets.spine.clone().applyQuaternion(hipsQ));
    let push=0;const see=w=>{if(w.y<WALL.top&&Math.abs(w.z)<.5)push=Math.max(push,FACE+FAR_CLEAR-w.x);};for(const q of hipsPts)see(q.clone().applyQuaternion(hipsQ).add(H));for(const q of spinePts)see(q.clone().applyQuaternion(chestQ).add(C));
@@ -249,12 +253,13 @@ export function createWallClimb(worker,profile={id:'horse'}){
    [3.065,{f:'world',p:[.81,1.70,0],hoof:20,heading:-90}],[3.485,{f:'world',p:[.80,1.58,-.10],hoof:20,heading:-140,knee:SIDE}],[DOWN_FAR,{f:'world',p:[.80,1.36,-.16],hoof:20,heading:-170,knee:SIDE}],
    [4.04,{...onFace(false,.70,-.16,4.105),knee:OUT,lift:.3}],[4.205,{f:'pelvis',p:[-.06,body.offsets.thigh[1].y-.95*fitB.leg,.16],hoof:25,knee:OUT}],[4.375,{f:'pelvis',p:[-.06,body.offsets.thigh[1].y-1.0*fitB.leg,.16],hoof:25,soft:.03,knee:OUT}],[4.625,foot(.90,-.16,0,-180)],[5.27,foot(.90,-.16,0,-270)],[5.52,foot(.90,-.16,0,-300)],[5.8,{...over(1,-355),arc:.07}],[5.84,land(1,-360)],[6.1,land(1,-360)]],
   // The left hand holds from the catch until the left knee is up (a deep body's left hand lets go in the straddle,
- // before its arm runs out: below), then re-grips on the far side's left while the seat is still on the top; the right
- // re-plants turned to the far side in the straddle (a palm turning 140 degrees where it lay touched the top at two
- // points, and held the body alone on them while the left crossed: 37% of its weight of phantom push). The right lets go
-  // once the chest is over and plants ahead before the right knee comes up beside it. Gripping, the elbows bend back
-  // and out from the wall (bent down, the forearms lay across its near edge). The arms swing up ahead of the jump, in
-  // front of the face, and come down onto the top (reaching straight for it, the forearms went 7 cm into the face).
+  // before its arm runs out: below), then re-grips on the far side's left while the seat is still on the top; the right
+  // re-plants turned to the far side in the straddle (a palm turning 140 degrees where it lay touched the top at two
+  // points, and held the body alone on them while the left crossed: 37% of its weight of phantom push). The right lets
+  // go once the chest is over and plants ahead before the right knee comes up beside it (a deep body's hands hold in
+  // front of its chest instead, from each let-go to its far grip: below). Gripping, the elbows bend back and out from
+  // the wall (bent down, the forearms lay across its near edge). The arms swing up ahead of the jump, in front of the
+  // face, and come down onto the top (reaching straight for it, the forearms went 7 cm into the face).
   'arm-1':[[0,{f:'chest',p:restWrist(-1)}],[.4,{f:'chest',p:[.20,.15,-.30]}],[.7,{f:'chest',p:[.10,-.05,-.32]}],[.86,{f:'chest',p:[.06,.40,-.26],elbow:HANG}],[1.115,{f:'chest',p:[.04,.56,-.22],elbow:HANG}],[1.265,{f:'world',p:[.45,top,-.18],palm:0,elbow:HANG}],[3.485,{f:'world',p:[.46,top,-.18],palm:0,elbow:HANG}],[3.545,{f:'world',p:[.50,top+.06,.04]}],[3.605,{f:'world',p:[farX,top,.20],palm:-180}],[4.175,{f:'world',p:[farX,top,.20],palm:-180,lift:.3}],...SLIDE(1),[4.95,{f:'chest',p:[.18,-.18,-.16]}],[5.27,{f:'chest',p:[.16,-.26,-.20]}],[6.1,{f:'chest',p:restWrist(-1)}]],
   arm1:[[0,{f:'chest',p:restWrist(1)}],[.4,{f:'chest',p:[.20,.15,.30]}],[.7,{f:'chest',p:[.10,-.05,.32]}],[.86,{f:'chest',p:[.06,.40,.26],elbow:HANG}],[1.115,{f:'chest',p:[.04,.56,.22],elbow:HANG}],[1.265,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.345,{f:'world',p:[.45,top,.18],palm:0,elbow:HANG}],[2.465,{f:'world',p:[.52,top+.06,0]}],[2.585,{f:'world',p:[.54,top,-.10],palm:-40}],[3,{f:'world',p:[.54,top,-.10],palm:-40}],[3.06,{f:'world',p:[.56,top+.06,-.15]}],[3.12,{f:'world',p:[farX,top,-.20],palm:-180}],[3.665,{f:'world',p:[farX,top,-.20],palm:-180}],[4.175,{f:'world',p:[farX,top,-.20],palm:-180,lift:.3}],...SLIDE(-1),[4.95,{f:'chest',p:[.18,-.18,.16]}],[5.27,{f:'chest',p:[.16,-.26,.20]}],[6.1,{f:'chest',p:restWrist(1)}]],
  };
@@ -267,62 +272,131 @@ export function createWallClimb(worker,profile={id:'horse'}){
  if(lean>0)for(const id of ['leg-1','leg1'])for(const [t,k] of LIMB[id])if(k.f==='pelvis'&&t>=farLeanFrom&&t<farLeanOff){const share=t<=farLeanTo?1:(farLeanOff-t)/(farLeanOff-farLeanTo);k.p=V(...k.p).applyQuaternion(bodyQ(-FAR_LEAN*lean*share*DEG,0)).toArray();}
  // A deep body's legs hanging down the far face as it leaves the top (their keys at 3.685 s, below the top's level)
  // rise as far as each leg needs to reach its key at .97 of its length (thigh and shin) from the keyed trunk's hip
- // there (trunkAt with no band, fit or balance), as the gripping keys rise for the arms; a key further out than the
- // leg could reach at any height is left where it is. They rode the search's height over the top before (between the
- // trunk keys either side: the pig foreman's 7.7 cm up, the director's 0.8), which left the foreman's at 104.1 and
- // 104.2% of its legs from that hip (116.9 and 117.1 as authored), and its left leg locked straight going down the far
- // side (from 3.645 s, the climb test's knee 10.2 m/s at 3.632; 13.8 at 3.618 as authored): on f293da69 the band's
- // drop hid the lock, but with the far hang holding the body there the gate's required force read 7.6 times its
- // weight for 3 ms at 3.633 (11.9 at 3.617 as authored, the knee point 14.4 m/s). Risen to 1.478 and 1.479 m, 4.2
- // and 4.3 cm above that ride, the foreman's leg locks later and slower (the knee 7.1 m/s at 3.644; 3.8 times its
- // weight at 3.646, where it read 2.6, and 3.7 since its left hand lets go early, below) and its required force
- // passes, its peak then the left elbow's whip (3.9 at 3.523, where it read 3.1; the lock's since that let-go); its
- // readings over the gate's limits and its hand check as they were (42, and 43 since that let-go; 6.5 mm). As
- // played the keys still lie past the leg's reach (105.3 and 105.9% of it, against 112.4 and 113.3 on ba891c83): the
- // clearance fit pushes the trunk 11.9 cm further out than keyed and, with the band (which lowers it 6.6 cm there),
- // 4.0 cm higher, and both legs hang straight down the far face as before (their knees bent under 5 degrees from
- // 3.660 and 3.647 s to 4.150 and 4.112; from 3.641 and 3.609 on ba891c83). The director's lie at 90.2 and 90.3% and
- // stay as authored, 7.5 mm below the ride: its left arm no longer goes into its left thigh as its left leg comes over
- // (2.9 cm, the forearm 2.4, at 3.543 s with the ride; under 1 cm now), at the cost of a little more required force
- // there (2.10 times its weight at 3.589 s against 1.75, the largest rise, from 3.571 to 3.616 s) and a dip of its hips
- // to 27.0 m/s^2 down at 3.790 s (21.3 there with the ride, its least then 27.0 at 3.747). Risen by the far hang's own
- // rise on top of the ride instead (the foreman's 7.6 cm, the director's 6.6), the foreman passed the same way, but
- // the director's left arm went 6.3 cm into its left thigh.
+ // there (trunkAt with no band, fit or balance), as the gripping keys rise for the arms; a key further out than the leg
+ // could reach at any height is left where it is. They rode the search's height over the top before (between the trunk
+ // keys either side: the pig foreman's 7.7 cm up, the director's 0.8), which left the foreman's at 104.1 and 104.2% of
+ // its legs from that hip (116.9 and 117.1 as authored), and its left leg locked straight going down the far side (from
+ // 3.645 s, the climb test's knee 10.2 m/s at 3.632; 13.8 at 3.618 as authored): on f293da69 the band's drop hid the
+ // lock, but with the far hang holding the body there the gate's required force read 7.6 times its weight for 3 ms at
+ // 3.633 (11.9 at 3.617 as authored, the knee point 14.4 m/s). Risen to 1.478 and 1.479 m, 4.2 and 4.3 cm above that
+ // ride, the foreman's leg locks later and slower (the knee 7.1 m/s at 3.644; 3.8 times its weight at 3.646, where it
+ // read 2.6, and 3.7 since its left hand lets go early, below) and its required force passes, its peak then the left
+ // elbow's whip (3.9 at 3.523, where it read 3.1; the lock's since that let-go, 3.7 at 3.646, below); its readings over
+ // the gate's limits and its hand check as they were (42; 43 since that let-go and 49 since its hands hold in front of
+ // its chest, below; 6.5 mm). As played the keys still lie past the leg's reach (105.3 and 105.9% of it, against 112.4
+ // and 113.3 on ba891c83): the clearance fit pushes the trunk 11.9 cm further out than keyed and, with the band (which
+ // lowers it 6.6 cm there), 4.0 cm higher, and both legs hang straight down the far face as before (their knees bent
+ // under 5 degrees from 3.660 and 3.647 s to 4.150 and 4.112; from 3.641 and 3.609 on ba891c83). The director's lie at
+ // 90.2 and 90.3% and stay as authored, 7.5 mm below the ride: its left arm no longer goes into its left thigh as its
+ // left leg comes over (2.9 cm, the forearm 2.4, at 3.543 s with the ride; under 1 cm now), at the cost of a little
+ // more required force there (2.10 times its weight at 3.589 s against 1.75, the largest rise, from 3.571 to 3.616 s)
+ // and a dip of its hips to 27.0 m/s^2 down at 3.790 s (21.3 there with the ride, its least then 27.0 at 3.747). Risen
+ // by the far hang's own rise on top of the ride instead (the foreman's 7.6 cm, the director's 6.6), the foreman passed
+ // the same way, but the director's left arm went 6.3 cm into its left thigh.
  if(deep){const tr=trunkAt(DOWN_FAR,null);
   for(const [id,s] of [['leg-1',-1],['leg1',1]]){const k=LIMB[id].find(([t])=>t===DOWN_FAR)?.[1];if(!k||k.f!=='world')continue;
    const hip=tr.hips.clone().add(body.offsets.thigh[s].clone().applyQuaternion(tr.hipsQ)),r=.97*(body.L[s].thigh+body.L[s].shin),h=Math.hypot(k.p[0]-hip.x,k.p[2]-hip.z);
    if(h<r)k.p=[k.p[0],Math.max(k.p[1],hip.y-Math.sqrt(r*r-h*h)),k.p[2]];}}
- // A deep body's left hand lets go of the near edge before its arm runs out (LET_GO) and holds in to its body until it
- // crosses to the far grip. Seated over the top the pigs' shoulders are wider than the wall: as they straddle it and
- // bring the left knee up behind, the left shoulder hangs out past the near face (22.3 cm on the pig director at 3.27
- // s, 44.6 cm above the grips' height; 25.1 and 46.6 cm on the foreman at 3.34), and the grip, 18 cm along the edge
- // from the wall's middle, lies past the arm's whole length from 2.92 s to the old let-go (3.485) but for 3.005 to
- // 3.070, where it comes just within it (on the foreman from 3.065 throughout). The director's nearest point of the
- // edge stays within it (98.8% at the most), but no point of the top lies within the foreman's from 3.14 to 3.43 s
- // (104.8% at the most). The search over the top does not bring the shoulder in with the seat resting: at 3.305 s it
- // could take the director's no nearer the grip than 2.3 cm past .97 of the arm (the foreman's 0.4), its pitch turned
- // 30 degrees, and it keeps their pitch within 2 degrees of the authored one, 8.4 and 5.9 cm past. Held to the grip
- // until 3.485 s, the arm went straight from about 2.95 s (3.0 on the foreman), the hand was dragged off its grip, 7.5
- // cm (7.0) by 3.48 s, now into the top, now over it, and as the hand let go its target swept in from 109% of the arm
- // (110 on the foreman): unlocking, the elbow bent 45 degrees in 13 ms (the rig's elbow point 16.9 and 15.0 m/s at
- // 3.516 and 3.522 s; the director's required force 6.5 times its weight for 1 ms at 3.517). So the hand lets go at
- // LET_GO, its arm at 98.5% of its length from the grip on the director and 95.0 on the foreman, the palm lifting off
- // over 120 ms (an arc of 3 cm) into a pose the chest carries, .6 of the arm out from the shoulder toward the
- // crossing's waypoint where the keyed trunk at 3.545 s leaves it; it holds there to 3.485 and crosses from there as
- // before. Held at .85 of the arm, the director's hand lay 4.4 cm in its left thigh (the forearm 5.0) as that knee came
- // up (3.13 s); held out forward or to the side, the crossing whipped the elbow again (8.5 to 15.3 m/s, the rig's elbow
- // point over 2 ms chords). LET_GO is the gate's pick, and the foreman's seat sets it: that seat touches the top at one
- // point until 2.900 s and spreads from 2.905, and a palm leaving before then leaves the body on that point (let go at
- // 2.875 s, the palm left by 2.895 and the gate read 154.6 N·m there; at 2.865, with the .85 hold, 207 N and 142 N·m at
- // 2.895). Let go at 2.885 the palm left between 2.905 and 2.910 (42.5 N·m for 1 ms at 2.907); at LET_GO it stays on
- // the top through 2.910, the seat then on five points, one of them on the near face, and is off by 2.915: a margin of
- // 5 ms at the most, which only the gate guards (gate both pigs again after any change over the top). The search above
- // still weighs the grip's mark to 3.485 s: ended at LET_GO, it pitched the foreman's straddle keys otherwise and moved
- // its body up to 20.6 cm at 3.26 s.
- if(deep){const LET_GO=2.895,A=LIMB['arm-1'],i=A.findIndex(([t])=>t===3.485),tr=trunkAt(3.545,null),sh=body.offsets.shoulder[-1],
-   way=V(...A.find(([t])=>t===3.545)[1].p).sub(tr.chest).applyQuaternion(tr.chestQ.clone().invert()).sub(sh).normalize(),
-   held=sh.clone().addScaledVector(way,.6*(body.L[-1].upper+body.L[-1].fore)).toArray();
-  A.splice(i,1,[LET_GO,{...A[i][1]}],[LET_GO+.12,{f:'chest',p:held,arc:.03}],[3.485,{f:'chest',p:[...held]}]);}
+ // A deep body's free hands, from letting go of a grip until they take the far one, hold in front of its chest and go
+ // round its belly. Seated over the top a pig's arms reach no grip there. Its right shoulder rides 45.7 to 57.4 cm
+ // above the grips' height on the pig director (46.2 to 57.1 on the foreman, from 2.585 to 3.0 s), more than the arm's
+ // 50.5 cm until 2.910 s (2.885 on the foreman), so that no point of the top lies within its reach, and the right
+ // hand's re-plant, 4 cm in from the top's far edge and 10 cm along it from the wall's middle, lay 103.9 to 121.8% of
+ // the arm (shoulder to wrist) from it (103.0 to 125.2; the horse's arm reaches it at 91.7 to 99.7%): the arm hung
+ // straight, the hand 8.7 and 10.3 cm off the wall at 2.585 s, the upper arm 5.4 cm into the foreman's lower trunk at
+ // 2.596 by the rig's capsules (3.1 on the director) and the director's forearm 2.9 cm into its right thigh at 2.995.
+ // As they bring the left knee up behind, the left shoulder hangs out past the near face (22.3 cm on the director at
+ // 3.27 s, 25.1 on the foreman at 3.34), and the left grip, 18 cm along the edge, lay past the arm's whole length from
+ // 2.92 s to its old let-go (3.485; from 3.065 on the foreman): the arm went straight, the hand was dragged off its
+ // grip, and as it let go its elbow whipped (16.9 and 15.0 m/s at 3.516 and 3.522 s; the director's required force 6.5
+ // times its weight for 1 ms at 3.517). Held in to the body instead, toward each crossing's waypoint (the left at .6 of
+ // the arm on 8da9a826, the right at .45 in this fix's first round), the hands lay inside the clothes (the ray from the
+ // chest point to the palm leaving the shirt and trousers that much beyond it, read every 2 ms: the director's left
+ // from 3.161 to 3.581 s, up to 20.3 cm at 3.543 as it passed through the left waypoint, 6 cm above the top and in its
+ // belly; the foreman's left 7.7 at 2.983, the right hands 18.5 and 11.9 at 3.015 and 3.023), where the rig's capsules,
+ // one .14 m trunk for every body, saw them clear. So each hand holds 30 degrees to its own side of straight ahead at
+ // the chest's height, MARGIN out from the torso there (its farthest point within 10 degrees of that line, or 20 where
+ // 10 hold fewer than two, every 50 ms over the hold: the climb's own surface probe, the points riding the hips or the
+ // spine, carried by the keyed trunk), and the waypoints go. Each move from a grip to the hold, or from the hold to the
+ // far grip, arcs out by as much as its chord's middle lies within CLEAR of the torso, along the line from the chest's
+ // origin through that middle, but never down: a chord between two points outside a round belly cuts into it (up to
+ // 14.2 cm without the arcs, by the chest ray: the first crossing of the clothes from the chest point toward the palm,
+ // round 2's measure), and arced down near the top the left hand went 2.0 and 3.6 cm into the wall. Every chord's
+ // middle lies below the chest, so each arc is pushed level, out to the side and back, 10.9 to 17.4 cm: each arc's size
+ // is how far that middle falls short of CLEAR out from the torso, and it pushes level, not out along that line, so
+ // CLEAR is not a clearance reached. Through each hold the elbow bends out to its side and a little up (ELBOW, in the
+ // chest frame): bent the arm's own way, back, down and out, the elbows lay against the bellies' sides as the hands
+ // held, the forearms up to 3.1 cm into the clothes (the foreman's left, into its shirt) and the sleeves up to 10.5
+ // (the director's right, into its waistcoat), by the winding number and the depth to the nearest triangle (below),
+ // every 10 ms. Bent straight out, the foreman's forearms stayed 1.1 and 1.2 cm in; bent further up, the director's
+ // left sleeve went 2.8 to 3.3 cm in; holds wider than 30 degrees (35 or 40) put the foreman's right hand 1.5 to 2.3 cm
+ // into its clothes. The left hand lets go at LET_GO and reaches its hold over LEFT_HOLD, holding it to LEFT_END; the
+ // right lets go as before (2.345 s), reaches its hold over RIGHT_HOLD and holds it to RIGHT_END; then each goes
+ // straight on to its far grip (3.605 and 3.12 s). LET_GO is fix 13's (the foreman's seat touches the top at one point
+ // until 2.900 s and spreads from 2.905: let go at 2.875 s the palm left by 2.895 and the gate read 154.6 N·m there);
+ // over LEFT_HOLD the palm now peels off the top, within the rig's centimetre of it until 2.965 s on the foreman and
+ // 2.980 on the director, the director's up to 4.6 mm into it (2.945 s). A hand whose hold finds no torso point keeps
+ // the keys it had before this rule, without arcs (the left would let go at 3.485 s again, its arm out of reach, as
+ // before fix 13); it never happens for the pigs. The rest are the gate's and the probes' picks. Reaching the hold in
+ // 120 ms, the director's left palm moved at 8.7 m/s (2.940 s); in 200 ms the foreman, its seat alone as the hand
+ // lifted clear, read 41.5 N·m at 2.965 s (104% of the rig's limit); in 300 it reads 29.1 N·m at the most there (2.968
+ // s, 73% of the limit, between the 5 ms samples, which read nothing; nothing on 8da9a826). Held to 3.45 (with the hold
+ // reached in 120 ms and arcs that could point down), the foreman's left palm crossed at 8.4 m/s (3.514 s); to 3.40,
+ // the director's left forearm went 2.1 cm into its left thigh by the rig's capsules (3.556). With CLEAR at 5 or 6 cm
+ // the right hands dipped up to 1.1 and 0.7 cm into the trousers on their way to the hold, from 2.46 s (0.3 at 7, none
+ // at 9; by the triangle depth every 2 ms, with the held elbows: review round 5's righthand-c5679-2ms.txt). At 9 the
+ // hands come out of the clothes about 10 ms sooner at some grips, and the foreman's left is out of its clothes for
+ // about 30 ms between its hold and its far grip (4 at 7) and rises only 0.9 cm into its shirt as it leaves its hold
+ // (1.4 at 7): better on every clothes figure here, by 0.5 cm and tens of milliseconds at most; but the fastest palm
+ // moves at 7.14 m/s (7.07 at 7), and gated, 9 reads over the limits at the same instants as 7, the foreman's seat at
+ // 29.8 N·m (29.1 at 7) and its worst wrench 201 N (200): about even, so 7 stays. Not kept: the holds pushed out from
+ // the old ones, or put on the belly's nearest point to the waypoint, lay in the thighs as the knees came up (up to 7.7
+ // and 12.0 cm by the rig's capsules); waypoints right above the far grips sent the hands through the belly (up to 17.9
+ // cm by the chest ray) and the thighs, at up to 12.8 m/s. As played, by the winding number against the shirt and the
+ // trousers and the depth to the nearest triangle (every 2 ms), no vertex of a held hand or forearm goes over 0.3 cm
+ // into the clothes (two of the foreman's left elbow and two of its wrist through its left hold; the climb test checks
+ // the hands and forearms, 1 cm at most), and none of the director's; the director's right sleeve lies 5.0 cm into its
+ // waistcoat by the elbow through its hold, a seam where the arm rests on the belly, and stays in its clothes from its
+ // let-go to its far grip; its left stays in until 3.17 s, where 8da9a826 had it out from 2.98 to 3.34 s (12.2 cm at
+ // 2.98), and lies 1.1 to 1.2 cm in from 3.20 to 3.31 s. On 8da9a826 the hands and forearms lay in from each let-go to
+ // its far grip, up to 21.6 cm. Near the grips the hands still sit inside the clothes for 0.09 to 0.15 s after each
+ // let-go and before each far grip (the foreman's left from its hold to its far grip but for about 4 ms at 3.50 s) and
+ // the forearms for up to 0.27 s (the foreman's left from 3.17 s to its far grip, 0.3 cm through its hold), up to 18.0
+ // cm in (every 10 ms): the grips lie under the belly and the seat, which rest on the top. The pigs' right arms keep
+ // 7.3 and 9.8 cm clear of the trunk from 2.4 to 3.0 s by the rig's one-size capsules, and by the shirt itself the
+ // elbow joints keep out of it through the holds (read at 2.75 to 2.85 and 3.25 to 3.35 s, every 50 ms: the foreman's
+ // 1.6 cm or more from it, where its right came within 0.3 cm before the held elbow); no arm capsule goes over 0.5 cm
+ // into another from 2.3 to 3.7 s, and the elbows, wrists and palms move at 7.1 m/s at the most there (the foreman's
+ // left palm at 3.510 s, every 2 ms; its left elbow 6.3 at 3.524 as the held elbow swings back, 4.5 on 8da9a826). The
+ // gate (8da9a826 -> this): the director's required force 3.6 -> 3.3 times its weight (3.037 s) and its capsule pairs
+ // over 1 cm 8 -> 3 (the three left as before: its left hand and forearm by its head at 1.167 and 1.337 s, its hooves
+ // at 5.185); the foreman's capsule rule passes (pairs over 2 cm 3 -> 0). The director reads 34 readings over the
+ // limits as before; the foreman 43 -> 49, the six more where its boots alone hold it as its right knee comes up (2.36
+ // to 2.50 s, before and after; there 21 -> 27: the first cluster's peak 324 -> 195% of the limit, the second's
+ // readings 8 -> 13 and its peak 239 -> 273%, 200 N at 2.498 s), and none over the top from 2.55 to 3.68 s on either
+ // pig. The foreman's left hand goes through the wall on its way to the far grip: held out over the near side (its
+ // chest faces back that way), it crosses low, and its mesh enters the near face at 3.530 s and passes through the top
+ // to the grip (7.7 cm deep at 3.560); on 8da9a826 it came down onto the grip from above, through the waypoint (5.1 cm
+ // at the grip, 3.590; at the far grips the pigs' hands sit 1.6 to 5.7 cm into the wall's box otherwise, before and
+ // after). Arced straight up instead, it cleared the near face, but the other hands rose into their bellies (up to 16.0
+ // cm by the chest ray); a waypoint over the near edge stalled both hands short of it; the keyed trunk plans that hand
+ // 10 cm higher than it plays, so a lift planned from it does not fire.
+ if(deep){const LET_GO=2.895,LEFT_END=3.42,RIGHT_HOLD=.35,RIGHT_END=2.90,MARGIN=.03,CLEAR=.07,LEFT_HOLD=.3,ELBOW=[0,.25,1],
+   torso=t=>{const tr=trunkAt(t,null),inv=tr.chestQ.clone().invert();return [...deepPts.spine,...deepPts.hips.map(q=>q.clone().applyQuaternion(tr.hipsQ).add(tr.hips).sub(tr.chest).applyQuaternion(inv))];},
+   radius=(pts,d)=>{for(const cone of [10,20]){let r=0,n=0;const c=Math.cos(cone*DEG);for(const q of pts){const l=q.length();if(l>1e-6&&q.dot(d)/l>=c){n++;r=Math.max(r,l);}}if(n>=2)return r;}return null;},
+   hold=(s,w0,w1)=>{const d=V(1,0,s*Math.tan(30*DEG)).normalize();let r=null;for(let t=w0;t<=w1+1e-9;t+=.05){const q=radius(torso(t),d);if(q!==null)r=Math.max(r??0,q);}
+    return r===null?null:d.multiplyScalar(r+MARGIN).toArray();};
+  const held=new Set();
+  {const A=LIMB['arm-1'],i=A.findIndex(([t])=>t===3.485);if(i>=0&&A[i+1]?.[0]===3.545){const p=hold(-1,LET_GO+LEFT_HOLD,LEFT_END);
+   if(p){A.splice(i,2,[LET_GO,{...A[i][1]}],[LET_GO+LEFT_HOLD,{f:'chest',p,elbow:ELBOW}],[LEFT_END,{f:'chest',p:[...p],elbow:ELBOW}]);held.add('arm-1');}}}
+  {const R=LIMB.arm1,j=R.findIndex(([t])=>t===2.345),k=R.findIndex(([t])=>t===3.06);if(j>=0&&k>j){const p=hold(1,2.345+RIGHT_HOLD,RIGHT_END);
+   if(p){R.splice(j+1,k-j,[2.345+RIGHT_HOLD,{f:'chest',p,elbow:ELBOW}],[RIGHT_END,{f:'chest',p:[...p],elbow:ELBOW}]);held.add('arm1');}}}
+  for(const [arm,t0,t1] of [['arm1',2.345,3.12],['arm-1',LET_GO,3.605]]){if(!held.has(arm))continue;const A=LIMB[arm];
+   for(let i=0;i+1<A.length;i++){const [ta,ka]=A[i],[tb,kb]=A[i+1];if(ta<t0||tb>t1||ka.f==='chest'&&kb.f==='chest'&&ka.p.every((x,j)=>x===kb.p[j]))continue;
+    const tm=(ta+tb)/2,tr=trunkAt(tm,null),inv=tr.chestQ.clone().invert(),at=k=>k.f==='chest'?V(...k.p):V(...k.p).sub(tr.chest).applyQuaternion(inv),
+     m=at(ka).add(at(kb)).multiplyScalar(.5),r=radius(torso(tm),m.clone().normalize());
+    if(r===null)continue;const c=m.length()-r;if(c>=CLEAR)continue;const w=m.normalize().applyQuaternion(tr.chestQ);if(w.y<0)w.set(w.x,0,w.z).normalize();
+    A[i+1]=[tb,{...kb,arc:CLEAR-c,arcTo:w.toArray()}];}}}
  const spec=t=>{const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posedFrom(tr,limbs,{poles:steady?id=>steady(id,t):null,offsets:fit?.limb?id=>fit.limb(id,t):null,snaps:fit?.plant?id=>fit.plant(id,t):null,turns:turnRef?b=>turnRef(b,t):null});};
  // Fit this character's surface: trunk, head and tail out of the floor and the wall. The face is the way out until the
  // chest is nearly over (2.265): a hanging front (the sheep's waistcoat hem) meets the top edge before the chest does.
