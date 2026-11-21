@@ -115,15 +115,17 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // right arm then goes 5.4 cm into its trunk as its knee comes up (1.6 cm without the rise). With the far grips the
  // search sets the foreman's left leg over 8.7 cm above the horse's (0.8 on 4e9853f6), and its left leg, going down the
  // far side to its 3.685 s key, locked straight out of reach (the rig's knee point 14.3 m/s at 3.617 s, the test's
- // measure 13.6; 13.7 body weights). So the legs' keys at 3.685 s ride the search's height too (deepDy): the lock came
- // back near what it was on 4e9853f6 (the rig's knee point 10.4 m/s at 3.631 s on d1118c40, 10.9 then; 9.3 once the
- // band rested the torso, 10.5 since the far hang below took away the band's drop that hid it), at the cost of one
- // reading and the foreman's hand check in that test (7.7 mm from the wall against 3.6 without it, on d1118c40; 6.5
- // now, 7.2 on f293da69). Riding every leg key below the top over it instead cost the right knee up 9 readings (its
- // foot's 2.525 s key raised 17 cm), turned the airborne body at the band's jump harder (870 N·m at 3.405 s against 273
- // on d1118c40; the band no longer jumps there) and put the director's required force over the limit (5.1 body weights
- // against 4.9 on d1118c40; 4.8 on f293da69, and 6.5 since the far hang below, at its old left elbow whip).
- const deepDy={},deep=back>.05,farX=.54+(deep?.025:0),slideDZ=deep?.10:0;
+ // measure 13.6; 13.7 body weights). So the legs' keys at 3.685 s rode the search's height too (until they rose to
+ // the legs' reach instead, below): the lock came back near what it was on 4e9853f6 (the rig's knee point 10.4 m/s at
+ // 3.631 s on d1118c40, 10.9 then; 9.3 once the band rested the torso, 10.5 once the far hang below took away the
+ // band's drop that hid it, 7.3 since the legs' keys there rise to their reach, below), at the cost of one reading and
+ // the foreman's hand check in that test (7.7 mm from the wall against 3.6 without it, on d1118c40; 6.5 now, 7.2 on
+ // f293da69; the reach that replaced the ride costs neither, below). Riding every leg key below the top over it instead
+ // cost the right knee up 9 readings (its foot's 2.525 s key raised 17 cm), turned the airborne body at the band's jump
+ // harder (870 N·m at 3.405 s against 273 on d1118c40; the band no longer jumps there) and put the director's required
+ // force over the limit (5.1 body weights against 4.9 on d1118c40; 4.8 on f293da69, and 6.5 since the far hang below,
+ // at its old left elbow whip).
+ const deep=back>.05,farX=.54+(deep?.025:0),slideDZ=deep?.10:0;
  if(deep){probe.update();const h0=body.at0('hips'),s0=body.at0('spine'),hipsPts=[],spinePts=[];
   for(let i=0;i<probe.count;i++){const b=probe.boneNames[probe.bone[i]],q=V(probe.x[i],probe.y[i],probe.z[i]);if(b==='hips')hipsPts.push(q.sub(h0));else if(b==='spine')spinePts.push(q.sub(s0));}
   const MARKS={1:[[1.265,2.345,[.45,top,.18]],[2.585,3.0,[.54,top,-.10]],[3.12,4.175,[farX,top,-.20]]],'-1':[[1.265,3.485,[.45,top,-.18]],[3.605,4.175,[farX,top,.20]]]};
@@ -134,7 +136,7 @@ export function createWallClimb(worker,profile={id:'horse'}){
     if(low===Infinity)continue;const dy=resting?(REST[0]+REST[1])/2-low:Math.max(0,REST[0]-low);
     let over=0;for(const s of ['1','-1']){const m=MARKS[s].find(([a,b])=>k.t>=a&&k.t<=b);if(!m)continue;const sh=C.clone().add(V(0,dy,0)).add(body.offsets.shoulder[+s].clone().applyQuaternion(chestQ));over=Math.max(over,sh.distanceTo(V(...m[2]))-reach);}
     const cost=Math.abs(dp)/10+Math.abs(dy)/.05+30*Math.max(0,over);if(!best||cost<best.cost)best={cost,dp,dy};}
-   if(best){k.pitch=(k.pitch||0)+best.dp;k.hips=[k.hips[0],k.hips[1]+best.dy,k.hips[2]];rise[k.t]=(rise[k.t]||0)+best.dy;deepDy[k.t]=best.dy;}}
+   if(best){k.pitch=(k.pitch||0)+best.dp;k.hips=[k.hips[0],k.hips[1]+best.dy,k.hips[2]];rise[k.t]=(rise[k.t]||0)+best.dy;}}
   // On the far face a deep body's keys left its trunk in the wall, and the clearance fit pushed it out after them (the
   // pigs' 14 to 17 cm from 4.10 to 4.22 s on f293da69), past where the grip rise above set the keys: from about 4.0 s
   // their arms fell short of the far grips (6.3 to 7.9 cm past .97 of the arm on the pig foreman from 4.18 to 4.22 s,
@@ -155,13 +157,14 @@ export function createWallClimb(worker,profile={id:'horse'}){
   // var-fh3). The pigs now touch down 25 and 30 ms later (the left boot at 4.555 and 4.545 s; the absorb's need the
   // same, about 2.2 kN), their hips coming 5.1 and 4.2 cm back toward the wall through the drop (3.6 and 3.3 before;
   // the foreman's let-go key lies 3.5 cm further out than its drop key, which nothing pushed); the foreman's head
-  // passes within 5.0 mm of the far face as it lets go (4.230 s), the director's 10.4 (16.0 and 12.6 before), and the
-  // director's left arm goes 2.9 cm into its left thigh as its left leg comes over (3.543 s, 1.4 before). Over the top
-  // the fit now pushes the trunk out less (the foreman's hips 3.7 to 5.4 cm further back from 3.60 to 3.70 s), and the
-  // foreman's band (below) no longer drops it as its left leg locks straight going down the far side (3.633 s): that
-  // old lock, which the fall hid on f293da69, now asks 7.6 times its weight for 3 ms on the rig's 1 ms grid (its 5-ms
-  // samples 3.9), over the rig's 5; the director's old left elbow whip as its left leg comes over now asks 6.5 for 1 ms
-  // (3.517 s; 4.8 before).
+  // passes within 4.9 mm of the far face as it lets go (4.230 s), the director's 10.5 (16.0 and 12.6 before), and the
+  // director's left arm went 2.9 cm into its left thigh as its left leg came over (3.543 s, 1.4 before; under 1 cm
+  // since the legs' keys at 3.685 s left the search's height, below). Over the top the fit now pushes the trunk out
+  // less (the foreman's hips 3.7 to 5.4 cm further back from 3.60 to 3.70 s), and the foreman's band (below) no longer
+  // drops it as its left leg locks straight going down the far side (3.633 s): that old lock, which the fall hid on
+  // f293da69, asked 7.6 times its weight for 3 ms on the rig's 1 ms grid (its 5-ms samples 3.9), over the rig's 5,
+  // until the legs' keys there rose to their reach (below: 3.9 now, at the elbow's whip); the director's old left elbow
+  // whip as its left leg comes over now asks 6.5 for 1 ms (3.517 s; 4.8 before).
   const FACE=WALL.edge+WALL.half,FAR_CLEAR=.006;
   for(const k of keys){if(!k.far)continue;const hipsQ=yawQ(k.heading||0).multiply(bodyQ((k.pitch||0)*DEG,(k.roll||0)*DEG)),chestQ=hipsQ.clone().multiply(relQ(k.flex||0,k.side||0,k.twist||0)),H=V(...k.hips),C=H.clone().add(body.offsets.spine.clone().applyQuaternion(hipsQ));
    let push=0;const see=w=>{if(w.y<WALL.top&&Math.abs(w.z)<.5)push=Math.max(push,FACE+FAR_CLEAR-w.x);};for(const q of hipsPts)see(q.clone().applyQuaternion(hipsQ).add(H));for(const q of spinePts)see(q.clone().applyQuaternion(chestQ).add(C));
@@ -197,7 +200,7 @@ export function createWallClimb(worker,profile={id:'horse'}){
  const onFace=(near,y,z,t)=>({f:'world',p:[near?WALL.edge-WALL.half-.12:WALL.edge+WALL.half+.12,y+(rise[t]||0),z],hoof:-85,heading:near?0:-180,plant:[near?-1:1,0,0]});
  const OUT=[.25,0,1]; // knees out to the sides while the hooves are on a wall face
  const SIDE=[-.3,0,1]; // straight out (a touch back) while a leg comes down the far side, clear of the face
- const DOWN_FAR=3.685; // the legs' keys hanging down the far face as the body leaves the top (deepDy rides them)
+ const DOWN_FAR=3.685; // the legs' keys hanging down the far face as the body leaves the top (raised to the legs' reach)
  // The far side faces the wall (heading -180): left foot and hand on +Z. The turn onto the tile steps the left foot
  // round behind the planted right, then the right round to its place (lifted mid-step); headings run on to -360.
  const land=(s,heading)=>({...stance(s,1),heading});
@@ -261,9 +264,31 @@ export function createWallClimb(worker,profile={id:'horse'}){
  if(lean>0)for(const id of ['leg-1','leg1'])for(const [t,k] of LIMB[id])if(k.f==='pelvis'&&t>leanFrom&&t<=leanTo)k.p=V(...k.p).applyQuaternion(bodyQ(-lean*DEG,0)).toArray();
  if(lean>0)for(const id of ['leg-1','leg1'])for(const [t,k] of LIMB[id])if(k.f==='pelvis'&&t>=farLeanFrom&&t<farLeanOff){const share=t<=farLeanTo?1:(farLeanOff-t)/(farLeanOff-farLeanTo);k.p=V(...k.p).applyQuaternion(bodyQ(-FAR_LEAN*lean*share*DEG,0)).toArray();}
  // A deep body's legs hanging down the far face as it leaves the top (their keys at 3.685 s, below the top's level)
- // ride the search's height there (deepDy, between the trunk keys either side).
- if(deep){const ks=keys.map(k=>[k.t,deepDy[k.t]||0]),dyAt=t=>{const j=ks.findIndex(([u])=>u>=t);if(j<=0)return j===0?ks[0][1]:0;const [a,da]=ks[j-1],[b,db]=ks[j];return da+(db-da)*(t-a)/(b-a);};
-  for(const id of ['leg-1','leg1'])for(const [t,k] of LIMB[id])if(k.f==='world'&&t===DOWN_FAR&&k.p[1]<WALL.top)k.p=[k.p[0],k.p[1]+dyAt(t),k.p[2]];}
+ // rise as far as each leg needs to reach its key at .97 of its length (thigh and shin) from the keyed trunk's hip
+ // there (trunkAt with no band, fit or balance), as the gripping keys rise for the arms; a key further out than the
+ // leg could reach at any height is left where it is. They rode the search's height over the top before (between the
+ // trunk keys either side: the pig foreman's 7.7 cm up, the director's 0.8), which left the foreman's at 104.1 and
+ // 104.2% of its legs from that hip (116.9 and 117.1 as authored), and its left leg locked straight going down the far
+ // side (from 3.645 s, the climb test's knee 10.2 m/s at 3.632; 13.8 at 3.618 as authored): on f293da69 the band's
+ // drop hid the lock, but with the far hang holding the body there the gate's required force read 7.6 times its
+ // weight for 3 ms at 3.633 (11.9 at 3.617 as authored, the knee point 14.4 m/s). Risen to 1.478 and 1.479 m, 4.2
+ // and 4.3 cm above that ride, the foreman's leg locks later and slower (the knee 7.1 m/s at 3.644; 3.8 times its
+ // weight at 3.646, where it read 2.6) and its required force passes, its peak now the left elbow's whip (3.9 at
+ // 3.523, where it read 3.1); its readings over the gate's limits and its hand check as they were (42; 6.5 mm). As
+ // played the keys still lie past the leg's reach (105.3 and 105.9% of it, against 112.4 and 113.3 on ba891c83): the
+ // clearance fit pushes the trunk 11.9 cm further out than keyed and, with the band (which lowers it 6.6 cm there),
+ // 4.0 cm higher, and both legs hang straight down the far face as before (their knees bent under 5 degrees from
+ // 3.660 and 3.647 s to 4.150 and 4.112; from 3.641 and 3.609 on ba891c83). The director's lie at 90.2 and 90.3% and
+ // stay as authored, 7.5 mm below the ride: its left arm no longer goes into its left thigh as its left leg comes over
+ // (2.9 cm, the forearm 2.4, at 3.543 s with the ride; under 1 cm now), at the cost of a little more required force
+ // there (2.10 times its weight at 3.589 s against 1.75, the largest rise, from 3.571 to 3.616 s) and a dip of its hips
+ // to 27.0 m/s^2 down at 3.790 s (21.3 there with the ride, its least then 27.0 at 3.747). Risen by the far hang's own
+ // rise on top of the ride instead (the foreman's 7.6 cm, the director's 6.6), the foreman passed the same way, but
+ // the director's left arm went 6.3 cm into its left thigh.
+ if(deep){const tr=trunkAt(DOWN_FAR,null);
+  for(const [id,s] of [['leg-1',-1],['leg1',1]]){const k=LIMB[id].find(([t])=>t===DOWN_FAR)?.[1];if(!k||k.f!=='world')continue;
+   const hip=tr.hips.clone().add(body.offsets.thigh[s].clone().applyQuaternion(tr.hipsQ)),r=.97*(body.L[s].thigh+body.L[s].shin),h=Math.hypot(k.p[0]-hip.x,k.p[2]-hip.z);
+   if(h<r)k.p=[k.p[0],Math.max(k.p[1],hip.y-Math.sqrt(r*r-h*h)),k.p[2]];}}
  const spec=t=>{const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posedFrom(tr,limbs,{poles:steady?id=>steady(id,t):null,offsets:fit?.limb?id=>fit.limb(id,t):null,snaps:fit?.plant?id=>fit.plant(id,t):null,turns:turnRef?b=>turnRef(b,t):null});};
  // Fit this character's surface: trunk, head and tail out of the floor and the wall. The face is the way out until the
  // chest is nearly over (2.265): a hanging front (the sheep's waistcoat hem) meets the top edge before the chest does.

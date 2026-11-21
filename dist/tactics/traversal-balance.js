@@ -118,9 +118,10 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=
   // A held seat keeps a hold's sideways bounds, as if it bore .3 g at least, even where its plan rides -g and it bears
   // nothing; the push then comes from elsewhere. On the climb's top a hand grips the wall at every seated sample
   // (supportAt reads a grip, no outline, at all 227 of each pig's), and a seat's bounds, up, down and sideways, lie
-  // inside a grip's: the pigs' plans ride -g at 16 and 9 of those samples (26 and 9 before their far hang, wall-climb.js)
-  // and push the body sideways there at up to 3.75 m/s^2, and the gate reads no phantom wrench over its limits on either
-  // pig from 2.55 to 3.68 s (its required force there passes its 5 body weights at two old whips since the far hang).
+  // inside a grip's: the pigs' plans ride -g at 13 and 9 of those samples (26 and 9 on f293da69, 16 and 9 on
+  // ba891c83) and push the body sideways there at up to 3.75 m/s^2, and the gate reads no phantom wrench over its
+  // limits on either pig from 2.55 to 3.68 s (its required force there goes over its 5 body weights at the pig
+  // director's old elbow whip).
   if(s.kind==='hold'&&!s.hull){const fy=Math.max(.3*G,ay(i)+G);both(-MU*fy*d2,MU*fy*d2);continue;}
   if(s.kind!=='feet'&&s.kind!=='hold')continue;const fy=Math.max(.3*G,ay(i)+G),h=Math.max(.2,Y.c[i]-(s.floor||0)),k=h/fy,a=-k/d2,b=1+2*k/d2;
   // The pressure point also carries the body's turning: p_x = c_x - k a_x + dL_z / (M fy), p_z = c_z - k a_z - dL_x / (M fy).

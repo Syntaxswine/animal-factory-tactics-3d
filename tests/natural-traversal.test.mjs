@@ -294,19 +294,21 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // every other mammal's knees 7.6 at most, the dog's; now the pigs' 4.1 and 5.3), and their hands came off the top as
    // they lowered (the nearest hand point, of the hand's mesh, forearm and hand, as the rig's grip reads it, up to 25.5
    // and 40.6 mm from the wall's surface, every 10 ms from 3.85 to 4.15 s; every other mammal's 1.9 at most, the
-   // skunk's; now 6.5 and 3.0, 7.2 and 4.3 on f293da69). Each check fails there on both pigs and on no other mammal,
-   // the second with the first switched off. The rig's 8 m/s holds the knees only to 3.1 s: going down the far side the
-   // pig foreman's left leg still locks straight out of reach of its 3.685 s key, as it did on 4e9853f6 (10.2 m/s at
-   // 3.632 s, 9.1 on f293da69, where its top band's drop hid it: wall-climb.js, the far hang; 10.4 then), and the
-   // director's left knee reads 8.8 at 3.180 s (8.9 on f293da69, 8.05 then). From 3.1 to 3.7 s they are held at 11 m/s,
-   // a bound 4e9853f6 also meets (the foreman's 10.4). The far grips set the foreman's left leg over higher, and
-   // without its legs' 3.685 s keys riding that height (wall-climb.js, deepDy) the lock read 13.6 m/s at 3.618 s: this
-   // bound guards deepDy, and passes on 4e9853f6.
+   // skunk's; now 6.5 and 2.9, 7.2 and 4.3 on f293da69). Each check fails there on both pigs and on no other mammal,
+   // the second with the first switched off. From 3.1 to 3.5 s, as the left knee comes up behind, the knees are held at
+   // 11 m/s, a sentinel no copy measured fails: the pig director's left knee reads 8.8 at 3.180 s (8.9 on f293da69,
+   // 8.05 on 4e9853f6), every other mammal's 6.1 to 7.5 near 3.19 s. Going down the far side, from 3.5 to 3.7 s, they
+   // are held at the rig's 8: the pig foreman's left leg locked straight there, out of reach of its 3.685 s key (10.2
+   // m/s at 3.632 s on ba891c83, 9.1 on f293da69, where its top band's drop hid it; 13.8 at 3.618 with its authored
+   // keys alone), until those keys rose to its reach from the keyed trunk (wall-climb.js, the legs' keys hanging down
+   // the far face): it straightens later and slower now (7.1 m/s at 3.644), and every other mammal reads 6.2 to 7.2
+   // there.
    const knee=s=>bones['shin'+s].getWorldPosition(bones['shin'+s].position.clone()),fastest=(a,b)=>{let w={v:0},was=null;
     for(let t=a;t<=b+1e-9;t+=.002){motion.apply(t/D);const k=[knee(-1),knee(1)];if(was)for(const j of [0,1]){const v=k[j].distanceTo(was[j])/.002;if(v>w.v)w={v,t,side:j?'right':'left'};}was=k;}return w;};
-   const whip=fastest(2.3,3.1),lock=fastest(3.1,3.7);
+   const whip=fastest(2.3,3.1),behind=fastest(3.1,3.5),lock=fastest(3.5,3.7);
    assert.ok(whip.v<=8,`wall: over the top the ${whip.side} knee moves at ${whip.v.toFixed(1)} m/s at ${whip.t?.toFixed(3)} s (the rig's limit is 8)`);
-   assert.ok(lock.v<=11,`wall: going down the far side the ${lock.side} knee moves at ${lock.v.toFixed(1)} m/s at ${lock.t?.toFixed(3)} s (11 at most; the pig foreman read 10.4 on 4e9853f6)`);
+   assert.ok(behind.v<=11,`wall: as the left knee comes up behind the ${behind.side} knee moves at ${behind.v.toFixed(1)} m/s at ${behind.t?.toFixed(3)} s (11 at most; the pig director reads 8.8)`);
+   assert.ok(lock.v<=8,`wall: going down the far side the ${lock.side} knee moves at ${lock.v.toFixed(1)} m/s at ${lock.t?.toFixed(3)} s (the rig's limit is 8; the pig foreman read 10.2 on ba891c83)`);
    let loose={d:0};
    for(let t=3.85;t<=4.15+1e-9;t+=.01){motion.apply(t/D);pr.update();let h=Infinity;for(let i=0;i<pr.count;i++)if(/hand/.test(pr.names[pr.part[i]]))h=Math.min(h,off(pr.x[i],pr.y[i],pr.z[i]));if(h>loose.d)loose={d:h,t};}
    assert.ok(loose.d<=.01,`wall: lowering down the far face the hand point nearest the wall's surface is ${(1e3*loose.d).toFixed(1)} mm from it at ${loose.t?.toFixed(2)} s`);
@@ -316,8 +318,8 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // its left thigh dragged under the hip, the band dropped it 8.3 cm in 15 ms as the fold slid off the top, and the
    // hips read -63.4 m/s^2 at 3.378 s (the pig director, on its own fold, -89.7 at 3.195 and +42.0 at 3.149; the
    // foreman +34.4 at 3.416); with the seat below but the band still resting the fold, only the director fails it
-   // (-38.2 at 3.198). Every other mammal reads -19.8 to +11.5 there, unchanged, and the pigs now -15.5 to +24.5
-   // (-14.4 to +24.5 on f293da69).
+   // (-38.2 at 3.198). Every other mammal reads -19.8 to +11.5 there, unchanged, and the pigs now -15.6 to +24.5
+   // (-15.5 on ba891c83, -14.4 to +24.5 on f293da69).
    const hipsY=t=>{motion.apply(t/D);return bones.hips.getWorldPosition(bones.hips.position.clone()).y;},ys=new Map();
    const yAt=t=>{const k=Math.round(t*1e3);if(!ys.has(k))ys.set(k,hipsY(k/1e3));return ys.get(k);};let jolt={a:0};
    for(let t=2.6;t<=3.5+1e-9;t+=.001){const a=(yAt(t+.005)-2*yAt(t)+yAt(t-.005))/.005**2;if(a<-25||a>30){if(Math.abs(a)>Math.abs(jolt.a))jolt={a,t};}}

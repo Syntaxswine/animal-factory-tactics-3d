@@ -3289,6 +3289,100 @@ its left leg comes over (2.9 cm, its forearm 2.4, at 3.543 s); the fit's push ov
 12.9 to 15.4 cm, 17.9 to 21.3 on f293da69: fitpush-f10-f11b.txt); the drop read honestly (palms on the face holding
 nothing); the flights' small torques after the release; and the rest of the list as it stood.
 
+### 2026-11-20 (physics balance, thirty-third part): the pigs' legs hang down the far face from their reach
+
+Since ba891c83 the gate's required force while in contact has failed on both pigs at two old whips (the thirty-second
+part). The pig foreman's: 7.6 times its weight for 3 ms at 3.633 s, as its left leg locked straight going down the far
+face (the climb test's knee 10.2 m/s at 3.632, the rig's knee point 10.5 at 3.631). On f293da69 the band's drop hid it.
+
+Why: the legs' keys hanging down the far face as the body leaves the top (DOWN_FAR, 3.685 s) rode the search's height
+over the top (deepDy, between the trunk keys either side: the foreman's 7.7 cm up, the director's 0.8). From the keyed
+trunk's hip there the foreman's keys still lay at 104.1 and 104.2% of the leg's length, thigh and shin (116.9 and
+117.1 as authored): out of reach. Its left leg went straight from about 3.645 s on f293da69 and ba891c83 alike (on the
+game's model f293da69 reads 99.9% of the leg at 3.645 s and 100.0 at 3.650: review round 1's legover-rig files).
+
+**The fix**, wall-climb.js: the keys no longer ride the search's height. They rise as far as each leg needs to reach
+its key at .97 of its length from the keyed trunk's hip there (trunkAt with no band, fit or balance), as the gripping
+keys rise for the arms. The foreman's go to 1.478 and 1.479 m, 4.2 and 4.3 cm above the ride; the director's lie at
+90.2 and 90.3% and stay as authored, 7.5 mm below the ride (an instrumented copy's log, var-f12bl).
+
+phantom-wrench 1.2.0 `--gate` on frozen copies (ba891c83 = var-f11b; this commit's tree = var-f12b; the other 31
+crossings play as on ba891c83, frame for frame: same-f12b-f11b.txt):
+- The foreman's required force passes. Its peak is now its left elbow's whip, 3.9 times its weight at 3.523 s, where
+  it read 3.1 (the 5 ms samples alone 3.4 at 3.640). The lock moves later and eases: 3.8 at 3.646 s, where it read 2.6,
+  against the 7.6 at 3.633, its largest rise at 3.637 s (1.26 -> 3.01) (forceprofile-f11b-f12b-foreman.txt, on the
+  gate's 1 ms grid). Its readings over the gate's limits are as they were (42, 0.040 s over the limit at the
+  samples, the worst 603% at 1.177 s).
+- The rig's knee point reads 7.3 m/s at 3.644 s against 10.5, and the foreman's points over 8 m/s 5 against 7 (the
+  left knee and the left ankle, 8.05 at 3.583, go under; the left elbow 15.2 -> 15.0, the left palm 8.17 -> 8.11).
+- The director's left arm no longer goes into its left thigh as its left leg comes over (2.9 cm, the forearm 2.4, at
+  3.543 s on ba891c83; under 1 cm now), its overlapping pairs over 2 cm 6 -> 4. Its required force's peak is as before
+  (6.5 times its weight for 1 ms at 3.517, its left elbow's whip; 6.48 -> 6.45 on the 1 ms grid:
+  forceprofile-f11b-f12b-director.txt), and so are its readings (34, 0.030 s). It pays a little: its required force
+  rises at instants under the limit (2.10 times its weight at 3.589 s against 1.75, the largest rise, from 3.571 to
+  3.616 s: review round 2's forceprofile-f11b-f12b-director-tol01.txt), its hips dip to -27.0 m/s^2 at 3.790 s by
+  the climb test's measure (-21.3 there before, its least then -27.0 at 3.747: review round 2's
+  hipsacc-series-f11b-f12b-director.txt), its plan's sideways acceleration over the held samples reads 16.08 m/s^2 at
+  3.595 s against 15.04 (seatplan-f12b.txt, against review round 1's seatplan-f11b.txt), its left elbow 16.8 -> 16.9
+  m/s and its left ankle 8.41 -> 8.51 (its left toe and palm, also over 8, by 0.003 m/s: review round 2's
+  jsoncmp-f11b-f12b-pigs.txt).
+- Without any raise (the authored keys: var-f12nr) the foreman needs 11.9 times its weight at 3.617 s, its knee point
+  at 14.4 m/s; the rule costs it no reading (42 either way) and not its hand check (6.5 mm either way: review round 2's
+  gate-var-f12nr-pig-foreman.txt and testmeasures-f12nr-foreman.txt).
+
+As played the foreman's keys still lie past the leg's reach (105.3 and 105.9% from the played hips, against 112.4 and
+113.3 on ba891c83, the same model: review rounds 1 and 2): the clearance fit pushes the trunk 11.9 cm further out than
+keyed and, with the band (which lowers it 6.6 cm there), 4.0 cm higher. Both legs still hang straight down the far
+face, their knees bent under 5 degrees from 3.660 and 3.647 s to 4.150 and 4.112 (from 3.641 and 3.609 on ba891c83, to
+the same: review round 3's rigpose-f11b-foreman-to430.txt and rigpose-f12b-foreman-to430.txt): the lock comes later
+and slower, not out.
+
+What else moves (by over 0.1 mm): the foreman from 3.431 to 4.290 s by up to 7.0 cm (at 3.637), and by 0.2 mm or less
+from 3.330 to 3.397 and from 4.325 to 4.409 (diffspans-f11b-f12-foreman.txt; var-f12 and var-f12b play the foreman
+alike to 0.00 mm: review round 2's diffspans-f12-f12b-foreman.txt); the director from 3.266 to 4.619 s by up to 4.6 cm
+(at 3.576: diffspans-f11b-f12b-director.txt).
+- The foreman's head passes within 4.9 mm of the far face as it lets go (4.230 s), against 5.0; the director's 10.5,
+  against 10.4 (review round 4's headwall-f11b-f12b-*.txt).
+- The foreman's hips, by the climb test's measure: -20.6 m/s^2 at 3.646 s, where they read +8.5 (the lock's moment);
+  their least from 3.5 to 4.0 s -30.0 at 3.749 (hipsacc-f12.txt), where ba891c83 read -30.8 (its least there -43.6 at
+  3.635: review round 1's hipsacc-series files); over the top -15.6 to +24.5 against -15.5 to +24.5
+  (testmeasures-f12b.txt, testmeasures-f11b.txt).
+- The foreman's trouser fold lies 3.41 cm in at 3.34 s against 3.40, 0.9 mm under the 3.5 cm the user allowed.
+- Collisions part by part (fix 11's review round 7's collparts.mjs: collparts-f12-foreman.txt and
+  collparts-f12b-director.txt, against that round's collparts-f11b-pig-foreman.txt and this fix's review round 2's
+  collparts-var-f11b-director.txt): the foreman's move by 2.2 mm or less (the left forearm and hand 5.3 -> 5.1 cm, its
+  deepest point now on the top's upper face; the right boot on the far face 2.7 -> 2.9; the trousers at 3.59 s 2.3 ->
+  2.4, on the top's upper face), the director's by 1.1 mm or less (its trousers as its left leg swings over 7.82 ->
+  7.86 cm, its right boot 2.61 -> 2.50). The rig's own count of spans deeper than 2 cm is 5 and 4 as before, the
+  deepest 6.3 and 7.9 cm (part by part the foreman's 8 -> 7, its left forearm's 2.1 cm at 3.52 s gone).
+- The foreman's left boot comes within the rig's centimetre of the far face from 3.835 to 3.870 s (no reading there),
+  and its right boot is off it at 3.965 and 4.050 s (review round 2's readings-boots-f11b-f12b.txt); its right toe's
+  peak 11.107 -> 11.115 m/s.
+- The pigs' plans over the top ride -g at 13 and 9 of their held samples, against 16 and 9 (seatplan-f12b.txt).
+
+`tests/natural-traversal.test.mjs`: the climb test's knee check splits at 3.5 s. As the left knee comes up behind
+(3.1 to 3.5 s) the knees are held at 11 m/s as before, a sentinel no copy measured fails (the director's 8.8 at 3.180
+the fastest, 8.9 on f293da69, 8.05 on 4e9853f6; every other mammal 6.1 to 7.5). Going down the far side (3.5 to 3.7 s)
+they are held at the rig's 8, which fails on ba891c83 (the foreman 10.2 at 3.632) and with the foreman's authored keys
+alone (13.8 at 3.618: var-f12nr); the same measure reads 9.1 on f293da69 (review round 2's kneewin-f10fin-pigs.txt;
+the test itself cannot load f293da69, which has no turnAir export); every other mammal reads 6.2 to 7.2 there
+(kneelock2-f11b.txt, kneelock2-f12b-pigs.txt, kneelock2-f12nr-foreman.txt). No test guards the director's left arm
+out of its left thigh; the gate's capsule check reads it.
+
+**Not kept.**
+- The ride kept and the reach added on top of it (var-f12, review round 1): the foreman the same, the director's left
+  arm 2.9 cm into its left thigh as on ba891c83. Once the reach sets the foreman's keys the ride does nothing there
+  (review round 1's x-noride: its climb the same to 0.00 mm), and it lifted the director's 7.5 mm.
+- The keys risen by the far hang's own rise on top of the ride (fix 11's review round 1's experiment, the foreman's
+  7.6 cm and the director's 6.6, on var-g12x): the foreman passes the same way (4.0 times its weight), but the
+  director's left arm goes 6.3 cm into its left thigh at 3.561 s, its overlapping pairs over 2 cm 6 -> 8, and its own
+  failure, the elbow, stays (6.6).
+
+**Left.** The reach read from the played trunk (the fit's push and lift, the band's lowering, a second pass), which
+would likely take out what is left of the lock and let the legs bend as they hang; the pig director's left elbow
+whip (6.5 times its weight for 1 ms at 3.517 s; its left hand crosses to the far grip through a stopping key at
+3.545 s): the next fix. The rest as the thirty-second part leaves it.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
