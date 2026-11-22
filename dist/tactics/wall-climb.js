@@ -282,8 +282,9 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // were), and since the flights' turn every millisecond (traversal-balance.js) 50: the horse 13, the goat 2, the bull
  // and cow none, the donkey 1, the sheep 4, the skunk none, the rabbit 21, the dog 9; and since the take-off's flight
  // holds its centre of mass and the head is fitted inside the balance, 26: the sheep 2, the rabbit 14, the dog 10, the
- // rest none. Arced, the palm's turn onto the face switched its way round 2.5 ms short of done and popped 0.09 degrees
- // (steadyTurns now switches on the sample). A deep body arcs as well now that its palms hold the top until it lets go
+ // rest none (18 since the walk-out's set-down and none since the left foot's step back, both in this file). Arced, the
+ // palm's turn onto the face switched its way round 2.5 ms short of done and popped 0.09 degrees (steadyTurns now
+ // switches on the sample). A deep body arcs as well now that its palms hold the top until it lets go
  // (its far hang, above). With them off the top before the let-go, arced, the pig foreman read 159 readings (7545% of
  // the limit at its worst) against 88 through the key, the director 67 (6399%) against 57; with the far hang, arced, 42
  // and 34 against 78 and 53 through the key (their let-go and drop 5 and 4 against 41 and 23, the foreman's worst there
@@ -298,8 +299,29 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // the air). The foreman's six are gone since its head is fitted inside the balance (fitted after it, with the drop's
  // turn held to the palms on the far face, they rose, to 254% at 4.310 s: var-f25b).
  const FAR=[1,0,0],ONFACE=4.33,ARC=.06,SLIDE=z=>[[ONFACE,{f:'world',p:[.62,1.80,(.22+slideDZ)*z],face:FAR,arc:ARC,arcTo:FAR}],[4.685,{f:'world',p:[.62,1.10,(.26+slideDZ)*z],face:FAR}]];
+ // The step in takes the left foot 4.5 cm further back than it did (x -.080-back, where it was -.035-back), and the
+ // crouch keeps it there for the take-off. In the battle stance the rabbit's and dog's rounded paws reach only 1.0 and
+ // 3.5 cm behind the centre of mass (their heels lie above the rigs' 1 cm contact band), and from rest the balance's
+ // plan asked for a pressure point up to 10 cm outside both feet in the step in's first 30 ms, the body as played up to
+ // 14.9 and 15.9 cm (the gate, which reads the played body: the rabbit's eight readings up to 137% of its limit, the
+ // dog's five up to 143%). The foot has barely moved in those 30 ms; what eases the start is the crouch keeping it back
+ // from 0.4 s (the support's back edge 4.5 cm further back to 0.74 s, and the authored centre up to 5 mm back with the
+ // leg: these copies do not separate the two), where the plan's later rows wanted the centre well ahead of that edge:
+ // the plan, solved over the whole climb, starts more gently, 5.0 and 4.8 cm outside, the played body 8.8 and 8.8,
+ // which the gate reads as 81 and 79% of its limit (back 5.5 cm for the step in alone, its support reaching further
+ // back to 0.49 s, the plan's start read 6.4 and 6.7 cm, the played 10.3 and 11.2, and the gate 95 and 101%). A margin,
+ // not a cure: at the start the gate's reading turns on what the plan barely registers (4 cm back, without and with an
+ // arc on the step in's key, plans 0.03 mm apart asked the dog's 20 ms sample for 108 and 55 N forward, where the gate,
+ // reading the played body, required 135 and 15 and read 102% and none; at the rabbit's 25 ms sample, the forward force
+ // the same within 1 N, the played turn alone took it from 85 to 64%). The pushes read less (the sheep's 115 -> 82%,
+ // the dog's as its hooves leave 107 -> 90.5%), the rabbit's only to the limit's edge (112 -> 99.9%): with both keys
+ // from 4 to 5.5 cm back it reads within a point of the limit either way (6 cm, with the arc, 98.5%; 6.5, with it,
+ // 92%). At 5 cm the rabbit's push read 100.9% and the dog's trunk went 2.02 cm into the face in its hang read every
+ // millisecond (1.98 by the fit's report, which the climb test reads; 1.97 and 1.92 here), at 5.5 cm 2.14 and 2.11 (the
+ // test allows 2), a hair either way at 5 cm; at 6.5 the pig director's jump touched mid-flight (647%); back only for
+ // the step in, the foot slid forward again under the crouch and the push read more (the rabbit's 118%).
  const LIMB={
-  'leg-1':[[0,stance(-1)],[.4,foot(-.035-back,-.20)],[.7,foot(-.035-back,-.20,15)],[.995,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-1.03*fitB.leg,-.20],hoof:55,soft:.03}],[1.195,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-.95*fitB.leg,-.20],hoof:50}],[1.375,{f:'pelvis',p:[.02,-.62,-.13],hoof:20,knee:OUT}],[1.505,{...onFace(true,.46,-.16,1.505),knee:OUT}],[1.905,{...onFace(true,.80,-.16,1.905),knee:OUT}],[2.305,{...onFace(true,1.26,-.16,2.305),knee:OUT}],[2.705,{...onFace(true,1.56,-.16,2.705),knee:OUT}],
+  'leg-1':[[0,stance(-1)],[.4,foot(-.080-back,-.20)],[.7,foot(-.080-back,-.20,15)],[.995,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-1.03*fitB.leg,-.20],hoof:55,soft:.03}],[1.195,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-.95*fitB.leg,-.20],hoof:50}],[1.375,{f:'pelvis',p:[.02,-.62,-.13],hoof:20,knee:OUT}],[1.505,{...onFace(true,.46,-.16,1.505),knee:OUT}],[1.905,{...onFace(true,.80,-.16,1.905),knee:OUT}],[2.305,{...onFace(true,1.26,-.16,2.305),knee:OUT}],[2.705,{...onFace(true,1.56,-.16,2.705),knee:OUT}],
    [3.065,{f:'world',p:[.19,1.70,0],hoof:20,heading:-90}],[3.305,{f:'world',p:[.44,2.24,.62],hoof:10,heading:-108}],[3.485,{f:'world',p:[.68,2.12,.66],hoof:40,heading:-140,knee:SIDE}],[DOWN_FAR,{f:'world',p:[.80,1.36,.20],hoof:20,heading:-170,knee:SIDE}],
    [4.04,{...onFace(false,.56,.16,4.105),knee:OUT,lift:.3}],[4.205,{f:'pelvis',p:[-.06,body.offsets.thigh[-1].y-.95*fitB.leg,-.14],hoof:25,knee:OUT}],[4.375,{f:'pelvis',p:[-.06,body.offsets.thigh[-1].y-1.0*fitB.leg,-.14],hoof:25,soft:.03,knee:OUT}],[4.625,foot(.90+back,.14,0,-180)],[4.95,foot(.90+back,.14,0,-190)],[5.23,{...over(-1,-265),arc:.07}],[5.27,land(-1,-270)],[6.1,land(-1,-360)]],
   leg1:[[0,stance(1)],[.4,foot(.14-back,.14)],[.7,foot(.14-back,.14,15)],[.995,{f:'pelvis',p:[body.offsets.thigh[1].x+.01,body.offsets.thigh[1].y-1.03*fitB.leg,.14],hoof:55,soft:.03}],[1.195,{f:'pelvis',p:[body.offsets.thigh[1].x+.01,body.offsets.thigh[1].y-.95*fitB.leg,.14],hoof:50}],[1.375,{f:'pelvis',p:[.02,-.62,.13],hoof:20,knee:OUT}],[1.505,{...onFace(true,.58,.16,1.505),knee:OUT}],[1.905,{...onFace(true,.96,.16,1.905),knee:OUT}],[2.305,{...onFace(true,1.30,.16,2.305),knee:OUT}],[2.525,{f:'world',p:[.20,1.96,.36],hoof:-60,knee:OUT}],[2.705,{f:'world',p:[.52,2.16,.42],hoof:0,heading:-30}],[2.905,{f:'world',p:[.72,2.04,.30],hoof:30,heading:-60}],

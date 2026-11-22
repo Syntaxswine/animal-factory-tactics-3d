@@ -261,14 +261,15 @@ function turning(frames,dt){const n=frames.length,mid=(P,a,b)=>P[a].clone().add(
 //   hooves bearing 2087 N at 0.845 s and 147 at 0.865. Held from the first sample in the air, the turn left that swing
 //   to the floor: the body's angular momentum changed at up to 398 N·m at 0.865 s, and the rig read 252 N and 115 N·m
 //   of phantom wrench there. Across the release (15 ms before the last foot sample to 10 ms after) the eleven climbs
-//   read 229 to 408 N·m that way, and 12 to 64 held from LEAD before, the plan reading no turning on the lead (below,
-//   at the rounds); their push-off and flight up read 105 readings over the limit against 381 (14 on the feet against
-//   144), all their readings 333 against 620 (at a 20 or 30 ms lead 378 or 313; at 30 the horse's push reads 541% at
-//   0.744 s, 227 at 25, and the rabbit's catch 1133% at 1.224 s, 999 at 25, 824 at 1.225 since the climb's flights'
-//   turn every millisecond, below). A run on the feet no longer than the lead (a touch between two flights) is left as
-//   it is: held whole, it would join the flights under one median (none of the 33 crossings has one; the unit test of
-//   turnAir reaches that branch). The support schedule is as it was on ten climbs; the donkey's catch comes one sample
-//   later (1.250 s).
+//   read 229 to 408 N·m that way, and 12 to 64 held from LEAD before (15 to 63 since the climb's left foot steps back,
+//   wall-climb.js), the plan reading no turning on the lead (below, at the rounds); their push-off and flight up read
+//   105 readings over the limit against 381 (14 on the feet against 144), all their readings 333 against 620 (at a 20
+//   or 30 ms lead 378 or 313; at 30 the horse's push reads 541% at 0.744 s, 227 at 25, and the rabbit's catch 1133% at
+//   1.224 s, 999 at 25, 824 at 1.225 since the climb's flights' turn every millisecond, below). A run on the feet no
+//   longer than the lead (a touch between two flights) is left as it is: held whole, it would join the flights under
+//   one median (none of the 33 crossings has one; the unit test of turnAir reaches that branch). The support schedule
+//   is as it was on ten climbs; the donkey's catch comes one sample later (1.250 s; in its second round 1.245 again
+//   since the climb's left foot steps back, wall-climb.js).
 // - a let-go's is not (a run on a grip before a flight). Held from LEAD before the hands leave as well, the turn helped
 //   only while a deep body's palms stopped at a key past the far edge: the pigs' far hang raised to their arms' reach
 //   (wall-climb.js) read 41 and 23 readings over the limit in their let-go and drop held from the flight's first
@@ -388,14 +389,17 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  // and five-sample mean smeared the step into the hold over the lead's first three samples (the horse's +56, +96 and
  // +57 N·m, where the played body read -79, -38 and -8 by the same rate), and nine climbs read new readings on the
  // feet there (review round 2 of this part).
- // Elsewhere the measured rate stands: read as the turn leaves it on every contact, the walk-outs moved too (the
- // goat's right foot round 7 readings, none before). Two things are left of it. Its five-sample mean carries the lead's
- // zero back over the two samples before the lead: on five climbs the plan reads 88 to 115 N·m less turning there
- // than is played over 1 ms chords (the rabbit's -135 against -250 at 0.845 s, where it reads a new 106%). And on the
- // lead the played rate rings about the plan's zero from sample to sample (the dog's -18, +56, -33, +22 and -13), the
- // turn's track following the kink at the lead's start: the horse's -30 at 0.860 s, on 0.82 g, puts its pressure point
- // 1.8 cm behind its heels, beside its two new readings (108 and 101% at 0.861 and 0.862 s; the sheep's two at 0.856
- // and 0.857, 108 and 113%). Review round 3 of this part.
+ // Elsewhere the measured rate stands: read as the turn leaves it on every contact, the walk-outs moved too (the goat's
+ // right foot round 7 readings, none before). Two things are left of it. Its five-sample mean carries the lead's zero
+ // back over the two samples before the lead: on five climbs the plan reads 88 to 115 N·m less turning there than is
+ // played over 1 ms chords (the rabbit's -135 against -250 at 0.845 s, where it reads a new 106%; since the climb's
+ // left foot steps back, wall-climb.js, -120 against -235, and 99.9% of the limit). And on the lead the played rate
+ // rings about the plan's zero from sample to sample (the dog's -18, +56, -33, +22 and -13), the turn's track following
+ // the kink at the lead's start: the horse's -30 at 0.860 s, on 0.82 g, puts its pressure point 1.8 cm behind its
+ // heels, beside its two new readings (108 and 101% at 0.861 and 0.862 s, 98.1 and 93.1% on 08274608 and 30.0 and 44.9%
+ // since the climb's left foot steps back; the sheep's two at 0.856 and 0.857, 108 and 113%, 109.9 and 114.7% on
+ // 08274608, under the limit since that step back; the dog's and the horse's turns here are that round's, on its code).
+ // Review round 3 of this part.
  let held=null,authored=null,last1=null,theta5=null,fineSpans=[],fineAir=[],fineMove=null,refitted=false,refound=false;const ceil=times.map(t=>ceiling?.(t)??null);
  const refind=()=>followCentre(times,plan,(t,s)=>{setShift(V(...s));return com(pose(t)).toArray();},{base,passes:3,from:follow.samples});
  const refine=(S,L,I)=>{for(let k=0;k<REFINE&&S.some(x=>x.kind==='air');k++){const L2=L.map(x=>x.slice()),I2=I.slice(),A=turnAir(S,dt);
@@ -443,14 +447,17 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  // at the rabbit's last millisecond in the air). Off a grip the centre is not held: eased in over 5 ms there it raised
  // the pig director's first millisecond in the air from 110 to 120% (4.236 s) and changed nothing else gated (the pig
  // foreman, donkey, horse and goat).
- // The eleven climbs now read 30 readings over the limits against 72: their catches none against 19, their phases over
- // the top 1 against 10, their push-offs 4 against 12, their drops 4 against 10. Two are new (the dog's 107% at 0.868 s
- // as its hooves leave, the rabbit's 104% at 0.846 s in its push) and of the 28 kept, 21 rose (the rabbit's 0.845 s 106
- // -> 112%, the sheep's two by 1.6 and 1.5 points, eighteen by 0.223 at most) and seven fell or held. By the climb
+ // The eleven climbs read 30 readings over the limits against 72 (22 since the walk-out's set-down and 4 since the left
+ // foot's step back, both wall-climb.js): their catches none against 19, their phases over the top 1 against 10, their
+ // push-offs 4 against 12, their drops 4 against 10 (since the left foot's step back, their phases over the top and
+ // push-offs none, the rabbit's push at 99.9% of the limit). Two are new (the dog's 107% at 0.868 s as its hooves
+ // leave, the rabbit's 104% at 0.846 s in its push; both gone since) and of the 28 kept, 21 rose (the rabbit's 0.845 s
+ // 106 -> 112%, the sheep's two by 1.6 and 1.5 points, eighteen by 0.223 at most) and seven fell or held. By the climb
  // test's measures the last 50 ms before the hands land (to the last millisecond in the air) turn at 0.1 to 4.1 N·m
  // against 3.1 to 79.4 (21efea5e's, to its last sample in the air), and the take-off's flight falls within 0.04 to 0.14
- // m/s^2 of gravity against 0.50 to 2.86. A prototype of this pass with the head and tail still fitted after the
- // balance read 52 (var-f25b); with them fitted inside it (refit, wall-climb.js), 30.
+ // m/s^2 of gravity against 0.50 to 2.86 (since the climb's left foot steps back, 0.1 to 0.9 N·m and 0.03 to 0.11
+ // m/s^2). A prototype of this pass with the head and tail still fitted after the balance read 52 (var-f25b); with them
+ // fitted inside it (refit, wall-climb.js), 30.
  const FINE=.001,FINE_RAMP=.005,FINE_LEAD=.005,FINE_PAST=.003,ramp=u=>u<=0?0:u>=1?1:u*u*(3-2*u),fineFlights=S=>{if(!theta5||!plan)return;
   let lo=theta5.findIndex(x=>x[0]||x[1]||x[2]),hi=theta5.findLastIndex(x=>x[0]||x[1]||x[2]);if(lo<0)return;lo=Math.max(0,lo-1);hi=Math.min(n-1,hi+1);
   const coarse=track(theta5.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false,spline:true}),pv=track(plan.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false,spline:true});

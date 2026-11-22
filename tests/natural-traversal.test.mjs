@@ -188,8 +188,8 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    assert.ok(B.times[0]===0&&B.times.every((t,i)=>!i||Math.abs(t-B.times[i-1]-dt)<1e-9)&&B.times.at(-1)>=D&&B.times.at(-1)-D<dt,`${kind}: the balance's samples end at ${B.times.at(-1)} s, not evenly spaced over the crossing (${D} s)`);
    let turn={a:0};for(const x of [.0025,.005,.0075,.01])for(const t of [x,D-x]){const s=B.spin(t),a=s?2*Math.acos(Math.min(1,Math.abs(s.q.w))):0;if(a>turn.a)turn={a,t};}
    assert.ok(turn.a<=3e-5,`${kind}: the balance turns the body ${(1e3*turn.a).toFixed(3)} milliradian at ${turn.t?.toFixed(4)} s, within 10 ms of an end`);}
-  // Its plan of the centre of mass is at rest at both ends, its rows met within a micrometre (0.30 at the worst, the
-  // rabbit's climb): the first sample on the authored path and the first interval a cubic from rest
+  // Its plan of the centre of mass is at rest at both ends, its rows met within a micrometre (0.17 at the worst, the
+  // rabbit's climb; 0.30 on 08274608): the first sample on the authored path and the first interval a cubic from rest
   // (7 c0 - 8 c1 + c2 = 0), and the same into the last sample before the end, the last held there. As played, the
   // centre of mass is at rest at both ends (under 0.3 m/s^2 and 1 mm/s there: at the start 0.04 at the most, at the end
   // 0.19, the donkey's window; on 26d37e89 0.10 to 3.76 at the end, the skunk's low wall to the bull's window); and
@@ -251,13 +251,14 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
   // take-off moved 5 to 15 ms between the balance's rounds, the lower hoof was 14 to 30 mm up at the last foot sample,
   // and in the flight's first 50 ms the body's angular momentum about its centre of mass lay 0.88 to 7.8 N·m·s from the
   // flight's median (its turn refined on the round before's hips, before the take-off moved). Every round now plans the
-  // take-off at its authored time, a hoof is within the rig's centimetre of the floor at the last foot sample (1.6 to
-  // 9.1 mm, the pig director's the lowest and the horse's the highest; 1.0 to 9.1 on 21efea5e), and the flight's first
-  // 50 ms hold their angular momentum within 0.5 N·m·s, what the rig's airborne limit of 10 N·m moves in 50 ms (0.001
-  // to 0.002; 0.001 to 0.13 on 21efea5e, 0.03 to 0.14 on 6fe975ef, to 0.12 on e909dcf4). That last check guards the
-  // runaway and the turn together and barely sees either alone: on e909dcf4, with the take-off held and the turn not
-  // refined on the final hips (traversal-balance.js), it read 0.15 to 0.51, the rabbit's alone over, and with that
-  // refinement alone on 148c6fb7's motion 0.09 to 0.66; the gate shows the refinement's own worth.
+  // take-off at its authored time, a hoof is within the rig's centimetre of the floor at the last foot sample (2.4 to
+  // 9.0 mm, the pig director's the lowest and the horse's the highest; 1.6 to 9.1 on 08274608, before the left foot
+  // stepped back), and the flight's first 50 ms hold their angular momentum within 0.5 N·m·s, what the rig's airborne
+  // limit of 10 N·m moves in 50 ms (0.0003 to 0.0016, the skunk's to the goat's; 0.0006 to 0.0015 on 08274608; 0.001 to
+  // 0.13 on 21efea5e, 0.03 to 0.14 on 6fe975ef, to 0.12 on e909dcf4). That last check guards the runaway and the turn
+  // together and barely sees either alone: on e909dcf4, with the take-off held and the turn not refined on the final
+  // hips (traversal-balance.js), it read 0.15 to 0.51, the rabbit's alone over, and with that refinement alone on
+  // 148c6fb7's motion 0.09 to 0.66; the gate shows the refinement's own worth.
   if(kind==='wall'){const B=motion.balance,S=B.samples,n=S.length,D=motion.duration,dt=B.times[1]-B.times[0],k0=S.findIndex((x,k)=>B.times[k]>.7&&x.kind==='air');
    assert.ok(k0>0,'wall: no flight after the push');
    const offs=(B.history||[]).map(h=>(h.match(/feet 0\.000-([0-9.]+), air/)||[])[1]);
@@ -270,6 +271,32 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    const L=t=>{const [A,ca]=at(t-dt),[P,c]=at(t),[Bp,cb]=at(t+dt),vc=sub(cb,ca).map(x=>x/(2*dt)),out=[0,0,0];
     for(const [a,b,mass] of MASS_SEGMENTS){const r=sub(mid(P,a,b),c),v=sub(sub(mid(Bp,a,b),mid(A,a,b)).map(x=>x/(2*dt)),vc),[u,l]=unit(P,a,b),du=sub(unit(Bp,a,b)[0],unit(A,a,b)[0]).map(x=>x/(2*dt));
      const o=cross(r,v),s=cross(u,du);for(let q=0;q<3;q++)out[q]+=mass*o[q]+mass*l*l/12*s[q];}return out;};
+   // Stepping in, the body asks less of the feet than it did (wall-climb.js: the left foot steps 4.5 cm further back):
+   // over the first 50 ms, at each of the balance's samples from 5 ms with feet under the body, the pressure point the
+   // played body asks for lies at most 10 cm outside the sample's outline: its centre of mass's acceleration and its
+   // angular momentum's rate read over 0.5 ms chords (the angular momentum as the flights' checks below read it), the
+   // floor's push placed where its moment about the centre meets that rate (p_x = c_x + (dL_z - h F_x) / F_y, F the
+   // body's weight carried plus its mass times that acceleration, h the centre over the floor). The gate reads the same
+   // played body: over the rabbit's and dog's starts it reads 8.9 to 9.3% of its limit per cm of this point outside the
+   // outline (eleven samples on five copies), so 10 cm is about 90% of its limit. With the foot where it stepped before
+   // (08274608) the rabbit's and dog's lay 14.9 and 15.9 cm outside (the gate: 137 and 143%); now 8.8 and 8.8 (81 and
+   // 79%), the nine others' 3.6 at most; 4 cm back the dog's 11.3 (102%); back 5.5 cm for the step in alone the
+   // rabbit's and dog's 10.3 and 11.2 (95 and 101%), both over this bound. The plan's own pressure point (the balance's
+   // rows) does not follow the gate at the start: its turn is the balance's 5 ms differences averaged over five samples
+   // and its force the plan's 5 ms second difference (on 08274608 at the rabbit's 5 ms sample the plan's point lies 5.5
+   // cm outside, the played 14.4, where the gate reads 134%; 4 cm back with an arc on the step in's key, at the dog's
+   // 15 ms sample the plan's 6.4, the played 6.2, the gate 55%). The floor pushes from nowhere outside the outline at
+   // all.
+   {const BM=MASS_SEGMENTS.reduce((m,x)=>m+x[2],0),G=9.81,h=5e-4,out=(hl,x,z)=>{let inside=true,best=Infinity;for(let j=0;j<hl.length;j++){const a=hl[j],b=hl[(j+1)%hl.length],ex=b[0]-a[0],ez=b[1]-a[1],L=Math.hypot(ex,ez)||1;
+     if(ex*(z-a[1])-ez*(x-a[0])<0)inside=false;const u=Math.max(0,Math.min(1,((x-a[0])*ex+(z-a[1])*ez)/(L*L)));best=Math.min(best,Math.hypot(x-a[0]-u*ex,z-a[1]-u*ez));}return inside?0:best;};
+    const Lh=t=>{const [A,ca]=at(t-h),[P,c]=at(t),[Q,cb]=at(t+h),vc=sub(cb,ca).map(x=>x/(2*h)),o3=[0,0,0];
+     for(const [a,b,mass] of MASS_SEGMENTS){const r=sub(mid(P,a,b),c),v=sub(sub(mid(Q,a,b),mid(A,a,b)).map(x=>x/(2*h)),vc),[u,l]=unit(P,a,b),du=sub(unit(Q,a,b)[0],unit(A,a,b)[0]).map(x=>x/(2*h));
+      const o=cross(r,v),w=cross(u,du);for(let q=0;q<3;q++)o3[q]+=mass*o[q]+mass*l*l/12*w[q];}return o3;};let worst={d:0},seen=0,all=0;
+    for(let i=1;i<n-1&&B.times[i]<=.05+1e-9;i++){all++;const x=S[i];if(x.kind!=='feet'||!x.hull?.length)continue;seen++;const t=B.times[i],[,c0]=at(t-h),[,c]=at(t),[,c1]=at(t+h);
+     const a=c.map((v,q)=>(c1[q]-2*v+c0[q])/(h*h)),L0=Lh(t-h),L1=Lh(t+h),dL=L0.map((v,q)=>(L1[q]-v)/(2*h)),Fy=BM*(a[1]+G),hc=c[1]-(x.floor||0);
+     const d=out(x.hull,c[0]+(dL[2]-hc*BM*a[0])/Fy,c[2]-(dL[0]+hc*BM*a[2])/Fy);if(d>worst.d)worst={d,t};}
+    assert.ok(all>0&&seen===all,`wall: stepping in, ${seen} of the first 50 ms's ${all} samples stand on the feet with an outline (all must, or this reads nothing)`);
+    assert.ok(worst.d<=.10,`wall: stepping in, the played body's pressure point lies ${(100*worst.d).toFixed(1)} cm outside the feet at ${worst.t?.toFixed(3)} s (10 at most)`);}
    let k1=k0;while(k1+1<n&&S[k1+1].kind==='air')k1++;const Ls=[];for(let k=k0;k<=k1;k++)Ls.push(L(B.times[k]));
    const med=[0,1,2].map(q=>Ls.map(x=>x[q]).sort((x,y)=>x-y)[Ls.length>>1]);let worst={d:0};
    for(let k=k0;k<=k1&&B.times[k]<=B.times[k0]+.05+1e-9;k++){const d=Math.hypot(...sub(Ls[k-k0],med));if(d>worst.d)worst={d,t:B.times[k]};}
@@ -282,7 +309,7 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // of the first round's, measured on the authored motion (10 ms early on both pigs, within 5 on the rest), and at the
    // catch a hand point lies within the rig's centimetre of the wall's surface, inside it or out (the rig counts a
    // point deeper than that a sink, not a contact; the hand is its mesh, forearm and hand, as the rig's grip reads it;
-   // 0.0 to 1.2 mm, the pig foreman's 1.16; 0.0 to 0.7 on 21efea5e). On e909dcf4 each fails on both pigs and on no
+   // 0.0 to 0.6 mm, the donkey's 0.56; 0.0 to 1.2 on 08274608). On e909dcf4 each fails on both pigs and on no
    // other mammal, the second with the first switched off (the nearest hand 65.5 and 47.3 mm off the wall at the
    // catch).
    const catchOf=h=>{const sp=[...h.matchAll(/(\w+) ([0-9.]+)-[0-9.]+/g)].map(x=>({kind:x[1],a:+x[2]})),i=sp.findIndex(x=>x.kind==='air'&&x.a>.7),g=i<0?null:sp.slice(i+1).find(x=>x.kind==='grip');return g?g.a:NaN;};
@@ -438,7 +465,7 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // every millisecond, its rate over 2 ms chords) changes at most 100 N·m (traversal-balance.js, LEAD). The legs
    // fold before the hooves leave, and with the turn held only from the first sample in the air the floor was asked to
    // turn the body as they swung, on a fading push: on 6d7ac5d4 every mammal's climb read 229 to 408 N·m there (the
-   // horse's 398 at 0.865 s, 147 N on its hooves), now 12 to 64.
+   // horse's 398 at 0.865 s, 147 N on its hooves), now 15 to 63 (12 to 64 on 08274608).
    {const h=5e-4,Lh=t=>{const [A,ca]=at(t-h),[P,c]=at(t),[Q,cb]=at(t+h),vc=sub(cb,ca).map(x=>x/(2*h)),out=[0,0,0];
      for(const [a,b,mass] of MASS_SEGMENTS){const r=sub(mid(P,a,b),c),v=sub(sub(mid(Q,a,b),mid(A,a,b)).map(x=>x/(2*h)),vc),[u,l]=unit(P,a,b),du=sub(unit(Q,a,b)[0],unit(A,a,b)[0]).map(x=>x/(2*h));
       const o=cross(r,v),s=cross(u,du);for(let q=0;q<3;q++)out[q]+=mass*o[q]+mass*l*l/12*s[q];}return out;};
@@ -448,11 +475,11 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
      assert.ok(spin.v<=100,`wall: as the hooves leave the body's angular momentum changes at ${spin.v.toFixed(0)} N·m at ${spin.t?.toFixed(3)} s (100 at most)`);}
     // Nor does the flight that follows turn the body: from 5 ms after the balance's first sample in the air (where the
     // rig can still read a hoof on the floor: the pig director's boot at 0.870 s, where the rate read 10.2 N·m on
-    // 21efea5e and reads 0.5 now) to 50 ms after it, the same angular momentum changes at most 10 N·m, the rig's
+    // 21efea5e and reads 0.3 now) to 50 ms after it, the same angular momentum changes at most 10 N·m, the rig's
     // airborne limit (traversal-balance.js: the climb's flights' turn every millisecond, fine). On 6fe975ef, with the
     // turn held at the 5 ms samples alone, eight climbs read 14.6 to 24.8 N·m there (the goat's 24.8 at 0.889 s, as its
     // legs fold), the skunk, rabbit and pig director 8.9, 9.4 and 9.9; on 21efea5e 0.6 to 8.8 (the horse's 8.8, its
-    // head fitted again after the balance, which the turn did not see); now 0.3 to 1.2.
+    // head fitted again after the balance, which the turn did not see); now 0.4 to 1.3 (0.3 to 1.2 on 08274608).
     {const spin=spinOver(B.times[k0]+.005,Math.min(B.times[k1],B.times[k0]+.05));
      assert.ok(spin.v<=10,`wall: in the take-off's flight (${(B.times[k0]+.005).toFixed(3)} to ${Math.min(B.times[k1],B.times[k0]+.05).toFixed(3)} s) the body's angular momentum changes at ${spin.v.toFixed(1)} N·m at ${spin.t?.toFixed(3)} s (10 at most)`);}
     // Nor as the hands reach the top: over the 50 ms to the last millisecond the balance's 1 ms pass reads in the air
@@ -460,11 +487,11 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
     // the plan only from 20 ms after its touch), the same angular momentum changes at most 10 N·m
     // (traversal-balance.js: the flights' turn holds up to the hands, fine). On 21efea5e, its turn eased out 5 ms
     // before that sample, eight climbs read 11.5 to 79.4 N·m there (the rabbit's 79.4 at 1.225 s, as its arms stop at
-    // the top); now 0.1 to 4.1 (the rabbit's 4.1 at 1.224 s). And the take-off's flight falls free: from 5 ms after its
-    // first sample in the air to that last millisecond, the centre of mass (read every millisecond over 0.5 ms chords)
-    // accelerates within 0.98 m/s^2 of gravity, the rig's force limit (10% of the body's weight). On 21efea5e, its
-    // centre held at the 5 ms samples alone, seven climbs read 1.05 to 2.86 m/s^2 (the rabbit's at 1.224 s, its arms
-    // stopping); now 0.04 to 0.14.
+    // the top); now 0.1 to 0.9 (the pig foreman's 0.9 at 1.180 s; 0.1 to 4.1 on 08274608, the rabbit's 4.1 at 1.224 s).
+    // And the take-off's flight falls free: from 5 ms after its first sample in the air to that last millisecond, the
+    // centre of mass (read every millisecond over 0.5 ms chords) accelerates within 0.98 m/s^2 of gravity, the rig's
+    // force limit (10% of the body's weight). On 21efea5e, its centre held at the 5 ms samples alone, seven climbs read
+    // 1.05 to 2.86 m/s^2 (the rabbit's at 1.224 s, its arms stopping); now 0.03 to 0.11 (0.04 to 0.14 on 08274608).
     {let kr=k0;while(kr+1<n&&(S[kr+1].raw??S[kr+1].kind)==='air')kr++;const T=B.times,fa=(B.fineAir||[]).find(([a,b])=>b>=T[k0]&&a<=T[k0]+.05),te=fa?fa[1]:T[kr],spin=spinOver(te-.05,te);
      assert.ok(spin.v<=10,`wall: as the hands reach the top (${(te-.05).toFixed(3)} to ${te.toFixed(3)} s) the body's angular momentum changes at ${spin.v.toFixed(1)} N·m at ${spin.t?.toFixed(3)} s (10 at most)`);
      let fall={v:0};for(let t=T[k0]+.005;t<=te+1e-9;t+=.001){const a=at(t-h)[1],c=at(t)[1],b=at(t+h)[1],v=Math.hypot(...a.map((x,q)=>(x-2*c[q]+b[q])/(h*h)+(q===1?9.81:0)));if(v>fall.v)fall={v,t};}

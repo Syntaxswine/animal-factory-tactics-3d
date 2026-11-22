@@ -4458,6 +4458,214 @@ it fails all eleven climbs on the new check, 129 to 173 N·m (test-f30g-t18-r3.l
   the limit either way: cmp-notail-skunk-bull.txt).
 - The horse's head in the top's far edge (2.9 mm for 8 ms at 3.933 s), between the head fit's samples.
 
+### 2026-11-22 (physics balance, fortieth part): the step in sets the left foot back
+
+After the thirty-ninth part (08274608) the eleven climbs read 22 readings over the gate's limits, the worst the dog's
+143% at 0.020 s and the rabbit's 137% at 0.025 s as they step in: the rabbit's eight from 0.004 to 0.027 s and the dog's
+five from 0.019 to 0.023 s; besides them the sheep's two and the rabbit's two in the push (up to 115%), the dog's one as
+its hooves leave (107%) and the pig director's four as its hands leave the top (up to 111%) (motion/var-f31l88's gate
+results, 08274608's code lines; scratchpad next-stepin/ holds every probe and output named here but the var-* copies and
+those named with next-catch/, next-walkout/ or motion/).
+
+Read every millisecond on the dog and the rabbit (var-f31l88):
+- The played centre of mass follows the balance's plan at every 5 ms sample, and its acceleration read every millisecond
+  meets the gate's required force (the dog's 2.37 against 2.33 m/s^2 forward at 0.020 s: probe-stepin-acc.mjs,
+  acc-dog-f31l88.txt): the readings are the played body's, which meets the plan's path at its samples but not the plan's
+  model of its motion between them: the plan's 5 ms second difference reads the dog 1.89 m/s^2 forward at 0.020 s, and
+  its rows take its turn at +29.5 N·m where the gate's row reads +15.5 (probe-start-ab2.mjs: start-ab2-f31l88-s5e.txt).
+- In the battle stance the rabbit's and dog's rounded paws reach only 1.0 and 3.5 cm behind the centre of mass at rest:
+  their heels lie above the rigs' 1 cm contact band, where the skunk's boots reach 9.4 cm behind it (probe-paw.mjs:
+  paw-f31l88.txt; motion/video/f18/grid-feet2.jpg). From its first sample the plan accelerated the centre forward
+  nonetheless, and its pressure point, as its rows take it (the centre less k a plus the turn's shift, k = h/fy:
+  planCentre), lay up to 9.9 cm outside the rabbit's feet (0.025 s) and 10.1 outside the dog's (0.020 s), their outline
+  there reaching 1.1 and 3.5 cm behind the centre; the nine others' lies inside throughout the step in's first 50 ms,
+  their outline reaching 6.4 to 10.4 cm behind the centre (probe-start-pp.mjs: start-pp-f31l88.txt). The pressure point
+  the played body asks for, which is what the gate reads, lay further out: 14.9 and 15.9 cm at those samples, the nine
+  others' 1.9 to 3.6 cm on the tree (its centre's acceleration and its angular momentum's rate read over 0.5 ms chords,
+  as the climb test now reads them: probe-played-pp.mjs, played-pp.txt).
+- Without its pressure-point rows over the first 40 ms, the plan throws the centre forward at once (its pendulum
+  pressure point 72.5 cm behind it at 5 ms on the rabbit, 76.6 on the dog) and from 45 ms barely accelerates (var-s3b, a
+  diagnostic: acc-rabbit-s3b.txt, acc-dog-s3b.txt): the later rows want the centre well ahead of the support's back
+  edge, and from rest the only way there is a forward start the paws cannot give. Nothing at the start alone brought it
+  in (NOTES.md): the plan's end margin taken off or stopped at the rest centre (var-s1a, s1b: further out), its pull
+  toward the authored path eased in at the ends (s1d: the same to 3 decimals), the turn faded in over 40 ms (s1f, gated:
+  further out, 143 -> 153% on the dog), the start solved again to 20000 iterations with the rest held (s2a to s2c: the
+  same within 1 mm), a gentler authored start (s3a: the same within 2 mm). The whole plan solved to 20000 iterations
+  (s1c) did bring it in (gated: the rabbit's step in 8 -> 3 readings, worst 110%; the dog's 5 -> 0), but every plan of
+  the climb moved with it and the rabbit's climb read 162 readings, 126 of them in its hang, up to 6627% (1.423 s).
+
+**The fix**, wall-climb.js: the step in takes the left foot 4.5 cm further back than it did (its Step in and Crouch keys
+at x -.080-back, where they were -.035-back), and the crouch keeps it there for the take-off. In the first 50 ms the
+support is what it was (the rabbit's and dog's outlines the same within 0.72 mm, the plans within 0.56 mm:
+probe-start-ab.mjs, start-ab-f31l88-s5e.txt; by 0.1 s the left ankle has moved half a centimetre: feet-track-s5e.txt),
+yet the plan starts more gently: its pressure point now lies up to 5.0 cm outside the rabbit's feet and 4.8 outside the
+dog's (start-pp-s5e.txt), the nine others' inside as before, and the played body's 8.8 and 8.8 (played-pp.txt). What
+eases it is the crouch keeping the foot back from 0.4 s, which the plan, solved over the whole climb, reads from the
+start: its later rows wanted the centre well ahead of the support's back edge (var-s3b above), and that edge now lies
+4.5 cm further back from 0.385 to 0.735 s, 4.3 to 4.5 to 0.81 s and 2.6 to 4.0 from 0.83 s to the take-off
+(probe-start-ab2.mjs: start-ab2-f31l88-s5e-late.txt); the authored centre lies up to 5.1 mm further back too, with the
+leg's mass, and these copies do not separate the two. The step in's support alone does not do it: back 5.5 cm for the
+step in only (var-s5b), the outline reaches further back than here from 0.1 to 0.49 s (start-ab2-s5e-s5b-late.txt) (the
+rabbit's 3.80 against 3.30 cm behind its first centre at 0.2 s, 6.55 against 5.55 at 0.4; the dog's 4.00 against 3.50
+and 6.75 against 5.75: the extra centimetre of its key), and the plan's start lies 6.4 and 6.7 cm outside the rabbit's
+and dog's feet (start-ab-s5e-s5b.txt), the played body's 10.3 and 11.2, which the gate reads as 95 and 101%. The gate
+reads this fix's two starts as 81 and 79% of its limit (worst-by-phase.mjs: worst-by-phase-f31l88-s5e.txt). That is a
+margin, not a cure: at the start the gate's reading turns on what the plan barely registers. With the keys 4 cm back, an
+arc on the step in's key (var-s4b, against var-s5f without it) lifted no foot (a planted key keeps the foot on the
+floor) and moved the ankles less than a millimetre (0.85 mm at most from 0 to 0.5 s: probe-ankles-ab.mjs,
+ankles-s4b-s5f.txt), but tilted the left paw enough to take some of its points out of the 1 cm band: the rabbit's left
+toe corner at 0.030 s, the dog's left heel at 0.025 s (probe-hull-points.mjs: hull-points-s5f-s4b.txt), the outlines as
+filled polygons 18.7 and 31.1 mm apart at most in the first 50 ms (probe-start-ab2.mjs: start-ab2-s5f-s4b.txt). The
+plans stayed within 0.08 and 0.12 mm of each other, yet at 0.020 s, 0.034 mm apart, they asked the dog for 108 N forward
+without the arc and 55 with it (the body's mass times the plan's 5 ms second difference), where the gate, reading the
+played body, required 135.0 and 14.8 N and read 102% and none; and at the rabbit's 0.025 s sample, the outline the same
+and the forward force the gate requires within 1 N (92.5 without the arc, 91.7 with it), the played turn alone (the
+gate's -0.4 N·m without, +16.8 with) took the reading from 85% to 64%. The first 50 ms' worst went from 102 to 55% on
+the dog and from 85 to 71% on the rabbit.
+
+Tried and not kept (gated as named; the first 50 ms's worst reading, and the worst in the phases at the limit, on every
+copy: variants-table.mjs, variants-table.txt):
+- The rabbit's push reads within a point of the limit at every distance from 4 to 5.5 cm, with the arc or without it:
+  100.51% at 4 cm (var-s5f; 100.64 with the arc, var-s4b), 99.86 at 4.5 (here), 100.88 at 5 (var-s5g; 100.82 with the
+  arc, var-s4c), 99.78 at 5.5 (var-s5a; 99.84 with the arc, var-s4e); with the arc, 98.52 at 6 cm (var-s4d) and 91.81 at
+  6.5 (var-s4a). That reading does not tell 4 to 5.5 cm apart: here it is under the limit by 0.14 points, at 4 and 5 cm
+  over it by 0.5 to 0.9.
+- 4 cm (var-s5f): the dog's start reads 102% (its plan 6.4 cm outside the feet at 0.020 s: start-pp-s5f.txt; the played
+  body's 11.3: played-pp.txt).
+- 5 cm (var-s5g, without the arc, gated on the rabbit and the dog only): the rabbit's push reads 100.88%, its only
+  reading over the limit; the first 50 ms read 78.0% on the rabbit and 48.8% on the dog (here 81.2 and 78.6; the dog's
+  step in reads 62.6% at 0.135 s, here 64.7: motion/var-s5e's g12-wall-dog.json), and the dog's take-off 84.7% (here
+  90.5); the dog's trunk goes 2.02 cm into the face in its hang read every millisecond (trunk-dog-f31l88-s5g.txt; 1.97
+  here), 1.98 by the fit's own report, which the climb test reads and passes (test-s5g-t19f.log; probe-fit-report.mjs:
+  fit-report-dog.txt, 1.92 here, 2.11 at 5.5 cm). Between 4.5 and 5 cm the readings at the limits are hairs either way,
+  and the starts' readings swing by tens of points with details here (above), the dog's 30 points lower at 5 cm: 4.5 cm
+  is kept as the one with none over the gate's limit and its trunk within 2 cm by either measure, not for a margin.
+- 5.5 cm (var-s5a, all eleven): 22 -> 4 as here, but the climb test failed the dog, its trunk left 2.1 cm in the face in
+  its hang (allowed 2; 2.14 cm read every millisecond: clear4dp-f31l88-s5a.txt).
+- 6.5 cm with the arc (var-s4a): the rabbit's, dog's and sheep's starts and pushes read 92% at most, but the pig
+  director's jump touched something near 1.045 s, its flight read as two (fineAir [[0.87,1.055],[1.04,1.221]]), with six
+  new readings in it (647% of the airborne torque at 1.054 s). Not gated: 6.5 cm without the arc, and 5.5 and 6 cm with
+  it on all eleven or through the climb test (var-s4e, s4d: the rabbit and the pig director alone).
+- Back for the step in only, the crouch where it was (var-s5b): the foot slid 5.5 cm forward again under the crouch, and
+  the push read more (the rabbit's 112 -> 118% and a new 100%; the dog's lead 107 -> 115%), the dog keeping one as it
+  steps in (101%) and the sheep its two (109%).
+- 5.5 cm for the step in and 2.5 or 4 for the crouch (var-s5c, s5d): the rabbit kept two and one (109 and 104%), the
+  foot sliding forward under the crouch.
+
+So (var-s5e, whose code lines the tree's are but for the spelling -0.080 of the same number), phantom-wrench 1.2.0
+`--gate` on frozen copies: the eleven climbs read 4 readings against 22, the pig director's four in its drop as they
+were (each within 0.0001 points: next-catch/rises17.mjs at no threshold; next-catch/readings.mjs:
+readings-f31l88-s5e.txt). Gone: the rabbit's ten (the step in's eight, the push's two), the dog's six (the step in's
+five, the one as its hooves leave) and the sheep's two in its push; none new. The rabbit, the dog and the sheep now pass
+the gate's phantom-wrench rule, the rabbit by 0.14 points (its push 99.86% of the limit at 0.845 s).
+
+Measured on var-s5e against var-f31l88:
+- The worst reading in each of the gate's phases, over its 5 ms rows and 1 ms checks between them
+  (worst-by-phase-f31l88-s5e.txt): the step in's fell on the rabbit (137.5 -> 81.2%) and the dog (143.5 -> 78.6%); the
+  push's on eight climbs (the sheep's 114.7 -> 81.9, the rabbit's 111.5 -> 99.9, the bull's 92.0 -> 58.0); the
+  take-off's (the gate's phase "Over the top", from the hooves leaving) on seven, the horse's most (98.1 -> 57.5) and
+  the dog's 106.8 -> 90.5; the jump's catch on ten (the rabbit's 50.7 -> 4.3). Others rose by more than 5 points, all
+  under the limit: the sheep's take-off 52.5 -> 80.1%, the pig director's step in 30.3 -> 62.0% (0.125 s) and push 19.3
+  -> 42.8%, the dog's crouch 63.1 -> 75.8%, the skunk's take-off 60.0 -> 71.9%, the horse's, donkey's and pig foreman's
+  crouches by 7 to 9 points (to 21, 26 and 34%). From the hang on, every phase reads as it did within 0.01 points. Over
+  90% of the limit now: the pig director's drop (110.7%, as before), the rabbit's push (99.9), the donkey's and sheep's
+  drops (92.5 and 90.7, as before) and the dog's take-off (90.5).
+- The gate's other rules (verdicts-f31l88-s5e.txt): the pig director's capsule overlaps of its head with its left hand,
+  2.84 -> 2.91 cm (1.169 s, as its hands reach for the top in the jump; the gate's phase "Over the top"), and with its
+  left forearm, 1.69 -> 2.10 cm (1.333 s, in its hang), now a second pair over the rule's 2 cm; the required force's
+  peaks within 0.1 of the body's weight (3.0 to 3.2 times it, against 5); two point speeds within 0.1 m/s (the pig
+  foreman's palm 8.1 -> 8.2 m/s, over the rule's 8 as before).
+- The support schedule: the donkey's second round catches at 1.245 s where it caught at 1.250 (its flight 0.875 to 1.240
+  s, 5 ms shorter); the other ten as they were (tc2-full-s5e.txt against next-walkout/tc2-full-f31c.txt).
+- What moves, every vertex every 1 ms (next-catch/probe-vertdiff-r4.mjs: vertdiff-f31l88-s5e.txt): to 0.4 s, the left
+  leg as its foot steps back, by up to 48.5 mm (the pig foreman's trousers at 0.400 s); from 0.4 to 1.0 s, the crouch
+  and the take-off from there, up to 66.3 mm (the dog's trousers at 0.699 s, in the crouch); after 1.0 s the jump's
+  flight, catch and hang play differently, up to 53.4 mm (the pig director's head at 1.246 s), the rabbit's head 29.9,
+  the other climbs 13.8 to 23.5.
+- The feet slide along the floor through the step in (each ankle's net horizontal displacement from 0 to 0.5 s, its
+  height within 1.2 cm of standing throughout, read every 1 ms on every climb: probe-feet-slide.mjs,
+  feet-slide-0500-all-f31l88-s5e.txt): the left 3.2 -> 5.5 cm on nine climbs (the donkey's 5.6), 16.7 -> 21.1 on the pig
+  foreman and 19.4 -> 23.8 on the pig director (the pigs stand further back and step back to their mark); the right as
+  before, 19.8 cm on nine (the donkey's 19.7) and 9.3 on the pigs.
+- Clearance, every vertex every 1 ms (next-walkout/probe-limbclear-4dp.mjs). By the fit's way out, to 0.001 mm (the near
+  face until 2.265 s: clear4dp-f31l88-s5e.txt; next-walkout/clear-summary4.mjs and clear-falls.mjs:
+  clear4dp-summary-f31l88-s5e.txt, clear-falls-f31l88-s5e.txt), in the take-off (0.77 to 0.82 s), the catch and hang
+  (1.25 to 1.37 s) and the hands' next grips (1.46 to 1.49 s), where legs, forearms and hands lie against the face, 30
+  parts' deepest rose, 14 of them by more than 1 mm: the donkey's right thigh most (11.6 -> 20.9 mm at 1.348 s), its
+  right forearm 26.7 -> 30.4, the dog's right shin 2.9 -> 5.9, the rabbit's right shin 9.9 -> 12.6 (0.818 s), the
+  donkey's trunk 0.6 -> 3.2, the dog's trunk 18.6 -> 19.7 (the climb test allows 2 cm, reading the fit's own report:
+  1.86 -> 1.92 cm, fit-report-dog.txt), the horse's, skunk's and dog's right forearms 1.0 to 1.3 mm deeper, and five
+  hands; 40 parts' deepest fell, 25 of them by more than 1 mm, the skunk's right thigh 28.0 -> 21.2 mm and shin 26.3 ->
+  20.9 in the take-off, the sheep's right thigh 17.0 -> 13.5 and shin 13.3 -> 9.5 (their deepest before in the catch, at
+  1.25 s). As the take-off's and the catch's timing moved, legs, forearms and trunks lie over 1 mm in where they were
+  not for up to 84 ms (the dog's right thigh, up to 9.5 mm at 1.259 s), and out where they were in at other moments. The
+  heads as before (the horse's 2.589 mm at 3.933 s). The fit's way out reads a hand lying on the top as deep as it lies
+  past the top's near edge (some 5 cm), so the hands are read by the true depth too, the least way out of the box
+  (clear-hands-true-f31l88-s5e.txt, 1.2 to 1.55 s): around the catch their deepest fell on most climbs (the left hands'
+  28.2 to 29.8 mm -> 24.8 to 26.0 on the goat, bull, cow, sheep, rabbit and dog, the rabbit's right 9.0 -> 0.8) and rose
+  on five hands, by more than 1 mm on the pig foreman's two (10.2 -> 14.6 and 15.7 -> 17.2 mm) and the donkey's left
+  (20.4 -> 22.6). At the next grips (1.44 to 1.52 s), where the fit's way out reads a hand up to 5.1 cm in that was
+  clear (the donkey's right at 1.493 s: the grips' timing moved), the true depth rose by 1.1 mm at most (the donkey's
+  left hand, 1.5 -> 2.6 mm at 1.440 s), the deepest there the pigs' as before (10.1 and 9.2 mm:
+  clear-hands-true-grips-f31l88-s5e.txt).
+- The figures the climb test's comments give, read again by the probes part 38 names (next-catch/'s tc1-full-r10.mjs,
+  tc2-full-r10.mjs, tm-full-r10.mjs, probe-farreach-r7.mjs, probe-wristheight-r9.mjs, probe-unread-r9.mjs and
+  probe-gripgap4-f11.mjs on var-s5e: tc1-full-s5e.txt and the rest, against next-walkout/'s -f31c outputs;
+  next-catch/cmp-full-r10.mjs: cmp-tc1-full-f31c-s5e.txt, cmp-tc2-full-f31c-s5e.txt), every one within its bound; those
+  that moved, brought up to date in the comments: the lower hoof at the last foot sample 2.4 to 9.0 mm (1.6 to 9.1), the
+  hands at the catch 0.0 to 0.6 mm (the donkey's 0.56; 0.0 to 1.2), the body's turning as the hooves leave 15 to 63 N·m
+  (12 to 64), the flight's first 50 ms 0.4 to 1.3 N·m (0.3 to 1.2) and their angular momentum 0.0003 to 0.0016 N·m·s off
+  the flight's median (0.0006 to 0.0015), the pig director's boot at 0.870 s 0.3 N·m (0.5), the last 50 ms before the
+  hands land 0.1 to 0.9 N·m (0.1 to 4.1), the take-off's flight 0.03 to 0.11 m/s^2 off gravity (0.04 to 0.14;
+  rate-director-0870-s5e.txt and tm-full-s5e.txt), and the plan's rows at rest met within 0.17 um at the worst, the
+  rabbit's climb (0.30; the dog's 0.17 -> 0.09: unread-s5e.txt), the windows' and low walls' within 0.08
+  (probe-rows-kind.mjs: rows-window-lowwall-s5e.txt). The far reach, the wrists and the dog's grip in the far hang read
+  as before (farreach-s5e.txt, wrist-s5e.txt, gripgap4-dog-s5e.txt the same to the digit).
+- The windows and the low walls do not change: wall-climb.js, the one file whose code changes, is imported by neither
+  (only the battle adapter and the study page import it).
+- The eleven climbs build in 71.8 s against 71.0 (the least of two builds each, 08274608's code lines and the tree's in
+  turn: motion/probe-buildtime.mjs, buildtime-f31l88-s5e.txt), 1.2% more: the same within the run's noise, single climbs
+  from 8.9% less to 13.0% more.
+
+`tests/natural-traversal.test.mjs`: the climb test checks that stepping in, the body asks less of the feet than it did:
+over the first 50 ms, at each of the balance's samples from 5 ms (each of which must stand on the feet with an outline,
+or the check fails), the pressure point the played body asks for (its centre's acceleration and its angular momentum's
+rate read over 0.5 ms chords, the floor's push placed where its moment about the centre meets that rate) lies at most 10
+cm outside the sample's outline. The gate reads the same played body: over the rabbit's and dog's starts it reads 8.9 to
+9.3% of its limit per cm of this point outside the outline (eleven samples on five copies, played-pp.txt against the
+copies' gate results: the rabbit's 0.025 s and the dog's 0.020 s on var-s5e, var-f31l88, var-s5f and var-s5b,
+var-f31l88's rabbit at 0.005 s, var-s4b's rabbit at 0.005 s and dog at 0.015 s), so 10 cm is about 90% of its limit.
+With the foot where it stepped before (08274608) the rabbit and the dog fail it, 14.9 and 15.9 cm (the gate: 137 and
+143%; test-f31l88-t19f.log, on var-f31l88-t19b); 4 cm back the dog fails it, 11.3 (102%: test-s5f-t19f.log), and back
+5.5 cm for the step in alone the rabbit, 10.3 (95%, under the gate's limit: test-s5b-t19f.log; its dog fails first on
+its trunk, 2.0 cm in its hang); 4 cm back with the arc and 5 cm pass it, as they pass the gate there (the rabbit's 8.0
+and 8.5, the dog's 6.2 and 5.1: played-pp.txt; test-s4b-t19f.log, test-s5g-t19f.log). Now 8.8 and 8.8 (81 and 79%), the
+nine others' 3.6 at most. The plan's own pressure point (the balance's rows: probe-start-ab2.mjs) does not follow the
+gate at the start: its turn is the balance's 5 ms differences averaged over five samples (traversal-balance.js, turning)
+and its force the plan's 5 ms second difference, where the gate reads the played body every millisecond. On var-f31l88
+at the rabbit's 5 ms sample its turn is +29.0 N·m where the gate's row reads -6.5, and its forward force 94.1 N where
+the gate's reads 132.1: the plan's point lies 5.5 cm outside and the played 14.4, where the gate reads 134%
+(start-ab2-f31l88-s5e.txt); on var-s4b at the dog's 15 ms sample the plan's 6.4, the played 6.2, the gate 55%
+(start-ab2-s5f-s4b.txt). The floor pushes from nowhere outside the outline at all: the bound guards the start the body
+had (15 cm), not the physics. The test file passes (18 of 18 tests, the eleven climbs' among them: test-s5e-t19f.log, on
+var-s5e-t19b, whose test is the tree's); on var-f31l88-t19b, var-s5f-t19b and var-s5b-t19b, which hold the same test, it
+fails only those climbs (16, 17 and 16 of 18), and on var-s4b-t19b and var-s5g-t19b it passes (18 of 18).
+
+**Left.**
+- The pig director's let-go (four, up to 111%), now the climbs' only readings over the limits.
+- The climbs' start: the played body's pressure point still lies up to 8.8 cm outside the rabbit's and dog's feet in the
+  first 50 ms (the plan's 5.0 and 4.8; the gate 81 and 79% of its limit), a margin that details the plan barely
+  registers move by tens of points; the start wants a plan that the paws can give from rest.
+- The rabbit's push at the limit's edge (99.86% at 0.845 s), as at every distance both keys were set back from 4 to 5.5
+  cm: the plan's turning on the take-off's lead.
+- The step in's feet slide along the floor (the right 19.8 cm and the left 5.5 on nine climbs; the pigs' left 21.1 and
+  23.8, their right 9.3): a step in that lifts them.
+- The pig director's head against its left forearm in its hang (2.10 cm, over the gate's 2 for capsules), and the legs
+  and forearms a few millimetres deeper against the face in the catch and hang.
+- The tail fit's switch to its planned path on a single brush with its margin, and its 4 mm margin inside the rig's 1 cm
+  band.
+- The horse's head in the top's far edge (2.9 mm for 8 ms at 3.933 s).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
