@@ -243,8 +243,19 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // The far side faces the wall (heading -180): left foot and hand on +Z. The turn onto the tile steps the left foot
  // round behind the planted right, then the right round to its place (lifted mid-step); headings run on to -360.
  const land=(s,heading)=>({...stance(s,1),heading});
- // A stepping hoof arrives over its mark, flat, before it sets down (coming down on the slant, its heel touched with the
- // step still 6 cm from done, and slid).
+ // A stepping hoof arrives over its mark, flat, before it sets down (coming down on the slant, its heel touched with
+ // the step still 6 cm from done, and slid), and the walk-out's right foot sets down over 80 ms, its land key 40 ms
+ // after the trunk's (5.88 s, the trunk's 5.84). Set down over 40 ms, a hoof's 2.5 cm came down at up to 91 m/s^2 (the
+ // rabbit's right, 5.808 s; 23 m/s^2 now) and stopped at the key: the legs' rate of angular momentum about the centre
+ // of mass swung by 270 N·m in 8 ms (the rabbit's, 5.832 to 5.840 s), faster than the balance's 5 ms samples follow,
+ // and the rig asked the floor to push from a point about 14 cm outside both feet (the rabbit's 13.9, the dog's 13.6),
+ // 148 and 147% of its limit (the rabbit's and the dog's, 8 readings from 5.839 to 5.842 s as the right foot comes
+ // round and the body turns onto the tile; from 5.5 s on now 36 and 30% at the most, the dog's read without its tail,
+ // which the rig takes for a support on the far face from 5.78 s: NATURAL-TRAVERSAL.md, the thirty-ninth part). The
+ // left foot's set-down (89 m/s^2 at 5.239 s) reads none and is left at 40 ms: set down over 80 ms too, it changed no
+ // reading but moved the body (its centre of mass by up to 4.2 mm, the dog's) so that the right upper arm and forearm
+ // went up to 3 mm deeper into the far face as the body turns away (the rabbit's upper arm at 5.277 s; its deepest 1.14
+ // -> 1.38 cm, the pig foreman's 1.21 -> 1.39).
  const over=(s,heading)=>({f:'world',p:[fitB.foot(s,1)[0],ANKLE+.025,fitB.foot(s)[2]],hoof:0,heading});
  const HANG=[-1,0,.8]; // a gripping hand's elbow: back and out from the wall
  // Letting go, the palms come off the top, out past its far edge and onto the far face, and slide down it as the body
@@ -293,7 +304,7 @@ export function createWallClimb(worker,profile={id:'horse'}){
    [4.04,{...onFace(false,.56,.16,4.105),knee:OUT,lift:.3}],[4.205,{f:'pelvis',p:[-.06,body.offsets.thigh[-1].y-.95*fitB.leg,-.14],hoof:25,knee:OUT}],[4.375,{f:'pelvis',p:[-.06,body.offsets.thigh[-1].y-1.0*fitB.leg,-.14],hoof:25,soft:.03,knee:OUT}],[4.625,foot(.90+back,.14,0,-180)],[4.95,foot(.90+back,.14,0,-190)],[5.23,{...over(-1,-265),arc:.07}],[5.27,land(-1,-270)],[6.1,land(-1,-360)]],
   leg1:[[0,stance(1)],[.4,foot(.14-back,.14)],[.7,foot(.14-back,.14,15)],[.995,{f:'pelvis',p:[body.offsets.thigh[1].x+.01,body.offsets.thigh[1].y-1.03*fitB.leg,.14],hoof:55,soft:.03}],[1.195,{f:'pelvis',p:[body.offsets.thigh[1].x+.01,body.offsets.thigh[1].y-.95*fitB.leg,.14],hoof:50}],[1.375,{f:'pelvis',p:[.02,-.62,.13],hoof:20,knee:OUT}],[1.505,{...onFace(true,.58,.16,1.505),knee:OUT}],[1.905,{...onFace(true,.96,.16,1.905),knee:OUT}],[2.305,{...onFace(true,1.30,.16,2.305),knee:OUT}],[2.525,{f:'world',p:[.20,1.96,.36],hoof:-60,knee:OUT}],[2.705,{f:'world',p:[.52,2.16,.42],hoof:0,heading:-30}],[2.905,{f:'world',p:[.72,2.04,.30],hoof:30,heading:-60}],
    [3.065,{f:'world',p:[.81,1.70,0],hoof:20,heading:-90}],[3.485,{f:'world',p:[.80,1.58,-.10],hoof:20,heading:-140,knee:SIDE}],[DOWN_FAR,{f:'world',p:[.80,1.36,-.16],hoof:20,heading:-170,knee:SIDE}],
-   [4.04,{...onFace(false,.70,-.16,4.105),knee:OUT,lift:.3}],[4.205,{f:'pelvis',p:[-.06,body.offsets.thigh[1].y-.95*fitB.leg,.16],hoof:25,knee:OUT}],[4.375,{f:'pelvis',p:[-.06,body.offsets.thigh[1].y-1.0*fitB.leg,.16],hoof:25,soft:.03,knee:OUT}],[4.625,foot(.90,-.16,0,-180)],[5.27,foot(.90,-.16,0,-270)],[5.52,foot(.90,-.16,0,-300)],[5.8,{...over(1,-355),arc:.07}],[5.84,land(1,-360)],[6.1,land(1,-360)]],
+   [4.04,{...onFace(false,.70,-.16,4.105),knee:OUT,lift:.3}],[4.205,{f:'pelvis',p:[-.06,body.offsets.thigh[1].y-.95*fitB.leg,.16],hoof:25,knee:OUT}],[4.375,{f:'pelvis',p:[-.06,body.offsets.thigh[1].y-1.0*fitB.leg,.16],hoof:25,soft:.03,knee:OUT}],[4.625,foot(.90,-.16,0,-180)],[5.27,foot(.90,-.16,0,-270)],[5.52,foot(.90,-.16,0,-300)],[5.8,{...over(1,-355),arc:.07}],[5.88,land(1,-360)],[6.1,land(1,-360)]],
   // The left hand holds from the catch until the left knee is up (a deep body's left hand lets go in the straddle,
   // before its arm runs out: below), then re-grips on the far side's left while the seat is still on the top; the right
   // re-plants turned to the far side in the straddle (a palm turning 140 degrees where it lay touched the top at two

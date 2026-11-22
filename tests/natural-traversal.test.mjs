@@ -480,7 +480,18 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
     // drops. The rate here is a torque (N·m: the rig's airborne limit is 10 N·m).
     if(!/^pig-/.test(p.id)){const lg=motion.phases.find(x=>x.label==='Let go').end,a=S.findIndex((x,k)=>B.times[k]>=lg&&x.kind==='air');let b=a;while(b>=0&&b+1<n&&S[b+1].kind==='air')b++;
      assert.ok(a>0,'wall: no flight after the let-go');const spin=spinOver(B.times[a],B.times[b]);
-     assert.ok(spin.v<=10,`wall: in the drop's flight (${B.times[a].toFixed(3)} to ${B.times[b].toFixed(3)} s) the body's angular momentum changes at ${spin.v.toFixed(1)} N·m at ${spin.t?.toFixed(3)} s (10 at most)`);}}
+     assert.ok(spin.v<=10,`wall: in the drop's flight (${B.times[a].toFixed(3)} to ${B.times[b].toFixed(3)} s) the body's angular momentum changes at ${spin.v.toFixed(1)} N·m at ${spin.t?.toFixed(3)} s (10 at most)`);}
+    // Nor does the walk-out's right foot jolt the body as it sets down: from 50 ms before the trunk's key as it comes
+    // round (the end of Right foot round, 5.84 s) to 80 ms after it, the same angular momentum changes at most 100 N·m
+    // (wall-climb.js: the hoof set down over 80 ms, its land key 40 ms after the trunk's). Set down over 40 ms
+    // (f209cf98), every climb read 129 to 173 N·m there (the skunk's 173 at 5.833 s; the rig 147 and 148% of its limit on
+    // the dog's and the rabbit's at 5.840), now 44 to 60. It bounds how hard the set-down jolts the body, not where that
+    // asks the feet to push: f209cf98's rate peaked as the hoof started down and as it stopped (171 N·m at 5.807 s on the
+    // rabbit and the dog, the others' peaks at 5.833), and at the rig's 148 and 147% (5.839 to 5.842 s) it read 22 to 77,
+    // so a set-down under 100 N·m could still flip the moment. On the ground the feet may push that rate, so no fixed
+    // limit holds it: 100 N·m is a guard between the two.
+    {const rf=motion.phases.find(x=>x.label==='Right foot round').end,spin=spinOver(rf-.05,rf+.08);
+     assert.ok(spin.v<=100,`wall: as the right foot sets down after the turn the body's angular momentum changes at ${spin.v.toFixed(0)} N·m at ${spin.t?.toFixed(3)} s (100 at most)`);}}
    // A pig hangs from the far grips within its arms' reach (wall-climb.js, the far hang): over the last 50 ms before it
    // lets go, each arm's shoulder lies within .97 of the arm's length, plus 1.5 cm, of its grip (the far edge's mark, x
    // .565, wall-climb.js's farX for a deep body; the wrist .07 over the top; z on its own side). On these rigs .97 of
@@ -494,15 +505,17 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
     for(let t=lg-.05;t<=lg+1e-9;t+=.005){motion.apply(t/D);for(const s of [-1,1]){const d=W('upperArm'+s).distanceTo(new T.Vector3(.565,WALL.top+.07,-s*.20))-.97*L[s];if(d>worst.d)worst={d,t,s};}}
     assert.ok(worst.d<=.015,`wall: hanging from the far grips the arm on side ${worst.s} is ${(100*worst.d).toFixed(1)} cm past .97 of its reach at ${worst.t.toFixed(3)} s (1.5 at most)`);}}
   // A stepping leg keeps its knee bent: through the window's get-up steps and the climb's last two, the stepping leg's
-  // hip-to-ankle distance stays short of the IK's soft reach (traversal-pose.js limb(): within SOFT, 1.5 cm, of straight
-  // it eases the hoof short of its mark; mid-step the reach widens by the step's soft zone, so the bound is exact at the
-  // lift and the landing and lenient between), so the hoof meets its mark. With the hips near standing height the
-  // window's last step lifted and landed at 0.99 of the leg's length (10.7 to 15.0 mm inside that reach at the worst,
-  // over the eleven mammals) and the climb's at 1.00, its hoof landing about 100 ms late.
-  {const STEPS={window:{'Left foot back':-1,'Right foot back':1,'Left foot round':-1},wall:{'Left foot round':-1,'Right foot round':1}}[kind];
+  // hip-to-ankle distance stays short of the IK's soft reach (traversal-pose.js limb(): within SOFT, 1.5 cm, of
+  // straight it eases the hoof short of its mark; mid-step the reach widens by the step's soft zone, so the bound is
+  // exact at the lift and the landing and lenient between), so the hoof meets its mark. Each step is read over its
+  // phase, the climb's right foot 40 ms on, to its landing (its land key 5.88 s, the trunk's 5.84: wall-climb.js). With
+  // the hips near standing height the window's last step lifted and landed at 0.99 of the leg's length (10.7 to 15.0 mm
+  // inside that reach at the worst, over the eleven mammals) and the climb's at 1.00, its hoof landing about 100 ms
+  // late.
+  {const STEPS={window:{'Left foot back':[-1],'Right foot back':[1],'Left foot round':[-1]},wall:{'Left foot round':[-1],'Right foot round':[1,.04]}}[kind];
    if(STEPS){const P=n=>bones[n].getWorldPosition(new T.Vector3());let worst={m:Infinity};
-    for(const [label,s] of Object.entries(STEPS)){const ph=motion.phases.find(x=>x.label===label);assert.ok(ph,`${kind}: no "${label}" phase`);
-     for(let t=ph.start;t<=ph.end+1e-9;t+=.005){motion.apply(t/motion.duration);const a=P('thigh'+s),b=P('shin'+s),c=P('hoof'+s),margin=a.distanceTo(b)+b.distanceTo(c)-.015-a.distanceTo(c);if(margin<worst.m)worst={m:margin,t,label};}}
+    for(const [label,[s,late=0]] of Object.entries(STEPS)){const ph=motion.phases.find(x=>x.label===label);assert.ok(ph,`${kind}: no "${label}" phase`);
+     for(let t=ph.start;t<=ph.end+late+1e-9;t+=.005){motion.apply(t/motion.duration);const a=P('thigh'+s),b=P('shin'+s),c=P('hoof'+s),margin=a.distanceTo(b)+b.distanceTo(c)-.015-a.distanceTo(c);if(margin<worst.m)worst={m:margin,t,label};}}
     assert.ok(worst.m>=0,`${kind}: the stepping leg is ${(-1e3*worst.m).toFixed(1)} mm inside the IK's soft reach in "${worst.label}" at ${worst.t?.toFixed(3)} s`);}}
   if(kind==='window'){const lift=100*motion.getup.liftoff,least=LIFT[p.id]??2;
    assert.ok(lift>=least,`window: the centre of mass is ${lift.toFixed(1)} cm inside the feet as the seat lets go (at least ${least})`);

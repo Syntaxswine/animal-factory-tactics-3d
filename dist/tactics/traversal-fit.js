@@ -261,9 +261,10 @@ export function createClearanceFit(duration,{step=.02}={}){
    const out=times.map((_,k)=>G[path[k]].slice()),pushes=times.map(()=>[0,0,0]);
    for(let k=0;k<n;k++)if(D[k][path[k]]>0){st=S[k].st;let deep=0;tails.world(G[path[k]][0]*DEG,G[path[k]][1]*DEG,(v,soft)=>{const dd=into(v,way,!soft)+margin;if(dd>deep){deep=dd;pushes[k]=way.clone().multiplyScalar(dd).toArray();}},S[k].F);}
    return {out,pushes};};
-  // planned: where the followed path leaves the tail in contact, at a sample or half way to one, the planned one
-  // replaces it (after the balance, or the climb's inside it, where the tail moves nothing else; the fit's own passes
-  // keep the followed one and the trunk moves it asks).
+  // planned: where the followed path leaves the tail in contact as the fit measures it (into() plus the margin above 0,
+  // so a tail within the margin of the floor or an obstacle counts: 4 mm on the climb), at a sample or half way to one,
+  // the planned one replaces it (after the balance, or the climb's inside it, where the tail moves nothing else; the
+  // fit's own passes keep the followed one and the trunk moves it asks).
   const solveTail=(planned=false)=>{const S=times.map(t=>{st=stage(t);poseAt(t);return {st,F:tails.frame()};});
    const follow=order=>{const out=new Array(n),pushes=times.map(()=>[0,0,0]);let cur=[0,0];
     for(const k of order){st=S[k].st;const depth=(a,b,visit)=>{let m=-Infinity;tails.world(a*DEG,b*DEG,(v,soft)=>{const d=into(v,way,!soft)+margin;if(visit)visit(d);if(d>m)m=d;},S[k].F);return m;};

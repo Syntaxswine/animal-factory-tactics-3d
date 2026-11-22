@@ -4298,6 +4298,166 @@ run on var-f27t: 21efea5e's code with this test, whose code lines are the tree's
 - The horse's head in the top's far edge, up to 2.9 mm for 8 ms at 3.933 s, between the fit's samples (21efea5e's kept
   16 mm clear).
 
+### 2026-11-22 (physics balance, thirty-ninth part): the walk-out's right foot sets down over 80 ms
+
+After the thirty-eighth part (f209cf98) the eleven climbs read 30 readings over the gate's limits, the worst the
+rabbit's and the dog's as they walk away from the wall: 148 and 147% at 5.840 s, four readings each from 5.839 to 5.842
+s, as the right foot comes round and sets down and the body turns onto the tile (motion/var-f28c's gate results, whose
+motion f209cf98's code plays to the bit: part 38; scratchpad next-walkout/ holds every probe and output named here but
+the var-* copies and those named with next-catch/ or motion/).
+
+Read every millisecond on the rabbit (f209cf98's code lines: motion/var-f30g, and var-f30a for the samples):
+- The right foot comes round to a key over its mark, 2.5 cm up (5.80 s), and sets down onto the mark by the next (5.84
+  s), 40 ms later, where it stops, as at every limb key: its hoof bone came down at up to 91 m/s^2 (5.808 s) and 1.20
+  m/s (5.820 s), the dog's the same (probe-hoofacc.mjs: hoofacc-rabbit-f30g-f31b.txt and -f31l88.txt).
+- The legs' rate of angular momentum about the centre of mass swung by 270 N·m in 8 ms as that foot stopped, from (-188,
+  95, 130) N·m at 5.832 s to (19, -3, -19) at 5.840; the head's by 48 and the arms' by 45
+  (motion/probe-takeoff-segs.mjs: segs-rabbit-walkout-f30g.txt).
+- Both feet were on the floor from 5.825 s, and the centre of mass lay on the balance's plan at every 5 ms sample (0.00
+  mm: probe-walkout-samples.mjs, samples-rabbit-walkout.txt). What the 5 ms samples could not follow was the moment: the
+  force the wrench asks of the feet barely changes from 5.835 to 5.840 s, but the moment flips, and the pressure point
+  it needs (all ground forces at the floor: pz - cz = (-cy Fz - dLx)/Fy, px - cx = (dLz - cy Fx)/Fy, from the gate's
+  rows) goes from inside the feet's hull at 5.835 s to 9.6 cm behind it and 8.3 cm past its side at 5.840, 13.9 cm from
+  it (NOTES.md; the dog's 13.6: probe-pp-walkout.mjs, pp-walkout-f30a-f28c.txt): the rig's 148%.
+
+**The fix**, wall-climb.js: the walk-out's right foot sets down over 80 ms, its land key at 5.88 s, 40 ms after the
+trunk's key as it comes round (5.84). Its hoof now comes down at 23 m/s^2 at the most (5.821 s) and 0.61 m/s (5.840 s);
+the largest rate of angular momentum the gate reads at its 5 ms rows from 5.79 to 5.93 s falls from 156 to 58 N·m on
+both climbs (walkout-worst-f28c-f31l88.txt).
+
+Tried and not kept:
+- The key over the mark earlier instead, so the swing ends sooner (at 5.76 or 5.78 s: 80 and 60 ms set-downs, the swing
+  40 and 20 ms shorter; var-f31r76 and var-f31r78, gated on the rabbit and the dog): the same eight readings go and none
+  is new, but the swing is faster. That is the twenty-third part's way, which it tried on every step (each over key 0.08
+  s before its landing) and did not keep: there the readings rose (the climb's 84 -> 88). Moving the land key leaves the
+  swing within 3.3 mm of where it was (every vertex every 1 ms to 5.80 s, where the set-down starts: below).
+- The left foot set down over 80 ms too (its land key 5.27 -> 5.31 s; it reads none; var-f31b, gated on all eleven): no
+  reading changed, but it moved the body (its centre of mass by up to 4.2 mm and its pelvis by 4.7, the dog's:
+  diffbody-f30g-f31b.txt) so that the right upper arm and forearm went up to 3.0 mm deeper into the far face as the body
+  turns away (the rabbit's upper arm at 5.277 s; the dog's 2.8 mm, the pig foreman's 2.3), their deepest rising up to
+  2.4 mm (the rabbit's upper arm 1.14 -> 1.38 cm, the dog's 0.84 -> 1.06, the pig foreman's 1.21 -> 1.39 and its forearm
+  0.22 -> 0.38, the pig director's upper arm 1.48 -> 1.54: clear1ms-f30g-f31b.txt by clear-summary.mjs), and it moved
+  the bodies before 5.0 s by up to 2.2 mm (the dog's jacket at 4.779 s; the dog's tail apart, which takes another path
+  there as it does with the fix) against 0.08 (vertdiff2-f30g-f31b.txt and -f31l88.txt).
+
+So (var-f31l88, whose code lines the tree's are), phantom-wrench 1.2.0 `--gate` on frozen copies: the eleven climbs read
+22 readings against 30. The rabbit's 14 -> 10 and the dog's 10 -> 6: the eight as the right foot comes round and the
+body turns onto the tile are gone, and none is new (next-catch/readings.mjs: readings-f28c-f31l88.txt). Of the 22
+readings both keep, five rose, by 0.0023 points at most (the pig director's at 4.233 s; next-catch/rises17.mjs at no
+threshold: rises-f28c-f31l88-tol0.txt), and seventeen fell or held. From 5.5 s to the end the rabbit's worst is now
+36.4% (5.545 s) and the dog's 29.6% (5.965 s), the dog's read without its tail's contacts (below; as gated, 29.1% at
+5.545 s). The worst reading of all is now the dog's step in, 143% at 0.020 s.
+
+Measured on var-f31c (the tree's code lines too) against var-f30g:
+- The windows and the low walls play as before, frame for frame (all 22: same-f30g-f31c-winvault.txt).
+- What moves (every rig point every 1 ms: next-catch/probe-diff-body.mjs, diffbody-f30g-f31c.txt; every vertex every 1
+  ms: round 4's next-catch/probe-vertdiff-r4.mjs on var-f31l88, vertdiff2-f30g-f31l88.txt): from 5.0 s on every vertex
+  but the dog's tail by up to 25.1 mm, the legs and clothes as the right foot sets down 40 ms later (the pig foreman's
+  trousers at 5.832 s; the right forearm and hand up to 8.3 mm, the bull's and cow's tails up to 10.2); the rig points
+  by up to 21.4 mm (the rabbit's right knee), the centre of mass by 2.4 mm at most and the heads by 4.9; before 5.0 s
+  every vertex by 0.08 mm at most, but the dog's tail. From 5.0 to 5.80 s, until the foot starts down, every vertex but
+  the dog's tail moves by up to 3.28 mm, growing to the end (the pig foreman's cap at 5.800 s; each climb's largest 2.46
+  to 3.28 mm, all at 5.800 s; 0.29 mm to 5.5 s and 1.68 to 5.75, the pig director's trousers; the right hoof 0.90 to
+  1.04 mm at 5.726 to 5.729 s: the same probe, vertdiff-5to580-f30g-f31l88.txt).
+- The right foot comes into support 25 ms later, at 5.850 s in the balance's outline and the rig's contacts alike (6
+  points, 10 from 5.865 s; f209cf98's 6 at 5.825 s and 10 from 5.835: the gate's rows): from 5.825 to 5.845 s the rabbit
+  stands on its left foot alone, its centre of mass 103 to 115 mm outside that foot's outline at the balance's 5 ms
+  samples (f209cf98's at most 99.7 mm, to 5.820 s), falling onto the right foot as before; the rig reads at most 1.6 N
+  of phantom force there (probe-walkout-samples.mjs: samples-rabbit-walkout-f31l88.txt against
+  samples-rabbit-walkout.txt).
+- The dog's tail moves by up to 9.7 cm before 5.0 s (a vertex of it at 2.970 s, over the top) and 10.3 cm at the end
+  (5.843 s), for a reason outside the walk-out's own change. The tail fit follows the tail from moment to moment, and
+  where that followed path comes within the fit's 4 mm margin at any one of its 20 ms samples, or half way between two,
+  it plays instead the tail's path planned over the whole climb on a 10-degree grid (traversal-fit.js:
+  createClearanceFit's step .02 and margin .004, solveTail's planned branch). On f209cf98 the dog's followed tail came
+  0.155 mm inside that margin half way to its 5.82 s sample (5.81 s, its bend half way from 10.3 to 13 degrees of yaw),
+  3.85 mm clear of the floor and the wall (the fit's depth: traversal-fit.js, into); at the 5.82 s sample itself it lay
+  0.134 mm outside the margin. With the foot set down later it comes within the margin nowhere. (The decision logged on
+  copies whose traversal-fit.js carries one log-only line: review round 1's patch-taillog.mjs on var-tl30 and var-tl31,
+  taillog-dog-tl30.txt and -tl31.txt; with the depths at the sample and half way to it apart, patch-taillog2.mjs on
+  var-tl30b, taillog2-dog-tl30b.txt; run-taillog.mjs builds the climb.) So f209cf98 played the planned path: pitched -10
+  degrees from 2.959 to 3.141 s over the top (from 2.942 to 3.158 s at all) and +10 from 5.739 s to the end, still +10
+  at 6.1 s, where the battle takes the tail back. The tree plays the followed path (its pitch and yaw every 1 ms:
+  probe-tailtrack.mjs, tailtrack-dog-f30g-f31c-1ms.txt): over the top it pitches -8 degrees at the most (3.057 to 3.063
+  s), then holds -2 from 3.173 to 5.625 s, where the follow's relax rounds a bend of 1 or 2 degrees to itself and never
+  reaches rest (traversal-fit.js, Math.round(.8 v): as it was); at the end it yaws up to +20 degrees (5.837 to 5.843 s)
+  and is at rest from 6.058 s. It keeps the fit's 4 mm from the wall and little more: 4.27 mm from the far face at the
+  closest (5.819 s), and within 1 cm of it at every millisecond from 5.779 s to the end, where f209cf98's kept 34.4 mm
+  or more over the whole climb (every tail vertex every 1 ms as the rig skins it: review round 3's probe-taildist.mjs,
+  taildist-dog-f30g.txt and -f31l88.txt).
+- So the rig, which counts any vertex within 1 cm of a surface as a contact, gives the dog's tail on the far face as a
+  support at its 64 rows from 5.780 to 6.095 s (counts-r4.txt), and reads the dog's phantom wrench as 0 (at most 1.2e-6%
+  of its limit) at every instant from 5.779 s to the end, 320 of them (counts-r5.mjs: counts-r5.txt): the figures above
+  are read through it. Read without tail contacts (a copy of the gate whose rig leaves the tail meshes out of its
+  contact surface: patch-notail.mjs on scratchpad/pw-notail, NO_TAIL=1; on f209cf98's motion, var-f28c, it reads all
+  6097 instants as the gate does), the dog's walk-out still reads nothing over the limit: the same six readings, its
+  worst from 5.5 s 29.6% at 5.965 s and from 5.79 to 5.81 s 4.2% at 5.805 (cmp-gates.mjs: cmp-notail-dog.txt, from
+  notail-f31l88-dog.json and notail-f28c-dog.json). The rejected variants carry it too, var-f31r76 and var-f31r78 at 16
+  rows (5.770 to 5.825 s and 6.080 to 6.095 s) and var-f31b at the same 64 (counts-r4.txt); read without tail contacts
+  each keeps the same six readings, the tail having hidden at most 8.6, 16.6 and 34.1% of the limit there
+  (cmp-notail-variants.txt).
+- Clearance (every vertex every 1 ms over the whole climb by the fit's way out, to 0.001 mm: review round 1's copy of
+  next-catch/probe-limbclear17b.mjs printing 4 decimals of a cm, probe-limbclear-4dp.mjs, on var-f31l88:
+  clear4dp-f30g-f31l88.txt, summarized by clear-summary4.mjs: clear4dp-summary-f30g-f31l88.txt): no part goes more than
+  0.089 mm deeper at any instant (the skunk's right upper arm at 5.178 s). 43 parts' deepest rose: the eight right upper
+  arms by 0.052 to 0.084 mm (the donkey's and the sheep's most; deepest from 5.185 to 5.317 s, as the body turns away
+  from the far face, their largest rises at one instant from 5.175 to 5.282 s), the skunk's tail by 0.012 and the other
+  34 by 0.006 at most; eight parts cross a millimetre for 1 or 2 ms where f209cf98's stayed just under. The horse's head
+  goes 2.586 -> 2.589 mm into the top's far edge at 3.933 s at this 1 ms step (2.9 read every 0.25 ms: part 38).
+- The figures the climb test's comments give for the code as it stands, read again by the same probes against their
+  f209cf98 runs (next-catch/'s tc1-full-r10.mjs, tc2-full-r10.mjs, tm-full-r10.mjs, probe-farreach-r7.mjs,
+  probe-wristheight-r9.mjs, probe-unread-r9.mjs and probe-gripgap4-f11.mjs on var-f31c against var-f30f, f209cf98's code
+  lines: tc1-full-f31c.txt, tc2-full-f31c.txt and the rest beside next-catch/'s -f30f outputs;
+  next-catch/cmp-full-r10.mjs: cmp-tc1-f30f-f31c.txt and cmp-tc2-f30f-f31c.txt): every one holds within its bound. The
+  far-hang hands rose most, by 0.004 to 0.006 mm (the pig foreman's 6.486 -> 6.493 mm, the horse's 0.360 -> 0.366, the
+  skunk's 1.894 -> 1.899, the pig director's 3.151 -> 3.154); every other rose by under 0.0005 in its unit (cm, mm, m/s,
+  m/s^2 or N·m; the most, the pig foreman's knee as it locks, 0.00041 m/s; the wrists by 0.001 cm at the 3 decimals that
+  probe prints), or fell or held.
+- Below the limit the walk-outs' peaks fell too: every climb's peak from 5.79 to 5.81 s, as the right foot's swing ends
+  at its key over the mark (60 to 87% of the limit, the nine others' at 5.799 s), is now 2 to 10% (the dog's 4.2%, read
+  without its tail); from 5.5 s to the end every climb's worst is now 21 to 36% (60 to 148%), and from 5.0 s 28 to 39%
+  (walkout-peaks.mjs: walkout-peaks-f28c-f31l88.txt; the dog's from cmp-notail-dog.txt). Not every instant fell: as the
+  foot comes down, at 5.815 s, where f209cf98 read none, the goat reads 21.9%, the sheep 21.2, the cow and bull 19.5 and
+  19.4 and the horse and donkey 11.2 and 11.1; every other climb's largest rise from 5.5 s is 10.0 points or less (the
+  rabbit's, at 5.855 s: subrise.mjs, subrise-f28c-f31l88.txt, each climb's largest rise, the dog's read without its
+  tail). Counted only where f209cf98 read under 0.05%, those six stay over 10% for 3 to 14 ms in all, between 5.813 and
+  5.829 s (counts-r5.txt). Before 5.5 s no instant rose by 1.7 points or more (the skunk's 1.6 at the probe's 0.1, at
+  5.260 s, 6.3 -> 7.9%: subrise-0to55-f28c-f31l88.txt).
+- The eleven climbs build in 71.2 s against 72.6 (the least of two builds each, f209cf98's code lines and the tree's in
+  turn: motion/probe-buildtime.mjs, buildtime-f30g-f31c.txt; two framing stills for the video ran in its last minute),
+  2.0% less: the same within the run's noise, single climbs differing by up to 15.5% either way.
+
+`tests/natural-traversal.test.mjs`: the climb test checks the set-down: from 50 ms before the trunk's key as the right
+foot comes round to 80 ms after it, the body's angular momentum changes at most 100 N·m (the test's own rate, read every
+millisecond: f209cf98's code reads 129 to 173 N·m there; now 44 to 60: next-catch/probe-rate-at-r7.mjs,
+rate-setdown-summary.txt). It bounds how hard the set-down jolts the body, not where that asks the feet to push:
+f209cf98's rate peaked as the hoof started down and as it stopped (171 N·m at 5.807 s on the rabbit and the dog, the
+other nine's peaks at 5.833), and at the rig's 148 and 147% (5.839 to 5.842 s) it read 22 to 77 (rate-setdown-f30g.txt),
+so a set-down under 100 N·m could still flip the moment. On the ground the feet may push that rate, so no fixed limit
+holds it: 100 N·m is a guard between the two. Its step check, which reads each step's leg against the IK's soft reach
+over the step's phase and is exact at the lift and the landing, reads the climb's right foot 40 ms past its phase, on to
+its landing: from 5.84 to 5.88 s that leg keeps 31.0 mm or more of the reach (the rabbit's, at 5.872 s), its hoof down
+from 5.875 s (review round 2's probe-softreach.mjs: softreach-f31c-to588.txt). The test file passes (18 of 18 tests, the
+eleven climbs' among them: test-f31c-t18-r3.log, on var-f31c-t18, the tree's test); with f209cf98's code (var-f30g-t18)
+it fails all eleven climbs on the new check, 129 to 173 N·m (test-f30g-t18-r3.log).
+
+**Left.**
+- The step in: the rabbit's eight and the dog's five (up to 143% at 0.020 s), now the worst.
+- The push off: the sheep's two (up to 115% at 0.857 s) and the rabbit's two (up to 112% at 0.845 s); the dog's lead
+  (107% at 0.868 s).
+- The pig director's let-go (four, up to 111%).
+- The left foot's set-down at 40 ms (it reads none; set down over 80 ms it pushed the right arm into the far face).
+- The tail fit's switch: a followed tail within its 4 mm margin at any one sample, or half way between two, hands the
+  whole climb's tail to the planned path, so a tenth of a millimetre anywhere moves a tail everywhere (the dog's, with
+  this change, though it kept 3.85 mm clear); and its relax stalls at 1 and 2 degrees.
+- The tail fit keeps a tail 4 mm clear and the rig counts anything within 1 cm as a contact, so a tail between the two
+  reads as a support (the dog's walk-out, with this change; read without it, nothing new over the limit). That is the
+  rig's standing limit, not this change's: on f209cf98 as now it takes the skunk's plume (15 rows from 3.700 to 5.445 s)
+  and the bull's tail (3.040 and 3.045 s) for supports, the same rows on both (counts-r4.txt), and on the tree they hide
+  nothing (gated without tail contacts there, 40 and 10 instants change, each by under 0.01 points, and none reads over
+  the limit either way: cmp-notail-skunk-bull.txt).
+- The horse's head in the top's far edge (2.9 mm for 8 ms at 3.933 s), between the head fit's samples.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
