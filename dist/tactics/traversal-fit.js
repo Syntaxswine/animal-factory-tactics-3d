@@ -165,21 +165,22 @@ export function createClearanceFit(duration,{step=.02}={}){
   // pushes the trunk for every sample it judges that is in contact, its eases' too; a later stretch that clears such a
   // sample does not take that push back, and one that also pushes it replaces the push, deeper or not (no push arose on
   // any crossing traced).
-  // keepBow: the head alone, against the bow as it is (fit.solveHead, after the balance). air(t), if given: where
-  // nothing holds the body; a turn is held through a flight next to its stretch, never turned there (eased out into
-  // the jump at the climb's push-off, it put 10 N on the flight's peak and 0.01 s more over the limit), and two
-  // stretches in a row that meet inside one flight (every 20 ms sample from the end of the one to the start of the next
-  // in the air) are one. Owned by two, a flight changed its turn in the air: the pig foreman's head came within the
-  // fit's margin of the wall from 0.78 to 1.04 s, a run cut into stretches of CHUNK at 1.00 s, inside its jump, and
-  // turned 12 degrees and nodded 10 there in 60 ms (up to 421 N·m of airborne phantom torque, and 624 N, at 1.035 s).
-  // Joined wherever their meeting touched the air, or wherever both its ends were in the air, stretches in two flights
-  // were joined across the ground between them: the horse's head held nodded 20 degrees from 0.80 to 4.0 s (its climb
-  // 80 readings against 40), the bull's nodded 20 and turned 12 from 0.7 to 4.6 s, its jump's stretch (from 0.66 s)
-  // joined to its drop's. solve takes air too, so the turn the balance is planned with is held there before it as well
-  // (the climb passes its jump). A stretch that starts just after a flight still eases its turn in over the flight's
-  // last samples (hold() softens over three, and the fit's track carries it between its samples): the pig director's
-  // catch, 5.0 degrees at the jump's last sample before the balance and 5.2 in its played flight's last 15 ms. Only the
-  // gate sees these rules (the test suite passes without them): the climbs are gated again after any change to them.
+  // keepBow: the head alone, against the bow as it is (fit.solveHead: the climb's, inside its balance after each round
+  // that plans). air(t), if given: where nothing holds the body; a turn is held through a flight next to its stretch,
+  // never turned there (eased out into the jump at the climb's push-off, it put 10 N on the flight's peak and 0.01 s
+  // more over the limit), and two stretches in a row that meet inside one flight (every 20 ms sample from the end of
+  // the one to the start of the next in the air) are one. Owned by two, a flight changed its turn in the air: the pig
+  // foreman's head came within the fit's margin of the wall from 0.78 to 1.04 s, a run cut into stretches of CHUNK at
+  // 1.00 s, inside its jump, and turned 12 degrees and nodded 10 there in 60 ms (up to 421 N·m of airborne phantom
+  // torque, and 624 N, at 1.035 s). Joined wherever their meeting touched the air, or wherever both its ends were in
+  // the air, stretches in two flights were joined across the ground between them: the horse's head held nodded 20
+  // degrees from 0.80 to 4.0 s (its climb 80 readings against 40), the bull's nodded 20 and turned 12 from 0.7 to 4.6
+  // s, its jump's stretch (from 0.66 s) joined to its drop's. solve takes air too, so the turn the balance is planned
+  // with is held there before it as well (the climb passes its jump). A stretch that starts just after a flight still
+  // eases its turn in over the flight's last samples (hold() softens over three, and the fit's track carries it between
+  // its samples): the pig director's catch, 5.0 degrees at the jump's last sample before the balance and 5.2 in its
+  // played flight's last 15 ms. Only the gate sees these rules (the test suite passes without them): the climbs are
+  // gated again after any change to them.
   const solveHead=(keepBow=false,air=null)=>{const S=bareHeads(),B=keepBow?ch.bow.map(x=>x[0]):null,r=B?R2:R,inAir=k=>!!air?.(times[k]);
    let flags=S.map((s,k)=>head.length>0&&headAt(s,[0,0,0],B?B[k]:0)>0),pushes;
    for(let pass=0;pass<3;pass++){pushes=times.map(()=>[0,0,0]);const list=[];
@@ -260,9 +261,9 @@ export function createClearanceFit(duration,{step=.02}={}){
    const out=times.map((_,k)=>G[path[k]].slice()),pushes=times.map(()=>[0,0,0]);
    for(let k=0;k<n;k++)if(D[k][path[k]]>0){st=S[k].st;let deep=0;tails.world(G[path[k]][0]*DEG,G[path[k]][1]*DEG,(v,soft)=>{const dd=into(v,way,!soft)+margin;if(dd>deep){deep=dd;pushes[k]=way.clone().multiplyScalar(dd).toArray();}},S[k].F);}
    return {out,pushes};};
-  // planned: where the followed path leaves the tail in contact, at a sample or half way to one, the planned one replaces
-  // it (after the balance, where the tail moves nothing else; the fit's own passes keep the followed one and the trunk
-  // moves it asks).
+  // planned: where the followed path leaves the tail in contact, at a sample or half way to one, the planned one
+  // replaces it (after the balance, or the climb's inside it, where the tail moves nothing else; the fit's own passes
+  // keep the followed one and the trunk moves it asks).
   const solveTail=(planned=false)=>{const S=times.map(t=>{st=stage(t);poseAt(t);return {st,F:tails.frame()};});
    const follow=order=>{const out=new Array(n),pushes=times.map(()=>[0,0,0]);let cur=[0,0];
     for(const k of order){st=S[k].st;const depth=(a,b,visit)=>{let m=-Infinity;tails.world(a*DEG,b*DEG,(v,soft)=>{const d=into(v,way,!soft)+margin;if(visit)visit(d);if(d>m)m=d;},S[k].F);return m;};
@@ -303,12 +304,16 @@ export function createClearanceFit(duration,{step=.02}={}){
   // trunk as it now is, with no trunk move for what no bend clears. Fitted only before them, the tails went 2 to 13 cm
   // into the floor as the body rocked and sat.
   // The report is taken again either way: after the balance it reads the motion as played (the traversal test's caps).
-  fit.solveTail=()=>{if(tails?.count){tracks=null;solveTail(true);build();}report();return fit;};
-  // The head again on the finished motion: turned for the body as the balance left it, the bow kept (the balance was
-  // planned with it) and the turn eased over R2 (eased over R, the climb's push-off turn asked 123 N of the crouch:
-  // 17% of the body's weight; over R2, 65 N). The balance's turn put the long heads 4 to 8 cm into the climb's wall
-  // at the push-off and the landing, where the fit before it saw them clear.
-  fit.solveHead=({air}={})=>{tracks=null;solveHead(true,air);build();report();return fit;};
+  // The climb fits its head and tail inside its balance, after each round that plans, with no report there ({report:
+  // false}), and takes the report alone after it (fit.measure).
+  fit.solveTail=({report:rep=true}={})=>{if(tails?.count){tracks=null;solveTail(true);build();}if(rep)report();return fit;};
+  // The head again on the balanced motion (its one caller, the climb, fits it inside its balance after each round that
+  // plans, before the last hip search, the refine and the 1 ms pass): turned for the body as the balance left it, the
+  // bow kept (the balance was planned with it) and the turn eased over R2 (eased over R, the climb's push-off turn
+  // asked 123 N of the crouch: 17% of the body's weight; over R2, 65 N). The balance's turn put the long heads 4 to 8
+  // cm into the climb's wall at the push-off and the landing, where the fit before it saw them clear.
+  fit.solveHead=({air,report:rep=true}={})=>{tracks=null;solveHead(true,air);build();if(rep)report();return fit;};
+  fit.measure=()=>{report();return fit;};
   // Limbs: the points riding a limb's bones move its end target out (a planted palm rises to lie on the sill, a hoof
   // drops under the lintel, a leg lifts over the wall top). They are fitted afterwards (solveLimbs), once the motion has
   // given its limbs their steady bend directions. planted(id, t) gives [weight, surface normal] for a limb's end; over a
@@ -333,8 +338,8 @@ export function createClearanceFit(duration,{step=.02}={}){
   fit.solveLimbs=({rounds:limbRounds=3,planted=null}={})=>{tracks=null;for(let r=0;r<limbRounds;r++){const need=limbNeed(planted);for(const id of LIMBS)add(id,need[id],free.limbs);}build();report();return fit;};
   // fit.report is what the motion as it stood at the last solve leaves in the floor and the obstacles. The traversals'
   // balance (and the window's seat band) move the body after the fit, so each takes it again on the balanced motion
-  // (fit.solveTail, and the climb's fit.solveHead): taken before, it read the climb's heads clear that went 5 to 8 cm
-  // into its wall (docs/tactics/NATURAL-TRAVERSAL.md, seventh part).
+  // (fit.solveTail; the climb, whose head and tail are fitted inside its balance, fit.measure): taken before, it read
+  // the climb's heads clear that went 5 to 8 cm into its wall (docs/tactics/NATURAL-TRAVERSAL.md, seventh part).
   // Arms clear of the legs: each arm's capsules (the phantom-wrench rig's: upper arm .045, forearm .04, hand .045) are
   // kept off both legs' (thigh .075, shank .05, hoof .03) by moving the arm's end out the way the two part, twice the
   // overlap for the upper arm and one and a half for the forearm (moving the hand moves the elbow about half as far; at

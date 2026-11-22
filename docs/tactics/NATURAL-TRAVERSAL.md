@@ -4088,6 +4088,216 @@ message mended).
 - The push off (the horse's 227% at 0.745 s), the step in (the rabbit's and dog's 13), the pigs' drops (the foreman's
   six, the director's four, three on contact and one in the air at 4.236 s), the walk-outs (the rabbit's and dog's 8).
 
+### 2026-11-21 (physics balance, thirty-eighth part): the climbs' jumps hold their centre of mass, and their flights their turn up to the hands
+
+After the thirty-seventh part (21efea5e) the eleven climbs read 72 readings over the gate's limits, 19 of them at the
+catch (the rabbit's 824% at 1.225 s, the worst of all) and 10 in the phase over the top (motion/g12-phasetable.mjs on
+var-f22i, 21efea5e's motion; scratchpad next-catch/ holds every probe and output named here but the var-* copies, those
+named with motion/, and same-f23b-f29a-winvault.txt, test-f29a-all.log and test-f29t-fix16code.log, in motion/ too).
+
+The rabbit's catch read every millisecond (next-catch/probe-catch-com.mjs and motion/probe-takeoff-segs.mjs on var-f23b,
+the rig's mass model):
+- Its centre of mass met the plan within 0.3 mm at its 5 ms samples there, but between them took 214 N of phantom force
+  (1.224 s, com-rabbit-f23b.txt): as the hands stop at the top the arms decelerate along the wall's normal (their own
+  -544 N at 1.229 s), and the hips, held to the plan at the samples and splined between, answer late.
+- Its turn held the body's angular momentum to 1.219 s, then let it change at 98 N·m (1.225 s, segs-rabbit-f23b.txt), as
+  the arms, head and legs swung in the last 5 ms of the corrected stretch, where the correction ramped out.
+- Held up to the contact (the thirty-seventh part's var-f22d), the turn moved the leftover into force: near the catch
+  the arms' targets are keyed in the world (their key at the catch, 1.265 s, blended in from 1.115), so the hands do not
+  turn with the trunk and turning the trunk moves the centre of mass.
+
+**The fix**, traversal-balance.js (balanceTraversal's `fine`, the climb alone): the 1 ms pass reads the body's contacts
+at every key it poses on its first pass (the probe and supportAt, as at the samples), so it knows which keys lie in the
+air: the run's, from the first to the last that the contacts read in the air (the result's `fineAir`). Its turn now
+holds from the lead to 3 ms past the last key in the air (FINE_PAST, on the hands or palms the flight lands on; never
+nearer than 5 ms to the stretch's end), fading over 5 ms after. Through a take-off's flight with three keys or more in
+the air it holds the centre of mass too: those keys give the flight's own ballistic path (least squares, gravity fixed),
+and the difference, less the Hermite cubic that meets it at the window's ends in value, and in slope over the 2 ms
+inside each (5 ms before the first key in the air, FINE_LEAD, on the hooves; FINE_PAST after the last), goes into the
+hips' move through a 1 ms spline (the result's `shift` and `hips`). Three passes. Each corrected stretch runs from three
+samples before its run to three after it, on the samples.
+
+Even so the catches held 8 readings, all the pig director's (var-f25b, a prototype), and the probe found why: the head
+the climb fits again after the balance turns where the balance planned it held. **The second fix**, wall-climb.js with
+traversal-balance.js's new `refit`: the climb fits its head and tail again inside the balance, after each of its rounds
+that plans (with one round, once after the loop), and after the last refit, whichever round it follows, the balance
+finds the hips again for them (followCentre, three passes), so the second round, the refine and the 1 ms pass plan the
+body as it is played. A loop that settles a round early, or runs one round, finds them after the loop (review round 3
+found them left as found before that refit): forced on test copies (next-catch/latent-switches17.mjs and
+probe-latent17.mjs on var-f29t and var-f30t: latent-f29t-f30t.txt), the played centre of mass where the body is held
+strayed from the plan by up to 3.0 mm on the horse (3.960 s) and 10.3 on the pig director (4.450 s), and now by 2.1 and
+2.3 at most (at 0.775 and 1.325 s; the two rounds leave 0.66 and 0.46 at most); the eleven climbs run both rounds, so
+they play as before to the bit (diffbody-f29a-f30a.txt). The fits there take no report (traversal-fit.js:
+`fit.solveHead` and `fit.solveTail` take `report: false`); the report, which the climb test's caps read, is taken once
+after the balance on the finished motion (`fit.measure`).
+
+How the head is fitted, each gated on all eleven:
+- after the first round alone (var-f28d, 28 readings): the second round moved the bodies under heads fitted for the
+  first, and three ended in the wall where 21efea5e left them clear: the pig director's 1.28 cm at 1.349 s (over a
+  millimetre from 1.300 to 1.394 s, every vertex every millisecond: next-catch/probe-headwall2.mjs, a round 2
+  reviewer's; the fit's report, every other vertex on a 20 ms grid, read 0.83), the cow's 0.88 at 0.730, the donkey's
+  0.78 at 0.732 (its trunk 0.87);
+- after both rounds, the hips left as the second round found them (var-f28a): 42 readings, the horse's push 14 (up to
+  308% at 0.815 s): the second fit comes after that round's plan;
+- after both, the hips found again in one pass (var-f28e): 35 readings, the horse's lead and the cow's push new or
+  higher (up to 122%);
+- a third round planning after the second fit (var-f28b): 20 readings (the push off none, the drop the pig director's
+  two), but the climbs built 43.3% longer than on 21efea5e (buildtime-f23b-f28b.txt, against 8.3% here in a later run),
+  the step in 15 (the rabbit two new, thirteen of the rabbit's and dog's 4 to 7 points higher) and the pig director's
+  trunk 1.64 cm in at 3.16 s against 1.24.
+The fits after both rounds with the hips found again in three passes (var-f28c's motion to the bit:
+diffbody-f28c-f29a.txt) read fewer readings than the other two fitted after both rounds and keep every head clear
+through the catch (later the horse's grazes the top's far edge: below); a third round reads fewer still but builds 43.3%
+longer.
+
+Tried and not kept (each gated, but for the two fades, read by the probe on var-f24a's switches:
+com-rabbit-f24a-fade.txt and -blend.txt; prototypes in var-f24*, var-f25*, var-f26*, switched by environment variables):
+- The centre's window from the first key in the air: its join read in the air (the rabbit a new 138% at 0.877 s); 2 and
+  3 ms before it, on hooves too lightly loaded to take it (164 and 119% at 0.875 and 0.874 s; from 5 ms before it, as
+  kept, the dog's join reads 107% for a millisecond at 0.868 s: below); eased in over 5 ms in the air, it let the
+  flight's first milliseconds through (the goat's 0.867 s 111 -> 119%, the sheep's 106 -> 114%, the donkey's 0.871 112
+  -> 121%: var-f25a, 57 readings).
+- A 5 ms fade of the whole difference instead of the Hermite cubic: its slow drift (0.538 mm off the flight's parabola
+  on the rabbit) out in 5 ms, up to 3781 N of phantom force (1.226 to 1.231 s); a straight blend of its two ends: a kink
+  of slope, 563 N at 1.226 s, the rabbit's last millisecond in the air.
+- The centre held off a grip too (the drops), eased in over 5 ms: the pig director's first millisecond in the air 110 ->
+  120% (4.236 s), nothing else changed on the five climbs gated (var-f26k against var-f26l).
+- The head and tail fitted again just before the 1 ms pass (var-f26d, 39 readings): every catch cleared, but the lead
+  and the let-go took what the 5 ms turn had planned for the other head (the horse a new 170% at 0.866 s on its hooves,
+  the donkey 118 and 124% at 4.246 and 4.247 s in the air); started 10 ms before the first key in the air the horse's
+  moved to 0.861 s (178%), and a turn started on the hands before the let-go put the donkey's in the air earlier (149 to
+  188%).
+
+So (var-f28c, whose motion var-f29a plays to the bit, as the tree's code does: var-f30a has its code lines, only
+comments having changed since, diffbody-f29a-f30a.txt), phantom-wrench 1.2.0 `--gate` on frozen copies:
+
+| 21efea5e -> this | readings over the limits | over the top | the catch | the drop | the push off |
+|---|---|---|---|---|---|
+| horse | 13 -> 0 | 4 -> 0 | 0 -> 0 | 0 -> 0 | 9 -> 0 |
+| goat | 2 -> 0 | 1 -> 0 | 1 -> 0 | 0 -> 0 | 0 -> 0 |
+| bull | 0 -> 0 | 0 -> 0 | 0 -> 0 | 0 -> 0 | 0 -> 0 |
+| cow | 0 -> 0 | 0 -> 0 | 0 -> 0 | 0 -> 0 | 0 -> 0 |
+| donkey | 1 -> 0 | 1 -> 0 | 0 -> 0 | 0 -> 0 | 0 -> 0 |
+| sheep | 4 -> 2 | 1 -> 0 | 1 -> 0 | 0 -> 0 | 2 -> 2 |
+| skunk | 0 -> 0 | 0 -> 0 | 0 -> 0 | 0 -> 0 | 0 -> 0 |
+| pig foreman | 8 -> 0 | 2 -> 0 | 0 -> 0 | 6 -> 0 | 0 -> 0 |
+| pig director | 14 -> 4 | 1 -> 0 | 9 -> 0 | 4 -> 4 | 0 -> 0 |
+| rabbit | 21 -> 14 | 0 -> 0 | 8 -> 0 | 0 -> 0 | 1 -> 2 |
+| dog | 9 -> 10 | 0 -> 1 | 0 -> 0 | 0 -> 0 | 0 -> 0 |
+| together | 72 -> 30 | 10 -> 1 | 19 -> 0 | 10 -> 4 | 12 -> 4 |
+
+- 44 readings go and 2 are new (next-catch/compare11.mjs f22i f28c): the dog's 107% at 0.868 s as its hooves leave, the
+  first millisecond of its centre's window (its first key in the air at 0.873 s, less FINE_LEAD), where 21efea5e read
+  59%, and from 0.869 to 0.900 s 6 to 8% against 10 to 74% (23 to 50% to 0.877 s); and the rabbit's 104% at 0.846 s in
+  its push. Of the 28 readings both keep, 21 rose (next-catch/rises17.mjs at no threshold, to four decimals:
+  rises-f22i-f28c-tol0.txt; 14 past compare11's 0.05 points): the rabbit's 0.845 s 106 -> 112%, the sheep's two at 0.856
+  and 0.857 s by 1.6 and 1.5 points (108 -> 110 and 113 -> 115%), the walk-outs' eight by 0.18 to 0.22 points (the
+  rabbit's 148.15 -> 148.33% at 5.840 s) and the step ins' ten by 0.071 at most (the rabbit's five from 0.023 to 0.027
+  s, the dog's five from 0.019 to 0.023 s); the other seven fell or held. The step in keeps its 13 (the rabbit's 8, the
+  dog's 5) and the walk-outs their 8.
+- The worst reading now is the rabbit's walk-out, 148% at 5.840 s; the push off's is the sheep's 115% at 0.857 s, the
+  drop's the pig director's let-go, 111% at 4.231 s.
+- The gate's capsule overlaps are 21efea5e's pairs on every climb, none gone and none new (with the head fitted after
+  the first round alone they lost the head and a hand on four climbs, the heads sitting otherwise: var-f28d), each as
+  deep within 0.011 cm but the pigs' head against the left arm: over the top the foreman's against its hand 1.49 -> 1.52
+  cm at 1.158 s and the director's 2.78 -> 2.84 at 1.168 s, and in its hang the director's against its forearm 1.93 ->
+  1.69 at 1.336 s (var-f22i's and var-f28c's gate results).
+
+Measured on var-f29a, whose motion the tree's code plays to the bit, or where named on var-f30a to var-f30f (the tree's
+code lines; only comments changed after them); against 21efea5e's, var-f23b:
+- The windows and the low walls play as before, frame for frame (same-f23b-f29a-winvault.txt, all 22 every 5 ms): they
+  pass neither `fine` nor `refit`.
+- The climb test's flight measures (next-catch/probe-testmeasures17b.mjs, its code copied: testmeasures17b-f23b.txt and
+  -f29a.txt): over the last 50 ms before the hands land, to the last millisecond in the air, the body's angular momentum
+  changes at 0.1 to 4.1 N·m (the rabbit's 4.1 at 1.224 s) against 3.1 to 79.4 (21efea5e, with no 1 ms keys, to its last
+  sample in the air); through the take-off's flight its centre of mass falls within 0.04 to 0.14 m/s^2 of gravity
+  against 0.50 to 2.86; the flight's first 50 ms turn at 0.3 to 1.2 N·m against 0.6 to 8.8; the nine's drops at 3.1 to
+  5.9 against 3.4 to 5.9, the pigs' at 12 (the foreman's 51 before, the director's 11, so the director's rises); as the
+  hooves leave the horse's 41.2 -> 48.1 N·m (the test's limit there 100) and the dog's 55.7 -> 55.8, the others' as they
+  were to 0.0001 N·m or lower (read to 5 decimals by round 10's tm-full-r10.mjs: tm-full-f23b.txt and -f30f.txt). The
+  figures the climb test's comments give for the code as it stands were read again on both roots, var-f23b against
+  var-f30f, by these probes, to the digits each prints (next-catch/: round 2's two probes printing 5 or 6 decimals, as
+  round 10 had them, tc1-full-r10.mjs and tc2-full-r10.mjs, compared field by field by round 10's cmp-full-r10.mjs:
+  cmp-tc1-full.txt and cmp-tc2-full.txt; the far reach by round 7's probe-farreach-r7.mjs, farreach-f23b.txt and
+  -f30f.txt; the clothes check and the plan rows by round 9's probe-unread-r9.mjs, unread-f23b.txt and -f30f.txt; the
+  pigs' wrists by round 9's probe-wristheight-r9.mjs, wrist-f23b.txt and -f30f.txt; the dog's grip gap by fix 11's probe
+  printing four decimals, probe-gripgap4-f11.mjs, gripgap4-dog-f23b.txt and -f30f.txt; the far reach and the clothes
+  check print 4 decimals, the wrists and the plan rows 3), and every one holds within the test's bounds. The six that
+  rose most, each against a bound of 1 cm: the pig foreman's catch hand, 0.25 -> 1.16 mm; the pig director's take-off
+  hoof, 1.01 -> 1.58 mm; the bull's catch hand, 0.03 -> 0.38 mm; the pig director's far-hang hand, 2.85 -> 3.15 mm; the
+  cow's catch hand, 0.01 -> 0.24 mm; and the pig foreman's take-off hoof, 6.35 -> 6.52 mm. Every other rose by at most
+  0.08 mm (the donkey's take-off hoof), 0.008 cm (the pig director's far reach, 0.545 -> 0.552 cm), 0.015 m/s^2 (the
+  hips' vertical acceleration over the top, the pig foreman's low end, -15.262 -> -15.277) and 0.0001 in the other units
+  (the knees' speeds, the flight's angular momentum off its median), or fell or held; the files give each one. The
+  comments' other figures for the code as it stands, which these probes do not read: the spline ends' bend (read on
+  var-f29a, whose motion the tree plays: splineends-f29a.txt) and the boot's rate at 0.870 s (10.19 -> 0.46 N·m:
+  rate-pigd-f23b.txt and -f30d.txt) fell; and the pigs' sleeves and hands in their clothes over the top move only with
+  their meshes, every vertex by 0.03 mm at most from the right hand's let-go at 2.345 s to 3.42 s (the pig foreman's to
+  3.75 s) and the pig director's by 1.26 mm at most by 3.75 s (round 4's probe-vertdiff-r4.mjs:
+  vertdiff-pigs-pre-f23b-f30g.txt and vertdiff-pigs-top-f23b-f30f.txt).
+- What moves, every 1 ms on var-f30a against var-f23b (next-catch/: round 4's probe-headroll-r4.mjs on the head's whole
+  turn and its every vertex, headroll-f23b-f30a.txt; round 4's probe-vertdiff-r4.mjs on every vertex,
+  vertdiff-f23b-f30a-1.txt and -2.txt; probe-headtrack17.mjs on the fit's own head turn, on var-f30c,
+  headtrack-horse-f23b-f30c-1ms.txt). The heads sit as on 21efea5e but for two. The fit turns the horse's head up to 12
+  degrees as it lowers itself down the far face (eased in from 3.67 s, 12 from 3.93 to 3.97 s) where 21efea5e's turned
+  it 24 (the two fits' turns a degree or more apart from 3.69 to 4.13 s), so the head played is up to 12.2 degrees off
+  21efea5e's at 3.886 s (over 1 from 3.690 to 4.129 s), a vertex 34 cm from the head bone 72 mm off at 3.884 s and the
+  tip 31 mm (the swing of the neck-to-tip line, which a turn about that line leaves alone, reads 4.9 degrees:
+  headwindow-f23b-f29a.txt); and the pig director's head turns 1.9 degrees otherwise in its hang (1.590 s; over 1 from
+  1.517 to 1.664 s). The pig foreman's head is within 0.9 degrees, the donkey's 0.7, the bull's 0.3, the others' 0.1.
+  Every vertex, by mesh: the horse's head (above), its mane 26 mm at 3.996 s, its overalls 14 and its shirt 11 at 3.99
+  s; the pigs' heads up to 16.4 mm (the foreman's at 4.424 s, its cap 17.8; the director's 15.1 at 3.898 s, and 11.7 in
+  its hang at 1.593 s: vertdiff-pigd-hang-f23b-f30c.txt) and their shirts up to 16.2 in the drop (the director's at
+  4.446 s); around the catch (1.15 to 1.35 s) the pig director's head 10.4 mm at 1.308 s (over 1 cm from 1.294 to 1.328
+  s) and its shirt 7.7, the donkey's tail's tuft 6.3 at 1.342 s, the pig foreman's trousers 3.9, the horse's head 2.9,
+  the bull's 2.6, the cow's 2.0; over the whole climb the donkey's 6.3 mm, the bull's 4.6 (its tail, 0.757 s), the cow's
+  2.4, the other five's 0.4 at most. The rig points but the heads' tips (probe-diff-body.mjs: diffbody-f23b-f29a.txt;
+  the tips up to 30.8 mm, the horse's at 3.880 s, the pig foreman's 16.9 and the director's 14.9) move by up to 13.2 mm
+  (a shoulder of the pig director's at 3.897 s, its centre of mass 10.3 mm in its drop at 4.448 s; the pig foreman's
+  11.6 mm, its neck at 4.425 s; the donkey's 4.7, the horse's 3.5, the bull's and cow's 2.2; the other five's 0.4 mm at
+  most), the second round planning with the head fitted after the first; around the catch by 6.7 mm at most (the pig
+  director's left shoulder at 1.306 s: probe-diff-window.mjs, diffwindow-catch-f23b-f29a.txt).
+- Clearance. The fit's report (next-catch/probe-report4.mjs: report4-f29a.txt) reads every head clear, as on 21efea5e,
+  and the trunks' deepest as on 21efea5e to within 0.05 cm (the bull's 0.15 against 0.11, the cow's 0.13 against 0.08,
+  the donkey's 0.06 against 0.01, all at 4.14 s). Read on every vertex every millisecond over the whole climb
+  (next-catch/probe-limbclear17b.mjs, the two roots in turn: headtrunk1ms-f23b-f29a-1.txt and -2.txt by the fit's way
+  out, limbs1ms-true-f23b-f29a-1.txt and -2.txt by the shortest), every head clears as on 21efea5e but the horse's: as
+  it lowers itself down the far face it goes into the top's far edge at 3.933 s, 2.6 mm read every millisecond, and read
+  every 0.25 ms up to 2.9 mm, inside for 7.75 ms from 3.9305 s, where 21efea5e's kept at least 16.1 mm clear (round 3's
+  probe-horsehead-r3.mjs: horsehead-q-f29a.txt and -f23b.txt); it falls between the fit's 20 ms samples, where its
+  report reads it clear. The trunks reach as deep as on 21efea5e to within 0.05 cm, and at no instant more than 1.6 mm
+  deeper (the pig director's at 1.424 s; from 0.5 to 1.6 s its deepest is 0.51 cm against 0.36 and the pig foreman's
+  0.11 against 0.08, both at 1.40 s: probe-headwall2.mjs, headwall2-f29a.txt and -f23b.txt; the dog's 1.86 cm within its
+  2). The arms and legs on the six climbs whose rig points moved by over 0.4 mm and on the goat's reach as deep as on
+  21efea5e to within 2 mm (the donkey's right thigh and shin against the near face, 1.16 and 1.47 cm against 0.97 and
+  1.30; the pig director's right hoof against the far face, 2.67 against 2.51 at 3.88 s), and at no instant more than 3
+  mm deeper (the donkey's right thigh at 1.331 s); the other four's within 0.2 mm by the fit's way out.
+- The eleven climbs build in 71.2 s against 65.7, 8.3% longer (the least of two builds each, the old code and the new in
+  turn: buildtime-f23b-f29a.txt), and 2.2% longer than with the head fitted after the first round alone
+  (buildtime-f28d-f29a.txt); 21efea5e's own total moved 2.3% across six such runs, its climbs up to 20% each. The fits
+  inside the balance take no report: with theirs (var-f28c, the same motion) the climbs built 18.7% longer than on
+  21efea5e (buildtime-f23b-f28c.txt). With the contacts read again on every pass, 11.5% longer against 2.9% (both before
+  the head was fitted after the second round too: buildtime-f23b-f27a.txt and -f27c.txt), for the same motion to the bit
+  (diffbody-f27a-f27c.txt), so they are read on the first pass only.
+
+`tests/natural-traversal.test.mjs`: the climb test checks the catch: over the 50 ms to the last millisecond the 1 ms
+pass reads in the air before the hands land (the balance's `fineAir`; on code without it, the last sample whose own
+contacts read air), the body's angular momentum changes at most 10 N·m, the rig's airborne limit (21efea5e fails it on
+eight climbs, 11.5 to 79.4 N·m); and the take-off's flight falls free: from 5 ms after its first sample in the air to
+that last millisecond, the centre of mass accelerates within 0.98 m/s^2 of gravity, the rig's force limit (21efea5e
+fails it on seven climbs, 1.05 to 2.86: the pig foreman's 1.93 at 1.177 s fails it first, the other six the catch's
+check before it). The spline check reads the hips' move between its 1 ms keys as it reads the turn's. The climb test
+passes (18 of 18: test-f29a-all.log); run with 21efea5e's code it fails nine climbs, as said (test-f29t-fix16code.log,
+run on var-f27t: 21efea5e's code with this test, whose code lines are the tree's).
+
+**Left.**
+- The push off: the sheep's two (up to 115% at 0.857 s), the rabbit's two (up to 112% at 0.845 s).
+- The step in: the rabbit's eight and the dog's five (up to 143% at 0.020 s); the walk-outs: the rabbit's four and the
+  dog's four (up to 148% at 5.840 s).
+- The pig director's let-go (four, up to 111%) and the dog's lead (107% at 0.868 s).
+- The horse's head in the top's far edge, up to 2.9 mm for 8 ms at 3.933 s, between the fit's samples (21efea5e's kept
+  16 mm clear).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

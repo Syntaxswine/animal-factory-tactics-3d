@@ -70,9 +70,9 @@ test('the hen hops up and down every obstacle, ends on the next tile and is give
 // balance's hips no longer cancel (splined without it, the skunk's window read 308 N at 2.904 s beside samples at 77
 // and 68% of the phantom-wrench rig's limit).
 // The balance counts no tail beyond its root as support on an obstacle (traversal-balance.js supportAt): the tails are
-// fitted out of the obstacles again after the balance, so the plan must not lean on that support (the skunk's plume on
-// the window's sill at its last step: 102 readings over the limit). A tail's root on an obstacle, and any tail on the
-// floor, still count.
+// fitted out of the obstacles again after the balance (the climb's inside it, after each round that plans), so the plan
+// must not lean on that support (the skunk's plume on the window's sill at its last step: 102 readings over the limit).
+// A tail's root on an obstacle, and any tail on the floor, still count.
 test('a tail beyond its root holds the body on the floor, not on an obstacle',()=>{
  const sill={min:[.42,0,-.5],max:[.58,.85,.5]},boot=[[.9,.2],[1.15,.2],[1.15,.33],[.9,.33]].map(([x,z],v)=>({part:0,v,x,y:.001,z}));
  const probe=pts=>({count:pts.length,names:['work boot 1','skunk tail plume'],part:Uint8Array.from(pts,p=>p.part),vertex:Uint32Array.from(pts,p=>p.v),
@@ -226,19 +226,21 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
   // under it: the clearance fit's, and the window's sill and seat or the climb's top) and its turn of the body (angle
   // and pivot), are the cubic spline through them: their acceleration runs straight from sample to sample (away from
   // the tracks' own ends, which ease from rest), so they hold nothing between samples that the samples miss. Through
-  // the climb's flights its turn is the cubic spline through keys 1 ms apart (traversal-balance.js, fine), read between
-  // those keys but for the first and last millisecond of each corrected stretch (B.fineSpans), where the correction's
-  // track eases from rest as a track's own ends do (its spline's end keys hold no acceleration): there it bends up to
-  // 0.88 rad/s^2 off straight (0.06 to 0.88 on the eleven climbs, the rabbit's at 1.224 s), as far as a track through
-  // central-slope quintics bends between its keys (0.77 and 1.09 on the horse and the goat). With central slopes the
-  // quintic bent between its samples to meet them: as the horse's weight went onto its right foot after the window, its
-  // hips rippled 2.5 to 3 m/s^2 between samples, read as 77 to 243 N of phantom force a millisecond past a sample whose
-  // own reading was at most 14% of the limit.
+  // the climb's flights its turn, and through its take-off's flight its hips' move, are the cubic spline through keys 1
+  // ms apart (traversal-balance.js, fine), read between those keys but for the first and last millisecond of each
+  // corrected stretch (B.fineSpans), where the correction's track eases from rest as a track's own ends do (its
+  // spline's end keys hold no acceleration): there it bends up to 0.020 rad/s^2 off straight (the horse's and the pig
+  // director's turns at 1.234 and 1.229 s; the other climbs' 0.005 at most, the hips' 0.001; on 21efea5e, its stretches
+  // ending inside their correction, 0.06 to 0.88, as far as a track through central-slope quintics bends between its
+  // keys: 0.77 and 1.09 on the horse and the goat). With central slopes the quintic bent between its samples to meet
+  // them: as the horse's weight went onto its right foot after the window, its hips rippled 2.5 to 3 m/s^2 between
+  // samples, read as 77 to 243 N of phantom force a millisecond past a sample whose own reading was at most 14% of the
+  // limit.
   {const B=motion.balance,n=B.times.length,h=1e-4,acc=(f,t)=>{const a=f(t-h),b=f(t),c=f(t+h);return a.map((x,i)=>(x-2*b[i]+c[i])/(h*h));};
    const turn=t=>{const s=B.spin(t);if(!s)return [0,0,0];const v=[s.q.x,s.q.y,s.q.z],l=Math.hypot(...v);return l<1e-15?[0,0,0]:v.map(x=>x*2*Math.atan2(l,s.q.w)/l);};
    const turning=k=>B.spin(B.times[k])&&B.spin(B.times[k+1]),fine=t=>(B.fineSpans||[]).some(([a,b])=>t>=a-1e-9&&t<=b+1e-9),rest=t=>(B.fineSpans||[]).some(([a,b])=>Math.abs(t-a)<1e-9||Math.abs(t+.001-b)<1e-9),unit={hips:'m/s^2',turn:'rad/s^2',pivot:'m/s^2'},seen={hips:0,turn:0,pivot:0};
    let bend={d:0};for(const [name,f,inner] of [['hips',t=>B.hips(t).toArray(),k=>k>0&&k<n-2],['turn',turn,turning],['pivot',t=>B.spin(t)?.pivot.toArray()??[0,0,0],turning]])
-    for(let k=0;k<n-1;k++){if(!inner(k))continue;seen[name]++;const t0=B.times[k],T=B.times[k+1]-t0,parts=name==='turn'&&fine(t0)&&fine(t0+T)?Math.round(T/.001):1;
+    for(let k=0;k<n-1;k++){if(!inner(k))continue;seen[name]++;const t0=B.times[k],T=B.times[k+1]-t0,parts=(name==='turn'||name==='hips')&&fine(t0)&&fine(t0+T)?Math.round(T/.001):1;
      for(let q=0;q<parts;q++){const u0=t0+q*T/parts;if(parts>1&&rest(u0))continue;const a=[.2,.4,.6,.8].map(u=>acc(f,u0+u*T/parts));
       for(let ax=0;ax<3;ax++){const d=Math.max(Math.abs(a[1][ax]-(2*a[0][ax]+a[3][ax])/3),Math.abs(a[2][ax]-(a[0][ax]+2*a[3][ax])/3));if(d>bend.d)bend={d,name,t:u0};}}}
    assert.ok(seen.hips>0&&seen.turn>0&&seen.pivot>0,`${kind}: the balance's tracks were not read between samples (${JSON.stringify(seen)})`);
@@ -249,13 +251,13 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
   // take-off moved 5 to 15 ms between the balance's rounds, the lower hoof was 14 to 30 mm up at the last foot sample,
   // and in the flight's first 50 ms the body's angular momentum about its centre of mass lay 0.88 to 7.8 N·m·s from the
   // flight's median (its turn refined on the round before's hips, before the take-off moved). Every round now plans the
-  // take-off at its authored time, a hoof is within the rig's centimetre of the floor at the last foot sample (4.9 to
-  // 9.2 mm, the rabbit's the highest), and the flight's first 50 ms hold their angular momentum within 0.5 N·m·s, what
-  // the rig's airborne limit of 10 N·m moves in 50 ms (0.001 to 0.13; 0.03 to 0.14 on 6fe975ef, to 0.12 on e909dcf4).
-  // That last check guards the runaway and the turn together and barely sees either alone: on e909dcf4, with the
-  // take-off held and the turn not refined on the final hips (traversal-balance.js), it read 0.15 to 0.51, the rabbit's
-  // alone over, and with that refinement alone on 148c6fb7's motion 0.09 to 0.66; the gate shows the refinement's own
-  // worth.
+  // take-off at its authored time, a hoof is within the rig's centimetre of the floor at the last foot sample (1.6 to
+  // 9.1 mm, the pig director's the lowest and the horse's the highest; 1.0 to 9.1 on 21efea5e), and the flight's first
+  // 50 ms hold their angular momentum within 0.5 N·m·s, what the rig's airborne limit of 10 N·m moves in 50 ms (0.001
+  // to 0.002; 0.001 to 0.13 on 21efea5e, 0.03 to 0.14 on 6fe975ef, to 0.12 on e909dcf4). That last check guards the
+  // runaway and the turn together and barely sees either alone: on e909dcf4, with the take-off held and the turn not
+  // refined on the final hips (traversal-balance.js), it read 0.15 to 0.51, the rabbit's alone over, and with that
+  // refinement alone on 148c6fb7's motion 0.09 to 0.66; the gate shows the refinement's own worth.
   if(kind==='wall'){const B=motion.balance,S=B.samples,n=S.length,D=motion.duration,dt=B.times[1]-B.times[0],k0=S.findIndex((x,k)=>B.times[k]>.7&&x.kind==='air');
    assert.ok(k0>0,'wall: no flight after the push');
    const offs=(B.history||[]).map(h=>(h.match(/feet 0\.000-([0-9.]+), air/)||[])[1]);
@@ -280,8 +282,9 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // of the first round's, measured on the authored motion (10 ms early on both pigs, within 5 on the rest), and at the
    // catch a hand point lies within the rig's centimetre of the wall's surface, inside it or out (the rig counts a
    // point deeper than that a sink, not a contact; the hand is its mesh, forearm and hand, as the rig's grip reads it;
-   // 0.0 to 0.7 mm). On e909dcf4 each fails on both pigs and on no other mammal, the second with the first switched
-   // off (the nearest hand 65.5 and 47.3 mm off the wall at the catch).
+   // 0.0 to 1.2 mm, the pig foreman's 1.16; 0.0 to 0.7 on 21efea5e). On e909dcf4 each fails on both pigs and on no
+   // other mammal, the second with the first switched off (the nearest hand 65.5 and 47.3 mm off the wall at the
+   // catch).
    const catchOf=h=>{const sp=[...h.matchAll(/(\w+) ([0-9.]+)-[0-9.]+/g)].map(x=>({kind:x[1],a:+x[2]})),i=sp.findIndex(x=>x.kind==='air'&&x.a>.7),g=i<0?null:sp.slice(i+1).find(x=>x.kind==='grip');return g?g.a:NaN;};
    const cs=(B.history||[]).map(catchOf);
    assert.ok(cs.length>1&&cs.every(x=>Math.abs(x-cs[0])<=.015+1e-9),`wall: the catch moves between the balance's rounds (${cs.map(x=>x.toFixed(3)).join(', ')} s)`);
@@ -301,21 +304,21 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // every other mammal's knees 7.6 at most, the dog's; now the pigs' 4.4 and 5.5), and their hands came off the top as
    // they lowered (the nearest hand point, of the hand's mesh, forearm and hand, as the rig's grip reads it, up to 25.5
    // and 40.6 mm from the wall's surface, every 10 ms from 3.85 to 4.15 s; every other mammal's 1.9 at most, the
-   // skunk's; now 6.5 and 2.8, 7.2 and 4.3 on f293da69). Each check fails there on both pigs and on no other mammal,
-   // the second with the first switched off. From 3.1 to 3.5 s, as the left knee comes up behind, the knees are held at
-   // 11 m/s, a sentinel no copy measured fails: the pig director's left knee reads 8.8 at 3.180 s (8.9 on f293da69,
-   // 8.05 on 4e9853f6), every other mammal's 6.1 to 7.5 near 3.19 s. Going down the far side, from 3.5 to 3.7 s, they
-   // are held at the rig's 8: the pig foreman's left leg locked straight there, out of reach of its 3.685 s key (10.2
-   // m/s at 3.632 s on ba891c83, 9.1 on f293da69, where its top band's drop hid it; 13.8 at 3.618 with its authored
-   // keys alone), until those keys rose to its reach from the keyed trunk (wall-climb.js, the legs' keys hanging down
-   // the far face): it straightens later and slower now (7.1 m/s at 3.644), and every other mammal reads 6.2 to 7.2
-   // there. As the left hand lets go of the near edge and crosses to the far grip, from 2.8 to 3.7 s, the elbows are
-   // held at the rig's 8 too, by the same measure on the forearm bone: held to that grip out of its arm's reach until
-   // 3.485 s, a pig's left arm went straight and its elbow whipped as the hand let go (15.7 and 14.1 m/s at 3.518 and
-   // 3.524 s on c44413ef, the director's and the foreman's), until a deep body's left hand let go before its arm ran
-   // out (wall-climb.js): the pigs' fastest there are now their left elbows as the hands cross, 5.3 and 6.3 at 3.528
-   // and 3.524 s (on 8da9a826 their right elbows, 5.8 and 5.6 at 3.034, before their hands held in front of their
-   // chests, below), and every other mammal's its left, 7.55 to 7.67 at 3.514.
+   // skunk's; now 6.5 and 3.2, 6.5 and 2.8 on 21efea5e, 7.2 and 4.3 on f293da69). Each check fails there on both pigs
+   // and on no other mammal, the second with the first switched off. From 3.1 to 3.5 s, as the left knee comes up
+   // behind, the knees are held at 11 m/s, a sentinel no copy measured fails: the pig director's left knee reads 8.8 at
+   // 3.180 s (8.9 on f293da69, 8.05 on 4e9853f6), every other mammal's 6.1 to 7.5 near 3.19 s. Going down the far side,
+   // from 3.5 to 3.7 s, they are held at the rig's 8: the pig foreman's left leg locked straight there, out of reach of
+   // its 3.685 s key (10.2 m/s at 3.632 s on ba891c83, 9.1 on f293da69, where its top band's drop hid it; 13.8 at 3.618
+   // with its authored keys alone), until those keys rose to its reach from the keyed trunk (wall-climb.js, the legs'
+   // keys hanging down the far face): it straightens later and slower now (7.1 m/s at 3.644), and every other mammal
+   // reads 6.2 to 7.2 there. As the left hand lets go of the near edge and crosses to the far grip, from 2.8 to 3.7 s,
+   // the elbows are held at the rig's 8 too, by the same measure on the forearm bone: held to that grip out of its
+   // arm's reach until 3.485 s, a pig's left arm went straight and its elbow whipped as the hand let go (15.7 and 14.1
+   // m/s at 3.518 and 3.524 s on c44413ef, the director's and the foreman's), until a deep body's left hand let go
+   // before its arm ran out (wall-climb.js): the pigs' fastest there are now their left elbows as the hands cross, 5.3
+   // and 6.3 at 3.528 and 3.524 s (on 8da9a826 their right elbows, 5.8 and 5.6 at 3.034, before their hands held in
+   // front of their chests, below), and every other mammal's its left, 7.55 to 7.67 at 3.514.
    const knee=s=>bones['shin'+s].getWorldPosition(bones['shin'+s].position.clone()),fastest=(a,b,at=knee)=>{let w={v:0},was=null;
     for(let t=a;t<=b+1e-9;t+=.002){motion.apply(t/D);const k=[at(-1),at(1)];if(was)for(const j of [0,1]){const v=k[j].distanceTo(was[j])/.002;if(v>w.v)w={v,t,side:j?'right':'left'};}was=k;}return w;};
    const whip=fastest(2.3,3.1),behind=fastest(3.1,3.5),lock=fastest(3.5,3.7),fold=fastest(2.8,3.7,s=>bones['forearm'+s].getWorldPosition(bones['forearm'+s].position.clone()));
@@ -329,9 +332,10 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // re-grips the top there (the shared keys), and its upper arm goes 3.0 to 3.9 cm into its lower trunk (at 2.656 to
    // 2.688 s), so they are held at 4.5 cm, a sentinel. A deep body's right hand holds in front of its chest instead
    // (wall-climb.js), and the pigs' arms keep 8.0 and 10.4 cm clear of the trunk (the foreman's and the director's
-   // nearest, the upper arm by the upper trunk, at 2.754 and 3.000 s), by these one-size capsules, which a pig's belly
-   // overruns (the clothes check below reads the pig's own); on 8da9a826 the arm hung straight toward a re-grip it
-   // could not reach, the pig foreman's upper arm 5.4 cm into its lower trunk at 2.596 s, the director's 3.1 at 2.604.
+   // nearest, the upper arm by the upper trunk, at 2.802 and 3.000 s; the foreman's at 2.754 on 21efea5e), by these
+   // one-size capsules, which a pig's belly overruns (the clothes check below reads the pig's own); on 8da9a826 the arm
+   // hung straight toward a re-grip it could not reach, the pig foreman's upper arm 5.4 cm into its lower trunk at
+   // 2.596 s, the director's 3.1 at 2.604.
    const gap=(p1,q1,p2,q2)=>{const d1=q1.clone().sub(p1),d2=q2.clone().sub(p2),r=p1.clone().sub(p2),a=d1.dot(d1),e=d2.dot(d2),f=d2.dot(r),c=d1.dot(r),b=d1.dot(d2),den=a*e-b*b,cl=x=>Math.max(0,Math.min(1,x));
     let s=den>1e-12?cl((b*f-c*e)/den):0,t=(b*s+f)/e;if(t<0){t=0;s=cl(-c/a);}else if(t>1){t=1;s=cl((b-c)/a);}return p1.clone().addScaledVector(d1,s).distanceTo(p2.clone().addScaledVector(d2,t));};
    let into={o:-Infinity};
@@ -443,22 +447,37 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
     {const tf=B.times[k0-1],spin=spinOver(tf-.015,tf+.010);
      assert.ok(spin.v<=100,`wall: as the hooves leave the body's angular momentum changes at ${spin.v.toFixed(0)} N·m at ${spin.t?.toFixed(3)} s (100 at most)`);}
     // Nor does the flight that follows turn the body: from 5 ms after the balance's first sample in the air (where the
-    // rig can still read a hoof on the floor: the pig director's boot at 0.870 s, where the rate reads 10.2 N·m) to 50
-    // ms after it, the same angular momentum changes at most 10 N·m, the rig's airborne limit (traversal-balance.js:
-    // the climb's flights' turn every millisecond, fine). On 6fe975ef, with the turn held at the 5 ms samples alone,
-    // eight climbs read 14.6 to 24.8 N·m there (the goat's 24.8 at 0.889 s, as its legs fold), the skunk, rabbit and
-    // pig director 8.9, 9.4 and 9.9; now every mammal's 0.6 to 8.8.
+    // rig can still read a hoof on the floor: the pig director's boot at 0.870 s, where the rate read 10.2 N·m on
+    // 21efea5e and reads 0.5 now) to 50 ms after it, the same angular momentum changes at most 10 N·m, the rig's
+    // airborne limit (traversal-balance.js: the climb's flights' turn every millisecond, fine). On 6fe975ef, with the
+    // turn held at the 5 ms samples alone, eight climbs read 14.6 to 24.8 N·m there (the goat's 24.8 at 0.889 s, as its
+    // legs fold), the skunk, rabbit and pig director 8.9, 9.4 and 9.9; on 21efea5e 0.6 to 8.8 (the horse's 8.8, its
+    // head fitted again after the balance, which the turn did not see); now 0.3 to 1.2.
     {const spin=spinOver(B.times[k0]+.005,Math.min(B.times[k1],B.times[k0]+.05));
      assert.ok(spin.v<=10,`wall: in the take-off's flight (${(B.times[k0]+.005).toFixed(3)} to ${Math.min(B.times[k1],B.times[k0]+.05).toFixed(3)} s) the body's angular momentum changes at ${spin.v.toFixed(1)} N·m at ${spin.t?.toFixed(3)} s (10 at most)`);}
+    // Nor as the hands reach the top: over the 50 ms to the last millisecond the balance's 1 ms pass reads in the air
+    // before they land (B.fineAir; on code without it, the last sample whose own contacts read air: a grip counts in
+    // the plan only from 20 ms after its touch), the same angular momentum changes at most 10 N·m
+    // (traversal-balance.js: the flights' turn holds up to the hands, fine). On 21efea5e, its turn eased out 5 ms
+    // before that sample, eight climbs read 11.5 to 79.4 N·m there (the rabbit's 79.4 at 1.225 s, as its arms stop at
+    // the top); now 0.1 to 4.1 (the rabbit's 4.1 at 1.224 s). And the take-off's flight falls free: from 5 ms after its
+    // first sample in the air to that last millisecond, the centre of mass (read every millisecond over 0.5 ms chords)
+    // accelerates within 0.98 m/s^2 of gravity, the rig's force limit (10% of the body's weight). On 21efea5e, its
+    // centre held at the 5 ms samples alone, seven climbs read 1.05 to 2.86 m/s^2 (the rabbit's at 1.224 s, its arms
+    // stopping); now 0.04 to 0.14.
+    {let kr=k0;while(kr+1<n&&(S[kr+1].raw??S[kr+1].kind)==='air')kr++;const T=B.times,fa=(B.fineAir||[]).find(([a,b])=>b>=T[k0]&&a<=T[k0]+.05),te=fa?fa[1]:T[kr],spin=spinOver(te-.05,te);
+     assert.ok(spin.v<=10,`wall: as the hands reach the top (${(te-.05).toFixed(3)} to ${te.toFixed(3)} s) the body's angular momentum changes at ${spin.v.toFixed(1)} N·m at ${spin.t?.toFixed(3)} s (10 at most)`);
+     let fall={v:0};for(let t=T[k0]+.005;t<=te+1e-9;t+=.001){const a=at(t-h)[1],c=at(t)[1],b=at(t+h)[1],v=Math.hypot(...a.map((x,q)=>(x-2*c[q]+b[q])/(h*h)+(q===1?9.81:0)));if(v>fall.v)fall={v,t};}
+     assert.ok(fall.v<=.981,`wall: in the take-off's flight (${(T[k0]+.005).toFixed(3)} to ${te.toFixed(3)} s) the centre of mass accelerates ${fall.v.toFixed(2)} m/s^2 off gravity's at ${fall.t?.toFixed(3)} s (0.98 at most)`);}
     // Nor does the drop's flight turn the body: through the balance's first flight after the let-go (the palms off the
     // top's far edge until they are on the far face), the same angular momentum changes at most 10 N·m, the rig's
     // airborne limit (wall-climb.js: the palms arc out over the top's far corner without stopping, and the head is held
     // through the drop before the balance as after it). On d54c607d the nine climbs read 20 to 32 N·m there (the hands
-    // braking to rest at a key past the edge, the bull's head turning in the turn's plan alone), now 3.4 to 5.9 (3.5 to
-    // 5.9 on 6fe975ef). The pigs are left out: their drop flights turn at 51 N·m (the foreman) and 11 (the director),
-    // at 4.327 and 4.325 s, as their palms land on the far face; with their palms off the top before they let go
-    // (f293da69) they turned at 58 and 148, at 4.259 and 4.213 s, earlier in their drops. The rate here is a torque
-    // (N·m: the rig's airborne limit is 10 N·m).
+    // braking to rest at a key past the edge, the bull's head turning in the turn's plan alone), now 3.1 to 5.9 (3.4 to
+    // 5.9 on 21efea5e, 3.5 to 5.9 on 6fe975ef). The pigs are left out: their drop flights turn at 12 N·m, at 4.330 and
+    // 4.324 s (51 and 11 on 21efea5e, the foreman and the director), as their palms land on the far face; with their
+    // palms off the top before they let go (f293da69) they turned at 58 and 148, at 4.259 and 4.213 s, earlier in their
+    // drops. The rate here is a torque (N·m: the rig's airborne limit is 10 N·m).
     if(!/^pig-/.test(p.id)){const lg=motion.phases.find(x=>x.label==='Let go').end,a=S.findIndex((x,k)=>B.times[k]>=lg&&x.kind==='air');let b=a;while(b>=0&&b+1<n&&S[b+1].kind==='air')b++;
      assert.ok(a>0,'wall: no flight after the let-go');const spin=spinOver(B.times[a],B.times[b]);
      assert.ok(spin.v<=10,`wall: in the drop's flight (${B.times[a].toFixed(3)} to ${B.times[b].toFixed(3)} s) the body's angular momentum changes at ${spin.v.toFixed(1)} N·m at ${spin.t?.toFixed(3)} s (10 at most)`);}}
@@ -467,8 +486,9 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // .565, wall-climb.js's farX for a deep body; the wrist .07 over the top; z on its own side). On these rigs .97 of
    // the arm plus 1.5 cm is the arm's whole length (50.5 cm). On f293da69 the pigs' arms were up to 7.4 and 5.7 cm past
    // .97 of the arm there (the foreman's and the director's), their palms sliding off the top onto the face before they
-   // let go; now 1.15 and 0.52. It guards the pigs' last 50 ms only: over the last 60 and 75 ms the foreman reads 1.47
-   // and 2.05, and the other climbs hang at their arms' full length there (the dog 2.2 to 2.6 cm past).
+   // let go; now 1.14 and 0.55 (0.54 on 21efea5e). It guards the pigs' last 50 ms only: over the last 60 and 75 ms the
+   // foreman reads 1.46 and 2.05, and the other climbs hang at their arms' full length there (the dog 2.2 to 2.6 cm
+   // past).
    if(/^pig-/.test(p.id)){const lg=motion.phases.find(x=>x.label==='Let go').end,W=q=>bones[q].getWorldPosition(new T.Vector3());
     motion.apply(lg/D);const arm=s=>W('upperArm'+s).distanceTo(W('forearm'+s))+W('forearm'+s).distanceTo(W('hand'+s)),L={'-1':arm(-1),'1':arm(1)};let worst={d:-Infinity};
     for(let t=lg-.05;t<=lg+1e-9;t+=.005){motion.apply(t/D);for(const s of [-1,1]){const d=W('upperArm'+s).distanceTo(new T.Vector3(.565,WALL.top+.07,-s*.20))-.97*L[s];if(d>worst.d)worst={d,t,s};}}

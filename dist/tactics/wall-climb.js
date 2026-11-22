@@ -264,24 +264,28 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // 8.9 mm), as the need falls from 132 N to 41: a hover as long as through the key (4.205 to 4.213 s, 223 to 29 N) and
  // lighter. The centre of mass starts down earlier and falls less fast after it (at most 5.5 mm off its path through
  // the key, at 4.218 s, within 1 mm by 4.33; the landing the same from 4.6 s). The drop's flight, from 4.245 to 4.325 s
- // (through the key from 4.210 or 4.215 to 4.295 or 4.300), turns at 3.4 to 5.9 N·m at the most (3.5 to 5.9 on
- // 6fe975ef; the test's measure; 20 to 32 through the key), under the rig's 10, and the nine climbs but the pigs' read
- // 112 readings over its limits against 188 on d54c607d (156 with the head held alone: the bull 50, then 18, then 8;
- // the donkey 17, then 8; the skunk 16, then 2; the dog 27, then 16; the other five as they were), and since the
- // flights' turn every millisecond (traversal-balance.js) 50: the horse 13, the goat 2, the bull and cow none, the
- // donkey 1, the sheep 4, the skunk none, the rabbit 21, the dog 9. Arced, the palm's turn onto the face switched its
- // way round 2.5 ms short of done and popped 0.09 degrees (steadyTurns now switches on the sample). A deep body arcs as
- // well now that its palms hold the top until it lets go (its far hang, above). With them off the top before the
- // let-go, arced, the pig foreman read 159 readings (7545% of the limit at its worst) against 88 through the key, the
- // director 67 (6399%) against 57; with the far hang, arced, 42 and 34 against 78 and 53 through the key (their let-go
- // and drop 5 and 4 against 41 and 23, the foreman's worst there 227% of the limit against 10810% at 4.265 s; their
- // worst readings then in the jump's flight, 603 and 455%, as they were there; since the climb's flights' turn every
- // millisecond, traversal-balance.js, the foreman's worst is its drop's 225% and the director's its catch's 337%). Of
- // the nine left in the let-go and drop, eight are new: the foreman's five in the air from 4.306 to 4.310 s, up to 227%
- // (six from 4.300, up to 225%, since that turn), in the last 5 ms before its palms reach the far face (where
- // f293da69's read up to 9.9 N·m, under the limit, before its palms reached it at 4.276 s), and the director's three on
- // contact from 4.231 to 4.233 s, up to 111%, as its hands leave the top (four, to 4.236 s, on 6fe975ef and since:
- // three on contact, one in the air).
+ // (through the key from 4.210 or 4.215 to 4.295 or 4.300), turns at 3.1 to 5.9 N·m at the most (3.4 to 5.9 on
+ // 21efea5e, 3.5 to 5.9 on 6fe975ef; the test's measure; 20 to 32 through the key), under the rig's 10, and the nine
+ // climbs but the pigs' read 112 readings over its limits against 188 on d54c607d (156 with the head held alone: the
+ // bull 50, then 18, then 8; the donkey 17, then 8; the skunk 16, then 2; the dog 27, then 16; the other five as they
+ // were), and since the flights' turn every millisecond (traversal-balance.js) 50: the horse 13, the goat 2, the bull
+ // and cow none, the donkey 1, the sheep 4, the skunk none, the rabbit 21, the dog 9; and since the take-off's flight
+ // holds its centre of mass and the head is fitted inside the balance, 26: the sheep 2, the rabbit 14, the dog 10, the
+ // rest none. Arced, the palm's turn onto the face switched its way round 2.5 ms short of done and popped 0.09 degrees
+ // (steadyTurns now switches on the sample). A deep body arcs as well now that its palms hold the top until it lets go
+ // (its far hang, above). With them off the top before the let-go, arced, the pig foreman read 159 readings (7545% of
+ // the limit at its worst) against 88 through the key, the director 67 (6399%) against 57; with the far hang, arced, 42
+ // and 34 against 78 and 53 through the key (their let-go and drop 5 and 4 against 41 and 23, the foreman's worst there
+ // 227% of the limit against 10810% at 4.265 s; their worst readings then in the jump's flight, 603 and 455%, as they
+ // were there; since the climb's flights' turn every millisecond, traversal-balance.js, the foreman's worst is its
+ // drop's 225% and the director's its catch's 337%; since its flights hold to their landing and the head is fitted
+ // inside the balance, the foreman reads none and the director's worst is its let-go's 111%). Of the nine left in the
+ // let-go and drop, eight are new: the foreman's five in the air from 4.306 to 4.310 s, up to 227% (six from 4.300, up
+ // to 225%, since that turn), in the last 5 ms before its palms reach the far face (where f293da69's read up to 9.9
+ // N·m, under the limit, before its palms reached it at 4.276 s), and the director's three on contact from 4.231 to
+ // 4.233 s, up to 111%, as its hands leave the top (four, to 4.236 s, on 6fe975ef and since: three on contact, one in
+ // the air). The foreman's six are gone since its head is fitted inside the balance (fitted after it, with the drop's
+ // turn held to the palms on the far face, they rose, to 254% at 4.310 s: var-f25b).
  const FAR=[1,0,0],ONFACE=4.33,ARC=.06,SLIDE=z=>[[ONFACE,{f:'world',p:[.62,1.80,(.22+slideDZ)*z],face:FAR,arc:ARC,arcTo:FAR}],[4.685,{f:'world',p:[.62,1.10,(.26+slideDZ)*z],face:FAR}]];
  const LIMB={
   'leg-1':[[0,stance(-1)],[.4,foot(-.035-back,-.20)],[.7,foot(-.035-back,-.20,15)],[.995,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-1.03*fitB.leg,-.20],hoof:55,soft:.03}],[1.195,{f:'pelvis',p:[body.offsets.thigh[-1].x-.165,body.offsets.thigh[-1].y-.95*fitB.leg,-.20],hoof:50}],[1.375,{f:'pelvis',p:[.02,-.62,-.13],hoof:20,knee:OUT}],[1.505,{...onFace(true,.46,-.16,1.505),knee:OUT}],[1.905,{...onFace(true,.80,-.16,1.905),knee:OUT}],[2.305,{...onFace(true,1.26,-.16,2.305),knee:OUT}],[2.705,{...onFace(true,1.56,-.16,2.705),knee:OUT}],
@@ -439,20 +443,21 @@ export function createWallClimb(worker,profile={id:'horse'}){
  const spec=t=>{const tr=trunkAt(t),limbs={};for(const id of Object.keys(LIMB))limbs[id]=keyedLimb(LIMB[id],t,tr);return posedFrom(tr,limbs,{poles:steady?id=>steady(id,t):null,offsets:fit?.limb?id=>fit.limb(id,t):null,snaps:fit?.plant?id=>fit.plant(id,t):null,turns:turnRef?b=>turnRef(b,t):null});};
  // Fit this character's surface: trunk, head and tail out of the floor and the wall. The face is the way out until the
  // chest is nearly over (2.265): a hanging front (the sheep's waistcoat hem) meets the top edge before the chest does.
- // The head's turn is held through the jump (launch to catch) here too, as the fit after the balance holds it through
- // every flight, but for the catch's own turn, softened over three of the fit's samples, reaching back into the jump's
- // end (on the pig director 5.0 degrees at its last sample here, 1.26 s, and 5.2 in the played flight's last 15 ms,
- // where the rig already reads its hands on the top). The balance plans the flight's turn with the head as this fit
- // leaves it, and the pig foreman's head, easing out of a 15 degree tilt from 1.04 s in the air here and held by the
- // fit after the balance, left the turn answering a tilt no longer there (up to 65 N·m of airborne phantom torque from
- // 1.03 to 1.18 s). So it is held through the drop too (from the let-go to the palms on the far face, ONFACE): on
- // d54c607d the bull's head, as the balance planned the drop's turn, eased into a stretch that clears the wall from
- // 4.23 s (turned 6.0 degrees at 4.30, 12 at 4.38), where the fit after the balance turned it before the let-go (11.9
- // degrees at 4.20) and held it through the flight: the turn answered a head turning that the played body never made,
- // 10 to 20 N·m of airborne phantom torque from 4.228 to 4.280 s (the bull's drop 42 readings over the limit, 10 held;
- // the other ten climbs' readings as they were). The window is the keys', not the flight's: it holds the balance's
- // drop flight inside it (from 4.245 to 4.325 s on the nine climbs but the pigs', theirs from 4.240 to 4.325 or
- // 4.330) only while the let-go and the palms' face key bracket it.
+ // The head's turn is held through the jump (launch to catch) here too, as the fit again inside the balance (refit,
+ // below) holds it through every flight, but for the catch's own turn, softened over three of the fit's samples,
+ // reaching back into the jump's end (on the pig director 5.0 degrees at its last sample here, 1.26 s, and 5.2 in the
+ // played flight's last 15 ms, where the rig already reads its hands on the top). The balance's first round plans the
+ // flight's turn with the head as this fit leaves it (the second round, the refine and the 1 ms pass with the head
+ // fitted again inside it, below), and the pig foreman's head, easing out of a 15 degree tilt from 1.04 s in the air
+ // here and held by the fit after the balance, left the turn answering a tilt no longer there (up to 65 N·m of airborne
+ // phantom torque from 1.03 to 1.18 s). So it is held through the drop too (from the let-go to the palms on the far
+ // face, ONFACE): on d54c607d the bull's head, as the balance planned the drop's turn, eased into a stretch that clears
+ // the wall from 4.23 s (turned 6.0 degrees at 4.30, 12 at 4.38), where the fit after the balance turned it before the
+ // let-go (11.9 degrees at 4.20) and held it through the flight: the turn answered a head turning that the played body
+ // never made, 10 to 20 N·m of airborne phantom torque from 4.228 to 4.280 s (the bull's drop 42 readings over the
+ // limit, 10 held; the other ten climbs' readings as they were). The window is the keys', not the flight's: it holds
+ // the balance's drop flight inside it (from 4.245 to 4.325 s on the nine climbs but the pigs', theirs from 4.240 to
+ // 4.325 or 4.330) only while the let-go and the palms' face key bracket it.
  fit=createClearanceFit(D);const jump=[TRUNK.find(k=>k.launch).t,TRUNK.find(k=>k.catch).t],drop=[TRUNK.find(k=>k.still).t,ONFACE];
  fit.solve({body,probe,tails,obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),poseAt:t=>body.pose(spec(t),'fit'),air:t=>t>jump[0]&&t<jump[1]||t>drop[0]&&t<drop[1],stage:t=>t<2.265?'near':t<3.685?'over':'far'});
  steady=steadyPoles(D,t=>limbSample(body,spec(t)));
@@ -507,8 +512,10 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // authored path (each plan's least gap 4.99 to 13.98 mm, the pigs' the least; every plan's ceiling rows logged, both
  // rounds, the eleven climbs). So the floor holds the take-off, and the bisection finds where it starts; that the
  // heights are found as a move of the trunk, while the balance bounds its centre of mass (a different move while the
- // legs stand), does not reach the plan. As the hooves leave (0.865 to 0.873 s) the horse's played ones are within
- // 0.5 mm of the authored ones.
+ // legs stand), does not reach the plan. As the hooves leave (0.865 to 0.873 s) the horse's played hoof bones ride
+ // within 2.6 mm of their height with the balance built but not played (the left up to 2.6 mm under it, the right up to
+ // 0.7 over; on 21efea5e 2.8 and 0.8), though the balance's move of the body carries them 13 to 22 mm from where they
+ // ride without it.
  // On e909dcf4, without the floor (EPS at 5 mm), the take-off drifted later between the rounds on seven climbs (the
  // pig foreman's 0.855 -> 0.870 s), the horse's centre of mass lay 28 mm under its authored path at its last foot
  // sample and met the catch 7.3 cm under it, the pigs' walk up the face read 240 and 108 readings against 52 and 0, and
@@ -519,12 +526,37 @@ export function createWallClimb(worker,profile={id:'horse'}){
    const base=trunkAt(t,null),up=d=>{const tr={...base,hips:base.hips.clone().add(V(0,d,0)),chest:base.chest.clone().add(V(0,d,0))};return keyedLimb(keys,t,tr).p[1]-a.p[1];};
    let lo=-.3,hi=.3;if(up(lo)>EPS)continue;if(up(hi)<=EPS)continue;for(let k=0;k<30;k++){const m=(lo+hi)/2;if(up(m)>EPS)hi=m;else lo=m;}best=best===null?lo:Math.min(best,lo);}return best===null?null:Math.max(0,best);};
  const bal=balanceTraversal({duration:D,probe:contactProbe(worker,tails),obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),pose:t=>{const P=body.pose(spec(t),'balance');playTail(t);return P;},com:P=>body.com(P),setMove:m=>{balance=m;},base:t=>fit.trunk(t).add(onTop?onTop(t):V()).toArray(),
-  hold:deep?t=>t>=TOP_BAND[0]&&t<=TOP_BAND[1]&&'seat':null,ceiling:pushCeiling,fine:true});
- // The head and tail are fitted again to the balanced motion, the head held through the flights but for the catch's
- // ease (traversal-fit.js, fit.solveHead and fit.solveTail), and the report taken on it. The balance's turn does not
- // see this head (traversal-balance.js, fine): the horse's take-off reads 11.8 N·m of airborne phantom torque at 0.871
- // s.
- balance=bal;fit.solveHead({air:t=>bal.samples[Math.round(t/(bal.times[1]-bal.times[0]))]?.kind==='air'});fit.solveTail();turns();
+  hold:deep?t=>t>=TOP_BAND[0]&&t<=TOP_BAND[1]&&'seat':null,ceiling:pushCeiling,fine:true,refit:({samples:sa,times:ti})=>{fit.solveHead({air:t=>sa[Math.round(t/(ti[1]-ti[0]))]?.kind==='air',report:false});fit.solveTail({report:false});}});
+ // The head and tail are fitted again to the balanced motion inside the balance, after each of its rounds that plans
+ // (refit; the hips are found again after the last refit, traversal-balance.js), the head held through the flights but
+ // for the catch's ease (traversal-fit.js, fit.solveHead and fit.solveTail, which take no report there), so the second
+ // round, the refine and the 1 ms pass (fine) plan the body as it is played; the fit's report is taken after the
+ // balance, on the finished motion (fit.measure). Fitted again after the balance (to 21efea5e), the head played
+ // otherwise than the flights' turn had planned it: at the horse's take-off the planned head turned where the played
+ // one held (11.8 N·m of airborne phantom torque at 0.871 s), and, with this pass, at the pig director's catch the
+ // played head turned where the planned one held (8 readings, up to 256% at 1.219 s: var-f25b). Fitted just before the
+ // 1 ms pass, every catch cleared but the lead and the let-go took what the 5 ms turn had planned for the other head
+ // (the horse a new 170% at 0.866 s on its hooves, the donkey 118 and 124% at 4.246 and 4.247 s in the air: var-f26d).
+ // Fitted after the first round alone (var-f28d, 28 readings), the second round moved the bodies under heads fitted for
+ // the first: the pig director's head 1.28 cm into the wall at 1.349 s (over a millimetre from 1.300 to 1.394 s, every
+ // vertex every millisecond), the cow's 0.88 at 0.730, the donkey's 0.78 (its trunk 0.87) at 0.732, where 21efea5e left
+ // them clear. Fitted after both rounds with the hips left as the second round found them, the horse's push read 14
+ // readings, up to 308% at 0.815 s (var-f28a); with the hips found again in one pass, 35 (var-f28e); a third round
+ // planning after the second fit read 20, but the climbs built 43.3% longer than on 21efea5e (var-f28b, against 8.3%
+ // here). The heads sit as on 21efea5e (their whole turn, read every 1 ms) but for two: this fit turns the horse's up
+ // to 12 degrees going down the far face (eased in from 3.67 s, 12 from 3.93 to 3.97) where 21efea5e's turned it 24
+ // (the fits' turns a degree or more apart from 3.69 to 4.13 s; the played heads 12.2 degrees apart at 3.886 s, over 1
+ // from 3.690 to 4.129; a vertex of it 72 mm), and turned less it goes up to 2.9 mm into the top's far edge at 3.933 s,
+ // for 8 ms, between the fit's 20 ms samples, where 21efea5e's kept 16 mm clear; the pig director's turns 1.9 degrees
+ // otherwise in its hang (1.590 s), every other's within 0.9. Read on every vertex every 1 ms, by mesh: the horse's
+ // head up to 72 mm (3.884 s), its mane 26 mm (3.996 s), its overalls 14; the pigs' heads up to 16.4 mm (the foreman's
+ // at 4.424 s, its cap 17.8; the director's 15.1 at 3.898 s, 11.7 in its hang at 1.593 s and 10.4 around its catch, at
+ // 1.308 s) and their shirts up to 16.2 in the drop; the donkey's and bull's tails 6.3 and 4.6 mm; the cow 2.4; the
+ // other five 0.4 at most. The rig points but the heads' tips (the horse's tip 30.8 mm at 3.880 s, the pigs' 16.9 and
+ // 14.9) move by up to 13.2 mm (a shoulder of the pig director's at 3.897 s; its centre of mass 10.3 mm in its drop, at
+ // 4.448 s; the pig foreman's 11.6 mm, the donkey's 4.7, the horse's, bull's and cow's 2.2 to 3.5, the other five's 0.4
+ // at most).
+ balance=bal;fit.measure();turns();
  const KEYS=TRUNK.map(k=>({t:k.t,label:k.label}));let state=null;
  const api={duration:D,keys:KEYS,body,probe,obstacle:WALL,fit:fit.report,clearance:fit,balance:bal,phases:KEYS.slice(0,-1).map((k,i)=>({label:KEYS[i+1].label,start:k.t,end:KEYS[i+1].t})),
   at(t){const time=clamp(t,0,D),P=body.pose(spec(time),time.toFixed(3));body.root.updateMatrixWorld(true);worker.skeleton?.update?.();playTail(time);
