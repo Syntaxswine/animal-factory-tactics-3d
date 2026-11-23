@@ -5272,6 +5272,118 @@ check's 100 ms samples; the roll's 166 readings; the hands to the floor's 38 (th
 tail fit's switch; the windows' other phases, among them left foot in 32, sit up 17, right foot in 17, slide over 10 and
 reach for the floor 9.
 
+### 2026-11-23 (physics balance, forty-fourth part): the roll's hooves land with the seat still down
+
+After the forty-third part (3f87e5d3) the eleven windows read 323 readings over the gate's limits, 166 of them in the
+roll, and the worst of all, the sheep's 733% at 2.837 s, fell where its roll's hooves land (window-dive.js: the roll's
+first rock row, FOOT_DOWN), as did the bull's 216% at 2.877, the horse's 206% at 2.774 (its worst), the pig director's
+roll's 212% at 2.897 and the rabbit's late roll's 211% at 2.819 (phase-readings.mjs: 126 of the roll's readings at the
+gate's 1 ms checks, 40 at its 5 ms rows; probe-roll-acc.mjs: each window's landing). There the played centre of mass's
+vertical acceleration dipped for two milliseconds: the sheep's 4.3, -7.5, -7.9 and 0.6 m/s^2 at 2.835 to 2.838 s, the
+body near free fall while it needed about a body weight sideways. The dip was the dive's own, not the balance's
+(probe-dive-vs-played.mjs: the dive as authored and as played the same to the decimal there), and its hips' roll path's
+(probe-trunk-parts.mjs on var-r23a, the hips' five parts: the roll path -14.6 and -14.5 m/s^2 at 2.836 and 2.837 s, the
+sill's and the seat's pushes, the balance's shift and the fit smooth). The roll's simulation re-seats the body on its
+lowest point at every step; at the landing's step that point is the arriving hoof, turned under the floor about the
+seat, and the body rose onto it for that one step, then sat back on its seat the next, as the rock's steps keep it: a
+one-step rise of the hips of 0.7 to 3.0 mm on eight windows, the goat's 0.1 (probe-land-bump.mjs: land-bump-a.txt,
+-b.txt). The softening's triangle average spreads a one-sample rise into a triangle, whose apex is a corner in the hips'
+fall; and its re-seat, reading each averaged pose's lowest point, lifted the body onto a tucked hoof under the floor for
+the one sample before the rock, a second corner beside the first (probe-soft.mjs on var-r23a, the sheep's: the raw path
+193.52 mm at 2.8366 s against 191.20 and 190.98 either side; the re-seat 2.013 mm there against -0.083 and -0.091),
+together -10.7 m/s^2 on one 2.5 ms sample of the averaged path (probe-uni.mjs).
+
+`dist/tactics/window-dive.js`: the landing's own step keeps the seat on the floor, re-seated on the seat's lowest point
+(seatLow) as the rock's steps are; before the rock, the softening's re-seat reads the trunk's lowest point (trunkLow:
+every point but the feet's, FEET the landing's own test, /hoof|boot|foot|toes/), for before the rock alone: FEET reads
+the meshes' names, and a trouser cuff skinned to a hoof's bone, 9.1 cm or more above the trunk's lowest point before the
+rock on every window, sinks up to 10.5 cm below the seat in it (round 4 of the review: review-fix23-r4\cuff-rv4c.txt,
+rv4b-all.txt). The landing's row still names the arriving foot (its part and bone, as before): roll.rows records which
+foot landed, and the window test's check of a stalled roll still meets a foot row on every roll that lands. The bodies
+move 0.19 mm at most (the sheep's at 2.834 s, by its landing; the horse's at 2.468, as its roll starts, where of the
+hips' five parts only the balance's shift moves, 0.13 mm, the roll path, the sill's and the seat's pushes and the fit
+the same: probe-parts-diff.mjs on var-r23a and var-r23h), the others' 0.08 mm at most, the cow's and the skunk's not at
+all, their rolls stalling before the hooves land (probe-vertdiff-k.mjs, every vertex every 2 ms:
+vertdiff-f22s-r23c-window.txt). Gated as var-r23c, the tree's code lines but the landing row's record, which var-r23g
+adds, and the landing flag's one name, which var-r23j has, the tree's code lines (the eleven window gates of each equal
+var-r23c's to the byte); the low walls and the climbs the same to the byte, every one of their 22 gates (gate-lanes.sh
+r23c).
+
+- The windows read 308 readings against 323 (kind-readings.mjs: kr-r23c-window.txt): the roll 151 against 166 (the
+  horse's 16 to 11, the bull's 12 to 11, the donkey's 28 to 27, the sheep's 15 to 13, the pig director's 16 to 14, the
+  rabbit's 33 to 29), every other phase's count as before. Eighteen readings gone, all at the landings: the horse's
+  206.1, 168.6, 125.1, 152.3 and 122.7% at 2.774 to 2.782 s, the bull's 152.9 and 216.4 at 2.876 and 2.877, the donkey's
+  118.2 at 2.887, the sheep's 117.8, 175.6 and 126.5 at 2.829, 2.830 and 2.845, the pig director's 189.3 and 212.0 at
+  2.896 and 2.897, the rabbit's 101.5, 109.1, 125.5, 210.9 and 119.5 at 2.803 to 2.822; three new: the bull's 103.3% at
+  2.871 s and the sheep's 117.8 at 2.838, beside their landings, and the rabbit's 100.0 at 2.697 (99.96 before), 124 ms
+  before its own (kept-rises-f22.mjs: kept-rises-e3-r23c-window.txt).
+- The worst readings: the sheep's 342% against 733 (its worst now its roll's tail-flip at 2.712 s, 337 before), the
+  bull's 167 against 216 (2.870 s, in its roll), the horse's 203 against 206 (now its reach for the floor's, 203 before
+  too); the roll's worst lower on five (the sheep's, the bull's and the horse's above, the pig director's 212 to 175,
+  the pig foreman's 133.8 to 133.0) and higher on the dog, under the limit (82.8 to 84.9% at 3.054 s: gatediff2.mjs,
+  gatediff2-e3-r23c-window.txt, every phase's worst moving half a point or more); the rabbit's late roll's worst 211 to
+  172 (its roll's worst, 291 at 2.604 s, as before). Readings kept and higher by more than 0.2 points: 30, all in the
+  roll (kept-rises-e3-r23c-window.txt; by their exact values; each group's largest rise, and where it ends): the
+  donkey's nine at 2.846 to 2.875 s, by 0.2 to 6.6 (to 113.0% at 2.874), the horse's six at 2.731 to 2.736, by 0.3 to
+  5.4 (to 124.4 at 2.735), the sheep's tail-flip five by 2.8 to 5.6 (to 339.2 at 2.711; the highest of them 342.4, at
+  2.712) and its 2.815 by 2.0, the pig director's five at 2.841 to 2.858 by 0.4 to 5.2 (to 110.4 at 2.858), the bull's
+  three by 0.5 to 6.2 (to 159.4 at 2.865), the pig foreman's 2.820 by 0.2; every other kept reading by 0.2 points at
+  most. Single instants under the limits rise by up to 99 points beside the removed ones (the sheep's 0 to 98.7% at
+  2.839 s, the bull's 0 to 54.1 at 2.875, the donkey's 0 to 37.6 at 2.883, the horse's 15.7 to 53.2 at 2.800, the
+  rabbit's 5.5 to 38.4 at 2.823, the pig director's 23.4 to 35.9 at 2.864, the dog's 10.4 to 16.8 at 3.045:
+  instant-moves-f22.mjs, instant-moves-e3-r23c-window.txt, every move of 5 points or more).
+- The wrench rule's time lower on three windows (the horse's 0.035 s to 0.025, the sheep's 0.030 to 0.020, the rabbit's
+  0.055 to 0.050), its instants fewer on five; the contact force's peak the sheep's 2.4334 to 2.4359 body weights at
+  2.714 s; every point's fastest within 0.002 m/s, the joints within 0.016 degrees; the donkey's capsule overlap (its
+  lower trunk and left shank at 4.810 s) 11.849 to 11.851 mm, 1.18 to 1.19 cm as the gate prints it, and the phases'
+  force maxima outside the roll within 0.35 N (the horse's back to the floor 14.85 to 15.20 N: round 4 of the review,
+  review-fix23-r4\gdiff4-e3-r23j-window.txt); every rule's pass as before; the cow's and the skunk's gates the same to
+  the byte.
+- Each change alone (var-r23d, the landing step's; var-r23e, the re-seat's) leaves half the dip: the sheep's -3.6 and
+  -3.8, -4.2 and -4.2 m/s^2 at 2.836 and 2.837 s, against -7.5 and -7.9 before and -0.3 and -0.1 with both
+  (probe-roll-acc.mjs). Tried and not kept: the roll path drawn without the track's slope limiter (limit:false, the rule
+  for a channel sampled from a solver): the sheep's landing the same to the decimal, no knot there an extremum
+  (var-r23b).
+
+`tests/natural-traversal.test.mjs`: the window test's roll block adds the landing: read every millisecond from 15 ms
+before the roll's first rock row to 15 ms after, the centre of mass's vertical acceleration changes by at most 1.5 m/s^2
+from one millisecond to the next. Fix 22's code fails it on seven windows, 2.14 to 11.81 m/s^2 (the sheep's at 2.836 s:
+test-land-r23f.log, the test file on var-f22s's code with this check), the landing step's change alone (var-r23d) on
+six, 1.88 to 5.35, the re-seat's alone (var-r23e) on six, 2.03 to 6.55 (test-land-r23d.log, -r23e.log); the tree reads
+0.42 to 1.26, the dog's 14.5 ms before its landing (probe-land-jerk-grid.mjs on var-r23c, the check's own grid:
+land-jerk-grid-r23c-a.txt, -b.txt). Only the cow's and the skunk's rolls never land: a window that stopped landing
+fails, not skips the checks. The landing row names the foot that landed (its mesh and its hoof's bone), and stands
+within 0.05 mm of its neighbours' mean height: 0.007 to 0.009 mm on the tree, 0.08 to 3.0 on fix 22's code and with the
+re-seat's change alone, on all nine landings (probe-land-row.mjs: land-row-r23g.txt, -f22s.txt, -r23e.txt, -r23d.txt).
+The jolt's bound passes a landing row lifted 1.1 mm (the donkey's with the re-seat's change alone, var-r23e: its row
+1.111 mm up, 1.29), which the row's check fails, and a one-sample lift of 0.44 mm by the re-seat (the donkey's with the
+landing step's change alone, var-r23d, 1.49: land-jerk-grid-donkey-halves.txt; on the tree's code its hoof is 0.498 mm
+under the floor at 2.8873 s, its trunk 0.057: probe-reseat.mjs on var-r23i, the tree's dive with the re-seat logged,
+reseat-r23i.txt); fix 22's pig foreman, its row 0.68 mm up, reads 1.13 (land-jerk-grid-f22s-pf-goat.txt). The bound
+reads the corner at each kink's apex alone: 15 to 45 ms out, where the averaging's far corners lie, fix 22 read up to
+11.4 (the dog's, 24.5 ms after its landing; the sheep's 5.6 and the horse's 4.9, 31 ms after), the tree 1.6 at most (the
+dog's 1.57, 19.5 ms after: probe-land-jerk-ring.mjs, land-jerk-ring-f22s.txt, -r23g.txt); the 2.14 to 11.81 above are
+figures within the 15 ms. Fix 22's code fails the row's check on all nine landings, 0.084 to 2.995 mm
+(test-land2-r23f.log: the test file on var-f22s's code), and so does the re-seat's change alone (test-land2-r23e.log);
+round 0 of this fix, which recorded the seat on the landing row, fails the foot's on all nine, and so does the landing
+step's change alone, built on it (test-land2-r23c.log, -r23d.log); the cow and the skunk pass on every one. The test
+file passes (22 of 22 tests: test-f23-tree-r4.log); the suite passes (2579 tests: suite-f23-r4.log).
+
+Left: the roll's other 151 readings (phase-readings.mjs on var-r23c), by when they come: at the sheep's landing itself
+3, up to 117.8% (113.9, 116.6 and 117.8 at 2.836 to 2.838 s, its 733% now 116.6); in the 70 ms before the hooves land 73
+(the donkey's 23 at 2.828 to 2.880 s, the pig director's 12 at 2.838 to 2.858, up to 175%, the bull's 11 at 2.853 to
+2.871, the horse's 11 at 2.728 to 2.750, the pig foreman's 8 at 2.815 to 2.835, the sheep's 5 at 2.777 to 2.815, the
+rabbit's 2 at 2.804 to 2.805, 172%, the goat's 1 at 2.851), where the bull's centre of mass falls nearly freely about
+its seat while it needs a sideways push the floor cannot give with so little weight on it (-9.3 to -9.7 m/s^2 from 2.866
+to 2.870 s, asking 0.19 body weights: probe-roll-acc.mjs on var-r23g, acc-bull-r23g.txt; on fix 22's code -9.5 to -10.2,
+0.18, acc-bull.txt); earlier in the roll 75: the skunk's 37 at 2.591 to 2.627 s (215%) as its roll stalls and it sits
+up, the rabbit's 16 at 2.593 to 2.608 (291%) where the plan leans on its tail and its 11 at 2.695 to 2.710 (141%), the
+sheep's tail-flip 5 at 2.708 to 2.712 (342%), the donkey's 4 at 2.677 to 2.702 (264%), the pig director's 2 at 2.673 to
+2.675. On every window the softening's re-seat still jumps for one sample elsewhere in the roll, by 0.3 to 1.1 mm (the
+pig director's -1.1 at 2.680 s, beside its two; the donkey's -0.67 at 2.687, beside its four; the goat's -0.63 at 2.707:
+probe-reseat.mjs on var-r23i, reseat-r23i.txt), each the same corner after the averaging as this fix took out at the
+landing, not yet weighed against the readings.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

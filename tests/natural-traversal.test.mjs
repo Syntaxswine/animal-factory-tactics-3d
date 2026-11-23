@@ -763,7 +763,29 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // here (the rig, at its 5 ms samples, 5.6 and 5.2), and the sheep's 5.7, which fell between the rig's samples.
    {const h=.001,c=[];for(let t=motion.roll.start-h;t<=motion.roll.end+h+1e-9;t+=h)c.push(motion.apply(t/motion.duration).com);let push={f:0};
     for(let i=1;i<c.length-1;i++){const a=[0,1,2].map(j=>(c[i-1][j]-2*c[i][j]+c[i+1][j])/(h*h));a[1]+=9.81;const f=Math.hypot(...a)/9.81;if(f>push.f)push={f,t:motion.roll.start+(i-1)*h};}
-    assert.ok(push.f<=5,`window: the roll asks the floor for ${push.f.toFixed(1)} body weights at ${push.t.toFixed(3)} s`);}
+    assert.ok(push.f<=5,`window: the roll asks the floor for ${push.f.toFixed(1)} body weights at ${push.t.toFixed(3)} s`);
+    // The hooves land with the seat still down (window-dive.js). Only the cow's and the skunk's rolls stall before
+    // their hooves land: a window that stopped landing fails here, not skips the checks. The landing row (the roll's
+    // first rock row) names the foot that landed (were the seat recorded there, the stalled-roll check above would read
+    // every window's tail, and pass) and stands within 0.05 mm of its neighbours' mean height (0.007 to 0.009 mm now;
+    // lifted onto the arriving hoof for that one step, fix 22's stood 0.08 to 3.0 mm off on all nine landings). Read
+    // every millisecond from 15 ms before the landing to 15 ms after, the centre of mass's vertical acceleration
+    // changes by at most 1.5 m/s^2 from one millisecond to the next: with the row's rise and the softening's one-sample
+    // lift onto a tucked hoof under the floor, each a kink in the hips' path, fix 22 read 2.1 to 11.8 on seven windows
+    // (the sheep's, where the phantom-wrench rig read 733% of its limit), 1.9 to 5.4 and 2.0 to 6.6 on six with either
+    // change alone; 0.4 to 1.3 now (the dog's 1.26, 14.5 ms before its landing). That bound passes a landing row lifted
+    // 1.1 mm (fix 22's landing step with the re-seat's change: the donkey's, 1.29), which the row's own check fails,
+    // and a one-sample lift of 0.44 mm by the re-seat (fix 22's re-seat with the landing step's change: the donkey's,
+    // 1.49); it reads the corner at each kink's apex alone: 15 to 45 ms out, where the averaging's far corners lie, fix
+    // 22 read up to 11.4 (the dog's, 24.5 ms after its landing), the tree 1.6 at most (the dog's 1.57, 19.5 ms after).
+    {const land=rows.find(r=>r.rock)?.t,stalls=['cow','skunk'].includes(p.id);
+     assert.ok((land===undefined)===stalls,`window: the roll's hooves ${land===undefined?'never land':`land at ${land.toFixed(3)} s`}, where only the cow's and the skunk's rolls stall`);
+     if(land!==undefined){const li=rows.findIndex(r=>r.rock),rise=1e3*(rows[li].p.y-(rows[li-1].p.y+rows[li+1].p.y)/2);
+      assert.ok(/hoof|boot|foot|toe/.test(rows[li].part)&&/hoof/.test(rows[li].bone),`window: the roll's landing row at ${land.toFixed(3)} s names the ${rows[li].part} on the ${rows[li].bone}, not the foot that landed`);
+      assert.ok(Math.abs(rise)<=.05,`window: the roll's landing row at ${land.toFixed(3)} s stands ${rise.toFixed(3)} mm off its neighbours' mean height`);
+      const ay=i=>(c[i-1][1]-2*c[i][1]+c[i+1][1])/(h*h);let jolt={d:0};
+     for(let i=2;i<c.length-1;i++){const t=motion.roll.start+(i-1)*h;if(Math.abs(t-land)<=.015){const d=Math.abs(ay(i)-ay(i-1));if(d>jolt.d)jolt={d,t};}}
+     assert.ok(jolt.d<=1.5,`window: the roll's landing at ${land.toFixed(3)} s jolts the centre of mass's fall by ${jolt.d.toFixed(2)} m/s^2 in a millisecond at ${jolt.t?.toFixed(3)} s`);}}}
    // The roll keeps the floor: read on every point of the body every 5 ms (the phantom-wrench rig's contacts), its
    // lowest point stays within the rig's centimetre of the floor from the roll's start to its end. Planning the roll
    // freely, the balance smoothed its landings (the centre of mass filtered at about 4 Hz) and lifted the goat's seat,

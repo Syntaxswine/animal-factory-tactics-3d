@@ -74,6 +74,11 @@ export function createWindowDive(worker,profile={id:'horse'}){
  const posed=(tr,limbs,t)=>posedFrom(tr,limbs,{elbowAway:[1,.15,0],poles:steady&&t!==undefined?id=>steady(id,t):null,offsets:fit?.limb&&t!==undefined?id=>fit.limb(id,t):null,snaps:fit?.plant&&t!==undefined?id=>fit.plant(id,t):null,turns:turnRef&&t!==undefined?b=>turnRef(b,t):null});
  const tuckLimbs=Object.fromEntries(Object.entries(TUCK).map(([k,p])=>[k,k.startsWith('leg')?{f:'pelvis',p}:{f:'chest',p,elbow:TUCK_ELBOW[k]}]));
  const lowest=()=>{probe.update();return probe.lowest();};
+ // The trunk's lowest point: the lowest of everything but the feet. A tucked hoof under the floor is the roll's
+ // landing, which the rock takes in (below), not a support that lifts the body. For before the rock alone: FEET reads
+ // the meshes' names, so a trouser cuff skinned to a hoof's bone counts as trunk, which before the rock stays well
+ // above the trunk's lowest point but in the rock sinks below the seat, and would lift the body onto it there.
+ const FEET=/hoof|boot|foot|toes/,trunkLow=()=>{probe.update();let b={y:Infinity};for(let i=0;i<probe.count;i++){const part=probe.names[probe.part[i]];if(!FEET.test(part)&&probe.y[i]<b.y)b={x:probe.x[i],y:probe.y[i],z:probe.z[i],part,bone:probe.boneNames[probe.bone[i]]};}return b;};
  // The seat's lowest point: the lowest the hips bone carries (the trouser legs are the same mesh as the seat).
  const seatLow=()=>{probe.update();let b={y:Infinity};for(let i=0;i<probe.count;i++)if(probe.boneNames[probe.bone[i]]==='hips'&&probe.y[i]<b.y)b={x:probe.x[i],y:probe.y[i],z:probe.z[i],part:probe.names[probe.part[i]],bone:'hips'};return b;};
  const shapeOf=row=>{const [flex,side,twist,nod,tilt,turn]=row;return {spineQ:relQ(flex,side,twist),headQ:relQ(nod,tilt,turn)};};
@@ -101,7 +106,7 @@ export function createWindowDive(worker,profile={id:'horse'}){
  for(let i=0;i<2;i++){const tr={hips:p0,hipsQ:q0,...s0,...chestOf(p0,q0,s0.spineQ)};body.pose(posed(tr,tuckLimbs),'roll start');p0=p0.clone().add(V(0,-lowest().y,0));}
  // ROCK: how far the body rocks on over its seat once the hooves are down, braked to rest by them.
  const ROCK=32*DEG,rollRows=[],impacts=[],SOFT=.04;let caughtAt=null;{const dth=.5*DEG;let q=q0.clone(),p=p0.clone(),t=0,w=ROLL.omega,E=null,prev=null,u=0,caught=null,brake=0,rocked=0;
-  for(let k=0;k*dth<=ROLL.maxTurn*DEG;k++){const tr={hips:p,hipsQ:q,...s0,...chestOf(p,q,s0.spineQ)};const P=body.pose(posed(tr,tuckLimbs),'roll');let L=lowest();if(brake)L=seatLow();
+  for(let k=0;k*dth<=ROLL.maxTurn*DEG;k++){const tr={hips:p,hipsQ:q,...s0,...chestOf(p,q,s0.spineQ)};const P=body.pose(posed(tr,tuckLimbs),'roll');let L=lowest();const landed=!brake&&caught===null&&FEET.test(L.part),foot=landed?L:null;if(brake||landed)L=seatLow();
    if(Math.abs(L.y)>1e-9){p=p.clone().add(V(0,-L.y,0));for(const n of Object.keys(P))P[n].y-=L.y;}
    const contact=V(L.x,0,L.z),c=body.com(P),IP=inertiaAbout(massPoints(P),contact,axis),U=BODY_MASS*G*c.y;
    // braked as w0 (1 - rocked / ROCK)^.75: to rest over ROCK with the braking itself fading out, so the get-up starts at
@@ -113,17 +118,21 @@ export function createWindowDive(worker,profile={id:'horse'}){
    // The hooves land with the seat still down: the body rocks on over the seat, the hooves braking it to rest over ROCK.
    // Turning about the hoof instead lifted the seat with the centre of mass 40 cm behind the feet and 35 J to rise over
    // them where it needed 180 (it would fall back); stopped dead on both, it sat 6 cm behind its seat, tipping back.
-   const landed=!brake&&caught===null&&/hoof|boot|foot|toes/.test(L.part);if(landed){brake=prev.w;rocked=dth;w=brake*Math.pow(1-rocked/ROCK,.75);jumped=false;}
+   // The landing's own step keeps the seat on the floor as the rock's do: re-seated on the arriving hoof, the step's
+   // lowest point, the body rose 0.7 to 3.0 mm for that step and sat back down the next (eight windows; the goat's
+   // 0.1), and the softening's average of that one-step rise left a kink in the hips' fall at the landing. Its row
+   // still names the arriving foot (part, bone): roll.rows records which foot landed.
+   if(landed){brake=prev.w;rocked=dth;w=brake*Math.pow(1-rocked/ROCK,.75);jumped=false;}
    // Each step's time from its mean spin (the step before's alone ran 12% fast as the body slowed rising about the hoof,
    // and the curve through the steps had to lose it at the hand-over), across an impact the spin before it.
    if(prev)t=prev.t+(jumped||prev.w+w<1e-6?dth/prev.w:2*dth/(prev.w+w));if(jumped)impacts.push({t,from:prev.part,to:L.part,lost:prev.E-E});
-   const up=V(0,1,0).applyQuaternion(tr.chestQ),about=landed?prev.contact:contact;rollRows.push({t,p:p.clone(),q:q.clone(),turn:k*dth,contact:about.toArray(),part:L.part,bone:L.bone,w,com:c,upright:up.y,u,impact:jumped,rock:!!brake});
+   const up=V(0,1,0).applyQuaternion(tr.chestQ),about=landed?prev.contact:contact;rollRows.push({t,p:p.clone(),q:q.clone(),turn:k*dth,contact:about.toArray(),part:(foot||L).part,bone:(foot||L).bone,w,com:c,upright:up.y,u,impact:jumped,rock:!!brake});
    // Stop once the rock has the body at rest, sitting up (chest within 10 degrees of upright), or if the roll runs out
    // of speed. Stopped at 35 degrees, just before the hooves landed, the get-up had to catch the roll's spin (3.3 rad/s)
    // itself, with the feet 40 cm ahead of the centre of mass (46% of the body's weight of phantom force).
    if(landed)caught=t;
    if(brake?w<.05:w<.25||up.y>Math.cos(10*DEG))break;
-   const r=Q().setFromAxisAngle(axis,dth);q=r.clone().multiply(q);p=p.clone().sub(about).applyQuaternion(r).add(about);prev={contact:about,w,part:L.part,E,t};}
+   const r=Q().setFromAxisAngle(axis,dth);q=r.clone().multiply(q);p=p.clone().sub(about).applyQuaternion(r).add(about);prev={contact:about,w,part:(foot||L).part,E,t};}
   caughtAt=caught;}
  const last=rollRows.at(-1),pivot=V(...last.contact),ROLL_T=last.t,ROLL_END=ROLL.start+ROLL_T,CATCH_END=ROLL_END,END=CATCH_END+SHAPE_POST.at(-1)[0];
  for(const r of rollRows)r.t+=ROLL.start;
@@ -176,7 +185,14 @@ export function createWindowDive(worker,profile={id:'horse'}){
    fits=k=>n-k>=H,whole=k=>smooth((n-k-H)/H),seated=[];
   for(let k=-1;k<=n;k++){const r=at(k);let p=r.p.clone(),a=r.a;if(fits(k)){const avg=V();let ang=0;for(let j=k-H;j<=k+H;j++){const f=H+1-Math.abs(j-k),s=at(j);avg.addScaledVector(s.p,f);ang+=f*s.a;}
     const w=whole(k);p.lerp(avg.divideScalar(W),w);a+=(ang/W-a)*w;}
-   const q=Q().setFromAxisAngle(axis,a).multiply(q0);let dn=0;if(k>=0){const tr={hips:p,hipsQ:q,...s0,...chestOf(p,q,s0.spineQ)};body.pose(posed(tr,tuckLimbs),'roll soft');dn=-(r.t>=rockFrom?seatLow():lowest()).y;}seated.push({t:r.t,p,q,a,down:dn});}
+   // Before the rock the re-seat reads the trunk alone: in the averaged poses a tucked hoof dips under the floor just
+   // before its landing (the sheep's 2.3 mm, 2.1 below its seat), and lifting the body onto it for that one sample left
+   // a kink of its own. Each of the two one-sample rises, averaged, made a corner in the hips' fall: read as the window
+   // test's landing check reads it, together they changed the centre of mass's vertical acceleration by 2.1 to 11.8
+   // m/s^2 in a millisecond on seven windows (the sheep's 11.8 at 2.836 s; the phantom-wrench rig read 733% of its
+   // limit at 2.837), the landing step's change alone left 1.9 to 5.4 on six, the re-seat's alone 2.0 to 6.6 on six;
+   // with both, 0.4 to 1.3.
+   const q=Q().setFromAxisAngle(axis,a).multiply(q0);let dn=0;if(k>=0){const tr={hips:p,hipsQ:q,...s0,...chestOf(p,q,s0.spineQ)};body.pose(posed(tr,tuckLimbs),'roll soft');dn=-(r.t>=rockFrom?seatLow():trunkLow()).y;}seated.push({t:r.t,p,q,a,down:dn});}
   // The re-seat goes with the window: the raw path is on the floor already at every step (re-seated sample by sample
   // there, the lowest vertex's own jumps came back as a 13 m/s^2 dip of the hips); before the start, the start's.
   const downAt=j=>seated[Math.max(j,0)+1].down,soft=seated.map((r,i)=>{const k=i-1;let y=0;if(fits(k)){for(let j=k-H;j<=k+H;j++)y+=(H+1-Math.abs(j-k))*downAt(j);y*=whole(k)/W;}return {t:r.t,p:r.p.clone().add(V(0,y,0)),q:r.q,a:r.a};});
