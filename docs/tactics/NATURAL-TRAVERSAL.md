@@ -4864,6 +4864,247 @@ against its 10. The test file passes (19 of 19 tests: test-rel8.log, on var-rel8
   band.
 - The horse's head in the top's far edge (2.9 mm for 8 ms at 3.933 s).
 
+### 2026-11-22 (physics balance, forty-second part): the window's hands to the floor
+
+After the forty-first part (15a4e470) the eleven windows read 529 readings over the gate's limits (the horse 34, the
+goat 44, the bull 29, the cow 53, the donkey 60, the sheep 37, the skunk 126, the pig foreman 11, the pig director 40,
+the rabbit 79, the dog 16, the twenty-fourth part's counts), 197 of them in the gate's phase "Hands to the floor" and
+157 in the roll; the low walls 2 and the climbs none (motion/var-f20w's gate results for the windows and the low walls,
+var-rel4's for the climbs: var-rel4's code lines, which play every crossing as 15a4e470's to the bit,
+next-letgo/same-rel4-rel8-wall.txt and same-rel4-rel8-window-lowwall.txt; scratchpad next-window/ holds every probe and
+output named here but the var-* copies and those named with next-letgo/, and its NOTES.md is the log).
+
+Diving through the window the right hand braces on the far face below the sill (window-dive.js BRACE, 1.42 to 2.06 s),
+the left hand sets down on the floor (2.08 s) and the right follows it there (2.18 s). Two things went wrong there as
+the gate reads it:
+- The brace's end. The balance planned the brace as a grip to its last touch, and a grip as able to give any force
+  (planCentre: up to fmax body weights, either way); as the right palm came off the far face its points thinned, as the
+  climbs' palms did off the top (the forty-first part), and the gate read what they could not give: the cow's 631% of
+  its limit at 2.089 s, the goat's 247% at 2.079 (kind-readings.mjs: readings-f20w-window.txt). The forty-first part's
+  release lets a grip go only into a flight; this one ends on the feet, the left hand on the floor being the feet's
+  outline.
+- One palm alone. From the brace's end to the right hand's landing the left palm alone held the body, and on 29 of the
+  phase's 41 rows over the gate's limits, on eight windows, the torque the gate found left over lay mostly about the
+  vertical, 37 to 61 N·m (twist-rows.mjs: twist-rows-f20w-w2-f21.txt; torque-axis.mjs sorts every window's rows so).
+  planCentre puts a feet sample's pressure point where the push meets the body's level turn, p = c - k a + (dL_z, -dL_x)
+  / (M fy); so placed, the push turns the body about the vertical by -(dL_x a_x + dL_z a_z) / fy (the k terms cancel),
+  and nothing in the plan meets that with the body's own turn about the vertical, dL_y. On two feet the patches' twist
+  against the floor gives the difference; one palm, its seven points 1.3 cm from their middle on average, cannot: on
+  those rows the push so placed asked -90 to 28 N·m of twist against the body's own -18 to 36, as the gate reads the
+  force and the turn. A force through one point turns the body only about axes across the line from the centre of mass
+  to that point (and across the force): one palm cannot change the body's spin about that line.
+
+Two changes in traversal-balance.js:
+- releaseGrips lets a grip go onto the feet where each of its last RELEASE samples already stands on an outline of its
+  own, with an area, and the feet bear for longer than LOST after it: those samples are the feet's, on their own
+  outline, their centre and raw contacts kept, marked released. supportAt keeps for this, on a grip sample, the outline
+  of what stands on the floor or a top beside the grip (feetBox, feetHull and feetFloor, which planCentre does not
+  read). Released so (probe-released.mjs: released-w5.txt against released-rel8.txt): every window's brace (from 2.075
+  to 2.135 s, onto the left palm on the floor: the cow's at 2.085, an outline 1.3 cm from its middle on average:
+  probe-released-outline.mjs, released-outline-f21.txt), the pig director's grip on the window's sill as it slides over
+  (1.360 s, onto what lies on the sill beside its hands, a 7.3 cm outline), every low wall's hands as the feet absorb
+  (1.670 to 1.685 s) and every climb's palms on the far face as the feet land (4.730 to 4.745 s). A grip whose last
+  samples have no outline of their own (or one with no area, a single floor point's), or that the feet follow for LOST
+  or less, is left.
+- holdPatchSpin, in bodyTurn's contacts: over a run of samples on a support that cannot twist, the feet or a hold on one
+  outline whose mean reach from its middle is under PATCH (4 cm: one palm, one hoof), the contacts' target angular
+  momentum keeps its change along the line from the centre of mass to the outline's middle, at its floor, within a rough
+  allowance for what the patch can give about that line (PATCH_TWIST, a half, of what friction, MU, gives at the body's
+  weight over the outline's reach, per second: friction twists the patch about the floor's normal, only part of which
+  lies along the line, and the push's point can wander across the patch), and what it kept eases back over PATCH_EASE
+  (0.1 s) after the run, unless a flight cuts that easing back (a flight holds its own turn): the turn then holds the
+  body's spin about that line as a flight holds all of it. It acts (probe-point-supports.mjs: point-supports-w3.txt) on
+  every window's hands to the floor (runs from between 2.075 and 2.130 s to 2.160) and on small patches in five windows'
+  rolls, and in the balance's first round on the pig foreman's feet on the sill as it slides over (1.390 to 1.410 s, a
+  patch 3.0 to 3.3 cm in reach), which the played motion keeps (its slide over's worst 47.82% at 1.392 s against 50.72
+  with the release alone); on no low wall; on the climbs only on single samples, the take-off's last foot sample, which
+  turnAir already holds as flight. The climbs and the low walls play as without it, to the bit (probe-same-motion.mjs,
+  every 5 ms: same-w3-w5-wall-lowwall.txt).
+
+So (motion/var-f21, gated: the tree's code lines but the area guard on releaseGrips, which no crossing reaches: the
+tree's own, motion/var-f21b, play every rig point of all 33 crossings as var-f21, every millisecond, to the bit,
+same-f21-f21b.txt; and var-f21 plays them as var-w5, where the work was measured, same-w5-f21-window.txt and
+same-w5-f21-wall-lowwall.txt, its eleven window gates equal to var-w5's), phantom-wrench 1.2.0 `--gate` on frozen
+copies:
+- The windows read 368 readings against 529 (readings-f21-window.txt): the horse 30, the goat 14, the bull 20, the cow
+  19, the donkey 56, the sheep 21, the skunk 101, the pig foreman 11, the pig director 30, the rabbit 50, the dog 16.
+  Hands to the floor 38 against 197 (phase-counts-f20w-f21-window.txt: the horse's 6 and the sheep's 19 to none, the
+  goat's 36 to 7, the bull's 10 to 2, the cow's 36 to 3, the donkey's 27 to 19, the skunk's 29 to 4, the rabbit's 34 to
+  3), and none of its rows over the limits by torque reads its leftover torque mostly about the vertical
+  (twist-rows-f20w-w2-f21.txt); new among its readings (newreadings-hands-f20w-f21.txt), the donkey's four, 145% at
+  2.136 and 2.137 s and 125 to 128% at 2.177 and 2.178 (their causes below), and the goat's 114% at 2.093 against 96.
+  The pig director's slide over 10 against 20. The roll 166 against 157 (newreadings.mjs:
+  newreadings-roll-f20w-f21.txt): the sheep's three new, 295 to 337% at 2.710 to 2.712 s against none, are its tail,
+  which the tail fit now lifts off the floor there where it held the body (the row at 2.710 s lists the tail on the
+  floor before, not now); the rest are readings near the limit crossing it either way as the turn the hand's stretch
+  adds unwinds into the roll (UNWIND, 0.3 s; the bodies up to 10 to 26 mm off through the roll:
+  vertdiff-rel8-f21-window-roll.txt), eleven that read 83 to 99% before now reading 101 to 125% (the horse's two, the
+  donkey's four, the skunk's one, the rabbit's four) and five that read over now 84 to 97% (the goat's, the bull's, the
+  skunk's, the rabbit's two). Not the hold on the roll's own small patches: PATCH 2 cm, which leaves out every one but
+  the pig director's (2.690 to 2.715 s: point-supports-w5r-r02.txt), reads fix 21's readings over the limits instant for
+  instant on every window (newreadings-f21-w5r.txt), and the roll's new readings fall on windows where it holds no roll
+  patch. The cow's right foot in 11 against 12; every other phase's count the same.
+- The worst readings (kind-readings.mjs): the goat's 154% against 247 (hands to the floor, 2.095 s); the cow's hands to
+  the floor 134% against 631 (2.095 s; its worst, the right foot in's 472% at 3.194, as before); the pig director's
+  slide over 215% against 347 (1.350 s); the rabbit's 291% against 298 (the roll). Three rise: the sheep's by 0.18
+  points (732.8% at 2.837 s, in its roll). The skunk's, 457% at 2.093 s against 339, where its brace's contact thins to
+  one point beside the left palm (a grip sample there): those points cannot give the force the body asks, some 650 N
+  toward the far face with its sideways part, together with the moment about the centre of mass that comes with it (the
+  physics check lets a hand on a face pull, so what it reads is that moment, not a pull); with the release alone
+  (var-w2) it reads 367% there, and the hold adds 90 points through the force, its sideways part 405 N against 234 (212
+  before), the push toward the face the same on all three, 37 ms before the hold's own run starts (2.130 s) (the gate's
+  solve again with the demand swapped between the copies, probe-nnls-split.mjs and nnls-swap.mjs copied from the review:
+  nnls-split-rel8-skunk.txt and the others, nnls-swap-skunk.txt). And the donkey's, 283% at 2.135 s against 239 there
+  (its hands to the floor's worst before, 258% at 2.141, reads 205 now), on its left palm alone just after the brace's
+  release (2.125 to 2.130 s), by force: there the level force the gate reads, 294 N (310 on fix 20), is more than the
+  palm's friction holds (186 N on fix 20, at the rig's 1.2), and the release raises its part toward the wall, 149 -> 177
+  N (with the release alone, var-w2, it reads 264%); the hold adds 19 points through the part of the body's turn across
+  the line to the palm, 19.6 N·m apart, which the palm can give only with force. So the gate's solve again with one part
+  of the demand swapped at a time between the copies (nnls-fparts.mjs and nnls-along.mjs copied from the review:
+  fparts-donkey-mine.txt, along-donkey-f21b-w3-mine.txt): on fix 20's contacts and turn, the release's force toward the
+  wall alone reads 262.7%, its push alone 243.1%; on fix 21's contacts and force, the release's turn across the line
+  alone reads 265.9%, about the line alone 282.9% (the spin about the line, 40 N·m against 4, goes to the torque left
+  over, 75 N·m, under the force's share). That spin is the hold's own start: over the first milliseconds of the donkey's
+  stretch on one palm, 2.134 to 2.138 s, its spin about the line to the palm changes at 29 to 60 N·m with the hold, 5 to
+  26 without. Of the donkey's four new readings the release makes three, over the limit with the release alone (var-w2:
+  104.3% at 2.136 s, 102.0 and 100.6% at 2.177 and 2.178 with both palms down; fix 20 82.0, 98.0 and 96.8), and the hold
+  raises them to 145, 128 and 125%: at 2.136 its turn, about 23 points of it its spin about the line, which makes that
+  reading one by torque (121.9% with the release's spin about the line instead), the rest its turn across the line
+  (105.9 with the release's whole turn), at 2.177 its force (83.9% with the release's level force; its turn lowers it
+  there, 144.0 with the release's). The hold's own start makes the fourth, 145% at 2.137 s by torque (65.9 with the
+  release alone, 70.6 on fix 20; 58.3 with the release's spin about the line) (probe-nnls-split.mjs,
+  nnls6-f21b-donkey-mine.txt, along6-donkey-f21b-w3.txt, fparts6-donkey-f21b-w3.txt). The goat's new reading, 114% at
+  2.093 s in its first stretch on one palm (2.086 to 2.096 s), is the hold's: 99.1% with the release alone, 95.6 on fix
+  20 (readings-at.mjs). The hold lowers its stretch's start on seven windows (the horse's, the goat's, the bull's, the
+  cow's, the sheep's, the skunk's and the pig director's, every millisecond of the first five) and the rabbit's first
+  stretch, the pig foreman's after its first millisecond (22 to 14 N·m against 22 to 18); it raises the donkey's, the
+  dog's (28 and 27 against 23 and 21 at 2.094 and 2.095 s, its stretch on one palm starting at 2.091 with the hold,
+  2.094 without) and the first 2 ms of the rabbit's second stretch (27 and 27 against 9 and 9 at 2.136 and 2.137 s)
+  (stretch-starts.mjs on patch-spin2-f21b-series.txt and patch-spin2-f21n2-series.txt; rows-donkey.mjs:
+  rows-donkey-f20w-f21.txt). Under the limit the dog's hands to the floor's worst 85.0% at 2.161 s against 83.1 at 2.158
+  (80.9 at 2.161), and as its brace lets go, from 2.090 to 2.093 s, 28 to 73% against 7 to 20.
+- The gate's other phases, rules and points (gatediff2.mjs, at full precision: the rules' passes, the wrench rule's
+  time, the contact force's peaks, every row's and 1 ms check's reading, every point's fastest, the joints' extremes,
+  the overlaps, jumps, pops and unresolved instants: gatediff2-f20w-f21-window.txt; 30995 of the 68356 rows and 1 ms
+  checks read differently by more than 1e-9 points, 4505 by more than 0.01): the wrench rule's time over its limits fell
+  on nine windows, its count of spans over them on six while it rose on the donkey (7 -> 8) and the pig director (4 ->
+  5) (the goat's 0.045 s and 35 instants between the samples to 0.010 and 12, the cow's 0.055 and 42 to 0.030 and 13).
+  The phase after the hands land, "Back to the floor", reads up to 20 points higher under the limit on seven windows
+  (the dog's 32.9 -> 52.9%, the rabbit's 34.2 -> 53.5, the cow's 27.2 -> 41.8), lower on three, and the donkey's 159.0
+  -> 163.2% over it; the roll's worst rises by more than a point on five (the goat's 104.8 -> 111.4%, the pig director's
+  206.1 -> 212.0, the donkey's 259.5 -> 264.1, the horse's 202.5 -> 206.1, the dog's 81.6 -> 82.8) and falls by more
+  than a point on three (the cow's 94.9 -> 33.2%, the rabbit's 297.8 -> 290.5, the pig foreman's 138.2 -> 133.8); the
+  horse's reach for the floor 200.5 -> 202.9%; the sheep's right foot in 25.8 -> 35.3%; the cow's left foot in 44.5 ->
+  28.7%; the pig director's left foot in 2.9 -> 4.4%; any other phase within 3 points. Every rig point's fastest within
+  0.12 m/s (the pig director's left toe 7.09 -> 7.21 m/s at 2.861 s), the points over the rule's 8 m/s the same (the pig
+  foreman's left toe 8.36 -> 8.39); the joints' extremes within 2.6 degrees (the goat's left elbow's least bend 12.0 ->
+  9.4 degrees at 2.031 s), none newly outside the rig's range; the contact force's peaks (every 1 ms) lower on six
+  windows (the cow's 3.361 -> 3.319 body weights at 2.635 s, the others by 0.006 at most), the pig director's 0.0002
+  higher and four others within 2e-6 higher, and at the 5 ms samples the donkey's 0.0022 higher (3.5593 -> 3.5615 at
+  2.685 s), every other lower or within 1e-5 higher; every rule's pass, the overlaps, jumps and pops as before, the
+  unresolved instants within 0.1 ms of where they were.
+- The low walls read 2 readings, as before (readings-f21-low-wall.txt): the pig foreman's absorb 7.7 -> 2.9% as its
+  hands let go onto the feet, every other reading within 0.86 points; every point's fastest within 0.08 m/s (the pig
+  foreman's left elbow 8.51 -> 8.43, the pig director's 8.68 -> 8.71, both over the rule's 8 m/s before and after), the
+  joints within 0.071 degrees; the contact force's peaks within 1e-5 body weights (the pig director's 7.7e-6), every
+  rule, overlap, jump and pop as before, the unresolved instants within 0.2 ms of where they were (the pig foreman's
+  1.6616 to 1.6624 s now 1.6614 to 1.6623: unres-phase.mjs) (gatediff2-f20w-f21-low-wall.txt).
+- The climbs read none, as before (readings-f21-wall.txt): as the feet land (4.745 s) the weight on the right foot reads
+  none on the goat, the bull and the cow, against 16.2, 15.8 and 16.8%, the phase's worsts now 8.6, 7.7 and 7.7% at
+  4.945 s, and the sheep's worst there 10.5 against 9.1 (4.945 s); before 4.70 s no reading moves by more than 0.0022
+  points, and from the landing single readings move by up to 21.5 points, none to the limit (the dog's 21.5% at 4.745 s
+  to none, the cow's 16.8, the goat's 16.2 and the bull's 15.8 likewise; the horse's 12.8% at 4.985 s and the pig
+  director's 6.1% at 4.741 from none); the contact force's peaks within 3e-5 body weights (the skunk's at the 5 ms
+  samples 2.1e-5), every point's fastest within 1e-5 m/s and every joint within 2e-4 degrees (gatediff2.mjs:
+  gatediff2-rel4-f21-wall.txt).
+
+What moves, every vertex every 1 ms (probe-vertdiff-k.mjs, var-rel8 against var-f21: vertdiff-rel8-f21-window.txt,
+-low-wall.txt, -wall.txt):
+- The windows' bodies at most 11 to 37 mm, most from 2.04 to 2.31 s, as the brace lets go and the hold comes and eases
+  back (the donkey's head 37.3 mm at 2.249 s, the dog's 34.4, the sheep's 33.0; the pig director's body the least,
+  10.9), and from 2.45 s still up to 10 to 26 mm, on nine windows most at 2.45 as the hold's move dies away into the
+  roll (from 2.45 to 3.00 s: vertdiff-rel8-f21-window-roll.txt; within it the pig director's 10.4 mm at 2.890, the cow's
+  10.8 at 2.479).
+- The tails: the tail fit (traversal-fit.js, solveTail), a choice among ways round the obstacles, takes another way on
+  four windows for whole stretches of the dive (probe-tail-diff.mjs: tail-diff-rel8-f21-a.txt, -b.txt): the sheep's 28.7
+  cm apart at 2.700 s (from 2.149 to 4.205 s), the pig director's 26.9 cm at 1.494 (1.186 to 1.953 s) and 23.7 at 2.614
+  (2.504 to 4.202), the cow's 22.8 cm at 3.472 (from 1.644 to 5.685 s, in stretches), the skunk's plume 16.4 cm at 2.338
+  (2.153 to 2.690); and on four low walls, whose bodies move 1.9 mm at most: the donkey's tail 9.6 cm at 1.500 s, the
+  dog's 6.9 cm at 1.460, the pig director's 2.3 cm at 2.120 and the pig foreman's 1.2 cm at 1.599
+  (vertdiff-rel8-f21-low-wall.txt). The cow's tail parts from where it was (by 1 cm) at 1.644 s with its body 0.04 mm
+  from where it was, the pig director's at 1.186 with its body 0.69 mm off; the sheep's and the skunk's at 2.149 and
+  2.153, their bodies by then 11.8 and 10.7 mm off (probe-tail-onset.mjs: tail-onset-rel8-f21-a.txt, -b.txt). The fit's
+  choice flips on fractions of a millimetre (Left: the tail fit's switch); in the video the tails stay mostly behind the
+  body.
+- The low walls' bodies 1.9 mm at most (the goat's and the sheep's at 1.670 s, as their hands let go onto the feet); the
+  climbs' 0.7 mm at most (from 4.72 to 4.74 s, as the palms let go onto the feet).
+
+Tried and not kept:
+- Holding the brace longer (BRACE's last key 2.06 -> 2.11 or 2.14 s: var-wb1, var-wb2; readings-wb1-window.txt,
+  readings-wb2-window.txt): 501 and 556 readings against 529, the thin end's spike moving with the hand and growing (the
+  cow's 631% to 1321% at 2.130 s with 2.11; 499% at 2.165 with 2.14).
+- Bounding the push's twist in the plan instead (var-w4: a row per feet sample keeping -(dL_x a_x + dL_z a_z) / fy
+  within the patch's twist of dL_y): 1359 readings (readings-w4-window.txt), the plan's centre 10 to 18 cm off its path
+  (probe-plan-twist.mjs: plan-twist-w4-cow.txt): on one patch the pressure point's rows fix where the centre lies along
+  the line and the twist row its acceleration there, which the authored turn does not agree with; the turn must hold the
+  spin, not the centre's path.
+- The hold's settings (var-w5r, var-w5t, var-w5e; readings-w5r-window.txt and the others): PATCH 2 cm (the palms, and
+  the pig director's roll patch at 2.690 s) read the same readings over the limits, 368; PATCH_TWIST 1, 373; PATCH_EASE
+  0.2 s, 380 (the roll 177).
+
+`tests/natural-traversal.test.mjs`: supportAt's test adds that a grip keeps the outline of the boot on the floor beside
+it (feetHull), with a boot on a top beside it too that of both, with nothing on the floor that of a boot on a top beside
+it, at the top's height, and none with neither (a grip that drops the top's boot from either fails it). A unit test of
+releaseGrips onto the feet: a grip the feet follow for longer than LOST gives its last two samples to the feet on their
+own outline, their centre and raw contacts kept; with the feet for LOST or less, a released sample with no outline under
+it (the first of the two too) or one with no area (a single floor point's), a grip that ends on a hold (the pigs' catch
+on their climbs ends on the seat; a release onto a hold fails it), or a grip the motion starts on, the grip is left; the
+released samples stand on the grip's own outline and floor (a sill's, 0.85 m up), not the feet's after it (a floor
+written as 0, or taken from the feet after, fails it). A unit test of holdPatchSpin: on a palm about 2 cm across
+standing on a top 0.85 m up, its corners unequally far from its middle, at the run's first sample 0.30 and 0.20 m to the
+side of the centre of mass and 0.6 below it, the centre moving 4 mm a sample, the palm sliding 1.5 mm a sample and one
+of its corners reaching out 1 mm a sample, the target's change along each sample's own line to it (to its outline's
+middle, at its floor) is held to that sample's own allowance (from its own reach) the way it would go, passes as it was
+where its own change is less (three samples a thousandth as large), either way round (one sample beyond the allowance
+and one within it turned round), and across the line as it was (a line fixed at the run's first sample, drawn to height
+0 or to the run's first middle, the run's first reach for the allowance, a kept change against the target's own, the
+full allowance where the change is less, or a clamp that treats the two ways round differently fails it); a held sample
+on the palm holds as the feet do (the hold on feet samples only fails it); a second run that starts while the first
+eases back starts from where that easing has brought the target, holds on from there and eases back from what it kept
+over the target as it was (one starting from the target as it was, or easing back over the first run's easing, fails
+it); a flight cuts an easing back (one carrying on after it fails it); before the palm and at its first sample, after
+PATCH_EASE, in the air and on a wider outline the target is as it was, and halfway through the easing back it keeps half
+of what it held, a quarter of the way through 0.896 of it (the ease traversal-pose.js's smooth; a straight line's 0.75
+fails). The window check: through the hands to the floor (2.06 to 2.20 s), every millisecond, where the played body
+stands on one palm alone (its support read as the balance reads it on the played pose, contactProbe and supportAt, but
+for the dive's tails, whose roots that probe does not tell from the rest: a tail on the sill's top could only widen the
+outline, and that instant would not count; the feet on one outline whose mean reach from its middle is under 4 cm), from
+10 ms after each such stretch starts to 10 ms before it ends, the played body's angular momentum about its centre of
+mass (the climb checks' model, its rate over 2 ms chords) changes along the line from its centre of mass to that palm at
+most 20 N·m, half the rig's limit of phantom torque on contact; the body stands on one palm for at least 20 ms, and the
+bound reads at least 5 instants (5 to 7 on eight windows, whose longest stretches on one palm last 25 to 27 ms, the
+goat's, the bull's, the cow's and the rabbit's 5 to 11 ms on one palm earlier too, until the brace touches the far face
+again, too short to be read; 51 to 60 on the pig foreman, the pig director and the dog); within 10 ms of a stretch's
+ends (where the brace leaves the far face or touches it again, and where the right hand lands) the rate reads 21.5 to
+60.1 N·m (the donkey's 60.1 at 2.137 s, 3 ms into its stretch, where the hold's own start raises it, 26 without; 27.9 to
+82.8 without the hold), unchecked (probe-patch-spin2.mjs: patch-spin2-f21b-e10.txt, patch-spin2-f21n2-e10.txt). Without
+the hold (var-f21n2: the tree's code lines but holdPatchSpin's call) it fails ten windows, 28.4 to 60.3 N·m (the dog's
+17.8 passes: test-f21n2.log); on 15a4e470's code lines (var-rel8t) it fails the same ten and the three unit tests above
+fail too (test-rel8t-r1.log); now 5.3 to 15.5. The forty-first part's test reads a grip that ends on the feet with no
+outline under it as left. The test file passes (21 of 21 tests: test-f21-tree-r12.log); the suite passes (2578 tests:
+suite-fix21m.log).
+
+Left: the brace's last point beside the palm, planned as a grip, which cannot give the body's force with its moment (the
+skunk's 457% at 2.093 s); the donkey's palm as the brace lets go (283% at 2.135: a level force beyond the palm's
+friction, whose part toward the wall the release raises, and the hold's turn across the line to the palm); the hold's
+own start, at full strength from a run's second sample, its end alone eased, its spin about that line rising in a
+stretch's first milliseconds (the donkey's new reading at 2.137 s; the dog's and the rabbit's starts rise too); what the
+hold adds to the release's three new readings on the donkey (2.136, 2.177 and 2.178 s), and the goat's new reading, the
+hold's (2.093 s); the tail fit's switch, which flips on millimetres; the roll's 166 readings, and the phase after the
+hands land reading higher; the windows' other phases, among them stand on the tile 46, left foot in 32, left foot round
+24, right foot in 17, sit up 17, slide over 10 (the pig director's 215% at 1.350 s) and reach for the floor 9 (the
+horse's 202.9%).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

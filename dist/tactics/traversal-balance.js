@@ -201,6 +201,9 @@ export function followCentre(times,plan,comAt,{passes=5,base=null,from=null}={})
 //   use costs nothing. On the floor a tail counts (the stalled roll turns on the skunk's plume: left out there too,
 //   that roll's sit up read 43 readings, 17 with it);
 // - nothing counted is flight.
+// A grip keeps what stands on the floor or a top beside it as the outline the feet would have (feetBox, feetHull and
+// feetFloor; planCentre reads an outline from feet and held samples only), so that releaseGrips can let a grip go onto
+// feet already down (the window's brace: the right hand leaving the far face with the left hand on the floor).
 // DRAPE: a body draped over a top with its centre of mass a little below it (over the window's sill as it reaches for
 // the floor, 2 cm below) still lies on it; one hanging well below (from the wall's top at a catch, 70 cm) does not:
 // there only what grips holds it.
@@ -226,7 +229,8 @@ export function supportAt(probe,obstacles,com,held=false){
   if(e===3)continue;for(const o of obstacles){const dx=Math.max(o.min[0]-x,0,x-o.max[0]),dy=Math.max(o.min[1]-y,0,y-o.max[1]),dz=Math.max(o.min[2]-z,0,z-o.max[2]);if(dx>=TOL||dy>=TOL||dz>=TOL)continue;const inside=!dx&&!dy&&!dz;
    const d=inside?Math.min(x-o.min[0],o.max[0]-x,y-o.min[1],o.max[1]-y,z-o.min[2],o.max[2]-z):Math.hypot(dx,dy,dz);if(d>=TOL)continue;
    if(e===1||e===4&&(held||y>o.max[1]-TOL))grip=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);topPts.push([x,z]);top=Math.max(top??-Infinity,o.max[1]);}}}
- if(grip)return {kind:'grip'};
+ if(grip){if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'grip',feetBox:box,feetHull:hullOf(pts.concat(topPts),box),feetFloor:0};}
+  return onTop[0]<=onTop[1]?{kind:'grip',feetBox:onTop,feetHull:hullOf(topPts,onTop),feetFloor:top}:{kind:'grip'};}
  if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'feet',box,hull:hullOf(pts.concat(topPts),box),floor:0};}
  return onTop[0]<=onTop[1]?{kind:'feet',box:onTop,hull:hullOf(topPts,onTop),floor:top}:{kind:'air'};}
 // The whole pipeline for a motion: pose(t) poses it (with the hips moved by the current trial shift, set through
@@ -283,6 +287,22 @@ function turning(frames,dt){const n=frames.length,mid=(P,a,b)=>P[a].clone().add(
 //   against 323% at 2.364. Together 182 readings against 188, 0.190 s over the limit at the samples either way. That
 //   flight is gone since wall-climb.js's KNEE_MID: the foreman's left hand keeps to the top, and the balance plans a
 //   grip there.
+// - on a support that cannot twist, one palm or one hoof (an outline whose mean reach from its middle is under PATCH,
+//   4 cm), the push is a force through one small patch, and its moment about the centre of mass lies across the line
+//   from the centre to the patch: on contacts L* keeps the body's spin about that line (holdPatchSpin), but for a rough
+//   allowance for what the patch can give about it (PATCH_TWIST, a half, of what friction, MU, gives at the body's
+//   weight over the patch's reach), and eases what it kept back over PATCH_EASE after it. Through the window's hands to
+//   the floor (from 2.075 to 2.160 s on the eleven: the left hand alone on the floor, the right going from the far face
+//   to it) the plan places the push where it meets the level turn, and so placed the push twists the body about the
+//   vertical by -(dL_x a_x + dL_z a_z) / (a_y + g); without the hold that read -90 to 39 N·m as the rig reads the force
+//   and the turn, against the body's own turn about the vertical there, -18 to 36, and the rig read 40 to 61 N·m of
+//   torque about the vertical left over on 30 of that phase's 39 rows over its limits, on eight windows. Held, the
+//   windows read 368 readings against 499 without it (hands to the floor 38 against 177; the roll 166 against 157: the
+//   sheep's tail, which the tail fit now lifts off the floor where it held the body, reads 295 to 337% at 2.710 s, and
+//   readings near the limit cross it either way as the turn the hand's stretch adds unwinds into the roll), the climbs
+//   and the low walls as they were, to the bit. Bounding the push's twist in the plan instead read 1359: on one patch
+//   that fixes both where the centre lies along the line and its acceleration there, which the authored turn does not
+//   agree with, and the plan's centre went 10 to 18 cm off its path.
 // The turn is the integral of w, its drift taken out along the motion so that it ends unturned. w carries over between
 // rounds (each adds what the last missed; delta, the largest, in rad/s, says when it has settled). Without contacts
 // the contacts' w is kept as it comes: a flight's refinement measures the flights alone again.
@@ -293,9 +313,26 @@ function turning(frames,dt){const n=frames.length,mid=(P,a,b)=>P[a].clone().add(
 // the spot (the phantom-wrench rig, reading every millisecond, found it at every crossing's start: the low-wall horse
 // 105 N of phantom force 4 ms in, the window sheep 317 N 2 ms in).
 const EASE=.25,TAU=.04,UNWIND=.3,TURN_TOL=.02,REFINE=2,REST=2*TAU,LEAD=.025;
+const PATCH=.04,PATCH_TWIST=.5,PATCH_EASE=.1;
 export const turnAir=(S,dt)=>{const a=S.map(x=>x.kind==='air'),out=a.slice(),lead=Math.round(LEAD/dt);
  for(let i=1;i<S.length;i++){if(!a[i]||a[i-1]||S[i-1].kind!=='feet')continue;let run=0;while(i-1-run>=0&&S[i-1-run].kind==='feet')run++;
   if(run>lead)for(let j=i-lead;j<i;j++)out[j]=true;}return out;};
+// The contacts' target L (ref) over a run of samples on a support that cannot twist (feet or held, its outline's mean
+// reach from its middle under PATCH): its change along the line from the centre of mass to the outline's middle, at
+// its floor, is kept within a rough allowance for what the patch can give about that line (PATCH_TWIST times MU times
+// the body's weight times that reach, per second: friction twists the patch about the floor's normal, only part of
+// which lies along the line, and the push's point can wander across the patch), and what it kept eases back to the
+// target over PATCH_EASE after the run, unless a flight cuts it, a flight holding its own turn; a run that starts while
+// the last one eases back starts from where that easing has brought the target (bodyTurn; exported for the unit test).
+export const holdPatchSpin=(ref,S,air,dt)=>{const n=S.length,refO=ref.map(x=>x.slice()),m=Math.round(PATCH_EASE/dt),pt=i=>{const q=S[i];if(!q||!(q.kind==='feet'||q.kind==='hold')||!q.hull?.length)return null;
+  const H=q.hull,cx=H.reduce((a,p)=>a+p[0],0)/H.length,cz=H.reduce((a,p)=>a+p[1],0)/H.length,r=H.reduce((a,p)=>a+Math.hypot(p[0]-cx,p[1]-cz),0)/H.length;return r<PATCH?{cx,cz,r,y:q.floor||0}:null;};
+ for(let i0=1;i0<n;i0++){if(air[i0]||!pt(i0))continue;let i1=i0;while(i1+1<n&&!air[i1+1]&&pt(i1+1))i1++;const Ls=ref[i0].slice();
+  for(let i=i0+1;i<=i1;i++){const q=pt(i),c=S[i].c,u=[q.cx-c[0],q.y-c[1],q.cz-c[2]],l=Math.hypot(...u),tf=PATCH_TWIST*MU*BODY_MASS*G*q.r*dt;
+   const D=[0,1,2].map(a=>refO[i][a]-refO[i-1][a]),al=(D[0]*u[0]+D[1]*u[1]+D[2]*u[2])/l,cl=Math.max(-tf,Math.min(tf,al));
+   for(let a=0;a<3;a++){Ls[a]+=D[a]-(al-cl)*u[a]/l;ref[i][a]=Ls[a];}}
+  const Dv=[0,1,2].map(a=>ref[i1][a]-refO[i1][a]);for(let q=1;q<=m&&i1+q<n&&!air[i1+q];q++){const g=1-smooth(q/m);for(let a=0;a<3;a++)ref[i1+q][a]=refO[i1+q][a]+Dv[a]*g;}
+  i0=i1;}
+ return ref;};
 function bodyTurn(w,S,L,I,dt,contacts=true){
  const n=S.length,k=Math.round(TAU/dt),e=Math.round(EASE/dt),air=turnAir(S,dt),fl=new Float64Array(n),nw=w.map(x=>x.slice());let delta=0;
  const add=(i,target)=>{const d=solve3(I[i],[0,1,2].map(a=>target[a]-L[i][a]));delta=Math.max(delta,Math.hypot(...d));nw[i]=nw[i].map((y,a)=>y+d[a]);};
@@ -317,6 +354,7 @@ function bodyTurn(w,S,L,I,dt,contacts=true){
  // contacts: L averaged over TAU either side, faded out beside a flight; the turn unwinds there and its drift is taken
  // out along the motion
  const ref=L.map((_,i)=>{const s=[0,0,0];let m=0;for(let j=Math.max(0,i-k);j<=Math.min(n-1,i+k);j++){for(let a=0;a<3;a++)s[a]+=L[j][a];m++;}return s.map(x=>x/m);});
+ if(contacts)holdPatchSpin(ref,S,air,dt);
  const wC=Array.from({length:n},()=>[0,0,0]),rest=i=>smooth(Math.min(i,n-1-i)*dt/REST);
  for(let i=0;i<n;i++){if(air[i]||!contacts)continue;const d=solve3(I[i],[0,1,2].map(a=>ref[i][a]-L[i][a])),r=(1-fl[i])*rest(i);delta=Math.max(delta,Math.hypot(...d)*r);wC[i]=d.map(x=>x*r);nw[i]=nw[i].map((y,a)=>y+wC[i][a]);}
  const thC=[[0,0,0]];for(let i=1;i<n;i++){const p=thC[i-1],q=(1-fl[i])*rest(i)*dt/UNWIND,cw=i=>air[i]?[0,0,0]:nw[i].map((y,a)=>y*(1-fl[i]));const a0=cw(i-1),a1=cw(i);thC.push(p.map((x,a)=>x+dt*(a0[a]+a1[a])/2-q*x));}
@@ -348,13 +386,24 @@ const KEEP=[...new Set(MASS_SEGMENTS.flatMap(([a,b])=>[a,b]))];
 // each round's schedule (roundSchedule, below), after the authored seat's restore and LOST's, so a gap a round gives
 // back to its support is never released; and it waits for a flight longer than LOST, the longest that restore gives
 // back: a slip between two grips, at most 40 ms before the onset's lag (above) makes it LOST, is left. A grip that ends
-// on the feet (the window's and the low wall's), on a hold or with the motion is left as it is (a height-only hold the
-// plan's move lifts for longer than LOST, which no restore gives back, is a flight like any other, and the grip before
-// it lets go), and so is a grip the motion starts on, as the onset leaves it.
+// on the feet lets go onto them where each of its last RELEASE samples already stands on an outline of its own
+// with an area (supportAt keeps a grip's; a single floor point's has none) and the feet bear for longer than LOST after
+// it: those samples are the feet's, on their own outline. So the window's brace lets go onto the left hand on the floor
+// (planned to its last touch, the cow's asked the right hand's last points on the far face for what they could not
+// give, and the rig read 631% of its limit at 2.089 s), the pig director's grip on the window's sill as it slides over
+// (its readings there 10 against 20, its worst 215% at 1.350 s against 347), the low wall's hands as the feet absorb,
+// and the climbs' palms on the far face as the feet land. A grip that ends on the feet where a released sample has no
+// outline of its own (or one with no area) or the feet bear for LOST or less, a grip that ends on a hold or with the
+// motion (a height-only hold the plan's move lifts for longer than LOST, which no restore gives back, is a flight like
+// any other, and the grip before it lets go), and a grip the motion starts on, as the onset leaves it, are left as they
+// are.
 const ONSET=.02,LOST=.06,RELEASE=.01;
 export const releaseGrips=(S,dt)=>{const n=S.length,rel=Math.round(RELEASE/dt),fly=Math.round(LOST/dt);
  for(let i=0;i<n;i++)if(S[i].kind==='grip'){let j=i;while(j+1<n&&S[j+1].kind==='grip')j++;let a=j;while(a+1<n&&S[a+1].kind==='air')a++;
-  if(i>0&&a-j>fly)for(let k=Math.max(i,j-rel+1);k<=j;k++)S[k]={...S[j+1],c:S[k].c,released:true};i=j;}
+  if(i>0&&a-j>fly)for(let k=Math.max(i,j-rel+1);k<=j;k++)S[k]={...S[j+1],c:S[k].c,released:true};
+  else if(i>0&&j+1<n&&S[j+1].kind==='feet'){let e=j;while(e+1<n&&S[e+1].kind==='feet')e++;const k0=Math.max(i,j-rel+1);
+   if(e-j>fly&&S.slice(k0,j+1).every(x=>x.feetHull?.length>=3&&Math.abs(areaOf(x.feetHull))>1e-6))for(let k=k0;k<=j;k++){const x=S[k];S[k]={kind:'feet',box:x.feetBox,hull:x.feetHull,floor:x.feetFloor,c:x.c,raw:x.raw,released:true};}}
+  i=j;}
  return S;};
 // A round's schedule: the authored seat given back (a seat the plan's own move lifted holds as authored), then, after
 // the first round, the flights the plan made given back to their support (LOST), then the release (releaseGrips):

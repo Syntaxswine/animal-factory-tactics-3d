@@ -7,8 +7,9 @@ import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {naturalTraversal,createNaturalTraversal} from '../dist/tactics/natural-traversal.js';
 import {contactProbe,supportAt,planCentre,turnAir} from '../dist/tactics/traversal-balance.js';
 import * as BALANCE from '../dist/tactics/traversal-balance.js';
-import {steadyPoles,steadyTurns,createSurfaceProbe,MASS_SEGMENTS} from '../dist/tactics/traversal-pose.js';
+import {steadyPoles,steadyTurns,createSurfaceProbe,MASS_SEGMENTS,BODY_MASS,smooth} from '../dist/tactics/traversal-pose.js';
 import {WALL} from '../dist/tactics/wall-climb.js';
+import {WINDOW} from '../dist/tactics/window-dive.js';
 import {edgeBoxes} from '../dist/tactics/traversal-fit.js';
 import {rigKey} from '../dist/tactics/idle-motion.js';
 import {IDLE_FITS} from '../dist/tactics/idle-fits.js';
@@ -102,6 +103,19 @@ test('a hand grips the wall, and an elbow against its face only pushes',()=>{
  assert.equal(kind([{...face,part:1,bone:3}]),'grip','fingertips against the far face do not grip');
  assert.equal(kind([{part:1,bone:1,v:9,x:.5,y:2.005,z:0}],[.8,1.2,0]),'grip','a forearm hooked over the top does not grip');
  assert.equal(kind([{...face,part:2,bone:2}]),'feet','a sleeve cuff riding the hand bone grips');
+ // A grip keeps what stands on the floor beside it as the outline the feet would have, for releaseGrips to let it go
+ // onto them (feetHull); with nothing on the floor, what stands on a top beside it (the pig director's grip on the
+ // window's sill as it slides over), at the top's height; with neither, none.
+ {const s=supportAt(probe([...boot,{...face,part:1,bone:2}]),[wall],[.97,.75,.1]);
+  assert.ok(s.kind==='grip'&&s.feetHull?.length>=3&&s.feetFloor===0,'a grip keeps no outline of the boot beside it');}
+ {const onTop=[[.45,-.1],[.55,-.1],[.55,.05],[.45,.05]].map(([x,z],v)=>({part:0,bone:0,v,x,y:2.004,z}));
+  const s=supportAt(probe([...onTop,{...face,y:1.9,part:1,bone:2}]),[wall],[.6,2.3,0]);
+  assert.ok(s.kind==='grip'&&s.feetHull?.length>=3&&s.feetFloor===2,`a grip keeps no outline of the boot on the top beside it at the top's height (feetFloor ${s.feetFloor})`);}
+ {const onTop=[[.45,-.1],[.55,-.1],[.55,.05],[.45,.05]].map(([x,z],v)=>({part:0,bone:0,v:20+v,x,y:2.004,z}));
+  const s=supportAt(probe([...boot,...onTop,{...face,y:1.9,part:1,bone:2}]),[wall],[.6,2.3,0]),xs=(s.feetHull||[]).map(p=>p[0]);
+  assert.ok(s.kind==='grip'&&s.feetFloor===0&&Math.min(...xs)<.451&&Math.max(...xs)>1.149,`a grip with a boot on the floor and one on a top beside it keeps an outline of both (x ${Math.min(...xs).toFixed(2)} to ${Math.max(...xs).toFixed(2)})`);}
+ {const s=supportAt(probe([{...face,part:1,bone:2}]),[wall],[.97,.75,.1]);
+  assert.ok(s.kind==='grip'&&!s.feetHull,'a grip with nothing on the floor keeps an outline');}
 });
 // A seat the balance holds (traversal-balance.js, planCentre: a 'hold' with seat, the climb's top for a deep body)
 // pushes and never pulls: planned against a seat whose height drops 6 cm at once, the plan falls no faster than
@@ -158,19 +172,19 @@ test("a flight's turn is held from LEAD before the hooves leave, not the hands",
  assert.equal(held('hhhhhhaaa'),'------aaa','a run on a held seat is left');
  assert.equal(held('aaaffffff'),'aaa------','a landing is left');
 });
-test('a grip the body leaves for a flight lets go 10 ms before its last touch, and no other grip does',()=>{
+test('a grip the body leaves for a flight lets go 10 ms before its last touch',()=>{
  // traversal-balance.js, releaseGrips, on the balance's 5 ms grid (RELEASE 0.01 s, two samples; LOST 0.06 s, twelve):
  // the last two samples of a grip run that a flight longer than LOST follows take that flight's first sample's kind and
  // raw contacts, keep their own centre and are marked released (upper case below); a flight of LOST or shorter (which
  // the round's LOST restore may give back to the support the authored motion lies on; or a slip between two grips, at
- // most 40 ms before the onset's lag makes it LOST), a grip that ends on the feet, on a hold or with the motion, and a
- // grip the motion starts on are left as they are. And roundSchedule runs a round's steps in their order, the authored
- // seat given back, then (after the first round) the plan's own short flights given back to their support (LOST), then
- // the release, so that a gap a round gives back is never released: released first, a seat the plan lifts for 65 ms
- // (longer than LOST, so only the seat's restore gives it back) keeps a 10 ms released flight before it; and a 60 ms
- // gap where the authored grip ended on the feet, which the LOST restore gives back, is left only while the release
- // waits for a flight longer than LOST (waiting for one of LOST, released first, it opened on a release and stayed a
- // flight).
+ // most 40 ms before the onset's lag makes it LOST), a grip that ends on the feet with no outline of its own under its
+ // last samples (one that has one lets go onto the feet: the next test), on a hold or with the motion, and a grip the
+ // motion starts on are left as they are. And roundSchedule runs a round's steps in their order, the authored seat
+ // given back, then (after the first round) the plan's own short flights given back to their support (LOST), then the
+ // release, so that a gap a round gives back is never released: released first, a seat the plan lifts for 65 ms (longer
+ // than LOST, so only the seat's restore gives it back) keeps a 10 ms released flight before it; and a 60 ms gap where
+ // the authored grip ended on the feet, which the LOST restore gives back, is left only while the release waits for a
+ // flight longer than LOST (waiting for one of LOST, released first, it opened on a release and stayed a flight).
  const {releaseGrips}=BALANCE;assert.equal(typeof releaseGrips,'function','traversal-balance.js exports releaseGrips');
  const K={f:'feet',g:'grip',h:'hold',a:'air'},C={feet:'f',grip:'g',hold:'h',air:'a'},g=n=>'g'.repeat(n),a=n=>'a'.repeat(n);
  const go=s=>releaseGrips([...s].map((c,i)=>({kind:K[c],raw:K[c],c:[i,0,0]})),.005),str=S=>S.map(x=>x.released?C[x.kind].toUpperCase():C[x.kind]).join('');
@@ -178,7 +192,7 @@ test('a grip the body leaves for a flight lets go 10 ms before its last touch, a
  assert.equal(str(go('ffff'+g(12)+a(13)+'ff')),'ffff'+g(10)+'AA'+a(13)+'ff','a flight longer than LOST is one');
  assert.equal(str(go('ffff'+g(12)+a(12)+'ff')),'ffff'+g(12)+a(12)+'ff','a flight of LOST, which a round may give back, is left');
  assert.equal(str(go('ffff'+g(12)+a(12)+g(12)+'ff')),'ffff'+g(12)+a(12)+g(12)+'ff','a slip between two grips, as the onset leaves it, is left');
- assert.equal(str(go('ffff'+g(12)+'ffff')),'ffff'+g(12)+'ffff','a grip that ends on the feet is left');
+ assert.equal(str(go('ffff'+g(12)+'f'.repeat(13))),'ffff'+g(12)+'f'.repeat(13),'a grip that ends on the feet with no outline under it is left');
  assert.equal(str(go('ffff'+g(12)+'hhhh')),'ffff'+g(12)+'hhhh','a grip that ends on a hold is left');
  assert.equal(str(go('ffff'+g(12))),'ffff'+g(12),'a grip that ends the motion is left');
  assert.equal(str(go('gggg'+a(14))),'gggg'+a(14),'a grip the motion starts on is left');
@@ -190,6 +204,84 @@ test('a grip the body leaves for a flight lets go 10 ms before its last touch, a
  assert.equal(round('ff'+g(12)+a(18)+'ffff','ff'+g(12)+a(18)+'ffff'),'ff'+g(10)+'AA'+a(18)+'ffff','a round releases a let-go after its restores');
  assert.equal(round('ff'+g(12)+'f'.repeat(16),'ff'+g(12)+a(12)+'ffff'),'ff'+g(12)+'f'.repeat(16),'a gap the plan made where the authored grip ends on the feet goes back to the feet before the release looks');
  assert.equal(round('ff'+g(12)+'h'.repeat(20),'ff'+g(12)+a(13)+'h'.repeat(7)),'ff'+g(12)+'h'.repeat(20),'a seat the plan lifted for longer than LOST goes back to the seat before the release looks');
+});
+test('a grip the body leaves for the feet lets go onto them where they already stand under it',()=>{
+ // traversal-balance.js, releaseGrips (and supportAt, above: a grip keeps what stands on the floor beside it as the
+ // outline the feet would have): the last two samples of a grip run that the feet follow for longer than LOST (more
+ // than twelve samples) are the feet's, on their own outline (marked released, upper case below; their centre and raw
+ // contacts kept), where each of the two has an outline of its own; with the feet for LOST or less, a released sample
+ // with no outline under it (G below, the first of the two too) or one with no area (P), a grip that ends on a hold (h:
+ // the pigs' catch ends on the seat), or a grip the motion starts on, the grip is left. The window's brace lets go so
+ // onto the left hand on the floor, the low wall's hands as the feet absorb, the climbs' palms as the feet land.
+ const {releaseGrips}=BALANCE,hull=[[0,0],[.1,0],[.1,.1],[0,.1]],box=[0,.1,0,.1],gHull=[[0,0],[.05,0],[.05,.05],[0,.05]],gBox=[0,.05,0,.05],K={f:'feet',g:'grip',G:'grip',P:'grip',h:'hold'},C={feet:'f',grip:'g',hold:'h'};
+ // g: a grip with an outline of its own beside it (gHull, not the feet's); G: one with none; P: one over a single
+ // floor point (its outline hullOf's zero-area box)
+ const point={feetBox:[.02,.02,.03,.03],feetHull:[[.02,.03],[.02,.03],[.02,.03],[.02,.03]],feetFloor:0};
+ // The grip's outline stands on a top 0.85 m up (the pig director's grip on the window's sill), the feet's on the floor.
+ const mk=s=>[...s].map((c,i)=>({kind:K[c],raw:K[c],c:[i,0,0],...(c==='g'?{feetBox:gBox,feetHull:gHull,feetFloor:.85}:{}),
+  ...(c==='P'?point:{}),...(c==='f'||c==='h'?{box,hull,floor:0}:{})}));
+ const str=S=>S.map(x=>x.released?C[x.kind].toUpperCase():C[x.kind]).join(''),go=s=>releaseGrips(mk(s),.005),f=n=>'f'.repeat(n),g=n=>'g'.repeat(n);
+ assert.equal(str(go(f(4)+g(12)+f(13))),f(4)+g(10)+'FF'+f(13),'a grip the feet follow for longer than LOST lets go onto them 10 ms early');
+ assert.equal(str(go(f(4)+g(12)+f(12))),f(4)+g(12)+f(12),'with the feet for LOST or less the grip is left');
+ assert.equal(str(go(f(4)+g(11)+'G'+f(13))),f(4)+g(12)+f(13),'a released sample with no outline under it leaves the grip as it is');
+ assert.equal(str(go(f(4)+g(10)+'Gg'+f(13))),f(4)+g(12)+f(13),'a first released sample with no outline under it leaves the grip as it is');
+ assert.equal(str(go(f(4)+g(12)+'h'.repeat(13))),f(4)+g(12)+'h'.repeat(13),'a grip that ends on a hold is left');
+ assert.equal(str(go(g(12)+f(13))),g(12)+f(13),'a grip the motion starts on is left');
+ assert.equal(str(go(f(4)+g(11)+'P'+f(13))),f(4)+g(12)+f(13),'a released sample over a single floor point (an outline with no area) leaves the grip as it is');
+ const S=go(f(4)+g(12)+f(13)),r=S.slice(14,16);
+ assert.ok(r.every(x=>x.kind==='feet'&&x.hull===gHull&&x.box===gBox&&x.floor===.85),'a released sample stands on its own outline and floor, not the feet\'s after it');
+ assert.deepEqual(r.map(x=>[x.c[0],x.raw]),[[14,'grip'],[15,'grip']],'a released sample keeps its own centre and raw contacts');
+});
+test('on one palm the body keeps its spin about the line to it',()=>{
+ // traversal-balance.js, holdPatchSpin (bodyTurn's contacts), on a palm about 2 cm across, its corners unequally far
+ // from its middle (so its mean reach is not its largest), to one side of the centre of mass: over a run of samples on
+ // a support whose outline's mean reach from its middle is under PATCH (4 cm: one palm, one hoof), the contacts' target
+ // angular momentum changes along the line from the centre of mass to the outline's middle, at its floor, by at most a
+ // rough allowance for what the patch can give about it (PATCH_TWIST, a half, of what friction, MU 0.9, gives at the
+ // body's weight over the outline's reach, per second), the way it would and as it would where its own change is less,
+ // and across that line as it would; after the run what it kept eases back over PATCH_EASE (0.1 s) on
+ // traversal-pose.js's smooth (read a quarter and half of the way); on a wider
+ // outline, or in the air, it is left; a held sample on the palm (the rolls' held patches) holds as the feet do. A force
+ // through one small patch turns the body only about axes across the line from the centre of mass to the patch.
+ const {holdPatchSpin}=BALANCE;assert.equal(typeof holdPatchSpin,'function','traversal-balance.js exports holdPatchSpin');
+ // The palm stands on a top 0.85 m up (a sill), the centre of mass 0.6 m above it: at the run's first sample the
+ // palm's middle lies 0.30 m and 0.20 m to the side of the centre, so the line from the centre to it, u, leans and its
+ // x, y and z all count. Through the run the centre moves 4 mm a sample along x, the palm slides 1.5 mm a sample along
+ // z and one of its corners reaches out 1 mm a sample: each sample's own line (to its outline's middle, at its floor)
+ // and its own reach count.
+ const dt=.005,n=50,top=.85,wide=[[-.2,-.1],[.2,-.1],[.2,.1],[-.2,.1]];
+ const palmAt=i=>{const k=Math.max(0,i-10),s=.0015*k;return [[.29,.19+s],[.32+.001*k,.19+s],[.31,.21+s],[.29,.21+s]];};
+ const mid=H=>[H.reduce((a,p)=>a+p[0],0)/H.length,H.reduce((a,p)=>a+p[1],0)/H.length],tfOf=H=>{const [x,z]=mid(H);return .5*.9*BODY_MASS*9.81*H.reduce((a,p)=>a+Math.hypot(p[0]-x,p[1]-z),0)/H.length*dt;};
+ const lineAt=(X,i)=>{const [x,z]=mid(X[i].hull),w=[x-X[i].c[0],X[i].floor-X[i].c[1],z-X[i].c[2]],l=Math.hypot(...w);return w.map(v=>v/l);};
+ // The target's own change is [1, 2, 0] a sample, about -1.3 along the line against an allowance of about 0.027, held
+ // to the allowance with its sign kept, and at sample 13 turned round, held to the allowance on the other side; from
+ // sample 18 to 20 a thousandth of that, under the allowance, which passes as it was, at 19 turned round too.
+ const step=i=>i===13?[-1,-2,0]:i===19?[-.001,-.002,0]:i>=18&&i<=20?[.001,.002,0]:[1,2,0],ref0=[[0,0,0]];for(let i=1;i<n;i++)ref0.push(ref0[i-1].map((x,a)=>x+step(i)[a]));
+ const S=Array.from({length:n},(_,i)=>({kind:'feet',hull:i>=10&&i<=20?palmAt(i):wide,floor:top,c:[.004*(i-10),top+.6,0]}));
+ const ref=holdPatchSpin(ref0.map(x=>x.slice()),S,S.map(()=>false),dt);
+ const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+ for(let i=0;i<=10;i++)assert.deepEqual(ref[i],ref0[i],`before the palm and at its first sample (${i}) the target is as it was`);
+ for(let i=11;i<=20;i++){const u=lineAt(S,i),tf=tfOf(S[i].hull),perp=d=>{const k=dot(d,u);return d.map((x,a)=>x-k*u[a]);};
+  const D=step(i),al=dot(D,u),want=Math.abs(al)>tf?Math.sign(al)*tf:al,d=[0,1,2].map(a=>ref[i][a]-ref[i-1][a]),p=perp(d),q=perp(D);
+  assert.ok(Math.abs(dot(d,u)-want)<1e-12&&p.every((x,a)=>Math.abs(x-q[a])<1e-12),`on the palm (sample ${i}) the target changes ${dot(d,u).toFixed(5)} N·m·s a sample about its line to it (${want.toFixed(5)}: its own ${al.toFixed(5)}, kept within ${tf.toFixed(5)} with its sign) and ${p.map(x=>x.toFixed(4)).join(', ')} across it (${q.map(x=>x.toFixed(4)).join(', ')} as it was)`);}
+ assert.deepEqual(holdPatchSpin(ref0.map(x=>x.slice()),S.map(x=>({...x,kind:'hold'})),S.map(()=>false),dt),ref,'a held sample on the palm holds as the feet do');
+ // A second run on the palm (samples 25 to 30) starts while the first eases back: it starts from where that easing has
+ // brought the target (a quarter of the way, 0.896 of what the first kept), and holds on from there.
+ {const S3=S.map((x,i)=>i>=25&&i<=30?{...x,hull:palmAt(i)}:x),ref3=holdPatchSpin(ref0.map(x=>x.slice()),S3,S3.map(()=>false),dt),kept1=ref3[20].map((x,a)=>x-ref0[20][a]),g5=1-smooth(5/Math.round(.1/dt));
+  assert.ok(kept1.every((k,a)=>Math.abs(ref3[25][a]-ref0[25][a]-k*g5)<1e-9),'a second run starts where the first one\'s easing back has brought the target');
+  const u=lineAt(S3,26),tf=tfOf(S3[26].hull),al=dot(step(26),u),d=[0,1,2].map(a=>ref3[26][a]-ref3[25][a]);
+  assert.ok(Math.abs(dot(d,u)-Math.sign(al)*tf)<1e-12,`the second run holds on from there (sample 26 changes ${dot(d,u).toFixed(5)} about its line, ${(Math.sign(al)*tf).toFixed(5)} held)`);
+  // and eases back from what it kept over the target as it was, not over the first run's easing
+  const kept2=ref3[30].map((x,a)=>x-ref0[30][a]),g1=1-smooth(1/Math.round(.1/dt));
+  assert.ok(Math.hypot(...kept2)>5&&kept2.every((k,a)=>Math.abs(ref3[31][a]-ref0[31][a]-k*g1)<1e-9),'the second run eases back from what it kept, over the target as it was');}
+ const m=Math.round(.1/dt),kept=ref[20].map((x,a)=>x-ref0[20][a]);
+ assert.ok(Math.hypot(...kept)>5&&kept.every((k,a)=>Math.abs(ref[20+m/2][a]-ref0[20+m/2][a]-k/2)<1e-9),'halfway through its easing back the target keeps half of what it held');
+ const q4=1-smooth(.25);assert.ok(kept.every((k,a)=>Math.abs(ref[20+m/4][a]-ref0[20+m/4][a]-k*q4)<1e-9),`a quarter of the way through its easing back the target keeps ${q4.toFixed(3)} of what it held (traversal-pose.js's smooth, not a straight line's 0.75)`);
+ for(let i=20+m;i<n;i++)assert.deepEqual(ref[i],ref0[i],`after PATCH_EASE (${i}) the target is as it was`);
+ const air=S.map((_,i)=>i===15),ref2=holdPatchSpin(ref0.map(x=>x.slice()),S,air,dt);
+ assert.deepEqual(ref2[15],ref0[15],'in the air the target is left');
+ assert.deepEqual(ref2[16],ref0[16],'a flight cuts the easing back: after it the target is as it was');
+ assert.deepEqual(holdPatchSpin(ref0.map(x=>x.slice()),S.map(x=>({...x,hull:wide})),S.map(()=>false),dt),ref0,'on a wider outline the target is left');
 });
 for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, ends on the next tile's centre, clears the obstacle and gives the tail back`,()=>{
  const m=model(p),tails=m.worker.parts.filter(x=>/tail/.test(x.name)).map(x=>[x,Float32Array.from(x.geometry.attributes.position.array)]);
@@ -694,6 +786,34 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    const pt=([part,i])=>{v.fromBufferAttribute(part.geometry.attributes.position,i);part.applyBoneTransform(i,v);return v.applyMatrix4(part.matrixWorld).clone();},near=[{d:Infinity},{d:Infinity}];
    for(let t=release;t<=release+.3;t+=.005){motion.apply(t/motion.duration);const H=head.map(pt);hands.forEach((hand,k)=>{for(let i=0;i<hand.geometry.attributes.position.count;i+=2){const x=pt([hand,i]);for(const y of H){const d=x.distanceTo(y);if(d<near[k].d)near[k]={d,t};}}});}
    near.forEach((n,k)=>assert.ok(n.d>=.02,`window: the ${k?'right':'left'} hand passes ${(100*n.d).toFixed(1)} cm from the head at ${n.t.toFixed(2)} s as it tucks`));}
+  // On one palm the body keeps its spin about the line to it (traversal-balance.js, holdPatchSpin): through the hands
+  // to the floor (2.06 to 2.20 s), every millisecond, where the played body stands on one palm alone (its support read
+  // as the balance reads it on the played pose, contactProbe and supportAt, but for the dive's tails, whose roots this
+  // probe does not tell from the rest: a tail on the sill's top could only widen the outline, and that instant would
+  // not count; the feet on one outline whose mean reach from its middle is under 4 cm), from 10 ms after each such
+  // stretch starts to 10 ms before it ends, the played body's angular momentum about its centre of mass (the climb
+  // checks' model; its rate over 2 ms chords) changes along the line from its centre of mass to that outline's middle
+  // at its floor at most 20 N·m, half the rig's limit of phantom torque on contact: a force through one palm turns the
+  // body only about axes across that line. Without the hold ten windows read 28 to 60 N·m there (the dog's 18), now
+  // 5 to 16. The body stands on one palm for at least 20 ms, and the bound reads at least 5 instants: 5 to 7 on eight
+  // windows, whose longest stretches on one palm last 25 to 27 ms (the goat, the bull, the cow and the rabbit stand on
+  // one palm for 5 to 11 ms earlier too, until the brace touches the far face again: too short to be read), 51 to 60 on
+  // the other three. Within 10 ms of a stretch's ends (where the brace leaves the far face or touches it again, and
+  // where the right hand lands) the rate reads 21.5 to 60.1 N·m (27.9 to 82.8 without the hold), unchecked: the most,
+  // the donkey's 60.1 at 2.137 s, 3 ms into its stretch, is where the hold's own start raises it (26 without).
+  if(kind==='window'){const ob=edgeBoxes(WINDOW.edge,WINDOW.half,[[0,WINDOW.sill],[WINDOW.top,2]]),cp=contactProbe(m.worker),D=motion.duration,h=5e-4,EDGE=10;
+   const at=t=>{const r=motion.apply(t/D);return [r.points,[...r.com]];},sub=(a,b)=>a.map((x,i)=>x-b[i]),mid=(P,a,b)=>P[a].map((x,i)=>(x+P[b][i])/2);
+   const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=(P,a,b)=>{const d=sub(P[b],P[a]),l=Math.hypot(...d);return [d.map(x=>x/l),l];};
+   const Lh=t=>{const [A,ca]=at(t-h),[P,c]=at(t),[Q,cb]=at(t+h),vc=sub(cb,ca).map(x=>x/(2*h)),out=[0,0,0];
+    for(const [a,b,mass] of MASS_SEGMENTS){const r=sub(mid(P,a,b),c),v=sub(sub(mid(Q,a,b),mid(A,a,b)).map(x=>x/(2*h)),vc),[u,l]=unit(P,a,b),du=sub(unit(Q,a,b)[0],unit(A,a,b)[0]).map(x=>x/(2*h));
+     const o=cross(r,v),s=cross(u,du);for(let q=0;q<3;q++)out[q]+=mass*o[q]+mass*l*l/12*s[q];}return out;};
+   const one=[];for(let k=0;k<=140;k++){const t=2.06+k/1e3,r=motion.apply(t/D);cp.update();const s=supportAt(cp,ob,[...r.com]);if(s.kind!=='feet'||!s.hull?.length)continue;
+    const H=s.hull,cx=H.reduce((a,q)=>a+q[0],0)/H.length,cz=H.reduce((a,q)=>a+q[1],0)/H.length;if(H.reduce((a,q)=>a+Math.hypot(q[0]-cx,q[1]-cz),0)/H.length<.04)one.push({k,t,p:[cx,s.floor||0,cz],c:[...r.com]});}
+   assert.ok(one.length>=20,`window: the body stands on one palm for ${one.length} ms in the hands to the floor (20 at least)`);
+   const on=new Set(one.map(o=>o.k));let worst={v:0},read=0;
+   for(const o of one){if(!on.has(o.k-EDGE)||!on.has(o.k+EDGE))continue;read++;const La=Lh(o.t-.001),Lb=Lh(o.t+.001),d=[0,1,2].map(q=>(Lb[q]-La[q])/.002),u=sub(o.p,o.c),l=Math.hypot(...u),v=Math.abs((d[0]*u[0]+d[1]*u[1]+d[2]*u[2])/l);if(v>worst.v)worst={v,t:o.t};}
+   assert.ok(read>=5,`window: the spin's bound reads ${read} instants 10 ms and more inside a stretch on one palm (5 at least)`);
+   assert.ok(worst.v<=20,`window: on one palm the body's spin about the line to it changes at ${worst.v.toFixed(1)} N·m at ${worst.t?.toFixed(3)} s (20 at most)`);}
   // Cut short where the tail is bent (as a casualty ends a crossing), the tail still comes back exactly.
   motion.apply(.6);motion.dispose();for(const [part,base]of tails)assert.deepEqual(part.geometry.attributes.position.array,base,`${kind}: the ${part.name} is not given back`);}
 });
