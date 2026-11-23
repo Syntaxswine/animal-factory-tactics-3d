@@ -333,7 +333,39 @@ const KEEP=[...new Set(MASS_SEGMENTS.flatMap(([a,b])=>[a,b]))];
 // touched 40 ms later once the hips moved left the feet braking the body alone), and a touch shorter than 3 ONSET
 // not at all: a hand brushing the wall in flight cannot hold the body, and planned as a grip it moved the hips enough
 // to brush elsewhere in the next round. Unused, a support the rig sees costs nothing.
-const ONSET=.02,LOST=.06;
+// A grip the body leaves for a flight ends RELEASE before its last touch (releaseGrips): a hand that lets go holds
+// nothing as it slides off, so those samples are the flight's for all that reads the samples' kind (the centre's plan;
+// the 5 ms turn's flights, turnAir and bodyTurn, and their refinement; and the motion's refit, which holds the climb's
+// head through its flights) and for the 1 ms turn's flights, which read the raw contacts (held from a released flight's
+// first sample, fineFlights): a hand that holds nothing turns nothing either. Planned to its last touch, the climbs'
+// palms, sliding off the top's far edge, were asked by the played body (as the rig's rows read it) for 67 to 127 N at
+// the samples where one or two points of them still touched (five climbs: the donkey's 127 on two points, the pig
+// director's 105 on one at 4.235 s; 3 to 21 N now), and the rig, every millisecond, read up to 111% of its limit as the
+// last of them left and the millisecond after (the pig director's four readings; the donkey's and the sheep's 93 and
+// 91%; every drop 21% at most now, though at the release's first sample the body is asked for 19 to 28 N downward: the
+// plan's flight meets gravity there, but the played centre, whose track cannot follow the plan's step from the grip's
+// support into free fall, dips a little past it, a pull the rig lets the hands still touching give). It runs last in
+// each round's schedule (roundSchedule, below), after the authored seat's restore and LOST's, so a gap a round gives
+// back to its support is never released; and it waits for a flight longer than LOST, the longest that restore gives
+// back: a slip between two grips, at most 40 ms before the onset's lag (above) makes it LOST, is left. A grip that ends
+// on the feet (the window's and the low wall's), on a hold or with the motion is left as it is (a height-only hold the
+// plan's move lifts for longer than LOST, which no restore gives back, is a flight like any other, and the grip before
+// it lets go), and so is a grip the motion starts on, as the onset leaves it.
+const ONSET=.02,LOST=.06,RELEASE=.01;
+export const releaseGrips=(S,dt)=>{const n=S.length,rel=Math.round(RELEASE/dt),fly=Math.round(LOST/dt);
+ for(let i=0;i<n;i++)if(S[i].kind==='grip'){let j=i;while(j+1<n&&S[j+1].kind==='grip')j++;let a=j;while(a+1<n&&S[a+1].kind==='air')a++;
+  if(i>0&&a-j>fly)for(let k=Math.max(i,j-rel+1);k<=j;k++)S[k]={...S[j+1],c:S[k].c,released:true};i=j;}
+ return S;};
+// A round's schedule: the authored seat given back (a seat the plan's own move lifted holds as authored), then, after
+// the first round, the flights the plan made given back to their support (LOST), then the release (releaseGrips):
+// that order, so that a gap a round gives back is never released first.
+// A flight of LOST or shorter that a round finds where the authored motion lies on the floor is the plan's own: its
+// last move lifted the body off what held it, and that support stands. Planned as a flight, the sheep's roll (its back
+// lifted off the floor by the round before) crouched 1.8 cm into the floor to spring over 40 ms of it.
+export const roundSchedule=(S,authored,r,dt)=>{const n=S.length;
+ S.forEach((x,i)=>{if(authored[i].kind==='hold'&&!authored[i].heightOnly)Object.assign(x,{...authored[i],c:x.c});});
+ if(r)for(let i=0;i<n;i++){if(S[i].kind!=='air')continue;let j=i;while(j+1<n&&S[j+1].kind==='air')j++;if(j-i<LOST/dt&&i>0&&j<n-1&&authored.slice(i,j+1).every(x=>x.kind==='feet'||x.heightOnly))for(let k=i;k<=j;k++)Object.assign(S[k],{...authored[k],c:S[k].c});i=j;}
+ return releaseGrips(S,dt);};
 // setMove({shift(t), spin(t)}) hands the motion its hips' move while it is found (spin(t) is null where the body does
 // not turn, or {q, pivot}: a turn about a point); the result's shift and spin are the final ones. hold(t), if given,
 // marks times the plan keeps near the authored path ('hold': a support it must not move, such as a seat the hips' own
@@ -365,11 +397,14 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  const history=[],runs=S=>{const out=[];S.forEach((s,i)=>{const r=out.at(-1);if(r&&r.kind===s.kind)r.end=times[i];else out.push({kind:s.kind,start:times[i],end:times[i]});});return out.map(r=>`${r.kind} ${r.start.toFixed(3)}-${r.end.toFixed(3)}`).join(', ');};
  const measure=()=>{const frames=[];const S=times.map(t=>{setShift(follow?follow.shift(t):null);const P=pose(t);probe.update();frames.push(Object.fromEntries(KEEP.map(k=>[k,P[k].clone()])));const c=com(P).toArray(),h=hold?.(t),s=supportAt(probe,obstacles,c,!!h);return h&&s.kind!=='air'?{...s,kind:'hold',heightOnly:h==='height',seat:h==='seat',c}:{...s,c};});
   const raw=fine?S.map(x=>x.kind):null,lag=Math.round(ONSET/dt);for(let i=n-1;i>=0;i--)if(S[i].kind==='grip'){let j=i;while(j>0&&S[j-1].kind==='grip')j--;const end=i-j+1<3*lag?i+1:Math.min(n,j+lag);for(let k=j;k<end;k++)S[k]=j>0?{...S[j-1],c:S[k].c}:S[k];i=j;}
-  if(raw)S.forEach((x,i)=>{x.raw=raw[i];});return {S,...turning(frames,dt)};};
+  if(raw)S.forEach((x,i)=>{x.raw=raw[i];});
+  return {S,...turning(frames,dt)};};
  // Two rounds: the second measures the schedule and the turning again on the balanced motion (four gave the climb no
- // more: 0.23 s against 0.21 s over). With more, the schedule is held from the second on: moved by each round's hips, a
- // toe-off came 5 ms earlier every round (the plan, pushing to reach it, raised the hips that lifted the hoof; on the
- // climb the push's ceiling now holds it at its authored time on both rounds).
+ // more: 0.23 s against 0.21 s over). With more, the schedule is held from the second on (a sample whose kind or
+ // released flag differs from the held one's takes the held one's fields but its centre, the flag whether set or not,
+ // so that a round's own release, roundSchedule, leaves neither a flag nor a raw contact the held schedule does not
+ // have): moved by each round's hips, a toe-off came 5 ms earlier every round (the plan, pushing to reach it, raised
+ // the hips that lifted the hoof; on the climb the push's ceiling now holds it at its authored time on both rounds).
  // A held sample keeps the support the authored motion had (its premise is the authored path), whatever the moved hips
  // touch: measured again on them, a seat carried on raised thighs rose off the floor, and the plan, finding the feet
  // alone 17 cm ahead of the centre of mass, dragged the hips 11 cm toward them (the window's lean, 78% of the body's
@@ -418,16 +453,18 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  // fitted after the second round too, its total 2.2% apart between runs) and its angular momentum about the centre of
  // mass at every key over a chord of FINE, and the rate I^-1 (L* - L) that holds the run's median L* is added to the
  // turn through a spline of those keys. The rate is weighted by a window, full from the last foot sample before a
- // take-off (the lead, which the turn already holds as flight) or from FINE_RAMP into a flight off a grip, to FINE_PAST
- // after the last key in the air (on the hands or palms it lands on; never nearer than FINE_RAMP to the stretch's end),
- // ramping over FINE_RAMP either side (a smoothstep), and the angle it adds is brought back to nothing over the run (a
- // smoothstep of its end value). Through a take-off's flight with three keys or more in the air the centre of mass is
- // held too: those keys give the flight's own ballistic path (least squares, gravity fixed), and the difference, less
- // the Hermite cubic that meets it at the window's ends in value, and in slope over the 2 ms inside each (FINE_LEAD
- // before the first key in the air, on the hooves, to FINE_PAST after the last), is added to the hips' move through a
- // spline of the keys (the result's shift and hips). Three passes. Outside the windows the turn and the hips are the 5
- // ms ones; each corrected stretch (fineSpans) runs from three samples before its run to three after it, and its keys
- // in the air span fineAir.
+ // take-off (the lead, which the turn already holds as flight), from FINE_RAMP into a flight off a grip, or from the
+ // first sample of a flight off a released grip (RELEASE: its hands hold nothing there; ramped in from FINE_RAMP after
+ // it, the climbs' drops turned through the release at 1.9 to 9.5 N·m, the rabbit's 9.5 at 4.236 s, against 0.06 to
+ // 0.20 held from it), to FINE_PAST after the last key in the air (on the hands or palms it lands on; never nearer than
+ // FINE_RAMP to the stretch's end), ramping over FINE_RAMP either side (a smoothstep), and the angle it adds is brought
+ // back to nothing over the run (a smoothstep of its end value). Through a take-off's flight with three keys or more in
+ // the air the centre of mass is held too: those keys give the flight's own ballistic path (least squares, gravity
+ // fixed), and the difference, less the Hermite cubic that meets it at the window's ends in value, and in slope over
+ // the 2 ms inside each (FINE_LEAD before the first key in the air, on the hooves, to FINE_PAST after the last), is
+ // added to the hips' move through a spline of the keys (the result's shift and hips). Three passes. Outside the
+ // windows the turn and the hips are the 5 ms ones; each corrected stretch (fineSpans) runs from three samples before
+ // its run to three after it, and its keys in the air span fineAir.
  // With the 5 ms turn alone (6fe975ef) the eleven climbs read 168 readings over the rig's limits, 93 of them in their
  // phase over the top (up to 26 N·m of airborne phantom torque as the legs fold, against the rig's 10); with the turn
  // held every millisecond to FINE_RAMP before each run's last sample, 72 (21efea5e). Held to the contact then, the turn
@@ -448,21 +485,21 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  // the pig director's first millisecond in the air from 110 to 120% (4.236 s) and changed nothing else gated (the pig
  // foreman, donkey, horse and goat).
  // The eleven climbs read 30 readings over the limits against 72 (22 since the walk-out's set-down and 4 since the left
- // foot's step back, both wall-climb.js): their catches none against 19, their phases over the top 1 against 10, their
- // push-offs 4 against 12, their drops 4 against 10 (since the left foot's step back, their phases over the top and
- // push-offs none, the rabbit's push at 99.9% of the limit). Two are new (the dog's 107% at 0.868 s as its hooves
- // leave, the rabbit's 104% at 0.846 s in its push; both gone since) and of the 28 kept, 21 rose (the rabbit's 0.845 s
- // 106 -> 112%, the sheep's two by 1.6 and 1.5 points, eighteen by 0.223 at most) and seven fell or held. By the climb
- // test's measures the last 50 ms before the hands land (to the last millisecond in the air) turn at 0.1 to 4.1 N·m
- // against 3.1 to 79.4 (21efea5e's, to its last sample in the air), and the take-off's flight falls within 0.04 to 0.14
- // m/s^2 of gravity against 0.50 to 2.86 (since the climb's left foot steps back, 0.1 to 0.9 N·m and 0.03 to 0.11
- // m/s^2). A prototype of this pass with the head and tail still fitted after the balance read 52 (var-f25b); with them
- // fitted inside it (refit, wall-climb.js), 30.
+ // foot's step back, both wall-climb.js; none since the release, above): their catches none against 19, their phases
+ // over the top 1 against 10, their push-offs 4 against 12, their drops 4 against 10 (since the left foot's step back,
+ // their phases over the top and push-offs none, the rabbit's push at 99.9% of the limit; since the release, their
+ // drops none). Two are new (the dog's 107% at 0.868 s as its hooves leave, the rabbit's 104% at 0.846 s in its push;
+ // both gone since) and of the 28 kept, 21 rose (the rabbit's 0.845 s 106 -> 112%, the sheep's two by 1.6 and 1.5
+ // points, eighteen by 0.223 at most) and seven fell or held. By the climb test's measures the last 50 ms before the
+ // hands land (to the last millisecond in the air) turn at 0.1 to 4.1 N·m against 3.1 to 79.4 (21efea5e's, to its last
+ // sample in the air), and the take-off's flight falls within 0.04 to 0.14 m/s^2 of gravity against 0.50 to 2.86 (since
+ // the climb's left foot steps back, 0.1 to 0.9 N·m and 0.03 to 0.11 m/s^2). A prototype of this pass with the head and
+ // tail still fitted after the balance read 52 (var-f25b); with them fitted inside it (refit, wall-climb.js), 30.
  const FINE=.001,FINE_RAMP=.005,FINE_LEAD=.005,FINE_PAST=.003,ramp=u=>u<=0?0:u>=1?1:u*u*(3-2*u),fineFlights=S=>{if(!theta5||!plan)return;
   let lo=theta5.findIndex(x=>x[0]||x[1]||x[2]),hi=theta5.findLastIndex(x=>x[0]||x[1]||x[2]);if(lo<0)return;lo=Math.max(0,lo-1);hi=Math.min(n-1,hi+1);
   const coarse=track(theta5.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false,spline:true}),pv=track(plan.slice(lo,hi+1).map((x,i)=>[times[lo+i],...x]),{},{limit:false,spline:true});
   const isAir=i=>(S[i].raw??S[i].kind)==='air',runs=[];for(let i=lo+1;i<hi;i++){if(!isAir(i))continue;let j=i;while(j+1<hi&&isAir(j+1))j++;if(j-i>=2)runs.push([i,j]);i=j;}if(!runs.length)return;
-  let corr=runs.map(([a,b])=>{const lead=(S[a-1].raw??S[a-1].kind)==='feet',ta=lead?times[a]-dt:times[a]+FINE_RAMP,k0=Math.max(lo,a-Math.ceil((dt+FINE_LEAD+FINE_RAMP)/dt-1e-9)),k1=Math.min(hi,b+Math.ceil((dt+FINE_PAST+FINE_RAMP)/dt-1e-9)),t0=times[k0],m=Math.round((times[k1]-t0)/FINE),z=()=>Array.from({length:m+1},()=>[0,0,0]);
+  let corr=runs.map(([a,b])=>{const lead=(S[a-1].raw??S[a-1].kind)==='feet',ta=lead?times[a]-dt:S[a].released?times[a]:times[a]+FINE_RAMP,k0=Math.max(lo,a-Math.ceil((dt+FINE_LEAD+FINE_RAMP)/dt-1e-9)),k1=Math.min(hi,b+Math.ceil((dt+FINE_PAST+FINE_RAMP)/dt-1e-9)),t0=times[k0],m=Math.round((times[k1]-t0)/FINE),z=()=>Array.from({length:m+1},()=>[0,0,0]);
    return {t0,m,ta,a,b,lead,d:z(),s:z(),tr:null,str:null};});
   const thetaAt=t=>{const base=coarse(t);for(const r of corr){if(!r.tr||t<r.t0||t>r.t0+r.m*FINE)continue;const x=r.tr(t);return base.map((y,a)=>y+x[a]);}return base;};
   const spinOf=()=>t=>{if(t<=times[lo]||t>=times[hi])return null;const r=V(...thetaAt(t)),ang=r.length();return ang<1e-12?null:{q:Q().setFromAxisAngle(r.divideScalar(ang),ang),pivot:V(...pv(t))};};
@@ -484,12 +521,8 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
     return {...r,air,airSpan:[ts[fa],ts[fb]],d:nd,s:ns,tr:track(nd.map((x,j)=>[ts[j],...x]),{},{limit:false,spline:true}),str:r.lead?track(ns.map((x,j)=>[ts[j],...x]),{},{limit:false,spline:true}):null};});}
   spin=spinOf();fineMove=moved;fineSpans=corr.map(r=>[r.t0,r.t0+r.m*FINE]);fineAir=corr.map(r=>r.airSpan);setMove(null);};
  for(let r=0;r<rounds&&!settled;r++){const {S,dL,L,I}=measure();last1={S,L,I};
-  if(!authored)authored=S.map(x=>({...x}));else S.forEach((x,i)=>{if(authored[i].kind==='hold'&&!authored[i].heightOnly)Object.assign(x,{...authored[i],c:x.c});});
-  // A flight shorter than LOST that a round finds where the authored motion lies on the floor is the plan's own: its
-  // last move lifted the body off what held it, and that support stands. Planned as a flight, the sheep's roll (its back
-  // lifted off the floor by the round before) crouched 1.8 cm into the floor to spring over 40 ms of it.
-  if(r)for(let i=0;i<n;i++){if(S[i].kind!=='air')continue;let j=i;while(j+1<n&&S[j+1].kind==='air')j++;if(j-i<LOST/dt&&i>0&&j<n-1&&authored.slice(i,j+1).every(x=>x.kind==='feet'||x.heightOnly))for(let k=i;k<=j;k++)Object.assign(S[k],{...authored[k],c:S[k].c});i=j;}
-  if(held)S.forEach((x,i)=>{if(x.kind!==held[i].kind)Object.assign(x,{...held[i],c:x.c});});else if(r===1)held=S.map(x=>({...x}));const key=S.map(x=>x.kind).join();history.push(runs(S));
+  if(!authored)authored=S.map(x=>({...x}));roundSchedule(S,authored,r,dt);
+  if(held)S.forEach((x,i)=>{if(x.kind!==held[i].kind||x.released!==held[i].released)Object.assign(x,{...held[i],c:x.c,released:held[i].released});});else if(r===1)held=S.map(x=>({...x}));const key=S.map(x=>x.kind).join();history.push(runs(S));
   if(!c0)c0=S.map(x=>x.c);const turn=bodyTurn(w,S,L,I,dt),lead=turnAir(S,dt).map((a,i)=>a&&S[i].kind==='feet');settled=key===last&&turn.delta<TURN_TOL;last=key;if(settled)break;
   samples=S.map((x,i)=>({...x,c:c0[i],dL:lead[i]?[0,0,0]:dL[i],ceil:x.kind==='feet'&&ceil[i]!==null?c0[i][1]+ceil[i]:null}));plan=planCentre(samples,dt,options);w=turn.w;spin=turnAt(turn.theta,plan);
   refine(S,L,I);

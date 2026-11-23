@@ -142,7 +142,8 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // each side (slideDZ): leant in over its belly, its head lay between its arms as the hands came off the top (the pig
  // foreman's right hand 8.3 cm into it at 4.214 s; 3.8 with the wider slide on f293da69, 3.7 on d1118c40; under 1 cm
  // since its palms arc off the top, below), and the wider slide doubled the pig director's turn in the air as it let go
- // (373 N·m at 4.206 s against 191; 8.1 at the most since its far hang and the arc, at 4.236 s).
+ // (373 N·m at 4.206 s against 191; 8.1 at the most since its far hang and the arc, at 4.236 s; 0.05 at most to 4.26
+ // since the balance's release, traversal-balance.js's RELEASE, its most in the air 0.07 at 4.305 s, as before it).
  // The hooves on the near face rise with the search's change of height at their key (rise, as with the grip's rise). On
  // 4e9853f6 the search set the pig foreman's chest over the top 24 cm higher than the horse's with its feet left on the
  // face where the horse's were: its right leg hung straight, out of reach of its foot's target (1.31 leg lengths at
@@ -195,15 +196,16 @@ export function createWallClimb(worker,profile={id:'horse'}){
   // var-fh3). The pigs now touch down 25 and 30 ms later (the left boot at 4.555 and 4.545 s; the absorb's need the
   // same, about 2.2 kN), their hips coming 5.1 and 4.2 cm back toward the wall through the drop (3.6 and 3.3 before;
   // the foreman's let-go key lies 3.5 cm further out than its drop key, which nothing pushed); the foreman's head
-  // passes within 4.9 mm of the far face as it lets go (4.230 s), the director's 10.5 (16.0 and 12.6 before), and the
-  // director's left arm went 2.9 cm into its left thigh as its left leg came over (3.543 s, 1.4 before; under 1 cm
-  // since the legs' keys at 3.685 s left the search's height, below). Over the top the fit now pushes the trunk out
-  // less (the foreman's hips 3.7 to 5.4 cm further back from 3.60 to 3.70 s), and the foreman's band (below) no longer
-  // drops it as its left leg locks straight going down the far side (3.633 s): that old lock, which the fall hid on
-  // f293da69, asked 7.6 times its weight for 3 ms on the rig's 1 ms grid (its 5-ms samples 3.9), over the rig's 5,
-  // until the legs' keys there rose to their reach (below: 3.7 now, at the later lock); the director's old left elbow
-  // whip as its left leg came over asked 6.5 for 1 ms (3.517 s; 4.8 before), until its left hand let go before its arm
-  // ran out (below: its peak now 3.3, at 3.037 s, since its hands hold in front of its chest; 3.6 at 3.040 before).
+  // passes within 4.9 mm of the far face as it lets go (4.230 s), the director's 10.5 (16.0 and 12.6 before; since the
+  // balance's release 3.5 and 8.3 mm from the wall, 5.0 and 10.6 before by that measure), and the director's left arm
+  // went 2.9 cm into its left thigh as its left leg came over (3.543 s, 1.4 before; under 1 cm since the legs' keys at
+  // 3.685 s left the search's height, below). Over the top the fit now pushes the trunk out less (the foreman's hips
+  // 3.7 to 5.4 cm further back from 3.60 to 3.70 s), and the foreman's band (below) no longer drops it as its left leg
+  // locks straight going down the far side (3.633 s): that old lock, which the fall hid on f293da69, asked 7.6 times
+  // its weight for 3 ms on the rig's 1 ms grid (its 5-ms samples 3.9), over the rig's 5, until the legs' keys there
+  // rose to their reach (below: 3.7 now, at the later lock); the director's old left elbow whip as its left leg came
+  // over asked 6.5 for 1 ms (3.517 s; 4.8 before), until its left hand let go before its arm ran out (below: its peak
+  // now 3.3, at 3.037 s, since its hands hold in front of its chest; 3.6 at 3.040 before).
   const FACE=WALL.edge+WALL.half,FAR_CLEAR=.006;
   for(const k of keys){if(!k.far)continue;const hipsQ=yawQ(k.heading||0).multiply(bodyQ((k.pitch||0)*DEG,(k.roll||0)*DEG)),chestQ=hipsQ.clone().multiply(relQ(k.flex||0,k.side||0,k.twist||0)),H=V(...k.hips),C=H.clone().add(body.offsets.spine.clone().applyQuaternion(hipsQ));
    let push=0;const see=w=>{if(w.y<WALL.top&&Math.abs(w.z)<.5)push=Math.max(push,FACE+FAR_CLEAR-w.x);};for(const q of hipsPts)see(q.clone().applyQuaternion(hipsQ).add(H));for(const q of spinePts)see(q.clone().applyQuaternion(chestQ).add(C));
@@ -268,36 +270,42 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // dog's arms' angular momentum changed at 330 N·m at 4.222 s and 15 at 4.236), and the rig read 217 to 249% of its
  // airborne limit at the key (the dog and the donkey 217, the skunk 246, the bull with its head held through the drop
  // 249). Arced, the palms slide off the top's far edge as the body starts down, the balance counting them a grip until
- // 4.240 s (through the key until 4.205 or 4.210). The horse's palms slide out over the top (outward at 1.2 to 2.5 m/s,
- // and down), its left hand in the wall's box to 4.234 (2.5 cm in at the let-go, as through the hang; 5.3 mm or less
- // from 4.225), as the motion's upward need, 458 N at the let-go (501 at 4.206), falls to 145 (through the key 223
- // there, none by 4.215); then both hands hover clear of it to 4.242, the nearer within the rig's centimetre (0.2 to
- // 8.9 mm), as the need falls from 132 N to 41: a hover as long as through the key (4.205 to 4.213 s, 223 to 29 N) and
- // lighter. The centre of mass starts down earlier and falls less fast after it (at most 5.5 mm off its path through
- // the key, at 4.218 s, within 1 mm by 4.33; the landing the same from 4.6 s). The drop's flight, from 4.245 to 4.325 s
- // (through the key from 4.210 or 4.215 to 4.295 or 4.300), turns at 3.1 to 5.9 N·m at the most (3.4 to 5.9 on
- // 21efea5e, 3.5 to 5.9 on 6fe975ef; the test's measure; 20 to 32 through the key), under the rig's 10, and the nine
- // climbs but the pigs' read 112 readings over its limits against 188 on d54c607d (156 with the head held alone: the
- // bull 50, then 18, then 8; the donkey 17, then 8; the skunk 16, then 2; the dog 27, then 16; the other five as they
- // were), and since the flights' turn every millisecond (traversal-balance.js) 50: the horse 13, the goat 2, the bull
- // and cow none, the donkey 1, the sheep 4, the skunk none, the rabbit 21, the dog 9; and since the take-off's flight
- // holds its centre of mass and the head is fitted inside the balance, 26: the sheep 2, the rabbit 14, the dog 10, the
- // rest none (18 since the walk-out's set-down and none since the left foot's step back, both in this file). Arced, the
- // palm's turn onto the face switched its way round 2.5 ms short of done and popped 0.09 degrees (steadyTurns now
- // switches on the sample). A deep body arcs as well now that its palms hold the top until it lets go
+ // 4.240 s (through the key until 4.205 or 4.210; until 4.230 since it lets a grip go 10 ms before its last touch,
+ // traversal-balance.js's RELEASE). The horse's palms slide out over the top (outward at 1.2 to 2.5 m/s, and down), its
+ // left hand in the wall's box to 4.234 (2.5 cm in at the let-go, as through the hang; 5.3 mm or less from 4.225), as
+ // the motion's upward need, 458 N at the let-go (501 at 4.206), falls to 145 (through the key 223 there, none by
+ // 4.215); then both hands hover clear of it to 4.242, the nearer within the rig's centimetre (0.2 to 8.9 mm), as the
+ // need falls from 132 N to 41: a hover as long as through the key (4.205 to 4.213 s, 223 to 29 N) and lighter
+ // (f293da69's figures, b6643d4a's within 5 N: 454 at the let-go, 504 at 4.206; since the balance's release the need
+ // falls from 483 N at the let-go, 460 at 4.206, to none by 4.234, and through the hover the body asks for 22 N
+ // downward at the release's first sample, 4.235 s, and 8 upward at most to 4.242). The centre of mass starts down
+ // earlier and falls less fast after it (at most 5.5 mm off its path through the key, at 4.218 s, within 1 mm by 4.33;
+ // the landing the same from 4.6 s). The drop's flight, from 4.245 to 4.325 s (through the key from 4.210 or 4.215 to
+ // 4.295 or 4.300; from 4.235 since the balance's release), turns at 3.1 to 5.9 N·m at the most (3.2 to 6.0 since that
+ // release; 3.4 to 5.9 on 21efea5e, 3.5 to 5.9 on 6fe975ef; the test's measure; 20 to 32 through the key), under the
+ // rig's 10, and the nine climbs but the pigs' read 112 readings over its limits against 188 on d54c607d (156 with the
+ // head held alone: the bull 50, then 18, then 8; the donkey 17, then 8; the skunk 16, then 2; the dog 27, then 16; the
+ // other five as they were), and since the flights' turn every millisecond (traversal-balance.js) 50: the horse 13, the
+ // goat 2, the bull and cow none, the donkey 1, the sheep 4, the skunk none, the rabbit 21, the dog 9; and since the
+ // take-off's flight holds its centre of mass and the head is fitted inside the balance, 26: the sheep 2, the rabbit
+ // 14, the dog 10, the rest none (18 since the walk-out's set-down and none since the left foot's step back, both in
+ // this file). Arced, the palm's turn onto the face switched its way round 2.5 ms short of done and popped 0.09 degrees
+ // (steadyTurns now switches on the sample). A deep body arcs as well now that its palms hold the top until it lets go
  // (its far hang, above). With them off the top before the let-go, arced, the pig foreman read 159 readings (7545% of
  // the limit at its worst) against 88 through the key, the director 67 (6399%) against 57; with the far hang, arced, 42
  // and 34 against 78 and 53 through the key (their let-go and drop 5 and 4 against 41 and 23, the foreman's worst there
  // 227% of the limit against 10810% at 4.265 s; their worst readings then in the jump's flight, 603 and 455%, as they
  // were there; since the climb's flights' turn every millisecond, traversal-balance.js, the foreman's worst is its
  // drop's 225% and the director's its catch's 337%; since its flights hold to their landing and the head is fitted
- // inside the balance, the foreman reads none and the director's worst is its let-go's 111%). Of the nine left in the
- // let-go and drop, eight are new: the foreman's five in the air from 4.306 to 4.310 s, up to 227% (six from 4.300, up
- // to 225%, since that turn), in the last 5 ms before its palms reach the far face (where f293da69's read up to 9.9
- // N·m, under the limit, before its palms reached it at 4.276 s), and the director's three on contact from 4.231 to
- // 4.233 s, up to 111%, as its hands leave the top (four, to 4.236 s, on 6fe975ef and since: three on contact, one in
- // the air). The foreman's six are gone since its head is fitted inside the balance (fitted after it, with the drop's
- // turn held to the palms on the far face, they rose, to 254% at 4.310 s: var-f25b).
+ // inside the balance, the foreman reads none and the director's worst is its let-go's 111%; since the balance's
+ // release, none). Of the nine left in the let-go and drop, eight are new: the foreman's five in the air from 4.306 to
+ // 4.310 s, up to 227% (six from 4.300, up to 225%, since that turn), in the last 5 ms before its palms reach the far
+ // face (where f293da69's read up to 9.9 N·m, under the limit, before its palms reached it at 4.276 s), and the
+ // director's three on contact from 4.231 to 4.233 s, up to 111%, as its hands leave the top (four, to 4.236 s, on
+ // 6fe975ef and since: three on contact, one in the air). The foreman's six are gone since its head is fitted inside
+ // the balance (fitted after it, with the drop's turn held to the palms on the far face, they rose, to 254% at 4.310 s:
+ // var-f25b), and the director's four since the balance's release (planned to its hands' last touch, the plan asked of
+ // them, as they slid off, a support that one or two points of a palm could not give).
  const FAR=[1,0,0],ONFACE=4.33,ARC=.06,SLIDE=z=>[[ONFACE,{f:'world',p:[.62,1.80,(.22+slideDZ)*z],face:FAR,arc:ARC,arcTo:FAR}],[4.685,{f:'world',p:[.62,1.10,(.26+slideDZ)*z],face:FAR}]];
  // The step in takes the left foot 4.5 cm further back than it did (x -.080-back, where it was -.035-back), and the
  // crouch keeps it there for the take-off. In the battle stance the rabbit's and dog's rounded paws reach only 1.0 and
@@ -490,7 +498,8 @@ export function createWallClimb(worker,profile={id:'horse'}){
  // never made, 10 to 20 N·m of airborne phantom torque from 4.228 to 4.280 s (the bull's drop 42 readings over the
  // limit, 10 held; the other ten climbs' readings as they were). The window is the keys', not the flight's: it holds
  // the balance's drop flight inside it (from 4.245 to 4.325 s on the nine climbs but the pigs', theirs from 4.240 to
- // 4.325 or 4.330) only while the let-go and the palms' face key bracket it.
+ // 4.325 or 4.330; since the balance's release from 4.235 and 4.230) only while the let-go and the palms' face key
+ // bracket it.
  fit=createClearanceFit(D);const jump=[TRUNK.find(k=>k.launch).t,TRUNK.find(k=>k.catch).t],drop=[TRUNK.find(k=>k.still).t,ONFACE];
  fit.solve({body,probe,tails,obstacles:edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),poseAt:t=>body.pose(spec(t),'fit'),air:t=>t>jump[0]&&t<jump[1]||t>drop[0]&&t<drop[1],stage:t=>t<2.265?'near':t<3.685?'over':'far'});
  steady=steadyPoles(D,t=>limbSample(body,spec(t)));

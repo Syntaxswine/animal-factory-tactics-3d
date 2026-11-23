@@ -4666,6 +4666,204 @@ fails only those climbs (16, 17 and 16 of 18), and on var-s4b-t19b and var-s5g-t
   band.
 - The horse's head in the top's far edge (2.9 mm for 8 ms at 3.933 s).
 
+### 2026-11-22 (physics balance, forty-first part): the hands let go over their last 10 ms
+
+After the fortieth part (b6643d4a) the eleven climbs read 4 readings over the gate's limits, all the pig director's as
+its hands leave the top's far edge: 111% at 4.231 s, 104 and 107% at 4.232 and 4.233 (on contact, between the 5 ms
+samples) and 108% at 4.236 (in the air), in the gate's phase "Drop", from the let-go key (4.205 s) to 4.505. There too
+the donkey's and the sheep's drops read 93 and 91% (4.232 s) and the skunk's 80 (4.241 s, in the air) (motion/var-s5e's
+gate results, b6643d4a's code lines; scratchpad next-letgo/ holds every probe and output named here but the var-* copies
+and those named with next-catch/, next-stepin/ or next-walkout/).
+
+Read at the gate's rows and every millisecond:
+- The pig director's rows (every 5 ms: rows-at.mjs; NOTES.md's table): the upward part of the support its body asks for
+  falls some 80 N every 5 ms, from 478 N at 4.210 s to 103 at 4.235 and none by 4.240, as the hands' contact thins from
+  48 points to one. With one point of the left palm left (4.235 s), the force must pass through it, and its moment about
+  the centre of mass does not meet the body's turn: the gate reads the difference as 59.7 N of phantom force and 20.1
+  N·m of torque at the sample (81% of its limit); between the samples 70 to 81 N from 4.231 to 4.234 s, and 79 N at
+  4.236 in the air as the last point leaves.
+- The plan does not see the contact thin: planCentre takes a grip sample as able to give whatever support the plan needs
+  (up to fmax body weights), however few of its points still touch, and every climb's plan held its centre on the hands
+  to the last sample a hand touched (4.240 s, the pigs' 4.235) and let it fall from the next. The six rows where one or
+  two points of the palms alone touched asked 67 to 127 N (the donkey's 127 on two points at 4.235 s, the pig director's
+  105 on one; the bull's, the sheep's and the skunk's at 4.240: thin-grip-force.mjs, thin-grip-s5e.txt), the gate
+  reading 24 to 81% of its limit there. Read every millisecond around the hands' last touch on the top (their contacts
+  read as the balance reads them, on the played pose, but for the climb's tails, whose roots the probe does not tell
+  from the rest, which can only add feet on the top within DRAPE of the centre of mass, as no body hanging from the top
+  is; from the sample before the last that touches to the next), the played body asked for 125 to 185 N, upward, 170 to
+  252% of the gate's phantom-force limit (73.5 N), the pigs the most (probe-letgo-support2.mjs:
+  letgo-support2-rel5-s5e.txt), most at that window's first instant (4.235 s, the pigs' 4.230), where 2 to 15 points
+  still touched (2 to 12 of them the hands') and the gate read nothing over its limit (0% on nine climbs, the bull's 51
+  and the donkey's 57%: rows-at.mjs): its readings over the limit, the pig director's (4.231 to 4.236 s), came as the
+  last one or two points left and in the millisecond after (probe-hand-points.mjs: hand-points-director-s5e.txt).
+
+**The fix**, traversal-balance.js: a grip run that a flight longer than LOST (60 ms) follows ends RELEASE, 10 ms (two
+samples), before its last touch (releaseGrips, run last in each round's schedule, roundSchedule, after the authored
+seat's restore and LOST's; both exported for a unit test). Those samples take the flight's first sample's kind and raw
+contacts, keep their own centre and are marked released: they are the flight's for all that reads the samples' kind (the
+centre's plan, the 5 ms turn's flights and their refinement, and the motion's refit, which holds the climb's head
+through its flights) and for the 1 ms turn's flights, which read the raw contacts and now hold the turn from a released
+flight's first sample (fineFlights), where they ramp it in over FINE_RAMP after the first sample of a flight off a grip:
+a hand that holds nothing turns nothing either. It mirrors the onset, a grip counted from ONSET (20 ms) after its first
+touch as a hold builds: a hand lets go before its last touch. A gap that a round gives back to its support (a seat the
+plan's move lifted, or a flight of LOST or shorter where the authored motion lies on the floor) is restored before the
+release looks, so it is never released; a flight of LOST or shorter (a slip between two grips, at most 40 ms before the
+onset's lag makes it LOST), a grip that ends on the feet, on a hold or with the motion, and a grip the motion starts on
+are left as they are (a height-only hold the plan lifts for longer than LOST, which no restore gives back, is a flight
+like any other; roundSchedule on made-up schedules: try-round.mjs, try-round-rel7.txt). The window's and the low wall's
+grips all end on the feet (probe-runs.mjs: runs-s5e-window-lowwall.txt), so neither changes. On the climbs the drop's
+flight now opens 10 ms sooner (4.235 s, the pigs' 4.230: tc2-full-rel4.txt), and the support the played body asks for,
+as the gate's rows read it, comes down over the grip's last samples before it: the pig director's upward part 326 N at
+4.215 s (414 before) and 126 at 4.225 (268), then 28 N downward at 4.230, the release's first sample (184 upward
+before), and 7 upward at 4.235 (103) (rows-at.mjs). The rows where one or two points of the palms alone touch ask 3 to
+21 N (five rows, the gate reading 0 to 11%: thin-grip-rel4.txt). Around the hands' last touch the played body now asks
+for 21 to 32 N (29 to 43% of the limit), all of it at the release's first sample and downward
+(letgo-support2-rel5-s5e.txt; below).
+
+At the release's first sample (4.235 s, the pigs' 4.230) every climb is asked for 18.5 to 27.7 N downward as the gate's
+rows read it (rows-drop-start.mjs: rows-drop-start-s5e-rel4.txt; 20.8 to 31.3 by the 0.5 ms chords the test reads). The
+plan's own flight meets gravity there (its 5 ms second difference to the probe's 0.001 m/s^2: probe-plan-drop-start.mjs,
+plan-drop-start-rel5-s5e.txt), but the played centre, which meets the plan at its samples, cannot follow the plan's step
+from the grip's support (1.07 to 1.57 m/s^2 upward at the sample before) into free fall, and dips past it, 0.28 to 0.42
+m/s^2 faster than gravity by the chords, then 0.04 to 0.10 back above it at the next sample. On b6643d4a the same 17.1
+to 25.8 N fell at the drop's first sample in the air (its step 0.84 to 1.28 m/s^2, its dip 0.26 to 0.39), which the gate
+read as phantom force, 19 to 35% of its limit, the horse's and the pig foreman's worst readings in their drops (24.4 and
+26.4%). Now 2 to 12 hand points still lie within the rig's centimetre there, and the gate, whose hand contacts may pull,
+lets them give it (0 to 11%), as no palm sliding off the top could. So the drops' fall in the gate's reading is in part
+that pull moving onto the hands: on the horse and the pig foreman wholly.
+
+Tried and not kept (gated as named, all eleven climbs):
+- 20 ms, ONSET's own length, on the plan's kinds alone (var-r1): every climb passes the gate's phantom-wrench rule, the
+  drops' worst 10.7 to 38.5% (the skunk's 38.5 in the air at 4.241 s: worst-by-phase-s5e-r1.txt), but more moves: the
+  heads 9 to 18 mm around the let-go on nine climbs and the skunk's tail plume 54.7 mm at 4.314 s, its fit switched
+  (vertdiff-s5e-r1.txt), and the horse's, goat's, donkey's and dog's right toes pass the gate's 8 m/s at 4.12 s (7.84 to
+  7.90 -> 8.04 to 8.08 m/s), before the let-go: the plan is solved over the whole climb.
+- 10 ms on the plan's kinds alone (var-r2): the drops' worst up to 37.2% (the sheep's), and the climb test failed the
+  rabbit, its drop flight turning at 11.5 N·m at 4.237 s (test-r2-t19b.log): the 1 ms turn reads flights by the raw
+  contacts, which still touched, so it held nothing through the release.
+- 10 ms on both, the turn ramped in after the release's first sample (var-r3): the drops' worst 10.9 to 20.2% (here 10.9
+  to 20.6: the skunk's 17.5 against 11.9 held, the sheep's 19.3 against 17.6, the donkey's 20.2 against 20.6, the eight
+  others' the same: next-stepin/worst-by-phase.mjs, worst-by-phase-r3-rel4.txt), and the climb test passes, but through
+  the release the turn read 1.9 to 9.5 N·m (the rabbit's 9.5 at 4.236 s, against the test's 10 for the drop's flight),
+  where, held from that sample, it reads 0.06 to 0.20 (probe-release-spin.mjs: release-spin-r3-rel4-s5e.txt). Its
+  vertices move from b6643d4a's as here, the same to 0.01 mm (vertdiff-s5e-r3.txt, vertdiff-s5e-rel4.txt).
+
+So (var-rel4, gated; the tree's code lines are var-rel8's, the release made a function run last in each round's schedule
+with its guards, the held schedule (more than two rounds, which no caller uses) giving a sample the held one's fields
+but its centre wherever its kind or its released flag differs, which moves every vertex of all 33 crossings as var-rel4
+does, to the bit: probe-same.mjs, same-rel4-rel8-wall.txt and same-rel4-rel8-window-lowwall.txt), phantom-wrench 1.2.0
+`--gate` on frozen copies: the eleven climbs read no readings over the gate's limits, against 4 (readings-s5e-rel4.txt);
+the pig director passes its phantom-wrench rule.
+
+Measured on var-rel4 against var-s5e:
+- The worst reading in each of the gate's phases (worst-by-phase-s5e-rel4.txt): the drop's fell on all eleven, to 10.9
+  to 20.6%: the pig director's 110.7 -> 12.0, the donkey's 92.5 -> 20.6, the sheep's 90.7 -> 17.6, the skunk's 79.7 ->
+  11.9, the bull's 58.4 -> 13.2, the goat's 56.2 -> 16.9, the dog's 54.7 -> 11.2, the rabbit's 40.1 -> 12.0, the cow's
+  40.0 -> 12.1, the pig foreman's 26.4 -> 15.4, the horse's 24.4 -> 10.9 (the horse's and the pig foreman's the pull
+  above moving onto the hands). Up to the let-go every phase reads as it did; after the drop every phase within 0.03
+  points (the pig director's left foot round the most, 36.55 -> 36.57%) but the weight on the right foot as the walk-out
+  begins, the cow's 17.9 -> 16.8% (4.745 s) and the pig director's 9.5 -> 10.4 (4.930 s).
+- The gate's other rules, from its JSONs' own maxima (each rig point's fastest, from 1 ms differences: speeds-diff.mjs,
+  speeds-s5e-rel4.txt; its text verdicts round to 0.1 m/s and list only the points over the rule): every climb's right
+  toe 0.019 to 0.058 m/s faster at 4.120 to 4.123 s, before the let-go, and the pigs' left toes 0.040 and 0.054 (the
+  foreman's 11.114 -> 11.161 and 9.829 -> 9.869 m/s, the director's 11.079 -> 11.137 and 10.314 -> 10.368); the nine
+  others' right toes stay under the rule's 8 m/s (7.401 to 7.957, the goat's the nearest, 7.898 before), the pigs' over
+  it as before, and the points over it are the same four on each climb; no other point's fastest moves by more than
+  0.005 m/s. The joint rule's extremes move 0.17 degrees at most (the sheep's right elbow's least bend, 2.92 -> 3.08
+  degrees at 4.176 s), the pigs' elbows past the rig's range at the push-off as before (155.2 and 155.9 against 150
+  degrees).
+- The support schedule (tc2-full-rel4.txt against next-stepin/tc2-full-s5e.txt): the drop's flight from 4.235 s on nine
+  climbs (4.245 before) and 4.230 on the pigs (4.240), the rest as before.
+- What moves, every vertex every 1 ms (next-catch/probe-vertdiff-r4.mjs: vertdiff-s5e-rel4.txt): to 4.0 s within 1.65 mm
+  (the cow's and the bull's heads at 4.000 s: the plan is solved over the whole climb); from 4.0 to 4.6 s 3.4 to 9.4 mm
+  on ten climbs (the cow's head 9.4 at 4.097 s, the bull's 8.4 at 4.092, the legs and feet up to 7.3), but the donkey's
+  head 57.8 mm at 4.254 s and 27.5 at 4.600, its mane 23.7 at 4.469; after 4.6 s within 0.9 mm on the ten. The climb's
+  clearance fit turns a head only where the bare head comes within the fit's margin of the wall, taking the cheapest
+  candidate turn that clears (traversal-fit.js, solveHead): on b6643d4a the donkey's came within it in its drop, and the
+  fit turned the head -12 degrees about its turn axis from 4.26 to 4.46 s (eased in from 4.00 s and out to 4.74); on the
+  tree's code the fit finds nothing to clear there and leaves the head unturned (probe-head-fit.mjs:
+  head-fit-donkey-s5e-rel5.txt). That is all of it: the head bone lies up to 12.0 degrees from b6643d4a's (4.420 s),
+  over 1 degree from 4.045 to 4.675 s, 4.9 of it its direction (5.05 at most, at 4.255) and 11.0 a twist about its long
+  axis (probe-head-rot20.mjs: head-rot-donkey-s5e-rel4.txt); b6643d4a's twisted 13.9 degrees about that axis and back,
+  the tree's 3.6 at most, its whole turn no faster (82 degrees a second at most from 4.0 to 4.75 s, against 114:
+  probe-head-twist20.mjs, head-twist-donkey-s5e-rel4.txt). It is not the head's hold through the drop starting 10 ms
+  sooner: refit with the air of b6643d4a's schedule, a copy turns the head the same to 0.01 degrees (review round 2's
+  var-rel5h: review-fix20-r2/head-rot-donkey-s5e-rel5h.txt).
+- The pig director's head passes 8.3 mm from the wall's top at 4.225 s (10.6 before: probe-head-gap.mjs,
+  head-gap-director-s5e-rel4.txt), inside the rig's 1 cm band, so the gate counts it among the contacts from 4.215 to
+  4.235 s, where the support asked falls from 328 N to 127, then 28 downward and 7, with the hands touching too. The pig
+  foreman's passes 3.5 mm from the wall at 4.230 s (5.0 before: head-gap-pigs-s5e-rel6.txt,
+  head-gap-foreman-s5e-rel6.txt), within that band before and after; neither touches.
+- Clearance, every vertex every 1 ms from 4.0 to 4.7 s (next-walkout/probe-limbclear-4dp.mjs). By the fit's way out
+  (clear4dp-s5e-rel4.txt; next-walkout/clear-summary4.mjs: clear4dp-summary-s5e-rel4.txt) 59 parts' deepest rose, by
+  1.35 mm at most (the pig foreman's right fingers, 7.3 -> 8.7 mm), the rest by 1.0 at most (the horse's left forearm,
+  33.0 -> 34.0); parts lie over 1 mm in where they were not for up to 19 ms (the pig director's right forearm); the
+  heads in nowhere, as before. By the true depth, the least way out of the box (clear-hands-true-s5e-rel4.txt,
+  clear-hands-true-summary-s5e-rel4.txt), the hands read as by the fit's way out here, past the top's far edge: the
+  deepest of 21 hand and finger parts rose, by 1.35 mm at most (the pig foreman's right fingers, as above), the rest by
+  0.74 at most (the donkey's right hand, 7.0 -> 7.8 mm), and a hand lies over 1 mm in where it was not for up to 18 ms
+  (the rabbit's right).
+- The figures the climb test's comments give, read again (next-catch/'s tc1-full-r10.mjs, tc2-full-r10.mjs and
+  tm-full-r10.mjs on var-rel4: tc1-full-rel4.txt, tc2-full-rel4.txt, tm-full-rel4.txt, against next-stepin/'s -s5e
+  outputs; next-catch/cmp-full-r10.mjs: cmp-tc1-full-s5e-rel4.txt, cmp-tc2-full-s5e-rel4.txt), every one within its
+  bound: the nine's drop flights turn at 3.2 to 6.0 N·m (3.1 to 5.9 before), the pigs' at 12.1 and 11.7 (12.1 and 12.1);
+  the hand point nearest the wall's surface lowering down the far face (3.85 to 4.15 s) rose on the horse (0.37 -> 0.45
+  mm), the dog (0.46 -> 0.50) and the pig director (3.15 -> 3.16), under the test's 10 mm; the rest within 0.00002.
+- The windows and the low walls do not change: the same to the bit, their schedules, plans and every vertex every 1 ms
+  (probe-same.mjs: same-s5e-rel4-window-lowwall.txt).
+- The eleven climbs build in 72.6 s against 73.7 (the least of two builds each, b6643d4a's code lines and var-rel4's in
+  turn: motion/probe-buildtime.mjs, buildtime-s5e-rel4.txt), 1.5% less: the same within the run's noise, single climbs
+  from 11.8% less to 4.0% more.
+
+`tests/natural-traversal.test.mjs`: releaseGrips's unit test: on the balance's 5 ms grid a grip run that a flight longer
+than LOST follows lets go 10 ms early, its last two samples the flight's (kind and raw contacts, their own centres
+kept), and a flight of LOST or shorter, a slip between two grips as the onset leaves it, a grip that ends on the feet,
+on a hold or with the motion, and a grip the motion starts on are left as they are and roundSchedule's order: a round
+releases a let-go after its restores, a gap the plan made where the authored grip ended on the feet goes back to the
+feet, and a seat the plan lifted for 65 ms (longer than LOST, so only the seat's restore gives it back) goes back to the
+seat before the release looks; with the release first in roundSchedule the unit test fails on that seat (var-rel7x:
+test-rel7x-unit.log). The climb test checks two things more. Letting go, around the hands' last touch on the top after
+the let-go (their contacts read as the balance reads them, but for the climb's tails, whose roots it does not tell from
+the rest, which can only add feet on the top within DRAPE (15 cm) of the centre of mass, as no body hanging from the top
+is: contactProbe and supportAt on the played pose at each of its samples, a grip while a hand point lies within the
+rig's centimetre of the wall; from the sample before the last that touches to the first that does not, between which the
+touch ends), the support the played body asks for (its mass times its centre's acceleration less gravity's, read over
+0.5 ms chords every millisecond) is at most 10% of its weight, the gate's phantom-force limit. It bounds that force's
+size, not its direction nor the turn it asks for, and it guards the release's premise rather than a gate reading: at its
+window's first instant b6643d4a asks for 125 to 185 N where the gate reads nothing over its limit on any climb. And
+through the release's 10 ms (the drop's flight's first two samples, which must be marked released) the body's angular
+momentum changes at most 1 N·m, a tenth of the rig's airborne limit; the gate sees the hold only in part (it reads the
+hand points still within its centimetre as contacts there, the window's last 2 to 5 ms airborne on six climbs:
+gate-air-release.mjs, gate-air-release-rel4.txt; and its drops' worst differ, ramped against held, on three climbs,
+above), so the bound guards the plan's own premise, that a released hand holds nothing. Now 21 to 32 N (downward, above)
+and 0.06 to 0.20 N·m. On b6643d4a's code every climb fails the first, 125 to 185 N, and the unit test fails, there being
+no releaseGrips (test-s5e-t20e.log, on var-s5e-t20, whose test is the tree's: 7 of 19 pass); with the turn ramped in
+after the release's first sample every climb fails the second, 1.9 to 9.5 N·m (test-rel8n.log, on var-rel8n, the tree's
+code lines but the hold: 8 of 19). The drop's flight check, its flight now opening at the release, reads 3.2 to 6.0 N·m
+against its 10. The test file passes (19 of 19 tests: test-rel8.log, on var-rel8, whose test is the tree's).
+
+**Left.**
+- The drop's centre dipping past gravity at the flight's first sample, now the release's, where its track cannot follow
+  the plan's step into free fall: 19 to 28 N downward by the gate's rows, which the gate lets the hands still touching
+  give. The 1 ms pass does not hold the centre off a grip (traversal-balance.js, fineFlights: eased in over 5 ms, before
+  the release, it raised the pig director's let-go); held from a released flight's first sample, untried.
+- The pigs' heads within the rig's 1 cm band of the top as they let go (the director's 8.3 mm at 4.225 s, newly; the
+  foreman's 3.5 at 4.230, 5.0 before), so the gate counts them contacts there.
+- The climbs' start: the played body's pressure point still lies up to 8.8 cm outside the rabbit's and dog's feet in the
+  first 50 ms (the plan's 5.0 and 4.8; the gate 81 and 79% of its limit), a margin that details the plan barely
+  registers move by tens of points; the start wants a plan that the paws can give from rest.
+- The rabbit's push at the limit's edge (99.86% at 0.845 s), as at every distance both keys were set back from 4 to 5.5
+  cm: the plan's turning on the take-off's lead.
+- Around the let-go some parts lie a little deeper against the wall: 59 parts' deepest by up to 1.35 mm (the pig
+  foreman's right fingers, 7.3 -> 8.7 mm into the top, by the fit's way out; the hands by the true depth the same).
+- The step in's feet slide along the floor (the right 19.8 cm and the left 5.5 on nine climbs; the pigs' left 21.1 and
+  23.8, their right 9.3): a step in that lifts them.
+- The pig director's head against its left forearm in its hang (2.10 cm, over the gate's 2 for capsules), and the legs
+  and forearms a few millimetres deeper against the face in the catch and hang.
+- The tail fit's switch to its planned path on a single brush with its margin, and its 4 mm margin inside the rig's 1 cm
+  band.
+- The horse's head in the top's far edge (2.9 mm for 8 ms at 3.933 s).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

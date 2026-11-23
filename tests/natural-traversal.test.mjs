@@ -6,6 +6,7 @@ import {createBattlePosture} from '../dist/tactics/battle-posture.js';
 import {createWorkerLocomotion} from '../dist/tactics/worker-locomotion.js';
 import {naturalTraversal,createNaturalTraversal} from '../dist/tactics/natural-traversal.js';
 import {contactProbe,supportAt,planCentre,turnAir} from '../dist/tactics/traversal-balance.js';
+import * as BALANCE from '../dist/tactics/traversal-balance.js';
 import {steadyPoles,steadyTurns,createSurfaceProbe,MASS_SEGMENTS} from '../dist/tactics/traversal-pose.js';
 import {WALL} from '../dist/tactics/wall-climb.js';
 import {edgeBoxes} from '../dist/tactics/traversal-fit.js';
@@ -156,6 +157,39 @@ test("a flight's turn is held from LEAD before the hooves leave, not the hands",
  assert.equal(held('aafffffaa'),'aa-----aa','a touch exactly as long as the lead between two flights is left');
  assert.equal(held('hhhhhhaaa'),'------aaa','a run on a held seat is left');
  assert.equal(held('aaaffffff'),'aaa------','a landing is left');
+});
+test('a grip the body leaves for a flight lets go 10 ms before its last touch, and no other grip does',()=>{
+ // traversal-balance.js, releaseGrips, on the balance's 5 ms grid (RELEASE 0.01 s, two samples; LOST 0.06 s, twelve):
+ // the last two samples of a grip run that a flight longer than LOST follows take that flight's first sample's kind and
+ // raw contacts, keep their own centre and are marked released (upper case below); a flight of LOST or shorter (which
+ // the round's LOST restore may give back to the support the authored motion lies on; or a slip between two grips, at
+ // most 40 ms before the onset's lag makes it LOST), a grip that ends on the feet, on a hold or with the motion, and a
+ // grip the motion starts on are left as they are. And roundSchedule runs a round's steps in their order, the authored
+ // seat given back, then (after the first round) the plan's own short flights given back to their support (LOST), then
+ // the release, so that a gap a round gives back is never released: released first, a seat the plan lifts for 65 ms
+ // (longer than LOST, so only the seat's restore gives it back) keeps a 10 ms released flight before it; and a 60 ms
+ // gap where the authored grip ended on the feet, which the LOST restore gives back, is left only while the release
+ // waits for a flight longer than LOST (waiting for one of LOST, released first, it opened on a release and stayed a
+ // flight).
+ const {releaseGrips}=BALANCE;assert.equal(typeof releaseGrips,'function','traversal-balance.js exports releaseGrips');
+ const K={f:'feet',g:'grip',h:'hold',a:'air'},C={feet:'f',grip:'g',hold:'h',air:'a'},g=n=>'g'.repeat(n),a=n=>'a'.repeat(n);
+ const go=s=>releaseGrips([...s].map((c,i)=>({kind:K[c],raw:K[c],c:[i,0,0]})),.005),str=S=>S.map(x=>x.released?C[x.kind].toUpperCase():C[x.kind]).join('');
+ assert.equal(str(go('ffff'+g(12)+a(18)+'ff')),'ffff'+g(10)+'AA'+a(18)+'ff','a let-go into a flight lets go 10 ms early');
+ assert.equal(str(go('ffff'+g(12)+a(13)+'ff')),'ffff'+g(10)+'AA'+a(13)+'ff','a flight longer than LOST is one');
+ assert.equal(str(go('ffff'+g(12)+a(12)+'ff')),'ffff'+g(12)+a(12)+'ff','a flight of LOST, which a round may give back, is left');
+ assert.equal(str(go('ffff'+g(12)+a(12)+g(12)+'ff')),'ffff'+g(12)+a(12)+g(12)+'ff','a slip between two grips, as the onset leaves it, is left');
+ assert.equal(str(go('ffff'+g(12)+'ffff')),'ffff'+g(12)+'ffff','a grip that ends on the feet is left');
+ assert.equal(str(go('ffff'+g(12)+'hhhh')),'ffff'+g(12)+'hhhh','a grip that ends on a hold is left');
+ assert.equal(str(go('ffff'+g(12))),'ffff'+g(12),'a grip that ends the motion is left');
+ assert.equal(str(go('gggg'+a(14))),'gggg'+a(14),'a grip the motion starts on is left');
+ const S=go('ffff'+g(12)+a(18)+'ff'),r=S.slice(14,16);
+ assert.ok(r.every(x=>x.kind==='air'&&x.raw==='air'),'a released sample is the flight\'s, its raw contacts too');
+ assert.deepEqual(r.map(x=>x.c[0]),[14,15],'a released sample keeps its own centre');
+ const {roundSchedule}=BALANCE;assert.equal(typeof roundSchedule,'function','traversal-balance.js exports roundSchedule');
+ const mk=s=>[...s].map((c,i)=>({kind:K[c],raw:K[c],c:[i,0,0]})),round=(au,me)=>str(roundSchedule(mk(me),mk(au),1,.005));
+ assert.equal(round('ff'+g(12)+a(18)+'ffff','ff'+g(12)+a(18)+'ffff'),'ff'+g(10)+'AA'+a(18)+'ffff','a round releases a let-go after its restores');
+ assert.equal(round('ff'+g(12)+'f'.repeat(16),'ff'+g(12)+a(12)+'ffff'),'ff'+g(12)+'f'.repeat(16),'a gap the plan made where the authored grip ends on the feet goes back to the feet before the release looks');
+ assert.equal(round('ff'+g(12)+'h'.repeat(20),'ff'+g(12)+a(13)+'h'.repeat(7)),'ff'+g(12)+'h'.repeat(20),'a seat the plan lifted for longer than LOST goes back to the seat before the release looks');
 });
 for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, ends on the next tile's centre, clears the obstacle and gives the tail back`,()=>{
  const m=model(p),tails=m.worker.parts.filter(x=>/tail/.test(x.name)).map(x=>[x,Float32Array.from(x.geometry.attributes.position.array)]);
@@ -496,18 +530,58 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
      assert.ok(spin.v<=10,`wall: as the hands reach the top (${(te-.05).toFixed(3)} to ${te.toFixed(3)} s) the body's angular momentum changes at ${spin.v.toFixed(1)} N·m at ${spin.t?.toFixed(3)} s (10 at most)`);
      let fall={v:0};for(let t=T[k0]+.005;t<=te+1e-9;t+=.001){const a=at(t-h)[1],c=at(t)[1],b=at(t+h)[1],v=Math.hypot(...a.map((x,q)=>(x-2*c[q]+b[q])/(h*h)+(q===1?9.81:0)));if(v>fall.v)fall={v,t};}
      assert.ok(fall.v<=.981,`wall: in the take-off's flight (${(T[k0]+.005).toFixed(3)} to ${te.toFixed(3)} s) the centre of mass accelerates ${fall.v.toFixed(2)} m/s^2 off gravity's at ${fall.t?.toFixed(3)} s (0.98 at most)`);}
-    // Nor does the drop's flight turn the body: through the balance's first flight after the let-go (the palms off the
-    // top's far edge until they are on the far face), the same angular momentum changes at most 10 N·m, the rig's
-    // airborne limit (wall-climb.js: the palms arc out over the top's far corner without stopping, and the head is held
-    // through the drop before the balance as after it). On d54c607d the nine climbs read 20 to 32 N·m there (the hands
-    // braking to rest at a key past the edge, the bull's head turning in the turn's plan alone), now 3.1 to 5.9 (3.4 to
-    // 5.9 on 21efea5e, 3.5 to 5.9 on 6fe975ef). The pigs are left out: their drop flights turn at 12 N·m, at 4.330 and
-    // 4.324 s (51 and 11 on 21efea5e, the foreman and the director), as their palms land on the far face; with their
-    // palms off the top before they let go (f293da69) they turned at 58 and 148, at 4.259 and 4.213 s, earlier in their
-    // drops. The rate here is a torque (N·m: the rig's airborne limit is 10 N·m).
+    // Letting go, a hand holds nothing as it slides off (traversal-balance.js, RELEASE): around the hands' last touch
+    // on the top after the let-go (read as the balance reads contacts, but for the climb's tails, whose roots it does
+    // not tell from the rest, which can only add feet on the top within DRAPE of the centre of mass, as no body hanging
+    // from the top is: contactProbe and supportAt on the played pose at each of its samples, a grip while a hand point
+    // lies within the rig's centimetre of the wall), from the sample before the last that touches to the first that
+    // does not, between which the touch ends, the support the played body asks for, its mass times its centre of mass's
+    // acceleration less gravity's (read over 0.5 ms chords every millisecond), is at most 10% of its weight, the gate's
+    // limit of phantom force. It bounds that force's size, not its direction nor the turn it asks for, and it guards
+    // the release's premise, not a gate reading: the gate lets any hand point within its centimetre give any force.
+    // Planned to the last touch (b6643d4a), every climb asked 125 to 185 N there, upward, at the window's first instant
+    // (170 to 252% of that limit, the pigs the most), where 2 to 15 points still touched (2 to 12 of them the hands')
+    // and the gate read nothing over its limit (0% on nine climbs, the bull's 51 and the donkey's 57%); its readings
+    // came as the last one or two points left (the pig director's 111%, the donkey's and the sheep's 93 and 91%). Now
+    // 21 to 32 N, every drop's reading 21% at most. That is the release's first sample, and it is downward: the plan's
+    // flight meets gravity there, but the played centre, whose track cannot follow the plan's step from the grip's
+    // support into free fall, dips a little past it (19 to 28 N as the gate's rows read it; on b6643d4a the same dip,
+    // 17 to 26 N, fell at the drop's first sample in the air, where the gate read it as phantom force, 19 to 35% of its
+    // limit), and with hand points still within its centimetre the gate lets them give it, as no palm sliding off the
+    // top could.
+    {const BM=MASS_SEGMENTS.reduce((m,x)=>m+x[2],0),G=9.81,h=5e-4,obstacles=edgeBoxes(WALL.edge,WALL.half,[[0,WALL.top]]),cp=contactProbe(m.worker),lg=motion.phases.find(x=>x.label==='Let go').end;
+     const kindAt=t=>{const r=motion.apply(t/D);cp.update();return supportAt(cp,obstacles,[...r.com]).kind;};let last=null;
+     for(let k=Math.ceil(lg/dt-1e-9);k*dt<=lg+.2;k++){const kd=kindAt(k*dt);if(kd==='grip')last=k*dt;else if(last!==null&&kd==='air')break;}
+     assert.ok(last!==null,'wall: no hand on the top after the let-go');const com=t=>[...motion.apply(t/D).com];let worst={f:0};
+     for(let q=0;q<=10;q++){const t=last-dt+q*.001,c0=com(t-h),c=com(t),c1=com(t+h),a=c.map((v,i)=>(c1[i]-2*v+c0[i])/(h*h)),f=BM*Math.hypot(a[0],a[1]+G,a[2]);if(f>worst.f)worst={f,t};}
+     assert.ok(worst.f<=.1*BM*G,`wall: letting go, the body asks its hands for ${worst.f.toFixed(1)} N at ${worst.t?.toFixed(3)} s, around their last touch on the top (${(.1*BM*G).toFixed(1)} at most)`);}
+    // Nor does the drop's flight turn the body: through the balance's first flight after the let-go (from the palms'
+    // release, their last 10 ms on the top's far edge, until they are on the far face), the same angular momentum
+    // changes at most 10 N·m, the rig's airborne limit (wall-climb.js: the palms arc out over the top's far corner
+    // without stopping, and the head is held through the drop before the balance as after it). On d54c607d the nine
+    // climbs read 20 to 32 N·m there (the hands braking to rest at a key past the edge, the bull's head turning in the
+    // turn's plan alone), now 3.2 to 6.0 (3.1 to 5.9 on b6643d4a, its flight 10 ms shorter, from the palms' first
+    // sample off the top; 3.4 to 5.9 on 21efea5e, 3.5 to 5.9 on 6fe975ef). The pigs are left out: their drop flights
+    // turn at 12 N·m, at 4.330 and 4.324 s (51 and 11 on 21efea5e, the foreman and the director), as their palms land
+    // on the far face; with their palms off the top before they let go (f293da69) they turned at 58 and 148, at 4.259
+    // and 4.213 s, earlier in their drops. The rate here is a torque (N·m: the rig's airborne limit is 10 N·m).
     if(!/^pig-/.test(p.id)){const lg=motion.phases.find(x=>x.label==='Let go').end,a=S.findIndex((x,k)=>B.times[k]>=lg&&x.kind==='air');let b=a;while(b>=0&&b+1<n&&S[b+1].kind==='air')b++;
      assert.ok(a>0,'wall: no flight after the let-go');const spin=spinOver(B.times[a],B.times[b]);
      assert.ok(spin.v<=10,`wall: in the drop's flight (${B.times[a].toFixed(3)} to ${B.times[b].toFixed(3)} s) the body's angular momentum changes at ${spin.v.toFixed(1)} N·m at ${spin.t?.toFixed(3)} s (10 at most)`);}
+    // And the release turns nothing: through its 10 ms (the drop's flight's first two samples, marked released:
+    // traversal-balance.js, RELEASE), the same angular momentum changes at most 1 N·m, a tenth of the rig's airborne
+    // limit: a hand that holds nothing turns nothing either (the 1 ms turn held from the release's first sample:
+    // traversal-balance.js, fineFlights). Ramped in from FINE_RAMP after that sample instead, as into a flight off a
+    // grip, the eleven read 1.9 to 9.5 N·m there (the rabbit's 9.5 at 4.236 s); held, 0.06 to 0.20. b6643d4a plans no
+    // release (its drops' flights, from the palms' first sample off the top, read 0.9 to 3.1 in their first 10 ms). The
+    // gate sees the hold only in part: it reads the hand points still within its centimetre as contacts there (40 N·m
+    // on contact; the window's last 2 to 5 ms airborne on six climbs), and its drops' worst, ramped against held,
+    // differ on three climbs (the skunk's 17.5 and 11.9%, the sheep's 19.3 and 17.6, the donkey's 20.2 and 20.6): the
+    // bound guards the plan's own premise, that a released hand holds nothing.
+    {const lg=motion.phases.find(x=>x.label==='Let go').end,a=S.findIndex((x,k)=>B.times[k]>=lg&&x.kind==='air');
+     assert.ok(a>0&&S[a].released&&S[a+1]?.released&&!S[a+2]?.released,`wall: the drop's flight (from ${B.times[a]?.toFixed(3)} s) does not open on a 10 ms release`);
+     const spin=spinOver(B.times[a],B.times[a]+.01);
+     assert.ok(spin.v<=1,`wall: through the release (${B.times[a].toFixed(3)} to ${(B.times[a]+.01).toFixed(3)} s) the body's angular momentum changes at ${spin.v.toFixed(2)} N·m at ${spin.t?.toFixed(3)} s (1 at most)`);}
     // Nor does the walk-out's right foot jolt the body as it sets down: from 50 ms before the trunk's key as it comes
     // round (the end of Right foot round, 5.84 s) to 80 ms after it, the same angular momentum changes at most 100 N·m
     // (wall-climb.js: the hoof set down over 80 ms, its land key 40 ms after the trunk's). Set down over 40 ms
