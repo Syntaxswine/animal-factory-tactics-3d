@@ -116,6 +116,12 @@ test('a hand grips the wall, and an elbow against its face only pushes',()=>{
   assert.ok(s.kind==='grip'&&s.feetFloor===0&&Math.min(...xs)<.451&&Math.max(...xs)>1.149,`a grip with a boot on the floor and one on a top beside it keeps an outline of both (x ${Math.min(...xs).toFixed(2)} to ${Math.max(...xs).toFixed(2)})`);}
  {const s=supportAt(probe([{...face,part:1,bone:2}]),[wall],[.97,.75,.1]);
   assert.ok(s.kind==='grip'&&!s.feetHull,'a grip with nothing on the floor keeps an outline');}
+ // On feet alone it keeps each foot's points by the probe's mesh (footPts, for landOnset); with a palm on the floor too,
+ // none.
+ {const s=supportAt(probe(boot),[wall],[.97,.75,.1]);
+  assert.ok(s.kind==='feet'&&Object.keys(s.footPts||{}).join()==='0'&&s.footPts[0].length===4&&s.tailPts?.length===0,'a sample on the boot alone keeps no points of it by its mesh');}
+ {const s=supportAt(probe([...boot,{part:1,bone:2,v:9,x:1,y:.001,z:.5}]),[wall],[.97,.75,.1]);
+  assert.ok(s.kind==='feet'&&!s.footPts,'a sample with a palm on the floor too keeps foot points');}
 });
 // A seat the balance holds (traversal-balance.js, planCentre: a 'hold' with seat, the climb's top for a deep body)
 // pushes and never pulls: planned against a seat whose height drops 6 cm at once, the plan falls no faster than
@@ -282,6 +288,38 @@ test('on one palm the body keeps its spin about the line to it',()=>{
  assert.deepEqual(ref2[15],ref0[15],'in the air the target is left');
  assert.deepEqual(ref2[16],ref0[16],'a flight cuts the easing back: after it the target is as it was');
  assert.deepEqual(holdPatchSpin(ref0.map(x=>x.slice()),S.map(x=>({...x,hull:wide})),S.map(()=>false),dt),ref0,'on a wider outline the target is left');
+});
+test('a foot that arrives takes the weight over ONSET',()=>{
+ // traversal-balance.js, landOnset (the round schedule's last step): where a foot's mesh has points on a sample standing
+ // on feet alone (footPts, by the probe's mesh) and none on the sample before while another foot stands there, that
+ // sample's outline and the next three (ONSET, 20 ms, at 5 ms) are the standing foot's points and the tail's, with the
+ // arriving foot's points drawn toward the standing foot's middle by traversal-pose.js's smooth at k/5, k = 1 to 4; the
+ // standing foot's own growth, a foot arriving with none standing, a sample with anything but feet and a tail on the
+ // floor, and a released sample are left; it stops where the arriving foot is up again.
+ const {landOnset}=BALANCE;assert.equal(typeof landOnset,'function','traversal-balance.js exports landOnset');
+ // The standing foot (mesh 3) 10 cm square, its middle at x 0.35 + 0.01 k, z 0.15, sliding 1 cm a sample along x; the
+ // arriving one (mesh 7) well beside it, z -0.9 to -0.8, so that even drawn in by smooth(1/5) it reaches past the
+ // standing one, sliding 2 cm a sample along x: each sample's own points count. Every sample's own outline is a unit
+ // square, which the onset replaces.
+ const R=k=>[[.3,.1],[.4,.1],[.4,.2],[.3,.2]].map(([x,z])=>[x+.01*k,z]),L=k=>[[.3,-.9],[.4,-.9],[.4,-.8],[.3,-.8]].map(([x,z])=>[x+.02*k,z]);
+ const own=[[0,0],[1,0],[1,1],[0,1]],want=[1,2,3,4].map(k=>smooth(k/5)),hull=P=>{const cr=(o,p,q)=>(p[0]-o[0])*(q[1]-o[1])-(p[1]-o[1])*(q[0]-o[0]),Q=P.slice().sort((p,q)=>p[0]-q[0]||p[1]-q[1]),lo=[],up=[];
+  for(const p of Q){while(lo.length>=2&&cr(lo.at(-2),lo.at(-1),p)<=0)lo.pop();lo.push(p);}for(let k=Q.length-1;k>=0;k--){const p=Q[k];while(up.length>=2&&cr(up.at(-2),up.at(-1),p)<=0)up.pop();up.push(p);}return lo.slice(0,-1).concat(up.slice(0,-1));};
+ const same=(H,G)=>{const s=P=>P.map(p=>p.join()).sort();return H.length===G.length&&H.every((p,q)=>Math.abs(p[0]-G[q][0])<1e-12&&Math.abs(p[1]-G[q][1])<1e-12)||JSON.stringify(s(H))===JSON.stringify(s(G));};
+ const S0=(fp,extra={})=>({kind:'feet',hull:own,box:[0,1,0,1],floor:0,footPts:fp,tailPts:[],...extra}),run=list=>landOnset(list.map((x,i)=>({...x,c:[i,0,0]})),.005);
+ const r=k=>S0({3:R(k)}),b=k=>S0({3:R(k),7:L(k)}),A=run([r(0),r(1),b(2),b(3),b(4),b(5),b(6),b(7)]);
+ assert.deepEqual(A.map(x=>x.landing),[undefined,undefined,...want,undefined,undefined],'the arriving foot is taken in over ONSET, smooth at 1/5 to 4/5');
+ for(let k=0;k<4;k++){const i=2+k,co=[.35+.01*i,.15],G=hull(R(i).concat(L(i).map(p=>[co[0]+want[k]*(p[0]-co[0]),co[1]+want[k]*(p[1]-co[1])]))),H=A[i].hull,z0=.15-1.05*want[k];
+  assert.ok(same(H,G)&&Math.abs(Math.min(...H.map(p=>p[1]))-z0)<1e-12,`sample ${i}: the outline ${JSON.stringify(H.map(p=>p.map(v=>+v.toFixed(4))))} is the standing foot's and the arriving one's points as this sample has them, the arriving one drawn toward the standing one's middle (${JSON.stringify(G.map(p=>p.map(v=>+v.toFixed(4))))})`);}
+ assert.equal(A[6].hull,own,'after ONSET a sample keeps its own outline');
+ const r0=r(0),R0=R(0),L0=L(0),b0=b(0);
+ assert.ok(run([r0,r0,S0({3:R0.concat([[.45,.15]])}),S0({3:R0.concat([[.45,.15]])})]).every(x=>x.landing===undefined),'the standing foot\'s own growth is left');
+ assert.ok(run([{kind:'air'},S0({7:L0}),S0({7:L0})]).every(x=>x.landing===undefined),'a foot arriving with none standing is left');
+ assert.ok(run([r0,{kind:'feet',hull:own,box:[0,1,0,1],floor:0},{kind:'feet',hull:own,box:[0,1,0,1],floor:0}]).every(x=>x.landing===undefined),'a sample with a hand or a body on the floor (no foot points) is left');
+ assert.ok(run([r0,S0({3:R0,7:L0},{released:true}),b0]).every(x=>x.landing===undefined),'a released sample is left');
+ {const T=run([r0,S0({3:R0,7:L0},{tailPts:[[.1,0]]})]),co=[.35,.15],G=hull(R0.concat([[.1,0]],L0.map(p=>[co[0]+want[0]*(p[0]-co[0]),co[1]+want[0]*(p[1]-co[1])])));
+  assert.ok(T[1].landing===want[0]&&same(T[1].hull,G),'the tail\'s points stay in the outline taken in, the arriving foot drawn toward the standing foot\'s middle, not the tail\'s');}
+ assert.deepEqual(run([r0,b0,b0,r0,r0]).map(x=>x.landing),[undefined,want[0],want[1],undefined,undefined],'the onset stops where the arriving foot is up again');
+ assert.deepEqual(run([r0,b0,S0({7:L0}),S0({7:L0})]).map(x=>x.landing),[undefined,want[0],undefined,undefined],'the onset stops where the standing foot is up');
 });
 for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, ends on the next tile's centre, clears the obstacle and gives the tail back`,()=>{
  const m=model(p),tails=m.worker.parts.filter(x=>/tail/.test(x.name)).map(x=>[x,Float32Array.from(x.geometry.attributes.position.array)]);
@@ -751,12 +789,19 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    // plan leant on it 31 to 58 cm behind the boots (its last step read 40% of its weight). Before the lean, where
    // contacts come and go, the plan's last round reads them on the hips of the round before, and the tails as bent
    // before it (bent again after, the rabbit's is off the floor at 2.59 to 2.61 s in its roll, where the plan leans on
-   // it 20 to 25 cm from anything the body has there).
-   const B=motion.balance;
+   // it 20 to 25 cm from anything the body has there). Where a foot that arrives is being taken in (traversal-balance.js,
+   // landOnset: a sample tagged landing), its corners are drawn in toward the standing foot, between the feet, up to
+   // 12.6 cm from any point the body has on the floor (5 to 11 at this check's own samples, on five windows) but inside
+   // their convex hull, leaning on less: there every corner lies within 5 cm of that hull instead.
+   const B=motion.balance,hull2=P=>{const cr=(o,p,q)=>(p[0]-o[0])*(q[1]-o[1])-(p[1]-o[1])*(q[0]-o[0]),Q=P.slice().sort((p,q)=>p[0]-q[0]||p[1]-q[1]),lo=[],up=[];
+     for(const p of Q){while(lo.length>=2&&cr(lo.at(-2),lo.at(-1),p)<=0)lo.pop();lo.push(p);}for(let k=Q.length-1;k>=0;k--){const p=Q[k];while(up.length>=2&&cr(up.at(-2),up.at(-1),p)<=0)up.pop();up.push(p);}return lo.slice(0,-1).concat(up.slice(0,-1));},
+    outside=(H,p)=>{if(H.length>=3&&H.every((q,k)=>{const r=H[(k+1)%H.length];return (r[0]-q[0])*(p[1]-q[1])-(r[1]-q[1])*(p[0]-q[0])>=0;}))return 0;let d=Infinity;
+     for(let k=0;k<H.length;k++){const q=H[k],r=H[(k+1)%H.length],ex=r[0]-q[0],ez=r[1]-q[1],L2=ex*ex+ez*ez,u=L2?Math.max(0,Math.min(1,((p[0]-q[0])*ex+(p[1]-q[1])*ez)/L2)):0;d=Math.min(d,Math.hypot(p[0]-q[0]-u*ex,p[1]-q[1]-u*ez));}return d;};
    for(let i=0;i<B.times.length;i+=20){const s=B.samples[i];if(B.times[i]<b||s.kind!=='feet'||s.floor!==0)continue;motion.apply(B.times[i]/motion.duration);const on=[];
-    for(const part of m.worker.parts){const a=part.geometry.attributes.position;for(let j=0;j<a.count;j++){v.fromBufferAttribute(a,j);part.applyBoneTransform(j,v);v.applyMatrix4(part.matrixWorld);if(Math.abs(v.y)<=.01)on.push(v.x,v.z);}}
-    let far=0;for(const [x,z]of s.hull){let d=Infinity;for(let k=0;k<on.length;k+=2)d=Math.min(d,Math.hypot(x-on[k],z-on[k+1]));far=Math.max(far,d);}
-    assert.ok(far<=.05,`window: at ${B.times[i].toFixed(2)} s the balance leans on the floor ${(100*far).toFixed(0)} cm from anything the body has there`);}
+    for(const part of m.worker.parts){const a=part.geometry.attributes.position;for(let j=0;j<a.count;j++){v.fromBufferAttribute(a,j);part.applyBoneTransform(j,v);v.applyMatrix4(part.matrixWorld);if(Math.abs(v.y)<=.01)on.push([v.x,v.z]);}}
+    let far=0;if(s.landing!==undefined){const H=hull2(on);for(const p of s.hull)far=Math.max(far,outside(H,p));}
+    else for(const [x,z]of s.hull){let d=Infinity;for(const q of on)d=Math.min(d,Math.hypot(x-q[0],z-q[1]));far=Math.max(far,d);}
+    assert.ok(far<=.05,`window: at ${B.times[i].toFixed(2)} s the balance leans on the floor ${(100*far).toFixed(0)} cm ${s.landing!==undefined?'outside':'from'} anything the body has there`);}
    // Lying back onto its hands and rolling, both elbows stay inside the rig's table (150 degrees). The balance, keeping
    // the centre of mass over the hands until the back is down, pulled the goat's hips 13 to 18 cm toward a horn tip it
    // rolled on alone (its left elbow folded to 155), and the skunk's 2.7 cm, its body lying lower than the horse's (151).
@@ -814,6 +859,23 @@ for(const p of MAMMALS)test(`${p.id}: every crossing starts in its own stance, e
    for(const o of one){if(!on.has(o.k-EDGE)||!on.has(o.k+EDGE))continue;read++;const La=Lh(o.t-.001),Lb=Lh(o.t+.001),d=[0,1,2].map(q=>(Lb[q]-La[q])/.002),u=sub(o.p,o.c),l=Math.hypot(...u),v=Math.abs((d[0]*u[0]+d[1]*u[1]+d[2]*u[2])/l);if(v>worst.v)worst={v,t:o.t};}
    assert.ok(read>=5,`window: the spin's bound reads ${read} instants 10 ms and more inside a stretch on one palm (5 at least)`);
    assert.ok(worst.v<=20,`window: on one palm the body's spin about the line to it changes at ${worst.v.toFixed(1)} N·m at ${worst.t?.toFixed(3)} s (20 at most)`);}
+  // A foot that arrives takes the weight over ONSET (traversal-balance.js, landOnset): on every window the last step's
+  // foot, landing beside the one the body stands on about 0.22 s before the end, is taken into the balance's outline
+  // over ONSET's four samples: one such run in the last 0.30 to 0.15 s, each of its samples' outline the standing
+  // foot's points and the tail's as that sample has them, with the arriving foot's drawn toward the standing foot's
+  // middle by smooth at k/5, k = 1 to 4 (no window has a tail on the floor there: the unit test above reads the tail's
+  // part).
+  if(kind==='window'){const B=motion.balance,S=B.samples,T=B.times,D=motion.duration,want=[1,2,3,4].map(k=>smooth(k/5)),starts=[];
+   for(let i=1;i<S.length;i++)if(S[i].landing!==undefined&&S[i-1].landing===undefined)starts.push(i);
+   const last=starts.filter(i=>T[i]>=D-.30&&T[i]<=D-.15);
+   assert.equal(last.length,1,`window: ${last.length} feet taken in over ONSET in the last 0.30 to 0.15 s (one, the last step's)`);
+   const hull=P=>{const cr=(o,p,q)=>(p[0]-o[0])*(q[1]-o[1])-(p[1]-o[1])*(q[0]-o[0]),Q=P.slice().sort((p,q)=>p[0]-q[0]||p[1]-q[1]),lo=[],up=[];
+    for(const p of Q){while(lo.length>=2&&cr(lo.at(-2),lo.at(-1),p)<=0)lo.pop();lo.push(p);}for(let k=Q.length-1;k>=0;k--){const p=Q[k];while(up.length>=2&&cr(up.at(-2),up.at(-1),p)<=0)up.pop();up.push(p);}return lo.slice(0,-1).concat(up.slice(0,-1));};
+   const i0=last[0],was=Object.keys(S[i0-1].footPts||{}),came=Object.keys(S[i0].footPts||{}).filter(q=>!was.includes(q));
+   for(let k=0;k<4;k++){const x=S[i0+k],old=was.flatMap(q=>x.footPts?.[q]||[]),co=[old.reduce((t,q)=>t+q[0],0)/old.length,old.reduce((t,q)=>t+q[1],0)/old.length];
+    const G=hull(old.concat(x.tailPts||[],came.flatMap(q=>(x.footPts?.[q]||[]).map(v=>[co[0]+want[k]*(v[0]-co[0]),co[1]+want[k]*(v[1]-co[1])])))),H=x.hull||[];
+    const off=H.length===G.length?Math.max(...H.map((p,q)=>Math.hypot(p[0]-G[q][0],p[1]-G[q][1]))):Infinity;
+    assert.ok(came.length>0&&Math.abs((x.landing??-1)-want[k])<1e-12&&off<1e-9,`window: at ${T[i0+k].toFixed(3)} s the last step's foot is taken in at ${x.landing?.toFixed(3)} (${want[k].toFixed(3)}), its outline ${off.toExponential(1)} m from the standing foot's and the tail's points with the arriving foot's drawn in, as this sample has them`);}}
   // Cut short where the tail is bent (as a casualty ends a crossing), the tail still comes back exactly.
   motion.apply(.6);motion.dispose();for(const [part,base]of tails)assert.deepEqual(part.geometry.attributes.position.array,base,`${kind}: the ${part.name} is not given back`);}
 });

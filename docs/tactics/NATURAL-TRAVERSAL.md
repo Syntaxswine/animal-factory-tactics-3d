@@ -5105,6 +5105,173 @@ hands land reading higher; the windows' other phases, among them stand on the ti
 24, right foot in 17, sit up 17, slide over 10 (the pig director's 215% at 1.350 s) and reach for the floor 9 (the
 horse's 202.9%).
 
+### 2026-11-23 (physics balance, forty-third part): a foot that arrives takes the weight over ONSET
+
+After the forty-second part (7ad0349f) the eleven windows read 368 readings over the gate's limits, 46 of them in their
+last phase, "Stand on the tile" (3 to 6 on every window), and 24 in the step before it, "Left foot round"; four windows'
+worsts were there (the horse's 226% at 5.835 s, the pig foreman's 192% at 5.950, the pig director's 215% at 6.140, the
+dog's 261% at 6.445), each 0.22 s before its crossing's end (kr-f21-window.txt). There the window's last step lands: the
+left foot comes round to its mark and sets down at the get-up's leftDown, END - 0.22 s (window-dive.js, GETUP), from 2.5
+cm up over 40 ms. Through the step the plan's centre lies about 10 cm outside the standing hoof's outline (the horse's z
+0.045 against 0.144 to 0.329: the authored hips cross to the middle with the left foot in the air), the body falling
+sideways onto the new foot at 1.4 to 2.1 m/s^2 (probe-end-plan.mjs: end-plan-horse.txt). The rig and the plan both read
+the arriving hoof from 1 cm up, and the plan counted it whole from that first reading; planCentre reads each sample's
+outline clipped by those within two samples either side (outlineAt), so the outline it read took the new foot in whole
+two samples later, 10 ms after that first reading, the hoof by then 0.4 to 1.0 mm above the lowest it reaches over the
+next 100 ms (the horse's: on the standing foot at 5.820 and 5.825 s, both feet at 5.830, the hoof 0.58 mm up:
+probe-read-outline.mjs; probe-hoof-down.mjs on var-f21b, hoof-table-f21b.txt), its pressure point jumping across in one
+sample and its sideways acceleration turning over within it (-2.08 to +1.49 m/s^2 at 5.825 to 5.830 s; on the eleven,
+the largest step 2.54 to 4.89 m/s^2 a sample: probe-land-step.mjs, land-step-f21b.txt); one row after, the gate read 157
+to 192 N of phantom force along x on the horse, the dog and the pig director (end-rows.mjs). A foot's load builds up
+over tens of milliseconds, as a hand's hold does.
+
+`dist/tactics/traversal-balance.js`: a sample standing on feet alone (a tail beyond its root counts as neither) keeps
+each foot's points by the probe's mesh (supportAt: footPts) and the tail's (tailPts). landOnset, the round schedule's
+last step (roundSchedule, after the release; exported): where a foot's mesh has points on such a sample and none on the
+sample before while another foot stands there, that sample's outline and the next ONSET/dt - 1 samples' (ONSET, the 20
+ms a grip waits after its first touch before it counts whole, a foot drawn in through them: four samples) are the
+standing feet's points as each sample has them and the tail's, with the arriving foot's points drawn toward the standing
+feet's middle by traversal-pose.js's smooth at k/(lag+1), k = 1..4, stopping where the arriving foot is up again, or the
+standing feet are; a released sample is left. A foot arriving inside another's run would be left out of the outline
+until that run ends, then counted whole; a run stopping at its first sample would still pass over the next three; and a
+short flight given back to the authored support from the second round on (LOST) would bring the first round's foot
+points beside the points measured in that round. None of these happens on the 33 (in both rounds each of the 117 entries
+takes in its four samples, no third foot arriving, no standing foot lifting: onset-paths-f22p-window.txt, -walls.txt,
+below; no flight given back in either round: probe-giveback.mjs on var-f22q, the tree's balance with the give-back
+logged, giveback-f22q-window.txt, -walls.txt, where a copy giving every flight back logs the horse's climb's two). Drawn
+so, the outline stays inside the convex hull of what the body has on the floor. Read through outlineAt's clip, the
+outline the plan reads grows from the run's fourth sample on, from 15 to 30 ms after the hoof's first reading, as the
+hoof comes down its last 0.3 mm (on the eleven 0.27 to 0.35 mm above the lowest it reaches over the next 100 ms at the
+run's fourth sample, 0.03 to 0.08 mm 30 ms after the first reading, where the outline read is whole: probe-hoof-down.mjs
+on var-f22s, hoof-down-f22s-a.txt, -b.txt, hoof-table-f22s.txt, the hoof's heights the same to 0.01 mm on fix 21's
+var-f21b, hoof-table-f21b.txt; the horse's 20, 63 and 93% of the way from the standing foot's edge to the new foot's at
+5.835 to 5.845 s, whole at 5.850; on fix 21 whole at 5.830: probe-read-outline.mjs, the least z of each read outline).
+It acts wherever a foot lands beside a standing one on feet alone (probe-onset-runs.mjs: onset-runs-f22-window.txt,
+-wall.txt): on every window's three get-up steps (Left foot back, Right foot back, Left foot round) and four windows'
+step in (the goat's, the bull's, the cow's, the sheep's, 0.48 to 0.52 s), on every climb's Left foot round (5.255 s) and
+Turn onto the tile (5.850) and three climbs' step in (the pig director's, the rabbit's, the dog's, 0.37 to 0.395 s); on
+no low wall, whose second hoof lands while the hands still grip the wall (on all eleven at 1.580 to 1.600 s, on grip
+samples), nor wherever a hand grips or the motion holds the body as a foot lands (the pigs' climbs' absorb, 4.545 to
+4.560 s, on grips; the rabbit's and the dog's hands on the sill, 0.750 and 0.675 s in the second round, the rabbit's on
+grips, the dog's inside a grip's onset; the cow's sit up, 2.935 s, held; in the first round the roll on the horse, the
+pig foreman and the pig director, 2.750 to 2.875 s, held, the body on the floor too): these are every foot that lands
+beside a standing one and is not taken in, on the 33 in either round (probe-onset-paths-r3copy.mjs on var-f22p, the
+tree's balance with logging added: onset-paths-f22p-window.txt, -walls.txt). The feet's points are kept afterwards only
+where an onset reads them, its samples and the one before (kept on every sample on feet alone, the horse's window held
+81157 points on 510 of its 1212 samples and 20.6 MB against fix 21's 14.5; so, 2329 points on 15 samples and 14.7 MB:
+probe-heap.mjs). The horse's plan at its last landing now turns over across three samples (-2.08, -1.01, +1.13, +2.68
+m/s^2: end-plan-horse-e3.txt), the largest step 2.15 to 2.38 m/s^2 a sample on nine windows, the rabbit's 3.04 and the
+dog's 3.55 (land-step-f22.txt). Gated as var-e3 (the tree's code lines but for ONSET written out as a constant of its
+own, 0.02, the outline's fields built inline, and the points kept on every sample), which plays all 33 crossings as the
+tree's code to the bit, every rig point every 1 ms (same-e3-f22s.txt).
+
+- The windows read 323 readings against 368 (kind-readings.mjs: kr-e3-window.txt): the horse 27, the goat 8, the bull
+  14, the cow 16, the donkey 49, the sheep 17, the skunk 96, the pig foreman 8, the pig director 28, the rabbit 45, the
+  dog 15. Stand on the tile 20 against 46 (the goat's 4, the bull's 3, the donkey's 4, the skunk's 4 and the pig
+  foreman's 3 to none; the horse's 5 to 2, the cow's 4 to 2, the sheep's 4 to 2, the pig director's 4 to 2; the rabbit's
+  6 to 6; the dog's 5 to 6), Left foot round 11 against 24, Left foot back none against 3, Weight on the left foot none
+  against 2, Weight on the right again 1 against 2; every other phase's count as before (the roll 166, the hands to the
+  floor 38); four readings new, all the dog's (100.0 and 100.3% at 6.382 and 6.383 s against 96.5 and 96.4 in Left foot
+  round, 117.0 at 6.438 against 64.9 there, 154.9 at 6.443 against 92.9 in Stand on the tile), five of its gone (120.5,
+  124.6 and 101.7% at 5.600 to 5.602 s, 100.2 at 6.026, 143.1 at 6.433), five of its kept higher (its worst, 261.1 to
+  287.7% at 6.445 s; 114.6 to 139.3 at 6.439, 189.7 to 223.7 at 6.444, 231.6 to 238.3 at 6.446; 116.65 to 116.74 at
+  6.025, in Weight on the right again); the rabbit's kept readings higher at its last step and stand (below); every
+  other kept reading higher by 0.05 points at most, if at all (readings-at.mjs; kept-rises-f22.mjs:
+  kept-rises-f21-e3-window.txt).
+- The worst readings: the horse's 206% against 226 (its worst now its roll's, 206 before too), the pig foreman's 134%
+  against 192 (now its roll's); the stands still over the limit: the horse's 142% against 226, the cow's 156 against
+  232, the sheep's 161 against 218, the pig director's 149 against 215 (its worst now the slide over's 215, as before),
+  the rabbit's 163 against 160 (its count 6 as before, five of its six readings higher: 146.2 to 162.6% at 6.044 s,
+  147.9 to 162.0 at 6.043, 152.0 to 160.1 at 6.042, 141.4 to 155.5 at 6.045, 160.0 to 161.2 at 6.041; its last step's
+  121.7 to 143.9 at 6.038 and 189.4 to 195.4 at 6.039), and the dog's 288% against 261 at 6.445 s. The dog's rise is the
+  onset's: there the outline the plan reads reaches 23% of the way to its new foot (95% on fix 21:
+  probe-read-outline.mjs), and the onset puts off its sideways catch, the sideways force the motion asks there -256 N
+  against +109 (the floor's as the gate solves it -185: the gate's rows, F less what it leaves over); on fix 22's
+  contacts and turn, the gate's solve with fix 21's sideways force alone reads 269.2%, with its forward force alone
+  276.8%, with its turn 283.2% (nnls-fparts.mjs, nnls-along.mjs: fparts-dog-f22-f21b.txt, along-dog-f22-f21b.txt, from
+  probe-nnls-split.mjs's dumps on var-f21b and var-f22).
+- The windows' other phases under the limits (phase-moves-f21-e3.txt: every phase's worst that moves by half a point or
+  more): Left foot round lower on all eleven (the dog's 206.6 to 143.9%, the bull's 178.3 to 88.8, the rabbit's 205.2 to
+  195.4, the pig foreman's by 0.24 points, 85.56 to 85.32, its worst at the 5 ms samples alone 83.83 to 84.01); Left
+  foot back higher on seven (the cow's 56.0 to 83.0%, the donkey's 61.7 to 75.5, the horse's 46.5 to 59.1, the sheep's
+  64.9 to 71.3, the goat's 52.7 to 55.8, the pig foreman's 48.4 to 51.2, the bull's 46.8 to 49.3), lower on four (the
+  rabbit's 127.0 to 70.7, the dog's 124.6 to 56.5, the pig director's 47.7 to 42.9, the skunk's 50.9 to 50.0); Weight on
+  the left foot lower on four (the cow's 49.8 to 17.1, the skunk's 43.7 to 3.6, the rabbit's 120.2 to 44.6, the dog's
+  101.7 to 37.2), higher on four (the sheep's 11.2 to 28.9, the pig foreman's 4.7 to 8.5, the pig director's 2.5 to 7.3,
+  the donkey's 11.7 to 12.3); Weight on the right again higher on three (the pig foreman's 55.6 to 64.3, the cow's 79.6
+  to 85.0, the horse's 85.4 to 86.2), lower on two (the pig director's 69.2 to 66.2, the sheep's 92.9 to 90.5); Right
+  foot back lower on four (the pig foreman's 20.4 to 15.8, the donkey's 57.6 to 54.8, the dog's 68.9 to 66.5, the
+  rabbit's 99.1 to 97.5), the cow's 62.8 to 63.8; Weight on the right foot the goat's 11.1 to 11.8, the pig foreman's
+  15.4 to 14.7. The wrench rule's time over its limits lower on nine windows (the donkey's 0.070 s to 0.055, the
+  rabbit's 0.065 to 0.055), the horse's and the pig director's the same, their instants 23 to 20 and 24 to 22; every
+  point's fastest within 0.002 m/s, the joints within 0.04 degrees, the contact force's peaks within 0.001 body weights;
+  every rule's pass as before (gatediff2.mjs: gatediff2-f21-e3-window.txt). Single instants under the limits rise by up
+  to 84 points from the rise over the feet on (the dog's 7.3 to 91.5% at 6.437 s, in Left foot round), and by up to 24
+  before it, in the back to the floor and the roll, where the bodies move 0.02 mm at most (the pig foreman's 0 to 24.5%
+  at 2.228 s, the cow's 0 to 21.0 at 2.657: instant-moves-f22.mjs, instant-moves-f21-e3-window.txt, every instant moving
+  5 points or more; probe-vertdiff-k.mjs, vertdiff-back-pigforeman.txt, vertdiff-roll-cow.txt).
+- The low walls as before, to the bit (gatediff2-f21-e3-low-wall.txt: no row or check differs on any of the eleven):
+  their second hoof lands while the hands still grip the wall, where landOnset does not act.
+- The climbs read none, as before (kr-e3-wall.txt). Under the limits the walk-out's Left foot round's worst is higher on
+  seven, by 3.4 to 9.2 points (the bull's 28.8 to 37.9%, the cow's 28.8 to 37.9, the goat's 26.4 to 35.4, the sheep's
+  24.3 to 33.4, the pig director's 36.6 to 41.5, the horse's 38.5 to 42.3, the donkey's 38.6 to 42.0: 42.3% the
+  highest), lower on the skunk (37.2 to 30.9), single instants there up to 21 points higher (the bull's 16.7 to 37.9% at
+  5.265 s), elsewhere up to 18, each where the onset takes a foot in (the rabbit's Crouch 29.2 to 47.5% at 0.405 s and
+  Turn onto the tile 0 to 13.0 at 5.865, the pig director's Step in 5.9 to 16.3 at 0.383, the dog's Crouch 17.7 to 25.7
+  at 0.400 and Step in 18.6 to 25.3 at 0.399: instant-moves-f22.mjs, instant-moves-f21-e3-wall.txt, every instant moving
+  5 points or more); Turn onto the tile lower on five (the bull's and the cow's 27.7 to 25.4, the pig foreman's 11.0 to
+  8.6); Right foot round the goat's 28.7 to 26.7; Weight on the right foot the pig foreman's 10.0 to 10.6; the climbs'
+  starts, where the onset takes a foot in on three: the dog's Step in 78.6 to 64.4%, its Crouch 75.8 to 77.0, the pig
+  director's Push off 42.8 to 41.3; every point's fastest within 0.002 m/s (the rabbit's left palm 8.509 to 8.507, over
+  the rule's 8 m/s before and after), the joints within 0.02 degrees, the contact force's peaks within 0.001 body
+  weights (gatediff2-f21-e3-wall.txt).
+- What moves, every vertex every 2 ms (probe-vertdiff-k.mjs: vertdiff-f21b-f22-window-a.txt, -b.txt,
+  vertdiff-f21b-f22-wall-a.txt, -b.txt): the windows' bodies at most 4.1 to 7.6 mm, each where a foot lands in the
+  get-up (the dog's 7.6 at 5.604 s, the rabbit's 7.3 at 5.204, the sheep's 4.9 at 5.928); the skunk's plume 14.5 cm at
+  5.334 s, the tail fit taking another way round, and the pig director's tail 2.3 cm at 6.058; the climbs' bodies 1.1 to
+  2.3 mm (the dog's 2.3 at 5.270 s); the low walls the same to the bit.
+- Tried and not kept (next-tail/NOTES.md): the left foot set down over 80 ms instead of 40 (its swing 40 ms shorter: 457
+  readings); the onset on any growth of an outline (335, but the hands to the floor and the roll worse: the donkey's
+  430%, the skunk's 499%); on any growth of an outline on feet alone (324 over 20 ms, but 691 over 10 ms and 352 over
+  30: fired by a hoof flattening onto its sole); a foot's arrival over 10 ms and 30 ms (360, 350); the tails fitted
+  inside the window's and the low wall's balances (339, the donkey's worst 300% and the pig director's roll 242%).
+
+`tests/natural-traversal.test.mjs`: supportAt's test adds that a sample on the boot alone keeps the boot's points by its
+mesh, and none with a palm on the floor too. A unit test of landOnset: a foot arriving beside a standing one, both
+sliding from sample to sample, is taken in over ONSET at smooth(1/5) to smooth(4/5), each sample's outline the standing
+foot's points and the arriving one's as that sample has them, the arriving one drawn toward the standing one's middle
+(the arriving foot well beside, so that the drawing shows from the first sample), after ONSET each sample's own outline;
+the standing foot's own growth, a foot arriving with none standing, a sample with no foot points and a released sample
+are left; the tail's points stay in the outline taken in, the arriving foot drawn toward the standing foot's middle, not
+the tail's; the onset stops where the arriving foot is up again, or the standing foot is (a foot counted as arriving
+where it already stood, LOST for ONSET, no drawing in, the tail dropped, a released sample taken in, the arriving foot
+drawn out, either foot's points held from the run's first sample, no stop where the standing foot is up, or the arriving
+foot drawn toward the standing foot's and the tail's middle fails it; no stop where the arriving foot is up fails it
+with a TypeError; a released sample carries no foot points on any crossing, releaseGrips building it without, so that
+case keeps a guard only). The window test checks, on every window, one foot taken in over ONSET in the last 0.30 to 0.15
+s, each of its four samples' outline the standing foot's and the tail's points with the arriving foot's drawn in, as
+that sample has them (the arriving foot drawn out, or either foot's points held, fails it; no window has a tail on the
+floor there, so the unit test alone reads the tail's part). The window test's outline check (from the lean over the feet
+on, every 20th sample, every corner of the balance's floor outline within 5 cm of something the played body has on the
+floor) reads a sample landOnset takes a foot in on against the convex hull of what the body has there instead: its
+corners lie between the feet, inside that hull, leaning on less, at the check's own samples 5 to 11 cm from any point
+the body has on the floor on five windows; every other sample as before (the arriving foot drawn out fails it, 17 to 42
+cm outside). supportAt counting a tail on the floor as any other part of the body (no foot points kept on such a sample:
+var-f22m7) is seen by no check: it plays all 33 crossings the same, every 1 ms (same-f22-f22m7.txt), no tail lying on
+the floor where a foot arrives. Nor is the clean-up (the foot points kept only on an onset's samples and the one
+before): var-e3, keeping them on every sample, plays all 33 as the tree's code to the bit (same-e3-f22s.txt), and the
+window check reads only the onset's samples and the one before. The test file passes (22 of 22 tests:
+test-f22-tree-r5.log); the suite passes (2579 tests: suite-f22-r5.log).
+
+Left: the windows' stands still over the limit (the dog's 288%, where the onset puts off its sideways catch; the
+rabbit's 6 readings, 163%; the horse's, the cow's, the sheep's and the pig director's 2 each, 142 to 161%) and the dog's
+four new readings (100.0, 100.3 and 117.0% in its last step, 154.9 at the stand); the plan leaning on a tail's stale
+points between the hooves as the body rises over its feet (the cow's 9.2 and 11.7 cm from anything on the floor at 4.110
+and 4.115 s, the bull's 10.1 and 11.6 at 4.715 and 4.720, on fix 21 too: probe-outline-every.mjs), between the outline
+check's 100 ms samples; the roll's 166 readings; the hands to the floor's 38 (the skunk's 457%, the donkey's 283%); the
+tail fit's switch; the windows' other phases, among them left foot in 32, sit up 17, right foot in 17, slide over 10 and
+reach for the floor 9.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

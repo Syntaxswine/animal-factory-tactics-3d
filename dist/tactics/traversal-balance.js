@@ -203,7 +203,9 @@ export function followCentre(times,plan,comAt,{passes=5,base=null,from=null}={})
 // - nothing counted is flight.
 // A grip keeps what stands on the floor or a top beside it as the outline the feet would have (feetBox, feetHull and
 // feetFloor; planCentre reads an outline from feet and held samples only), so that releaseGrips can let a grip go onto
-// feet already down (the window's brace: the right hand leaving the far face with the left hand on the floor).
+// feet already down (the window's brace: the right hand leaving the far face with the left hand on the floor). A
+// sample standing on feet alone (a tail beyond its root counts as neither) keeps each foot's points, by the probe's
+// mesh (footPts), and the tail's (tailPts), so that landOnset can tell a foot arriving from an outline's own growth.
 // DRAPE: a body draped over a top with its centre of mass a little below it (over the window's sill as it reaches for
 // the floor, 2 cm below) still lies on it; one hanging well below (from the wall's top at a catch, 70 cm) does not:
 // there only what grips holds it.
@@ -223,16 +225,17 @@ export const contactProbe=(worker,tails=null)=>Object.assign(createSurfaceProbe(
 const endsOf=probe=>{let e=ENDS.get(probe);if(!e){const kind=probe.names.map(p=>/hand/.test(p)?1:/hoof|boot|foot|toe/i.test(p)?2:0),handBone=probe.boneNames.map(b=>/^(hand|fingers)/.test(b));e=Uint8Array.from(probe.part,(pi,i)=>probe.tails&&/tail/.test(probe.names[pi])&&!probe.tails.isRoot(probe.names[pi],probe.vertex[i])?3:kind[pi]===1&&!handBone[probe.bone[i]]?4:kind[pi]);ENDS.set(probe,e);}return e;};
 export function supportAt(probe,obstacles,com,held=false){
  const over=(x,z)=>obstacles.some(b=>x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]),ends=endsOf(probe),grow=(b,x,z)=>{b[0]=Math.min(b[0],x);b[1]=Math.max(b[1],x);b[2]=Math.min(b[2],z);b[3]=Math.max(b[3],z);};
- let grip=false,top=null;const box=[Infinity,-Infinity,Infinity,-Infinity],onTop=[Infinity,-Infinity,Infinity,-Infinity],pts=[],topPts=[];
+ let grip=false,top=null,mixed=false;const fp={},tp=[],box=[Infinity,-Infinity,Infinity,-Infinity],onTop=[Infinity,-Infinity,Infinity,-Infinity],pts=[],topPts=[];
  for(let i=0;i<probe.count;i++){const x=probe.x[i],y=probe.y[i],z=probe.z[i],e=ends[i];
-  if(y<TOL&&y>-TOL&&!over(x,z)){grow(box,x,z);pts.push([x,z]);continue;}
+  if(y<TOL&&y>-TOL&&!over(x,z)){grow(box,x,z);pts.push([x,z]);if(e===2)(fp[probe.part[i]]??=[]).push([x,z]);else if(e===3)tp.push([x,z]);else mixed=true;continue;}
   if(e===3)continue;for(const o of obstacles){const dx=Math.max(o.min[0]-x,0,x-o.max[0]),dy=Math.max(o.min[1]-y,0,y-o.max[1]),dz=Math.max(o.min[2]-z,0,z-o.max[2]);if(dx>=TOL||dy>=TOL||dz>=TOL)continue;const inside=!dx&&!dy&&!dz;
    const d=inside?Math.min(x-o.min[0],o.max[0]-x,y-o.min[1],o.max[1]-y,z-o.min[2],o.max[2]-z):Math.hypot(dx,dy,dz);if(d>=TOL)continue;
-   if(e===1||e===4&&(held||y>o.max[1]-TOL))grip=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);topPts.push([x,z]);top=Math.max(top??-Infinity,o.max[1]);}}}
+   if(e===1||e===4&&(held||y>o.max[1]-TOL))grip=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);topPts.push([x,z]);if(e===2)(fp[probe.part[i]]??=[]).push([x,z]);else mixed=true;top=Math.max(top??-Infinity,o.max[1]);}}}
  if(grip){if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'grip',feetBox:box,feetHull:hullOf(pts.concat(topPts),box),feetFloor:0};}
   return onTop[0]<=onTop[1]?{kind:'grip',feetBox:onTop,feetHull:hullOf(topPts,onTop),feetFloor:top}:{kind:'grip'};}
- if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'feet',box,hull:hullOf(pts.concat(topPts),box),floor:0};}
- return onTop[0]<=onTop[1]?{kind:'feet',box:onTop,hull:hullOf(topPts,onTop),floor:top}:{kind:'air'};}
+ const own=mixed?{}:{footPts:fp,tailPts:tp};
+ if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'feet',box,hull:hullOf(pts.concat(topPts),box),floor:0,...own};}
+ return onTop[0]<=onTop[1]?{kind:'feet',box:onTop,hull:hullOf(topPts,onTop),floor:top,...own}:{kind:'air'};}
 // The whole pipeline for a motion: pose(t) poses it (with the hips moved by the current trial shift, set through
 // setShift) and returns its points; com(points) is its centre of mass.
 // Angular momentum about the centre of mass at each grid sample, from the posed points (the rig's model: each
@@ -411,10 +414,62 @@ export const releaseGrips=(S,dt)=>{const n=S.length,rel=Math.round(RELEASE/dt),f
 // A flight of LOST or shorter that a round finds where the authored motion lies on the floor is the plan's own: its
 // last move lifted the body off what held it, and that support stands. Planned as a flight, the sheep's roll (its back
 // lifted off the floor by the round before) crouched 1.8 cm into the floor to spring over 40 ms of it.
+// A foot that arrives takes the weight over ONSET, as a hand's hold builds up, drawn in through the time a grip waits
+// before it counts whole (landOnset, the round schedule's last step; exported for the unit test): where a foot's mesh
+// has points on a sample standing on feet alone and none on the sample before while another foot stands there, that
+// sample's outline and the next ONSET/dt - 1 samples' are the standing feet's points, as each sample has them, and the
+// tail's, with the arriving foot's points drawn toward the standing feet's middle by traversal-pose.js's smooth at
+// k/(lag+1), k = 1..lag (stopping where the arriving foot is up again, or the standing feet are). planCentre reads each
+// sample's outline clipped by those within two samples either side (outlineAt), so the outline it reads lags the
+// samples' own: counted whole from the hoof's first reading (the rig and the plan read a hoof from 1 cm up), the
+// window's last step's new foot came into it whole two samples later (the horse's at 5.830 s, 10 ms after that first
+// reading, the hoof 0.58 mm above the lowest it reaches over the next 100 ms), the plan's pressure point jumping across
+// in one sample and its sideways acceleration turning over within it (-2.08 to +1.49 m/s^2, 5.825 to 5.830 s); taken in
+// over ONSET, the outline it reads grows from the run's fourth sample on, from 15 to 30 ms after that first reading, as
+// the hoof comes down its last 0.3 mm (the horse's 20, 63 and 93% of the way from the standing foot's edge to the new
+// foot's at 5.835 to 5.845 s, whole at 5.850), and the acceleration turns over across three samples (-2.08, -1.01,
+// +1.13, +2.68: 2.15 m/s^2 a sample at most). It acts wherever a foot lands beside a standing one on feet alone: on
+// every window's three get-up steps (left foot back, right foot back, the last step round) and four windows' step in
+// (the goat, the bull, the cow, the sheep), on every climb's left foot round and turn onto the tile and three climbs'
+// step in (the pig director, the rabbit, the dog); on no low wall, whose second hoof lands while the hands still grip
+// the wall, nor wherever a hand grips or the motion holds the body as a foot lands (the pigs' climbs' absorb, the
+// rabbit's and the dog's hands on the sill, the cow's sit up, the first round's roll on three windows). The windows
+// read 323 readings against 368: Stand on the tile 20 against 46, Left foot round 11 against 24, Left foot back none
+// against 3, Weight on the left foot none against 2, Weight on the right again 1 against 2, every other phase's count
+// as before; four readings new, all the dog's (100.0 and 100.3% at 6.382 and 6.383 s against 96.5 and 96.4, 117.0 at
+// 6.438 against 64.9, 154.9 at 6.443 against 92.9), five of its gone (120.5, 124.6 and 101.7 at 5.600 to 5.602 s, 100.2
+// at 6.026, 143.1 at 6.433), five of its kept higher (6.445 s, below; 6.439, 6.444, 6.446, 6.025 s: 114.6, 189.7,
+// 231.6, 116.65 to 139.3, 223.7, 238.3, 116.74), the rabbit's at its last step and stand too, every other kept reading
+// higher by 0.05 points at most if at all; its stand 288% against 261 at 6.445 s, where the outline the plan reads
+// reaches 23% of the way to its new foot (95% on fix 21), the onset putting off its sideways catch (the sideways force
+// the motion asks there -256 N against +109, the floor's as the gate solves it -185: with fix 21's sideways force
+// alone, on this one's contacts and turn, the gate's solve reads 269%, with its forward force alone 277, its turn 283);
+// the low walls as before, to the bit; the climbs read none over the limits, as before, their left foot round's worst
+// up to 9.2 points higher under them (42.3% at most), single instants up to 21 points higher where the onset takes a
+// foot in (the bull's 16.7 to 37.9% at 5.265 s, the rabbit's crouch 29.2 to 47.5 at 0.405). Over 10 ms the windows read
+// 360, over 30 ms 350; with the onset fired by any growth of an outline on feet alone (a hoof flattening onto its
+// sole), 691 over 10 ms. A released sample carries no foot points (releaseGrips builds it without), so its guard only
+// keeps it so; a foot arriving inside another's run is left out of the outline until that run ends, then counted whole,
+// a run that stops at its first sample still passes over the next three, and a short flight given back to the authored
+// support from the second round on (LOST) brings the first round's foot points beside the points measured in this one
+// (none of these happens on the 33); every caller runs two rounds (from a third, the held schedule, assigned after this
+// step, could leave a tag on a sample whose kind it changes).
+export const landOnset=(S,dt)=>{const n=S.length,lag=Math.round(ONSET/dt);
+ for(let i=1;i<n;i++){const a=S[i-1],b=S[i];if(a.kind!=='feet'||b.kind!=='feet'||!a.footPts||!b.footPts||a.released||b.released)continue;
+  const was=Object.keys(a.footPts),came=Object.keys(b.footPts).filter(q=>!was.includes(q));if(!was.length||!came.length)continue;
+  for(let k=0;k<lag&&i+k<n;k++){const x=S[i+k];if(x.kind!=='feet'||!x.footPts||!came.every(q=>x.footPts[q]))break;const old=was.flatMap(q=>x.footPts[q]||[]);if(!old.length)break;
+   const co=[old.reduce((t,q)=>t+q[0],0)/old.length,old.reduce((t,q)=>t+q[1],0)/old.length],lam=smooth((k+1)/(lag+1)),nw=came.flatMap(q=>x.footPts[q].map(v=>[co[0]+lam*(v[0]-co[0]),co[1]+lam*(v[1]-co[1])]));
+   S[i+k]={...x,hull:hullOf(old.concat(x.tailPts||[],nw),x.box),landing:lam};}
+  i+=lag-1;}
+ // the feet's points kept only where an onset reads them, its samples and the one before: kept on every sample on
+ // feet alone, a built window held 6.1 MB more (the horse's 81157 points on 510 of its 1212 samples: 20.6 MB against
+ // 14.5; so, 2329 points on 15 samples, 14.7 MB)
+ for(let i=0;i<n;i++){const x=S[i];if(x.footPts&&x.landing===undefined&&S[i+1]?.landing===undefined){const {footPts,tailPts,...rest}=x;S[i]=rest;}}
+ return S;};
 export const roundSchedule=(S,authored,r,dt)=>{const n=S.length;
  S.forEach((x,i)=>{if(authored[i].kind==='hold'&&!authored[i].heightOnly)Object.assign(x,{...authored[i],c:x.c});});
  if(r)for(let i=0;i<n;i++){if(S[i].kind!=='air')continue;let j=i;while(j+1<n&&S[j+1].kind==='air')j++;if(j-i<LOST/dt&&i>0&&j<n-1&&authored.slice(i,j+1).every(x=>x.kind==='feet'||x.heightOnly))for(let k=i;k<=j;k++)Object.assign(S[k],{...authored[k],c:S[k].c});i=j;}
- return releaseGrips(S,dt);};
+ return landOnset(releaseGrips(S,dt),dt);};
 // setMove({shift(t), spin(t)}) hands the motion its hips' move while it is found (spin(t) is null where the body does
 // not turn, or {q, pivot}: a turn about a point); the result's shift and spin are the final ones. hold(t), if given,
 // marks times the plan keeps near the authored path ('hold': a support it must not move, such as a seat the hips' own
