@@ -7,6 +7,8 @@ import {createWindowDive} from './window-dive.js';
 import {createWallVault,LOW_WALL} from './wall-vault.js';
 import {createWallClimb} from './wall-climb.js';
 import {createHenCrossing} from './hen-crossing.js';
+import {createBattlePosture} from './battle-posture.js';
+import {createWorkerLocomotion} from './worker-locomotion.js';
 const $=id=>document.getElementById(id),host=$('viewport'),params=new URLSearchParams(location.search);
 for(const p of ANIMAL_MOTION_CATALOG){const o=document.createElement('option');o.value=p.id;o.textContent=p.label;$('animal').append(o);}
 for(const id of ['obstacle','animal','outfit','view','speed'])if([...$(id).options].some(o=>o.value===params.get(id)))$(id).value=params.get(id);
@@ -44,6 +46,10 @@ function render(){if(!motion)return;const d=motion.apply(progress,{origin:ORIGIN
 async function load(){if(loading)return;loading=true;playing=false;$('play').textContent='Play';window.traversalStudy.ready=false;const animal=$('animal').value,outfit=$('outfit').value,kind=obstacle();
  try{disposeActor();profile=ANIMAL_MOTION_CATALOG.find(p=>p.id===animal);const res=await fetch(profile.file);if(!res.ok)throw Error(profile.label+' mesh failed to load');
   worker=profile.create(await res.json());paint=await createAnimalPaint(renderer,worker,profile,r.loader,outfit);for(const p of worker.parts){p.material=paint.material;p.castShadow=p.receiveShadow=true;}
+  // Made as the game makes its animals (battle-renderer.js): the battle posture tucks the tails and re-skins a dog's
+  // pasterns, and the crossings' contacts read that surface. Without it the cow's window ran 6.83 s here, its roll
+  // 0.83 s, where the game's runs 5.71 s, its roll 0.28 s.
+  createBattlePosture(worker,profile);createWorkerLocomotion(worker,profile);
   // The hen has wings and no hands: her own crossings (hen-crossing.js).
   motion=profile.id==='hen'?createHenCrossing(worker,profile,obstacle()):OBSTACLES[obstacle()].make(worker,profile);$('phases').replaceChildren();for(const p of motion.phases){const b=document.createElement('button');b.textContent=p.label;b.onclick=()=>window.traversalStudy.seek((p.start+p.end)/(2*motion.duration));$('phases').append(b);}
   scene.add(worker.root);window.traversalStudy.ready=true;$('loading').hidden=true;render();}

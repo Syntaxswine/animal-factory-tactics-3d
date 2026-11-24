@@ -5384,6 +5384,62 @@ pig director's -1.1 at 2.680 s, beside its two; the donkey's -0.67 at 2.687, bes
 probe-reseat.mjs on var-r23i, reseat-r23i.txt), each the same corner after the averaging as this fix took out at the
 landing, not yet weighed against the readings.
 
+### 2026-11-23 (the study page, a note): the traversal study makes its animal as the game does
+
+`dist/tactics/traversal-study.js` made its animal from the mesh and its paint alone. The game (battle-renderer.js: the
+mesh, its paint, then the battle posture and the locomotion), the gate's rig (phantom-wrench `rigs/traversal.mjs`) and
+this suite's tests make the posture and the locomotion too, and the posture tucks the shirt's hem and the tails and
+re-skins a dog's pasterns: a surface the crossings' contact probes read, and one the page drew without those
+corrections. So the page drew, and on many crossings played, its own crossing, not the game's. On the low walls and the
+climbs each crossing runs as long on both (2.400 and 6.100 s); over 41 instants of each (every 2.5% of it), every bone,
+and every fourth vertex but the shirt's, the dog's feet's and the tails', against the game's (probe-study-bones-mm.mjs
+on var-r23j, fix 23's code lines: study-bones-all-r23j.txt; on this part's worktree the same: study-bones-all-a.txt,
+-b.txt):
+
+| species | low wall: bones, vertices | climb: bones, vertices |
+|---|---|---|
+| horse | the same | the same (0.0001 mm) |
+| goat | the same | 0.8 mm, 0.9 |
+| bull | the same | 0.9 mm, 1.1 |
+| cow | the same | 6.1 mm, 6.7 |
+| donkey | the same | 16.8 mm, 20.1 |
+| sheep | the same | 0.6 mm, 0.8 |
+| skunk | the same | the same (0.0002 mm) |
+| pig foreman | 32.3 mm, 37.9 | 45.5 mm, 54.1 |
+| pig director | 79.4 mm, 100.5 (its trousers) | 215.5 mm, 365.6 (its head) |
+| rabbit | the same | 6.1 mm, 6.7 |
+| dog | the same | 12.5 mm, 15.5 |
+
+The shirts themselves were drawn up to 16.5 cm off the game's and the dog's feet 21.4 (probe-study-kinds.mjs on this
+part's worktree, every fourth vertex at 21 instants: study-kinds.txt, the horse, the cow, the pig foreman and the dog on
+each). On the windows, whose roll reads that surface, every roll ran a different length on the page, so every window's
+later phases came at other times and in other places (probe-study-duration.mjs on var-r23j:
+study-duration-window-r23j.txt).
+
+| window | on the page | in the game |
+|---|---|---|
+| horse | 6.109 s, the roll 2.460 to 2.935 s | 6.054 s, 2.460 to 2.907 s |
+| goat | 7.031, 2.460 to 3.395 | 6.600, 2.460 to 3.180 |
+| bull | 6.401, 2.460 to 3.081 | 6.325, 2.460 to 3.043 |
+| cow | 6.826, 2.460 to 3.293 | 5.713, 2.460 to 2.736 |
+| donkey | 6.370, 2.460 to 3.065 | 6.602, 2.460 to 3.181 |
+| sheep | 6.246, 2.460 to 3.003 | 6.148, 2.460 to 2.954 |
+| skunk | 5.549, 2.460 to 2.655 | 5.495, 2.460 to 2.627 |
+| pig foreman | 6.165, 2.460 to 2.962 | 6.169, 2.460 to 2.964 |
+| pig director | 6.164, 2.460 to 2.962 | 6.358, 2.460 to 3.059 |
+| rabbit | 6.300, 2.460 to 3.030 | 6.260, 2.460 to 3.010 |
+| dog | 6.715, 2.460 to 3.238 | 6.662, 2.460 to 3.211 |
+
+The page now makes the posture and the locomotion after the paint, as battle-renderer.js does, and plays the game's
+crossings: the cow's window, read from the page, runs 5.71 s. The Red Hats' cap, which the game adds on the head's bone
+(battle-renderer.js), the page still leaves out; no contact reads it. The strips and videos made from the page before
+this (tools/photo-traversal.mjs, and the clips of these parts' fixes) showed the page's crossings: a fix's before and
+after were both the page's, so what changed between them was the fix, but on the page's surface, on the windows on the
+page's roll and at its times, and on the climbs and the pigs' low walls on bones up to 21.5 cm from the game's (the pig
+director's climb, its head 36.6 cm). The gate always measured the game's. Found making the forty-fifth part's video: its
+clips of the cow's sit up and feet in (2.90 to 3.55 s) came out the same to the byte under that part's rule and under
+the rule it replaced, the page's cow rolling there until 3.293 s.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:
