@@ -5440,6 +5440,162 @@ director's climb, its head 36.6 cm). The gate always measured the game's. Found 
 clips of the cow's sit up and feet in (2.90 to 3.55 s) came out the same to the byte under that part's rule and under
 the rule it replaced, the page's cow rolling there until 3.293 s.
 
+### 2026-11-23 (physics balance, forty-fifth part): a held elbow brushing a wall waits ONSET before it grips
+
+After the forty-fourth part (5113201c) the eleven windows read 308 readings over the gate's limits, and the worst of all
+was the cow's 472% at 3.194 s, in Right foot in: 11 readings from 3.192 to 3.202 s, torque-led (phase-readings.mjs;
+rows-near.mjs). There the force the cow's body needs sideways swung from -442 N at 3.190 s to +945 N at 3.195 (the
+gate's rows), the sample its right elbow first touched box0, the wall below the window, on its far face, 48 cm off the
+floor (the forearm mesh's skin on the upper arm's bone: review round 5's review-fix24-r5\touch-r23j-cow.txt). The swing
+was the balance's shift alone (probe-trunk-parts.mjs on var-r23h, sideways: -9.4 to +13.0 m/s^2 at 3.190 to 3.195 s; the
+roll path, the sill's and the seat's pushes and the fit flat), and the cow's samples there are held (probe-kinds.mjs).
+Fix 8 (6d7ac5d4) left a held forearm or elbow against a face gripping, and a grip carries feetHull, not hull, so
+planCentre plans such a hold by friction alone: on the sample the elbow touched, the hold lost the floor's outline and
+the plan swung. The rig had no wall before the touch, and then one point of the forearm on it: it read 125.5 to 472.0%
+from 3.192 to 3.194 s, 374.7% at the row of 3.195 s with that one point and 227.4 to 365.6 at the checks and the row up
+to 3.202, 234.7 there (one point at the rows of 3.195 and 3.200 s), and nothing from 3.205 s, where the forearm had two
+(the gate's contacts, "forearm and hand 1 / box0:100": rows-r23j-r24g-cow.txt). In the 33's final schedules a hold has
+no outline on the cow's window from 3.195 to 3.325 s, on the skunk's from 2.940 to 3.045, and through the pigs' climbs
+(probe-hold-nohull.mjs: hold-nohull-*.txt); the cow's and the skunk's are gripped by a forearm against the wall's far
+face alone, the pigs' by hands on the top, a hand against a face and forearms on the top (instrument-gripby.mjs on
+var-r24a, probe-gripby.mjs: gripby-*.txt). In each round's own schedule the cow's sit up touches the wall so too,
+briefly (2.755 to 2.765 s on the authored motion: rounds-cow-situp-r24h.txt), and so does the skunk's (2.700 to 2.740 s:
+rounds-skunk-all-r24h.txt). The skunk's right leg is on that wall from two samples before its elbow (its overalls on the
+shin and thigh bones, 12 to 31 cm up, in the gate's contacts from 2.930 s; its upper arm's sleeve and its forearm from
+2.940), and its gate reads nothing where its grip starts; the cow touches the wall with its forearm alone.
+
+`dist/tactics/traversal-balance.js`: held, a forearm or an elbow against an obstacle's face, where the body leans on
+that obstacle nowhere else, is a brush: supportAt returns its grip with brush: true, and a brush counts from ONSET after
+its first touch, as an unheld grip does, and one shorter than 3 ONSET not at all. The lean is a point of the trunk, head
+or legs touching that obstacle as the grip's own test reads touching: end 0 and on no arm's bone, and not on the floor
+(a point on the floor is the floor's). A hand's mesh is no lean because its palm grips there anyway and its forearm is
+the brush itself; the feet and the tails beyond their roots are left out by choice, which changes nothing on the 33: no
+foot, and no tail beyond its root, touches the obstacle beside a held elbow in either round (0 of 57 round-samples on
+the cow, 0 of 69 on the skunk: review round 5's rv5i-cow.txt, rv5i-skunk.txt); it is read on the sample itself, not on
+the one before. measure()'s onset is now gripOnset (exported for the unit test): it reads the runs of unheld grips and
+of held brushes from the kinds as measured and takes them in time order, each onset taking the sample before it as
+already settled, so neither kind's onset lengthens the other's runs and a run shorter than 3 ONSET never counts,
+whatever follows it; a grip's onset copies that sample whole, as measure()'s loop did (on 20,000 random schedules
+without a brush, every field the same: onset-equiv-f24.mjs, onset-equiv-f24.txt), and a brush's keeps its samples held
+unless that support is a flight. A held grip that is no brush counts at once, as before. Gated as var-r24i, the tree's
+code lines: the cow's and the skunk's windows change, the nine other windows' gates the same to the byte as var-r23j's,
+the low walls' and the climbs' as var-r23c's (gate-lanes.sh r24i); every one of the 33 the same to the byte as
+var-r24h's, this part as the second review round read it. Each round measures its own motion (the first the authored
+one), and roundSchedule merges a held sample's authored support into the round's own (Object.assign, older than this
+part), so a field the authored sample lacks stays: the cow's elbow touches at 3.190 s on the authored motion and at
+3.200 on round 2's, its brush counting from 3.210 and from 3.220, and 3.210 and 3.215 keep round 2's outline beside the
+authored grip, so the cow's grip counts from 3.220, 30 ms after the authored touch (rv1-probe-rounds.mjs on var-r24hi,
+var-r24h's code logging each round's schedule: rounds-cow-r24h.txt; the skunk's samples at 3.050 to 3.060 s carry both
+too, as before this part: rounds-skunk-r24h.txt).
+
+- The cow's window reads 5 readings against 16 (kind-readings.mjs: kr-r24h-window.txt; kept-rises-f22.mjs:
+  kept-rises-r23j-r24h-window.txt): its 11 from 3.192 to 3.202 s gone, none new, its stand's two the same within a
+  millionth of a point (156.2 and 138.9% at 5.495 and 5.496 s) and its hands to the floor's three 1.1 to 1.7 points
+  lower (to 132.4% at 2.095 s). Its worst is 156% against 472, its stand's, as before. Its gate is var-r24g's to the
+  byte (this part as first reviewed: below).
+- The skunk's window changes through its sit up alone, a side effect, not a fix of anything in it. Round 1's elbow
+  touches the wall there with only its own arm's sleeve beside it (2.730 to 2.740 s, the authored motion, the sleeve on
+  its upper arm 42 to 44 cm up: review round 4's review-fix24-r4\leanall-skunk-situp.txt), a grip at once before this
+  part (every held elbow gripped), a brush now, shorter than 3 ONSET, so round 1 plans those samples on the outline
+  before them. That moves round 2's body: round 2's elbow now touches the wall from 2.700 s, where before it touched
+  nothing (2.700 to 2.740 s, brushes too short to count), and at 2.745 s round 2 reads a one-sample lean grip, its right
+  leg touching the wall for that sample only (its overalls on the thigh and the shin, 27 to 31 cm up): a held grip that
+  is no brush counts at once, however short. Round 1's grip from 2.745 s, its leg leaning, runs to 2.785;
+  roundSchedule's merge keeps round 2's outline on 2.750 to 2.785, so in the final schedule 2.745 s alone plans by
+  friction alone, as it does in round 2's own (rv1-probe-rounds.mjs on var-r24hi: rounds-skunk-all-r24h.txt; the lean's
+  points, review round 3's: review-fix24-r3\why-skunk-situp.txt). Every other change in its window follows from that sit
+  up: round 2 measures the motion round 1's plan moved, so its final outlines differ from the tree's at 97 samples, up
+  to 3.1 mm from 2.13 s on, 4.3 to 4.9 mm at 2.730 to 2.740 s, and 20 to 48 mm at 2.770 to 2.785 (probe-final-diff.mjs:
+  final-diff-r23j-r24i-skunk.txt). Its window reads 90 readings against 96: six gone at 2.900 to 2.905 s (110.1 to
+  128.6%, Right foot in, force-led), where its schedule does not change, and none new; 52 kept readings higher, by up to
+  3.7 points (its roll's 100.8 to 104.5% at 2.591 s), and 38 lower, by up to 6.8 (its hands to the floor's 456.7 to
+  449.8% at 2.093 s, its worst now 449.8% against 456.7). At 2.745 s the body's required horizontal force swings from
+  571 N at 2.740 s to 1912 N and back to 790 at 2.750, its largest in the window, against 1298 N at most in its sit up
+  before (2.755 s) and 1793 at its grip's start (2.940 s); its largest change from one row to the next in the sit up
+  2617 N against 1762 (swing-f24.mjs: swing-r23j-r24h-skunk.txt). The rig reads nothing there: it lets the forearm grip
+  (its mesh is named for the hand), though the force pulls the body toward the wall (-1512 N along x, the far face's
+  normal +x), more than the floor's friction gives (0.9 x 929 = 836 N); the contact force peaks there, 2.893 body
+  weights against 2.864 at 2.940 s before. Its instants over 80% of the limit: 118 against 127, its mean reading 6.79%
+  against 6.87 (bins-f24.mjs: bins-r23j-r24h-skunk.txt); single instants under the limits up to 77.3 points higher (Sit
+  up's 0 to 77.3% at 2.691 s, just before that stretch; instant-under-r23j-r24h-skunk.txt).
+- The windows read 291 readings against 308 (the cow's 11 gone, and the skunk's 6 by the side effect above), their worst
+  the skunk's 449.8% (its hands to the floor).
+- The cow's other rules (gatediff2.mjs: gatediff2-r23j-r24h-window.txt): the wrench rule's time 0.015 s against 0.025,
+  its instants 2 against 11; the contact force's peak 3.330 body weights against 3.319 at 2.635 s (its tail root's
+  landing in the roll); its phases' worsts Right foot in 53.9% against 472.0, Hands to the floor 132.4 against 133.8,
+  Sit up 28.0 against 30.8, and higher under the limits, the roll 50.0 against 33.2 (2.646 s), Left foot in 66.7 against
+  28.7 (3.328 s), Back to the floor 42.9 against 41.8; its neck's top speed 2.426 m/s against 2.362 (3.439 s), the
+  largest change of any point's; its joints within 0.023 degrees of before. The skunk's: the wrench rule's time 0.085 s
+  against 0.095, its instants 73 against 77; the contact force's peak at 2.745 s (above); its phases' worsts Right foot
+  in 85.5% against 128.6, Hands to the floor 449.8 against 456.7, Left foot in 125.3 against 125.5, and higher, the roll
+  216.7 against 214.7, Sit up 178.1 against 177.3, Back to the floor 53.2 against 53.0; its left knee's top speed 3.242
+  m/s against 3.230 (2.659 s), the largest change of any point's (its fastest point, its right toe, 5.892 m/s as
+  before); its joints within 0.62 degrees of before. Every rule's pass as before.
+- Single instants under the limits on the cow rise by up to 54.6 points (instant-under-r23j-r24h-cow.txt): Left foot
+  in's 12.1 to 66.7% at 3.328 s, as the elbow leaves the wall (its last contact row 3.325 s) and the plan comes back to
+  the floor's outline; Right foot in's 0.6 to 22.8 at 3.161; Sit up's 5.3 to 27.2 at 2.930; the roll's 33.2 to 50.0 at
+  2.646. Before the touch the plan differs too (the body's required force 226 N apart at 2.945 s), and Right foot in
+  reads up to 53.9% at 3.100 s against 40.1.
+- What moves (probe-vertdiff-k.mjs, every vertex every 2 ms: vertdiff-r23j-r24h-skunk-cow.txt): the cow's body up to
+  14.8 mm, at 3.202 s (its overalls), 4.1 mm before 3.1 s and 4.8 after 3.4; the skunk's up to 5.4 mm (2.432 s, its left
+  arm), 3.6 at 2.746.
+- Still not physical, as fix 8 left it: from the onset's end the cow's hold is planned by friction alone on an elbow
+  that cannot grip. The body's sideways force, along the wall's face, swings from -358 N at 3.215 s to +828 N at 3.220,
+  stays at 479 to 572 N to 3.250 and at 298 to 477 from 3.255 to 3.325 s (on the tree it fell below 300 N at 3.290 s and
+  to 63 by 3.325), then changes by 553 N in 5 ms as the elbow leaves (3.325 to 3.330 s; 600 N horizontally; on the tree
+  63 and 125), where the rig reads the 66.7% at 3.328 s (rows-near.mjs on var-r24g; swing-f24.mjs:
+  swing-r23j-r24h-cow-release.txt). The rig reads nothing from 3.200 to 3.325 s: it lets the forearm grip, with one
+  point of it on the wall at the rows of 3.200, 3.205 and 3.325 s and two to six between; on the tree one point at 3.195
+  and 3.200 s, under the swing at the touch, read 374.7 and 227.4%. How many points the rig needs depends on what the
+  body asks of them.
+- Tried and not kept: (1) held, a forearm against a face gripping only where the body leans on that obstacle, and
+  otherwise only pushing (var-r24f): the 11 readings at the touch went, but 16 came from 3.228 to 3.243 s (up to 143%),
+  and the rig read the cow at 68 to 143% of the limit all through 3.100 to 3.300 s (0 to 40% there before, but for those
+  11), 143 instants over 80% in its window against 24, its mean reading 7.32% against 4.01 (bins-r23j-r24f-cow.txt): its
+  plan, kept within the floor's outline, asks little sideways there (-75 to +126 N) but the rig reads 27 to 57 N·m of
+  phantom torque, and the body moved up to 45.4 mm, its tail 92.6 (vertdiff-r23j-r24e-cow.txt; var-r24e is the cow as
+  var-r24f). (2) The onset for every held grip, a brush or not (var-r24b): the cow as now; the skunk 131 readings
+  against 96, 35 new: 23 from 2.547 to 2.910 s (up to 170.8%), in its roll, sit up and feet in before its grip, and 12
+  from 3.149 to 3.192 s (up to 128.0%) after it. The lean exempts the skunk because of that; what the rule says of it,
+  that the rig has the wall when the plan turns to it, holds for its leg. (3) An onset of one or of two samples for
+  every held grip (var-r24c, var-r24d): the cow 11 readings (363%) and 9 (258%), the skunk 101 and 112. (4) This part as
+  first reviewed (var-r24g): the lean read from every point of the rest of the body (end 0), the sleeves on the arms and
+  the points on the floor too, and gripOnset taking the grips first: the cow as now, the skunk's gate the same to the
+  byte as before this part, its elbow's own sleeve read as a lean. (5) As the second review round read it (var-r24h):
+  gripOnset taking the brushes first and then the grips, each reading its runs after the other's copies, so that a short
+  grip before a brush lengthened the brush and a grip's onset could take a brush's copies; the 33 gated as now, no brush
+  lying beside a grip on them.
+
+`tests/natural-traversal.test.mjs`: supportAt's test: held, an elbow alone against the far face is a brush; with the
+body's back on that face too, on the wall's top, at the floor under the wall, or a palm beside it, a grip that is no
+brush; with only its own arm's sleeve beside it (on its upper arm or its forearm bone), with the body leaning on another
+obstacle, with a point of the body on the floor at the wall's foot, deep inside the wall or 1.5 cm off its face, with a
+boot against the face, or with a tail beyond its root against it, a brush; a held brush keeps its flag with only a top
+beside it and with nothing under the body; a held forearm hooked over the top, a grip that is no brush; unheld, the back
+and the elbow, no grip; held, the back alone, no grip. A new test of gripOnset: a grip run's first four samples take the
+support before it, each keeping its own centre, and a run shorter than three ONSET takes it throughout; a held brush the
+same (after a held grip, that grip's support; after a flight, the flight), its onset taking a held support's outline
+with the sample's own seat and heightOnly, one of exactly three ONSET counting and one shorter not at all though a grip
+follows it; a short grip before a brush lengthens nothing, the brush's onset held; a short brush after a grip carries
+that grip on, held, the grip's outline fields with it; a held grip that is no brush counts at once. Each of twenty-seven
+mutants fails them (mkmut-f24d.mjs, mkmut-f24e-extra.mjs: unit-f24t1.log to unit-f24t27.log): every held elbow gripping
+at once (the old rule), gripOnset leaving the brushes alone, the lean ignored, a brush unheld too, the lean read from
+every point (the elbow's own), the onset for every hold without an outline, the arms counted in the lean, the lean on
+any obstacle, the lean reading points on the floor, a held forearm over a top a brush, the second round's gripOnset, the
+feet counted in the lean, the tails beyond their roots counted, the flag dropped on the top's return, the flag dropped
+on the return with no outline, a brush's onset not kept held; and review round 3's eight: a brush's onset held after a
+flight, the onset taking the support's seat, the forearm's bone no arm, any point inside an obstacle touching it, the
+lean leaving out the top, a brush of exactly three ONSET not counted, a short brush after a grip keeping its own
+outline, the lean read within 2 TOL; and review round 4's two: the onset taking the support's heightOnly, the lean's
+floor test reading a point under an obstacle as the floor's; and round 5's one: the onset copying a held support whole.
+The test file passes (23 of 23 tests: test-f24-tree-r6.log); the suite passes (2580 tests: suite-f24-r6.log).
+
+Left: the cow's push along the wall on its elbow (above) and the skunk's (fix 8's), the plan modelling no contact that
+can only push; the skunk's one-sample lean grip at 2.745 s (round 2's own: a held grip that is no brush counts at once,
+however short); roundSchedule's merge (above), which keeps a field the authored support lacks; the windows' other 291
+readings, among them the skunk's 449.8% at its hands to the floor, the sheep's tail flip (342%), the rabbit's early roll
+(291%), the dog's stand (288%) and the donkey's hands to the floor (283%).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

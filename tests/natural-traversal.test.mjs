@@ -89,16 +89,46 @@ test('a tail beyond its root holds the body on the floor, not on an obstacle',()
 // A hand grips (traversal-balance.js supportAt): skin the hand or fingers carry most of, on a mesh the rig names a
 // hand, grips on an obstacle's top or against its face (as the climb's drop lands, its palms on the far face); the rest
 // of that mesh, the forearm and the elbow, grips only hooked over a top, and elsewhere against a face it only pushes.
-// Where the body is held the old rule stands (the whole mesh grips), so the held stretches are as they were. The mesh's
-// name alone made a grip of an elbow brushing the wall's far face as the climbs walk away from it.
+// Where the body is held the old rule stands (the whole mesh grips), so the held stretches are as they were, but for
+// when a grip counts: there an elbow against a face, where the body leans on that obstacle nowhere else, is a brush,
+// which counts from ONSET after its first touch (gripOnset: the next test). The mesh's name alone made a grip of an
+// elbow brushing the wall's far face as the climbs walk away from it.
 test('a hand grips the wall, and an elbow against its face only pushes',()=>{
  const wall={min:[.42,0,-.5],max:[.58,2,.5]},boot=[[.9,.2],[1.15,.2],[1.15,.33],[.9,.33]].map(([x,z],v)=>({part:0,bone:0,v,x,y:.001,z}));
  const probe=pts=>({count:pts.length,names:['work boot 1','forearm and hand 1','connected shirt and sleeves'],part:Uint8Array.from(pts,p=>p.part),vertex:Uint32Array.from(pts,p=>p.v),
-  x:Float32Array.from(pts,p=>p.x),y:Float32Array.from(pts,p=>p.y),z:Float32Array.from(pts,p=>p.z),boneNames:['hoof1','forearm1','hand1','fingers1'],bone:Uint16Array.from(pts,p=>p.bone),tails:null});
+  x:Float32Array.from(pts,p=>p.x),y:Float32Array.from(pts,p=>p.y),z:Float32Array.from(pts,p=>p.z),boneNames:['hoof1','forearm1','hand1','fingers1','upperArm1','spine'],bone:Uint16Array.from(pts,p=>p.bone),tails:null});
  const kind=(pts,com=[.97,.75,.1],held=false)=>supportAt(probe([...boot,...pts]),[wall],com,held).kind,face={v:9,x:.585,y:.86,z:.2};
  assert.equal(kind([]),'feet','the boot alone');
  assert.equal(kind([{...face,part:1,bone:1}]),'feet','an elbow against the far face grips');
  assert.equal(kind([{...face,part:1,bone:1}],undefined,true),'grip','a held body leaning an elbow on the far face keeps its outline');
+ // Held, an elbow against a face where the body leans on that obstacle nowhere else (no point of the trunk, head or
+ // legs within TOL of it, a point on the floor counting as the floor's: the cow's elbow brushing the wall below the
+ // window) is a brush, a grip that counts from ONSET after its first touch; where the body leans on it too (the skunk's
+ // right leg on that wall), a grip that counts at once. The arms are no lean (the skunk's brushing arm's own sleeve
+ // touched the wall), nor is the body on another obstacle, nor a point on the floor at the wall's foot. A palm is never
+ // a brush, nor is an elbow beside a palm that grips; a forearm hooked over a top grips, held or not; unheld, an elbow
+ // against a face neither grips nor brushes.
+ {const sup=(pts,{held=true,obs=[wall],com=[.97,.75,.1]}={})=>supportAt(probe([...boot,...pts]),obs,com,held),elbow={...face,part:1,bone:1},back={part:2,bone:5,v:10,x:.585,y:.9,z:.1};
+  {const s=sup([elbow]);assert.ok(s.kind==='grip'&&s.brush===true,'a held body with only an elbow on the far face grips at its touch');}
+  {const s=sup([elbow,back]);assert.ok(s.kind==='grip'&&!s.brush,'a held body leaning on the far face, an elbow there too, waits ONSET for its grip');}
+  {const s=sup([elbow,{...face,v:11,part:1,bone:2}]);assert.ok(s.kind==='grip'&&!s.brush,'a held palm against the far face, an elbow beside it, waits ONSET for its grip');}
+  {const s=sup([elbow,{part:2,bone:4,v:12,x:.585,y:.95,z:.15}]);assert.ok(s.kind==='grip'&&s.brush===true,'a held elbow on the far face, its own sleeve there too, reads as a lean');}
+  {const wall2={min:[2,0,-.5],max:[2.16,2,.5]},s=sup([elbow,{...back,x:1.995}],{obs:[wall,wall2]});assert.ok(s.kind==='grip'&&s.brush===true,'a held elbow on one wall, the body leaning on another, reads as a lean');}
+  {const s=sup([elbow,{...back,v:14,y:.001}]);assert.ok(s.kind==='grip'&&s.brush===true,'a held elbow on the far face, the body on the floor at its foot, reads as a lean');}
+  {const s=sup([{part:1,bone:1,v:9,x:.5,y:2.005,z:0}],{com:[.8,1.2,0]});assert.ok(s.kind==='grip'&&!s.brush,'a held forearm hooked over the top is a brush');}
+  assert.equal(sup([elbow,back],{held:false}).kind,'feet','an unheld body leaning on the far face, an elbow there too, grips');
+  assert.equal(sup([back]).kind,'feet','a held body leaning its back alone on the far face grips');
+  {const s=sup([elbow,{part:0,bone:0,v:15,x:.585,y:.3,z:.25}]);assert.ok(s.kind==='grip'&&s.brush===true,'a held elbow on the far face, a boot against it too, reads as a lean');}
+  {const pt=pts=>({...probe([...boot,...pts]),names:['work boot 1','forearm and hand 1','connected shirt and sleeves','skunk tail plume'],tails:{isRoot:()=>false}}),s=supportAt(pt([elbow,{part:3,bone:0,v:16,x:.585,y:.5,z:.3}]),[wall],[.97,.75,.1],true);
+   assert.ok(s.kind==='grip'&&s.brush===true,'a held elbow on the far face, a tail beyond its root against it too, reads as a lean');}
+  {const onTop=[[.45,-.1],[.55,-.1],[.55,.05],[.45,.05]].map(([x,z],v)=>({part:0,bone:0,v:30+v,x,y:2.004,z})),s=supportAt(probe([...onTop,{...elbow,y:1.9}]),[wall],[.6,2.3,0],true);
+   assert.ok(s.kind==='grip'&&s.brush===true&&s.feetFloor===2,'a held brush with a boot on the top beside it loses its flag');}
+  {const s=supportAt(probe([elbow]),[wall],[.97,.75,.1],true);assert.ok(s.kind==='grip'&&s.brush===true&&!s.feetHull,'a held brush with nothing under the body loses its flag');}
+  {const s=sup([elbow,{part:2,bone:1,v:17,x:.585,y:.8,z:.25}]);assert.ok(s.kind==='grip'&&s.brush===true,'a held elbow on the far face, a sleeve on its forearm bone there too, reads as a lean');}
+  {const s=sup([elbow,{...back,v:18,x:.5,y:1,z:0}]);assert.ok(s.kind==='grip'&&s.brush===true,'a held elbow on the far face, a point of the body deep inside the wall, reads as a lean');}
+  {const s=sup([elbow,{...back,v:19,x:.5,y:2.005,z:0}]);assert.ok(s.kind==='grip'&&!s.brush,'a held elbow on the far face, the body on the wall\'s top, waits ONSET for its grip');}
+  {const s=sup([elbow,{...back,v:20,x:.595}]);assert.ok(s.kind==='grip'&&s.brush===true,'a held elbow on the far face, the body 1.5 cm off it, reads as a lean');}
+  {const s=sup([elbow,{...back,v:21,x:.5,y:.001,z:0}]);assert.ok(s.kind==='grip'&&!s.brush,'a held elbow on the far face, a point of the body at the floor under the wall, reads as no lean');}}
  assert.equal(kind([{...face,part:1,bone:2}]),'grip','a palm against the far face does not grip');
  assert.equal(kind([{...face,part:1,bone:3}]),'grip','fingertips against the far face do not grip');
  assert.equal(kind([{part:1,bone:1,v:9,x:.5,y:2.005,z:0}],[.8,1.2,0]),'grip','a forearm hooked over the top does not grip');
@@ -122,6 +152,39 @@ test('a hand grips the wall, and an elbow against its face only pushes',()=>{
   assert.ok(s.kind==='feet'&&Object.keys(s.footPts||{}).join()==='0'&&s.footPts[0].length===4&&s.tailPts?.length===0,'a sample on the boot alone keeps no points of it by its mesh');}
  {const s=supportAt(probe([...boot,{part:1,bone:2,v:9,x:1,y:.001,z:.5}]),[wall],[.97,.75,.1]);
   assert.ok(s.kind==='feet'&&!s.footPts,'a sample with a palm on the floor too keeps foot points');}
+});
+// A grip counts from ONSET after its first touch (traversal-balance.js, gripOnset, on the balance's 5 ms grid: ONSET
+// 0.02 s, four samples): the first four samples of a grip run take the support before it, each keeping its own centre,
+// and a run shorter than three ONSET takes it throughout (a touch too short to hold the body). A held brush (a hold
+// that grips by an elbow alone, on an obstacle the body leans on nowhere else: supportAt's brush) does the same, its
+// samples kept held (the support before it, the sample's own heightOnly and seat) unless that support is a flight; a
+// held grip that is no brush (the skunk's, its right leg on the wall) counts at once. The runs are read from the kinds
+// as measured and taken in time order, each onset taking the sample before it as already settled, so a short grip
+// before a brush gives way to what is before it and lengthens nothing, and a short brush after a grip carries that grip
+// on, held.
+test('a grip counts from ONSET after its first touch, a held brush too',()=>{
+ const {gripOnset}=BALANCE;assert.equal(typeof gripOnset,'function','traversal-balance.js exports gripOnset');
+ const hull=[[0,0],[1,0],[1,1],[0,1]],K={f:{kind:'feet',hull},g:{kind:'grip'},o:{kind:'hold',hull},h:{kind:'hold'},b:{kind:'hold',brush:true},a:{kind:'air'}},r=(c,n)=>c.repeat(n);
+ const go=s=>gripOnset([...s].map((c,i)=>({...K[c],c:[i,0,0]})),.005),str=S=>S.map(x=>x.kind==='feet'?'f':x.kind==='grip'?'g':x.kind==='air'?'a':x.brush?'b':x.hull?'o':'h').join('');
+ assert.equal(str(go('ffff'+r('g',14)+'ff')),r('f',8)+r('g',10)+'ff','a grip counts at its touch');
+ assert.equal(str(go('ffff'+r('g',11)+'ff')),r('f',17),'a touch shorter than three ONSET counts');
+ assert.equal(str(go('oooo'+r('b',14)+'oo')),r('o',8)+r('b',10)+'oo','a held brush counts at its touch');
+ assert.equal(str(go('oooo'+r('b',11)+'oo')),r('o',17),'a held brush shorter than three ONSET counts');
+ assert.equal(str(go('oooo'+r('b',8)+r('g',14)+'ff')),r('o',16)+r('g',10)+'ff','a held brush shorter than three ONSET counts where a grip follows it');
+ assert.equal(str(go('ffff'+r('g',9)+r('b',14)+'oo')),r('f',13)+r('o',4)+r('b',10)+'oo','a grip shorter than three ONSET before a held brush counts, or the brush\'s onset is not held');
+ {const S=go('ffff'+r('g',14)+r('b',8)+'oo');assert.equal(str(S),r('f',8)+r('g',10)+r('h',8)+'oo','a held brush shorter than three ONSET after a grip does not carry that grip on');
+  assert.ok(S.slice(18,26).every(x=>x.kind==='hold'&&!x.hull&&!x.brush),'a held brush the onset replaces is no longer held');}
+ {const gh=[[0,0],[2,0],[2,2]],bh=[[5,5],[6,5],[6,6]],K2={...K,g:{kind:'grip',feetHull:gh},b:{kind:'hold',brush:true,feetHull:bh}},S=gripOnset([...('ffff'+r('g',14)+r('b',8)+'oo')].map((c,i)=>({...K2[c],c:[i,0,0]})),.005);
+  assert.ok(S.slice(18,26).every(x=>x.kind==='hold'&&!x.hull&&x.feetHull===gh),'a short held brush after a grip keeps its own outline, not the grip\'s');}
+ {const S=go('aaaa'+r('b',14)+'oo');assert.equal(str(S),r('a',8)+r('b',10)+'oo','a held brush after a flight does not take the flight');}
+ {const Ks={...K,s:{kind:'hold',brush:true,seat:true},y:{kind:'hold',brush:true,heightOnly:true}},S=gripOnset([...('oooo'+'s'.repeat(14)+'oo')].map((c,i)=>({...Ks[c],c:[i,0,0]})),.005),Y=gripOnset([...('oooo'+'y'.repeat(14)+'oo')].map((c,i)=>({...Ks[c],c:[i,0,0]})),.005);
+  assert.ok(S.slice(4,8).every(x=>x.kind==='hold'&&x.hull===hull&&x.seat===true),'a held brush\'s onset takes the support\'s seat, not its own');
+  assert.ok(Y.slice(4,8).every(x=>x.kind==='hold'&&x.hull===hull&&x.heightOnly===true),'a held brush\'s onset takes the support\'s heightOnly, not its own');}
+ assert.equal(str(go('oooo'+r('b',12)+'oo')),r('o',8)+r('b',8)+'oo','a held brush of three ONSET does not count');
+ assert.equal(str(go('oooo'+r('h',14)+'oo')),'oooo'+r('h',14)+'oo','a held grip that is no brush waits ONSET');
+ assert.equal(str(go('oooo'+r('h',4)+r('b',14))),'oooo'+r('h',8)+r('b',10),'a held brush after a held grip does not take that grip\'s support');
+ const S=go('oooo'+r('b',14)+'oo');assert.deepEqual(S.slice(4,8).map(x=>x.c[0]),[4,5,6,7],'a sample the onset replaces does not keep its own centre');
+ assert.ok(S.slice(4,8).every(x=>x.hull===hull&&!x.brush),'a sample the onset replaces does not take the support before it');
 });
 // A seat the balance holds (traversal-balance.js, planCentre: a 'hold' with seat, the climb's top for a deep body)
 // pushes and never pulls: planned against a seat whose height drops 6 cm at once, the plan falls no faster than

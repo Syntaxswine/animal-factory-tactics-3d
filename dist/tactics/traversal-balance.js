@@ -172,20 +172,39 @@ export function followCentre(times,plan,comAt,{passes=5,base=null,from=null}={})
 //   but the climb's landing leans on one). A hand is skin the hand or fingers carry most of, on a mesh the rig names a
 //   hand; the rest of that mesh, the forearm and the elbow, grips only hooked over a top (within TOL of its height),
 //   and elsewhere against a face it is a part that can only push (below). Where the body is held (held: the motion's
-//   hold) the old rule stands, the whole mesh gripping, so this rule leaves the held stretches as they were. The rig
-//   lets the whole mesh grip anywhere, so the plan counts on less than the rig allows (a support the plan leaves
+//   hold) the old rule stands, the whole mesh gripping, so this rule leaves the held stretches as they were, but for
+//   when such a grip counts: a forearm or an elbow against a face, where the body leans on that obstacle nowhere else
+//   (no point of the trunk, head or legs, end 0 and on no arm's bone, within TOL of it, read as the grip's own test
+//   reads touching: a point on the floor is the floor's; a hand's mesh is no lean, its palm gripping there anyway and
+//   its forearm being the brush itself, and the feet and the tails beyond their roots are left out by choice), is a
+//   brush (brush: true), which counts from ONSET after its first touch, as an unheld grip does (gripOnset, below). The
+//   rig lets the whole mesh grip anywhere, so the plan counts on less than the rig allows (a support the plan leaves
 //   unused reads nothing in the rig).
 //   By the mesh alone an elbow brushing a face gripped: walking away from the wall, ten climbs read a grip from their
 //   right elbows on its far face (from 5.150 to 5.295 s, 45 to 120 ms each, 20 ms after the touch), and the plan pulled
 //   the body back toward the wall on one boot (by 1.2 to 5.6 m/s^2 at most; the pig foreman's 2.5, where the rig,
 //   finding only its sleeve on the face as played, read up to 158 N of phantom force: 84 + 7 readings over the limit).
-//   Held, a grip only lifts the outline (planCentre keeps the hold by friction alone). The cow's and skunk's rolls on
-//   the floor past the window's sill read one from their right elbows on its far face (from 3.195 to 3.325 s and from
-//   2.940 to 3.045), and their plans there are not physical either: the skunk's pushes it along the sill at up to
-//   13.3 m/s^2, its pressure point 27 to 42 cm outside the floor's outline (the cow's up to 37), which the rig misses
-//   because it, too, lets the elbow grip (it reads nothing over the limit through the skunk's stretch, and 9 readings
-//   at the start of the cow's). Held within that outline instead, the skunk's window read 301 readings over the limit
-//   against 126, the cow's 59 against 53. A held body leaning on a face is left open;
+//   Held, a grip only lifts the outline (planCentre keeps the hold by friction alone). The cow's and skunk's feet in
+//   after their rolls past the window's sill read one from their right elbows on its far face (from 3.195 to 3.325 s
+//   and from 2.940 to 3.045), and their plans there are not physical either: the skunk's pushes it along the sill at up
+//   to 13.3 m/s^2, its pressure point 27 to 42 cm outside the floor's outline (the cow's up to 37), which the rig
+//   misses because it, too, lets the elbow grip (it reads nothing over the limit through the skunk's stretch, and 9
+//   readings at the start of the cow's). Held within that outline instead, the skunk's window read 301 readings over
+//   the limit against 126, the cow's 59 against 53. The cow's elbow there is a brush (the cow leans on that wall
+//   nowhere else). Counted at its touch, it took the hold off the floor's outline on the sample the elbow touched, and
+//   the plan swung its sideways push from -442 N to +945 N in 5 ms, where the rig had no wall yet (from 3.192 s) and
+//   then one point of the forearm on it (3.195 and 3.200 s): 11 readings over the limit, to 472% at 3.194 s, the
+//   windows' worst; from two points on (3.205 s) it reads nothing. Counted from ONSET the swing comes at 3.215 to 3.220
+//   s, the forearm on the wall at two points, and the cow's window reads 5 readings against 16; the swing is still
+//   there, and the rig, letting the elbow grip, does not read it. (The elbow touches at 3.190 s on the authored motion
+//   and at 3.200 on round 2's; roundSchedule's merge keeps round 2's outline on 3.210 and 3.215, so the grip counts
+//   from 3.220.) The skunk's right leg is on that wall from two samples before its elbow touches it (its overalls on
+//   the shin and thigh, 12 to 31 cm up, in the rig's contacts from 2.930 s): the rig has the wall when the plan turns
+//   to it, and its grip counts at once (from ONSET, its window read 131 readings against 96). The arms are left out of
+//   the lean: the skunk's brushing arm's own sleeve touched the wall too (44 to 48 cm up). Held within the floor's
+//   outline instead, the elbow only pushing, the cow read 68 to 143% of the limit from 3.100 to 3.300 s (0 to 40 there
+//   before, but for the 11 readings at the touch) and its window 21 readings. A held body leaning on a face is left
+//   open;
 // - anything on the floor stands on it (hooves, hands, a back in a roll), and so does a part on an obstacle's top or
 //   its edge (within TOL of the top's height: the rig reads a point just past the edge as touching the edge, pushing up
 //   and out) while the centre of mass is above that top or less than DRAPE below it (a belly on a sill): their extent
@@ -225,14 +244,17 @@ export const contactProbe=(worker,tails=null)=>Object.assign(createSurfaceProbe(
 const endsOf=probe=>{let e=ENDS.get(probe);if(!e){const kind=probe.names.map(p=>/hand/.test(p)?1:/hoof|boot|foot|toe/i.test(p)?2:0),handBone=probe.boneNames.map(b=>/^(hand|fingers)/.test(b));e=Uint8Array.from(probe.part,(pi,i)=>probe.tails&&/tail/.test(probe.names[pi])&&!probe.tails.isRoot(probe.names[pi],probe.vertex[i])?3:kind[pi]===1&&!handBone[probe.bone[i]]?4:kind[pi]);ENDS.set(probe,e);}return e;};
 export function supportAt(probe,obstacles,com,held=false){
  const over=(x,z)=>obstacles.some(b=>x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]),ends=endsOf(probe),grow=(b,x,z)=>{b[0]=Math.min(b[0],x);b[1]=Math.max(b[1],x);b[2]=Math.min(b[2],z);b[3]=Math.max(b[3],z);};
- let grip=false,top=null,mixed=false;const fp={},tp=[],box=[Infinity,-Infinity,Infinity,-Infinity],onTop=[Infinity,-Infinity,Infinity,-Infinity],pts=[],topPts=[];
+ let grip=false,brush=false,top=null,mixed=false;const fp={},tp=[],box=[Infinity,-Infinity,Infinity,-Infinity],onTop=[Infinity,-Infinity,Infinity,-Infinity],pts=[],topPts=[];
+ const touches=(o,x,y,z)=>{const dx=Math.max(o.min[0]-x,0,x-o.max[0]),dy=Math.max(o.min[1]-y,0,y-o.max[1]),dz=Math.max(o.min[2]-z,0,z-o.max[2]);if(dx>=TOL||dy>=TOL||dz>=TOL)return false;return (!dx&&!dy&&!dz?Math.min(x-o.min[0],o.max[0]-x,y-o.min[1],o.max[1]-y,z-o.min[2],o.max[2]-z):Math.hypot(dx,dy,dz))<TOL;};
+ const arm=probe.boneNames.map(b=>/^(upperArm|forearm|hand|fingers)/.test(b)),leans=new Set();
+ if(held)for(let i=0;i<probe.count;i++){const x=probe.x[i],y=probe.y[i],z=probe.z[i];if(ends[i]!==0||arm[probe.bone[i]]||y<TOL&&y>-TOL&&!over(x,z))continue;for(const o of obstacles)if(touches(o,x,y,z))leans.add(o);}
  for(let i=0;i<probe.count;i++){const x=probe.x[i],y=probe.y[i],z=probe.z[i],e=ends[i];
   if(y<TOL&&y>-TOL&&!over(x,z)){grow(box,x,z);pts.push([x,z]);if(e===2)(fp[probe.part[i]]??=[]).push([x,z]);else if(e===3)tp.push([x,z]);else mixed=true;continue;}
   if(e===3)continue;for(const o of obstacles){const dx=Math.max(o.min[0]-x,0,x-o.max[0]),dy=Math.max(o.min[1]-y,0,y-o.max[1]),dz=Math.max(o.min[2]-z,0,z-o.max[2]);if(dx>=TOL||dy>=TOL||dz>=TOL)continue;const inside=!dx&&!dy&&!dz;
    const d=inside?Math.min(x-o.min[0],o.max[0]-x,y-o.min[1],o.max[1]-y,z-o.min[2],o.max[2]-z):Math.hypot(dx,dy,dz);if(d>=TOL)continue;
-   if(e===1||e===4&&(held||y>o.max[1]-TOL))grip=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);topPts.push([x,z]);if(e===2)(fp[probe.part[i]]??=[]).push([x,z]);else mixed=true;top=Math.max(top??-Infinity,o.max[1]);}}}
- if(grip){if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'grip',feetBox:box,feetHull:hullOf(pts.concat(topPts),box),feetFloor:0};}
-  return onTop[0]<=onTop[1]?{kind:'grip',feetBox:onTop,feetHull:hullOf(topPts,onTop),feetFloor:top}:{kind:'grip'};}
+   if(e===1||e===4&&(held&&leans.has(o)||y>o.max[1]-TOL))grip=true;else if(e===4&&held)brush=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);topPts.push([x,z]);if(e===2)(fp[probe.part[i]]??=[]).push([x,z]);else mixed=true;top=Math.max(top??-Infinity,o.max[1]);}}}
+ if(grip||brush){const b=grip?{}:{brush:true};if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'grip',feetBox:box,feetHull:hullOf(pts.concat(topPts),box),feetFloor:0,...b};}
+  return onTop[0]<=onTop[1]?{kind:'grip',feetBox:onTop,feetHull:hullOf(topPts,onTop),feetFloor:top,...b}:{kind:'grip',...b};}
  const own=mixed?{}:{footPts:fp,tailPts:tp};
  if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'feet',box,hull:hullOf(pts.concat(topPts),box),floor:0,...own};}
  return onTop[0]<=onTop[1]?{kind:'feet',box:onTop,hull:hullOf(topPts,onTop),floor:top,...own}:{kind:'air'};}
@@ -373,7 +395,16 @@ const KEEP=[...new Set(MASS_SEGMENTS.flatMap(([a,b])=>[a,b]))];
 // A grip counts from ONSET after the first touch (a hand's hold builds up; planned on at the touch itself, a hand that
 // touched 40 ms later once the hips moved left the feet braking the body alone), and a touch shorter than 3 ONSET
 // not at all: a hand brushing the wall in flight cannot hold the body, and planned as a grip it moved the hips enough
-// to brush elsewhere in the next round. Unused, a support the rig sees costs nothing.
+// to brush elsewhere in the next round. Unused, a support the rig sees costs nothing. A held brush (supportAt: a hold
+// that grips by an elbow against a face alone, on an obstacle the body leans on nowhere else) counts from ONSET after
+// its first touch too, and one shorter than 3 ONSET not at all: such a hold loses the floor's outline (a grip carries
+// feetHull, not hull), and planned on at the touch, the plan swung the body while the rig had no more than one point of
+// the forearm on the wall (the cow's window, 472% of the limit at 3.194 s). gripOnset reads the runs of unheld grips
+// and of held brushes from the kinds as measured and takes them in time order, each onset taking the sample before it
+// as already settled, so neither kind's onset lengthens the other's runs and a run shorter than 3 ONSET never counts,
+// whatever comes after it; a grip's onset copies that sample whole, as measure()'s loop did (a schedule without a brush
+// comes out the same), and a brush's keeps its samples held (that support, with their own heightOnly and seat) unless
+// the support is a flight. A held grip that is no brush counts at once, as before.
 // A grip the body leaves for a flight ends RELEASE before its last touch (releaseGrips): a hand that lets go holds
 // nothing as it slides off, so those samples are the flight's for all that reads the samples' kind (the centre's plan;
 // the 5 ms turn's flights, turnAir and bodyTurn, and their refinement; and the motion's refit, which holds the climb's
@@ -401,6 +432,10 @@ const KEEP=[...new Set(MASS_SEGMENTS.flatMap(([a,b])=>[a,b]))];
 // any other, and the grip before it lets go), and a grip the motion starts on, as the onset leaves it, are left as they
 // are.
 const ONSET=.02,LOST=.06,RELEASE=.01;
+export const gripOnset=(S,dt)=>{const n=S.length,lag=Math.round(ONSET/dt),T=S.map(x=>x.kind==='grip'?1:x.kind==='hold'&&x.brush?2:0);
+ for(let j=0;j<n;j++){const t=T[j];if(!t)continue;let i=j;while(i+1<n&&T[i+1]===t)i++;const end=i-j+1<3*lag?i+1:Math.min(n,j+lag);
+  if(j>0)for(let k=j;k<end;k++){const p=S[j-1],x=S[k];S[k]=t===1||p.kind==='air'?{...p,c:x.c}:{...p,kind:'hold',heightOnly:x.heightOnly,seat:x.seat,c:x.c};}j=i;}
+ return S;};
 export const releaseGrips=(S,dt)=>{const n=S.length,rel=Math.round(RELEASE/dt),fly=Math.round(LOST/dt);
  for(let i=0;i<n;i++)if(S[i].kind==='grip'){let j=i;while(j+1<n&&S[j+1].kind==='grip')j++;let a=j;while(a+1<n&&S[a+1].kind==='air')a++;
   if(i>0&&a-j>fly)for(let k=Math.max(i,j-rel+1);k<=j;k++)S[k]={...S[j+1],c:S[k].c,released:true};
@@ -500,7 +535,7 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  // each round's schedule as runs ('feet 0.000-0.690, ...'), for the diagnostics
  const history=[],runs=S=>{const out=[];S.forEach((s,i)=>{const r=out.at(-1);if(r&&r.kind===s.kind)r.end=times[i];else out.push({kind:s.kind,start:times[i],end:times[i]});});return out.map(r=>`${r.kind} ${r.start.toFixed(3)}-${r.end.toFixed(3)}`).join(', ');};
  const measure=()=>{const frames=[];const S=times.map(t=>{setShift(follow?follow.shift(t):null);const P=pose(t);probe.update();frames.push(Object.fromEntries(KEEP.map(k=>[k,P[k].clone()])));const c=com(P).toArray(),h=hold?.(t),s=supportAt(probe,obstacles,c,!!h);return h&&s.kind!=='air'?{...s,kind:'hold',heightOnly:h==='height',seat:h==='seat',c}:{...s,c};});
-  const raw=fine?S.map(x=>x.kind):null,lag=Math.round(ONSET/dt);for(let i=n-1;i>=0;i--)if(S[i].kind==='grip'){let j=i;while(j>0&&S[j-1].kind==='grip')j--;const end=i-j+1<3*lag?i+1:Math.min(n,j+lag);for(let k=j;k<end;k++)S[k]=j>0?{...S[j-1],c:S[k].c}:S[k];i=j;}
+  const raw=fine?S.map(x=>x.kind):null;gripOnset(S,dt);
   if(raw)S.forEach((x,i)=>{x.raw=raw[i];});
   return {S,...turning(frames,dt)};};
  // Two rounds: the second measures the schedule and the turning again on the balanced motion (four gave the climb no
