@@ -5638,6 +5638,137 @@ test-f25-tree-r4.log); the suite passes (2580 tests: suite-f25-r4.log).
 Left: the skunk's one-sample lean grip at 2.745 s (the forty-fifth part), which the merge leaves as round 2's own
 schedule has it; planning such a hold on the outline its grip keeps for the feet (feetHull), never tried.
 
+### 2026-11-24 (physics balance, forty-seventh part): a palm on a wall pushes; toward the wall only friction pulls
+
+The windows' worst readings after the forty-fifth part were the skunk's hands to the floor: 445.5, 449.8, 424.6 and
+429.3% of the limit at 2.092, 2.093, 2.095 and 2.096 s. There its contacts are its two hands alone: the left on the
+floor, the right palm braced on the far face, which the rig reads at one point there (rows-near.mjs on var-r24i).
+Through the right hand's step from the face to its floor mark (2.06 to 2.18 s) the palm rolls down the face on its
+fingertips: the fingers stay 0.5 cm off it while the wrist moves out and down and the palm turns toward the floor, so
+the heel lifts first (one or two points within TOL, the least gap 0.97 cm at 2.094 s), then the finger pads roll flat
+onto it (eight points), then it leaves (2.135 s; probe-brace.mjs, probe-palm-path.mjs: brace-r24i-skunk.txt,
+palm-path-r24i.txt). Eight windows' palms roll so: the horse's, the sheep's and the donkey's keep one to five points on
+the face through it, as the skunk's does; the goat's, the bull's, the cow's and the rabbit's leave the face for 4 to 10
+ms between 2.086 and 2.098 s and come back, where the goat's, the bull's and the cow's hands to the floor read 154, 136
+and 132%; the pigs' and the dog's leave it from 2.078 to 2.090 s and stay off (brace-r24i-gbcd.txt,
+brace-r24i-others.txt). Through it the body is braked hard: the skunk's required force at 2.095 s is (-649, 575, -387)
+N, 756 N across against the 690 the floor hand's friction gives (1.2 times 575), and the rig, letting the palm grip,
+makes up the rest by pulling the body toward the wall through it, which a palm on a flat face cannot do.
+
+The plan asked for that pull. supportAt counts a palm against a face as a grip, and planCentre plans a grip within fmax
+either way. supportAt instrumented to name the faces a palm touches (instrument-faces.mjs, var-r26f) shows such grips,
+with something on the floor or a top beside the palm, pulling the body toward the face past what that support's friction
+allows on seven windows: beside the left hand on the floor, the cow's hands to the floor from 2.030 to 2.075 s by up to
+4.48 m/s^2, the donkey's by 3.96, the skunk's from 2.080 to 2.120 by 2.20, the goat's, the horse's and the sheep's by
+0.79 to 1.11; beside the body on the sill's top, the pig director's reach for the floor from 1.685 to 1.780 by up to
+3.18; no climb's, no low wall's (probe-face-grips-phys-fh.mjs: face-grips-phys-fh-r26f.txt).
+
+`dist/tactics/traversal-balance.js`: supportAt hands back push, those faces' outward normals ('+x', '-x', '+z', '-z'; at
+a vertical edge the face the point lies farther outside of; on the 33 every push is a far face's, +x: the windows' (the
+right palm) and the climbs' (both palms, beside the feet as they land)), on a grip whose every gripping point is a palm
+on an obstacle's side face (none on a top or an underside, no forearm) with something on the floor or a top beside it. A
+palm on a face can only push, so planCentre bounds such a grip's acceleration toward each face as friction does, given
+the vertical force per unit mass of its own plan, fy: by MU fy while fy is positive, and by fy/MU below that, where only
+the palm's friction can pull the body down faster than gravity, so the palm must press and push the body away; unless a
+palm presses the opposite face too; at most a push away of fmax (below -MU fmax g the row's two bounds would cross:
+never on the 33, var-r26k's plans hash-equal to var-r26d's on the four windows whose fy dips under .3 g: plan-hash.mjs,
+plan-hash-r26k-window4.txt against plan-hash-r26d-window4.txt; the test does not pin the cap, which no crossing reaches,
+nor fmax along a face and away from it, which none comes near: the plans push away at most 13.09 m/s^2 and along a face
+at most 15.45, against 29.43). Along a face and away from it the grip's bounds stand. On the 33 fy stays at or above 0
+at every such grip (the least the pig director's, 0.00 at 1.740 s), and the plan's pull toward the face now meets the
+bound to within 0.005 m/s^2 (probe-push-fy.mjs: push-fy-r26c.txt, and on var-r26d for the four windows its floor
+changes, push-fy-r26d-window4.txt; probe-face-grips-phys.mjs on var-r26d: face-grips-phys-r26d.txt).
+
+- The windows read 291 readings over the limits against 291 (kept-rises-r24i-r26c-window.txt; the four windows whose
+  bound this changes from its first version, kept-rises-r24i-r26d-window4.txt: on every other crossing the plan's rows
+  are its first version's on both rounds of the balance, review round 2's calls-r26c-window.txt and -wall.txt). The
+  skunk's four fall to 393.8, 395.3, 366.7 and 369.4%: its worst, the windows' worst, 395.3% against 449.8. The goat's
+  at 2.138 s (100.17%) is gone and one at 2.092 is new (100.12); every other reading is kept, a little higher or lower.
+  The rig reads the bound only where the palm is down to one point on the wall, which carries no turning: that is what
+  is left of the skunk's four (two points, 5.4 cm apart, at 2.094 s, which reads nothing; the chart: brace-fix26.html,
+  make-chart-f26.mjs).
+- The climbs read none over the limits, as before: ten gates the same to the byte, the pig foreman's within about 0.0001
+  N in every row (the solve, its bound never reached; kept-rises-r24i-r26c-wall.txt): the pig director's drop, which
+  pulls past the friction, has its palm alone on the face, a grip whole as before. The low walls carry no push; their
+  plans are the same to the bit (review round 1's plan-same-lowwall.txt), and their gates, run with the rule's plain
+  version, the same to the byte.
+- The body moves 5.9 mm at most (the cow's window at 1.970 s; the pig director's 5.7 at 1.730, the donkey's 4.7, the
+  skunk's 2.6, the goat's, the horse's and the sheep's under 1 mm; probe-vertdiff-k.mjs: vertdiff-r24i-r26c-*.txt,
+  vertdiff-r24i-r26d-window4.txt); the bull's and the rabbit's windows read the same to the byte, the dog's and the pig
+  foreman's move by under 0.005 mm. Single instants under the limits rise by up to 26.5 points (the horse's 0 to 26.5%
+  at 2.138 s, a contact flickering as its palm leaves; the donkey's 7.9 at 2.256; instant-under-f24.mjs); the skunk's
+  mean reading 6.75% against 6.79, its instants over 80% 118 against 118 (bins-f24.mjs).
+
+A palm alone on a face (nothing on the floor or a top beside it) keeps the grip whole. Bounded as physics asks, a push
+away of at least |fy|/MU (its own friction carrying the vertical force; var-r26e, edit-push-physical.mjs with ALONE=1),
+its few samples become a sudden shove: on the eleven windows the horse read seven readings more, up to 303.7% at 2.016
+s, where its palm is alone for two samples, the donkey one more (263.5% at 2.096) and the pig foreman four more, the
+skunk one fewer, the others as many (302 against 291; kept-rises-r24i-r26e-window.txt; the sheep's gated by review round
+2, 15 against 15); the climbs, which read none, read seven at their drops (up to 318.8% at 4.238 s, the pig director's;
+the bull's, the donkey's, the sheep's and the skunk's from 4.230 s; kept-rises-r24i-r26e-wall.txt). Bounded only toward
+the face (var-r26s: on this rule's first version, with its .3 g floor beside a support; gated on six windows and two
+climbs, not the nine climbs whose drops it bounds, where it could only add), the pig foreman read two more (108.4 and
+105.2% at 2.207 and 2.208 s) and the goat one fewer (kept-rises-r24i-r26s-window.txt, -wall.txt). The authored motion
+leans on a palm alone for those samples, which no bound of the plan makes physical without a jolt: it stays a grip, as
+the rig's is, and there the plans still pull the body toward the face (on this rule's plans, review round 2's
+alone-r26d-window.txt): at up to 12.50 m/s^2 on the dog's window at 2.025 s, the pig foreman's 8.44, the pig director's
+6.27, the cow's 5.75, the goat's 3.68, the skunk's 0.04 (2 to 16 such samples a window, none on the sheep's), and every
+climb's drop near 4.4 s (36 to 44 samples, up to 4.50, the pig director's at 4.375 s).
+
+Tried and not kept:
+- The bound with a floor of .3 g under fy (var-r26c, gated on the 33: this rule's first version, review round 1's).
+  Below .3 g it let the pull toward the face exceed what friction gives: the pig director's reach for the floor planned
+  2.62 to 2.65 m/s^2 toward the wall at 1.715 to 1.740 s with fy 0.004 to 0.28, 21 samples past MU fy by up to 2.64, the
+  donkey's 3 by 0.36 (review round 1's push-paths-r26c.txt); pulled down faster than gravity it would have let the palm
+  pull the body toward the face where it must press. Without the floor the four windows it reached read as many readings
+  (the donkey's, the pig foreman's, the pig director's and the dog's: var-r26d against var-r26c).
+- The same bound for a palm alone too, MU fy where no floor stands to pull (var-r26p, gated on the 33): the windows read
+  as the scoped rule's on nine, every reading the same to the hundredth, the pigs' a little different, every count the
+  same (kept-rises-r26p-r26c-window.txt); the pig director's climb's drop moved 4.6 mm. It stands for a friction that is
+  not there.
+- The right hand lifting off the far face on its step to the floor (an arc of 3 cm along the face's normal on the step's
+  key; var-r26q, edit-step-lift.mjs). The palm leaves at 2.085 to 2.090 s and never comes back (palm-path-r26q.txt), and
+  the skunk's four readings are gone, but the windows read 330 against 291: the one hand on the floor is left alone with
+  the braking (the cow's 5 readings become 14, among them 326.7% at 2.075 s as its palm leaves; the horse's 22 become
+  28, the donkey's 48 become 59, the rabbit's 41 become 46; kept-rises-r24i-r26q-window.txt); on top of this rule the
+  cow's still read 14 (review round 1's g12-lift-window-cow). The palm must stay on the face through 2.08 to 2.12 s.
+
+`tests/natural-traversal.test.mjs`: a new test, "a palm against a face only pushes": supportAt's push on the far, near
+and side faces, just inside a face and on both faces, beside the other hand on the floor (one point of it, an outline
+with no area, too), beside the body on the window's sill (at one point and along a line too), beside the head on the
+floor and beside a boot, on the other side face (-z), just outside a vertical edge (the face it lies farther outside
+of), 1.5 cm below a top (past TOL), and none on a top, beside a palm on a top, beside a forearm hooked over the top,
+under the window's lintel, within TOL of a top or above an underside, beside its own forearm leaning on the face when
+held, or for a palm alone; planCentre's bound on a grip schedule beside a support whose authored path steps 30 cm along
+x (a plain grip's plan accelerates the body at up to 24.45 m/s^2 either way): pressing a +x face it pulls the body back
+at 8.83 m/s^2 (MU g, reached to within 0.05) and pushes it away, or moves it along the face, as a grip does; pressing a
+-x face the mirror; palms on both faces, or on a z face, leave x a grip's; pressing a +z face it pulls the body back
+along -z at MU g, and a -z face along +z; a path toward the face is bounded too; pulled down faster than gravity (a free
+fall in the schedule) it pushes the body away by -fy/MU at least, and where fy is just above 0 (ten samples under .3 g)
+it pulls the body toward the face at MU fy at most; and with the authored height stepping 1 cm (which the plan smooths)
+its pull meets the bound on its own vertical, not the authored one's, and its push stays under 3 g less 1 m/s^2 (read
+from the authored step, the cap would hold it at fmax g, 29.43: with the free fall's check switched off, fy from the
+authored path fails there, unit-r8-auth-nofall.log). It fails on fix 25's code, on this rule's first version (at the
+free fall, 6.617 m/s^2 past the bound: var-r26c), and on forty wrong versions (mkmut-f26k.mjs on var-r26k, the cap's
+copy: push never handed back, push ignored, the bound on the wrong side, push beside a hook, opposite faces not freeing
+the axis, no pull at all, a face bounding the axis along it too, a palm on a top pushing, a palm under an underside
+pushing, the .3 g floor, a floor of none, fy from the authored path, push for a palm alone, push only beside a foot, no
+push beside a top alone, and review round 2's: MU fy below 0 too, a z face unbounded, a +z face bounded the wrong way, a
+palm within TOL below a top or above an underside pushing, fy read a sample early; and review round 3's: fy read a
+sample late, the bound MU g, MU |fy|, a forearm pushing too, the bands 2 TOL deep, push only beside an outline with an
+area; and review round 4's: push only beside a top with an area, push only beside a hand or a foot on the floor, the
+nearer face at an edge, both faces at an edge, a -z face named +z, unbounded, or bounded the wrong way; and review round
+5's: the .3 g floor kept at or above 0, the bound turning over at .3 g, no pull toward a -x face; and review round 6's:
+a friction 5% low, MU fy less .3; and review round 7's: the bands within TOL of a top or above an underside half as
+deep; unit-r8-*.log, unit-r8-summary.txt). Review round 6's MU min(fy, g) passes: no case presses the bound with fy
+above g; on the 33 it moves the dog's window 5.0 mm (the others 0.01 mm at most, the solve's drift: review round 7's
+plan diffs). The test file passes (24 of 24 tests: test-f26-tree.log); the suite passes (2581 tests: suite-f26.log).
+
+Left: the palm's roll off the face (the turning a single point cannot carry), the next fix; a palm alone on a face,
+which the authored motion leans on and the plan keeps as a grip; along a face the grip's bounds (the cow's plan pushes
+along the far face at up to 8.17 m/s^2 past MU fy: the palm's friction there depends on how hard it presses, which this
+bound does not ask for).
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

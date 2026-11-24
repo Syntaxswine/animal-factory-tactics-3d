@@ -186,6 +186,78 @@ test('a grip counts from ONSET after its first touch, a held brush too',()=>{
  const S=go('oooo'+r('b',14)+'oo');assert.deepEqual(S.slice(4,8).map(x=>x.c[0]),[4,5,6,7],'a sample the onset replaces does not keep its own centre');
  assert.ok(S.slice(4,8).every(x=>x.hull===hull&&!x.brush),'a sample the onset replaces does not take the support before it');
 });
+test('a palm against a face only pushes: toward the face only the friction of what stands beside it pulls',()=>{
+ // supportAt hands back push, the outward normals of the faces a grip's palms press, where every gripping point is a
+ // palm on an obstacle's side face (none on a top or an underside, nor within TOL of either, no forearm) with something
+ // on the floor or a top beside it; planCentre bounds such a grip's pull toward each face as friction does, given the
+ // vertical force per unit mass fy of its own plan: by MU fy while fy >= 0 (the support's friction), and by fy/MU below
+ // that (pulled down faster than gravity only by the palm's friction, it must press, pushing the body away), unless a
+ // palm presses the opposite face too. A palm alone (nothing on the floor or a top beside it) keeps the grip whole. The
+ // windows' brace: the right palm on the far face (+x) beside the left hand on the floor, the body on the sill's top,
+ // or its head on the floor (the donkey's and the rabbit's reach for the floor); the climbs' landing: both palms on the
+ // far face beside the feet.
+ const wall={min:[.42,0,-.5],max:[.58,2,.5]},low={min:[.42,0,-.5],max:[.58,.85,.5]},lintel={min:[.42,1.55,-.5],max:[.58,2,.5]};
+ const probe=pts=>({count:pts.length,names:['work boot 1','forearm and hand 1','connected shirt and sleeves','forearm and hand -1'],part:Uint8Array.from(pts,p=>p.part),vertex:Uint32Array.from(pts,p=>p.v),
+  x:Float32Array.from(pts,p=>p.x),y:Float32Array.from(pts,p=>p.y),z:Float32Array.from(pts,p=>p.z),boneNames:['hoof1','forearm1','hand1','fingers1','upperArm1','spine','hand-1'],bone:Uint16Array.from(pts,p=>p.bone),tails:null});
+ const palm=(v,x,y,z)=>({part:1,bone:2,v,x,y,z}),floorHand=[[.95,.15],[1.05,.15],[1.05,.25],[.95,.25]].map(([x,z],k)=>({part:3,bone:6,v:40+k,x,y:.001,z}));
+ const sup=(pts,obs=[wall])=>supportAt(probe([...floorHand,...pts]),obs,[.97,.75,.1],false),push=s=>s.kind==='grip'&&s.push?s.push.slice().sort().join():s.kind;
+ {const s=sup([palm(9,.585,.86,.2)]);assert.ok(s.kind==='grip'&&s.push?.join()==='+x'&&s.feetHull?.length>=3,'a palm on the far face, the other on the floor, pushes along its normal');}
+ assert.equal(push(sup([palm(9,.415,.86,.2)])),'-x','a palm on the near face pushes along its normal');
+ assert.equal(push(sup([palm(9,.5,.86,.505)])),'+z','a palm on a side face pushes along its normal');
+ assert.equal(push(sup([palm(9,.5,.86,-.505)])),'-z','a palm on the other side face pushes along its normal');
+ assert.equal(push(sup([palm(9,.588,.86,.503)])),'+x','a palm just outside a vertical edge pushes along the face it lies farther outside of');
+ assert.equal(push(sup([palm(9,.575,.86,.2)])),'+x','a palm just inside the far face pushes out of it');
+ assert.equal(push(sup([palm(9,.585,.86,.2),palm(10,.415,.86,.2)])),'+x,-x','palms on both faces push both ways');
+ assert.equal(push(sup([palm(9,.5,2.005,0)])),'grip','a palm on the top grips');
+ assert.equal(push(sup([palm(9,.585,.86,.2),palm(10,.5,2.005,0)])),'grip','a palm on the far face beside one on the top grips');
+ assert.equal(push(sup([palm(9,.585,.86,.2),{part:1,bone:1,v:10,x:.5,y:2.005,z:0}])),'grip','a palm on the far face beside a forearm hooked over the top grips');
+ assert.equal(push(sup([palm(9,.5,1.545,0)],[low,lintel])),'grip','a palm under the window\'s lintel grips');
+ assert.equal(push(sup([palm(9,.585,1.992,.2)])),'grip','a palm on the far face within TOL of the top grips: the edge');
+ assert.equal(push(sup([palm(9,.585,1.985,.2)])),'+x','a palm on the far face 1.5 cm below the top, past TOL, pushes along its normal');
+ {const s=supportAt(probe([palm(9,.585,.86,.2),{part:3,bone:6,v:40,x:1,y:.001,z:.2}]),[wall],[.97,.75,.1],false);assert.ok(s.kind==='grip'&&s.push?.join()==='+x','a palm on the far face beside one point of the other hand on the floor pushes along its normal');}
+ {const s=supportAt(probe([...floorHand,palm(9,.585,.86,.2),{part:1,bone:1,v:10,x:.585,y:.8,z:.25},{part:2,bone:5,v:11,x:.585,y:.9,z:.1}]),[wall],[.97,.75,.1],true);assert.ok(s.kind==='grip'&&!s.push,'a held palm on the far face beside its forearm leaning there, the body on it too, grips: no forearm pushes');}
+ assert.equal(push(sup([palm(9,.585,1.558,.2)],[low,lintel])),'grip','a palm on the far face within TOL above the lintel\'s underside grips');
+ {const s=supportAt(probe([palm(9,.585,.5,.2),{part:2,bone:5,v:11,x:.5,y:.851,z:.1},{part:2,bone:5,v:12,x:.45,y:.851,z:.2},{part:2,bone:5,v:13,x:.55,y:.851,z:.25}]),[low,lintel],[.6,.9,.1],false);
+  assert.ok(s.kind==='grip'&&s.push?.join()==='+x'&&s.feetFloor===.85,'a palm on the far face below the window, the body on the sill\'s top, pushes along its normal');}
+ for(const [name,seat] of [['at one point',[[.5,.1]]],['along a line',[[.45,.1],[.55,.1]]]]){const s=supportAt(probe([palm(9,.585,.5,.2),...seat.map(([x,z],k)=>({part:2,bone:5,v:11+k,x,y:.851,z}))]),[low,lintel],[.6,.9,.1],false);
+  assert.ok(s.kind==='grip'&&s.push?.join()==='+x'&&s.feetFloor===.85,`a palm on the far face below the window, the body on the sill\'s top ${name}, pushes along its normal`);}
+ {const head=[[.95,.15],[1.05,.15],[1.05,.25]].map(([x,z],k)=>({part:2,bone:5,v:30+k,x,y:.001,z})),s=supportAt(probe([palm(9,.585,.86,.2),...head]),[wall],[.97,.75,.1],false);
+  assert.ok(s.kind==='grip'&&s.push?.join()==='+x','a palm on the far face beside the head on the floor pushes along its normal');}
+ {const s=supportAt(probe([palm(9,.585,.86,.2),{part:0,bone:0,v:20,x:1,y:.001,z:.2},{part:0,bone:0,v:21,x:1.1,y:.001,z:.2},{part:0,bone:0,v:22,x:1.1,y:.001,z:.3}]),[wall],[.97,.75,.1],false);
+  assert.ok(s.kind==='grip'&&s.push?.join()==='+x','a palm on the far face beside a boot on the floor pushes along its normal');}
+ assert.equal(push(supportAt(probe([palm(9,.585,.86,.2)]),[wall],[.97,.75,.1],false)),'grip','a palm alone on the far face, nothing under the body, grips');
+ // The plan: a grip schedule whose authored path steps 30 cm along x mid-way (a plain grip's plan accelerates the body
+ // either way at up to 24 m/s^2). Pressing a face whose normal is +x, the body is pulled back along -x at MU g, the
+ // bound reached to within 0.05 m/s^2 (its path level: fy = g), and pushed along +x, or moved along the face, as a grip
+ // is; palms on both faces, or on a z face, leave x a grip's.
+ const dt=.005,n=121,G=9.81,MU=.9,FH=[[0,0],[1,0],[1,1]],path=(push,d=.3,ax=0)=>Array.from({length:n},(_,i)=>({c:ax?[0,1,i<60?0:d]:[i<60?0:d,1,0],kind:'grip',feetHull:FH,...(push?{push}:{})}));
+ const accX=(plan,ax=0)=>{let lo=Infinity,hi=-Infinity;for(let i=1;i<n-1;i++){const a=(plan[i+1][ax]-2*plan[i][ax]+plan[i-1][ax])/dt/dt;lo=Math.min(lo,a);hi=Math.max(hi,a);}return [lo,hi];};
+ const [lo,hi]=accX(planCentre(path(['+x']),dt)),[gLo,gHi]=accX(planCentre(path(null),dt)),[nLo,nHi]=accX(planCentre(path(['-x']),dt));
+ assert.ok(gLo<-2*MU*G&&gHi>2*MU*G,`a plain grip's plan accelerates the body at ${gLo.toFixed(2)} to ${gHi.toFixed(2)} m/s^2`);
+ assert.ok(lo>=-MU*G-.05&&lo<=-MU*G+.05,`pressing a +x face, the plan pulls the body back toward it at ${(-lo).toFixed(2)} m/s^2 (MU g ${(MU*G).toFixed(2)})`);
+ assert.ok(hi>2*MU*G,`pressing a +x face, the plan pushes the body away from it at ${hi.toFixed(2)} m/s^2`);
+ assert.ok(nHi<=MU*G+.05&&nHi>=MU*G-.05&&nLo<-2*MU*G,`pressing a -x face, the plan pulls the body toward it at ${nHi.toFixed(2)} m/s^2 (MU g ${(MU*G).toFixed(2)}) and pushes it away at ${(-nLo).toFixed(2)}`);
+ {const [bLo]=accX(planCentre(path(['+x','-x']),dt)),[zLo]=accX(planCentre(path(['+z']),dt)),[rLo]=accX(planCentre(path(['+x'],-.3),dt)),[tLo,tHi]=accX(planCentre(path(['+x'],.3,2),dt),2);
+  assert.ok(bLo<-2*MU*G,`palms on both faces pull the body either way (${bLo.toFixed(2)} m/s^2)`);
+  assert.ok(zLo<-2*MU*G,`a palm on a z face leaves x a grip's (${zLo.toFixed(2)} m/s^2)`);
+  {const [zl]=accX(planCentre(path(['+z'],.3,2),dt),2);assert.ok(zl>=-MU*G-.05&&zl<=-MU*G+.05,`pressing a +z face, the plan pulls the body back along -z at ${(-zl).toFixed(2)} m/s^2 (MU g ${(MU*G).toFixed(2)})`);}
+  {const [,zh]=accX(planCentre(path(['-z'],-.3,2),dt),2);assert.ok(zh<=MU*G+.05&&zh>=MU*G-.05,`pressing a -z face, the plan pulls the body back along +z at ${zh.toFixed(2)} m/s^2 (MU g ${(MU*G).toFixed(2)})`);}
+  assert.ok(tLo<-2*MU*G&&tHi>2*MU*G,`pressing a +x face, the plan moves the body along it as a grip does (${tLo.toFixed(2)} to ${tHi.toFixed(2)} m/s^2)`);
+  assert.ok(rLo>=-MU*G-.05,`pressing a +x face, a path toward the face is pulled at ${(-rLo).toFixed(2)} m/s^2 at most`);}
+ // Pulled down faster than gravity (a free fall in the schedule, a 5 cm step along x within it), the bound turns over:
+ // the palm must press to pull the body down by its friction, and the plan pushes the body away by -fy/MU at least;
+ // where fy is just above 0, about to turn over, the pull toward the face is MU fy at most (round 1's floor of .3 g
+ // there let the pig director's plan pull 2.64 m/s^2 past friction).
+ {const yAt=i=>{const k=Math.min(Math.max(i,30),90)-30;return 1-.5*G*(k*dt)**2;},P=planCentre(Array.from({length:n},(_,i)=>({c:[i<45||i>75?0:.05,yAt(i),0],kind:'grip',feetHull:FH,push:['+x']})),dt);
+  let k=0,low=0,worst=-Infinity;for(let i=1;i<n-1;i++){const fy=(P[i+1][1]-2*P[i][1]+P[i-1][1])/dt/dt+G,ax=(P[i+1][0]-2*P[i][0]+P[i-1][0])/dt/dt;if(fy<0)k++;else if(fy<.3*G)low++;worst=Math.max(worst,-ax-(fy>=0?MU*fy:fy/MU));}
+  assert.ok(k>=10&&low>=5&&worst<=.05,`pulled down faster than gravity (${k} samples, ${low} more under .3 g), the plan meets the bound, pushing the body away by -fy/MU below 0 (past by ${worst.toFixed(3)} m/s^2 at most)`);}
+ // The bound reads the plan's own vertical, not the authored path's: the authored height steps 1 cm at sample 58, which
+ // the plan smooths; read from the authored step, the bound would ask a push of hundreds of m/s^2 there, which the cap
+ // holds at fmax g (29.43): the plan's push stays under 3 g less 1 m/s^2 (20.93 on its own vertical).
+ {const P=planCentre(Array.from({length:n},(_,i)=>({c:[i<60?0:.3,i<58?1:.99,0],kind:'grip',feetHull:FH,push:['+x']})),dt);let worst=-Infinity,hi=-Infinity;
+  for(let i=1;i<n-1;i++){const fy=(P[i+1][1]-2*P[i][1]+P[i-1][1])/dt/dt+G,ax=(P[i+1][0]-2*P[i][0]+P[i-1][0])/dt/dt;worst=Math.max(worst,-ax-(fy>=0?MU*fy:fy/MU));hi=Math.max(hi,ax);}
+  assert.ok(worst<=.05&&hi<3*G-1,`with the authored height stepping, the plan's pull meets the bound on its own vertical (past by ${worst.toFixed(3)}), its push ${hi.toFixed(2)} m/s^2 at most`);}
+});
 // A seat the balance holds (traversal-balance.js, planCentre: a 'hold' with seat, the climb's top for a deep body)
 // pushes and never pulls: planned against a seat whose height drops 6 cm at once, the plan falls no faster than
 // gravity (-9.81 m/s^2 at its least) and comes down onto it at the balance's 3 body weights at most (FMAX: 2 g net,

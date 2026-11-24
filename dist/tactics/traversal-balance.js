@@ -6,7 +6,9 @@ import {V,Q,clamp,smooth,track,MASS_SEGMENTS,BODY_MASS,createSurfaceProbe} from 
 // - airborne (nothing touching): exactly ballistic, a = -g;
 // - on the feet alone: the pressure point of a linear inverted pendulum, p = c - h a / (g + a_y), inside the soles'
 //   outline (their convex hull), the push within friction, and the floor pushing (never pulling);
-// - hands gripping (with or without feet): any direction, each axis within FMAX body weights;
+// - hands gripping (with or without feet): any direction, each axis within FMAX body weights; but a grip whose every
+//   gripping point is a palm pressed on a side face, beside something on the floor or a top (supportAt's push), pulls
+//   the body toward that face only as friction allows;
 // - held as a seat (the climb's top for a deep body): pushing up between none and FMAX body weights, never pulling,
 //   the push sideways within friction;
 // - at rest at either end, as the battle's own stance hands over: the first sample on the authored path, with no
@@ -88,13 +90,14 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=
  const sup=s=>(s?.kind==='feet'||s?.kind==='hold')&&s.hull,outlineAt=i=>{let P=samples[i].hull;for(let j=i-2;j<=i+2&&P.length>=3;j++)if(j!==i&&sup(samples[j]))P=clipConvex(P,samples[j].hull);
   return P.length>=3&&areaOf(P)>1e-6?P:samples[i].hull;};
  // Across, x and z together (interleaved: the outline's edges couple them): ballistic in flight, a grip within fmax
- // either way, and on the feet the pressure point inside the support's outline and the push within friction. The
- // outline is the contacts' convex hull, each edge drawn in by margin but never past its centre; their bounding box
- // let the pressure point sit 4 to 11 cm off the line between two hands set down on a diagonal (the window's), where
- // the rig, reading the hull, found 20 to 32% of the body's weight of phantom force. A held stretch is planned across
- // as the feet are, near its authored path: held by its weight alone, the plan left it at 2 g in its last samples to
- // meet the feet's outline after it, where the floor could push it no more than friction allows (as a body rose off
- // its seat with its centre of mass 7 cm behind its heels: 121% of the body's weight of phantom force).
+ // either way (but toward a face its palms only push on, within friction: below), and on the feet the pressure point
+ // inside the support's outline and the push within friction. The outline is the contacts' convex hull, each edge drawn
+ // in by margin but never past its centre; their bounding box let the pressure point sit 4 to 11 cm off the line
+ // between two hands set down on a diagonal (the window's), where the rig, reading the hull, found 20 to 32% of the
+ // body's weight of phantom force. A held stretch is planned across as the feet are, near its authored path: held by
+ // its weight alone, the plan left it at 2 g in its last samples to meet the feet's outline after it, where the floor
+ // could push it no more than friction allows (as a body rose off its seat with its centre of mass 7 cm behind its
+ // heels: 121% of the body's weight of phantom force).
  // On the rows of the first and last END samples (samples 1 to 4 and n-5 to n-2, 20 ms at either end) the edges are
  // asked in by END_MARGIN: there the hips' track, easing from rest into the plan's first acceleration, overshoots it by
  // up to a third, and the plan ran its pressure point to the margin (the goat's to the heel side, from its first sample
@@ -114,7 +117,12 @@ export function planCentre(samples,dt,{jerk:wJ=2e5,hold:wH=400,level:wL=50,fmax=
   {at:2*(n-2)+ax/2,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ},{at:2*(n-1)+ax/2,c:[1],lo:c0[ax][n-1],hi:c0[ax][n-1],stiff:EQ});
  for(let i=1;i<n-1;i++){const s=samples[i],at=2*(i-1),both=(lo,hi)=>rows.push({at,c:acc2,lo,hi},{at:at+1,c:acc2,lo,hi});
   if(s.kind==='air'){both(0,0);continue;}
-  if(s.kind==='grip'){both(-fmax*G*d2,fmax*G*d2);continue;}
+  // A grip whose palms push on side faces alone, beside something on the floor or a top (supportAt's push), pulls the
+  // body toward each face no harder than friction allows: by MU fy, the support's, while its plan's fy is positive, and
+  // by fy/MU below that, the palm's (it must press to pull the body down); unless a palm presses the opposite face too;
+  // at most a push away of fmax (below -MU fmax g the row's bounds would cross). Along a face and away from it, fmax.
+  if(s.kind==='grip'){const F=fmax*G,p=s.push,has=k=>p.includes(k);let lx=-F,hx=F,lz=-F,hz=F;if(p){const fy=ay(i)+G,f=Math.max(-F,fy>=0?MU*fy:fy/MU);if(has('+x')&&!has('-x'))lx=-f;if(has('-x')&&!has('+x'))hx=f;if(has('+z')&&!has('-z'))lz=-f;if(has('-z')&&!has('+z'))hz=f;}
+   rows.push({at,c:acc2,lo:lx*d2,hi:hx*d2},{at:at+1,c:acc2,lo:lz*d2,hi:hz*d2});continue;}
   // A held seat keeps a hold's sideways bounds, as if it bore .3 g at least, even where its plan rides -g and it bears
   // nothing; the push then comes from elsewhere. On the climb's top a hand grips the wall at most seated samples
   // (supportAt reads a grip, no outline, at 211 and 213 of each pig's 227; at the other 16 and 14, from 2.970 to 3.045
@@ -220,6 +228,38 @@ export function followCentre(times,plan,comAt,{passes=5,base=null,from=null}={})
 //   use costs nothing. On the floor a tail counts (the stalled roll turns on the skunk's plume: left out there too,
 //   that roll's sit up read 43 readings, 17 with it);
 // - nothing counted is flight.
+// A grip whose every gripping point is a palm against an obstacle's side face (none on a top or an underside, no
+// forearm), with something on the floor or a top beside it (feetHull), carries push, those faces' outward normals
+// ('+x', '-x', '+z', '-z'; at a vertical edge the face the point lies farther outside of, so one axis; on the 33 every
+// push is a far face's, +x: the windows' (the right palm) and the climbs' (both palms, beside the feet as they land)).
+// A palm on a face can only push the body out from it, so toward the face only the friction of what stands beside it
+// pulls: planCentre bounds such a grip's acceleration toward each face by MU fy while the vertical force per unit mass
+// of its own plan, fy, is positive, and by fy/MU below that, where only the palm's friction can pull the body down
+// faster than gravity, so the palm must press and push the body away (on the 33 fy stays at or above 0 at every such
+// grip, the least the pig director's, 0.00 at 1.740 s); unless a palm presses the opposite face too. Planned within
+// fmax either way, such grips pulled the body toward the wall past that friction on seven windows: beside the left hand
+// on the floor, the cow's hands to the floor from 2.030 to 2.075 s by up to 4.48 m/s^2, the donkey's by 3.96, the
+// skunk's from 2.080 to 2.120 by 2.20, the goat's, the horse's and the sheep's by 0.79 to 1.11; beside the body on the
+// sill's top, the pig director's reach for the floor from 1.685 to 1.780 by up to 3.18; no climb's, no low wall's. The
+// rig lets the palm grip anywhere, so it reads the bound only where the grip is down to one point on the face, which
+// carries no turning: rolling off the far face on its fingertips, the skunk's palm keeps one point on it at 2.092,
+// 2.093, 2.095 and 2.096 s (two, 5.4 cm apart, at 2.094, which reads nothing), where its window's four readings fall
+// from 424.6 to 449.8% of the limit to 366.7 to 395.3. Every crossing reads as many readings over the limits as before
+// (the goat's at 2.138 s gone, one at 2.092 new); ten climbs and the bull's and the rabbit's windows read the same to
+// the byte, the low walls' plans are the same to the bit, and the body moves 5.9 mm at most (the cow's window at 1.970
+// s; the pig director's 5.7 at 1.730, the donkey's 4.7); where the bound is never reached the solve still moves a
+// little, stopping short of exact (the pig foreman's climb's required force by about 0.0001 N). A palm alone on a face
+// (nothing on the floor or a top beside it) keeps the grip whole. Bounded as physics asks, a push away of at least
+// |fy|/MU (its own friction carrying the vertical force), its few samples become a sudden shove: on the eleven windows
+// the horse read seven readings more, up to 303.7% at 2.016 s, where its palm is alone for two samples, the donkey one
+// more (263.5% at 2.096) and the pig foreman four more, the skunk one fewer, the others as many (302 against 291);
+// bounded only toward the face (on this rule's first version, with its .3 g floor beside a support; six windows and two
+// climbs gated so, not the nine climbs whose drops it bounds), the pig foreman two more and the goat one fewer. The
+// authored motion leans on a palm alone for those samples, which no bound of the plan makes physical without a jolt: it
+// stays a grip, as the rig's is, and there the plans still pull the body toward the face (up to 12.50 m/s^2, the dog's
+// window at 2.025 s; every climb's drop near 4.4 s, up to 4.50). Along a face and away from it the grip's bounds stand
+// (the cow's plan pushes along the far face at up to 8.17 m/s^2 past MU fy): the palm's friction along the face depends
+// on how hard it presses, which this bound does not ask for.
 // A grip keeps what stands on the floor or a top beside it as the outline the feet would have (feetBox, feetHull and
 // feetFloor; planCentre reads an outline from feet and held samples only), so that releaseGrips can let a grip go onto
 // feet already down (the window's brace: the right hand leaving the far face with the left hand on the floor). A
@@ -244,7 +284,7 @@ export const contactProbe=(worker,tails=null)=>Object.assign(createSurfaceProbe(
 const endsOf=probe=>{let e=ENDS.get(probe);if(!e){const kind=probe.names.map(p=>/hand/.test(p)?1:/hoof|boot|foot|toe/i.test(p)?2:0),handBone=probe.boneNames.map(b=>/^(hand|fingers)/.test(b));e=Uint8Array.from(probe.part,(pi,i)=>probe.tails&&/tail/.test(probe.names[pi])&&!probe.tails.isRoot(probe.names[pi],probe.vertex[i])?3:kind[pi]===1&&!handBone[probe.bone[i]]?4:kind[pi]);ENDS.set(probe,e);}return e;};
 export function supportAt(probe,obstacles,com,held=false){
  const over=(x,z)=>obstacles.some(b=>x>b.min[0]&&x<b.max[0]&&z>b.min[2]&&z<b.max[2]),ends=endsOf(probe),grow=(b,x,z)=>{b[0]=Math.min(b[0],x);b[1]=Math.max(b[1],x);b[2]=Math.min(b[2],z);b[3]=Math.max(b[3],z);};
- let grip=false,brush=false,top=null,mixed=false;const fp={},tp=[],box=[Infinity,-Infinity,Infinity,-Infinity],onTop=[Infinity,-Infinity,Infinity,-Infinity],pts=[],topPts=[];
+ let grip=false,brush=false,top=null,mixed=false,hook=false;const push=new Set();const fp={},tp=[],box=[Infinity,-Infinity,Infinity,-Infinity],onTop=[Infinity,-Infinity,Infinity,-Infinity],pts=[],topPts=[];
  const touches=(o,x,y,z)=>{const dx=Math.max(o.min[0]-x,0,x-o.max[0]),dy=Math.max(o.min[1]-y,0,y-o.max[1]),dz=Math.max(o.min[2]-z,0,z-o.max[2]);if(dx>=TOL||dy>=TOL||dz>=TOL)return false;return (!dx&&!dy&&!dz?Math.min(x-o.min[0],o.max[0]-x,y-o.min[1],o.max[1]-y,z-o.min[2],o.max[2]-z):Math.hypot(dx,dy,dz))<TOL;};
  const arm=probe.boneNames.map(b=>/^(upperArm|forearm|hand|fingers)/.test(b)),leans=new Set();
  if(held)for(let i=0;i<probe.count;i++){const x=probe.x[i],y=probe.y[i],z=probe.z[i];if(ends[i]!==0||arm[probe.bone[i]]||y<TOL&&y>-TOL&&!over(x,z))continue;for(const o of obstacles)if(touches(o,x,y,z))leans.add(o);}
@@ -252,9 +292,9 @@ export function supportAt(probe,obstacles,com,held=false){
   if(y<TOL&&y>-TOL&&!over(x,z)){grow(box,x,z);pts.push([x,z]);if(e===2)(fp[probe.part[i]]??=[]).push([x,z]);else if(e===3)tp.push([x,z]);else mixed=true;continue;}
   if(e===3)continue;for(const o of obstacles){const dx=Math.max(o.min[0]-x,0,x-o.max[0]),dy=Math.max(o.min[1]-y,0,y-o.max[1]),dz=Math.max(o.min[2]-z,0,z-o.max[2]);if(dx>=TOL||dy>=TOL||dz>=TOL)continue;const inside=!dx&&!dy&&!dz;
    const d=inside?Math.min(x-o.min[0],o.max[0]-x,y-o.min[1],o.max[1]-y,z-o.min[2],o.max[2]-z):Math.hypot(dx,dy,dz);if(d>=TOL)continue;
-   if(e===1||e===4&&(held&&leans.has(o)||y>o.max[1]-TOL))grip=true;else if(e===4&&held)brush=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);topPts.push([x,z]);if(e===2)(fp[probe.part[i]]??=[]).push([x,z]);else mixed=true;top=Math.max(top??-Infinity,o.max[1]);}}}
- if(grip||brush){const b=grip?{}:{brush:true};if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'grip',feetBox:box,feetHull:hullOf(pts.concat(topPts),box),feetFloor:0,...b};}
-  return onTop[0]<=onTop[1]?{kind:'grip',feetBox:onTop,feetHull:hullOf(topPts,onTop),feetFloor:top,...b}:{kind:'grip',...b};}
+   if(e===1||e===4&&(held&&leans.has(o)||y>o.max[1]-TOL)){grip=true;if(e===1&&y<=o.max[1]-TOL&&y>=o.min[1]+TOL)push.add([[x-o.max[0],'+x'],[o.min[0]-x,'-x'],[z-o.max[2],'+z'],[o.min[2]-z,'-z']].reduce((p,q)=>q[0]>p[0]?q:p)[1]);else hook=true;}else if(e===4&&held)brush=true;else if(y>o.max[1]-TOL&&com&&com[1]>o.max[1]-DRAPE){grow(onTop,x,z);topPts.push([x,z]);if(e===2)(fp[probe.part[i]]??=[]).push([x,z]);else mixed=true;top=Math.max(top??-Infinity,o.max[1]);}}}
+ if(grip||brush){const b=grip?hook||!push.size?{}:{push:[...push]}:{brush:true};if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'grip',feetBox:box,feetHull:hullOf(pts.concat(topPts),box),feetFloor:0,...b};}
+  return onTop[0]<=onTop[1]?{kind:'grip',feetBox:onTop,feetHull:hullOf(topPts,onTop),feetFloor:top,...b}:{kind:'grip',...(b.push?{}:b)};}
  const own=mixed?{}:{footPts:fp,tailPts:tp};
  if(box[0]<=box[1]){if(onTop[0]<=onTop[1]){grow(box,onTop[0],onTop[2]);grow(box,onTop[1],onTop[3]);}return {kind:'feet',box,hull:hullOf(pts.concat(topPts),box),floor:0,...own};}
  return onTop[0]<=onTop[1]?{kind:'feet',box:onTop,hull:hullOf(topPts,onTop),floor:top,...own}:{kind:'air'};}
