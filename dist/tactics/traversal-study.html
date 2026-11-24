@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Traversal study · Animal Factory</title><link rel="icon" href="data:,"><link rel="stylesheet" href="painted-fire-study.css"></head><body>
+<header><div><h1 id="heading">Through the window</h1><p id="sub">Head first over the sill · onto the hands · roll along the wall · up on the next tile</p></div></header>
+<main><section class="controls" aria-label="Traversal controls">
+<label>Obstacle <select id="obstacle"><option value="window">Window</option><option value="low-wall">Waist-high wall (proposed)</option><option value="wall">2 m wall</option></select></label><label>Character <select id="animal"></select></label>
+<label>Outfit <select id="outfit"><option value="normal">Original outfit</option><option value="red-hats">Red Hats</option></select></label>
+<label>View <select id="view"><option value="game">Gameplay (from the room)</option><option value="game-back">Gameplay (from outside)</option><option value="side">Side</option><option value="along">Along the wall</option><option value="close">Close three-quarter</option></select></label>
+<button id="play">Play</button><label>Speed <select id="speed"><option value="1">Normal</option><option value=".5">Half</option><option value=".25">Quarter</option></select></label>
+<label><input id="grey" type="checkbox">Grey</label><label><input id="grid" type="checkbox" checked>Tile grid</label>
+<input id="progress" type="range" min="0" max="1" step=".001" value="0" aria-label="Progress"><span id="time"></span></section>
+<div id="phases" class="phases"></div>
+<div id="viewport"><div id="loading">Loading traversal study…</div></div><p id="status" role="status"></p><p id="error" role="alert"></p>
+<footer>One square is one tile; the window is the game's own (sill 0.85, opening 0.70 tall). The character starts on the tile centre outside and must finish standing on the next tile's centre, facing on. Contacts come from the skinned surface, checked by phantom-wrench (docs/tactics/NATURAL-TRAVERSAL.md).</footer></main>
+<script type="module" src="traversal-study.js"></script></body></html>
