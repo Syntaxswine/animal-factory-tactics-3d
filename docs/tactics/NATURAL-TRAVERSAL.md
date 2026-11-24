@@ -5596,6 +5596,48 @@ however short); roundSchedule's merge (above), which keeps a field the authored 
 readings, among them the skunk's 449.8% at its hands to the floor, the sheep's tail flip (342%), the rabbit's early roll
 (291%), the dog's stand (288%) and the donkey's hands to the floor (283%).
 
+### 2026-11-23 (physics balance, forty-sixth part): the rounds' merge, told as it works
+
+The forty-fifth part found that roundSchedule merges a held sample's authored support into the round's own
+(Object.assign: the authored sample's fields, but its centre, assigned over the round's) where its comment said a held
+sample keeps the support the authored motion had: a field the authored sample lacks stays. On the 33 a held sample keeps
+a field of its own only where the authored sample grips (no hull: its grip keeps only the outline the feet would have,
+which the plan does not read) and the round's own body stands on an outline, which then stays beside the grip, and the
+plan keeps it: the cow's window at 3.210 and 3.215 s and the skunk's at 2.750 to 2.785 and 3.050 to 3.060
+(probe-merge.mjs on var-r25s, var-r24i logging each round's schedule: merge-scan-r24i-cow-skunk.txt). Every other
+crossing's full holds keep the authored support with no field of their own, or it has none (merge-scan-a.txt, -b.txt); a
+sample held in height alone is not merged, its support measured each round. The probe reads the samples the authored
+motion holds in full: a hold of round 2's own where the authored motion has none is not merged, and there is none on the
+33 (review round 2's review-fix25-r2\probe-r2-window.txt for the windows, probe-r2-wall.txt for the pigs' climbs; the
+other 20 crossings hold the body nowhere). The merge is older than fix 24: on fix 23's code it left the cow's outline at
+2.755 to 2.765 and 3.190 s and the skunk's at 2.730 to 2.785 and 3.050 to 3.060 (var-r25t, var-r23j logging each round's
+schedule: merge-scan-r23j-cow-skunk.txt). An authored outline replaces the round's own (its hull, box and floor) and
+goes over the round's own grip, whose fields stay beside it, unread by the plan.
+
+Tried and not kept: the held sample given the authored support whole, its own centre kept (var-r25a, edit-merge.mjs):
+the skunk's window read 145 readings against 90, 56 new and one gone (42 in its sit up from 2.746 s, up to 732%, its sit
+up planned by friction alone on a grip the body round 2 measures no longer has; 13 at 3.050 to 3.062 s, up to 353%, and
+1 at 3.189), and the cow's 6 against 5 (134.0% at 3.327 s, as the elbow leaves: kept-rises-r24i-r25a.txt;
+bins-r24i-r25a-skunk.txt, -cow.txt). Where the authored grip has gone from the body round 2 measures (the skunk's), the
+outline the merge leaves stands for the support that body has, and keeps the plan on it; at the cow's 3.210 and 3.215 s
+round 2's elbow is on the wall from 3.200, a brush whose grip counts from ONSET (from 3.220: the forty-fifth part), and
+the outline stands for the support until then (review round 3's review-fix25-r3\probe-raw-r3.mjs).
+
+`dist/tactics/traversal-balance.js`: the comment tells the merge as the code does it, and why it stays. No code line
+changes: every gate is the forty-fifth part's (var-r24i's code lines). `tests/natural-traversal.test.mjs`:
+roundSchedule's test pins it: an authored outline replaces the round's own (its hull, box and floor) and goes over the
+round's own grip, an authored grip leaves the round's own outline beside it, a held seat is merged as any full hold (the
+climb's top), and a sample held in height alone keeps the support measured in its own round. The replacement tried fails
+it (var-r25nR: unit-f25nR-r4.log), as do the round's own outline kept where it has one, the spreads swapped, the
+authored support given only over a flight, the samples held in height alone merged too, and held seats left out of the
+merge (var-r25nA, -nB, -nC, -nH, -nS: unit-f25nA-r4.log, -nB-r4.log, -nC-r4.log, -nH-r4.log, -nS-r4.log; the last review
+round 3's, which passed the test before its seat); with no merge at all an older assert of the test fails first
+(var-r25nN: unit-f25nN-r4.log), each on the final test file. The test file passes (23 of 23 tests:
+test-f25-tree-r4.log); the suite passes (2580 tests: suite-f25-r4.log).
+
+Left: the skunk's one-sample lean grip at 2.745 s (the forty-fifth part), which the merge leaves as round 2's own
+schedule has it; planning such a hold on the outline its grip keeps for the feet (feetHull), never tried.
+
 ## Integration
 
 The battle adapter matches the contract of Codex's `createSimpleTraversal(model, event, unit)`:

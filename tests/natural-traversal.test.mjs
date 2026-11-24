@@ -273,6 +273,21 @@ test('a grip the body leaves for a flight lets go 10 ms before its last touch',(
  assert.equal(round('ff'+g(12)+a(18)+'ffff','ff'+g(12)+a(18)+'ffff'),'ff'+g(10)+'AA'+a(18)+'ffff','a round releases a let-go after its restores');
  assert.equal(round('ff'+g(12)+'f'.repeat(16),'ff'+g(12)+a(12)+'ffff'),'ff'+g(12)+'f'.repeat(16),'a gap the plan made where the authored grip ends on the feet goes back to the feet before the release looks');
  assert.equal(round('ff'+g(12)+'h'.repeat(20),'ff'+g(12)+a(13)+'h'.repeat(7)),'ff'+g(12)+'h'.repeat(20),'a seat the plan lifted for longer than LOST goes back to the seat before the release looks');
+ // A held sample takes the authored support over its own: roundSchedule assigns the authored fields, but the centre,
+ // over the round's (Object.assign), so an authored outline replaces the round's own (its hull, box and floor) and goes
+ // over the round's own grip (the grip's fields left beside it, which the plan does not read); where the authored
+ // sample grips (no hull) and the round's own stands on an outline, that outline stays beside the grip (given the
+ // authored grip whole there, the skunk's window read 145 readings against 90). A held seat is merged as any full hold
+ // (the climb's top); a sample held in height alone is not merged: its support is measured each round.
+ {const H1=[[0,0],[1,0],[1,1]],B1=[0,1,0,1],H2=[[5,5],[6,5],[6,6]],B2=[5,6,5,6],FH=[[9,9],[10,9],[10,10]],c=[0,0,0];
+  const a6=roundSchedule([{kind:'hold',seat:true,hull:H2,box:B2,floor:.3,c}],[{kind:'hold',seat:true,hull:H1,box:B1,floor:0,c}],1,.005)[0];
+  assert.ok(a6.kind==='hold'&&a6.seat&&a6.hull===H1&&a6.box===B1&&a6.floor===0,'an authored outline replaces a held seat\'s own');
+  const a1=roundSchedule([{kind:'hold',feetHull:FH,brush:true,c}],[{kind:'hold',hull:H1,c}],1,.005)[0];
+  assert.ok(a1.kind==='hold'&&a1.hull===H1,'an authored outline goes over a held sample\'s own grip');
+  const a2=roundSchedule([{kind:'hold',hull:H2,c}],[{kind:'hold',feetHull:FH,c}],1,.005)[0];
+  assert.ok(a2.kind==='hold'&&a2.hull===H2&&a2.feetHull===FH,'a held sample keeps its own outline beside an authored grip');
+  const a3=roundSchedule([{kind:'hold',heightOnly:true,hull:H2,box:B2,floor:.3,c}],[{kind:'hold',heightOnly:true,hull:H1,box:B1,floor:0,c}],1,.005)[0];
+  assert.ok(a3.hull===H2&&a3.box===B2&&a3.floor===.3,'a sample held in height alone keeps the support measured in its own round');}
 });
 test('a grip the body leaves for the feet lets go onto them where they already stand under it',()=>{
  // traversal-balance.js, releaseGrips (and supportAt, above: a grip keeps what stands on the floor beside it as the

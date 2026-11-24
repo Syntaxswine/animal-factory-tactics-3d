@@ -544,11 +544,21 @@ export function balanceTraversal({duration,probe,obstacles,pose,com,setMove,base
  // so that a round's own release, roundSchedule, leaves neither a flag nor a raw contact the held schedule does not
  // have): moved by each round's hips, a toe-off came 5 ms earlier every round (the plan, pushing to reach it, raised
  // the hips that lifted the hoof; on the climb the push's ceiling now holds it at its authored time on both rounds).
- // A held sample keeps the support the authored motion had (its premise is the authored path), whatever the moved hips
- // touch: measured again on them, a seat carried on raised thighs rose off the floor, and the plan, finding the feet
+ // A fully held sample takes the support the authored motion had over its own (its premise is the authored path):
+ // measured again on the moved hips, a seat carried on raised thighs rose off the floor, and the plan, finding the feet
  // alone 17 cm ahead of the centre of mass, dragged the hips 11 cm toward them (the window's lean, 78% of the body's
  // weight); a pig's seat rose 5 mm off the climb's top for 40 ms, and the plan, finding it in flight, jerked the body
- // at 39 m/s. Held in height alone, a sample's support is measured each round, as the feet's is: the body moves across.
+ // at 39 m/s. roundSchedule assigns the authored sample's fields, but its centre, over the round's own (Object.assign):
+ // an authored outline replaces the round's own (its hull, box and floor) and goes over the round's own grip (whose
+ // fields stay beside it, unread by the plan); where the authored sample grips (no hull) and the round's own body
+ // stands on an outline, that outline stays beside the grip and the plan keeps it (the cow's window at 3.210 and 3.215
+ // s and the skunk's at 2.750 to 2.785 and 3.050 to 3.060; before fix 24 the cow's at 2.755 to 2.765 and 3.190, the
+ // skunk's at 2.730 to 2.785 and 3.050 to 3.060; on no other crossing does a held sample keep a field of its own).
+ // Given the authored grip whole there instead, the skunk's window read 145 readings against 90 (56 new, up to 732% at
+ // 2.746 s: its sit up planned by friction alone on a grip the body round 2 measures no longer has) and the cow's 6
+ // against 5, so the outline is left to stay. The third round's held schedule, which no caller reaches (every caller
+ // runs two rounds), assigns its sample's fields over the round's own the same way, where their kind or released flag
+ // differ. Held in height alone, a sample's support is measured each round, as the feet's is: the body moves across.
  // The turn refined REFINE times on the flight samples alone, posed with the turn so far: by rounds alone, a flight's
  // first samples never settled where the toe-off moved a sample each round (955 N·m at the push-off). The contacts
  // keep the round's turn: their angular momentum is not measured again, and the same correction, added to it at each
